@@ -3,7 +3,6 @@ import logging
 import shutil
 import zipfile
 import xmltodict
-from lxml import etree
 
 from osgeo import ogr, osr
 
@@ -14,7 +13,7 @@ from django.template import Template, Context
 
 from dominate.tags import legend, table, tbody, tr, th, div
 
-from hs_core.models import Title, CoreMetaData
+from hs_core.models import Title
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm
 from hs_core.signals import post_add_geofeature_aggregation
@@ -46,7 +45,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         metadata_model_classes['fieldinformation'] = FieldInformation
         return metadata_model_classes
 
-    def get_html(self):
+    def get_html(self, **kwargs):
         """overrides the base class function"""
 
         html_string = super(GeoFeatureFileMetaData, self).get_html()
@@ -80,7 +79,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
         return root_div.render()
 
-    def get_html_forms(self, datatset_name_form=True):
+    def get_html_forms(self, datatset_name_form=True, **kwargs):
         """overrides the base class function to generate html needed for metadata editing"""
 
         root_div = div("{% load crispy_forms_tags %}")
@@ -142,22 +141,19 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
+    def get_preview_data_url(self, resource, folder_path):
+        """Get a GeoServer layer preview link."""
 
-        # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(GeoFeatureFileMetaData, self)._get_xml_containers()
-        if self.geometryinformation:
-            self.geometryinformation.add_to_xml_container(container_to_add_to)
+        if self.spatial_coverage:
+            preview_data_url = utils.build_preview_data_url(
+                resource=resource,
+                folder_path=folder_path,
+                spatial_coverage=self.spatial_coverage.value
+            )
+        else:
+            preview_data_url = None
 
-        for fieldinfo in self.fieldinformations.all():
-            fieldinfo.add_to_xml_container(container_to_add_to)
-
-        if self.originalcoverage:
-            self.originalcoverage.add_to_xml_container(container_to_add_to)
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
+        return preview_data_url
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
@@ -200,6 +196,10 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
     def get_aggregation_display_name():
         return 'Geographic Feature Content: The multiple files that are part of a geographic ' \
                'shapefile'
+
+    @staticmethod
+    def get_aggregation_term_label():
+        return "Geographic Feature Aggregation"
 
     @staticmethod
     def get_aggregation_type_name():
@@ -259,8 +259,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
             res_file = ft_ctx.res_file
             try:
-                meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource,
-                                                                                   res_file)
+                meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
             except ValidationError as ex:
                 log.exception(str(ex))
                 raise ex
@@ -276,9 +275,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
             file_folder = res_file.file_folder
             upload_folder = file_folder
-            file_type_success = False
             res_files_to_delete = []
-
             msg = "GeoFeature aggregation. Error when creating aggregation. Error:{}"
             with transaction.atomic():
                 try:
@@ -297,19 +294,18 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                                                           new_files_to_upload=files_to_upload,
                                                           folder_path=upload_folder)
 
+                    ft_ctx.res_files_to_delete = res_files_to_delete
                     log.info("GeoFeature aggregation - files were added to the aggregation.")
                     add_metadata(resource, meta_dict, xml_file, logical_file)
                     log.info("GeoFeature aggregation and resource level metadata updated.")
-
-                    file_type_success = True
                     ft_ctx.logical_file = logical_file
-                    ft_ctx.res_files_to_delete = res_files_to_delete
                 except Exception as ex:
+                    logical_file.remove_aggregation()
                     msg = msg.format(str(ex))
                     log.exception(msg)
+                    raise ValidationError(msg)
 
-            if not file_type_success:
-                raise ValidationError(msg)
+            return logical_file
 
     @classmethod
     def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):

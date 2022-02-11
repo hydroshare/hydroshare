@@ -4,10 +4,10 @@ from hs_core.models import BaseResource
 from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.contenttypes.models import ContentType
 
+
 ###################################
 # Communities of groups
 ###################################
-
 
 class Community(models.Model):
     """ a placeholder class for a community of groups """
@@ -17,6 +17,9 @@ class Community(models.Model):
     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = models.ImageField(upload_to='community', null=True, blank=True)
+
+    def __str__(self):
+        return self.name
 
     @property
     def member_groups(self):
@@ -73,15 +76,19 @@ class Community(models.Model):
 
         # import here to avoid import loops
         from hs_access_control.models.privilege import PrivilegeCodes
+
+        # TODO: propagated resources should be owned by a member of the publishing group,
+        # and not just any group in the community!
         res = BaseResource\
             .objects\
-            .filter(r2grp__group__g2gcp__community=self,
-                    r2grp__group__gaccess__active=True)\
+            .filter(Q(r2grp__group__g2gcp__community=self,
+                      r2grp__group__gaccess__active=True,
+                      r2urp__privilege=PrivilegeCodes.OWNER,  # owned by member of community
+                      r2urp__user__u2ugp__group__g2gcp__community=self) |
+                    Q(r2crp__community=self))\
             .filter(Q(raccess__public=True) |
                     Q(raccess__published=True) |
                     Q(raccess__discoverable=True))\
-            .filter(Q(r2urp__privilege=PrivilegeCodes.OWNER,
-                      r2urp__user__u2ugp__group__g2gcp__community=self))\
             .annotate(group_name=F("r2grp__group__name"),
                       group_id=F("r2grp__group__id"),
                       public=F("raccess__public"),
@@ -126,13 +133,20 @@ class Community(models.Model):
 
         return res
 
+    # TODO: this currently contains OWNER privilege only
     def get_effective_user_privilege(self, this_user):
         from hs_access_control.models.privilege import UserCommunityPrivilege
         return UserCommunityPrivilege.get_privilege(user=this_user, community=self)
 
+    # TODO: this is never > VIEW.
     def get_effective_group_privilege(self, this_group):
         from hs_access_control.models.privilege import GroupCommunityPrivilege
         return GroupCommunityPrivilege.get_privilege(group=this_group, community=self)
+
+    # TODO: this is never > VIEW.
+    def get_effective_resource_privilege(self, this_resource):
+        from hs_access_control.models.privilege import CommunityResourcePrivilege
+        return CommunityResourcePrivilege.get_privilege(resource=this_resource, community=self)
 
     def get_groups_with_explicit_access(self, privilege, user=None):
         """
@@ -169,9 +183,19 @@ class Community(models.Model):
         """
         from hs_access_control.models.privilege import PrivilegeCodes
 
+        if group is None:
+            # At this level, CHANGE is never allowed
+            if privilege != PrivilegeCodes.VIEW:
+                return BaseResource.objects.none()
+            # direct access without group assocation with resource
+            return BaseResource.objects.filter(
+               Q(r2crp__community=self, r2crp__community__c2urp__user=user) |
+               Q(r2crp__community=self, r2crp__community__c2gcp__group__g2ugp__user=user))\
+                .distinct()
+
         # if user is a member, member privileges apply regardless of superuser privileges
         # (superusers only obtain member privileges over every group in the community)
-        if group.gaccess.members.filter(id=user.id).exists() or self.is_superuser(user):
+        elif group.gaccess.members.filter(id=user.id).exists() or self.is_superuser(user):
             if privilege == PrivilegeCodes.CHANGE:
                 return BaseResource.objects.filter(raccess__immutable=False,
                                                    r2grp__group=group,
@@ -179,13 +203,19 @@ class Community(models.Model):
             else:
                 return BaseResource.objects.filter(r2grp__group=group,
                                                    r2grp__privilege=privilege)
-
-        # user is not a member of group and not a superuser
+        # now user is not a member of group and not a superuser
         elif privilege == PrivilegeCodes.CHANGE:  # requires superuser
             return BaseResource.objects.none()
         else:  # VIEW is requested for regular user via community
-            return BaseResource.objects.filter(
-                # The only reasonable protection is VIEW; don't check protection.
-                Q(r2grp__group=group,
-                  r2grp__group__g2gcp__community=self,
-                  r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user)).distinct()
+            return BaseResource.objects.none()
+
+    @property
+    def first_owner(self):
+        from hs_access_control.models.privilege import UserCommunityPrivilege, PrivilegeCodes
+        opriv = UserCommunityPrivilege.objects.filter(community=self, privilege=PrivilegeCodes.OWNER)\
+            .order_by('start')
+        opriv = list(opriv)
+        if opriv:
+            return opriv[0].user
+        else:
+            return None

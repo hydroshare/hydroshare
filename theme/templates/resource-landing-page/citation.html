@@ -2,22 +2,39 @@
 
 <div class="col-sm-12 content-block">
     <span id="citation" class="page-anchor"></span>
-    <h3>How to Cite</h3>
+    <h3>How to Cite
 
+    </h3>
     <div class="row">
         <div class="col-xs-12">
-            <div class="flex">
-                <div id="citation-text">{{ citation|urlize }}</div>
-
-                <button class="btn btn-default clipboard-copy" data-target="citation-text"
-                        type="button">
+            <div id="citation-text-wrapper" class="flex">
+                <div class="flex">
+                    <div id="citation-text">{% if custom_citation %}{{ custom_citation|urlize }}{% else %}{{ citation|urlize }}{% endif %}</div>
+                    <span id="edit-citation-control" style="display: none" data-toggle="modal"
+                          data-placement="auto" class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
+                            title="Edit citation" data-target="#customize-citation-dialog">
+                    </span>
+                </div>
+                <button class="btn btn-default clipboard-copy" data-target="citation-text" type="button">
                     <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
                 </button>
             </div>
 
+            <script language="JavaScript">
+              $.ajax({
+                type: "GET",
+                url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
+              }).complete(function(res) {
+                if (res.responseText) {
+                  const fn = JSON.parse(res.responseText).filenames.length
+                  if (fn > 0 && RESOURCE_MODE === 'Edit') {
+                    document.getElementById('edit-citation-control').style.display = "block"
+                  }
+                }
+              });
+            </script>
             {% if self_access_level == 'owner' and not cm.raccess.published and cm.can_be_published %}
             <br />
-
             <div class="citation-description">
                 <em>
                     When permanently published, this resource will have a formal Digital Object Identifier (DOI) and will be
@@ -27,11 +44,10 @@
                 </em>
             </div>
             {% endif %}
-
-            <br>
+            <br />
 
             {# ======= Sharing ======= #}
-            {% if not resource_edit_mode %}
+            {% if not resource_edit_mode or cm.raccess.published %}
                 {% if rights.statement or rights.url %}
                     <div id="rights">
                         {% if rights.statement %}
@@ -70,9 +86,9 @@
                         <fieldset>
                             <div class="col-md-6">
                                 <span for="select_license"> Select a license </span>
-                                        <span data-toggle="tooltip" data-placement="auto"
-                                              title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
-                                              class="glyphicon glyphicon-info-sign text-muted"></span>
+                                    <span data-toggle="tooltip" data-placement="auto"
+                                        title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
+                                        class="glyphicon glyphicon-info-sign text-muted"></span>
                                 <select id="select_license" class="form-control">
                                     <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
                                     <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
@@ -126,7 +142,7 @@
             {% endif %}
         </div>
 
-        {% if resource_edit_mode %}
+        {% if resource_edit_mode and not cm.raccess.published %}
         <div class="col-xs-12">
             {# Require license agreement for file download #}
             {% if self_access_level == 'owner' %}
@@ -135,15 +151,15 @@
                     {% csrf_token %}
 
                     <input name="flag" type="hidden" {% if cm.raccess.require_download_agreement %}value="make_not_require_lic_agreement"
-                           {% else %}value="make_require_lic_agreement"{% endif %}/>
+                        {% else %}value="make_require_lic_agreement"{% endif %}/>
 
                     <br>
                     <div class="input-group" data-toggle="tooltip" title="When checked, users need to agree before they can download any content files or resource bag.">
-                      <span class="input-group-addon">
-                        <input id="btn-lic-agreement" type="checkbox"
-                                      {% if cm.raccess.require_download_agreement %}checked{% endif %}>
-                      </span>
-                      <span class="form-control">Require agreement to rights statement before downloading</span>
+                        <span class="input-group-addon">
+                            <input id="btn-lic-agreement" type="checkbox"
+                            {% if cm.raccess.require_download_agreement %}checked{% endif %}>
+                        </span>
+                        <span class="form-control">Require agreement to rights statement before downloading</span>
                     </div><!-- /input-group -->
                 </form>
             {% else %}

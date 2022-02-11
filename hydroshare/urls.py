@@ -10,9 +10,10 @@ from mezzanine.pages.views import page
 
 from autocomplete_light import shortcuts as autocomplete_light
 
-from hs_core.views.discovery_view import DiscoveryView
 from hs_core.views.discovery_json_view import DiscoveryJsonView
 from hs_core.views.oauth2_view import GroupAuthorizationView
+from hs_rest_api.urls import hsapi_urlpatterns
+from hs_rest_api2.urls import hsapi2_urlpatterns
 from hs_sitemap.views import sitemap
 from theme import views as theme
 from hs_tracking import views as tracking
@@ -20,7 +21,7 @@ from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
 import hs_communities.views.communities
 from theme.views import delete_resource_comment
-from hs_discover.views import SearchView
+from hs_discover.views import SearchView, SearchAPI
 
 autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -47,13 +48,13 @@ urlpatterns = i18n_patterns(
     url(r'^comment/$', theme.comment),
     url(r'^comment/delete/(?P<id>.*)/$', delete_resource_comment, name='delete_resource_comment'),
     url(r'^rating/$', theme.rating),
-    url(r'^profile/$', theme.update_user_profile, name='update_profile'),
+    url(r'^profile/(?P<profile_user_id>.*)/$', theme.update_user_profile, name='update_profile'),
     url(r'^update_password/$', theme.update_user_password, name='update_password'),
     url(r'^resend_verification_email/(?P<email>.*)/', theme.resend_verification_email,
         name='resend_verification_email'),
     url(r'^reset_password_request/$', theme.request_password_reset,
         name='reset_password_request'),
-    url(r'^new_password_for_reset/(?P<token>[-\w]+)/', theme.UserPasswordResetView.as_view(),
+    url(r'^new_password_for_reset/$', theme.UserPasswordResetView.as_view(),
         name='new_password_for_reset'),
     url(r'^confirm_reset_password/$', theme.reset_user_password,
         name='confirm_reset_password'),
@@ -71,8 +72,8 @@ urlpatterns = i18n_patterns(
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', hs_core_views.verify),
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^ping/$', SearchView.as_view(), name='devops_demo'),
-    url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
+    url(r'^discoverapi/$', SearchAPI.as_view(), name='DiscoverAPI'),
+    url(r'^search/$', SearchView.as_view(), name='Discover'),
     url(r'^topics/$', hs_communities.views.communities.TopicsView.as_view(), name='topics'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', sitemap, name='sitemap'),
@@ -97,22 +98,15 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
                                         settings.PACKAGE_NAME_FILEBROWSER)),
     )
 
+urlpatterns += hsapi_urlpatterns + hsapi2_urlpatterns
+
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += [
-    url('^hsapi/', include('hs_rest_api.urls')),
-    url('^hsapi/', include('hs_core.urls')),
     url('', include('hs_core.resourcemap_urls')),
     url('', include('hs_core.metadata_terms_urls')),
     url('', include('hs_core.debug_urls')),
-    url('^hsapi/', include('ref_ts.urls')),
     url('^irods/', include('irods_browser_app.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
-    url('^hsapi/', include('hs_model_program.urls')),
-    url('^hsapi/', include('hs_labels.urls')),
-    url('^hsapi/', include('hs_collection_resource.urls')),
-    url('^hsapi/', include('hs_file_types.urls')),
-    url('^hsapi/', include('hs_app_netCDF.urls')),
-    url('^hsapi/', include('hs_composite_resource.urls')),
 ]
 
 # robots.txt URLs for django-robots

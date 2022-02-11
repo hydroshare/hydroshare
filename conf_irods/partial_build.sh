@@ -86,5 +86,5 @@ echo " - ichmod -r -M own "${HS_IRODS_PROXY_USER_IN_USER_ZONE}" /${HS_USER_IRODS
 echo "------------------------------------------------------------"
 echo "INFO: set ${HS_USER_IRODS_ZONE}/home to inherit"
 echo "ichmod -r -M inherit /"${HS_USER_IRODS_ZONE}"/home" | $RUN_ON_USER
-echo " - ichmod -r -M inherit /"${HS_USER_IRODS_ZONE}"/home" 
+echo " - ichmod -r -M inherit /"${HS_USER_IRODS_ZONE}"/home"
 echo

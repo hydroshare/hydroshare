@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <hsterms:ModelInstanceAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/model_instance/model_instance_resmap.xml#aggregation">
+    <hsterms:modelProgramSchema rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/model_instance/model_instance_schema.json"/>
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/ModelInstanceAggregation"/>
+    <hsterms:executedByModelProgram rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/model_program/model_program_resmap.xml#aggregation"/>
+    <dc:title>model_instance</dc:title>
+    <dc:language>eng</dc:language>
+    <hsterms:modelProgramSchemaValues rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/model_instance/model_instance_schema_values.json"/>
+    <hsterms:includesModelOutput rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</hsterms:includesModelOutput>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:URL rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+        <hsterms:rightsStatement>This resource is shared under the Creative Commons Attribution CC BY.</hsterms:rightsStatement>
+      </rdf:Description>
+    </dc:rights>
+  </hsterms:ModelInstanceAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/ModelInstanceAggregation">
+    <rdfs:label>Model Instance Content: One or more files with specific metadata</rdfs:label>
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+  </rdf:Description>
+</rdf:RDF>

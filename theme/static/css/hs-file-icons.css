@@ -90,6 +90,20 @@
 	height: 32px;
 }
 
+.fb-view-grid .fb-stack-mp img, .fb-view-grid .fb-stack-mi img {
+    width: 18px;
+    top: 8px;
+    position: absolute;
+    left: 3px;
+}
+
+.fb-view-list .fb-stack-mp img, .fb-view-list .fb-stack-mi img {
+    width: 9px;
+    top: 5px;
+    position: absolute;
+    left: 13px;
+}
+
 .fb-view-list .fb-stack {
 	width: 18px;
 	height: 18px;
@@ -270,7 +284,8 @@
 	font-size: 32px;
 }
 
-.fb-view-grid .fb-folder i.fa-tag {
+.fb-view-grid .fb-folder i.fa-tag,
+ #legend-collapse i.fa-tag {
 	transform: rotate(90deg);
 	color: #FF9800;
 	top: -3px;
@@ -285,10 +300,17 @@
 	font-size: 9px;
 }
 
-.fb-view-list .fb-folder-aggregation {
+.fb-view-list .fb-folder-aggregation, .fb-view-list .fb-folder-mp, .fb-view-list .fb-folder-mi {
 	margin-left: 0;
 }
 
 .fb-folder-aggregation {
 	color: #45911c;
+}
+
+.fb-folder-mp {
+    color: #3f51b5;
+}
+.fb-folder-mi {
+    color: #d3c54d;
 }

@@ -66,6 +66,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         self.assertEqual(len(logical_file.metadata.keywords), 1)
         self.assertEqual(logical_file.metadata.keywords[0], 'Snow water equivalent')
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_nc_file_2(self):
@@ -97,6 +98,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         self.assertEqual(len(logical_file.metadata.keywords), 1)
         self.assertEqual(logical_file.metadata.keywords[0], 'Snow water equivalent')
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_nc_file_3(self):
@@ -149,6 +151,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                 other_res_file = res_file
                 break
         self.assertEqual(other_res_file.file_folder, new_folder)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_nc_file_4(self):
@@ -191,7 +194,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.assertEqual(res_file.file_folder, expected_file_folder)
         self.assertTrue(isinstance(logical_file, NetCDFLogicalFile))
         self.assertTrue(logical_file.metadata, NetCDFLogicalFile)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_for_netcdf_resource_title(self):
@@ -218,7 +221,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test resource title was updated with the extracted netcdf data
         res_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
         self.assertEqual(self.composite_resource.metadata.title.value, res_title)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_invalid_nc_file_1(self):
@@ -227,6 +230,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource(self.netcdf_invalid_file)
         self._test_invalid_file()
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_invalid_nc_file_2(self):
@@ -243,6 +247,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # set nc file to aggregation
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         # check that the nc resource file is associated with a logical file
         res_file = hydroshare.utils.get_resource_files_by_extension(
@@ -255,6 +260,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_metadata_CRUD(self):
@@ -359,7 +366,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         netcdf_logical_file.metadata.update_element('Variable', variable.id, **variable_data)
         variable = netcdf_logical_file.metadata.variables.get(id=variable.id)
         self.assertEqual(variable.name, 'variable_name_updated')
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_metadata_on_logical_file_delete(self):
@@ -401,7 +408,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(Variable.objects.count(), 0)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_remove_aggregation(self):
@@ -427,16 +434,19 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                          set(logical_file.files.all()))
 
         # delete the aggregation (logical file) object using the remove_aggregation function
+        # this should delete the system generated txt file when the netcdf logical file was created
         logical_file.remove_aggregation()
         # test there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         # test there is no NetCDFFileMetaData object
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
         # check the files associated with the aggregation not deleted
-        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
         # check the file folder is not deleted
-        for f in self.composite_resource.files.all():
-            self.assertEqual(f.file_folder, expected_folder_name)
+        nc_file = self.composite_resource.files.first()
+        self.assertTrue(nc_file.file_name.endswith('.nc'))
+        self.assertEqual(nc_file.file_folder, expected_folder_name)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_metadata_on_resource_delete(self):
@@ -461,6 +471,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(Coverage.objects.count(), 4)
         self.assertEqual(OriginalCoverage.objects.count(), 1)
         self.assertEqual(Variable.objects.count(), 5)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
         # delete resource
         hydroshare.delete_resource(self.composite_resource.short_id)
@@ -534,7 +545,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(Variable.objects.count(), 0)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_file_rename(self):
@@ -568,6 +579,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                 move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                               tgt_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_file_move(self):
@@ -595,6 +607,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                 move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                               tgt_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_rename(self):
@@ -653,6 +666,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_parent_folder_rename(self):
@@ -725,7 +739,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
         expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_move_1(self):
@@ -775,7 +789,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         expected_map_file_path = '{0}{1}'.format(nc_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_move_2(self):
@@ -800,6 +814,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_sub_folder_creation(self):
@@ -820,7 +835,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create a folder inside the aggregation folder
         new_folder = '{}/sub_folder'.format(res_file.file_folder)
         ResourceFile.create_folder(self.composite_resource, new_folder)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_file_move_to_aggregation_folder_allowed(self):
@@ -847,6 +862,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # move file to aggregation folder
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                       tgt_path)
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_upload_file_to_aggregation_folder_allowed(self):
@@ -869,6 +886,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.add_file_to_resource(file_to_add=self.netcdf_invalid_file,
                                   upload_folder=res_file.file_folder)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def _test_invalid_file(self):
@@ -883,6 +901,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 
@@ -934,7 +953,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(Variable.objects.count(), 0)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_main_file(self):
@@ -948,3 +967,5 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(".nc", NetCDFLogicalFile.objects.first().get_main_file_type())
         self.assertEqual(self.netcdf_file_name,
                          NetCDFLogicalFile.objects.first().get_main_file.file_name)
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())

@@ -7,6 +7,7 @@ import zipfile
 import logging
 import json
 
+from celery.signals import task_postrun
 from datetime import datetime, timedelta, date
 from xml.etree import ElementTree
 
@@ -16,23 +17,24 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
-from django.core.exceptions import ObjectDoesNotExist
-
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
-from hs_core.hydroshare import utils
-from hs_core.hydroshare.hs_bagit import create_bag_files
-from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
-    get_crossref_url, deposit_res_metadata_with_crossref
+from hs_core.hydroshare import utils, create_empty_resource
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
+from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref
+from hs_core.task_utils import get_or_create_task_notification
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
-from theme.models import UserQuota, QuotaMessage, UserProfile, User
-
+from theme.models import UserQuota, QuotaMessage, User
 from django_irods.icommands import SessionException
+from celery.result import states
 
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, TaskNotification
+from hs_core.enums import RelationTypes
 from theme.utils import get_quota_message
+from hs_collection_resource.models import CollectionDeletedResource
 
 
 # Pass 'django' into getLogger instead of __name__
@@ -71,69 +73,6 @@ def nightly_zips_cleanup():
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
-def sync_email_subscriptions():
-    sixty_days = datetime.today() - timedelta(days=60)
-    active_subscribed = UserProfile.objects.filter(email_opt_out=False,
-                                                   user__last_login__gte=sixty_days,
-                                                   user__is_active=True)
-    sync_mailchimp(active_subscribed, settings.MAILCHIMP_ACTIVE_SUBSCRIBERS)
-    subscribed = UserProfile.objects.filter(email_opt_out=False, user__is_active=True)
-    sync_mailchimp(subscribed, settings.MAILCHIMP_SUBSCRIBERS)
-
-
-def sync_mailchimp(active_subscribed, list_id):
-    session = requests.Session()
-    url = "https://us3.api.mailchimp.com/3.0/lists/{list_id}/members"
-    # get total members
-    response = session.get(url.format(list_id=list_id), auth=requests.auth.HTTPBasicAuth(
-        'hs-celery', settings.MAILCHIMP_PASSWORD))
-    total_items = json.loads(response.content.decode())["total_items"]
-    # get list of all member ids
-    response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
-                                                                          total_items=total_items),
-                           auth=requests.auth.HTTPBasicAuth('hs-celery',
-                                                            settings.MAILCHIMP_PASSWORD))
-    # clear the email list
-    delete_count = 0
-    for member in json.loads(response.content.decode())["members"]:
-        if member["status"] == "subscribed":
-            session_response = session.delete(
-                (url + "/{id}").format(list_id=list_id, id=member["id"]),
-                auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
-            if session_response.status_code != 204:
-                logger.info("Expected 204 status code, got " + str(session_response.status_code))
-                logger.debug(session_response.content)
-            else:
-                delete_count += 1
-    # add active subscribed users to mailchimp
-    add_count = 0
-    for subscriber in active_subscribed:
-        json_data = {"email_address": subscriber.user.email, "status": "subscribed",
-                     "merge_fields": {"FNAME": subscriber.user.first_name,
-                                      "LNAME": subscriber.user.last_name}}
-        session_response = session.post(
-            url.format(list_id=list_id), json=json_data, auth=requests.auth.HTTPBasicAuth(
-                'hs-celery', settings.MAILCHIMP_PASSWORD))
-        if session_response.status_code != 200:
-            logger.info("Expected 200 status code, got " + str(session_response.status_code))
-            logger.debug(session_response.content)
-        else:
-            add_count += 1
-    if delete_count == active_subscribed.count():
-        logger.info("successfully cleared mailchimp for list id " + list_id)
-    else:
-        logger.info(
-            "cleared " + str(delete_count) + " out of " + str(
-                active_subscribed.count()) + " for list id " + list_id)
-
-    if active_subscribed.count() == add_count:
-        logger.info("successfully synced all subscriptions for list id " + list_id)
-    else:
-        logger.info("added " + str(add_count) + " out of " + str(
-            active_subscribed.count()) + " for list id " + list_id)
-
-
-@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
 def manage_task_nightly():
     # The nightly running task do DOI activation check
 
@@ -151,7 +90,7 @@ def manage_task_nightly():
             if response.status_code == status.HTTP_200_OK:
                 # retry of metadata deposition succeeds, change resource flag from failure
                 # to pending
-                res.doi = get_resource_doi(act_doi, 'pending')
+                res.doi = act_doi
                 res.save()
                 # create bag and compute checksum for published resource to meet DataONE requirement
                 create_bag_by_irods(res.short_id)
@@ -336,13 +275,16 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False):
+def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False, download_path='',
+                    request_username=None):
     """ Create temporary zip file from input_path and store in output_path
     :param resource_id: the short_id of a resource
     :param input_path: full irods path of input starting with federation path
     :param output_path: full irods path of output starting with federation path
     :param aggregation_name: The name of the aggregation to zip
     :param sf_zip: signals a single file to zip
+    :param download_path: download path to return as task payload
+    :param request_username: the username of the requesting user
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
@@ -354,53 +296,68 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
     if res.resource_type == "CompositeResource":
         if '/data/contents/' in input_path:
             short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
-            res.create_aggregation_xml_documents(path=short_path)
+            res.create_aggregation_meta_files(path=short_path)
         else:  # all metadata included, e.g., /data/*
-            res.create_aggregation_xml_documents()
+            res.create_aggregation_meta_files()
 
-    try:
-        if aggregation or sf_zip:
-            # input path points to single file aggregation
-            # ensure that foo.zip contains aggregation metadata
-            # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
-            temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
-            head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
-            out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
-            istorage.copyFiles(input_path, out_with_folder)
-            if aggregation:
+    if aggregation or sf_zip:
+        # input path points to single file aggregation
+        # ensure that foo.zip contains aggregation metadata
+        # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
+        temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
+        head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
+        out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
+        istorage.copyFiles(input_path, out_with_folder)
+        if not aggregation:
+            if '/data/contents/' in input_path:
+                short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
+            else:
+                short_path = input_path
+            try:
+                aggregation = res.get_aggregation_by_name(short_path)
+            except ObjectDoesNotExist:
+                pass
+
+        if aggregation:
+            try:
+                istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
+            except SessionException:
+                logger.error("cannot copy {}".format(aggregation.map_file_path))
+            try:
+                istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
+            except SessionException:
+                logger.error("cannot copy {}".format(aggregation.metadata_file_path))
+            if aggregation.is_model_program or aggregation.is_model_instance:
                 try:
-                    istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
+                    istorage.copyFiles(aggregation.schema_file_path, temp_folder_name)
                 except SessionException:
-                    logger.error("cannot copy {}".format(aggregation.map_file_path))
-                try:
-                    istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
-                except SessionException:
-                    logger.error("cannot copy {}".format(aggregation.metadata_file_path))
-                for file in aggregation.files.all():
+                    logger.error("cannot copy {}".format(aggregation.schema_file_path))
+                if aggregation.is_model_instance:
                     try:
-                        istorage.copyFiles(file.storage_path, temp_folder_name)
+                        istorage.copyFiles(aggregation.schema_values_file_path, temp_folder_name)
                     except SessionException:
-                        logger.error("cannot copy {}".format(file.storage_path))
-            istorage.zipup(temp_folder_name, output_path)
-            istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
-        else:  # regular folder to zip
-            istorage.zipup(input_path, output_path)
-    except SessionException as ex:
-        logger.error(ex.stderr)
-        return False
-    return True
+                        logger.error("cannot copy {}".format(aggregation.schema_values_file_path))
+            for file in aggregation.files.all():
+                try:
+                    istorage.copyFiles(file.storage_path, temp_folder_name)
+                except SessionException:
+                    logger.error("cannot copy {}".format(file.storage_path))
+        istorage.zipup(temp_folder_name, output_path)
+        istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
+    else:  # regular folder to zip
+        istorage.zipup(input_path, output_path)
+    return download_path
 
 
 @shared_task
-def create_bag_by_irods(resource_id):
+def create_bag_by_irods(resource_id, create_zip=True):
     """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
-
     This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
     :param
     resource_id: the resource uuid that is used to look for the resource to create the bag for.
-
-    :return: True if bag creation operation succeeds or
+    :param create_zip: defaults to True, set to false to create bagit files without zipping
+    :return: bag_url if bag creation operation succeeds or
              raise an exception if resource does not exist or any other issues that prevent bags from being created.
     """
     res = utils.get_resource_by_shortkey(resource_id)
@@ -409,72 +366,231 @@ def create_bag_by_irods(resource_id):
 
     bag_path = res.bag_path
 
-    metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
+    metadata_dirty = res.getAVU('metadata_dirty')
+    metadata_dirty = metadata_dirty is None or metadata_dirty
     # if metadata has been changed, then regenerate metadata xml files
-    if metadata_dirty is None or metadata_dirty.lower() == "true":
-        create_bag_files(res)
+    if metadata_dirty:
+        create_bag_metadata_files(res)
 
-    irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
-    # check to see if bagit readme.txt file exists or not
-    bagit_readme_file = res.get_irods_path('readme.txt')
-    is_bagit_readme_exist = istorage.exists(bagit_readme_file)
-    if irods_bagit_input_path.startswith(resource_id):
-        # resource is in data zone, need to append the full path for iRODS bagit rule execution
-        irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-        irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.IRODS_DEFAULT_RESOURCE)
+    bag_modified = res.getAVU("bag_modified")
+    bag_modified = bag_modified is None or bag_modified
+    if metadata_dirty or bag_modified:
+        create_bagit_files_by_irods(res, istorage)
+        res.setAVU("bag_modified", False)
+
+    if create_zip:
+        irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
+
+        # only proceed when the resource is not deleted potentially by another request
+        # when being downloaded
+        is_exist = istorage.exists(irods_bagit_input_path)
+        if is_exist:
+            try:
+                if istorage.exists(bag_path):
+                    istorage.delete(bag_path)
+                istorage.zipup(irods_bagit_input_path, bag_path)
+                if res.raccess.published:
+                    # compute checksum to meet DataONE distribution requirement
+                    chksum = istorage.checksum(bag_path)
+                    res.bag_checksum = chksum
+                return res.bag_url
+            except SessionException as ex:
+                raise SessionException(-1, '', ex.stderr)
+        else:
+            raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
+
+
+@shared_task
+def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
+    try:
+        new_res = None
+        if not new_res_id:
+            new_res = create_empty_resource(ori_res_id, request_username, action='copy')
+            new_res_id = new_res.short_id
+        utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id)
+        ori_res = utils.get_resource_by_shortkey(ori_res_id)
+        if not new_res:
+            new_res = utils.get_resource_by_shortkey(new_res_id)
+        utils.copy_and_create_metadata(ori_res, new_res)
+
+        if new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
+            # the resource to be copied is a versioned resource, need to delete this isVersionOf
+            # relation element to maintain the single versioning obsolescence chain
+            new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
+
+        # create the relation element for the new_res
+        today = date.today().strftime("%m/%d/%Y")
+        derived_from = "{}, accessed on: {}".format(ori_res.get_citation(), today)
+        # since we are allowing user to add relation of type source, need to check we don't already have it
+        if not new_res.metadata.relations.all().filter(type=RelationTypes.source, value=derived_from).exists():
+            new_res.metadata.create_element('relation', type=RelationTypes.source, value=derived_from)
+
+        if ori_res.resource_type.lower() == "collectionresource":
+            # clone contained_res list of original collection and add to new collection
+            # note that new collection will not contain "deleted resources"
+            new_res.resources = ori_res.resources.all()
+
+        # create bag for the new resource
+        create_bag(new_res)
+        return new_res.get_absolute_url()
+    except Exception as ex:
+        if new_res:
+            new_res.delete()
+        raise utils.ResourceCopyException(str(ex))
+
+
+@shared_task
+def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
+    """
+    Task for creating a new version of a resource
+    Args:
+        ori_res_id: the original resource id that is to be versioned.
+        new_res_id: the new versioned resource id from the original resource. If None, a
+        new resource will be created.
+        username: the requesting user's username
+    Returns:
+        the new versioned resource url as the payload
+    """
+    try:
+        new_res = None
+        if not new_res_id:
+            new_res = create_empty_resource(ori_res_id, username)
+            new_res_id = new_res.short_id
+        utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id)
+
+        # copy metadata from source resource to target new-versioned resource except three elements
+        ori_res = utils.get_resource_by_shortkey(ori_res_id)
+        if not new_res:
+            new_res = utils.get_resource_by_shortkey(new_res_id)
+        utils.copy_and_create_metadata(ori_res, new_res)
+
+        # add or update Relation element to link source and target resources
+        ori_res.metadata.create_element('relation', type=RelationTypes.isReplacedBy, value=new_res.get_citation())
+
+        if new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
+            # the original resource is already a versioned resource, and its isVersionOf relation
+            # element is copied over to this new version resource, needs to delete this element so
+            # it can be created to link to its original resource correctly
+            new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
+
+        new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf, value=ori_res.get_citation())
+
+        if ori_res.resource_type.lower() == "collectionresource":
+            # clone contained_res list of original collection and add to new collection
+            # note that new version collection will not contain "deleted resources"
+            new_res.resources = ori_res.resources.all()
+
+        # create bag for the new resource
+        create_bag(new_res)
+
+        # since an isReplaceBy relation element is added to original resource, needs to call
+        # resource_modified() for original resource
+        utils.resource_modified(ori_res, by_user=username, overwrite_bag=False)
+        # if everything goes well up to this point, set original resource to be immutable so that
+        # obsoleted resources cannot be modified from REST API
+        ori_res.raccess.immutable = True
+        ori_res.raccess.save()
+        ori_res.save()
+        return new_res.get_absolute_url()
+    except Exception as ex:
+        if new_res:
+            new_res.delete()
+        raise utils.ResourceVersioningException(str(ex))
+    finally:
+        # release the lock regardless
+        ori_res.locked_time = None
+        ori_res.save()
+
+
+@shared_task
+def replicate_resource_bag_to_user_zone_task(res_id, request_username):
+    """
+    Task for replicating resource bag which will be created on demand if not existent already to iRODS user zone
+    Args:
+        res_id: the resource id with its bag to be replicated to iRODS user zone
+        request_username: the requesting user's username to whose user zone space the bag is copied to
+
+    Returns:
+    None, but exceptions will be raised if there is an issue with iRODS operation
+    """
+
+    res = utils.get_resource_by_shortkey(res_id)
+    res_coll = res.root_path
+    istorage = res.get_irods_storage()
+    if istorage.exists(res_coll):
+        bag_modified = res.getAVU('bag_modified')
+        if bag_modified is None or not bag_modified:
+            if not istorage.exists(res.bag_path):
+                create_bag_by_irods(res_id)
+        else:
+            create_bag_by_irods(res_id)
+
+        # do replication of the resource bag to irods user zone
+        if not res.resource_federation_path:
+            istorage.set_fed_zone_session()
+        src_file = res.bag_path
+        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
+            userzone=settings.HS_USER_IRODS_ZONE, username=request_username, resid=res_id)
+        fsize = istorage.size(src_file)
+        utils.validate_user_quota(request_username, fsize)
+        istorage.copyFiles(src_file, tgt_file)
+        return None
     else:
-        # this will need to be changed with the default resource in whatever federated zone the
-        # resource is stored in when we have such use cases to support
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
+        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
-    bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
 
-    bagit_files = [
-        res.get_irods_path('bagit.txt'),
-        res.get_irods_path('manifest-md5.txt'),
-        res.get_irods_path('tagmanifest-md5.txt'),
-        bag_path
-    ]
+@shared_task
+def delete_resource_task(resource_id, request_username=None):
+    """
+    Deletes a resource managed by HydroShare. The caller must be an owner of the resource or an
+    administrator to perform this function.
+    :param resource_id: The unique HydroShare identifier of the resource to be deleted
+    :return: resource_id if delete operation succeeds
+             raise an exception if there were errors.
+    """
+    res = utils.get_resource_by_shortkey(resource_id)
+    res_title = res.metadata.title
+    res_type = res.resource_type
+    resource_related_collections = [col for col in res.collections.all()]
+    owners_list = [owner for owner in res.raccess.owners.all()]
 
-    # only proceed when the resource is not deleted potentially by another request
-    # when being downloaded
-    is_exist = istorage.exists(irods_bagit_input_path)
-    if is_exist:
-        # if bagit readme.txt does not exist, add it.
-        if not is_bagit_readme_exist:
-            from_file_name = getattr(settings, 'HS_BAGIT_README_FILE_WITH_PATH',
-                                     'docs/bagit/readme.txt')
-            istorage.saveFile(from_file_name, bagit_readme_file, True)
+    # when the most recent version of a resource in an obsolescence chain is deleted, the previous
+    # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
+    # relation element
+    if res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
+        is_version_of_res_link = \
+            res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().value
+        idx = is_version_of_res_link.rindex('/')
+        if idx == -1:
+            obsolete_res_id = is_version_of_res_link
+        else:
+            obsolete_res_id = is_version_of_res_link[idx + 1:]
+        obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
+        if obsolete_res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).exists():
+            eid = obsolete_res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first().id
+            obsolete_res.metadata.delete_element('relation', eid)
+            # also make this obsoleted resource editable if not published now that it becomes the latest version
+            if not obsolete_res.raccess.published:
+                obsolete_res.raccess.immutable = False
+                obsolete_res.raccess.save()
 
-        # call iRODS bagit rule here
-        bagit_rule_file = getattr(settings, 'IRODS_BAGIT_RULE',
-                                  'hydroshare/irods/ruleGenerateBagIt_HS.r')
+    res.delete()
+    if request_username:
+        # if the deleted resource is part of any collection resource, then for each of those collection
+        # create a CollectionDeletedResource object which can then be used to list collection deleted
+        # resources on collection resource landing page
+        for collection_res in resource_related_collections:
+            o = CollectionDeletedResource.objects.create(
+                resource_title=res_title,
+                deleted_by=User.objects.get(username=request_username),
+                resource_id=resource_id,
+                resource_type=res_type,
+                collection=collection_res
+            )
+            o.resource_owners.add(*owners_list)
 
-        try:
-            # call iRODS run and ibun command to create and zip the bag, ignore SessionException
-            # for now as a workaround which could be raised from potential race conditions when
-            # multiple ibun commands try to create the same zip file or the very same resource
-            # gets deleted by another request when being downloaded
-            istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
-            istorage.zipup(irods_bagit_input_path, bag_path)
-            if res.raccess.published:
-                # compute checksum to meet DataONE distribution requirement
-                chksum = istorage.checksum(bag_path)
-                res.bag_checksum = chksum
-            istorage.setAVU(irods_bagit_input_path, 'bag_modified', "false")
-            return True
-        except SessionException as ex:
-            # if an exception occurs, delete incomplete files potentially being generated by
-            # iRODS bagit rule and zipping operations
-            for fname in bagit_files:
-                if istorage.exists(fname):
-                    istorage.delete(fname)
-            raise SessionException(-1, '', ex.stderr)
-    else:
-        raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
+    # return the page URL to redirect to after resource deletion task is complete
+    return '/my-resources/'
 
 
 @shared_task
@@ -540,6 +656,14 @@ def resource_debug(resource_id):
     return check_irods_files(resource, log_errors=False, return_errors=True)
 
 
+@shared_task
+def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False, auto_aggregate=False,
+               ingest_metadata=False):
+    from hs_core.views.utils import unzip_file
+    user = User.objects.get(pk=user_pk)
+    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata)
+
+
 @periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
 def daily_odm2_sync():
     """
@@ -555,3 +679,35 @@ def monthly_group_membership_requests_cleanup():
     """
     two_months_ago = datetime.today() - timedelta(days=60)
     GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
+
+
+@task_postrun.connect
+def update_task_notification(sender=None, task_id=None, task=None, state=None, retval=None, **kwargs):
+    """
+    Updates the state of TaskNotification model when a celery task completes
+    :param sender:
+    :param task_id: task id
+    :param task: task object
+    :param state: task return state
+    :param retval: task return value
+    :param kwargs:
+    :return:
+    """
+    if task.name in settings.TASK_NAME_LIST:
+        if state == states.SUCCESS:
+            get_or_create_task_notification(task_id, status="completed", payload=retval)
+        elif state in states.EXCEPTION_STATES:
+            get_or_create_task_notification(task_id, status="failed", payload=retval)
+        elif state == states.REVOKED:
+            get_or_create_task_notification(task_id, status="aborted", payload=retval)
+        else:
+            logger.warning("Unhandled task state of {} for {}".format(state, task_id))
+
+
+@periodic_task(ignore_result=True, run_every=crontab(day_of_week=1))
+def task_notification_cleanup():
+    """
+    Delete expired task notifications each week
+    """
+    week_ago = datetime.today() - timedelta(days=7)
+    TaskNotification.objects.filter(created__lte=week_ago).delete()

@@ -10,6 +10,7 @@
 {# override content_block in generice.html#}
 {% block content_block %}
     <input type="hidden" id="edit-mode" value="{{ edit_mode }}" >
+    <input type="hidden" id="published" value="{{ cm.raccess.published }}" >
     <input type="hidden" id="discoverable" value="{{ discoverable }}">
     <input type="hidden" id="collection-res-id" value="{{ collection_res_id }}">
     <div class="col-sm-12 content-block">
@@ -19,7 +20,7 @@
                 <h3>Collection Contents </h3>
             </div>
             <div id="collection-table-div">
-                {% if edit_mode %}
+                {% if edit_mode and not cm.raccess.published %}
                     <form id="collector-new" name="collector-new"
                           action="/hsapi/_internal/{{ collection_res_id }}/update-collection/" method="POST">
                 {% endif %}
@@ -105,7 +106,7 @@
                     </tbody>
                 </table>
 
-                {% if edit_mode %}
+                {% if edit_mode and not cm.raccess.published %}
                     </form>
                     <div>
                         <a id="btn-add-collection-resources" type="button" class="btn btn-success">
@@ -136,8 +137,7 @@
                         </a>
                     </div>
                     <div>
-                        <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit
-                            archive format</a>
+                        <a target="_blank" href="https://help.hydroshare.org/creating-and-managing-resources/view-and-download-a-resource">Learn more about the BagIt download</a>
                     </div>
                 </div>
             {% endblock %}

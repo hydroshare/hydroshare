@@ -43,8 +43,7 @@ function bindResourceTemporalDeleteOption() {
 function setResourceSpatialCoverageDeleteOption() {
     // show/hide spatial coverage delete option at the resource level
     var $deleteSpatialCoverageResource = $("#id-delete-spatial-resource");
-    var $id_type_div = $("#div_id_type");
-    var $box_radio = $id_type_div.find("#id_type_1");
+    var $box_radio = $("#id_type_1");
     if($box_radio.prop("checked")) {
         if ($("#id_northlimit").val().length > 0) {
             $deleteSpatialCoverageResource.show();
@@ -155,7 +154,7 @@ function resource_coverage_update_ajax_submit(resourceID, coverageType) {
     });
 }
 
-function fileset_coverage_update_ajax_submit(logicalFileID, coverageType) {
+function nested_aggregation_coverage_update_ajax_submit(logicalFileID, coverageType) {
     var $alert_success = '<div class="alert alert-success" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
@@ -175,13 +174,13 @@ function fileset_coverage_update_ajax_submit(logicalFileID, coverageType) {
                 var logicalFileID = json_response.logical_file_id;
             if(coverageType === 'spatial'){
                 var spatialCoverage = json_response.spatial_coverage;
-                updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileID, coverageElementID);
+                updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileType, logicalFileID, coverageElementID);
                 var bindCoordinatesPicker = false;
                 setFileTypeSpatialCoverageFormFields(logicalFileType, bindCoordinatesPicker);
             }
             else {
                 var temporalCoverage = json_response.temporal_coverage;
-                updateAggregationTemporalCoverage(temporalCoverage, logicalFileID, coverageElementID);
+                updateAggregationTemporalCoverage(temporalCoverage, logicalFileType, logicalFileID, coverageElementID);
                 setFileTypeTemporalCoverageDeleteOption(logicalFileType);
             }
             $("#fb-inner-controls").after($alert_success);

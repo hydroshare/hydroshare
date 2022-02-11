@@ -7,11 +7,11 @@ from functools import partial, wraps
 import netCDF4
 import numpy as np
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context
-from dominate.tags import div, legend, form, button, p, textarea, _input
-from lxml import etree
+from dominate.tags import div, legend, form, button, p, em, a, textarea, _input
 
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
@@ -21,8 +21,9 @@ from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCo
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
-from hs_core.models import Creator, Contributor, CoreMetaData
+from hs_core.models import Creator, Contributor
 from hs_core.signals import post_add_netcdf_aggregation
+from hs_core.enums import RelationTypes
 
 
 class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
@@ -48,10 +49,30 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         # with this metadata object
         return self.ori_coverage.all().first()
 
-    def get_html(self):
+    def _get_opendap_html(self):
+        opendap_div = div(cls="content-block")
+        res_id = self.logical_file.resource.short_id
+        file_name = self.logical_file.aggregation_name
+        opendap_url = f'{settings.THREDDS_SERVER_URL}dodsC/hydroshare/resources/{res_id}/data/contents/{file_name}.html'
+        with opendap_div:
+            legend('OPeNDAP using DAP2')
+            em('The netCDF data in this multidimensional content aggregation may be accessed at the link below '
+               'using the OPeNDAP DAP2 protocol enabled on the HydroShare deployment of Unidata’s THREDDS data server. '
+               'This enables direct and programmable access to this data through ')
+            a(" OPeNDAP client software",
+              href="https://www.opendap.org/support/OPeNDAP-clients",
+              target="_blank")
+            with div(style="margin-top:10px;"):
+                a(opendap_url, href=opendap_url, target='_blank')
+
+        return opendap_div.render()
+
+    def get_html(self, **kwargs):
         """overrides the base class function"""
 
         html_string = super(NetCDFFileMetaData, self).get_html()
+        if self.logical_file.resource.raccess.public:
+            html_string += self._get_opendap_html()
         if self.spatial_coverage:
             html_string += self.spatial_coverage.get_html()
         if self.originalCoverage:
@@ -259,20 +280,6 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(NetCDFFileMetaData, self)._get_xml_containers()
-        if self.originalCoverage:
-            self.originalCoverage.add_to_xml_container(container_to_add_to)
-
-        for variable in self.variables.all():
-            variable.add_to_xml_container(container_to_add_to)
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
-
 
 class NetCDFLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(NetCDFFileMetaData, related_name="logical_file")
@@ -297,6 +304,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     def get_aggregation_display_name():
         return 'Multidimensional Content: A multidimensional dataset represented by a NetCDF ' \
                'file (.nc) and text file giving its NetCDF header content'
+
+    @staticmethod
+    def get_aggregation_term_label():
+        return "Multidimensional Aggregation"
 
     @staticmethod
     def get_aggregation_type_name():
@@ -406,7 +417,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             nc_dataset = nc_utils.get_nc_dataset(temp_file)
             if isinstance(nc_dataset, netCDF4.Dataset):
                 msg = "NetCDF aggregation. Error when creating aggregation. Error:{}"
-                file_type_success = False
                 # extract the metadata from netcdf file
                 res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
                 # populate resource_metadata and file_type_metadata lists with extracted metadata
@@ -414,6 +424,13 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                      res_type_specific_meta, file_type_metadata, resource)
 
                 # create the ncdump text file
+                dump_file_name = nc_file_name + "_header_info.txt"
+                for file in resource.files.filter(file_folder=folder_path):
+                    # look for and delete an existing header_file before creating it below.
+                    fname = os.path.basename(file.resource_file.name)
+                    if fname in dump_file_name:
+                        file.delete()
+                        break
                 dump_file = create_header_info_txt_file(temp_file, nc_file_name)
                 file_folder = res_file.file_folder
                 upload_folder = file_folder
@@ -461,20 +478,35 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                         resource.metadata.create_element('subject', value=kw)
                             else:
                                 logical_file.metadata.create_element(k, **v)
-                        log.info("NetCDF aggregation - metadata was saved in aggregation")
 
-                        file_type_success = True
+                        log.info("NetCDF aggregation - metadata was saved in aggregation")
                         ft_ctx.logical_file = logical_file
                     except Exception as ex:
+                        logical_file.remove_aggregation()
                         msg = msg.format(str(ex))
                         log.exception(msg)
+                        raise ValidationError(msg)
 
-                if not file_type_success:
-                    raise ValidationError(msg)
+                return logical_file
             else:
                 err_msg = "Not a valid NetCDF file. NetCDF aggregation validation failed."
                 log.error(err_msg)
                 raise ValidationError(err_msg)
+
+    def remove_aggregation(self):
+        """Deletes the aggregation object (logical file) *self* and the associated metadata
+        object. If the aggregation contains a system generated txt file that resource file also will be
+        deleted."""
+
+        # need to delete the system generated ncdump txt file
+        txt_file = None
+        for res_file in self.files.all():
+            if res_file.file_name.lower().endswith(".txt"):
+                txt_file = res_file
+                break
+        super(NetCDFLogicalFile, self).remove_aggregation()
+        if txt_file is not None:
+            txt_file.delete()
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
@@ -547,14 +579,14 @@ def add_metadata_to_list(res_meta_list, extracted_core_meta, extracted_specific_
         add_contributors_metadata(res_meta_list, extracted_core_meta,
                                   Contributor.objects.none())
 
-    # add source (applies only to NetCDF resource type)
+    # add relation of type 'source' (applies only to NetCDF resource type)
     if extracted_core_meta.get('source') and file_meta_list is None:
-        source = {'source': {'derived_from': extracted_core_meta['source']}}
-        res_meta_list.append(source)
+        relation = {'relation': {'type': 'source', 'value': extracted_core_meta['source']}}
+        res_meta_list.append(relation)
 
-    # add relation (applies only to NetCDF resource type)
+    # add relation of type 'references' (applies only to NetCDF resource type)
     if extracted_core_meta.get('references') and file_meta_list is None:
-        relation = {'relation': {'type': 'cites',
+        relation = {'relation': {'type': 'references',
                                  'value': extracted_core_meta['references']}}
         res_meta_list.append(relation)
 
@@ -942,7 +974,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             if hasattr(nc_dataset, 'references'):
                 delattr(nc_dataset, 'references')
 
-            reference_list = instance.metadata.relations.all().filter(type='cites')
+            reference_list = instance.metadata.relations.all().filter(type=RelationTypes.references)
             if reference_list:
                 res_meta_ref = []
                 for reference in reference_list:
@@ -953,11 +985,11 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             if hasattr(nc_dataset, 'source'):
                 delattr(nc_dataset, 'source')
 
-            source_list = instance.metadata.sources.all()
+            source_list = instance.metadata.relations.filter(type=RelationTypes.source).all()
             if source_list:
                 res_meta_source = []
                 for source in source_list:
-                    res_meta_source.append(source.derived_from)
+                    res_meta_source.append(source.value)
                 nc_dataset.source = ' \n'.join(res_meta_source)
 
         # close nc dataset

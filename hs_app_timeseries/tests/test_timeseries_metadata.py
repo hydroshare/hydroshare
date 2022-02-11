@@ -13,7 +13,7 @@ from django.contrib.auth.models import Group
 from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
-    Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
+    Publisher, Identifier, Type, Subject, Description, Date, Format, Relation
 from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 from hs_app_timeseries.models import TimeSeriesResource, Site, Variable, Method, ProcessingLevel, \
     TimeSeriesResult, CVVariableType, CVVariableName, CVSpeciation, CVElevationDatum, CVSiteType, \
@@ -330,8 +330,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Type metadata objects
         self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Relation metadata objects
         self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Publisher metadata objects
@@ -404,8 +402,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Type metadata objects
         self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Relation metadata objects
         self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Publisher metadata objects
@@ -1241,29 +1237,24 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         # at this point the resource should have one content file
         self.assertEqual(self.resTimeSeries.files.all().count(), 1)
         self.assertEqual(self.resTimeSeries.has_sqlite_file, True)
-        res_file = self.resTimeSeries.files.all().first()
-
-        _, file_name, file_ext = utils.get_resource_file_name_and_extension(res_file)
-        self.assertEqual(file_name, self.odm2_sqlite_file_name)
 
         # now uploading of a csv file should delete the above uploaded sqlite file and
-        # add the blank sqlite file (ODM2.sqlite)
+        # add the blank sqlite file
         self._upload_valid_csv_file()
         # at this point the resource should 2 content files
         self.assertEqual(self.resTimeSeries.files.all().count(), 2)
         self.assertEqual(self.resTimeSeries.has_csv_file, True)
         self.assertEqual(self.resTimeSeries.has_sqlite_file, True)
 
-        # get the sqlite file and check its name is ODM2.sqlite
+        # get the sqlite file
         self.assertEqual(len(utils.get_resource_files_by_extension(self.resTimeSeries,
                                                                    '.sqlite')), 1)
         sqlite_file = utils.get_resource_files_by_extension(self.resTimeSeries, '.sqlite')[0]
         _, sqlite_file_name, _ = utils.get_resource_file_name_and_extension(sqlite_file)
-        self.assertEqual(sqlite_file_name, 'ODM2.sqlite')
 
         # now uploading a sqlite file should delete the above uploaded csv file
         # first delete the existing sqlite file before we can upload a sqlite file
-        hydroshare.delete_resource_file(self.resTimeSeries.short_id, 'ODM2.sqlite', self.user)
+        hydroshare.delete_resource_file(self.resTimeSeries.short_id, sqlite_file_name, self.user)
 
         self._upload_valid_sqlite_file()
         # at this point the resource should have one content file

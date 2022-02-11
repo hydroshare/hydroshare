@@ -8,6 +8,7 @@ var pathLogIndex = 0;
 var isDragging = false;
 var isDownloadZipped = false;
 var currentAggregations = [];
+var removeCitationIntent = false;
 
 var file_metadata_alert =
     '<div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">' +
@@ -44,7 +45,8 @@ function clearSourcePaths() {
 }
 
 function getFolderTemplateInstance(folder) {
-    if (folder['folder_aggregation_type'] === "FileSetLogicalFile") {
+    if (folder['folder_aggregation_type'] === "FileSetLogicalFile" || folder['folder_aggregation_type'] === "ModelProgramLogicalFile"
+        || folder['folder_aggregation_type'] === "ModelInstanceLogicalFile") {
         var folderIcons = getFolderIcons();
         let iconTemplate = folderIcons.DEFAULT;
 
@@ -60,6 +62,7 @@ function getFolderTemplateInstance(folder) {
             "<span class='fb-logical-file-type' data-logical-file-type='" +
             folder['folder_aggregation_type'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] + "'>" +
             folder['folder_aggregation_name'] + "</span>" +
+            "<span class='fb-preview-data-url'>" + folder['preview_data_url'] + "</span>" +
             "<span class='fb-file-size'></span>" +
             "</li>"
     }
@@ -72,6 +75,7 @@ function getFolderTemplateInstance(folder) {
         "<span class='fb-file-type' data-folder-short-path='" + folder['folder_short_path'] + "'>File Folder</span>" +
         "<span class='fb-logical-file-type' data-logical-file-type-to-set='" +
         folder['folder_aggregation_type_to_set'] + "'></span>" +
+        "<span class='fb-preview-data-url'>" + folder['preview_data_url'] + "</span>" +
         "<span class='fb-file-size'></span>" +
         "</li>";
 }
@@ -92,6 +96,7 @@ function getVirtualFolderTemplateInstance(agg) {
       "<span class='fb-file-type'>File Folder</span>" +
       "<span class='fb-logical-file-type' data-logical-file-type='" + agg.logical_type +
       "' data-logical-file-id='" + agg.logical_file_id + "'>" + agg.logical_type + "</span>" +
+      "<span class='fb-preview-data-url'>" + agg.preview_data_url + "</span>" +
       "<span class='fb-file-size'></span>" +
       "</li>";
 }
@@ -99,6 +104,12 @@ function getVirtualFolderTemplateInstance(agg) {
 // Associates file icons with file extensions. Could be improved with a dictionary.
 function getFileTemplateInstance(file) {
     var fileTypeExt = file.name.substr(file.name.lastIndexOf(".") + 1, file.name.length);
+    if (file['logical_type'] === "ModelProgramLogicalFile" && !file.has_model_program_aggr_folder) {
+        fileTypeExt = "MP";
+    }
+    if (file['logical_type'] === "ModelInstanceLogicalFile" && !file.has_model_instance_aggr_folder) {
+        fileTypeExt = "MI";
+    }
     var iconTemplate;
     var fileIcons = getFileIcons();
 
@@ -123,7 +134,9 @@ function getFileTemplateInstance(file) {
     return "<li data-pk='" + file.pk + "' data-url='" + file.url + "' data-ref-url='" +
         file.reference_url + "' data-logical-file-id='" + file.logical_file_id +
         "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
-        file.is_single_file_aggregation + "'>" +
+        file.is_single_file_aggregation + "' data-has-model-program-aggr-folder='" +
+        file.has_model_program_aggr_folder + "' data-has-model-instance-aggr-folder='" +
+        file.has_model_instance_aggr_folder +"'>" +
         iconTemplate +
         "<span class='fb-file-name'>" + file.name + "</span>" +
         "<span class='fb-file-type'>" + file.type + " File</span>" +
@@ -179,6 +192,7 @@ function updateSelectionMenuContext() {
         "getRefUrl",
         "open",
         "paste",
+        "preview",
         "removeAggregation",
         "rename",
         "setFileSetFileType",
@@ -188,11 +202,13 @@ function updateSelectionMenuContext() {
         "setNetCDFFileType",
         "setRefTimeseriesFileType",
         "setTimeseriesFileType",
+        "setModelProgramFileType",
+        "setModelInstanceFileType",
         "subMenuSetContentType",
         "unzip",
         "updateRefUrl",
         "uploadFiles",
-        "zip",
+        "zip"
     ];
     var uiActionStates = {};
 
@@ -249,17 +265,8 @@ function updateSelectionMenuContext() {
         uiActionStates.setGeoFeatureFileType.disabled = true;
         uiActionStates.setRefTimeseriesFileType.disabled = true;
         uiActionStates.setTimeseriesFileType.disabled = true;
-
-        for (let i = 0; i < selected.length; i++) {
-            const size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
-            if (size > maxSize) {
-                // Some file is too large for direct download
-                // Here we just disable, but keep the menu item visible
-                uiActionStates.download.disabled = true;
-                $("#fb-download-help").toggleClass("hidden", true);
-                break;
-            }
-        }
+        uiActionStates.setModelProgramFileType.disabled = true;
+        uiActionStates.setModelInstanceFileType.disabled = true;
 
         const foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
         if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
@@ -270,17 +277,11 @@ function updateSelectionMenuContext() {
             uiActionStates.removeAggregation.disabled = true;
         }
         $("#fileTypeMetaData").html(file_metadata_alert);
+        // hide preview option on multiple file selection
+        uiActionStates.preview.fileMenu.hidden = true;
     }
-    else if (selected.length == 1) {
+    else if (selected.length === 1) {
         // Exactly one item selected
-        var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
-        if (size > maxSize) {
-            uiActionStates.download.disabled = false;
-            $("#fb-download-help").toggleClass("hidden", false);
-        }
-        else {
-            $("#fb-download-help").toggleClass("hidden", true);
-        }
 
         var fileName = $(selected).find(".fb-file-name").text();
 
@@ -300,10 +301,12 @@ function updateSelectionMenuContext() {
             uiActionStates.setGenericFileType.fileMenu.hidden = true;
 
             // Disable creating aggregations from folders
-            uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
-            uiActionStates.subMenuSetContentType.disabled = true;
 
             uiActionStates.setRefTimeseriesFileType.disabled = true;
+            uiActionStates.setTimeseriesFileType.disabled = true;
+            uiActionStates.setGeoRasterFileType.disabled = true;
+            uiActionStates.setNetCDFFileType.disabled = true;
+            uiActionStates.setGeoFeatureFileType.disabled = true;
             if (!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
                 !!selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")) {
                 uiActionStates.removeAggregation.disabled = true;
@@ -317,18 +320,42 @@ function updateSelectionMenuContext() {
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
             }
 
+            let previewDataURL = selected.children('span.fb-preview-data-url').text();
+            if (previewDataURL === 'null' || previewDataURL === 'undefined') {
+                uiActionStates.preview.fileMenu.hidden = true;
+            }
+
             let logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
             if (!logicalFileTypeToSet || !logicalFileTypeToSet.length) {
                 uiActionStates.setFileSetFileType.fileMenu.hidden = true;
+                uiActionStates.subMenuSetContentType.disabled = true;
+                uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+            }
+            else {
+                if (logicalFileTypeToSet !== "ModelProgramLogicalFile" &&
+                    logicalFileTypeToSet !== "ModelProgramOrInstanceLogicalFile") {
+                    uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
+                }
+                if (logicalFileTypeToSet !=="ModelInstanceLogicalFile" &&
+                    logicalFileTypeToSet !=="ModelProgramOrInstanceLogicalFile") {
+                    uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
+                }
+                if (logicalFileTypeToSet === "ModelProgramLogicalFile") {
+                    uiActionStates.setFileSetFileType.fileMenu.hidden = true;
+                }
             }
         }
         //  ------------- The item selected is a file -------------
         else {
             const logicalFileType = $(selected).find(".fb-logical-file-type").attr("data-logical-file-type").trim();
-
+            const fileHasModelProgramAggrFolder = $(selected).attr("data-has-model-program-aggr-folder").trim();
+            const fileHasModelInstanceAggrFolder = $(selected).attr("data-has-model-instance-aggr-folder").trim();
             // Disable add metadata to folder
             uiActionStates.setFileSetFileType.disabled = true;
             uiActionStates.setFileSetFileType.fileMenu.hidden = true;
+
+            uiActionStates.preview.disabled = true;
+            uiActionStates.preview.fileMenu.hidden = true;
 
             if (!fileName.toUpperCase().endsWith(".ZIP")) {
                 uiActionStates.unzip.disabled = true;
@@ -337,35 +364,61 @@ function updateSelectionMenuContext() {
 
             if (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile") {
                 // The file is already part of an aggregation
-                uiActionStates.setGenericFileType.disabled = true;
-                uiActionStates.setGenericFileType.fileMenu.hidden = true;
-
-                uiActionStates.subMenuSetContentType.disabled = true;
-                uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                if (logicalFileType === "GenericLogicalFile") {
+                    uiActionStates.setGenericFileType.disabled = true;
+                    uiActionStates.setGenericFileType.fileMenu.hidden = true;
+                }
+                if (logicalFileType !== "ModelInstanceLogicalFile") {
+                    uiActionStates.subMenuSetContentType.disabled = true;
+                    uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                }
+                if ((logicalFileType === "ModelInstanceLogicalFile" && fileHasModelInstanceAggrFolder !== 'true')
+                    || logicalFileType === "ModelProgramLogicalFile") {
+                    // the file is part of a model instance aggregation based on a single file or the file is part of
+                    // a model program aggregation
+                    uiActionStates.setGenericFileType.disabled = true;
+                    uiActionStates.setGenericFileType.fileMenu.hidden = true;
+                    uiActionStates.subMenuSetContentType.disabled = true;
+                    uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                }
+                if (logicalFileType !== "ModelInstanceLogicalFile" && fileHasModelInstanceAggrFolder === 'true'){
+                    // the file is not a model instance aggregation but part of a model instance aggregation
+                    // based on a folder - e.g., a single file aggregation living inside a folder that represents
+                    // a model instance aggregation
+                    uiActionStates.subMenuSetContentType.disabled = true;
+                    uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                    uiActionStates.setGenericFileType.disabled = true;
+                    uiActionStates.setGenericFileType.fileMenu.hidden = true;
+                }
             }
 
             if (!fileName.toUpperCase().endsWith(".TIF") && !fileName.toUpperCase().endsWith(".TIFF") ||
-                logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile") {
+                logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                logicalFileType !== "ModelInstanceLogicalFile") {
                 uiActionStates.setGeoRasterFileType.disabled = true;
             }
 
             if (!fileName.toUpperCase().endsWith(".NC") ||
-                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                    logicalFileType !== "ModelInstanceLogicalFile")) {
                 uiActionStates.setNetCDFFileType.disabled = true;
             }
 
             if ((!fileName.toUpperCase().endsWith(".SHP")) ||
-                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                    logicalFileType !== "ModelInstanceLogicalFile")) {
                 uiActionStates.setGeoFeatureFileType.disabled = true;
             }
 
             if (!fileName.toUpperCase().endsWith(".REFTS.JSON") ||
-                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                    logicalFileType !== "ModelInstanceLogicalFile")) {
                 uiActionStates.setRefTimeseriesFileType.disabled = true;
             }
 
             if ((!fileName.toUpperCase().endsWith(".SQLITE") && !fileName.toUpperCase().endsWith(".CSV")) ||
-                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                    logicalFileType !== "ModelInstanceLogicalFile")) {
                 uiActionStates.setTimeseriesFileType.disabled = true;
             }
 
@@ -380,7 +433,7 @@ function updateSelectionMenuContext() {
                 // disable remove aggregation option if it is URL file
                 uiActionStates.removeAggregation.disabled = true;
 
-                if (mode != "edit") {
+                if (mode !== "edit") {
                     uiActionStates.updateRefUrl.disabled = true;
                     uiActionStates.updateRefUrl.fileMenu.hidden = true;
                 }
@@ -400,11 +453,24 @@ function updateSelectionMenuContext() {
             }
             else {
                 // The selected file is part of a logical file type
-                if (logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile") {
+                if (logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"
+                    && logicalFileType !== "ModelProgramLogicalFile" && logicalFileType !== "ModelInstanceLogicalFile") {
                     // if the selected file is not part of the RefTimeseriesLogical or GenericLogicalFile file (aggregation)
-                    // dont't show the Remove Aggregation option
+                    // ModelInstanceLogicalFile or ModelProgramLogicalFile don't show the Remove Aggregation option
                     uiActionStates.removeAggregation.disabled = true;
                     uiActionStates.removeAggregation.fileMenu.hidden = true;
+                }
+                else {
+                    if ((logicalFileType === "ModelProgramLogicalFile" && fileHasModelProgramAggrFolder === "true") ||
+                        (logicalFileType === "ModelInstanceLogicalFile" && fileHasModelInstanceAggrFolder === "true")) {
+                        // don't show option to remove aggregation for a file that's part of a model program/instance aggregation
+                        // created based on a folder
+                        uiActionStates.removeAggregation.disabled = true;
+                        uiActionStates.removeAggregation.fileMenu.hidden = true;
+                        // hide option to create model aggregation
+                        uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
+                        uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
+                    }
                 }
             }
         }
@@ -425,6 +491,9 @@ function updateSelectionMenuContext() {
         uiActionStates.setGeoRasterFileType.disabled = true;
         uiActionStates.setGeoFeatureFileType.disabled = true;
         uiActionStates.setTimeseriesFileType.disabled = true;
+        uiActionStates.setModelProgramFileType.disabled = true;
+        uiActionStates.setModelInstanceFileType.disabled = true;
+        uiActionStates.preview.disabled = true;
 
         if (resourceType === 'Composite Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
@@ -442,7 +511,6 @@ function updateSelectionMenuContext() {
             })
         }
 
-        $("#fb-download-help").toggleClass("hidden", true);
         $("#fileTypeMetaData").html(file_metadata_alert);
     }
 
@@ -558,8 +626,8 @@ function paste(destPath) {
 }
 
 function bindFileBrowserItemEvents() {
-    var mode = $("#hs-file-browser").attr("data-mode");
 
+    var mode = $("#hs-file-browser").attr("data-mode");
     // Drop
     if (mode === "edit") {
         $(".droppable").droppable({
@@ -626,11 +694,11 @@ function bindFileBrowserItemEvents() {
         }
 
         // Handle selecting multiple elements with Shift + Click
-        if (!e.shiftKey) {
+        if (!e.shiftKey) { // shift key not engaged
             $("#fb-files-container li").removeClass("ui-last-selected");
             $(this).addClass("ui-last-selected");
         }
-        else {
+        else { // shift key is engaged
             var lastSelected = $("#fb-files-container").find(".ui-last-selected").index();
             var range = $(this).index();
 
@@ -646,7 +714,6 @@ function bindFileBrowserItemEvents() {
                 }
             }
         }
-
         updateSelectionMenuContext();
     });
 
@@ -660,7 +727,8 @@ function bindFileBrowserItemEvents() {
                 },
                 stop: function (event, ui) {
                     $("#fb-files-container li.ui-selected").removeClass("fb-drag-cutting");
-                    $('#fb-files-container li').animate({top: 0, left: 0}, 200);    // Custom revert to handle multiple selection
+                    // Custom revert to handle multiple selection
+                    $('#fb-files-container li').animate({top: 0, left: 0}, 200);
                     isDragging = false;
                 },
                 drag: function (event, ui) {
@@ -799,6 +867,17 @@ function showFileTypeMetadata(file_type_time_series, url){
         if (selectedItem.hasClass("fb-file")) {
             $("#btnSideAddMetadata").attr("data-fb-action", "setGenericFileType");
         }
+        else if (selectedItem.hasClass("fb-folder")) {
+            var folderLogicalFileTypeToSet = selectedItem.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
+            if (folderLogicalFileTypeToSet === undefined || folderLogicalFileTypeToSet === "ModelProgramLogicalFile" ||
+                folderLogicalFileTypeToSet.length === 0) {
+                $("#fileTypeMetaData").html(no_metadata_alert);
+                $("#btnSideAddMetadata").addClass("disabled");
+            }
+            else {
+                $("#btnSideAddMetadata").attr("data-fb-action", "setFileSetFileType");
+            }
+        }
         else {
             $("#btnSideAddMetadata").attr("data-fb-action", "setFileSetFileType");
         }
@@ -823,12 +902,38 @@ function showFileTypeMetadata(file_type_time_series, url){
             updateSelectionMenuContext();
             return;
         }
+        else if (logical_type === "ModelProgramLogicalFile") {
+            if (selectedItem.attr('data-has-model-program-aggr-folder') === 'true') {
+                $("#fileTypeMetaData").html(no_metadata_alert);
+                $("#btnSideAddMetadata").addClass("disabled");
+                return;
+            }
+        }
+        else if (logical_type === "ModelInstanceLogicalFile") {
+            if (selectedItem.attr('data-has-model-instance-aggr-folder') === 'true') {
+                $("#fileTypeMetaData").html(no_metadata_alert);
+                $("#btnSideAddMetadata").addClass("disabled");
+                return;
+            }
+        }
     }
+    else if (selectedItem.hasClass("fb-folder")) {
+        var folderLogicalFileTypeToSet = selectedItem.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
+        if (folderLogicalFileTypeToSet === undefined || folderLogicalFileTypeToSet === "ModelProgramLogicalFile" ||
+            folderLogicalFileTypeToSet.length === 0) {
+            $("#fileTypeMetaData").html(no_metadata_alert);
+            $("#btnSideAddMetadata").addClass("disabled");
+        }
+    }
+
     var resource_mode = RESOURCE_MODE;
     if (!resource_mode) {
         return;
     }
     resource_mode = resource_mode.toLowerCase();
+    if(RESOURCE_PUBLISHED) {
+        resource_mode = 'view';
+    }
     var $url;
     if (file_type_time_series) {
         $url = url;
@@ -884,6 +989,7 @@ function showFileTypeMetadata(file_type_time_series, url){
         }
 
         if (RESOURCE_MODE === "Edit") {
+             $("[data-toggle=tooltip]").tooltip();
              $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
              $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
              $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
@@ -938,20 +1044,122 @@ function showFileTypeMetadata(file_type_time_series, url){
                      $spatialRadioPoint.prop("checked", true);
                  }
              }
-             if (logical_type === "FileSetLogicalFile") {
+             if (logical_type === "FileSetLogicalFile" || logical_type === "ModelInstanceLogicalFile") {
                  // Submit for aggregation spatial coverage update
                  $("#btn-update-aggregation-spatial-coverage").click(function () {
-                    fileset_coverage_update_ajax_submit(logical_file_id, 'spatial');
+                    nested_aggregation_coverage_update_ajax_submit(logical_file_id, 'spatial');
                  });
                  // Submit for aggregation temporal coverage update
                  $("#btn-update-aggregation-temporal-coverage").click(function () {
-                    fileset_coverage_update_ajax_submit(logical_file_id, 'temporal');
+                    nested_aggregation_coverage_update_ajax_submit(logical_file_id, 'temporal');
+                 });
+             }
+             if (logical_type === "ModelProgramLogicalFile") {
+                  setupModelProgramFileTypeUI();
+                  setupModelProgramTypeUI();
+                  $("#mi-json-schema-file").change(function () {
+                    $(".btn-form-submit").show();
+                })
+             }
+             if (logical_type === "ModelInstanceLogicalFile") {
+                  setupModelInstanceTypeUI();
+                 $("#btn-mi-schema-update").click(function () {
+                    updateModelInstanceMetaSchema();
                  });
              }
         }
     });
 }
 
+
+function setupModelProgramFileTypeUI() {
+    // controls the UI for associating aggregation files to specific model program file type
+    // (release notes, model engine etc)
+    var mpContentFiles = $("#mp_content_files");
+    $(mpContentFiles).find("select").change(function (e) {
+        var inputElement =  $(mpContentFiles).find("input");
+        var selectedOptions = $(mpContentFiles).find("option:selected");
+        var inputElementValue = "";
+        for(var i=0; i< selectedOptions.length; i++) {
+            var selectedFileType = $(selectedOptions[i]).val();
+            if (!selectedFileType) {
+                selectedFileType = "None";
+            }
+            if(i == 0) {
+                inputElementValue += $(selectedOptions[i]).parents(".file-row").find("p").text() + ":" + selectedFileType;
+            }
+            else {
+                inputElementValue += ";" + $(selectedOptions[i]).parents(".file-row").find("p").text() + ":" + selectedFileType;
+            }
+        }
+        inputElement.attr("value", inputElementValue);
+
+        $(this).parents("form").find(".btn-form-submit").show();
+    })
+}
+
+function setupModelProgramTypeUI() {
+    var mpProgramType = $("#mp-program-type");
+    $(mpProgramType).find("select").change(function (e) {
+        var inputElement =  $(mpProgramType).find("input");
+        var selectedOption = $(mpProgramType).find("option:selected");
+        inputElement.attr("value", $(selectedOption).val());
+        $(this).parents("form").find(".btn-form-submit").show();
+     })
+}
+
+function setupModelInstanceTypeUI() {
+    $("#filetype-model-instance").change(function () {
+        $(this).find(".btn-form-submit").show();
+    });
+
+    if($("#id-schema-based-form").length){
+        var jsonSchema = $("#id-schema-based-form").find("#id-json-schema").val();
+        jsonSchema = JSON.parse(jsonSchema);
+        var jsonData = $("#id-schema-based-form").find("#id-metadata-json").val();
+        jsonData = JSON.parse(jsonData);
+    }
+    else {
+        jsonSchema = {};
+        jsonData = {};
+    }
+
+    // if there is a metadata schema - create the metadata editing form
+    if(!jQuery.isEmptyObject(jsonSchema)) {
+        var editor = new JSONEditor(document.getElementById('editor-holder'), {
+            schema: jsonSchema,
+            startval: jsonData,
+            theme: "bootstrap4",
+            no_additional_properties: true,
+            disable_edit_json: true,
+            disable_array_add: false,
+            disable_array_delete: false,
+            // optional fields are not displayed by default in JSONEditor form for editing
+            // user needs to select any optional properties to make it available for editing
+            display_required_only: false,
+            required_by_default: true,
+            object_layout: "table"
+        });
+        editor.on("change", function () {
+            showJsonEditorSubmitButton();
+            // get all JSONEditor form data as a string
+            var jsonDataString = JSON.stringify(editor.getValue());
+            // set the form field with the form data
+            $("#id-schema-based-form").find("#id-metadata-json").val(jsonDataString);
+        });
+        // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
+        $(".property-selector").removeAttr("style");
+    }
+}
+
+function showJsonEditorSubmitButton() {
+    var jsonEditorStatus = $("#id-schema-based-form").find("#id-json-editor-load-status").val();
+    if(jsonEditorStatus === "loaded")
+        $("#id-schema-form-submit").show();
+    else {
+        $("#id-schema-based-form").find("#id-json-editor-load-status").val("loaded");
+    }
+}
 function InitializeTimeSeriesFileTypeForms() {
     var tsSelect = $(".time-series-forms select");
 
@@ -1100,7 +1308,6 @@ function onSort() {
     sort(method, order);
 }
 
-
 function onOpenFile() {
     // Check to see if it is .url web referenced file, if yes, do redirect rather than download
     var file = $("#fb-files-container li.ui-selected");
@@ -1127,33 +1334,39 @@ function onOpenFile() {
 function isVirtualFolder(item) {
     item = $(item);
     let isFileSet = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "FileSetLogicalFile";
-    return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet;
+    let isModelProgramFolder = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "ModelProgramLogicalFile";
+    let isModelInstanceFolder = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "ModelInstanceLogicalFile";
+    return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet && !isModelProgramFolder && !isModelInstanceFolder;
 }
 
-function startDownload(zipped) {
-    if (zipped === undefined) {
-        zipped = false;
-    }
+function previewData() {
+    let selected = $("#fb-files-container li.ui-selected");
+    let previewDataURL = selected.children('span.fb-preview-data-url').text();
+    window.open(previewDataURL, '_blank');
+}
 
-    var downloadList = $("#fb-files-container li.ui-selected");
-
-    // Remove previous temporary download frames
-    $(".temp-download-frame").remove();
+function startDownload(zipFiles) {
+    zipFiles = zipFiles || false;
+    const downloadList = $("#fb-files-container li.ui-selected");
 
     if (downloadList.length) {
-        // Workaround for Firefox and IE
+        // Remove previous temporary download frames
+        $(".temp-download-frame").remove();
+
         for (var i = 0; i < downloadList.length; i++) {
-            let item = $(downloadList[i]);
+            const item = $(downloadList[i]);
             let url = item.attr("data-url");
-            let fileName = item.children(".fb-file-name").text();
-            let itemIsVirtualFolder = isVirtualFolder(item.first());
+
+            const fileName = item.children(".fb-file-name").text();
+            const itemIsVirtualFolder = isVirtualFolder(item.first());
+            const isFolder = item.hasClass("fb-folder");
             let parameters = [];
 
             if (fileName.toUpperCase().endsWith(".URL")) {
                 parameters.push('url_download=true');
             }
 
-            if (zipped === true) {
+            if (zipFiles === true) {
                 parameters.push("zipped=true");
             }
 
@@ -1165,9 +1378,25 @@ function startDownload(zipped) {
                 url += "?" + parameters.join("&");
             }
 
-            let frameID = "download-frame-" + i;
-            $("body").append("<iframe class='temp-download-frame' id='"
-                + frameID + "' style='display:none;' src='" + url + "'></iframe>");
+            if (zipFiles || isFolder) {
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    success: function (task) {
+                        notificationsApp.registerTask(task);
+                        notificationsApp.show();
+                    },
+                    error: function (xhr, errmsg, err) {
+                        display_error_message('Failed to zip files', xhr.responseText);
+                    }
+                });
+            }
+            else {
+                let frameID = "download-frame-" + i;
+                console.log(url);
+                $("body").append("<iframe class='temp-download-frame' id='"
+                    + frameID + "' style='display:none;' src='" + url + "'></iframe>");
+            }
         }
     }
 }
@@ -1177,7 +1406,8 @@ function onOpenFolder() {
     let aggregationId = parseInt(selectedFolder.attr("data-logical-file-id"));
     let logicalFileType = selectedFolder.find(".fb-logical-file-type").attr("data-logical-file-type");
 
-    if (aggregationId && logicalFileType !== "FileSetLogicalFile") {
+    if (aggregationId && logicalFileType !== "FileSetLogicalFile" && logicalFileType !== "ModelProgramLogicalFile" &&
+        logicalFileType !== "ModelInstanceLogicalFile") {
         // Remove further paths from the log
         let range = pathLog.length - pathLogIndex;
         pathLog.splice(pathLogIndex + 1, range);
@@ -1230,6 +1460,39 @@ function updateNavigationState() {
     $("#fb-move-up").toggleClass("disabled", !(getCurrentPath().path.length || getCurrentPath().hasOwnProperty("aggregation")));    // The root path is an empty string
 }
 
+function isSelected(fullPaths) {
+    const deleteList = $("#fb-files-container li.ui-selected");
+    let filesToDelete = [];
+
+    if (deleteList.length) {
+        for (let i = 0; i < deleteList.length; i++) {
+            const item = $(deleteList[i]);
+            const respath = item.attr("data-url");
+            const pk = item.attr("data-pk");
+            if (respath && pk) {
+                const parsed_path = respath.split(/contents(.+)/).filter(function(el){return el})
+                filesToDelete.push(parsed_path[parsed_path.length-1])
+            } else {
+                if (!isVirtualFolder(item.first())) { // Item is a regular folder
+                    let folderName = item.children(".fb-file-name").text();
+                    let folder_path = getCurrentPath().path.concat(folderName);
+                    filesToDelete.push('/' + folder_path.join('/'))
+                }
+            }
+        }
+
+        // maximum matches with duplicates (based on parent folder match or top level filename match)
+        let matches = fullPaths.map(function(i1) {
+            return filesToDelete.filter(function(i2) {
+                if (i1.split('/')[1] === i2.split('/')[1]) {
+                    return i2
+                }
+            })
+        }).flat()
+        return matches
+    }
+}
+
 // Reload the current folder structure
 // Optional argument: file name or folder name to select after reload
 function refreshFileBrowser(name) {
@@ -1264,8 +1527,21 @@ function refreshFileBrowser(name) {
                 }
             }
         }
-
         updateSelectionMenuContext();
+
+        $.ajax({
+            type: "GET",
+            url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
+        }).complete(function(res) {
+            if (res.responseText) {
+                let extRefs = JSON.parse(res.responseText).filenames
+                if (extRefs.length && RESOURCE_MODE === 'Edit') {
+                    document.getElementById('edit-citation-control').style.display = 'block'
+                } else {
+                    document.getElementById('edit-citation-control').style.display = 'none'
+                }
+            }
+        })
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1274,6 +1550,89 @@ function refreshFileBrowser(name) {
         sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
         updateSelectionMenuContext();
     });
+}
+
+function warnExternalContent(shortId) {
+    /*
+    Conditionally update the delete modal to include a warning if the last .url file is being deleted as a part of this
+    action and inform the user that the custom Citation will be reverted to the standard one.
+    Local cookie will be read for the CSRF POST, since this is happening outside the Django template/form/modal
+    pattern.
+
+    param: shortId HydroShare short_id GUID from server
+     */
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    function sameOrigin(url) {
+        // test that a given url is a same-origin URL
+        // url could be relative or scheme relative or absolute
+        var host = document.location.host; // host + port
+        var protocol = document.location.protocol;
+        var sr_origin = '//' + host;
+        var origin = protocol + sr_origin;
+        // Allow absolute or scheme relative URLs to same origin
+        return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+            (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+            // or any other URL that isn't scheme relative or absolute i.e relative.
+            !(/^(\/\/|http:|https:).*/.test(url));
+    }
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+                // Send the token to same-origin, relative URLs only.
+                // Send the token only if the method warrants CSRF protection
+                // Using the CSRFToken value acquired earlier
+                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            }
+        }
+    });
+
+    $('#btn-confirm-delete').prop('disabled', true)
+    $('#additional-citation-warning').text('Analyzing files . . .')
+    $.ajax({
+        type: "GET",
+        url: '/hsapi/_internal/' + shortId + '/list-referenced-content/',
+    }).complete(function(res) {
+        if (res.responseText) {
+            let extRefs = JSON.parse(res.responseText).filenames
+
+            // capture external refs within subfolders as just the folder names
+            extRefs = extRefs.map(function(ref) {
+                return ref.split('/').length === 2 ? ref : ref.substr(0, ref.lastIndexOf('/'))
+            })
+
+            const sel = isSelected(extRefs)
+            if (global_custom_citation !== 'None' && global_custom_citation !== '' && global_custom_citation !== '' && sel.length === extRefs.length && extRefs.length > 0) {
+                removeCitationIntent = true;
+                $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
+                  'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
+                  'and custom citation?')
+                $('#additional-citation-warning').css("color", "red");
+            } else {
+                removeCitationIntent = false;
+                $('#additional-citation-warning').text('')
+                $('#additional-citation-warning').css("color", "black");
+            }
+        }
+        $('#btn-confirm-delete').prop('disabled', false)
+    })
 }
 
 function onUploadSuccess(file, response) {
@@ -1338,7 +1697,7 @@ $(document).ready(function () {
     var mode = $("#hs-file-browser").attr("data-mode");
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
-    if (mode === "edit") {
+    if (mode === "edit" && !RESOURCE_PUBLISHED) {
         no_metadata_alert +=
         '<div class="text-center">' +
             '<a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">' +
@@ -1427,7 +1786,7 @@ $(document).ready(function () {
                 // When a file gets processed
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
-                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");
+                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");  // TODO assess for bugs
                         $("#fb-inner-controls").append(previewNode);
                     }
                     $("#hsDropzone").toggleClass("glow-blue", false);
@@ -1731,14 +2090,22 @@ $(document).ready(function () {
             // Disable the Cancel button until request has finished
             $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
 
-            function afterRequest() {
-                refreshFileBrowser();
+            function enableControls() {
                 $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
                 $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
             }
 
-            $.when.apply($, calls).done(afterRequest);
-            $.when.apply($, calls).fail(afterRequest);
+            function afterRequestSuccess() {
+                refreshFileBrowser();
+                enableControls();
+            }
+
+            function afterRequestFail() {
+                enableControls();
+            }
+
+            $.when.apply($, calls).done(afterRequestSuccess);
+            $.when.apply($, calls).fail(afterRequestFail);
         }
         return false;
     });
@@ -1766,7 +2133,7 @@ $(document).ready(function () {
         else if (refName && newRefURL) {
             var file = $("#fb-files-container li.ui-selected");
             var oldurl = file.attr("data-ref-url");
-            if (oldurl != newRefURL) {
+            if (oldurl !== newRefURL) {
                 calls.push(update_ref_url_ajax_submit(SHORT_ID, getCurrentPath().path.join('/'), refName, newRefURL, false));
                 $.when.apply($, calls).done(function () {
                     refreshFileBrowser();
@@ -1786,15 +2153,11 @@ $(document).ready(function () {
         var oldurl = file.attr("data-ref-url");
         var oldName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var newurl = $("#txtNewRefURL").val().trim();
-        if (oldurl != newurl) {
+        if (oldurl !== newurl) {
             var calls = [];
             calls.push(update_ref_url_ajax_submit(SHORT_ID, getCurrentPath().path.join('/'), oldName, newurl, true));
 
             $.when.apply($, calls).done(function () {
-                refreshFileBrowser();
-            });
-
-            $.when.apply($, calls).fail(function () {
                 refreshFileBrowser();
             });
         }
@@ -1878,6 +2241,7 @@ $(document).ready(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
         var filesToDelete = "";
         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+
         if (deleteList.length) {
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
@@ -1913,6 +2277,19 @@ $(document).ready(function () {
                 }
                 else {
                     refreshFileBrowser();
+                }
+                if (removeCitationIntent) {
+                    $.ajax({
+                      type: "POST",
+                      url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
+                    }).complete(function() {
+                        document.body.style.cursor = 'default';
+                        if (window.location.href.includes('?resource-mode=edit')) {
+                            location.reload();
+                        } else {
+                            window.location.href = window.location.href + '?resource-mode=edit';
+                        }
+                    });
                 }
             });
 
@@ -1986,6 +2363,11 @@ $(document).ready(function () {
         });
     });
 
+    // Preview data
+    $("[data-fb-action='preview']").click(function () {
+        previewData();
+    });
+
     // Download method
     $("[data-fb-action='download']").click(function () {
         if ($("#hs-file-browser").attr("data-agreement") === "true") {
@@ -2019,11 +2401,14 @@ $(document).ready(function () {
         var url = item.attr("data-url");
         var basePath = window.location.protocol + "//" + window.location.host;
 
-        if (item.hasClass("fb-folder") && item.attr("data-logical-file-id") &&
-            item.find(".fb-logical-file-type").attr("data-logical-file-type") !== "FileSetLogicalFile") {
-            // The selected item is a virtual folder
-            let parameters = ["zipped=true", "aggregation=true"];
-            url += "?" + parameters.join("&");
+        if (item.hasClass("fb-folder") && item.attr("data-logical-file-id")) {
+            let logical_file = item.find(".fb-logical-file-type").attr("data-logical-file-type");
+            if (logical_file !== "FileSetLogicalFile" && logical_file !== "ModelProgramLogicalFile" &&
+                logical_file !== "ModelInstanceLogicalFile"){
+                // The selected item is a virtual folder
+                let parameters = ["zipped=true", "aggregation=true"];
+                url += "?" + parameters.join("&");
+            }
         }
 
         $("#txtFileURL").val(basePath + url);
@@ -2063,30 +2448,28 @@ $(document).ready(function () {
         setFileType("TimeSeries");
     });
 
+    // set Model Program file type method
+    $("#btn-set-model-program-file-type").click(function () {
+        setFileType("ModelProgram");
+    });
+
+    // set Model Instance file type method
+    $("#btn-set-model-instance-file-type").click(function () {
+        setFileType("ModelInstance");
+    });
     // set remove aggregation (file type) method
     $("#btnRemoveAggregation").click(function () {
         removeAggregation();
     });
 
     // Zip method
-    $("#btn-confirm-zip").click(function () {
+    $("#btn-confirm-zip").click(async function () {
         if ($("#txtZipName").val().trim() !== "") {
-            let folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-            let fileName = $("#txtZipName").val() + ".zip";
-
-            let calls = [];
-            let path = getCurrentPath().path.concat(folderName);
-
-            calls.push(zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName));
-
-            // Wait for the asynchronous calls to finish to get new folder structure
-            $.when.apply($, calls).done(function () {
-                refreshFileBrowser();
-            });
-
-            $.when.apply($, calls).fail(function () {
-                refreshFileBrowser();
-            });
+            const folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+            const fileName = $("#txtZipName").val() + ".zip";
+            const path = getCurrentPath().path.concat(folderName);
+            await zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
+            refreshFileBrowser();
         }
     });
 
@@ -2107,6 +2490,26 @@ $(document).ready(function () {
 
         $.when.apply($, calls).fail(function () {
             refreshFileBrowser();
+        });
+    });
+
+    // Download All method
+    $("#btn-download-all, #download-bag-btn").click(function (event) {
+        $(event.currentTarget).toggleClass("disabled", true);
+        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
+
+        if (!bagUrl) {
+            return; // If no url, it means download will be triggered from Agreement modal
+        }
+
+        $.ajax({
+            type: "GET",
+            url: bagUrl,
+            success: function (task) {
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+                $(event.currentTarget).toggleClass("disabled", false);
+            }
         });
     });
 

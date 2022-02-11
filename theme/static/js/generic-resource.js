@@ -87,14 +87,38 @@ function showRemoveExtraMetaPopup(row_id_str) {
     $('#deleteExtraMetaDialog').modal('show');
 }
 
+// removes html tags from the userInput
+function sanitizeUserInput(userInput) {
+    return $("<div/>").html(userInput.trim()).text();
+}
+
 function addEditExtraMeta2Table() {
     // Restore validation UI state
     $("#extra_meta_msg").hide();
     $("#extra_meta_name_input").removeClass("form-invalid");
+    $("#extra_meta_value_input").removeClass("form-invalid");
     var t = $('#extraMetaTable').DataTable();
+
     var extra_meta_name = $("#extra_meta_name_input").val().trim();
     var extra_meta_value = $("#extra_meta_value_input").val().trim();
     var edit_extra_meta_row_id = $("#edit_extra_meta_row_id").val().trim();
+
+    var sanitized_extra_meta_name = sanitizeUserInput(extra_meta_name)
+    if (extra_meta_name !== sanitized_extra_meta_name) {
+        $("#extra_meta_name_input").addClass("form-invalid");
+        $("#extra_meta_msg").html("<div class='alert alert-danger'>" +
+            "The Name text contains html code and cannot be saved.</div>");
+        $("#extra_meta_msg").show();
+        return;
+    }
+    var sanitized_extra_meta_value = $("<div/>").html(extra_meta_value.trim()).text();
+    if (extra_meta_value !== sanitized_extra_meta_value) {
+        $("#extra_meta_value_input").addClass("form-invalid");
+        $("#extra_meta_msg").html("<div class='alert alert-danger'>" +
+            "The Value text contains html code and cannot be saved.</div>");
+        $("#extra_meta_msg").show();
+        return;
+    }
 
     if (foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id)) {
         $("#extra_meta_name_input").addClass("form-invalid");
@@ -239,55 +263,7 @@ function removeExtraMetadataFromTable(row_id) {
     removed_row.remove().draw(false);
 }
 
-function update_download_status(task_id, download_path) {
-    download_status_timeout_id=-1;
-    // disable download button to prevent it from being clicked again
-    $('#btn-download-all').attr('disabled', 'disabled');
-    $.ajax({
-        dataType: "json",
-        cache: false,
-        timeout: 60000,
-        type: "POST",
-        url: '/django_irods/check_task_status/',
-        data: {
-            task_id: task_id
-        },
-        success: function(data) {
-            if(data.status == 'true') {
-                $("#loading").html('');
-                if(download_status_timeout_id > -1)
-                    clearTimeout(download_status_timeout_id);
-                $("#btn-download-all").removeAttr('disabled');
-                $("#download-status-info").html(
-                        "If your download does not start automatically, " +
-                        "please click <a href='" + download_path + "'>here</a>.");
-                window.location.href = download_path;
-            }
-            // only check status again in 3 seconds when $("#loading") is not
-            // cleared up by success status above
-            else if($("#loading").html()) {
-                $("#loading").html($("#loading").html() + ".");
-                download_status_timeout_id = setTimeout(function () {
-                    update_download_status(task_id, download_path);
-                }, 3000);
-            }
-        },
-        error: function (xhr, errmsg, err) {
-            if(download_status_timeout_id > -1)
-                clearTimeout(download_status_timeout_id);
-            $("#btn-download-all").removeAttr('disabled');
-            $("#download-status-info").html("Resource bag cannot be generated. Check server log for details.");
-        }
-    });
-}
-
 $(document).ready(function () {
-    var task_id = $('#task_id').val();
-    var download_path = $('#download_path').val();
-    if (task_id) {
-        update_download_status(task_id, download_path);
-    }
-
     $('.authors-wrapper.sortable').sortable({
         placeholder: "ui-state-highlight",
         stop: function (event, ui) {
@@ -326,6 +302,84 @@ $(document).ready(function () {
         else
             $('#download-file-btn').attr('disabled', 'disabled');
     });
+
+    $("#copy-btn").on('click', function(e) {
+        e.stopImmediatePropagation();
+        $.ajax({
+            type: "POST",
+            url: "/hsapi/_internal/" + SHORT_ID + "/copy-resource/",
+            success: function (task) {
+                $('#copy-resource-dialog').modal('hide');
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+            },
+            error: function (xhr, errmsg, err) {
+                display_error_message('Failed to copy the resource', xhr.responseText);
+                $('#copy-resource-dialog').modal('hide');
+            }
+        })
+    });
+
+    $("#new-version-btn").on('click', function(e) {
+       e.stopImmediatePropagation();
+       // disable the new version icon to prevent users from clicking it again until it is done
+       $('#new-version').addClass('disabled');
+       $('#new-version').removeAttr('data-toggle');
+       $.ajax({
+           type: 'POST',
+           url: '/hsapi/_internal/' + SHORT_ID + '/create-new-version-resource/',
+           success: function (task) {
+                $('#new-version-resource-dialog').modal('hide');
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+            },
+            error: function (xhr, errmsg, err) {
+                display_error_message('Failed to create a new version of the resource', xhr.responseText);
+                $('#new-version-resource-dialog').modal('hide');
+            }
+       })
+    });
+
+    $("#btn-replicate").on('click', function(e) {
+        e.stopImmediatePropagation();
+        $.ajax({
+            type: "POST",
+            url: "/hsapi/_internal/" + SHORT_ID + "/rep-res-bag-to-irods-user-zone/",
+            success: function (task) {
+                $('#rep-resource-to-irods-dialog').modal('hide');
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+            },
+            error: function (xhr, errmsg, err) {
+                display_error_message('Failed to copy the resource to your user zone', xhr.responseText);
+                $('#rep-resource-to-irods-dialog').modal('hide');
+            }
+        })
+    });
+
+    $("#btn-delete-resource").on('click', function(e) {
+        e.stopImmediatePropagation();
+        // disable the delete icon to prevent users from clicking it again until it is done
+        $('#delete').addClass('disabled');
+        $('#delete').removeAttr('data-toggle');
+        let deleteText = $('#confirm-res-id-text').val();
+        $.ajax({
+            type: "POST",
+            url: "/hsapi/_internal/" + SHORT_ID + "/delete-resource/" + deleteText + "/",
+            success: function (task) {
+                $('#delete-resource-dialog').modal('hide');
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+                // redirect to my resources page after async task is started to address issue #4321
+                window.location.href = "/my-resources/";
+            },
+            error: function (xhr, errmsg, err) {
+                display_error_message('Failed to delete the resource', xhr.responseText);
+                $('#delete-resource-dialog').modal('hide');
+            }
+        })
+    });
+
     // add input element to each of the comment/rating forms to track resource mode (edit or view)
     var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
     inputElementToAdd = inputElementToAdd.replace('mode_to_replace', RESOURCE_MODE.toLowerCase());
@@ -368,7 +422,7 @@ $(document).ready(function () {
         });
     }
 
-    $("#citation-text").on("click", function (e) {
+    $("#citation-text-wrapper").on("click", function (e) {
         // document.selection logic is added in for IE 8 and lower
         if (document.selection) {
             document.selection.empty();
@@ -558,7 +612,7 @@ $(document).ready(function () {
     $(window).bind('scroll', function () {
         let toolbar = $(".custom-btn-toolbar");
         if (toolbar.children().length == 0){
-            toolbar.css("display", None);
+            toolbar.css("display", 'None');
         }
         else if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
             toolbar.parent().height(toolbar.parent().height());

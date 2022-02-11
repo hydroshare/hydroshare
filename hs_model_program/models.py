@@ -105,6 +105,10 @@ processor_for(ModelProgramResource)(resource_processor)
 class ModelProgramMetaData(CoreMetaData):
     _mpmetadata = GenericRelation(MpMetadata)
 
+    def ingest_metadata(self, graph):
+        raise NotImplementedError("Metadata ingestion for {} is unsupported at this time"
+                                  .format(self.__class__.__name__))
+
     @property
     def resource(self):
         return ModelProgramResource.objects.filter(object_id=self.id).first()
@@ -169,10 +173,10 @@ class ModelProgramMetaData(CoreMetaData):
 
 
         # get the xml string for Model Program
-        xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=pretty_print)
+        xml_string = super(ModelProgramMetaData, self).get_xml_legacy(pretty_print=pretty_print)
 
         # create  etree element
-        RDF_ROOT = etree.fromstring(xml_string)
+        RDF_ROOT = etree.fromstring(xml_string.encode())
 
         # get the root 'Description' element, which contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)

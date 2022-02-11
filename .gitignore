@@ -1,4 +1,5 @@
 ## Custom
+nohup.out
 local_settings.py
 __pycache__/
 *.py[cod]
@@ -39,8 +40,11 @@ celerybeat.pid
 .c9
 /nginx/cert*
 pg.deploy.sql
+pylint.out
 
 # Frontend
 node_modules/
 hs_discover/templates/
 hs_discover/static
+hs_resource_landing/templates/
+hs_resource_landing/static

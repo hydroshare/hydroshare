@@ -304,6 +304,7 @@ INSTALLED_APPS = (
     "hs_file_types",
     "hs_composite_resource",
     "hs_rest_api",
+    "hs_rest_api2",
     "hs_dictionary",
     "hs_odm2",
     "security",
@@ -312,6 +313,10 @@ INSTALLED_APPS = (
     "hs_discover", 
     "hs_linux"
 )
+
+SWAGGER_SETTINGS = {
+    'DEFAULT_GENERATOR_CLASS': 'hs_rest_api2.serializers.NestedSchemaGenerator'
+}
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 
@@ -472,6 +477,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ),
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
 }
 
 SOLR_HOST = os.environ.get('SOLR_PORT_8983_TCP_ADDR', 'localhost')
@@ -491,8 +497,6 @@ HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealti
 # customized value for password reset token, email verification and group invitation link token
 # to expire in 7 days
 PASSWORD_RESET_TIMEOUT_DAYS = 7
-
-RESOURCE_LOCK_TIMEOUT_SECONDS = 300  # in seconds
 
 # customized temporary file path for large files retrieved from iRODS user zone for metadata
 # extraction
@@ -524,14 +528,6 @@ LOGGING = {
         },
     },
     'handlers': {
-        'syslog': {
-            'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/hydroshare/log/system.log',
-            'formatter': 'simple',
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-        },
         'djangolog': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
@@ -548,21 +544,34 @@ LOGGING = {
             'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
+        'celerylog': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/hydroshare/log/celery.log',
+            'formatter': 'verbose',
+            'maxBytes': 1024*1024*15,  # 15MB
+            'backupCount': 10,
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['syslog', 'djangolog'],
-            'propagate': True,
+            'handlers': ['djangolog'],
+            'propagate': False,
             'level': 'DEBUG',
         },
         # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
         'django.template': {
-            'handlers': ['syslog', 'djangolog'],
+            'handlers': ['djangolog'],
             'level': 'INFO',
-            'propagate': True,
+            'propagate': False,
         },
         'django.db.backends': {
-            'handlers': ['syslog'],
+            'handlers': ['djangolog'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'celery': {
+            'handlers': ['celerylog'],
             'level': 'WARNING',
             'propagate': False,
         },
@@ -691,8 +700,6 @@ CSRF_COOKIE_SECURE = USE_SECURITY
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
-HSWS_ACTIVATED = False
-
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files. 
 DISCOVERY_EXTENSION_CONTENT_TYPES = { 
@@ -703,6 +710,24 @@ DISCOVERY_EXTENSION_CONTENT_TYPES = {
     'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
     'Multidimensional (NetCDF)': set(['nc'])
 } 
+
+HSWS_ACTIVATED = False
+
+# HydroShare THREDDS Data Server URL
+THREDDS_SERVER_URL = 'https://thredds.hydroshare.org/thredds/'
+# HydroShare Geoserver URL
+HSWS_GEOSERVER_URL = 'https://geoserver.hydroshare.org/geoserver'
+
+# celery task names to be recorded in task notification model
+TASK_NAME_LIST = [
+    'hs_core.tasks.create_bag_by_irods',
+    'hs_core.tasks.create_temp_zip',
+    'hs_core.tasks.unzip_task',
+    'hs_core.tasks.copy_resource_task',
+    'hs_core.tasks.replicate_resource_bag_to_user_zone_task',
+    'hs_core.tasks.create_new_version_resource_task',
+    'hs_core.tasks.delete_resource_task'
+]
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
@@ -742,3 +767,5 @@ else:
 #import codecs
 #sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 #sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+
+MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = "/hydroshare/hs_file_types/model_meta_schema_templates"

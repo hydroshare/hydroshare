@@ -10,13 +10,17 @@
         <label class="control-label" for="{{ field.auto_id }}">{{ field.label }}</label>
     {% endif %}
 
-    {% if readonly %}
-        {% render_field field readonly="readonly" %}
-    {% elif inline_label %}
-        {% render_field field placeholder=field.label %}
-    {% else %}
-        {% render_field field placeholder=field.label %}
-    {% endif %}
+    {% with field_label=field.label|add:" *" %}
+        {% if readonly %}
+            {% render_field field readonly="readonly" %}
+        {% else %}
+            {% if required %}
+                {% render_field field placeholder=field_label %}
+            {% else %}
+                {% render_field field placeholder=field.label %}
+            {% endif %}
+        {% endif %}
+    {% endwith %}
 
     {% if field.errors %}
         <p class="help-block">

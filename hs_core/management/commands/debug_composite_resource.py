@@ -28,7 +28,7 @@ def debug_resource(short_id):
                 print("metadata for {} is".format(resource.short_id))
                 pprint(metadata)
 
-        resource.create_aggregation_xml_documents()
+        resource.create_aggregation_meta_files()
         print("resource {}".format(resource.short_id))
         '''
         storage = resource.get_storage()

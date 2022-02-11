@@ -187,9 +187,6 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
                          "Oct. 2009 to June 2010 for TWDEF site in Utah."
     self.assertEqual(self.composite_resource.metadata.description.abstract, extracted_abstract)
 
-    # there should be no source element
-    self.assertEqual(self.composite_resource.metadata.sources.all().count(), 0)
-
     # there should be one license element:
     self.assertNotEqual(self.composite_resource.metadata.rights.statement, 1)
 
@@ -436,7 +433,7 @@ def assert_ref_time_series_file_type_metadata(self):
     # there should be 2 web services
     self.assertEqual(len(logical_file.metadata.web_services), 2)
     web_urls = [web.url for web in logical_file.metadata.web_services]
-    self.assertIn("http://hydroportal.cuahsi.org/nwisdv/cuahsi_1_1.asmx?WSDL", web_urls)
+    self.assertIn("http://www.bing.com/", web_urls)
     self.assertIn("http://www.google.com", web_urls)
     web_service_types = [web.service_type for web in logical_file.metadata.web_services]
     self.assertIn("SOAP", web_service_types)

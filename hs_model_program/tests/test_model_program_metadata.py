@@ -10,7 +10,7 @@ from django.contrib.auth.models import Group
 from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
-    Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
+    Publisher, Identifier, Type, Subject, Description, Date, Format, Relation
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_model_program.models import ModelProgramResource, MpMetadata
 
@@ -108,9 +108,6 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should be rights element
         self.assertNotEqual(self.resModelProgram.metadata.rights, None)
-
-        # there shouldn't any source element
-        self.assertEqual(self.resModelProgram.metadata.sources.count(), 0)
 
         # there shouldn't any relation element
         self.assertEqual(self.resModelProgram.metadata.relations.count(), 0)
@@ -343,8 +340,6 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Type metadata objects
         self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Relation metadata objects
         self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Publisher metadata objects
@@ -382,8 +377,6 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Type metadata objects
         self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Relation metadata objects
         self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Publisher metadata objects

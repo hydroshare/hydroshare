@@ -53,8 +53,14 @@ $(document).ready(function () {
         $("#item-selectors").width($("#item-selectors").width() - 2);
     }
 
+    function clearLabelErrorMessaging(){
+        $("#txtLabelName").removeClass("invalid-input");
+        $("#txtLabelName").closest(".modal-body").find(".error-label").remove();
+    }
+
     // Trigger label creation when pressing Enter
     $("#txtLabelName").keyup(function (event) {
+        clearLabelErrorMessaging();
         var label = $("#txtLabelName").val().trim();
         if (event.keyCode == 13 && label != "") {
             $("#btn-create-label").click();
@@ -71,6 +77,12 @@ $(document).ready(function () {
     // Autofocus input when modal appears
     $("#modalCreateLabel").on('shown.bs.modal', function () {
         $("#txtLabelName").focus();
+    });
+
+    // remove error messaging and input, if any
+    $("#modalCreateLabel").on('hidden.bs.modal', function () {
+        $("#txtLabelName").val("");
+        clearLabelErrorMessaging();
     });
 
     $("#item-selectors").show();
@@ -202,6 +214,15 @@ $(document).ready(function () {
         }
     }
 
+    $( "#confirm-res-id-text" ).keyup(function() {
+        $("#btn-delete-multiple-resources").prop("disabled", this.value !== "DELETE");
+    });
+
+    $("#delete-multiple-resources-dialog").on('hidden.bs.modal', function () {
+        $("#confirm-res-id-text").val('');
+        $("#btn-delete-multiple-resources").prop("disabled", true);
+    });
+
     $("#btn-delete-multiple-resources").click(function() {
         var indexes = [];   // List of selected resources allowed for deletion
         var notOwned = [];
@@ -221,7 +242,7 @@ $(document).ready(function () {
 
         inspectResources(indexes, notOwned, published);
 
-        var messageBody = $("#delete-multiple-resources-dialog .modal-body");
+        var messageBody = $("#delete-multiple-resources-dialog #delete-resource-messaging");
 
         messageBody.empty();
 
@@ -268,20 +289,24 @@ $(document).ready(function () {
         if (indexes.length > 0) {
             var actionWarningTemplate =
             '<div class="alert alert-danger">' +
-                '<strong>THIS IS A PERMANENT ACTION</strong>' +
+                '<strong>WARNING! DELETING RESOURCES IS A PERMANENT ACTION!</strong>' +
                 '<ul>' +
-                    '<li>This will delete any resources you have selected.</li>' +
-                    '<li>HydroShare will not retain copies of any of your content files.</li>' +
-                    '<li>We highly recommend that you download the latest copy of your resource file(s) before deleting.</li>' +
+                    '<li>This will delete any resources you have selected and their content files.</li>' +
+                    '<li>HydroShare will not retain copies of your resources or content files.</li>' +
+                    '<li>We highly recommend that you download the latest copy of your resources before confirming ' +
+                        'this action so that you do not lose any content you might need later.</li>' +
                 '</ul>' +
+                '<p>If you are sure you want to delete the selected resources, type the word "DELETE" in the ' +
+                    'following text box and then click the "Delete" button below. ' +
+                '</p>' +
             '</div>';
 
             messageBody.append(actionWarningTemplate);
-            $("#btn-delete-multiple-resources").attr("disabled", false);
+            $("#confirm-res-id-text").show();
         }
         else {
             messageBody.append('<div>Select resources to delete.</div><br>');
-            $("#btn-delete-multiple-resources").attr("disabled", true);
+            $("#confirm-res-id-text").hide();
         }
 
         messageBody.find("a").attr("target", "_blank"); // Make listed resources open in new tab
@@ -318,7 +343,8 @@ function delete_multiple_resources_ajax_submit(indexes) {
         const row = $(indexes[i]);  // Needs to be a constant so the value doesn't change during the asynchronous calls
         var datastring = $(form).serialize();
         var url = $(form).attr("action");
-
+        let deleteText = $('#confirm-res-id-text').val();
+        url = url + deleteText + "/";
         $("html").css("cursor", "progress");
 
         calls.push(
@@ -327,8 +353,10 @@ function delete_multiple_resources_ajax_submit(indexes) {
                 url: url,
                 datastring: datastring,
                 dataType: "html",
-                success: function () {
-                    resourceTable.row(row).remove();  // Delete row from the table
+                success: function (task) {
+                    task = JSON.parse(task);
+                    notificationsApp.registerTask(task);
+                    notificationsApp.show();
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log(textStatus, errorThrown);
@@ -340,9 +368,7 @@ function delete_multiple_resources_ajax_submit(indexes) {
     // Wait for all asynchronous calls to finish
     $.when.apply($, calls)
       .done(function () {
-          resourceTable.draw();
-          updateLabelCount();
-          $("html").css("cursor", "initial"); // Restore default cursor
+          window.location.href = "/my-resources/";
       })
       .fail(function () {
           customAlert("Error", 'Failed to delete resource(s).', "error", 10000);
@@ -350,8 +376,21 @@ function delete_multiple_resources_ajax_submit(indexes) {
       });
 }
 
+function errorLabel(message) {
+    return "<div class='label label-danger error-label'>" + message + "</div>";
+}
+
 function label_ajax_submit() {
     var el = $(this);
+    var labelText = $("#txtLabelName").val();
+    var sanitizedLabelText = $("<div/>").html(labelText.trim()).text();
+    if (labelText !== sanitizedLabelText){
+        // red outline and messaging for invalid input
+        $("#txtLabelName").closest(".modal-body").append(errorLabel("This label contains HTML and cannot be saved."))
+        $("#txtLabelName").addClass("invalid-input");
+        return;
+    }
+    $("#txtLabelName").val(labelText);
     var form = $("form[data-id='" + el.attr("data-form-id") + "']");
     var datastring = form.serialize();
     var url = form.attr('action');

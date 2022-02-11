@@ -11,7 +11,7 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="collaborate-nav">
-                        <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
+                        <a href="{% url "groups" %}" class="collaborate-nav-item">Find Groups</a>
                         <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
                     </div>
                 </div>
@@ -58,6 +58,51 @@
                 <h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>
 
                 <p>{{ group.gaccess.description|linebreaks }}</p>
+                {% if not profile_user.is_group_member and profile_user.is_authenticated %}
+                    <div>
+                        {% if group.gaccess.active %}
+                            <hr>
+                            <h4><i>You are not a member of this group.</i></h4>
+                            {% if group.join_request_waiting_user_action %}
+                                <div class="request-block pull-left">
+                                    <span class="flag-joined">You have been invited to join!</span>
+                                    <br><br>
+                                    <div class="height-fix">
+                                        <form class="act-on-request height-fix"
+                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
+                                              method="POST">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success"
+                                                    data-user-action="Accept">Accept
+                                            </button>
+                                        </form>
+
+                                        <form class="act-on-request height-fix"
+                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
+                                              method="POST">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-default">
+                                                Decline
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% elif group.join_request_waiting_owner_action %}
+                                <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request
+                                    Sent</h4>
+                            {% else %}
+                                <form id="join-{{ group.id }}" method="post"
+                                      action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary" role="button">Ask to join
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <h4><i>This group is currently inactive.</i></h4>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
 
             {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
@@ -69,9 +114,11 @@
                                       data-placement="auto" title="Edit Group"></span></a>
                         {% endif %}
                     {% endif %}
-                    <a href="#" id="btn-leave-group" data-toggle="modal" data-target="#leave-group-dialog">
-                        <span class="glyphicon glyphicon-hand-left btn-remove icon-button" data-toggle="tooltip"
-                              data-placement="auto" title="Leave Group"></span></a>
+                    {% if profile_user.is_group_member %}
+                        <a href="#" id="btn-leave-group" data-toggle="modal" data-target="#leave-group-dialog">
+                            <span class="glyphicon glyphicon-hand-left btn-remove icon-button" data-toggle="tooltip"
+                                  data-placement="auto" title="Leave Group"></span></a>
+                    {% endif %}
                     {% if profile_user.is_group_owner and group.gaccess.active %}
                         <a href="#" id="btn-delete-group" data-toggle="modal" data-target="#delete-group-dialog">
                             <span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="tooltip"
@@ -94,7 +141,7 @@
                         <i class="glyphicon glyphicon-file"></i> Resources</a>
                 </li>
 
-                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public %}
+                {% if profile_user.is_group_member or group.gaccess.public %}
                     <li role="presentation">
                         <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-user"></i> Members</a>
@@ -597,55 +644,8 @@
                                 {% endfor %}
                                 </tbody>
                             </table>
-
                             {% include "includes/legend.html" %}
-
-                        {% else %}
-
-                            <div class="col-lg-10" id="items">
-                                {% if group.gaccess.active %}
-                                    <h4><i>You are not a member of this group.</i></h4>
-                                    {% if group.join_request_waiting_user_action %}
-                                        <div class="request-block pull-left">
-                                            <span class="flag-joined">You have been invited to join!</span>
-                                            <br><br>
-                                            <div class="height-fix">
-                                                <form class="act-on-request height-fix"
-                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
-                                                      method="POST">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-success"
-                                                            data-user-action="Accept">Accept
-                                                    </button>
-                                                </form>
-
-                                                <form class="act-on-request height-fix"
-                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
-                                                      method="POST">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-default">
-                                                        Decline
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    {% elif group.join_request_waiting_owner_action %}
-                                        <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request
-                                            Sent</h4>
-                                    {% else %}
-                                        <form id="join-{{ group.id }}" method="post"
-                                              action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-primary" role="button">Ask to join
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                {% else %}
-                                    <h4><i>This group is currently inactive.</i></h4>
-                                {% endif %}
-                            </div>
                         {% endif %}
-
                         </div>
                     </div>
                 </div>

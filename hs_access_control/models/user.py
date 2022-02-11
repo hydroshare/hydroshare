@@ -6,10 +6,11 @@ from django.core.exceptions import PermissionDenied
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, \
         UserGroupPrivilege, UserResourcePrivilege, GroupResourcePrivilege, \
-        UserCommunityPrivilege, GroupCommunityPrivilege
+        UserCommunityPrivilege, GroupCommunityPrivilege, CommunityResourcePrivilege
 from hs_access_control.models.group import GroupAccess, GroupMembershipRequest
 from hs_access_control.models.exceptions import PolymorphismError
 from hs_access_control.models.community import Community
+from hs_access_control.models.invite import GroupCommunityRequest
 
 #############################################
 # Methods and data for users
@@ -307,11 +308,7 @@ class UserAccess(models.Model):
                                       gaccess__active=True) |
                                     Q(g2ugp__user=self.user,
                                       gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER) |
-                                    Q(gaccess__active=True,
-                                      g2gcp__community__c2gcp__group__gaccess__active=True,
-                                      g2gcp__community__c2gcp__group__g2ugp__user=self.user))\
-                            .distinct()
+                                      g2ugp__privilege=PrivilegeCodes.OWNER)).distinct()
 
     @property
     def edit_groups(self):
@@ -421,11 +418,7 @@ class UserAccess(models.Model):
                   g2ugp__privilege=PrivilegeCodes.OWNER) |
                 # everyone else can see only active groups they are in
                 Q(gaccess__active=True,
-                  g2ugp__user=self.user) |
-                # if user has access to a group in a community, grant access to whole community
-                Q(gaccess__active=True,
-                  g2gcp__community__c2gcp__group__gaccess__active=True,
-                  g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
+                  g2ugp__user=self.user)).distinct()
 
     def owns_group(self, this_group):
         """
@@ -518,7 +511,7 @@ class UserAccess(models.Model):
         access_group = this_group.gaccess
 
         return self.user.is_superuser or access_group.public \
-            or this_group.gaccess.view_users.filter(id=self.user.id).exists()
+            or this_group in self.view_groups
 
     def can_view_group_metadata(self, this_group):
         """
@@ -620,14 +613,14 @@ class UserAccess(models.Model):
     #   can_share_group without optional arguments
     #   can_share_group_with_user
     #   can_share_community_with_group
-    def can_share_group(self, this_group, this_privilege, user=None):
+    def can_share_group(self, this_group, this_privilege, user=None, community=None):
         """
         Return True if a given user can share this group with a given privilege.
 
         :param this_group: group to check
         :param this_privilege: privilege to assign
         :param user: user with which to share.
-        :param community: group with which to share.
+        :param community: community with which to share.
         :return: True if sharing is possible, otherwise false.
 
         This determines whether the current user can share a group, independent of
@@ -1072,7 +1065,7 @@ class UserAccess(models.Model):
         unlike GroupAccess.view_groups and GroupAccess.edit_groups.
 
         This can be subqueried in returns, because it is lazily evaluated.
-        e.g., self.uaccess.view_resources.filter(id=resource.id).exists()
+        e.g., user.uaccess.view_resources.filter(id=resource.id).exists()
         """
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -1082,11 +1075,7 @@ class UserAccess(models.Model):
             Q(r2urp__user=self.user) |
             # access via a group
             Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2ugp__user=self.user) |
-            # access via an unprivileged peer group in a community
-            Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
+              r2grp__group__g2ugp__user=self.user)).distinct()
 
     @property
     def owned_resources(self):
@@ -1111,6 +1100,7 @@ class UserAccess(models.Model):
         :return: QuerySet of resource objects that can be edited  by this user.
 
         This utilizes effective privilege; immutable resources are not returned.
+        Owners can edit immutable resources 4/9/2021.
 
         Note that this return includes all editable resources, whereas
         get_resources_with_explicit_access only returns those resources that are editable
@@ -1123,11 +1113,12 @@ class UserAccess(models.Model):
         # a resource is editable if
         # 1. it's shared with the user and editable.
         # 2. it's shared with a group that has edit privilege and contains the user,
-        # 3. it's shared with a group that has edit privilege and a community that
-        #    contains the user, and the community share preserves edit
 
         return BaseResource.objects.filter(
-            # user has direct access
+            # user owns resource invariant of immutable flag 4/9/2021
+            Q(r2urp__user=self.user,
+              r2urp__privilege=PrivilegeCodes.OWNER) |
+            # user has direct access and resource is not immutable
             Q(raccess__immutable=False,
               r2urp__user=self.user,
               r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
@@ -1135,8 +1126,7 @@ class UserAccess(models.Model):
             Q(raccess__immutable=False,
               r2grp__group__gaccess__active=True,
               r2grp__group__g2ugp__user=self.user,
-              r2grp__privilege=PrivilegeCodes.CHANGE))\
-            .distinct()
+              r2grp__privilege=PrivilegeCodes.CHANGE)).distinct()
 
     def get_resources_with_explicit_access(self, this_privilege,
                                            via_user=True, via_group=False, via_community=False):
@@ -1147,7 +1137,7 @@ class UserAccess(models.Model):
         :param this_privilege: A privilege code 1-3
         :param via_user: True to incorporate user privilege
         :param via_group: True to incorporate group privilege
-        :param via_community: True to incorporate member group privileges
+        :param via_community: True to incorporate member group privileges (disabled)
 
         Returns: list of resource objects (QuerySet)
 
@@ -1273,18 +1263,6 @@ class UserAccess(models.Model):
                 else:
                     excl = gexcl
 
-            # community permission is VIEW if community link exists at all.
-            if via_community:
-                cquery = \
-                    Q(r2grp__group__gaccess__active=True,
-                      r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
-                if incl is not None:
-                    incl = incl | cquery
-                else:
-                    incl = cquery
-                # No CHANGE privilege over community resources.
-
             if incl is not None:
                 if excl:
                     # exclude higher privilege
@@ -1340,8 +1318,8 @@ class UserAccess(models.Model):
         Note that
 
         * The ability to change a resource is not just contingent upon sharing,
-          but also upon the resource flag "immutable". Thus "owns" does not imply
-          "can change" privilege.
+          but also upon the resource flag "immutable".
+        * But "owns" now implies "can change" privilege regardless of "immutable" flag 4/9/2021
         * The ability to change a resource applies to its data and metadata, but not to its
           resource state flags: shareable, public, immutable, published, and discoverable.
 
@@ -1360,6 +1338,9 @@ class UserAccess(models.Model):
         if self.user.is_superuser:
             return True
 
+        if self.owns_resource(this_resource):
+            return True
+
         if access_resource.immutable:
             return False
 
@@ -1367,6 +1348,33 @@ class UserAccess(models.Model):
             return True
 
         return False
+
+    def can_change_resource_shareable_flag(self, this_resource):
+        """
+        Whether self can change the shareable resource flag.
+
+        :param this_resource: Resource to check.
+
+        :return: True if user can set shareable flag otherwise false.
+
+        This is not enforced. It is up to the programmer to obey this restriction.
+
+        This is not subject to immutability. Ar present, owns_resource -> can_change_resource_shareable_flag.
+        If we made it subject to immutability, no resources could be made not immutable again.
+        Shareable flag can be set even if the resource is published.
+
+        This is called from hs_core/views/authorize to authorize actions.
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_resource, BaseResource)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        if self.user.is_superuser:
+            return True
+
+        return self.owns_resource(this_resource)
 
     def can_change_resource_flags(self, this_resource):
         """
@@ -1390,8 +1398,10 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return self.user.is_superuser or \
-            (not this_resource.raccess.published and self.owns_resource(this_resource))
+        if self.user.is_superuser:
+            return True
+
+        return not this_resource.raccess.published and self.owns_resource(this_resource)
 
     def can_view_resource(self, this_resource):
         """
@@ -1407,8 +1417,6 @@ class UserAccess(models.Model):
           view_resources.
         * This is not sensitive to the setting for the "immutable" flag. That only affects editing.
         * This is called from hs_core/views/authorize to authorize actions.
-        * This includes group-to-community, community-to-group, and community-to-group-to-community
-          permissions
 
         """
         if __debug__:  # during testing only, check argument types and preconditions
@@ -1560,7 +1568,7 @@ class UserAccess(models.Model):
         # regardless of privilege, cannot remove last owner or quota holder
         if user is not None:
             if grantee_priv == PrivilegeCodes.OWNER and this_privilege != PrivilegeCodes.OWNER:
-                if access_resource.owners.count() == 1:
+                if access_resource.owners.count() == 1 and user in access_resource.owners:
                     raise PermissionDenied("Cannot remove sole owner of resource")
                 qholder = this_resource.get_quota_holder()
                 if qholder:
@@ -2077,9 +2085,13 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("Group is not active")
+            return False
         if not this_user.is_active:
-            raise PermissionDenied("User is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("User is not active")
+            return False
 
         return self.__get_group_undo_users(this_group).filter(id=this_user.id).exists()
 
@@ -2182,7 +2194,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active:
-            raise PermissionDenied("User is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("User is not active")
+            return False
 
         return self.__get_resource_undo_users(this_resource).filter(id=this_user.id).exists()
 
@@ -2274,7 +2288,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("Group is not active")
+            return False
 
         return self.__get_resource_undo_groups(this_resource).filter(id=this_group.id).exists()
 
@@ -2990,23 +3006,27 @@ class UserAccess(models.Model):
     def __check_share_community_with_group(self, this_community, this_group,
                                            this_privilege=PrivilegeCodes.VIEW):
         """
-        Check whether an unshare of a group with a community is permitted.
+        Check whether a share of a group with a community is permitted.
 
-        :param this_community: Community with which to unshare group
-        :param this_group: Group to unshare
+        :param this_community: Community with which to share group
+        :param this_group: Group to share
 
         This utility routine's sole purpose is to ensure that
         can_share_community_with_group and share_community_with_group
         are consistent with one another.
         """
-        self.__check_share_group(this_group, this_privilege)
-        # only owners of the original groups can share a group with a community
+        # only owners of the community can share a group with a community
         if this_privilege != PrivilegeCodes.VIEW:
             raise PermissionDenied("Groups can only view communities")
-        if not self.user.uaccess.owns_community(this_community):
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
+
+        if not self.owns_community(this_community):
             raise PermissionDenied("User must own the community to be modified")
-        if not self.user.uaccess.owns_group(this_group):
-            raise PermissionDenied("User must own the group that will join a community")
 
     def share_community_with_group(self, this_community, this_group,
                                    this_privilege=PrivilegeCodes.VIEW):
@@ -3112,16 +3132,13 @@ class UserAccess(models.Model):
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Group to be unshared is not active")
-
-        if not self.user.uaccess.owns_community(this_community):
-            raise PermissionDenied("User is not an owner of the target group")
 
         # Check for sufficient privilege
-        if not self.user.is_superuser \
-                and not self.owns_group(this_group):
-            raise PermissionDenied("You do not have permission to remove this sharing setting")
+        if self.user.is_superuser:
+            return True
+
+        if not self.owns_community(this_community):
+            raise PermissionDenied("User is not an owner of the target community")
 
         return True
 
@@ -3262,7 +3279,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active:
-            raise PermissionDenied("Grantee user is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("Grantee user is not active")
+            return False
 
         return self.__get_community_undo_users(this_community).filter(id=this_user.id).exists()
 
@@ -3355,7 +3374,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("Group is not active")
+            return False
 
         return self.__get_community_undo_groups(this_community).filter(id=this_group.id).exists()
 
@@ -3390,12 +3411,351 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("Group is not active")
+            return False
 
         qual_undo = self.__get_community_undo_groups(this_community)
         if qual_undo.filter(id=this_group.id).exists():
             GroupCommunityPrivilege.undo_share(group=this_group, community=this_community,
                                                grantor=self.user)
+        else:
+            raise PermissionDenied("User did not grant last privilege")
+
+    ####################################
+    # (can_)share_resource_with_community: check for and implement share
+    ####################################
+
+    def can_share_resource_with_community(self, this_community, this_resource,
+                                          this_privilege=PrivilegeCodes.VIEW):
+        """
+        Return True if a given user can share this resource with a specified resource
+        with a given privilege.
+
+        :param this_resource: resource to be shared.
+        :param this_community: community with which to share.
+        :param this_privilege: privilege to assign to user
+        :return: True if sharing is possible, otherwise false.
+
+        This determines whether the current user can share a resource with a specific second resource.
+
+        Usage:
+        ------
+
+            if my_user.can_share_resource_with_community(some_community, some_resource,
+                        PrivilegeCodes.VIEW):
+                # ...time passes, forms are created, requests are made...
+                my_user.share_resource_with_community(some_community, some_resource, PrivilegeCodes.VIEW)
+
+        In practice:
+        ------------
+
+        If this returns False, UserAccess.share_resource_with_community will raise an exception
+        for the corresponding arguments -- *guaranteed*.
+        """
+        try:
+            self.__check_share_resource_with_community(this_community, this_resource, this_privilege)
+            return True
+        except PermissionDenied:
+            return False
+
+    def __check_share_resource_with_community(self, this_community, this_resource,
+                                              this_privilege=PrivilegeCodes.VIEW):
+        """
+        Check whether an unshare of a resource with a community is permitted.
+
+        :param this_community: Community with which to unshare resource
+        :param this_resource: resource to unshare
+
+        This utility routine's sole purpose is to ensure that
+        can_share_resource_with_community and share_resource_with_community
+        are consistent with one another.
+        """
+        self.__check_share_resource(this_resource, this_privilege)
+        # only owners of the original resources can share a resource with a community
+        if this_privilege != PrivilegeCodes.VIEW:
+            raise PermissionDenied("Communities can only view resources")
+        if this_community not in self.communities and not self.owns_community(this_community):
+            raise PermissionDenied("User must be a member or owner of the community to be modified")
+        if not self.owns_resource(this_resource):
+            raise PermissionDenied("User must own the resource to be shared with a community")
+
+    def share_resource_with_community(self, this_community, this_resource,
+                                      this_privilege=PrivilegeCodes.VIEW):
+        """
+        :param this_resource: resource to be shared.
+        :param this_community: community with which to share.
+        :param this_privilege: privilege to assign: 1-4
+        :return: none
+
+        User self must be one of:
+
+                * admin
+                * resource owner
+                * resource member with shareable=True
+
+        and have equivalent or greater privilege over resource.
+
+        Usage:
+        ------
+
+            if my_user.can_share_resource_with_community(community, resource, PrivilegeCodes.CHANGE):
+                # ...time passes, forms are created, requests are made...
+                my_user.share_resource_with_community(community, resource, PrivilegeCodes.CHANGE)
+
+        In practice:
+        ------------
+
+        "can_share_resource" is used to construct views with appropriate buttons or popups,
+        e.g., "share with...", while "share_resource_with_user" is used in the form responder
+        to implement changes.  This is safe to do even if the state changes, because
+        "share_resource_with_user" always rechecks permissions before implementing changes.
+        If -- in the interim -- one removes my_user's sharing privileges, "share_resource_with_user"
+        will raise an exception.
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_resource, BaseResource)
+            assert isinstance(this_community, Community)
+            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        # raise a PermissionDenied exception if user self is not allowed to do this.
+        self.__check_share_resource_with_community(this_community, this_resource, this_privilege)
+
+        CommunityResourcePrivilege.share(community=this_community, resource=this_resource,
+                                         grantor=self.user, privilege=this_privilege)
+
+    ####################################
+    # (can_)unshare_resource_with_community: check for and implement unshare
+    ####################################
+
+    def can_unshare_resource_with_community(self, this_community, this_resource):
+        """
+        Determines whether a resource can be unshared.
+
+        :param this_resource: resource to be unshared.
+        :param this_community: resource to which to deny access.
+        :return: Boolean: whether self can unshare this_resource with this_community
+
+        Usage:
+        ------
+
+            if my_user.can_unshare_resource_with_community(some_community, some_resource):
+                # ...time passes, forms are created, requests are made...
+                my_user.unshare_resource_with_community(some_community, some_resource)
+
+        In practice:
+        ------------
+
+        If this routine returns False, UserAccess.unshare_resource_with_community is *guaranteed*
+        to raise an exception.
+
+        Note that can_unshare_X is parallel to unshare_X and returns False exactly
+        when unshare_X will raise an exception.
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_resource, BaseResource)
+            assert isinstance(this_community, Community)
+
+        try:
+            self.__check_unshare_resource_with_community(this_community, this_resource)
+            return True
+        except PermissionDenied:
+            return False
+
+    def __check_unshare_resource_with_community(self, this_community, this_resource):
+        """
+        Check whether an unshare of a resource with a community is permitted.
+
+        :param this_community: Community with which to unshare resource
+        :param this_resource: resource to unshare
+
+        This utility routine's sole purpose is to ensure that
+        can_unshare_resource_with_community and unshare_resource_with_community
+        are consistent with one another.
+        """
+        if __debug__:
+            assert isinstance(this_resource, BaseResource)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        # TODO: work this out better; this is too restrictive?
+        if not self.owns_community(this_community):
+            raise PermissionDenied("User is not an owner of the target community")
+
+        # Check for sufficient privilege
+        if not self.user.is_superuser \
+                and not self.owns_resource(this_resource):
+            raise PermissionDenied("You do not have permission to remove this sharing setting")
+
+        return True
+
+    def unshare_resource_with_community(self, this_community, this_resource):
+        """
+        Remove a resource from a community by removing privileges.
+
+        :param this_resource: resource to be unshared.
+        :param this_community: Community with which to unshare.
+        :return: None
+
+        This removes a resource "this_resource" from a community "this_community" if
+        one of the following is true:
+            * self is an administrator.
+            * self owns the resource "this_resource" and the community "this_community"
+
+        Usage:
+        ------
+
+            if my_user.can_unshare_resource_with_community(some_community, some_resource):
+                # ...time passes, forms are created, requests are made...
+                my_user.unshare_resource_with_community(some_community, some_resource)
+
+        In practice:
+        ------------
+
+        "can_unshare_*" is used to construct views with appropriate forms and
+        change buttons, while "unshare_*" is used to implement the responder to the
+        view's forms. "unshare_*" still checks for permission (again) in case
+        things have changed (e.g., through a stale form).
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_resource, BaseResource)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        self.__check_unshare_resource_with_community(this_community, this_resource)
+        CommunityResourcePrivilege.unshare(community=this_community, resource=this_resource,
+                                           grantor=self.user)
+
+    def get_community_unshare_resources(self, this_community):
+        """
+        Get a QuerySet of resources who could be unshared from this resource.
+
+        :param this_community: resource to check.
+        :return: QuerySet of resources who could be removed by self.
+
+        A resource can be unshared with a community if:
+            * Self is resource owner.
+            * Self has admin privilege.
+
+        Usage:
+        ------
+
+            c = some_community
+            r = some_resource
+            unshare_resources = self.get_community_unshare_resources(c)
+            if unshare_resources.filter(id=r.id).exists():
+                self.unshare_resource_with_community(c, r)
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        if self.user.is_superuser or self.owns_community(this_community):
+            return this_community.view_resources
+        else:
+            return BaseResource.objects.none()
+
+    ##################################
+    # undo for community resources
+    ##################################
+
+    def __get_community_undo_resources(self, this_community):
+        """
+        Get a list of resources whose privilege was granted by self and can be undone.
+
+        :param this_resource: resource to check.
+        :returns: QuerySet of resources
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, one can undo a share that one no longer has the privilege to grant.
+        This excludes single owners from the list of undo resources to avoid removing last owner.
+
+        """
+        if __debug__:
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        return CommunityResourcePrivilege.get_undo_resources(community=this_community, grantor=self.user)
+
+    def can_undo_share_resource_with_community(self, this_community, this_resource):
+        """
+        Check that a resource share can be undone
+
+        :param this_resource: shared resource to check.
+        :param this_community: with resource to check.
+        :returns: Boolean
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus -- under freakish circumstances --  one can undo a share that one no
+        longer has the privilege to grant.
+
+        Usage:
+        ------
+
+            s = some_resource
+            w = some_other_resource
+            if request_user.can_undo_share_resource_with_community(s,w)
+                request_user.undo_share_resource_with_community(s,w)
+        """
+        if __debug__:
+            assert isinstance(this_resource, BaseResource)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        return self.__get_community_undo_resources(this_community)\
+            .filter(id=this_resource.id).exists()
+
+    def undo_share_resource_with_community(self, this_community, this_resource):
+        """
+        Undo a share with a user that was granted by self
+
+        :param this_resource: resource for which to remove privilege.
+        :param this_community: user to remove from privilege.
+
+        This routine undoes a privilege previously granted by self.  Only the last granted
+        privilege for a resource can be undone.  If some other user has granted a new (greater)
+        privilege, then the new privilege cannot be undone by the original user.
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, **one can undo a share that one no longer has the privilege to grant.**
+
+        Usage:
+        ------
+
+            c = some_community
+            g = some_resource
+            if request_user.can_undo_share_resource_with_user(c, g)
+                request_user.undo_share_resource_with_user(c, g)
+        """
+
+        if __debug__:
+            assert isinstance(this_resource, BaseResource)
+            assert isinstance(this_community, Community)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        qual_undo = self.__get_community_undo_resources(this_community)
+        if qual_undo.filter(id=this_resource.id).exists():
+            CommunityResourcePrivilege.undo_share(resource=this_resource,
+                                                  community=this_community,
+                                                  grantor=self.user)
         else:
             raise PermissionDenied("User did not grant last privilege")
 
@@ -3481,3 +3841,26 @@ class UserAccess(models.Model):
             return record.enabled
         except Feature.DoesNotExist:
             return False
+
+    # ======================
+    # community invitations
+    # ======================
+
+    def group_community_invite(self, group, community):
+        message, approved = GroupCommunityRequest(
+            group=group, community=community, requester=self.user)
+        return message
+
+    def group_community_pending(self):
+        return GroupCommunityRequest.pending(self.user)
+
+    def group_community_queued(self):
+        return GroupCommunityRequest.queued(self.user)
+
+    def group_community_approve(self, request):
+        message, success = request.approve(responder=self.user, privilege=PrivilegeCodes.VIEW)
+        return message
+
+    def group_community_decline(self, request):
+        message, success = request.decline(responder=self.user, privilege=PrivilegeCodes.VIEW)
+        return message

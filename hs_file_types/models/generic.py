@@ -51,9 +51,10 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
             return True
         return False
 
-    def get_html(self):
+    def get_html(self, **kwargs):
         """overrides the base class function"""
 
+        skip_coverage = kwargs.get('skip_coverage', False)
         html_string = super(GenericFileMetaDataMixin, self).get_html()
         if not self.has_metadata:
             no_metadata_message = div(id="#fb-metadata-default", cls="text-center text-muted",
@@ -64,7 +65,7 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
                 i_tag = i(cls="fa fa-eye-slash fa-2x")
                 i_tag['aria-hidden'] = 'true'
             html_string = no_metadata_message.render()
-        else:
+        elif not skip_coverage:
             if self.temporal_coverage:
                 html_string += self.temporal_coverage.get_html()
 
@@ -75,70 +76,76 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
         context = Context({})
         return template.render(context)
 
-    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, render=True, **kwargs):
         """overrides the base class function"""
 
+        skip_coverage = kwargs.get('skip_coverage', False)
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
-            super(GenericFileMetaDataMixin, self).get_html_forms()
-            with div():
-                with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
-                          method="post", enctype="multipart/form-data", cls='hs-coordinates-picker',
-                          data_coordinates_type="point"):
-                    div("{% crispy spatial_form %}")
-                    with div(cls="row", style="margin-top:10px;"):
-                        with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                     "col-md-2 col-xs-6"):
-                            button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right btn-form-submit",
-                                   style="display: none;")  # TODO: TESTING
-                # for aggregation that contains other aggregations with spatial data,
-                # show option to update spatial coverage from contained aggregations
-                if self.logical_file.has_children_spatial_data:
-                    with div(style="margin-top:20px;"):
-                        with div():
-                            button("Set spatial coverage from folder contents", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   id="btn-update-aggregation-spatial-coverage")
+            super(GenericFileMetaDataMixin, self).get_html_forms(skip_coverage=skip_coverage)
+            if not skip_coverage:
+                with div():
+                    with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
+                              method="post", enctype="multipart/form-data", cls='hs-coordinates-picker',
+                              data_coordinates_type="point"):
+                        div("{% crispy spatial_form %}")
+                        with div(cls="row", style="margin-top:10px;"):
+                            with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                         "col-md-2 col-xs-6"):
+                                button("Save changes", type="button",
+                                       cls="btn btn-primary pull-right btn-form-submit",
+                                       style="display: none;")  # TODO: TESTING
+                    # for aggregation that contains other aggregations with spatial data,
+                    # show option to update spatial coverage from contained aggregations
+                    if self.logical_file.has_children_spatial_data:
+                        with div(cls="control-group", style="margin-top:10px;"):
+                            with div(cls="row", style="margin-right: 2px; margin-bottom: 5px;"):
+                                button("Set spatial coverage from folder contents", type="button",
+                                       cls="btn btn-primary pull-right",
+                                       id="btn-update-aggregation-spatial-coverage")
 
         template = Template(root_div.render())
         context_dict = dict()
-        temp_cov_form = self.get_temporal_coverage_form()
-        spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
-        update_action = "/hsapi/_internal/{0}/{1}/{2}/{3}/update-file-metadata/"
-        create_action = "/hsapi/_internal/{0}/{1}/{2}/add-file-metadata/"
+        if not skip_coverage:
+            temp_cov_form = self.get_temporal_coverage_form()
+            spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
+            update_action = "/hsapi/_internal/{0}/{1}/{2}/{3}/update-file-metadata/"
+            create_action = "/hsapi/_internal/{0}/{1}/{2}/add-file-metadata/"
 
-        element_name = "coverage"
-        logical_file_class_name = self.logical_file.__class__.__name__
-        if self.temporal_coverage or self.spatial_coverage:
-            if self.temporal_coverage:
-                temp_action = update_action.format(logical_file_class_name, self.logical_file.id,
-                                                   element_name, self.temporal_coverage.id)
-                temp_cov_form.action = temp_action
+            element_name = "coverage"
+            logical_file_class_name = self.logical_file.__class__.__name__
+            if self.temporal_coverage or self.spatial_coverage:
+                if self.temporal_coverage:
+                    temp_action = update_action.format(logical_file_class_name, self.logical_file.id,
+                                                       element_name, self.temporal_coverage.id)
+                    temp_cov_form.action = temp_action
+                else:
+                    temp_action = create_action.format(logical_file_class_name, self.logical_file.id,
+                                                       element_name)
+                    temp_cov_form.action = temp_action
+
+                if self.spatial_coverage:
+                    spatial_action = update_action.format(logical_file_class_name, self.logical_file.id,
+                                                          element_name, self.spatial_coverage.id)
+                    spatial_cov_form.action = spatial_action
+                else:
+                    spatial_action = create_action.format(logical_file_class_name, self.logical_file.id,
+                                                          element_name)
+                    spatial_cov_form.action = spatial_action
             else:
-                temp_action = create_action.format(logical_file_class_name, self.logical_file.id,
-                                                   element_name)
-                temp_cov_form.action = temp_action
+                action = create_action.format(logical_file_class_name, self.logical_file.id,
+                                              element_name)
+                temp_cov_form.action = action
+                spatial_cov_form.action = action
 
-            if self.spatial_coverage:
-                spatial_action = update_action.format(logical_file_class_name, self.logical_file.id,
-                                                      element_name, self.spatial_coverage.id)
-                spatial_cov_form.action = spatial_action
-            else:
-                spatial_action = create_action.format(logical_file_class_name, self.logical_file.id,
-                                                      element_name)
-                spatial_cov_form.action = spatial_action
-        else:
-            action = create_action.format(logical_file_class_name, self.logical_file.id,
-                                          element_name)
-            temp_cov_form.action = action
-            spatial_cov_form.action = action
+            context_dict["temp_form"] = temp_cov_form
+            context_dict["spatial_form"] = spatial_cov_form
 
-        context_dict["temp_form"] = temp_cov_form
-        context_dict["spatial_form"] = spatial_cov_form
         context = Context(context_dict)
-        rendered_html = template.render(context)
-        return rendered_html
+        if render:
+            rendered_html = template.render(context)
+            return rendered_html
+        return root_div, context
 
     @classmethod
     def validate_element_data(cls, request, element_name):
@@ -188,6 +195,10 @@ class GenericLogicalFile(AbstractLogicalFile):
     @staticmethod
     def get_aggregation_display_name():
         return 'Single File Content: A single file with file specific metadata'
+
+    @staticmethod
+    def get_aggregation_term_label():
+        return "Single File Aggregation"
 
     @staticmethod
     def get_aggregation_type_name():
@@ -252,14 +263,21 @@ class GenericLogicalFile(AbstractLogicalFile):
 
             ft_ctx.logical_file = logical_file
             log.info("Generic aggregation was created for file:{}.".format(res_file.storage_path))
+            return logical_file
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
         """Gets any resource file as the primary file  from the list of files *resource_files* """
 
-        return resource_files[0]
+        return resource_files[0] if resource_files else None
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(GenericLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
         self.metadata.save()
+
+    @classmethod
+    def get_main_file_type(cls):
+        # a singel file extension in the group which is considered the main file
+        # - subclass needs to override this
+        return ".*"

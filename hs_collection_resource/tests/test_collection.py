@@ -1,19 +1,18 @@
 import json
+
 from dateutil import parser
-
-from django.test import TransactionTestCase, Client
 from django.contrib.auth.models import Group
+from django.test import TransactionTestCase, Client
 
-from hs_core.hydroshare import create_resource, create_account, \
-     create_empty_resource, create_new_version_resource, \
-     update_science_metadata, copy_resource
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
-from hs_core.hydroshare.resource import ResourceFile
-
 from hs_collection_resource.models import CollectionResource, CollectionDeletedResource
+from hs_collection_resource.utils import update_collection_list_csv
 from hs_collection_resource.views import _update_collection_coverages
-from hs_collection_resource.utils import RES_LANDING_PAGE_URL_TEMPLATE, update_collection_list_csv
+from hs_core.hydroshare import create_resource, create_account, \
+    create_empty_resource, create_new_version_resource, \
+    update_science_metadata, copy_resource
+from hs_core.hydroshare.resource import ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 
 
 class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -116,7 +115,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.url_to_update_collection = base_url + "/update-collection/"
         self.url_to_collection_member_permission = base_url + "/collection-member-permission/{1}/"
         self.url_to_set_resource_flag = base_url + "/set-resource-flag/"
-        self.url_to_delete_resource = base_url + "/delete-resource/"
+        self.url_to_delete_resource = base_url + "/delete-resource/DELETE/"
         self.url_to_update_collection_for_deleted_resources = \
             base_url + "/update-collection-for-deleted-resources/"
         self.url_to_calculate_collection_coverages = \
@@ -448,6 +447,63 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertIn(self.resGen2, self.resCollection.resources.all())
         self.assertIn(self.resGen5, self.resCollection.resources.all())
 
+        # make resGen5 not shareable
+        self.resGen5.raccess.shareable = False
+        self.resGen5.raccess.save()
+        # remove all existing contained resources
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': []},
+                                        )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        # trying to add resGen5 (for which user1 has vew permission) to the collection should fail as resGen5 is not
+        # shareable
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen5.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "error")
+        self.assertEqual(self.resCollection.resources.count(), 0)
+
+        # make resGen5 not discoverable
+        self.resGen5.raccess.discoverable = False
+        self.resGen5.raccess.save()
+        # remove all existing contained resources
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': []},
+                                        )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        # trying to add resGen5 (for which user1 has vew permission) to the collection should fail as resGen5 is not
+        # discoverable
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen5.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "error")
+        self.assertEqual(self.resCollection.resources.count(), 0)
+
+        # make resGen5 discoverable
+        self.resGen5.raccess.discoverable = True
+        self.resGen5.raccess.public = False
+        self.resGen5.raccess.save()
+        # trying to add resGen5 (resource discoverable but private) to the collection should be successful
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen5.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 1)
+
+        # make resGen5 public
+        self.resGen5.raccess.public = True
+        self.resGen5.raccess.save()
+        # trying to add resGen5 (public resource not shareable) to the collection should be successful
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen5.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 1)
+
         # test adding resources to a collection that does not have all the required metadata
         self.assertEqual(self.resCollection_with_missing_metadata.resources.count(), 0)
         url_to_update_collection = self.url_to_update_collection.format(
@@ -680,7 +736,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 3)
 
         # make a new version of collection
-        new_collection = create_empty_resource(self.resCollection.short_id, self.user1)
+        new_collection = create_empty_resource(self.resCollection.short_id, self.user1.username)
 
         new_collection = create_new_version_resource(self.resCollection, new_collection, self.user1)
 
@@ -708,7 +764,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 3)
 
         # make a new copy of collection
-        new_collection = create_empty_resource(self.resCollection.short_id, self.user1,
+        new_collection = create_empty_resource(self.resCollection.short_id, self.user1.username,
                                                action='copy')
 
         new_collection = copy_resource(self.resCollection, new_collection)
@@ -871,15 +927,15 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         hasPart = "hasPart"
 
         # check self.resGen1.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen1.short_id)
+        value = self.resGen1.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen2.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen2.short_id)
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen3.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
 
@@ -895,15 +951,15 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.metadata.relations.count(), 2)
 
         # check self.resGen1.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen1.short_id)
+        value = self.resGen1.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen2.short_id -- should be 0
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen2.short_id)
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 0)
         # check self.resGen3.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
+        value = self.resGen3.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
 

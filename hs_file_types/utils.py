@@ -1,14 +1,26 @@
 import json
 import os
-from dateutil import parser
 from operator import lt, gt
-from hs_core.hydroshare import utils
 
-from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
-    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
-
-from hs_file_types.models.base import AbstractLogicalFile
+from dateutil import parser
 from django.apps import apps
+from django.db import transaction
+from rdflib import RDFS, Graph
+from rdflib.namespace import DC, Namespace
+
+from hs_core.hydroshare import utils, get_resource_file
+from hs_file_types.models.base import AbstractLogicalFile
+from .models import (
+    GenericLogicalFile,
+    GeoRasterLogicalFile,
+    NetCDFLogicalFile,
+    GeoFeatureLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile,
+    FileSetLogicalFile,
+    ModelProgramLogicalFile,
+    ModelInstanceLogicalFile,
+)
 
 
 def get_SupportedAggTypes_choices():
@@ -46,10 +58,10 @@ def update_target_spatial_coverage(target):
     aggregations (file type). Note: This action will overwrite any existing target spatial
     coverage data.
 
-    :param  target: an instance of CompositeResource or FileSetLogicalFile
+    :param  target: an instance of CompositeResource or FileSetLogicalFile or ModelInstanceLogicalFile
     """
 
-    if isinstance(target, FileSetLogicalFile):
+    if isinstance(target, FileSetLogicalFile) or isinstance(target, ModelInstanceLogicalFile):
         spatial_coverages = [lf.metadata.spatial_coverage for lf in target.get_children()
                              if lf.metadata.spatial_coverage is not None]
     else:
@@ -145,9 +157,9 @@ def update_target_temporal_coverage(target):
     Note: This action will overwrite any existing target temporal
     coverage data.
 
-    :param  target: an instance of CompositeResource or FileSetLogicalFile
+    :param  target: an instance of CompositeResource or FileSetLogicalFile or ModelInstanceLogicalFile
     """
-    if isinstance(target, FileSetLogicalFile):
+    if isinstance(target, FileSetLogicalFile) or isinstance(target, ModelInstanceLogicalFile):
         temporal_coverages = [lf.metadata.temporal_coverage for lf in target.get_children()
                               if lf.metadata.temporal_coverage is not None]
     else:
@@ -216,30 +228,195 @@ def get_logical_file_type(res, file_id, hs_file_type=None, fail_feedback=True):
                      "NetCDF": NetCDFLogicalFile,
                      'GeoFeature': GeoFeatureLogicalFile,
                      'RefTimeseries': RefTimeseriesLogicalFile,
-                     'TimeSeries': TimeSeriesLogicalFile}
+                     'TimeSeries': TimeSeriesLogicalFile,
+                     'ModelProgram': ModelProgramLogicalFile,
+                     'ModelInstance': ModelInstanceLogicalFile}
+
     if hs_file_type not in file_type_map:
         if fail_feedback:
             raise ValueError("Unsupported aggregation type. Supported aggregation types are: {"
-                             "}".format(list(ext_to_type.keys())))
+                             "}".format(list(file_type_map.keys())))
         return None
     logical_file_type_class = file_type_map[hs_file_type]
     return logical_file_type_class
 
 
+def get_logical_file(agg_type_name):
+    file_type_map = {"GeographicRasterAggregation": GeoRasterLogicalFile,
+                     "SingleFileAggregation": GenericLogicalFile,
+                     "FileSetAggregation": FileSetLogicalFile,
+                     "MultidimensionalAggregation": NetCDFLogicalFile,
+                     "GeographicFeatureAggregation": GeoFeatureLogicalFile,
+                     "ReferencedTimeSeriesAggregation": RefTimeseriesLogicalFile,
+                     "TimeSeriesAggregation": TimeSeriesLogicalFile,
+                     "ModelProgramAggregation": ModelProgramLogicalFile,
+                     "ModelInstanceAggregation": ModelInstanceLogicalFile
+                     }
+    return file_type_map[agg_type_name]
+
+
+def is_aggregation_metadata_file(file):
+    return file.name.endswith('_meta.xml')
+
+
+def is_map_file(file):
+    return file.name.endswith('_resmap.xml') or file.name == 'resourcemap.xml'
+
+
+def is_resource_metadata_file(file):
+    return os.path.basename(file.name) == 'resourcemetadata.xml'
+
+
+def identify_and_ingest_metadata_files(resource, files):
+    res_files, meta_files, map_files = identify_metadata_files(files)
+    ingest_metadata_files(resource, meta_files, map_files)
+
+
+def ingest_metadata_files(resource, meta_files, map_files):
+    # refresh to pick up any new possible aggregations
+    resource_metadata_file = None
+    for f in meta_files:
+        if is_resource_metadata_file(f):
+            resource_metadata_file = f
+        elif is_aggregation_metadata_file(f):
+            ingest_logical_file_metadata_from_file(f, resource, map_files)
+    # process the resource level metadata last, some aggregation metadata is pushed to the resource level
+    if resource_metadata_file:
+        resource.refresh_from_db()
+        graph = Graph().parse(data=resource_metadata_file.read())
+        try:
+            with transaction.atomic():
+                resource.metadata.ingest_metadata(graph)
+        except:
+            # logger.exception("Error processing resource metadata file")
+            raise
+    resource.setAVU('metadata_dirty', True)
+    resource.setAVU("bag_modified", True)
+
+
+def identify_metadata_files(files):
+
+    res_files = []
+    meta_files = []
+    map_files = []
+    for f in files:
+        if is_resource_metadata_file(f) or is_aggregation_metadata_file(f):
+            meta_files.append(f)
+        elif is_map_file(f):
+            map_files.append(f)
+        else:
+            res_files.append(f)
+    return res_files, meta_files, map_files
+
+
+def get_map_graph(subject, map_files):
+    map_name = subject.split('data/contents/', 1)[1]
+    map_name = map_name.split('#', 1)[0]
+    for map_file in map_files:
+        if map_file.name.endswith(map_name):
+            return Graph().parse(data=map_file.read())
+    raise Exception(f"Could not find _resmap.xml for {subject}")
+
+
+def get_aggregation_files(map_graph):
+    ORE = Namespace("http://www.openarchives.org/ore/terms/")
+    files = []
+    for _, _, o in map_graph.triples((None, ORE.aggregates, None)):
+        file_path = str(o)
+        if not file_path.endswith("_meta.xml"):
+            files.append(file_path)
+    return files
+
+
+def ingest_logical_file_metadata_from_file(metadata_file, resource, map_files=[]):
+    ingest_logical_file_metadata_from_string(metadata_file.read(), resource, map_files)
+
+
+def ingest_logical_file_metadata_from_string(metadata_str, resource, map_files=[]):
+    graph = Graph()
+    graph = graph.parse(data=metadata_str)
+    ingest_logical_file_metadata(graph, resource, map_files)
+
+
+def ingest_logical_file_metadata(graph, resource, map_files=[]):
+    resource.refresh_from_db()
+
+    agg_type_name = None
+    for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
+        agg_type_name = s.split("/")[-1]
+        break
+    if not agg_type_name:
+        raise Exception("Could not derive aggregation type from {}".format(graph))
+
+    subject = None
+    for s, _, _ in graph.triples((None, DC.title, None)):
+        subject = s.split('/resource/', 1)[1].split("#")[0]
+        break
+    if not subject:
+        raise Exception("Could not derive aggregation path from {}".format(graph))
+
+    logical_file_class = get_logical_file(agg_type_name)
+    lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
+
+    if not lf:
+        # see if the files exist and create it
+        map_graph = get_map_graph(subject, map_files)
+        aggregation_files = get_aggregation_files(map_graph)
+        # making an assumption that model program/instance is not folder based when there is only one file
+        is_folder_based = logical_file_class is FileSetLogicalFile or len(aggregation_files) > 1
+
+        if is_folder_based:
+            file_path = subject.rsplit('/', 1)[0]
+            file_path = file_path.split('data/contents/', 1)[1]
+            res_file = resource.files.filter(file_folder=file_path).first()
+            if res_file:
+                set_logical_file_type(res=resource, user=None, file_id=None, folder_path=file_path,
+                                      logical_file_type_class=logical_file_class, fail_feedback=True)
+        else:
+            file_path = aggregation_files[0].split('data/contents/', 1)[1]
+            res_file = get_resource_file(resource.short_id, file_path)
+            if res_file:
+                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                      logical_file_type_class=logical_file_class, fail_feedback=True)
+            else:
+                raise ValueError(f"Could not find {file_path} referenced in logical file _meta.xml file {subject}")
+        if res_file:
+            res_file.refresh_from_db()
+            lf = res_file.logical_file
+        else:
+            raise Exception("Could not find aggregation for {}".format(subject))
+        if not lf:
+            raise Exception("Files for aggregation in metadata file {} could not be found".format(subject))
+
+    with transaction.atomic():
+        lf.metadata.delete_all_elements()
+        lf.metadata.ingest_metadata(graph)
+        lf.create_aggregation_xml_documents()
+
+
+def get_logical_file_by_map_file_path(resource, logical_file_class, map_file_path):
+    for logical_file in logical_file_class.objects.filter(resource=resource):
+        if logical_file.map_short_file_path in map_file_path:
+            return logical_file
+    return None
+
+
 def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path='', extra_data={},
-                          fail_feedback=True):
+                          fail_feedback=True, logical_file_type_class=None):
     """ set the logical file type for a new file """
-    logical_file_type_class = get_logical_file_type(res, file_id, hs_file_type, fail_feedback)
+    if not logical_file_type_class:
+        logical_file_type_class = get_logical_file_type(res, file_id, hs_file_type, fail_feedback)
 
     try:
         # Some aggregations use the folder name for the aggregation name
         folder_path = folder_path.rstrip('/') if folder_path else folder_path
         if extra_data:
-            logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
-                                                  folder_path=folder_path, extra_data=extra_data)
+            return logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
+                                                         folder_path=folder_path, extra_data=extra_data)
         else:
-            logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
-                                                  folder_path=folder_path)
+            return logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
+                                                         folder_path=folder_path)
     except:
         if fail_feedback:
             raise
+        return None

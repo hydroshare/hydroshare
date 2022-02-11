@@ -40,10 +40,10 @@ class TestCreateResource(HSRESTTestCase):
         response = self.getResourceBag(res_id)
         if response['Content-Type'] == 'application/json':
             content = json.loads(response.content.decode())
-            if content['bag_status'] == "Not ready":
+            if content['status'] != "Completed":
                 # wait for 10 seconds to give task a chance to run and finish
                 time.sleep(10)
-                task_id = content['task_id']
+                task_id = content['id']
                 status_response = self.getDownloadTaskStatus(task_id)
                 status_content = json.loads(status_response.content.decode())
                 if status_content['status']:
@@ -83,10 +83,10 @@ class TestCreateResource(HSRESTTestCase):
         response = self.getResourceBag(res_id)
         if response['Content-Type'] == 'application/json':
             content = json.loads(response.content.decode())
-            if content['bag_status'] == "Not ready":
+            if content['status'] != "Completed":
                 # wait for 10 seconds to give task a chance to run and finish
                 time.sleep(10)
-                task_id = content['task_id']
+                task_id = content['id']
                 status_response = self.getDownloadTaskStatus(task_id)
                 status_content = json.loads(status_response.content.decode())
                 if status_content['status']:
@@ -155,8 +155,6 @@ class TestCreateResource(HSRESTTestCase):
         # relation
         metadata.append({'relation': {'type': 'isPartOf',
                                       'value': 'http://hydroshare.org/resource/001'}})
-        # source
-        metadata.append({'source': {'derived_from': 'http://hydroshare.org/resource/0001'}})
 
         # identifier
         metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})
@@ -218,11 +216,6 @@ class TestCreateResource(HSRESTTestCase):
         relation = resource.metadata.relations.all().first()
         self.assertEqual(relation.type, 'isPartOf')
         self.assertEqual(relation.value, 'http://hydroshare.org/resource/001')
-
-        # there should be 1 source element
-        self.assertEqual(resource.metadata.sources.all().count(), 1)
-        source = resource.metadata.sources.all().first()
-        self.assertEqual(source.derived_from, 'http://hydroshare.org/resource/0001')
 
         # there should be 2 identifiers
         self.assertEqual(resource.metadata.identifiers.all().count(), 2)

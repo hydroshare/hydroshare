@@ -11,11 +11,11 @@
                     {% if czo_user %}
                         <div id="cv-add-keyword-wrapper" class="input-group"
                              @keyup.enter="addKeyword('{{ cm.short_id }}')">
-                            {#                        https://github.com/alexurquhart/vue-bootstrap-typeahead#}
+                            {# https://github.com/alexurquhart/vue-bootstrap-typeahead #}
                             <vue-bootstrap-typeahead
                                     :data="{{ odm2_terms }}"
                                     v-model="newKeyword"
-                                    {#                                Undocumented https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19#}
+                                    {# Undocumented https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19 #}
                                     ref="newKeyword"
                                     input-class="typeahead-search-input"
                                     @hit=addKeyword('{{ cm.short_id }}')
@@ -39,42 +39,57 @@
                         </div>
                     {% endif %}
                 {% endif %}
-
-                <ul id="lst-tags" class="custom-well tag-list">
+                <ul id="lst-tags" class="custom-well tag-list" style="display:none">
                     <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
                     <li v-else v-for="k in resKeywords">
                         {% if resource_edit_mode %}
-                            <span v-if="resKeywords.length" class="tag">${ k }<span
-                                    @click="removeKeyword('{{ cm.short_id }}', k )"
-                                    class="glyphicon glyphicon-remove-circle icon-remove"></span></span>
+                            {% if cm.raccess.published  %}
+                                <span v-if="resKeywords.length" class="tag">
+                                    {% templatetag openvariable %} k {% templatetag closevariable %}<span v-if="resKeywords.length > 1"
+                                        @click="removeKeyword('{{ cm.short_id }}', k )"
+                                        class="glyphicon glyphicon-remove-circle icon-remove"></span>
+                                </span>
+                            {% else %}
+                                <span v-if="resKeywords.length" class="tag">
+                                    {% templatetag openvariable %} k {% templatetag closevariable %}<span
+                                        @click="removeKeyword('{{ cm.short_id }}', k )"
+                                        class="glyphicon glyphicon-remove-circle icon-remove"></span>
+                                </span>
+                            {% endif %}
                         {% else %}
                             <a class='tag' target="_blank"
-                               :href="'/search/?q=&selected_facets=subject_exact:' + k">${ k }</a>
+                               :href="'/search/?subject=' + safeJS(k)">{% templatetag openvariable %} k {% templatetag closevariable %}</a>
                         {% endif %}
                     </li>
                 </ul>
             </div>
-            <div>
+            <div id="subj-inline-error" style="display:none">
                 <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
                 <div v-if="error" class='alert alert-danger space-top small'>
-                    <strong>Error: </strong>${ error }
+                    <strong>Error: </strong>{% templatetag openvariable %} k {% templatetag closevariable %}
                 </div>
             </div>
         </div>
-
-        <div v-if="resMode === 'Edit'" class="col-xs-12 col-sm-6">
-            <span class="alert alert-warning group-title" role="alert">
-                <div class="flex">
-                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                    <em style="padding-right:20px;">
-                        Deleting all keywords will set the resource sharing status to <strong>private</strong>.
-                    </em>
-                </div>
-            </span>
-        </div>
+        {% if not cm.raccess.published %}
+            <div v-if="resMode === 'Edit'" class="col-xs-12 col-sm-6">
+                <span class="alert alert-warning group-title" role="alert">
+                    <div class="flex">
+                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                        <em style="padding-right:20px;">
+                            Deleting all keywords will set the resource sharing status to <strong>private</strong>.
+                        </em>
+                    </div>
+                </span>
+            </div>
+       {% endif %}
     </div>
 </div>
-{# typeahead is used in title.html #}
-<link href="{{ STATIC_URL }}css/vue-bootstrap-typeahead.0.2.6.css" rel="stylesheet">
-<script type="text/javascript" src="{{ STATIC_URL }}js/vue-bootstrap-typeahead.0.2.6.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/subject-keywords-app.js"></script>
+{% block extra_css %}
+    {# typeahead is used in title.html #}
+    <link href="{{ STATIC_URL }}css/vue-bootstrap-typeahead.0.2.6.css" rel="stylesheet">
+{% endblock %}
+{% block extra_js %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-bootstrap-typeahead.0.2.6.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/subject-keywords-app.js"></script>
+{% endblock %}
+

@@ -5,7 +5,11 @@ import logging
 import shutil
 import copy
 from uuid import uuid4
+from urllib.parse import quote
 import errno
+import urllib
+
+from urllib.request import pathname2url, url2pathname
 
 from django.apps import apps
 from django.http import Http404
@@ -23,7 +27,7 @@ from mezzanine.conf import settings
 from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
     post_add_files_to_resource
 from hs_core.models import AbstractResource, BaseResource, ResourceFile
-from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -42,6 +46,14 @@ class ResourceFileValidationException(Exception):
 
 
 class QuotaException(Exception):
+    pass
+
+
+class ResourceCopyException(Exception):
+    pass
+
+
+class ResourceVersioningException(Exception):
     pass
 
 
@@ -101,24 +113,29 @@ def user_from_id(user, raise404=True):
     if isinstance(user, User):
         return user
 
-    try:
-        tgt = User.objects.get(username=user)
-    except ObjectDoesNotExist:
+    tgt = None
+    if str(user).isnumeric():
         try:
-            tgt = User.objects.get(email=user)
+            tgt = User.objects.get(pk=int(user))
+        except ValueError:
+            pass
+        except ObjectDoesNotExist:
+            pass
+    else:
+        try:
+            tgt = User.objects.get(username__iexact=user)
         except ObjectDoesNotExist:
             try:
-                tgt = User.objects.get(pk=int(user))
-            except ValueError:
-                if raise404:
-                    raise Http404('User not found')
-                else:
-                    raise User.DoesNotExist
+                tgt = User.objects.get(email__iexact=user)
             except ObjectDoesNotExist:
-                if raise404:
-                    raise Http404('User not found')
-                else:
-                    raise
+                pass
+
+    if tgt is None:
+        if raise404:
+            raise Http404('User not found')
+        else:
+            raise
+
     return tgt
 
 
@@ -408,6 +425,14 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
                 tgt_logical_file.save()
             tgt_logical_file.add_resource_file(new_resource_file)
 
+    for lf in map_logical_files:
+        if lf.type_name() == 'ModelProgramLogicalFile':
+            # for any model program logical files in original resource need to copy the model program file types
+            lf.copy_mp_file_types(tgt_logical_file=map_logical_files[lf])
+        elif lf.type_name() == 'ModelInstanceLogicalFile':
+            # for any model instance logical files in original resource need to set the executed_by (FK) relation
+            lf.copy_executed_by(tgt_logical_file=map_logical_files[lf])
+
     if src_res.resource_type.lower() == "collectionresource":
         # clone contained_res list of original collection and add to new collection
         # note that new collection resource will not contain "deleted resources"
@@ -467,9 +492,17 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     """
 
     if not by_user:
-        logger.warning("by_user not specified in resource_modified, last_changed_by will not be updated")
+        user = None
     else:
-        resource.last_changed_by = by_user
+        if isinstance(by_user, User):
+            user = by_user
+        else:
+            try:
+                user = User.objects.get(username=by_user)
+            except User.DoesNotExist:
+                user = None
+    if user:
+        resource.last_changed_by = user
 
     resource.updated = now().isoformat()
     # seems this is the best place to sync resource title with metadata title
@@ -480,7 +513,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
-        create_bag_files(resource)
+        create_bag_metadata_files(resource)
 
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
@@ -628,14 +661,25 @@ def convert_file_size_to_unit(size, unit):
         return tbsize
 
 
-def validate_user_quota(user, size):
+def validate_user_quota(user_or_username, size):
     """
     validate to make sure the user is not over quota with the newly added size
-    :param user: the user to be validated
+    :param user_or_username: the user to be validated
     :param size: the newly added file size to add on top of the user's used quota to be validated.
                  size input parameter should be in byte unit
     :return: raise exception for the over quota case
     """
+    if user_or_username:
+        if isinstance(user_or_username, User):
+            user = user_or_username
+        else:
+            try:
+                user = User.objects.get(username=user_or_username)
+            except User.DoesNotExist:
+                user = None
+    else:
+        user = None
+
     if user:
         # validate it is within quota hard limit
         uq = user.quotas.filter(zone='hydroshare').first()
@@ -790,20 +834,29 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
         metadata.append({'creator': creator_data})
 
 
+def get_user_party_name(user):
+    user_profile = get_profile(user)
+    if user.last_name and user.first_name:
+        if user_profile.middle_name:
+            party_name = '%s, %s %s' % (user.last_name, user.first_name,
+                                            user_profile.middle_name)
+        else:
+            party_name = '%s, %s' % (user.last_name, user.first_name)
+    elif user.last_name:
+        party_name = user.last_name
+    elif user.first_name:
+        party_name = user.first_name
+    elif user_profile.middle_name:
+        party_name = user_profile.middle_name
+    else:
+        party_name = ''
+    return party_name
+
+
 def get_party_data_from_user(user):
     party_data = {}
     user_profile = get_profile(user)
-
-    if user_profile.middle_name:
-        user_full_name = '%s, %s %s' % (user.last_name, user.first_name,
-                                        user_profile.middle_name)
-    else:
-        user_full_name = '%s, %s' % (user.last_name, user.first_name)
-
-    if user_full_name:
-        party_name = user_full_name
-    else:
-        party_name = user.username
+    party_name = get_user_party_name(user)
 
     party_data['name'] = party_name
     party_data['email'] = user.email
@@ -819,6 +872,10 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
                                   source_names=[], **kwargs):
     if __debug__:
         assert(isinstance(source_names, list))
+
+    if resource.raccess.published and not user.is_superuser:
+        raise ValidationError("Only admin can add files to a published resource")
+
     resource_cls = resource.__class__
     if len(files) > 0:
         size = validate_resource_file_size(files)
@@ -842,13 +899,17 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     from .resource import add_resource_files
     if __debug__:
         assert(isinstance(source_names, list))
+
+    if resource.raccess.published and not user.is_superuser:
+        raise ValidationError("Only admin can add files to a published resource")
+
     folder = kwargs.pop('folder', '')
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
                                                source_names=source_names, full_paths=full_paths,
-                                               auto_aggregate=auto_aggregate)
-
+                                               auto_aggregate=auto_aggregate, user=user)
+    resource.refresh_from_db()
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
@@ -874,7 +935,7 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder='', source_name='',
-                         check_target_folder=False, add_to_aggregation=True):
+                         check_target_folder=False, add_to_aggregation=True, user=None):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param  resource: Resource to which file should be added
@@ -893,26 +954,33 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     :param  add_to_aggregation: if true and the resource is a composite resource then the file
     being added to the resource also will be added to a fileset aggregation if such an aggregation
     exists in the file path
+    :param  user: user who is adding file to the resource
     :return: The identifier of the ResourceFile added.
     """
 
     # validate parameters
+    if resource.raccess.published:
+        if user is None or not user.is_superuser:
+            raise ValidationError("Only admin can add files to a published resource")
+
     if check_target_folder and resource.resource_type != 'CompositeResource':
         raise ValidationError("Resource must be a CompositeResource for validating target folder")
 
     if f:
         if check_target_folder and folder:
-                tgt_full_upload_path = os.path.join(resource.file_path, folder)
-                if not resource.can_add_files(target_full_path=tgt_full_upload_path):
-                    err_msg = "File can't be added to this folder which represents an aggregation"
-                    raise ValidationError(err_msg)
+            tgt_full_upload_path = os.path.join(resource.file_path, folder)
+            if not resource.can_add_files(target_full_path=tgt_full_upload_path):
+                err_msg = "File can't be added to this folder which represents an aggregation"
+                raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
         if add_to_aggregation:
             if folder and resource.resource_type == 'CompositeResource':
-                aggregation = resource.get_fileset_aggregation_in_path(folder)
+                aggregation = resource.get_model_aggregation_in_path(folder)
+                if aggregation is None:
+                    aggregation = resource.get_fileset_aggregation_in_path(folder)
                 if aggregation is not None:
-                    # make the added file part of the fileset aggregation
+                    # make the added file part of the fileset or model program/instance aggregation
                     aggregation.add_resource_file(ret)
 
         # add format metadata element if necessary
@@ -921,7 +989,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     elif source_name:
         try:
             # create from existing iRODS file
-            ret = ResourceFile.create(resource, None, folder=folder, source=source_name)
+            ret = ResourceFile.create(resource, file=None, folder=folder, source=source_name)
         except SessionException as ex:
             try:
                 ret.delete()
@@ -1061,12 +1129,84 @@ def check_aggregations(resource, res_files):
     :param res_files: list of ResourceFile objects to check for aggregations creation
     :return:
     """
+    new_logical_files = []
     if resource.resource_type == "CompositeResource":
         from hs_file_types.utils import set_logical_file_type
 
         # check files for aggregation creation
         for res_file in res_files:
-            if not res_file.has_logical_file or res_file.logical_file.is_fileset:
+            if not res_file.has_logical_file or (res_file.logical_file.is_fileset or
+                                                 res_file.logical_file.is_model_instance):
                 # create aggregation from file 'res_file'
-                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                      fail_feedback=False)
+                logical_file = set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                                     fail_feedback=False)
+                if logical_file:
+                    new_logical_files.append(logical_file)
+    return new_logical_files
+
+
+def build_preview_data_url(resource, folder_path, spatial_coverage):
+    """Get a GeoServer layer preview link."""
+
+    if resource.raccess.public is True:
+        try:
+            geoserver_url = settings.HSWS_GEOSERVER_URL
+            resource_id = resource.short_id
+            layer_id = '.'.join('/'.join(folder_path.split('/')[2:]).split('.')[:-1])
+
+            for k, v in settings.HSWS_GEOSERVER_ESCAPE.items():
+                layer_id = layer_id.replace(k, v)
+
+            layer_id = quote(f'HS-{resource_id}:{layer_id}')
+
+            extent = quote(','.join((
+                str(spatial_coverage['westlimit']),
+                str(spatial_coverage['southlimit']),
+                str(spatial_coverage['eastlimit']),
+                str(spatial_coverage['northlimit']),
+            )))
+
+            layer_srs = quote(spatial_coverage['projection'][-9:])
+
+            preview_data_url = (
+                f'{geoserver_url}/HS-{resource_id}/wms'
+                f'?service=WMS&version=1.1&request=GetMap'
+                f'&layers={layer_id}'
+                f'&bbox={extent}'
+                f'&width=800&height=500'
+                f'&srs={layer_srs}'
+                f'&format=application/openlayers'
+            )
+
+        except Exception as e:
+            logger.exception("build_preview_data_url: " + str(e))
+            preview_data_url = None
+
+    else:
+        preview_data_url = None
+
+    return preview_data_url
+
+
+def encode_resource_url(url):
+    """
+    URL encodes a full resource file/folder url.
+    :param url: a string url
+    :return: url encoded string
+    """
+    parsed_url = urllib.parse.urlparse(url)
+    url_encoded_path = pathname2url(parsed_url.path)
+    encoded_url = parsed_url._replace(path=url_encoded_path).geturl()
+    return encoded_url
+
+
+def decode_resource_url(url):
+    """
+    URL decodes a full resource file/folder url.
+    :param url: an encoded string url
+    :return: url decoded string
+    """
+    parsed_url = urllib.parse.urlparse(url)
+    url_encoded_path = url2pathname(parsed_url.path)
+    encoded_url = parsed_url._replace(path=url_encoded_path).geturl()
+    return encoded_url

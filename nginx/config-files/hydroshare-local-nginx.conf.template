@@ -20,7 +20,7 @@ proxy_set_header X-Forwarded-Proto $scheme;
 client_max_body_size 4096m;
 client_body_buffer_size 1m;
 proxy_intercept_errors on;
-proxy_buffering on;
+proxy_buffering off;
 proxy_buffer_size 128k;
 proxy_buffers 256 16k;
 proxy_busy_buffers_size 256k;
@@ -54,7 +54,8 @@ server {
 
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log error;
-    error_log       /var/log/nginx/system.log notice;
+    # This clutters logs without usefulness 2021/06/21 ALC
+    # error_log       /var/log/nginx/system.log notice;
     # Uncomment the following line to generate debugging log entries
     # error_log       /var/log/nginx/system.log debug;
 

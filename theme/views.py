@@ -114,12 +114,12 @@ class UserProfileView(TemplateView):
 class UserPasswordResetView(TemplateView):
     template_name = 'accounts/reset_password.html'
 
-    def get_context_data(self, **kwargs):
-        token = kwargs.pop('token', None)
-        if token is None:
-            raise ValidationError('Unauthorised access to reset password')
-        context = super(UserPasswordResetView, self).get_context_data(**kwargs)
-        return context
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.error(request, "The link you clicked is no longer valid.")
+            return HttpResponseRedirect(reverse('password_reset_url'))
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
 
 def landingPage(request, template="pages/homepage.html"):
     return render(request, template)
@@ -159,7 +159,7 @@ def comment(request, template="generic/comments.html"):
 
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based rating form and view
-def rating(request):
+def rating(request, template="generic/rating.html"):
     """
     Handle a ``RatingForm`` submission and redirect back to its
     related object.
@@ -175,16 +175,8 @@ def rating(request):
     rating_form = RatingForm(request, obj, post_data)
     if rating_form.is_valid():
         rating_form.save()
-        if request.is_ajax():
-            # Reload the object and return the rating fields as json.
-            obj = obj.__class__.objects.get(id=obj.id)
-            rating_name = obj.get_ratingfield_name()
-            json = {}
-            for f in ("average", "count", "sum"):
-                json["rating_" + f] = getattr(obj, "%s_%s" % (rating_name, f))
-            response = HttpResponse(dumps(json))
-        ratings = ",".join(rating_form.previous + [rating_form.current])
-        set_cookie(response, "mezzanine-rating", ratings)
+        return response
+    response = render(request, template)
     return response
 
 
@@ -261,8 +253,11 @@ def signup_verify(request, uidb36=None, token=None):
 
 
 @login_required
-def update_user_profile(request):
-    user = request.user
+def update_user_profile(request, profile_user_id):
+    if request.user.is_superuser:
+        user = User.objects.get(id=profile_user_id)
+    else:
+        user = request.user
     old_email = user.email
     user_form = UserForm(request.POST, instance=user)
     user_profile = UserProfile.objects.filter(user=user).first()
@@ -292,7 +287,7 @@ def update_user_profile(request):
             if user_form.is_valid() and profile_form.is_valid():
                 user_form.save()
                 profile = profile_form.save(commit=False)
-                profile.user = request.user
+                profile.user = user
                 profile.identifiers = identifiers
                 profile.save()
                 messages.success(request, "Your profile has been successfully updated.")
@@ -344,6 +339,7 @@ def update_user_profile(request):
         messages.error(request, str(ex))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 def resend_verification_email(request, email):
     user = User.objects.filter(email=email).first()
@@ -554,18 +550,21 @@ def email_verify_password_reset(request, uidb36=None, token=None):
     """
 
     user = authenticate(uidb36=uidb36, token=token)
-    if not user.is_active:
-        # password reset for user that hasn't hit the verification email, since they're resetting
-        # the password, we know the email is good
-        user.is_active = True
-        user.save()
     if user is not None:
+        if not user.is_active:
+            # password reset for user that hasn't hit the verification email, since they're resetting
+            # the password, we know the email is good
+            user.is_active = True
+            user.save()
         auth_login(request, user)
         # redirect to user to password reset page
-        return HttpResponseRedirect(reverse('new_password_for_reset', kwargs={'token': token}))
+        return HttpResponseRedirect(reverse('new_password_for_reset'))
     else:
-        messages.error(request, _("The link you clicked is no longer valid."))
-        return redirect("/")
+        if request.user and request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('new_password_for_reset'))
+        else:
+            messages.error(request, _("The link you clicked is no longer valid, please request a password reset link."))
+            return HttpResponseRedirect('/accounts/password/reset/')
 
 @login_required()
 def delete_resource_comment(request, id):

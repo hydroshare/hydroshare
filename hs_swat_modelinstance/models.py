@@ -382,6 +382,10 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
     _model_parameter = GenericRelation(ModelParameter)
     _model_input = GenericRelation(ModelInput)
 
+    def ingest_metadata(self, graph):
+        raise NotImplementedError("Metadata ingestion for {} is unsupported at this time"
+                                  .format(self.__class__.__name__))
+
     @property
     def resource(self):
         return SWATModelInstanceResource.objects.filter(object_id=self.id).first()
@@ -493,13 +497,13 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                         self.update_non_repeatable_element(element_name, metadata,
                                                            element_property_name)
 
-    def get_xml(self, pretty_print=True, include_format_elements=True):
+    def get_xml_legacy(self, pretty_print=True, include_format_elements=True):
 
         # get the xml string representation of the core metadata elements
-        xml_string = super(SWATModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
+        xml_string = super(SWATModelInstanceMetaData, self).get_xml_legacy(pretty_print=pretty_print)
 
         # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
+        RDF_ROOT = etree.fromstring(xml_string.encode())
 
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)

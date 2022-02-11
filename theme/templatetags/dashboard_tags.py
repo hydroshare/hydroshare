@@ -3,6 +3,8 @@
 from django import template
 import timeago
 from django.utils import timezone as django_timezone
+from django.utils.html import escape
+
 register = template.Library()
 
 
@@ -15,7 +17,7 @@ def date_time_pac(in_datetime):
 @register.simple_tag(name='resource_link_builder')
 def build_resource_link(title, short_id):
     link = "/resource/" + short_id + "/"
-    return "<strong> <a href=\"" + link + "\">" + title + "</a> </strong>"
+    return "<strong> <a href=\"" + link + "\">" + escape(title) + "</a> </strong>"
 
 
 @register.simple_tag(name='build_privacy_status')

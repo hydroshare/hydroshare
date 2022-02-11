@@ -38,7 +38,7 @@ class TestBagIt(TestCase):
 
     def test_create_bag_files(self):
         # this is the api call we are testing
-        irods_storage_obj = hs_bagit.create_bag_files(self.test_res)
+        irods_storage_obj = hs_bagit.create_bag_metadata_files(self.test_res)
         self.assertTrue(isinstance(irods_storage_obj, IrodsStorage))
 
     def test_bag_creation_and_deletion(self):
@@ -94,8 +94,9 @@ class TestBagIt(TestCase):
                                          'id': mock_scheduled_job_id,
                                          'worker_pid': None
                                      }}]}
-        ret_id = _retrieve_task_id(mock_res_id, mock_active_and_reserved_jobs)
+        job_name = 'hs_core.tasks.create_bag_by_irods'
+        ret_id = _retrieve_task_id(job_name, mock_res_id, mock_active_and_reserved_jobs)
         self.assertEqual(ret_id, mock_active_and_reserved_job_id, msg="retrieved task id not equal to "
                                                                       "mock_active_and_reserved_job_id")
-        ret_id = _retrieve_task_id(mock_res_id, mock_scheduled_jobs)
+        ret_id = _retrieve_task_id(job_name, mock_res_id, mock_scheduled_jobs)
         self.assertEqual(ret_id, mock_scheduled_job_id, msg="retrieved task id not equal to mock_scheduled_job_id")

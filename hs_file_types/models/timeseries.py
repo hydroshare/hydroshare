@@ -2,10 +2,10 @@ import os
 import shutil
 import logging
 import sqlite3
-from lxml import etree
 import csv
 from dateutil import parser
 import tempfile
+import time
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
@@ -14,9 +14,12 @@ from django.template import Template, Context
 
 from dominate.tags import div, legend, strong, form, select, option, button, _input, p, \
     textarea, span
+from rdflib import BNode, Literal
+from rdflib.namespace import DCTERMS, DC
+
+from hs_core.hs_rdf import HSTERMS
 
 from hs_core.hydroshare import utils
-from hs_core.models import CoreMetaData
 from hs_core.signals import post_add_timeseries_aggregation
 
 from hs_app_timeseries.models import TimeSeriesMetaDataMixin, AbstractCVLookupTable
@@ -383,24 +386,153 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             return {'is_valid': False, 'element_data_dict': None,
                     "errors": element_validation_form.errors}
 
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
+    def ingest_metadata(self, graph):
+        subject = self.rdf_subject_from_graph(graph)
 
-        # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(TimeSeriesFileMetaData, self)._get_xml_containers()
-        NAMESPACES = CoreMetaData.NAMESPACES
+        def copy_out_of_result(term):
+            class HashableDict(dict):
+                def __hash__(self):
+                    s = sorted(self.items())
+                    t = tuple(s)
+                    h = hash(t)
+                    return h
+            # extract all term_entries
+            terms_by_id = {}
+            for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+                term_entry = HashableDict()
+                term_node = graph.value(subject=result_node, predicate=term)
+                result_uuid = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
+                result_uuid = str(result_uuid)
+                if term_node:
+                    for _, terms_term, term_value in graph.triples((term_node, None, None)):
+                        term_entry[terms_term] = term_value
+                    terms_by_id[result_uuid] = term_entry
+
+            # group common term_entries
+            flipped = {}
+            for key, value in terms_by_id.items():
+                if value not in flipped:
+                    flipped[value] = [key]
+                else:
+                    flipped[value].append(key)
+
+            # update the graph
+            for term_entry, result_uuids in flipped.items():
+                term_node = BNode()
+                graph.add((subject, term, term_node))
+                graph.add((term_node, HSTERMS.timeSeriesResultUUID, Literal(result_uuids)))
+                for key, value in term_entry.items():
+                    graph.add((term_node, key, value))
+
+            # remove nested entry of term
+            for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+                for _, _, term_node in graph.triples((result_node, term, None)):
+                    for _, pred, obj in graph.triples((term_node, None, None)):
+                        graph.remove((term_node, pred, obj))
+                    graph.remove((result_node, term, term_node))
+
+        copy_out_of_result(HSTERMS.site)
+        copy_out_of_result(HSTERMS.variable)
+        copy_out_of_result(HSTERMS.method)
+        copy_out_of_result(HSTERMS.processingLevel)
+        copy_out_of_result(HSTERMS.UTCOffSet)
+
+        # pull units from unit section
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            unit = graph.value(subject=result_node, predicate=HSTERMS.unit)
+            if unit:
+                for _, unit_term, unit_value in graph.triples((unit, None, None)):
+                    graph.add((result_node, unit_term, unit_value))
+                    graph.remove((unit, unit_term, unit_value))
+                graph.remove((result_node, HSTERMS.unit, unit))
+
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            series_id = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
+            graph.remove((result_node, HSTERMS.timeSeriesResultUUID, series_id))
+            graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal([str(series_id)])))
+
+        # abstract is all by itself on this model, won't get picked up by ingestion automatically
+        description_node = graph.value(subject=subject, predicate=DC.description, default=None)
+        if description_node:
+            self.abstract = graph.value(subject=description_node, predicate=DCTERMS.abstract, default="").toPython()
+            self.save()
+
+        super(TimeSeriesFileMetaData, self).ingest_metadata(graph)
+
+    def get_rdf_graph(self):
+        graph = super(TimeSeriesFileMetaData, self).get_rdf_graph()
+
+        subject = self.rdf_subject()
+
+        def copy_into_result(term, result_id):
+            for _, _, term_node in graph.triples((subject, term, None)):
+                for _, _, term_series_ids in graph.triples((term_node, HSTERMS.timeSeriesResultUUID, None)):
+                    if term_series_ids:
+                        term_series_ids = term_series_ids.strip('][').split(', ')
+                        if result_id in term_series_ids:
+                            result_term_node = BNode()
+                            graph.add((result_node, term, result_term_node))
+                            for _, term_pred, term_obj in graph.triples((term_node, None, None)):
+                                if term_pred != HSTERMS.timeSeriesResultUUID:
+                                    graph.add((result_term_node, term_pred, term_obj))
+
+        def remove_term(term):
+            for _, _, term_node in graph.triples((subject, term, None)):
+                for _, pred, obj in graph.triples((term_node, None, None)):
+                    graph.remove((term_node, pred, obj))
+                graph.remove((subject, term, term_node))
+
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            result_series_id = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
+            if result_series_id:
+                result_series_id = result_series_id.strip('][').split(', ')[0]
+                copy_into_result(HSTERMS.site, result_series_id)
+                copy_into_result(HSTERMS.variable, result_series_id)
+                copy_into_result(HSTERMS.method, result_series_id)
+                copy_into_result(HSTERMS.processingLevel, result_series_id)
+                copy_into_result(HSTERMS.UTCOffSet, result_series_id)
+                graph.remove((result_node, HSTERMS.timeSeriesResultUUID, None))
+                result_series_id = result_series_id.replace("'", "")
+                graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal(result_series_id)))
+
+        remove_term(HSTERMS.site)
+        remove_term(HSTERMS.variable)
+        remove_term(HSTERMS.method)
+        remove_term(HSTERMS.processingLevel)
+        remove_term(HSTERMS.UTCOffSet)
+
+        # correct series_id entry from list cast to string
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            series_id = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
+            graph.remove((result_node, HSTERMS.timeSeriesResultUUID, series_id))
+            series_id = series_id.replace("['", "").replace("']", "")
+            graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal(series_id)))
+
+        # push unit values into units section
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            units_type = graph.value(subject=result_node, predicate=HSTERMS.UnitsType)
+            units_name = graph.value(subject=result_node, predicate=HSTERMS.UnitsName)
+            units_abbreviation = graph.value(subject=result_node, predicate=HSTERMS.UnitsAbbreviation)
+            if units_type or units_name or units_abbreviation:
+                unit_node = BNode()
+                graph.add((result_node, HSTERMS.unit, unit_node))
+                if units_type:
+                    graph.add((unit_node, HSTERMS.UnitsType, units_type))
+                    graph.remove((result_node, HSTERMS.UnitsType, units_type))
+                if units_name:
+                    graph.add((unit_node, HSTERMS.UnitsName, units_name))
+                    graph.remove((result_node, HSTERMS.UnitsName, units_name))
+                if units_abbreviation:
+                    graph.add((unit_node, HSTERMS.UnitsAbbreviation, units_abbreviation))
+                    graph.remove((result_node, HSTERMS.UnitsAbbreviation, units_abbreviation))
+
         if self.abstract:
-            dc_description = etree.SubElement(container_to_add_to,
-                                              '{%s}description' % NAMESPACES['dc'])
-            dc_des_rdf_Desciption = etree.SubElement(dc_description,
-                                                     '{%s}Description' % NAMESPACES['rdf'])
-            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
-                                                '{%s}abstract' % NAMESPACES['dcterms'])
-            dcterms_abstract.text = self.abstract
+            # abstract is all by itself on this model, won't get picked up by rdf/xml creation automatically
+            description_node = BNode()
+            graph.add((subject, DC.description, description_node))
+            graph.add((description_node, DCTERMS.abstract, Literal(self.abstract)))
 
-        add_to_xml_container_helper(self, container_to_add_to)
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
+        return graph
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):
@@ -426,6 +558,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
     def get_aggregation_display_name():
         return 'Time Series Content: One or more time series held in an ODM2 format SQLite ' \
                'file and optional source comma separated (.csv) files'
+
+    @staticmethod
+    def get_aggregation_term_label():
+        return "Time Series Aggregation"
 
     @staticmethod
     def get_aggregation_type_name():
@@ -558,7 +694,6 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             base_file_name = file_name[:-len(res_file.extension)]
             file_folder = res_file.file_folder
             upload_folder = file_folder
-            file_type_success = False
             res_files_for_aggr = [res_file]
             msg = "TimeSeries aggregation type. Error when creating. Error:{}"
             with transaction.atomic():
@@ -587,15 +722,33 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     else:
                         # populate CV metadata django models from the blank sqlite file
                         extract_cv_metadata_from_blank_sqlite_file(logical_file)
-
-                    file_type_success = True
                     ft_ctx.logical_file = logical_file
                 except Exception as ex:
+                    logical_file.remove_aggregation()
                     msg = msg.format(str(ex))
                     log.exception(msg)
+                    raise ValidationError(msg)
 
-            if not file_type_success:
-                raise ValidationError(msg)
+            return logical_file
+
+    def remove_aggregation(self):
+        """Deletes the aggregation object (logical file) *self* and the associated metadata
+        object. If the aggregation contains a system generated sqlite file that resource file also will be
+        deleted."""
+
+        # need to delete the system generated sqlite file
+        sqlite_file = None
+        if self.has_csv_file:
+            # the sqlite file is a system generated file
+            for res_file in self.files.all():
+                if res_file.file_name.lower().endswith(".sqlite"):
+                    sqlite_file = res_file
+                    break
+
+        super(TimeSeriesLogicalFile, self).remove_aggregation()
+
+        if sqlite_file is not None:
+            sqlite_file.delete()
 
     def get_copy(self, copied_resource):
         """Overrides the base class method"""
@@ -853,10 +1006,10 @@ def add_blank_sqlite_file(resource, upload_folder):
     # add the sqlite file to the resource
     odm2_sqlite_file_name = 'ODM2.sqlite'
     odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+    odm2_sqlite_file_name = _get_timestamped_file_name(odm2_sqlite_file_name)
 
     try:
-        uploaded_file = UploadedFile(file=open(odm2_sqlite_file, 'rb'),
-                                     name=os.path.basename(odm2_sqlite_file))
+        uploaded_file = UploadedFile(file=open(odm2_sqlite_file, 'rb'), name=odm2_sqlite_file_name)
         new_res_file = utils.add_file_to_resource(
             resource, uploaded_file, folder=upload_folder
         )
@@ -1170,6 +1323,7 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
     temp_dir = tempfile.mkdtemp()
     odm2_sqlite_file_name = 'ODM2.sqlite'
     odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+    odm2_sqlite_file_name = _get_timestamped_file_name(odm2_sqlite_file_name)
     target_temp_sqlite_file = os.path.join(temp_dir, odm2_sqlite_file_name)
     shutil.copy(odm2_sqlite_file, target_temp_sqlite_file)
 
@@ -1219,6 +1373,12 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
     # cleanup the temp csv file
     if os.path.exists(temp_csv_file):
         shutil.rmtree(os.path.dirname(temp_csv_file))
+
+
+def _get_timestamped_file_name(file_name):
+    name, ext = os.path.splitext(file_name)
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    return "{}_{}{}".format(name, timestr, ext)
 
 
 def _extract_creators_contributors(resource, cur, file_type=False):
@@ -1794,44 +1954,6 @@ def sqlite_file_update(instance, sqlite_res_file, user):
         finally:
             if os.path.exists(temp_sqlite_file):
                 shutil.rmtree(os.path.dirname(temp_sqlite_file))
-
-
-def add_to_xml_container_helper(target_obj, container):
-    """Generates xml+rdf representation of all metadata elements associated with the *target_obj*
-    :param  target_obj: either an instance of TimeSeriesMetaData or TimeSeriesFileMetaData
-    :param  container: xml container element to which xml nodes need to be added
-    """
-
-    for time_series_result in target_obj.time_series_results:
-        ts_result_root_container = time_series_result.add_to_xml_container(
-            container=container)
-        # generate xml for 'site' element
-        sites = [site for site in target_obj.sites if time_series_result.series_ids[0] in
-                 site.series_ids]
-        if sites:
-            site = sites[0]
-            site.add_to_xml_container(container=ts_result_root_container)
-
-        # generate xml for 'variable' element
-        variables = [variable for variable in target_obj.variables if
-                     time_series_result.series_ids[0] in variable.series_ids]
-        if variables:
-            variable = variables[0]
-            variable.add_to_xml_container(container=ts_result_root_container)
-
-        # generate xml for 'method' element
-        methods = [method for method in target_obj.methods if time_series_result.series_ids[0] in
-                   method.series_ids]
-        if methods:
-            method = methods[0]
-            method.add_to_xml_container(container=ts_result_root_container)
-
-        # generate xml for 'processing_level' element
-        processing_levels = [processing_level for processing_level in target_obj.processing_levels
-                             if time_series_result.series_ids[0] in processing_level.series_ids]
-        if processing_levels:
-            processing_level = processing_levels[0]
-            processing_level.add_to_xml_container(container=ts_result_root_container)
 
 
 def _get_element_update_form_action(element_name, target_id, element_id, file_type=False):

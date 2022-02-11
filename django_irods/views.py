@@ -1,20 +1,18 @@
 import datetime
-import json
 import mimetypes
 import os
+import urllib
 from uuid import uuid4
 from celery.result import AsyncResult
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, FileResponse, HttpResponseRedirect, JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework import status
 
 from django_irods import icommands
-from hs_core.hydroshare import check_resource_type
-from hs_core.hydroshare.hs_bagit import create_bag_files
-from hs_core.task_utils import get_resource_bag_task
+from hs_core.hydroshare.resource import check_resource_type
+from hs_core.task_utils import get_resource_bag_task, get_or_create_task_notification, get_task_user_id
 
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
@@ -25,13 +23,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=True,
+def download(request, path, use_async=True, use_reverse_proxy=True,
              *args, **kwargs):
     """ perform a download request, either asynchronously or synchronously
 
     :param request: the request object.
     :param path: the path of the thing to be downloaded.
-    :param rest_call: True if calling from REST API
     :param use_async: True means to utilize asynchronous creation of objects to download.
     :param use_reverse_proxy: True means to utilize NGINX reverse proxy for streaming.
 
@@ -57,7 +54,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     6. a previously zipped file that was zipped asynchronously.
 
     """
-    if __debug__:
+    if not settings.DEBUG:
         logger.debug("request path is {}".format(path))
 
     split_path_strs = path.split('/')
@@ -70,6 +67,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     is_zip_download = False
     is_zip_request = request.GET.get('zipped', "False").lower() == "true"
     is_aggregation_request = request.GET.get('aggregation', "False").lower() == "true"
+    api_request = request.META.get('CSRF_COOKIE', None) is None
     aggregation_name = None
     is_sf_request = False
 
@@ -85,7 +83,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     else:  # regular download request
         res_id = split_path_strs[0]
 
-    if __debug__:
+    if not settings.DEBUG:
         logger.debug("resource id is {}".format(res_id))
 
     # now we have the resource Id and can authorize the request
@@ -96,11 +94,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     if not authorized:
         response = HttpResponse(status=401)
         content_msg = "You do not have permission to download this resource!"
-        if rest_call:
-            raise PermissionDenied(content_msg)
-        else:
-            response.content = "<h1>" + content_msg + "</h1>"
-            return response
+        response.content = content_msg
+        return response
 
     istorage = res.get_storage()
 
@@ -140,10 +135,10 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
             irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
-            if __debug__:
+            if not settings.DEBUG:
                 logger.debug("automatically zipping folder {} to {}".format(path, output_path))
         elif istorage.exists(irods_path):
-            if __debug__:
+            if not settings.DEBUG:
                 logger.debug("request for single file {}".format(path))
             is_sf_request = True
 
@@ -163,8 +158,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
     # determine active session
     if icommands.ACTIVE_SESSION:
-        if __debug__:
-            logger.debug("using ACTIVE_SESSION")
         session = icommands.ACTIVE_SESSION
     else:
         raise KeyError('settings must have IRODS_GLOBAL_SESSION set ')
@@ -172,41 +165,35 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     resource_cls = check_resource_type(res.resource_type)
 
     if is_zip_request:
-
+        download_path = '/django_irods/rest_download/' + output_path
         if use_async:
+            user_id = get_task_user_id(request)
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                aggregation_name, is_sf_request))
-            delete_zip.apply_async((irods_output_path, ),
+                                                aggregation_name, is_sf_request, download_path, user_id))
+            task_id = task.task_id
+            delete_zip.apply_async((irods_output_path,),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
-
-            if rest_call:
-                return HttpResponse(
-                    json.dumps({
-                        'zip_status': 'Not ready',
-                        'task_id': task.task_id,
-                        'download_path': '/django_irods/rest_download/' + output_path}),
-                    content_type="application/json")
+            if api_request:
+                return JsonResponse({
+                    'zip_status': 'Not ready',
+                    'task_id': task.task_id,
+                    'download_path': '/django_irods/rest_download/' + output_path})
             else:
-                # return status to the UI
-                request.session['task_id'] = task.task_id
-                # TODO: this is mistaken for a bag download in the UI!
-                # TODO: multiple asynchronous downloads don't stack!
-                request.session['download_path'] = '/django_irods/download/' + output_path
-                # redirect to resource landing page, which interprets session variables.
-                return HttpResponseRedirect(res.get_absolute_url())
+                # return status to the task notification App AJAX call
+                task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
+                                                            username=user_id)
+                return JsonResponse(task_dict)
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
-                                         aggregation_name, is_sf_request)
+                                         aggregation_name=aggregation_name, sf_zip=is_sf_request,
+                                         download_path=download_path)
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
             if not ret_status:
                 content_msg = "Zip could not be created."
                 response = HttpResponse()
-                if rest_call:
-                    response.content = content_msg
-                else:
-                    response.content = "<h1>" + content_msg + "</h1>"
+                response.content = content_msg
                 return response
             # At this point, output_path presumably exists and contains a zipfile
             # to be streamed below
@@ -216,10 +203,10 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         bag_file_name = res_id + '.zip'
         output_path = os.path.join('bags', bag_file_name)
         irods_output_path = res.bag_path
-
+        res.update_relation_meta()
         bag_modified = res.getAVU('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
-        if __debug__:
+        if not settings.DEBUG:
             logger.debug("irods_output_path is {}".format(irods_output_path))
         if bag_modified is None or not bag_modified:
             if not istorage.exists(irods_output_path):
@@ -228,12 +215,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         # send signal for pre_check_bag_flag
         # this generates metadata other than that generated by create_bag_files.
         pre_check_bag_flag.send(sender=resource_cls, resource=res)
-
-        metadata_dirty = res.getAVU('metadata_dirty')
-        if metadata_dirty is None or metadata_dirty:
-            create_bag_files(res)  # sets metadata_dirty to False
-            bag_modified = "True"
-
         if bag_modified is None or bag_modified:
             if use_async:
                 # task parameter has to be passed in as a tuple or list, hence (res_id,) is needed
@@ -241,33 +222,61 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 # object can be passed as parameters to a celery task
 
                 task_id = get_resource_bag_task(res_id)
+                user_id = get_task_user_id(request)
                 if not task_id:
-                    task = create_bag_by_irods.apply_async((res_id,), countdown=3)
+                    # create the bag
+                    task = create_bag_by_irods.apply_async((res_id, ))
                     task_id = task.task_id
-                if rest_call:
-                    return JsonResponse({'bag_status': 'Not ready',
-                                         'task_id': task_id})
-
-                request.session['task_id'] = task_id
-                request.session['download_path'] = request.path
-                return HttpResponseRedirect(res.get_absolute_url())
+                    if api_request:
+                        return JsonResponse({
+                            'bag_status': 'Not ready',
+                            'task_id': task_id,
+                            'download_path': res.bag_url,
+                            # status and id are checked by by hs_core.tests.api.rest.test_create_resource.py
+                            'status': 'Not ready',
+                            'id': task_id})
+                    else:
+                        task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
+                                                                    username=user_id)
+                        return JsonResponse(task_dict)
+                else:
+                    # bag creation has already started
+                    if api_request:
+                        return JsonResponse({
+                            'bag_status': 'Not ready',
+                            'task_id': task_id,
+                            'download_path': res.bag_url})
+                    else:
+                        task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
+                                                                    username=user_id)
+                        return JsonResponse(task_dict)
             else:
                 ret_status = create_bag_by_irods(res_id)
                 if not ret_status:
                     content_msg = "Bag cannot be created successfully. Check log for details."
                     response = HttpResponse()
-                    if rest_call:
-                        response.content = content_msg
-                    else:
-                        response.content = "<h1>" + content_msg + "</h1>"
+                    response.content = content_msg
                     return response
-
+        elif request.is_ajax():
+            task_dict = {
+                'id': datetime.datetime.today().isoformat(),
+                'name': "bag download",
+                'status': "completed",
+                'payload': res.bag_url
+            }
+            return JsonResponse(task_dict)
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
-        if path.endswith("resourcemap.xml") or path.endswith('resourcemetadata.xml'):
-            metadata_dirty = res.getAVU("metadata_dirty")
-            if metadata_dirty is None or metadata_dirty:
-                create_bag_files(res)  # sets metadata_dirty to False
+
+        if path in [f"{res_id}/data/resourcemap.xml", f"{res_id}/data/resourcemetadata.xml",
+                    f"{res_id}/manifest-md5.txt", f"{res_id}/tagmanifest-md5.txt", f"{res_id}/readme.txt",
+                    f"{res_id}/bagit.txt"]:
+
+            res.update_relation_meta()
+            bag_modified = res.getAVU("bag_modified")
+            if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
+                res.setAVU("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
+                create_bag_by_irods(res_id, False)
 
         # send signal for pre download file
         # TODO: does not contain subdirectory information: duplicate refreshes possible
@@ -315,22 +324,20 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         if not istorage.exists(irods_output_path):
             content_msg = "file path {} does not exist in iRODS".format(output_path)
             response = HttpResponse(status=404)
-            if rest_call:
-                response.content = content_msg
-            else:
-                response.content = "<h1>" + content_msg + "</h1>"
+            response.content = content_msg
             return response
 
         # track download count
         res.update_download_count()
         # invoke X-Accel-Redirect on physical vault file in nginx
         response = HttpResponse(content_type=mtype)
-        response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
-            name=output_path.split('/')[-1])
+        filename = output_path.split('/')[-1]
+        filename = urllib.parse.quote(filename)
+        response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
         response['Content-Length'] = flen
         response['X-Accel-Redirect'] = '/'.join([
             getattr(settings, 'IRODS_DATA_URI', '/irods-data'), output_path])
-        if __debug__:
+        if not settings.DEBUG:
             logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
         return response
 
@@ -340,14 +347,15 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
     options = ('-',)  # we're redirecting to stdout.
     # this unusual way of calling works for streaming federated or local resources
-    if __debug__:
+    if not settings.DEBUG:
         logger.debug("Locally streaming {}".format(output_path))
     # track download count
     res.update_download_count()
     proc = session.run_safe('iget', None, irods_output_path, *options)
     response = FileResponse(proc.stdout, content_type=mtype)
-    response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
-        name=output_path.split('/')[-1])
+    filename = output_path.split('/')[-1]
+    filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
     response['Content-Length'] = flen
     return response
 
@@ -359,9 +367,11 @@ def rest_download(request, path, *args, **kwargs):
     return download(request, path, rest_call=True, *args, **kwargs)
 
 
-def check_task_status(request, task_id=None, *args, **kwargs):
+@swagger_auto_schema(method='get', auto_schema=None)
+@api_view(['GET'])
+def rest_check_task_status(request, task_id, *args, **kwargs):
     '''
-    A view function to tell the client if the asynchronous create_bag_by_irods()
+    A REST view function to tell the client if the asynchronous create_bag_by_irods()
     task is done and the bag file is ready for download.
     Args:
         request: an ajax request to check for download status
@@ -383,10 +393,3 @@ def check_task_status(request, task_id=None, *args, **kwargs):
             return JsonResponse({"status": 'false'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return JsonResponse({"status": None})
-
-
-@swagger_auto_schema(method='get', auto_schema=None)
-@api_view(['GET'])
-def rest_check_task_status(request, task_id, *args, **kwargs):
-    # need to have a separate view function just for REST API call
-    return check_task_status(request, task_id, *args, **kwargs)

@@ -1,14 +1,13 @@
 import logging
+
 from dateutil import parser
-
-from django.http import JsonResponse
 from django.db import transaction
+from django.http import JsonResponse
 
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
-
-from .utils import add_or_remove_relation_metadata, RES_LANDING_PAGE_URL_TEMPLATE,\
-    update_collection_list_csv
+from .utils import add_or_remove_relation_metadata, update_collection_list_csv, get_collectable_resources
+from hs_core.enums import RelationTypes
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -19,15 +18,15 @@ def update_collection(request, shortkey, *args, **kwargs):
     """
     Update collection. The POST request should contain a
     list of resource ids and a 'update_type' parameter with value of 'set', 'add' or 'remove',
-    which are three differnt mode to update the collection.If no 'update_type' parameter is
+    which are three different mode to update the collection.If no 'update_type' parameter is
     provided, the 'set' will be used by default.
-    To add a resource to collection, user should have certain premission on both collection
+    To add a resource to collection, user should have certain permission on both collection
     and resources being added.
     For collection: user should have at least Edit permission
     For resources being added, one the following criteria should be met:
     1) user has at lest View permission and the resource is Shareable
     2) user is resource owner
-    :param shortkey: id of the collection resource to which resources are to be added.
+    :param shortkey: id of the collection resource to which resources are to be added/removed.
     """
 
     status = "success"
@@ -44,6 +43,9 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             if collection_res_obj.resource_type.lower() != "collectionresource":
                 raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+
+            if collection_res_obj.raccess.published:
+                raise Exception("Resources of a published collection can't be changed")
 
             # get 'resource_id_list' list from POST
             updated_contained_res_id_list = request.POST.getlist("resource_id_list")
@@ -91,11 +93,15 @@ def update_collection(request, shortkey, *args, **kwargs):
                 res_obj_remove = get_resource_by_shortkey(res_id_remove)
                 collection_res_obj.resources.remove(res_obj_remove)
 
-                # change "Relation" metadata in collection
-                value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_remove)
+                # delete relation meta element of type 'hasPart' for the collection resource
                 add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
-                                                relation_type=hasPart, relation_value=value,
+                                                relation_type=hasPart, relation_value=res_obj_remove.get_citation(),
                                                 set_res_modified=False)
+
+                # delete relation meta element of type 'isPartOf' from the resource removed from the collection
+                res_obj_remove.metadata.relations.filter(type=RelationTypes.isPartOf,
+                                                         value__contains=collection_res_obj.short_id).first().delete()
+                set_dirty_bag_flag(res_obj_remove)
 
             # res to add
             res_id_list_add = []
@@ -113,35 +119,42 @@ def update_collection(request, shortkey, *args, **kwargs):
                 # check authorization for all new resources being added to the collection
                 # the requesting user should at least have metadata view permission for each of
                 # the new resources to be added to the collection
+
                 res_to_add, _, _ \
                     = authorize(request, res_id_add,
                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-                # the resources being added should be 'Shareable'
-                # or is owned by current user
-                is_shareable = res_to_add.raccess.shareable
-                is_owner = res_to_add.raccess.owners.filter(pk=user.pk).exists()
-                if not is_shareable and not is_owner:
-                        raise Exception('Only resource owner can add a non-shareable '
-                                        'resource to a collection ')
+                # the resources being added should be discoverable, 'shareable' by,
+                # or owned by current user
+
+                # this is a lazily evaluated queryset that is only queried relative
+                # to "exists" and exactly matches the intent of the UI.  It is much
+                # more efficient than it looks.
+
+                if not get_collectable_resources(user, collection_res_obj, annotate=False)\
+                        .filter(short_id=res_to_add.short_id).exists():
+                    raise Exception('Only resource owner can add a non-shareable private'
+                                    'resource to a collection ')
 
                 # add this new res to collection
                 res_obj_add = get_resource_by_shortkey(res_id_add)
                 collection_res_obj.resources.add(res_obj_add)
 
-                # change "Relation" metadata in collection
-                value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_add)
+                # add relation meta element of type 'hasPart' to the collection resource
                 add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
-                                                relation_type=hasPart, relation_value=value,
+                                                relation_type=hasPart, relation_value=res_obj_add.get_citation(),
                                                 set_res_modified=False)
+
+                # add relation meta element of type 'isPartOf' to the resource added to the collection
+                res_obj_add.metadata.create_element('relation', type='isPartOf',
+                                                    value=collection_res_obj.get_citation())
+                set_dirty_bag_flag(res_obj_add)
 
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
 
             new_coverage_list = _update_collection_coverages(collection_res_obj)
-
             update_collection_list_csv(collection_res_obj)
-
             resource_modified(collection_res_obj, user, overwrite_bag=False)
 
     except Exception as ex:
@@ -177,25 +190,12 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
             if collection_res.resource_type.lower() != "collectionresource":
                 raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
-            # handle "Relation" metadata
-            hasPart = "hasPart"
-            for deleted_res_log in collection_res.deleted_resources:
-                relation_value = RES_LANDING_PAGE_URL_TEMPLATE.format(deleted_res_log.resource_id)
-
-                add_or_remove_relation_metadata(add=False,
-                                                target_res_obj=collection_res,
-                                                relation_type=hasPart,
-                                                relation_value=relation_value,
-                                                set_res_modified=False)
-
             new_coverage_list = _update_collection_coverages(collection_res)
             ajax_response_data['new_coverage_list'] = new_coverage_list
 
             # remove all logged deleted resources for the collection
             collection_res.deleted_resources.all().delete()
-
             update_collection_list_csv(collection_res)
-
             resource_modified(collection_res, user, overwrite_bag=False)
 
     except Exception as ex:

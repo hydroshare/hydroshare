@@ -8,12 +8,172 @@
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
+
+{% if not page|is_debug %}
+{# ======= JSON-LD Structure ======= #}
+<script id="schemaorg" type="application/ld+json">
+{
+    "@context": {
+        "@vocab": "https://schema.org/"
+    },
+    {% if cm.raccess.published %}
+    "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}#schemaorg",
+    "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    {% else %}
+    "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}#schemaorg",
+    "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    {% endif %}
+    "@type": "Dataset",
+    "additionalType": "{{ cm.metadata.type.url }}",
+    "name": "{{ title }}",
+    "description": "{{ cm.metadata.description | escapejs }}",
+    "keywords": {{ keywords|safe }},
+    {% if cm.raccess.published %}
+    "creativeWorkStatus": "Published",
+    {% elif cm.raccess.public %}
+    "creativeWorkStatus": "Public",
+    {% elif cm.raccess.discoverable %}
+    "creativeWorkStatus": "Discoverable",
+    {% elif is_replaced_by %}
+    "creativeWorkStatus": "Obsolete",
+    {% else %}
+    "creativeWorkStatus": "Private",
+    {% endif %}
+    "inLanguage": "en-US",
+    {% if cm.raccess.published %}
+    "identifier": [
+      {
+        "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "@type": "PropertyValue",
+        "propertyID": "https://registry.identifiers.org/registry/doi",
+        "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "value": "doi:10.4211/hs.{{ cm.short_id }}"
+      },
+      "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+    ],
+    {% else %}
+    "identifier": [
+      "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+    ],
+    {% endif %}
+    "creator": {{ creators | creator_json_ld_element | safe }},
+    {% if temporal_coverage %}
+    "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
+    {% endif %}
+    {% if spatial_coverage.exists %}
+    "spatialCoverage": {
+        "@type": "Place",
+        {% if spatial_coverage.name %}
+        "name": "{{ spatial_coverage.name }}",
+        {% endif %}
+        "geo": {
+            {% if spatial_coverage.type == 'point' %}
+            "@type": "GeoCoordinates",
+            "latitude": {{ spatial_coverage.north|floatformat:"4" }},
+            "longitude": {{ spatial_coverage.east|floatformat:"4" }}
+            {% else %}
+            "@type": "GeoShape",
+            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }} {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }} {{ spatial_coverage.eastlimit|floatformat:"4" }}"
+            {% endif %}
+        }
+    },
+    {% endif %}
+    {% if cm.raccess.published %}
+    "publisher": {
+        "@id": "https://www.hydroshare.org"
+    },
+    {% endif %}
+    "provider": {
+        "@id": "https://www.hydroshare.org",
+        "@type": "Organization",
+        "name": "HydroShare",
+        "url": "https://www.hydroshare.org"
+    },
+    "includedInDataCatalog": {
+		"@type": "DataCatalog",
+		"name": "HydroShare",
+    	"url": "https://www.hydroshare.org/search/"
+	},
+	 {% if cm.metadata.rights.statement or cm.metadata.rights.url %}
+	"license": {
+	    "@type": "CreativeWork",
+	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
+        "text": "{{ cm.metadata.rights.statement | escapejs }}",
+        "url": "{{ cm.metadata.rights.url }}"
+        {% elif cm.metadata.rights.statement %}
+        "text": "{{ cm.metadata.rights.statement | escapejs}}",
+        "name": "Customized license"
+        {% else %}
+        "url": "{{ cm.metadata.rights.url }}"
+        {% endif %}
+	},
+	{% endif %}
+    {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
+    {% if relations %}
+    "citation": [
+    {% for relation in relations %}
+        "{{ relation.value | escapejs }}"{%if not forloop.last%},{%endif%}
+    {% endfor %}
+    ],
+    {% endif %}
+    {% if fundingagencies %}
+    "funder": [
+    {% for agency in fundingagencies %}
+        {
+            "@type": "Organization",
+            "name": "{{ agency.agency_name | escapejs }}",
+            "url": "{{ agency.agency_url }}"
+        }{%if not forloop.last%},{%endif%}
+        {% endfor %}
+    ],
+    {% endif %}
+    "dateCreated": "{{ cm.created | date:"c" }}",
+    "dateModified": "{{ cm.last_updated | date:"c"}}",
+    {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
+    "subjectOf": {
+        "@type": "DataDownload",
+        "name": "resourcemetadata.xml",
+        "description": "Dublin Core Metadata Document Describing the Dataset",
+        "url": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/scimeta/",
+        "encodingFormat": "application/rdf+xml"
+    },
+    "distribution": {
+        "@type": "DataDownload",
+        "contentSize": "{{ cm.size|filesizeformat }}",
+        "encodingFormat": "application/zip",
+        "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
+        "description": "Zipped BagIt Bag containing the HydroShare Resource",
+        "dateModified": "{{ cm.last_updated | date:"c" }}",
+        {% if cm.raccess.published %}
+        "identifier": [
+          "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+          {
+            "@type": "PropertyValue",
+            "additionalType": [
+                "http://www.wikidata.org/entity/Q185235",
+                "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5"
+            ],
+            "identifier": "md5:{{ cm.bag_checksum }}",
+            "propertyID": "MD5",
+            "value": "{{ cm.bag_checksum }}"
+          }
+        ]
+        {% else %}
+        "identifier": [
+          "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+        ]
+        {% endif %}
+    }
+}
+</script>
+{% endif %}
 {% endblock %}
 
 {% block main %}
     {% keywords_for page as kws %}
     {% set_page_permissions page %}
-    {% if page.perms.change and resource_edit_mode %}
+    {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
     {% csrf_token %}
     {% endif %}
 
@@ -32,16 +192,6 @@
                 </div>
             {% endif %}
         {% endblock %}
-
-        {%  if task_id and download_path %}
-            <input type="hidden" id="task_id" name="task_id" value="{{ task_id }}">
-            <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
-            <div class="col-sm-12">
-                <div id='download-status-info' class="alert alert-success">
-                    Please wait for the download to be prepared<span id="loading">.</span>
-                </div>
-            </div>
-        {% endif %}
 
         {# Needs to be included first so it's available before other instances initialize #}
         {% include "includes/profile-card.html" %}
@@ -86,7 +236,7 @@
                     <li id="open-separator" role="separator" class="divider"></li>
                 {% endif %}
 
-                {% if page.perms.change and resource_edit_mode %}
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                     {% if cm.resource_type == "CompositeResource" %}
                         <li id="btn-cut" data-menu-name="cut" data-fb-action="cut">
                             <span class="fa fa-scissors icon-blue"></span>
@@ -128,6 +278,10 @@
                     <li role="separator" class="divider"></li>
                 {% endif %}
 
+                <li id="btn-preview" data-menu-name="preview" data-fb-action="preview">
+                    <span class="glyphicon glyphicon-eye-open icon-blue"></span>
+                    <span>Preview</span>
+                </li>
                 <li id="btn-download" data-menu-name="download" data-fb-action="download">
                     <span class="glyphicon glyphicon-download icon-blue"></span>
                     <span>Download</span>
@@ -155,7 +309,7 @@
                     </li>
                 {% endif %}
                 <li id="content-type-separator" role="separator" class="divider"></li>
-                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
+                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" and not cm.raccess.published %}
                     {# ADD METADATA TO A FILE #}
                     <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
                         <i class="fa fa-plus icon-green" aria-hidden="true"></i>
@@ -209,6 +363,20 @@
                                  alt="Time Series Resource Icon" class="resource-type-icon"/>
                                 <span>Time Series</span>
                             </li>
+                            <li id="btn-set-model-program-file-type" data-menu-name="setmodelprogramfiletype"
+                                data-toggle="tooltip" data-placement="right" data-fb-action="setModelProgramFileType"
+                                title="Convert to a model program dataset to which you can add metadata">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                 alt="Model Program Aggregation Icon" class="resource-type-icon"/>
+                                <span>Model Program</span>
+                            </li>
+                            <li id="btn-set-model-instance-file-type" data-menu-name="setmodelinstancefiletype"
+                                data-toggle="tooltip" data-placement="right" data-fb-action="setModelInstanceFileType"
+                                title="Convert to a model instance dataset to which you can add metadata">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                 alt="Model Instance Aggregation Icon" class="resource-type-icon"/>
+                                <span>Model Instance</span>
+                            </li>
                         </ul>
                     </li>
                     <li data-fb-action="removeAggregation"
@@ -226,7 +394,7 @@
 
             {# POPUP MENU - Right clicking empty space in file browser #}
             <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
-                {% if page.perms.change and resource_edit_mode %}
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                     {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                         <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                             data-fb-action="createFolder"
@@ -262,21 +430,23 @@
             <div class="col-xs-12 content-block">
                 <h3>Content</h3>
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                    <div class="alert alert-info alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        <div class="flex">
-                            <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                            <em>
-                                If you upload a readme.txt or readme.md file at the root level in your
-                                resource, it will be rendered automatically on the page. Markdown
-                                formatting is allowed in readme.md.<br><strong><a
-                                    href="https://daringfireball.net/projects/markdown/basics"
-                                    target="_blank">Learn more about Markdown</a></strong>
-                            </em>
+                    {% if not cm.raccess.published or current_user.is_superuser %}
+                        <div class="alert alert-info alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <div class="flex">
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                <em>
+                                    If you upload a readme.txt or readme.md file at the root level in your
+                                    resource, it will be rendered automatically on the page. Markdown
+                                    formatting is allowed in readme.md.<br><strong><a
+                                        href="https://daringfireball.net/projects/markdown/basics"
+                                        target="_blank">Learn more about Markdown</a></strong>
+                                </em>
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
                 {% endif %}
 
                 <div id="ref_file_note" class="alert alert-warning space-top" role="alert"
@@ -295,25 +465,27 @@
                 </div>
 
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                    <div id="fb-alerts">
-                        <div class="alert alert-warning alert-dismissible" role="alert">
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                    {% if not cm.raccess.published or current_user.is_superuser %}
+                        <div id="fb-alerts">
+                            <div class="alert alert-warning alert-dismissible" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
 
-                            <div class="flex">
-                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                                <em>
-                                    <strong>Uploading</strong>
-                                    <ul>
-                                        <li><span id="file-types"></span></li>
-                                        <li><span id="file-multiple"></span></li>
-                                        {% block upload_message %}{% endblock %}
-                                    </ul>
-                                </em>
+                                <div class="flex">
+                                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                    <em>
+                                        <strong>Uploading</strong>
+                                        <ul>
+                                            <li><span id="file-types"></span></li>
+                                            <li><span id="file-multiple"></span></li>
+                                            {% block upload_message %}{% endblock %}
+                                        </ul>
+                                    </em>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                   {% endif %}
                 {% endif %}
 
                 {% if page.perms.change and resource_edit_mode %}
@@ -339,8 +511,14 @@
                                 </div>
                                 <div class="modal-body">
                                     <div class="warnings-list">
-                                        <div>Consider saving a copy of the files before you delete it if it is
-                                            important to you.
+                                        <div>This file will be permanently deleted. Consider saving a copy if it is
+                                            important to you.<strong> If this is the last file in the resource and it is public,
+                                            the sharing status will revert to private.</strong> If you are not the owner of
+                                            this resource, then an owner will need to reset this to public after a new
+                                            file has been added. If you want to replace this file, add the new file
+                                            first then delete the old one, so that sharing status does not change.
+                                            <br /><br />
+                                            <p id="additional-citation-warning"></p>
                                         </div>
                                         <br>
                                     </div>
@@ -358,7 +536,11 @@
                     {# ======= Modal window ends =======#}
 
                     <div id="hs-file-browser" data-current-path=""
-                         {% if page.perms.change and resource_edit_mode %}data-mode="edit"{% endif %}
+                         {% if page.perms.change and resource_edit_mode %}
+                             data-mode="edit"
+                         {% else %}
+                            data-mode="view"
+                         {% endif %}
                          data-supported-files="{{ cm.get_supported_upload_file_types }}"
                          data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
                          {% if cm.raccess.require_download_agreement %}
@@ -454,50 +636,52 @@
                                     <div class="row">
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                                                <a type="button" data-fb-action="uploadFiles"
-                                                   class="btn btn-success btn-xs dz-clickable upload-toggle">
-                                                    <i class="fa fa-plus"></i> Add files
-                                                </a>
+                                                {% if not cm.raccess.published or current_user.is_superuser %}
+                                                    <a type="button" data-fb-action="uploadFiles"
+                                                       class="btn btn-success btn-xs dz-clickable upload-toggle">
+                                                        <i class="fa fa-plus"></i> Add files
+                                                    </a>
 
-                                                <div id="irods-group" class="btn-group">
-                                                    <button type="button"
-                                                            class="btn btn-default btn-xs dropdown-toggle fb-space-right"
-                                                            data-toggle="dropdown" aria-haspopup="true"
-                                                            title="Add files from an iRODS server"
-                                                            aria-expanded="false">
-                                                        <span>iRODS</span>&nbsp;<span class="caret"></span>
-                                                    </button>
+                                                    <div id="irods-group" class="btn-group">
+                                                        <button type="button"
+                                                                class="btn btn-default btn-xs dropdown-toggle fb-space-right"
+                                                                data-toggle="dropdown" aria-haspopup="true"
+                                                                title="Add files from an iRODS server"
+                                                                aria-expanded="false">
+                                                            <span>iRODS</span>&nbsp;<span class="caret"></span>
+                                                        </button>
 
-                                                    <ul class="dropdown-menu text-left">
-                                                        <li id="btn-signin-irods" data-toggle="modal"
-                                                            data-target="#irodsSignin">
-                                                            <a>
-                                                                <span class="glyphicon glyphicon-log-in icon-blue"></span>&nbsp;&nbsp;Log
-                                                                in to iRODS
-                                                            </a>
-                                                        </li>
+                                                        <ul class="dropdown-menu text-left">
+                                                            <li id="btn-signin-irods" data-toggle="modal"
+                                                                data-target="#irodsSignin">
+                                                                <a>
+                                                                    <span class="glyphicon glyphicon-log-in icon-blue"></span>&nbsp;&nbsp;Log
+                                                                    in to iRODS
+                                                                </a>
+                                                            </li>
 
-                                                        <li id="btn-select-irods-file" class="dz-clickable hidden"
-                                                            data-fb-action="uploadFiles"
-                                                            data-toggle="modal" data-target="#irodsContent">
-                                                            <a>
-                                                                <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
-                                                                files from iRODS...
-                                                            </a>
-                                                        </li>
+                                                            <li id="btn-select-irods-file" class="dz-clickable hidden"
+                                                                data-fb-action="uploadFiles"
+                                                                data-toggle="modal" data-target="#irodsContent">
+                                                                <a>
+                                                                    <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
+                                                                    files from iRODS...
+                                                                </a>
+                                                            </li>
 
-                                                        <li role="separator" class="divider hidden"></li>
-                                                        <li id="btn-signout-irods" class="hidden">
-                                                            <a>
-                                                                <span class="glyphicon glyphicon-log-out btn-remove"></span>&nbsp;&nbsp;Log
-                                                                out of iRODS
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
+                                                            <li role="separator" class="divider hidden"></li>
+                                                            <li id="btn-signout-irods" class="hidden">
+                                                                <a>
+                                                                    <span class="glyphicon glyphicon-log-out btn-remove"></span>&nbsp;&nbsp;Log
+                                                                    out of iRODS
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
                                             {% endif %}
 
-                                            {% if page.perms.change and resource_edit_mode %}
+                                            {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                                                 {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-create-folder" class="disabled"
                                                             data-fb-action="createFolder" data-toggle="modal"
@@ -552,12 +736,14 @@
                                             {% endif %}
 
                                             {% if page.perms.change and resource_edit_mode %}
-                                                <button id="fb-delete" data-fb-action="delete"
-                                                        class="disabled fb-space-right"
-                                                        title="Delete" data-toggle="modal"
-                                                        data-target="#confirm-delete-dialog">
-                                                    <span class="glyphicon glyphicon-trash btn-remove"></span>
-                                                </button>
+                                                {% if not cm.raccess.published or current_user.is_superuser %}
+                                                    <button id="fb-delete" data-fb-action="delete"
+                                                            class="disabled fb-space-right"
+                                                            title="Delete" data-toggle="modal"
+                                                            data-target="#confirm-delete-dialog" onclick="warnExternalContent('{{ cm.short_id }}')">
+                                                        <span class="glyphicon glyphicon-trash btn-remove"></span>
+                                                    </button>
+                                                {% endif %}
                                             {% endif %}
 
                                             <button id="fb-select-all"
@@ -598,17 +784,18 @@
                                                 </a>
                                             {% endif %}
 
-                                            <a id="btn-download-all" type="button"
-                                               title="Download all content as Zipped BagIt Archive"
-                                                    {% if cm.raccess.require_download_agreement %}
-                                               data-target="#license-agree-dialog-bag" data-toggle="modal"
-                                               data-placement="auto"
-                                               {% else %}href="{{ cm.bag_url }}"{% endif %}>
+                                            <button id="btn-download-all"
+                                                title="Download all content as Zipped BagIt Archive"
+                                                {% if cm.raccess.require_download_agreement %}
+                                                data-target="#license-agree-dialog-bag" data-toggle="modal"
+                                                data-placement="auto"
+                                                {% else %}
+                                                data-bag-url="{{ cm.bag_url }}"
+                                                {% endif %}>
                                                 <span class="fa fa-briefcase icon-blue"></span>
-                                            </a>
+                                            </button>
                                             <a class="small" target="_blank"
-                                               href="https://en.wikipedia.org/wiki/BagIt">Learn more</a>
-
+                                               href="https://help.hydroshare.org/creating-and-managing-resources/view-and-download-a-resource">Learn more about the BagIt download</a>
                                         </div>
                                     </div>
                                 </div>
@@ -622,7 +809,7 @@
                             <div class="fb-content-wrapper">
                                 <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
                                     <form id="hsDropzone"
-                                          class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode %}dropzone{% endif %}"
+                                          class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and not cm.raccess.published or cm.raccess.published and current_user.is_superuser %}dropzone{% endif %}"
                                           action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
                                           method="POST">
                                         {% csrf_token %}
@@ -649,11 +836,13 @@
                                     </form>
 
                                     {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                                        <div class="fb-upload-caption ">
-                                            <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
-                                            smaller than 1GB in size by dragging & dropping, or click <a
-                                                class="dz-clickable upload-toggle">here</a> to select them.
-                                        </div>
+                                        {% if not cm.raccess.published or current_user.is_superuser %}
+                                            <div class="fb-upload-caption ">
+                                                <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
+                                                smaller than 1GB in size by dragging & dropping, or click <a
+                                                    class="dz-clickable upload-toggle">here</a> to select them.
+                                            </div>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                                 {% if cm.resource_type == "CompositeResource" %}
@@ -687,25 +876,15 @@
                             </div>
 
                             {% if page.perms.change and resource_edit_mode %}
-                                <form id="fb-delete-files-form" class="hidden"
-                                      action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
-                                      method="POST" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="file_ids" value=""/>
-                                </form>
+                                {% if not cm.raccess.published or current_user.is_superuser %}
+                                    <form id="fb-delete-files-form" class="hidden"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
+                                          method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="file_ids" value=""/>
+                                    </form>
+                                {% endif %}
                             {% endif %}
-                        </div>
-                    </div>
-
-                    <div id="fb-download-help" class="alert alert-warning hidden" role="alert">
-                        <div class="flex">
-                            <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                            <em>
-                                <p><strong>Downloading LargeFiles</strong></p>
-                                <p>To learn how to download files larger than 1 GB see <a
-                                        href="https://help.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
-                                        target="_blank">Uploading/Downloading large files to/from HydroShare</a>.</p>
-                            </em>
                         </div>
                     </div>
 
@@ -735,11 +914,16 @@
                     {% endif %}
                 {% else %}
                     <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
-                    <span>You do not have permission to see these content files. Please contact the Authors if you wish to obtain access.</span>
+                    <span>You do not have permission to see these content files. Please contact an Owner if you wish to obtain access.</span>
                 {% endif %}
             </div>
         {% endif %}
         {% endblock %} {# content_block #}
+
+        {# ======= Data Services ======= #}
+        {% if data_services_urls.wms_url or data_services_urls.wfs_url or data_services_urls.wcs_url or data_services_urls.thredds_url %}
+            {% include "resource-landing-page/data-services.html" %}
+        {% endif %}
 
         {# ======= Resource Specific ======= #}
 
@@ -751,7 +935,7 @@
                         <h3>Resource Specific</h3>
                         <div id="resourceSpecificTab">
                             <div class="row">
-                                {% if not resource_edit_mode %}
+                                {% if not resource_edit_mode or cm.raccess.published %}
                                     {% block extended_metadata %}{% endblock %}
                                 {% else %}
                                     {% crispy metadata_form  %}
@@ -776,7 +960,7 @@
         {% include "resource-landing-page/credits.html" %}
 
         {# ======= Citation ======= #}
-        {% if resource_edit_mode %}
+        {% if resource_edit_mode and not cm.raccess.published %}
             {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
         {% else %}
             {% include "resource-landing-page/citation.html" with resource_mode="view" %}
@@ -792,6 +976,19 @@
     {{ block.super }}
     <script>
       {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
+      const SHORT_ID = "{{ cm.short_id }}";
+      var global_num_ext_refs = 0;
+      var global_custom_citation = "{{ custom_citation }}";
+
+      $.ajax({
+        type: "GET",
+        url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
+      }).complete(function(res) {
+        if (res.responseText) {
+          global_num_ext_refs = JSON.parse(res.responseText).filenames.length
+        }
+      });
+      const CITATION_ID = "{{ citation_id }}";
       const RES_KEYWORDS = {{ keywords|safe }};
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
       const CAN_CHANGE = "{{ page.perms.change }}" === "True";
@@ -800,23 +997,23 @@
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
       const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
+      const RESOURCE_PUBLISHED = "{{ cm.raccess.published }}" === "True";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
-      const SHORT_ID = "{{ cm.short_id }}";
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
       const AUTHORS = [
           {% for author in creators %}
               {
                   "id": "{{ author.id }}",
-                  "name": "{{ author.name|default:"" }}",
+                  "name": "{{ author.name|default:""|escapejs }}",
                   "email": "{{ author.email|default:"" }}",
-                  "organization": "{{ author.organization|default:"" }}",
+                  "organization": "{{ author.organization|default:""|escapejs }}",
                   "identifiers": {
                       {% for name, link in author.identifiers.items %}
                           "{{ name }}": "{{ link }}",
                       {% endfor %}
                   },
-                  "address": "{{ author.address|default:"" }}",
+                  "address": "{{ author.address|default:""|escapejs }}",
                   "phone": "{{ author.phone|default:"" }}",
                   "homepage": "{{ author.homepage|default:"" }}",
                   "profileUrl": "{{ author.description|default:"" }}",
@@ -830,18 +1027,18 @@
           const LAST_CHANGED_BY = {
           "id": {{ usr.id }},
           "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
-          "best_name": "{{ usr|best_name }}",
+          "best_name": "{{ usr|best_name|escapejs }}",
           "email": "{{ usr.email|safe }}",
-          "organization": "{{ usr.userprofile.organization }}",
-          "title": "{{ usr.userprofile.title }}",
+          "organization": "{{ usr.userprofile.organization|escapejs }}",
+          "title": "{{ usr.userprofile.title|escapejs }}",
           "contributions": "{{ usr.uaccess.owned_resources|length  }}",
-          "subject_areas": "{{ usr.userprofile.subject_areas }}",
+          "subject_areas": "{{ usr.userprofile.subject_areas|escapejs }}",
           "identifiers": {
               {% for name, link in usr.userprofile.identifiers.items %}
                   "{{ name }}": "{{ link }}",
               {% endfor %}
           },
-          "state": "{{ usr.userprofile.state }}",
+          "state": "{{ usr.userprofile.state|escapejs }}",
           "country": "{{ usr.userprofile.country }}",
           "joined": "{{ usr.date_joined|date:"M d, Y" }}"
       };
@@ -859,12 +1056,12 @@
           };
       {% endif %}
       var spatial_coverage_type = "{{ spatial_coverage.type }}";
+
     </script>
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>

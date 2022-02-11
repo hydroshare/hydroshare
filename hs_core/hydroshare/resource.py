@@ -3,6 +3,8 @@ import zipfile
 import shutil
 import logging
 import requests
+import datetime
+import pytz
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -10,6 +12,7 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
+from django.contrib.auth.models import User
 
 from rest_framework import status
 
@@ -237,65 +240,6 @@ def update_resource_file(pk, filename, f):
     raise ObjectDoesNotExist(filename)
 
 
-def replicate_resource_bag_to_user_zone(user, res_id):
-    """
-    Replicate resource bag to iRODS user zone
-    Args:
-        user: the requesting user
-        res_id: the resource id with its bag to be replicated to iRODS user zone
-
-    Returns:
-    None, but exceptions will be raised if there is an issue with iRODS operation
-    """
-    # do on-demand bag creation
-
-    res = utils.get_resource_by_shortkey(res_id)
-    res_coll = res.root_path
-    istorage = res.get_storage()
-    bag_modified_flag = True
-    # needs to check whether res_id collection exists before getting/setting AVU on it to
-    # accommodate the case where the very same resource gets deleted by another request when
-    # it is getting downloaded
-    if istorage.exists(res_coll):
-        bag_modified = istorage.getAVU(res_coll, 'bag_modified')
-
-        # make sure bag_modified_flag is set to False only if bag exists and bag_modified AVU
-        # is False; otherwise, bag_modified_flag will take the default True value so that the
-        # bag will be created or recreated
-        if bag_modified:
-            if bag_modified.lower() == "false":
-                bag_file_name = res_id + '.zip'
-                if res.resource_federation_path:
-                    bag_full_path = os.path.join(res.resource_federation_path, 'bags',
-                                                 bag_file_name)
-                else:
-                    bag_full_path = os.path.join('bags', bag_file_name)
-
-                if istorage.exists(bag_full_path):
-                    bag_modified_flag = False
-
-        if bag_modified_flag:
-            # import here to avoid circular import issue
-            from hs_core.tasks import create_bag_by_irods
-            status = create_bag_by_irods(res_id)
-            if not status:
-                # bag fails to be created successfully
-                raise SessionException(-1, '', 'The resource bag fails to be created '
-                                               'before bag replication')
-
-        # do replication of the resource bag to irods user zone
-        if not res.resource_federation_path:
-            istorage.set_fed_zone_session()
-        src_file = res.bag_path
-        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
-            userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
-        fsize = istorage.size(src_file)
-        utils.validate_user_quota(user, fsize)
-        istorage.copyFiles(src_file, tgt_file)
-    else:
-        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
-
-
 def get_related(pk):
     """
     Returns a list of pids for resources that are related to the resource identified by the
@@ -490,8 +434,13 @@ def create_resource(
         resource creation.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
-    :return: a new resource which is an instance of BaseResource with specificed resource_type.
+    :return: a new resource which is an instance of BaseResource with specified resource_type.
     """
+    if not __debug__:
+        if resource_type in ("ModelInstanceResource", "ModelProgramResource", "MODFLOWModelInstanceResource",
+                             "SWATModelInstanceResource"):
+            raise ValidationError("Resource type '{}' is no more supported for resource creation".format(resource_type))
+
     with transaction.atomic():
         cls = check_resource_type(resource_type)
         owner = utils.user_from_id(owner)
@@ -605,7 +554,7 @@ def create_resource(
     return resource
 
 
-def create_empty_resource(pk, user, action='version'):
+def create_empty_resource(pk, user_or_username, action='version'):
     """
     Create a resource with empty content and empty metadata for resource versioning or copying.
     This empty resource object is then used to create metadata and content from its original
@@ -620,6 +569,10 @@ def create_empty_resource(pk, user, action='version'):
         resource which is then further populated with metadata and content in a subsequent step.
     """
     res = utils.get_resource_by_shortkey(pk)
+    if isinstance(user_or_username, User):
+        user = user_or_username
+    else:
+        user = User.objects.get(username=user_or_username)
     if action == 'version':
         if not user.uaccess.owns_resource(res):
             raise PermissionDenied('Only resource owners can create new versions')
@@ -659,23 +612,13 @@ def copy_resource(ori_res, new_res, user=None):
         the new resource copied from the original resource
     """
 
-    # add files directly via irods backend file operation
-    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id)
-
-    utils.copy_and_create_metadata(ori_res, new_res)
-
-    hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-    if hs_identifier:
-        new_res.metadata.create_element('source', derived_from=hs_identifier.url)
-
-    if ori_res.resource_type.lower() == "collectionresource":
-        # clone contained_res list of original collection and add to new collection
-        # note that new collection will not contain "deleted resources"
-        new_res.resources = ori_res.resources.all()
-
-    # create bag for the new resource
-    hs_bagit.create_bag(new_res)
-    return new_res
+    from hs_core.tasks import copy_resource_task
+    if user:
+        copy_resource_task(ori_res.short_id, new_res.short_id, request_username=user.username)
+    else:
+        copy_resource_task(ori_res.short_id, new_res.short_id)
+    # cannot directly return the new_res object being passed in, but rather return the new resource object being copied
+    return utils.get_resource_by_shortkey(new_res.short_id)
 
 
 def create_new_version_resource(ori_res, new_res, user):
@@ -691,43 +634,19 @@ def create_new_version_resource(ori_res, new_res, user):
         the new versioned resource for the original resource and thus obsolete the original resource
 
     """
-    # newly created new resource version is private initially
-    # add files directly via irods backend file operation
-    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id)
-
-    # copy metadata from source resource to target new-versioned resource except three elements
-    utils.copy_and_create_metadata(ori_res, new_res)
-
-    # add or update Relation element to link source and target resources
-    hs_identifier = new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-    ori_res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
-
-    if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
-        # the original resource is already a versioned resource, and its isVersionOf relation
-        # element is copied over to this new version resource, needs to delete this element so
-        # it can be created to link to its original resource correctly
-        eid = new_res.metadata.relations.all().filter(type='isVersionOf').first().id
-        new_res.metadata.delete_element('relation', eid)
-
-    hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-    new_res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
-
-    if ori_res.resource_type.lower() == "collectionresource":
-        # clone contained_res list of original collection and add to new collection
-        # note that new version collection will not contain "deleted resources"
-        new_res.resources = ori_res.resources.all()
-
-    # create bag for the new resource
-    hs_bagit.create_bag(new_res)
-
-    # since an isReplaceBy relation element is added to original resource, needs to call
-    # resource_modified() for original resource
-    utils.resource_modified(ori_res, user, overwrite_bag=False)
-    # if everything goes well up to this point, set original resource to be immutable so that
-    # obsoleted resources cannot be modified from REST API
-    ori_res.raccess.immutable = True
-    ori_res.raccess.save()
-    return new_res
+    from hs_core.tasks import create_new_version_resource_task
+    if ori_res.locked_time:
+        # cannot create new version for this resource since the resource is locked by another user
+        raise utils.ResourceVersioningException('Failed to create a new version for this resource '
+                                                'since another user is creating a new version for '
+                                                'this resource synchronously.')
+    # lock the resource to prevent concurrent new version creation since only one new version for an
+    # obsoleted resource is allowed
+    ori_res.locked_time = datetime.datetime.now(pytz.utc)
+    ori_res.save()
+    create_new_version_resource_task(ori_res.short_id, user.username, new_res_id=new_res.short_id)
+    # cannot directly return the new_res object being passed in, but rather return the new versioned resource object
+    return utils.get_resource_by_shortkey(new_res.short_id)
 
 
 def add_resource_files(pk, *files, **kwargs):
@@ -764,11 +683,16 @@ def add_resource_files(pk, *files, **kwargs):
         assert(isinstance(source_names, list))
 
     folder = kwargs.pop('folder', '')
+    user = kwargs.pop('user', None)
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
             print("kwargs[{}]".format(k))
         assert len(kwargs) == 0
+
+    if resource.raccess.published:
+        if user is None or not user.is_superuser:
+            raise ValidationError("Only admin can add files to a published resource")
 
     prefix_path = 'data/contents'
     if folder == prefix_path:
@@ -785,19 +709,20 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
+        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user))
 
-    if len(source_names) > 0:
-        for ifname in source_names:
-            ret.append(utils.add_file_to_resource(resource, None,
-                                                  folder=folder,
-                                                  source_name=ifname))
+    for ifname in source_names:
+        ret.append(utils.add_file_to_resource(resource, None,
+                                              folder=folder,
+                                              source_name=ifname, user=user))
+
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
+
     return ret
 
 
@@ -833,7 +758,6 @@ def update_science_metadata(pk, metadata, user):
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
             {'rights': {'statement': 'This is the rights statement for this resource',
                         'url': 'http://rights.ord/001'}},
-            {'source': {'derived_from': 'http://hydroshare.org/resource/0001'}},
             {'subject': {'value': 'sub-1'}},
             {'subject': {'value': 'sub-2'}},
         ]
@@ -848,7 +772,7 @@ def update_science_metadata(pk, metadata, user):
     resource.update_public_and_discoverable()  # set to False if necessary
 
 
-def delete_resource(pk):
+def delete_resource(pk, request_username=None):
     """
     Deletes a resource managed by HydroShare. The caller must be an owner of the resource or an
     administrator to perform this function. The operation removes the resource from further
@@ -872,36 +796,13 @@ def delete_resource(pk):
     Exceptions.NotFound - The resource identified by pid does not exist
     Exception.ServiceFailure - The service is unable to process the request
 
-    Note:  Only HydroShare administrators will be able to delete formally published resour
+    Note:  Only HydroShare administrators will be able to delete formally published resource
     """
+    from hs_core.tasks import delete_resource_task
+    resource = utils.get_resource_by_shortkey(pk)
+    resource.set_discoverable(False)
+    delete_resource_task(pk, request_username)
 
-    res = utils.get_resource_by_shortkey(pk)
-
-    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
-        raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '
-                              'cannot be deleted.')
-
-    # when the most recent version of a resource in an obsolescence chain is deleted, the previous
-    # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
-    # relation element
-    if res.metadata.relations.all().filter(type='isVersionOf').exists():
-        is_version_of_res_link = \
-            res.metadata.relations.all().filter(type='isVersionOf').first().value
-        idx = is_version_of_res_link.rindex('/')
-        if idx == -1:
-            obsolete_res_id = is_version_of_res_link
-        else:
-            obsolete_res_id = is_version_of_res_link[idx+1:]
-        obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
-        if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
-            eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
-            obsolete_res.metadata.delete_element('relation', eid)
-            # also make this obsoleted resource editable if not published now that it becomes the latest version
-            if not obsolete_res.raccess.published:
-                obsolete_res.raccess.immutable = False
-                obsolete_res.raccess.save()
-
-    res.delete()
     return pk
 
 
@@ -937,7 +838,7 @@ def delete_format_metadata_after_delete_file(resource, file_name):
     """
     delete format metadata as appropriate after a file is deleted.
     :param resource: BaseResource object representing a HydroShare resource
-    :param file_name: the file name to be deleted
+    :param file_name: name of the file that got deleted
     :return:
     """
     delete_file_mime_type = utils.get_file_mime_type(file_name)
@@ -951,22 +852,6 @@ def delete_format_metadata_after_delete_file(resource, file_name):
         format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
         if format_element:
             resource.metadata.delete_element(format_element.term, format_element.id)
-
-
-# TODO: test in-folder delete of short path
-def filter_condition(filename_or_id, fl):
-    """
-    Converted lambda definition of filter_condition into def to conform to pep8 E731 rule: do not
-    assign a lambda expression, use a def
-    :param filename_or_id: passed in filename_or id as the filter
-    :param fl: the ResourceFile object to filter against
-    :return: boolean indicating whether fl conforms to filename_or_id
-    """
-    try:
-        file_id = int(filename_or_id)
-        return fl.id == file_id
-    except ValueError:
-        return fl.short_path == filename_or_id
 
 
 # TODO: Remove option for file id, not needed since names are unique.
@@ -999,40 +884,58 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     Note:  This does not handle immutability as previously intended.
     """
     resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        if resource.files.count() == 1:
+            raise ValidationError("Resource file delete is not allowed. Published resource must contain at "
+                                  "least one file")
+        elif not user.is_superuser:
+            raise ValidationError("Resource file can be deleted only by admin for a published resource")
+
     res_cls = resource.__class__
+    file_by_id = False
+    try:
+        int(filename_or_id)
+        file_by_id = True
+    except ValueError:
+        pass
 
-    for f in ResourceFile.objects.filter(object_id=resource.id):
-        if filter_condition(filename_or_id, f):
-            if delete_logical_file:
-                if f.has_logical_file and not f.logical_file.is_fileset:
-                    # delete logical file if any resource file that belongs to logical file
-                    # gets deleted for any logical file other than fileset logical file
-                    # logical_delete() calls this function (delete_resource_file())
-                    # to delete each of its contained ResourceFile objects
-                    f.logical_file.logical_delete(user)
-                    return filename_or_id
+    try:
+        if file_by_id:
+            f = ResourceFile.objects.get(id=filename_or_id)
+        else:
+            folder, base = os.path.split(filename_or_id)
+            f = ResourceFile.get(resource=resource, file=base, folder=folder)
+    except ObjectDoesNotExist:
+        raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
+                                            resource.short_id, filename_or_id))
 
-            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
-                                                       resource=resource, user=user)
-
-            file_name = delete_resource_file_only(resource, f)
-
-            # This presumes that the file is no longer in django
-            delete_format_metadata_after_delete_file(resource, file_name)
-
-            signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
-
-            # set to private if necessary -- AFTER post_delete_file handling
-            resource.update_public_and_discoverable()  # set to False if necessary
-
-            # generate bag
-            utils.resource_modified(resource, user, overwrite_bag=False)
-
+    if delete_logical_file and f.has_logical_file:
+        logical_file = f.logical_file
+        if logical_file.can_be_deleted_on_file_delete():
+            # logical_delete() calls this function (delete_resource_file())
+            # to delete each of its contained ResourceFile objects
+            logical_file.logical_delete(user)
             return filename_or_id
+        else:
+            logical_file.set_metadata_dirty()
 
-    # if execution gets here, file was not found
-    raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
-                                        resource.short_id, filename_or_id))
+    signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
+                                               resource=resource, user=user)
+
+    file_name = delete_resource_file_only(resource, f)
+
+    # This presumes that the file is no longer in django
+    delete_format_metadata_after_delete_file(resource, file_name)
+
+    signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
+
+    # set to private if necessary -- AFTER post_delete_file handling
+    resource.update_public_and_discoverable()  # set to False if necessary
+
+    # generate bag
+    utils.resource_modified(resource, user, overwrite_bag=False)
+
+    return filename_or_id
 
 
 def get_resource_doi(res_id, flag=''):
@@ -1123,6 +1026,8 @@ def publish_resource(user, pk):
     Note:  This is different than just giving public access to a resource via access control rule
     """
     resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        raise ValidationError("This resource is already published")
 
     # TODO: whether a resource can be published is not considered in can_be_published
     # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
@@ -1136,16 +1041,16 @@ def publish_resource(user, pk):
     resource.doi = get_resource_doi(pk, 'pending')
     resource.save()
 
-    response = deposit_res_metadata_with_crossref(resource)
-    if not response.status_code == status.HTTP_200_OK:
-        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
-        # crontab celery task
-        resource.doi = get_resource_doi(pk, 'failure')
-        resource.save()
+    if not settings.DEBUG:
+        # only in production environment submit doi request to crossref
+        response = deposit_res_metadata_with_crossref(resource)
+        if not response.status_code == status.HTTP_200_OK:
+            # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
+            # crontab celery task
+            resource.doi = get_resource_doi(pk, 'failure')
+            resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
-    resource.raccess.immutable = True
-    resource.raccess.shareable = False
     resource.raccess.published = True
     resource.raccess.save()
 

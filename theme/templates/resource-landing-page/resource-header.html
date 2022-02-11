@@ -12,11 +12,13 @@
                            @click="selectAuthor(author, index)"
                            data-target="#view-author-modal">
                             <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
-                            <template v-else>${ author.organization }</template>
+                            <template v-else-if="author.organization">${ author.organization }</template>
+                            <template v-else>${ author.email }</template>
                         </a>
                     </td>
 
                     <td v-if="res_mode === 'Edit'">
+                        {% if not cm.raccess.published %}
                         <a :disabled="isUpdatingAuthor" type="button" id="btn-add-new-author"
                            class="btn btn-success btn-xs" data-toggle="modal"
                            data-target="#add-author-modal" title="Add Author">
@@ -28,15 +30,26 @@
                                 <a data-toggle="modal" class="author-preview" :title="'Edit ' + author.name"
                                    @click="selectAuthor(author, index)" data-target="#edit-author-modal">
                                     <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
-                                    <template v-else>${ author.organization }</template>
+                                    <template v-else-if="author.organization">${ author.organization }</template>
+                                    <template v-else>${ author.email }</template>
                                 </a>
                             </span>
                         </span>
-
                         <span data-toggle="tooltip" data-placement="auto"
                               title='Drag and drop Authors to rearrange.'
                               class="glyphicon glyphicon-info-sign text-muted">
                         </span>
+                        {% else %}
+                          <span class="authors-wrapper">
+                               <a v-for="(author, index) in authors" data-toggle="modal"
+                               @click="selectAuthor(author, index)"
+                               data-target="#view-author-modal">
+                                <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
+                                <template v-else-if="author.organization">${ author.organization }</template>
+                                <template v-else>${ author.email }</template>
+                                </a>
+                          </span>
+                        {% endif %}
                     </td>
                 </tr>
                 <tr>

@@ -19,8 +19,8 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource, validate_user_url, clean_for_xml
-from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.models import BaseResource, validate_user_url, clean_for_xml, Relation
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 
 logger = logging.getLogger(__name__)
@@ -176,7 +176,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
                                       update_creation_date=True,
                                       update_modification_date=True)
         # Force bag files to be re-written
-        create_bag_files(resource)
+        create_bag_metadata_files(resource)
     except HsDeserializationDependencyException as e:
         return e.dependency_resource_id, rm, resource
 
@@ -447,7 +447,7 @@ class GenericResourceMeta(object):
         SAX_parse_results = GenericResourceSAXHandler()
         xml.sax.parse(self.rmeta_path, SAX_parse_results)
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Warn if title does not match that from resource map
         title_lit = self._rmeta_graph.value(res_uri, rdflib.namespace.DC.title)
@@ -680,16 +680,6 @@ class GenericResourceMeta(object):
         for r in self.relations:
             logger.debug("\t\t\t{0}".format(str(r)))
 
-        # Get sources
-        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.source, None)):
-            for pred, obj in self._rmeta_graph.predicate_objects(o):
-                source = GenericResourceMeta.ResourceSource(obj, pred)
-                self.sources.append(source)
-
-        logger.debug("\t\tSources: ")
-        for r in self.sources:
-            logger.debug("\t\t\t{0}".format(str(r)))
-
     def get_owner(self):
         """
         Return the creator with the lowest order.
@@ -873,16 +863,6 @@ class GenericResourceMeta(object):
             else:
                 msg = "Relations with type {0} are not supported"
                 msg = msg.format(r.__class__.__name__)
-                raise TypeError(msg)
-        if len(self.sources) > 0:
-            resource.metadata.sources.all().delete()
-        for s in self.sources:
-            if isinstance(s, GenericResourceMeta.ResourceSource):
-                kwargs = {'derived_from': s.uri}
-                resource.metadata.create_element('source', **kwargs)
-            else:
-                msg = "Sources with type {0} are not supported"
-                msg = msg.format(s.__class__.__name__)
                 raise TypeError(msg)
 
         if update_modification_date:
@@ -1216,8 +1196,7 @@ class GenericResourceMeta(object):
                 raise GenericResourceMeta.ResourceMetaException(msg)
 
     class ResourceRelation(object):
-        KNOWN_TYPES = {'isParentOf', 'isExecutedBy', 'isHostedBy', 'isCopiedFrom', 'isCreatedBy',
-                       'isPartOf', 'isVersionOf', 'isReplacedBy', 'isDataFor', 'cites'}
+        KNOWN_TYPES = Relation.get_supported_types()
 
         def __str__(self):
             msg = "{classname} {relationship_type}: {uri}"

@@ -1,0 +1,4 @@
+{
+    "simulationType": "Test simulation",
+    "modelObjective": ["Objective-1", "Objective-2"]
+}

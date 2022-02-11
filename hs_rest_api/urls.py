@@ -1,10 +1,10 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
 from hs_file_types import views as file_type_views
 from hs_core.views.resource_folder_hierarchy import data_store_add_reference_public, \
-    data_store_edit_reference_url_public
+    data_store_edit_reference_url_public, ingest_metadata_files
 
 from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 
@@ -14,6 +14,19 @@ from rest_framework import permissions
 
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
 from .discovery import DiscoverSearchView
+
+
+hsapi_urlpatterns = [
+    url('^hsapi/', include('hs_rest_api.urls')),
+    url('^hsapi/', include('hs_core.urls')),
+    url('^hsapi/', include('ref_ts.urls')),
+    url('^hsapi/', include('hs_model_program.urls')),
+    url('^hsapi/', include('hs_labels.urls')),
+    url('^hsapi/', include('hs_collection_resource.urls')),
+    url('^hsapi/', include('hs_file_types.urls')),
+    url('^hsapi/', include('hs_app_netCDF.urls')),
+    url('^hsapi/', include('hs_composite_resource.urls')),
+]
 
 schema_view_yasg = get_schema_view(
    openapi.Info(
@@ -26,6 +39,7 @@ schema_view_yasg = get_schema_view(
    validators=[],
    public=True,
    permission_classes=(permissions.AllowAny,),
+   patterns=hsapi_urlpatterns,
 )
 
 urlpatterns = [
@@ -112,6 +126,10 @@ urlpatterns = [
         core_views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='list_create_resource_file'),
 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/ingest_metadata/$',
+        ingest_metadata_files,
+        name='ingest_metadata_files'),
+
     url(r'^resource/data-store-add-reference/$',
         data_store_add_reference_public),
 
@@ -154,6 +172,21 @@ urlpatterns = [
         file_type_views.set_file_type_public,
         name="set_file_type_public"),
 
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/functions/remove-file-type/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_path>.*)/$',
+        file_type_views.remove_aggregation_public,
+        name="remove_aggregation_public"),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/functions/delete-file-type/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_path>.*)/$',
+        file_type_views.delete_aggregation_public,
+        name="delete_aggregation_public"),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_path>.*)/functions/move-file-type/(?P<tgt_path>.*)$',
+        file_type_views.move_aggregation_public,
+        name="move_aggregation_public"),
+
     # DEPRECATED: use form above instead. Added unused POST for simplicity
     url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$',
         core_views.resource_rest_api.ResourceFileListCreate.as_view(),
@@ -168,6 +201,9 @@ urlpatterns = [
 
     url(r'^userInfo/$',
         core_views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
+
+    url(r'^userDetails/(?P<user_identifier>.+)/$',
+        core_views.hsapi_get_user, name='get_user_details'),
 
     url(r'^dictionary/universities/$',
         dict_views.ListUniversities.as_view(), name="get_dictionary"),

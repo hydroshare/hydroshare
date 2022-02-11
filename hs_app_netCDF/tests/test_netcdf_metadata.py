@@ -11,7 +11,7 @@ from django.db import IntegrityError
 from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
-    Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
+    Publisher, Identifier, Type, Subject, Description, Date, Format, Relation
 from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 from hs_app_netCDF.models import NetcdfResource, Variable, OriginalCoverage
 
@@ -133,11 +133,8 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # there shouldn't any contributor element
         self.assertEqual(self.resNetcdf.metadata.contributors.all().count(), 0)
 
-        # there shouldn't any source element
-        self.assertEqual(self.resNetcdf.metadata.sources.all().count(), 0)
-
         # there shouldn't any relation element
-        self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 0)
+        self.assertEqual(self.resNetcdf.metadata.relations.all().count(), 0)
 
         # there should be 1 creator
         self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 1)
@@ -223,8 +220,6 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Type metadata objects
         self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be Source metadata objects
-        self.assertTrue(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Relation metadata objects
         self.assertTrue(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Publisher metadata objects
@@ -264,8 +259,6 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Type metadata objects
         self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Relation metadata objects
         self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Publisher metadata objects
