@@ -802,7 +802,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no resource file
         self.assertEqual(self.composite_resource.files.all().count(), 0)
         # check that the folder got deleted from irods
-        istorage = self.composite_resource.get_irods_storage()
+        istorage = self.composite_resource.get_storage()
         full_folder_path = os.path.join(self.composite_resource.file_path, fileset_folder)
         self.assertFalse(istorage.exists(full_folder_path))
 

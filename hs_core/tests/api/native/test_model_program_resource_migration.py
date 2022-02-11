@@ -956,7 +956,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         self.assertEqual(mp_res.files.count(), 2)
         # delete the text file from iRODS
-        istorage = mp_res.get_irods_storage()
+        istorage = mp_res.get_storage()
         istorage.delete(text_res_file.public_path)
 
         # as pre the DB the MP resource still have 2 files

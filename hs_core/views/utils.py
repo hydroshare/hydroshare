@@ -1045,7 +1045,7 @@ def ingest_bag(resource, bag_file, user):
     """
     from hs_file_types.utils import identify_metadata_files, ingest_metadata_files
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     zip_with_full_path = os.path.join(resource.file_path, bag_file.short_path)
 
     # unzip to a temporary folder=

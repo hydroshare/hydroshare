@@ -75,7 +75,7 @@ class Command(BaseCommand):
             self.stdout.flush()
 
             # check resource exists on irods
-            istorage = mp_res.get_irods_storage()
+            istorage = mp_res.get_storage()
             if not istorage.exists(mp_res.root_path):
                 err_resource_counter += 1
                 err_msg = "{}Couldn't migrate model program resource (ID:{}). This resource doesn't exist in iRODS."

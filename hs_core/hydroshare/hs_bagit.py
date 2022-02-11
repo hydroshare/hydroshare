@@ -132,7 +132,7 @@ def save_resource_metadata_xml(resource):
     Parameters:
     :param resource: A resource instance
     """
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     temp_path = _create_temp_dir_on_irods(istorage)
     from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
     with open(from_file_name, 'w') as out:

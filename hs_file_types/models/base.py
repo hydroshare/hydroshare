@@ -911,7 +911,7 @@ class AbstractLogicalFile(models.Model):
                         raise ValidationError(msg)
         else:
             # user selected a folder to set aggregation - check if the specified folder exists
-            storage = resource.get_irods_storage()
+            storage = resource.get_storage()
             if folder_path.startswith("data/contents/"):
                 folder_path = folder_path[len("data/contents/"):]
             path_to_check = os.path.join(resource.file_path, folder_path)
@@ -981,7 +981,7 @@ class AbstractLogicalFile(models.Model):
         """Checks if this aggregation is a dangling aggregation or not"""
 
         resource = self.resource
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_storage()
         if self.files.count() == 0:
             if any([self.is_fileset, self.is_model_instance, self.is_model_program]):
                 # check folder exist in irods
@@ -1521,7 +1521,7 @@ class AbstractLogicalFile(models.Model):
         return xml_file_name
 
     def read_metadata_file(self):
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
         return istorage.download(self.metadata_file_path).read()
 
     def read_metadata_as_rdf(self):

@@ -25,7 +25,7 @@ class Command(BaseCommand):
         parser.add_argument('resource_ids', nargs='*', type=str)
 
     def process_resource(self, model_res, resource_type, logger):
-        istorage = model_res.get_irods_storage()
+        istorage = model_res.get_storage()
         model_res_type_folder_mapping = {"ModelProgram": "model-program", "ModelInstance": "model-instance",
                                          "MODFLOWModelInstance": "modflow-instance",
                                          "SWATModelInstance": "swat-instance"}

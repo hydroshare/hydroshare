@@ -929,7 +929,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         add_file_to_resource(mi_res, file_to_upload, folder=upload_folder)
         self.assertEqual(mi_res.files.count(), 2)
         # delete the text file from iRODS
-        istorage = mi_res.get_irods_storage()
+        istorage = mi_res.get_storage()
         istorage.delete(text_res_file.public_path)
         # as pre the DB the Mi resource still have 2 files
         self.assertEqual(mi_res.files.count(), 2)

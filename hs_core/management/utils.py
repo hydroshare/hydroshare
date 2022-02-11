@@ -33,7 +33,7 @@ def _get_model_aggregation_folder_name(comp_res, default_folder_name):
     # generate a folder name if the default folder name already exists
     # used for migrating model resources
     folder_name = default_folder_name
-    istorage = comp_res.get_irods_storage()
+    istorage = comp_res.get_storage()
     folder_path = os.path.join(comp_res.file_path, default_folder_name)
     post_fix = 1
     while istorage.exists(folder_path):
@@ -58,7 +58,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
     command.stdout.write(command.style.SUCCESS(msg))
 
     # move files and folders to the new aggregation folder
-    istorage = comp_res.get_irods_storage()
+    istorage = comp_res.get_storage()
     moved_folders = []
     aggr_name = aggr_name.replace("-", " ")
     for res_file in comp_res.files.all().iterator():

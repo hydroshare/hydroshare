@@ -58,7 +58,7 @@ def resource_metadata(resource):
     :returns: ResourceMetadata schema instance
     """
     file_with_path = resource.scimeta_path
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     resource.update_relation_meta()
     metadata_dirty = resource.getAVU('metadata_dirty')
     if metadata_dirty:
@@ -125,7 +125,7 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
         aggregation.create_aggregation_xml_documents()
 
     # read existing metadata from file
-    agg_md = load_metadata_from_file(resource.get_irods_storage(), aggregation.metadata_file_path)
+    agg_md = load_metadata_from_file(resource.get_storage(), aggregation.metadata_file_path)
 
     agg_md_dict = agg_md.dict()
 
@@ -161,5 +161,5 @@ def aggregation_metadata_json_loads(resource, file_path):
     agg = resource.get_aggregation_by_name(file_path)
     if agg.metadata.is_dirty:
         agg.create_aggregation_xml_documents()
-    agg_md = load_metadata_from_file(resource.get_irods_storage(), agg.metadata_file_path)
+    agg_md = load_metadata_from_file(resource.get_storage(), agg.metadata_file_path)
     return json.loads(agg_md.json())

@@ -365,7 +365,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 
         schema_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchema)
         if schema_file:
-            istorage = self.logical_file.resource.get_irods_storage()
+            istorage = self.logical_file.resource.get_storage()
             if istorage.exists(self.logical_file.schema_file_path):
                 with istorage.download(self.logical_file.schema_file_path) as f:
                     json_bytes = f.read()
@@ -376,7 +376,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 
         schema_values_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchemaValues)
         if schema_values_file:
-            istorage = self.logical_file.resource.get_irods_storage()
+            istorage = self.logical_file.resource.get_storage()
             if istorage.exists(self.logical_file.schema_values_file_path):
                 with istorage.download(self.logical_file.schema_values_file_path) as f:
                     json_bytes = f.read()
@@ -468,7 +468,7 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
 
         # create a temp dir where the json file will be temporarily saved before copying to iRODS
         tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
 
         if os.path.exists(tmpdir):
             shutil.rmtree(tmpdir)
@@ -564,14 +564,14 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
 
     def logical_delete(self, user, delete_res_files=True):
         # super deletes files needed to delete the values file path
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
         if istorage.exists(self.schema_values_file_path):
             istorage.delete(self.schema_values_file_path)
         super(ModelInstanceLogicalFile, self).logical_delete(user, delete_res_files=delete_res_files)
 
     def remove_aggregation(self):
         # super deletes files needed to delete the values file path
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
 
         if istorage.exists(self.schema_values_file_path):
             istorage.delete(self.schema_values_file_path)

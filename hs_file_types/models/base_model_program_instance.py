@@ -306,7 +306,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         parent_aggr = self.get_parent()
         resource = self.resource
         # delete associated metadata and map xml documents
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_storage()
         if istorage.exists(self.metadata_file_path):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
@@ -349,7 +349,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         object. However, it doesn't delete any resource files that are part of the aggregation."""
 
         # delete associated metadata and map xml document
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
         if istorage.exists(self.metadata_file_path):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
@@ -421,7 +421,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
 
         # create a temp dir where the json file will be temporarily saved before copying to iRODS
         tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
 
         if os.path.exists(tmpdir):
             shutil.rmtree(tmpdir)

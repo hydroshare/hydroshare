@@ -516,7 +516,7 @@ def replicate_resource_bag_to_user_zone_task(res_id, request_username):
 
     res = utils.get_resource_by_shortkey(res_id)
     res_coll = res.root_path
-    istorage = res.get_irods_storage()
+    istorage = res.get_storage()
     if istorage.exists(res_coll):
         bag_modified = res.getAVU('bag_modified')
         if bag_modified is None or not bag_modified:

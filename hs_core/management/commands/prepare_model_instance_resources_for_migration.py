@@ -28,7 +28,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(msg))
 
                 # check resource exists on irods
-                istorage = mi_res.get_irods_storage()
+                istorage = mi_res.get_storage()
                 if not istorage.exists(mi_res.root_path):
                     err_msg = "Model instance ({}) resource not found in irods (ID: {})"
                     err_msg = err_msg.format(mi_res.short_id, model_type)
@@ -39,7 +39,7 @@ class Command(BaseCommand):
                 if mi_res.metadata.executed_by:
                     resource_counter_executed_by += 1
                     linked_mp_res = mi_res.metadata.executed_by.model_program_fk
-                    istorage = linked_mp_res.get_irods_storage()
+                    istorage = linked_mp_res.get_storage()
                     if not istorage.exists(linked_mp_res.root_path):
                         err_msg = "Linked Model program resource was not found in irods (ID: {})"
                         err_msg = err_msg.format(linked_mp_res.short_id)
