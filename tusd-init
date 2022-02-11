@@ -1,0 +1,5 @@
+#!/bin/bash 
+su irods -c '/usr/local/bin/tusd \
+     -behind-proxy \
+     -upload-dir /tmp/irods/data \
+     -base-path /upload/' >> /hydroshare/log/tusd.log 2>&1
