@@ -1,5 +1,4 @@
 import csv
-from datetime import datetime
 from django.core.management.base import BaseCommand
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 
