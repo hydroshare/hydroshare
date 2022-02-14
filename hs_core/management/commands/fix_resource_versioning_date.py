@@ -1,6 +1,7 @@
 import csv
 from django.core.management.base import BaseCommand
 from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.models import Date
 
 
 class Command(BaseCommand):
@@ -26,6 +27,11 @@ class Command(BaseCommand):
                     print(f'Resource {res_id} does not exist', flush=True)
                     continue
                 res.updated = res_date
+                if res.metadata.dates.all().filter(type='modified'):
+                    res_modified_date = res.metadata.dates.all().filter(type='modified')[0]
+                    dt = Date.objects.get(id=res_modified_date.id)
+                    dt.start_date = res_date
+                    dt.save()
                 res.save()
                 count += 1
             print(f"{count} resources have been updated with the correct date")

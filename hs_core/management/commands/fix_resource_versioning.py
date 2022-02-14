@@ -1,7 +1,7 @@
 import csv
 from django.core.management.base import BaseCommand
 from hs_core.hydroshare.utils import get_resource_by_shortkey, set_dirty_bag_flag
-from hs_core.models import RelationTypes
+from hs_core.enums import RelationTypes
 
 
 class Command(BaseCommand):
@@ -74,9 +74,9 @@ class Command(BaseCommand):
                     except Exception:
                         print(f'Resource {version_res_id} does not exist', flush=True)
                         continue
-                    hs_identifier = version_res.metadata.identifiers.filter(name="hydroShareIdentifier").first()
                     res.metadata.relations.filter(type=RelationTypes.isVersionOf).delete()
-                    res.metadata.create_element('relation', type=RelationTypes.isReplacedBy, value=hs_identifier.url)
+                    res.metadata.create_element('relation', type=RelationTypes.isReplacedBy,
+                                                value=version_res.get_citation())
                     res.save()
                     set_dirty_bag_flag(res)
                     fixed = True
@@ -88,9 +88,9 @@ class Command(BaseCommand):
                     except Exception:
                         print(f'Resource {replace_by_res_id} does not exist', flush=True)
                         continue
-                    hs_identifier = replace_by_res.metadata.identifiers.filter(name="hydroShareIdentifier").first()
                     res.metadata.relations.filter(type=RelationTypes.isReplacedBy).delete()
-                    res.metadata.create_element('relation', type=RelationTypes.isReplacedBy, value=hs_identifier.url)
+                    res.metadata.create_element('relation', type=RelationTypes.isReplacedBy,
+                                                value=replace_by_res.get_citation())
                     res.save()
                     set_dirty_bag_flag(res)
                     fixed = True
@@ -110,11 +110,11 @@ class Command(BaseCommand):
                         print(f'Resource {replace_res_id} does not exist', flush=True)
                         continue
                     res.metadata.relations.filter(type=RelationTypes.isVersionOf).delete()
-                    hs_identifier = version_res.metadata.identifiers.filter(name="hydroShareIdentifier").first()
-                    res.metadata.create_element('relation', type=RelationTypes.isVersionOf, value=hs_identifier.url)
+                    res.metadata.create_element('relation', type=RelationTypes.isVersionOf,
+                                                value=version_res.get_citation())
                     res.metadata.relations.filter(type=RelationTypes.isReplacedBy).delete()
-                    hs_identifier = replace_res.metadata.identifiers.filter(name="hydroShareIdentifier").first()
-                    res.metadata.create_element('relation', type=RelationTypes.isReplacedBy, value=hs_identifier.url)
+                    res.metadata.create_element('relation', type=RelationTypes.isReplacedBy,
+                                                value=replace_res.get_citation())
                     res.save()
                     set_dirty_bag_flag(res)
                     fixed = True
