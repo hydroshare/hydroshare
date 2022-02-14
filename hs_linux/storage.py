@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.core.files.storage import  FileSystemStorage
 from hs_linux.models import LinuxAVU
 import os, tarfile, shutil, errno
@@ -5,7 +7,12 @@ from pprint import pprint
 
 IRODS_PATH = "./irods/"
 class LinuxStorage(FileSystemStorage):
-        def prepend_path(path):
+
+        def __init__(self, location=None, base_url=None, file_permissions_mode=None,
+                     directory_permissions_mode=None):
+                super().__init__(IRODS_PATH, base_url, file_permissions_mode, directory_permissions_mode)
+
+        def prepend_path(self, path):
                 if(not os.path.exists(IRODS_PATH)):
                         os.makedirs(IRODS_PATH)        
                 if( path[0] != "/" ):
@@ -16,7 +23,7 @@ class LinuxStorage(FileSystemStorage):
         
         @property
         def getUniqueTmpPath(self):
-                pass
+                return self.prepend_path(os.path.join('tmp', uuid4().hex))
 
         def download(self, name):
                 irods_name = self.prepend_path(name)
@@ -58,12 +65,19 @@ class LinuxStorage(FileSystemStorage):
                 getAVU -- There is a lookup table for each one and its deafault value; check that and return the default value
                 Alva: he will generate default AVUs for everything.
         '''
-        def setAVU(self, name, attName, attVal, attUnit=None):
-                LinuxAVU.models.create(path=name, name=attName, val=attVal, unit=attUnit)
+        def setAVU(self, name, attName, attVal, attUnit=""):
+                obj, _ = LinuxAVU.objects.get_or_create(path=name, name=attName)
+                obj.value = attVal
+                obj.unit = attUnit
+                obj.save()
 
         def getAVU(self, name, attName):
-                obj = LinuxAVU.filter(path__exact=name, name__exact=attName)
-                return obj.attVal
+                obj = LinuxAVU.objects.get(path__exact=name, name__exact=attName)
+                return obj.value
+
+        def removeAVU(self, name, attName):
+                obj = LinuxAVU.objects.get(path__exact=name, name__exact=attName)
+                obj.delete()
                 
 
 
@@ -77,6 +91,11 @@ class LinuxStorage(FileSystemStorage):
                         os.remove(directory)
                 elif(os.path.isdir(directory)):
                         shutil.rmtree(directory)
+
+        def createDirectory(self, dirname):
+                directory = self.prepend_path(dirname)
+                if (not os.path.exists(directory)):
+                        os.makedirs(directory)
 
         # copies files or directories recursively within irods
         def copyFiles(self, src_name, dest_name, ires=None):

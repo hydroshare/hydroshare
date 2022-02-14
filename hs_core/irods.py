@@ -272,4 +272,5 @@ class ResourceFileIRODSMixin(models.Model):
 
     def create_ticket(self, user, write=False):
         """ This creates a ticket to read or modify this file """
-        return self.resource.create_ticket(user, path=self.storage_path, write=write)
+        pass
+        # return self.resource.create_ticket(user, path=self.storage_path, write=write)

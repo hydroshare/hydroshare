@@ -127,7 +127,9 @@ def data_store_structure(request):
     for index, fname in enumerate(store[1]):  # files
         f_store_path = os.path.join(store_path, fname)
         file_in_irods = resource.get_irods_path(f_store_path)
-        size = store[2][index]
+        #size = store[2][index]
+        # TODO get the size
+        size = 1
         mtype = get_file_mime_type(fname)
         idx = mtype.find('/')
         if idx >= 0:
@@ -138,7 +140,7 @@ def data_store_structure(request):
                                             fed_resource_file=file_in_irods).first()
         else:
             f = ResourceFile.objects.filter(object_id=resource.id,
-                                            resource_file=file_in_irods).first()
+                                            linux_resource_file=file_in_irods).first()
 
         if not f:
             # skip metadata files

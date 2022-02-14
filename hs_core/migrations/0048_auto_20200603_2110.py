@@ -34,5 +34,5 @@ class Migration(migrations.Migration):
             name='file_folder',
             field=models.CharField(default='', max_length=4096),
         ),
-        migrations.RunPython(update_file_folder_none_to_empty),
+        # migrations.RunPython(update_file_folder_none_to_empty),
     ]

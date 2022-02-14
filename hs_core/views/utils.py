@@ -1147,7 +1147,8 @@ def create_folder(res_id, folder_path, migrating_resource=False):
     # check for duplicate folder path
     if istorage.exists(coll_path):
         raise ValidationError("Folder already exists")
-    istorage.session.run("imkdir", None, '-p', coll_path)
+    # istorage.session.run("imkdir", None, '-p', coll_path)
+    istorage.createDirectory(coll_path)
 
 
 def remove_folder(user, res_id, folder_path):

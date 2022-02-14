@@ -43,6 +43,7 @@ from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import RelationTypes
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from hs_linux.storage import LinuxStorage
 from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
 from .languages_iso import languages as iso_languages
 
@@ -2241,7 +2242,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         istorage = self.get_storage()
         root_path = self.root_path
-        istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
+        #istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
+        istorage.removeAVU(root_path, attribute)
 
     def setAVU(self, attribute, value):
         """Set an AVU at the resource level.
@@ -2256,8 +2258,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # has to create the resource collection directory if it does not exist already due to
         # the need for setting quota holder on the resource collection before adding files into
         # the resource collection in order for the real-time iRODS quota micro-services to work
-        if not istorage.exists(root_path):
-            istorage.session.run("imkdir", None, '-p', root_path)
+        # if not istorage.exists(root_path):
+            # istorage.session.run("imkdir", None, '-p', root_path)
+        istorage.createDirectory(root_path)
         istorage.setAVU(root_path, attribute, value)
 
     def getAVU(self, attribute):
@@ -2800,8 +2803,8 @@ class ResourceFile(ResourceFileIRODSMixin):
                                      null=True, blank=True, storage=IrodsStorage())
     fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
                                          null=True, blank=True, storage=FedStorage())
-    # linux_resource_file = models.FileField(upload_to=get_path, max_length=4096,
-    #                                        null=True, blank=True, storage=LinuxStorage())
+    linux_resource_file = models.FileField(upload_to=get_path, max_length=4096,
+                                           null=True, blank=True, storage=LinuxStorage())
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -2864,12 +2867,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
-            if resource.is_federated:
-                kwargs['resource_file'] = None
-                kwargs['fed_resource_file'] = file
-            else:
-                kwargs['resource_file'] = file
-                kwargs['fed_resource_file'] = None
+            kwargs['linux_resource_file'] = file
 
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
@@ -3012,7 +3010,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
             try:
-                self._size = self.resource_file.size
+                self._size = self.linux_resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
@@ -3432,9 +3430,10 @@ class BaseResource(Page, AbstractResource):
 
     def get_storage(self):
         """Return either IrodsStorage or FedStorage."""
-
         # if self.resource.storage_type == StorageCodes.IRODS:
-        return IrodsStorage()
+        return LinuxStorage()
+        #self, location = None, base_url = None, file_permissions_mode = None,
+        #directory_permissions_mode = None
         # elif self.resource.storage_type == StorageCodes.FEDERATED:
         #     return FedStorage()
         # elif self.resource.storage_type == StorageCodes.LINUX:
