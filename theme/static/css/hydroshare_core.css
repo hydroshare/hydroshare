@@ -1007,6 +1007,7 @@ div.readme .readme-header h4 > span {
 	position: absolute;
 	right: 8px;
 	top: 10px;
+	font-size: 0px;
 }
 
 .form-control, .controls .input-group .form-control {
