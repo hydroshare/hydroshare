@@ -179,7 +179,7 @@ def data_store_structure(request):
             logical_file_id = logical_file.id
             aggregation_name = f.aggregation_display_name
             aggregation_appkey = ''
-            if not hasattr(logical_file, 'folder'):
+            if not hasattr(logical_file, 'folder') or logical_file.folder is None:
                 aggregation_appkey = logical_file.metadata.extra_metadata.get('appkey', '')
             if 'url' in f.logical_file.extra_data:
                 f_ref_url = f.logical_file.extra_data['url']
