@@ -8,6 +8,8 @@
                 Public
             {% elif cm.raccess.discoverable %}
                 Discoverable
+            {% elif cm.raccess.allow_private_sharing %}
+                Private (link sharing enabled)
             {% else %}
                 Private
             {% endif %}

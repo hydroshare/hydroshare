@@ -32,10 +32,12 @@ let manageAccessApp = new Vue({
         error: "",
         quotaError: "",
         sharingError: "",
+        privateLinkSharingError: "",
         isProcessing: false,
         isProcessingAccess: false,
         isProcessingShareable: false,
         isChangingQuotaHolder: false,
+        isProcessingPrivateLinkSharing: false,
         cardPosition: {
             top: 0,
             left: 0,
@@ -51,10 +53,13 @@ let manageAccessApp = new Vue({
 
             let accessStr = "Private";
             if (newAccess.isPublic && newAccess.isDiscoverable) {
-                accessStr = "Public"
+                accessStr = "Public";
             }
             else if (!newAccess.isPublic && newAccess.isDiscoverable) {
-                accessStr = "Discoverable"
+                accessStr = "Discoverable";
+            }
+            else if (!newAccess.isPublic && newAccess.isPrivateLinkSharing) {
+                accessStr = "Private (link sharing enabled)";
             }
             $("#hl-sharing-status").text(accessStr);    // Update highlight sharing status
         },
@@ -366,6 +371,7 @@ let manageAccessApp = new Vue({
                                 isPublic: true,
                                 isDiscoverable: true,
                                 isShareable: vue.resAccess.isShareable,
+                                isPrivateLinkSharing : vue.resAccess.isPrivateLinkSharing,
                             };
                         }
                         else if (action === 'make_discoverable') {
@@ -373,6 +379,7 @@ let manageAccessApp = new Vue({
                                 isPublic: false,
                                 isDiscoverable: true,
                                 isShareable: vue.resAccess.isShareable,
+                                isPrivateLinkSharing : vue.resAccess.isPrivateLinkSharing,
                             }
                         }
                         else if (action === 'make_private') {
@@ -380,6 +387,7 @@ let manageAccessApp = new Vue({
                                 isPublic: false,
                                 isDiscoverable: false,
                                 isShareable: vue.resAccess.isShareable,
+                                isPrivateLinkSharing : vue.resAccess.isPrivateLinkSharing,
                             }
                         }
                     }
@@ -398,6 +406,35 @@ let manageAccessApp = new Vue({
                         vue.sharingError = resp.message;
                     }
                     vue.isProcessingShareable = false;
+                }
+            );
+        },
+        setPrivateLinkSharing: function (action) {
+            let vue = this;
+            vue.isProcessingPrivateLinkSharing = true;
+            vue.privateLinkSharingError = "";
+            $.post('/hsapi/_internal/' + this.resShortId + '/set-resource-flag/',
+                {flag: action, 'resource-mode': this.resourceMode}, function (resp) {
+                    if (resp.status === "error") {
+                        vue.privateLinkSharingError = resp.message;
+                    }
+                    else if(action === "enable_private_sharing_link") {
+                        vue.resAccess = {
+                            isPublic: vue.resAccess.isPublic,
+                            isDiscoverable: vue.resAccess.isDiscoverable,
+                            isShareable: vue.resAccess.isShareable,
+                            isPrivateLinkSharing : true
+                       }
+                    }
+                    else {
+                        vue.resAccess = {
+                            isPublic: vue.resAccess.isPublic,
+                            isDiscoverable: vue.resAccess.isDiscoverable,
+                            isShareable: vue.resAccess.isShareable,
+                            isPrivateLinkSharing : false
+                       }
+                    }
+                    vue.isProcessingPrivateLinkSharing = false;
                 }
             );
         },
