@@ -63,7 +63,7 @@
                     <div>
                         {#  Existing HydroShare User  #}
                         <div v-show="authorType === authorTypes.EXISTING_HS_USER">
-                            <div class="modal-body">
+                            <div @click="clearErrors" class="modal-body">
                                 {{ add_view_hs_user_form.user }}
 
                                 <div v-if="addAuthorError" class="alert alert-danger space-top">

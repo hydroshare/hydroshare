@@ -123,6 +123,11 @@ Vue.component('add-author-modal', {
         }
     },
     methods: {
+        clearErrors: function(event){
+            if(event.target.className === "remove"){
+                this.addAuthorError = "";
+            }
+        },
         addAuthorExistingUser: function () {
             let vue = this;
             vue.addAuthorError = null;
@@ -133,6 +138,15 @@ Vue.component('add-author-modal', {
             if (!userId) {
                 vue.addAuthorError = "Select a user to add as an author";
                 return;
+            }else {
+                const alreadyExists = leftHeaderApp.$data.authors.map(function (author) {
+                        return author.profileUrl;
+                    }).indexOf("/user/" + userId + "/") >= 0;
+
+                if (alreadyExists) {
+                    vue.addAuthorError = "This author has already been added to this resource";
+                    return;
+                }
             }
 
             let url = '/hsapi/_internal/get-user-or-group-data/' + userId + "/false";
