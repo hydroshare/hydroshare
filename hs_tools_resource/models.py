@@ -1,6 +1,7 @@
 import requests
 import base64
 import imghdr
+from hs_core.hydroshare.utils import get_file_mime_type
 
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
@@ -472,12 +473,17 @@ class ToolIcon(AbstractMetaDataElement):
         if response.status_code != 200:
             raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
                                format(response.status_code))
-        image_size_mb = float(response.headers["content-length"])
+        if 'Transfer-Encoding' in response.headers and response.headers["Transfer-Encoding"] == "chunked":
+            image_size_mb = len(response.content)
+        else:
+            image_size_mb = float(response.headers["content-length"])
         if image_size_mb > 1000000:  # 1mb
             raise ValidationError("Icon image size should be less than 1MB.")
         image_type = imghdr.what(None, h=response.content)
-        if image_type not in ["png", "gif", "jpeg"]:
-            raise ValidationError("Supported icon image types are png, gif and jpeg")
+        if not image_type:
+            image_type = get_file_mime_type(url).rsplit('/', 1)[1]
+        if image_type not in ["png", "gif", "jpeg", "svg+xml", "vnd.microsoft.icon", "svg", "ico"]:
+            raise ValidationError("Supported icon image types are png, gif, jpeg, ico, and svg")
         base64_string = base64.b64encode(response.content)
         data_url = "data:image/{image_type};base64,{base64_string}". \
             format(image_type=image_type, base64_string=base64_string.decode())
