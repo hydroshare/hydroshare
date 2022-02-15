@@ -107,8 +107,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         show_content_files = user.uaccess.can_view_resource(content_model)
     else:
         # if anonymous user getting access to a private resource (since resource is discoverable),
-        # then don't show content files
-        show_content_files = content_model.raccess.public
+        # then don't show content files unless private link sharing is enabled
+        show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
 
     rights_allow_copy = rights_allows_copy(content_model, user)
 
