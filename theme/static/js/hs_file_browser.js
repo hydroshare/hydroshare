@@ -888,18 +888,21 @@ function bindFileBrowserItemEvents() {
                                 appKeyApp = true;
                             }
                         }
-                        // check for matching aggregation type if tool has no appkey
-                        if (!toolAppKey) {
-                            // check for aggregation type match
-                             if (!aggrFolderBased) {
+                        if ($(this).attr("data-agg-types"))  {
+                            // tool has restricted aggregation types - need to also match aggregation type
+                            if (!aggrFolderBased) {
                                 // file based aggregation selected (single file aggregation, model program/instance aggregation)
-                                if ($(this).attr("data-agg-types")) {
-                                    aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
-                                }
+                                aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
                              }
                              // file selected
-                             else if ($(this).attr("data-agg-types") && $(this).attr("data-url-file")) {
+                             else if ($(this).attr("data-url-file")) {
                                 aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                            }
+                            if (toolAppKey && !appKeyApp) {
+                                aggrApp = false;
+                            }
+                            if (!aggrApp) {
+                                appKeyApp = false;
                             }
                         }
                     }
@@ -914,10 +917,14 @@ function bindFileBrowserItemEvents() {
                             appKeyApp = true;
                         }
                     }
-                    // check for matching aggregation type if tool has no appkey
-                    if (!toolAppKey) {
-                        if ($(this).attr("data-agg-types")) {
-                            aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                    if ($(this).attr("data-agg-types")) {
+                        // tool has restricted aggregation types - need to also match aggregation type
+                        aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                        if (toolAppKey && !appKeyApp) {
+                            aggrApp = false;
+                        }
+                        if (!aggrApp) {
+                            appKeyApp = false;
                         }
                     }
                 }
