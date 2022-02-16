@@ -122,12 +122,15 @@ Vue.component('add-author-modal', {
             },
         }
     },
-    methods: {
-        clearErrors: function(event){
-            if(event.target.className === "remove"){
-                this.addAuthorError = "";
+    mounted(){
+        let that = this;
+        $('.modal-body').click(function(e){
+            if($(e.target).attr('class') === "remove"){
+                that.addAuthorError = "";
             }
-        },
+        });
+    },
+    methods: {
         addAuthorExistingUser: function () {
             let vue = this;
             vue.addAuthorError = null;
@@ -139,9 +142,10 @@ Vue.component('add-author-modal', {
                 vue.addAuthorError = "Select a user to add as an author";
                 return;
             }else {
+                // .find() suggested but I went with .includes()
                 const alreadyExists = leftHeaderApp.$data.authors.map(function (author) {
                         return author.profileUrl;
-                    }).indexOf("/user/" + userId + "/") >= 0;
+                    }).includes("/user/" + userId + "/");
 
                 if (alreadyExists) {
                     vue.addAuthorError = "This author has already been added to this resource";
