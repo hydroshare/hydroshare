@@ -2026,7 +2026,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(CompositeResource.objects.count(), 1)
         new_folder = 'fileset_folder'
         ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the txt file to the resource at the above folder
+        # add the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # set folder to fileset logical file type (aggregation)
         FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
