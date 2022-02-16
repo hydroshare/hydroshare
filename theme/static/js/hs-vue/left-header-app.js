@@ -142,7 +142,6 @@ Vue.component('add-author-modal', {
                 vue.addAuthorError = "Select a user to add as an author";
                 return;
             }else {
-                // .find() suggested but I went with .includes()
                 const alreadyExists = leftHeaderApp.$data.authors.map(function (author) {
                         return author.profileUrl;
                     }).includes("/user/" + userId + "/");
