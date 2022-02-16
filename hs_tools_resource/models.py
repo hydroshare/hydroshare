@@ -493,7 +493,7 @@ class ToolIcon(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if "value" in kwargs:
             url = kwargs["value"]
-
+            data_url = cls._validate_tool_icon(url) if url else ""
             metadata_obj = kwargs['content_object']
             new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
             new_meta_instance.value = url
