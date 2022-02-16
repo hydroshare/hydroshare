@@ -91,7 +91,8 @@ function getVirtualFolderTemplateInstance(agg) {
 
     return "<li class='fb-folder droppable draggable' data-url='" + agg.url +
       "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
-      agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file + "' >" +
+      agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file +
+      "' data-aggregation-appkey='" + agg.aggregation_appkey  + "' >" +
       iconTemplate +
       "<span class='fb-file-name'>" + agg.name + "</span>" +
       "<span class='fb-file-type'>File Folder</span>" +
@@ -847,12 +848,17 @@ function bindFileBrowserItemEvents() {
             // toggle apps by file extension, appkey and aggregation type
             let hasTools = false;
             menu.find("li.btn-open-with").each(function() {
+                // when file extension and extension supported by the tool matches, this will be set to true
                 let extensionApp = false;
+                // when appkey in aggregation matches with the appkey of the tool, this will be set to true
                 let appKeyApp = false;
+                // when aggregation type of the aggregation matches with the aggregation type supported by the tool
+                // matches, this will be set to true
                 let aggrApp = false;
                 let toolExtensions = '';
                 let toolAppKey = '';
                 if (fileSelected) {
+                    // check for file extension match
                     if ($(this).attr("data-file-extensions")) {
                         toolExtensions = $(this).attr("data-file-extensions").split(",");
                         for (let i = 0; i < toolExtensions.length; ++i) {
@@ -864,8 +870,8 @@ function bindFileBrowserItemEvents() {
                     }
                 }
                 if (fileSelected) {
-                    if (!toolExtensions && !extensionApp) {
-                        // check for appkey
+                    if (!extensionApp) {
+                        // file extension and tool supported extension didn't match - now check for appkey match
                         if (!aggrFolderBased) {
                             // file based aggregation selected (single file aggregation, model program/instance aggregation)
                             if ($(this).attr("data-tool-appkey")) {
@@ -877,12 +883,13 @@ function bindFileBrowserItemEvents() {
                             toolAppKey = $(this).attr("data-tool-appkey");
                         }
 
-                        if (aggrAppKey || toolAppKey) {
+                        if (aggrAppKey && toolAppKey) {
                             if (aggrAppKey === toolAppKey) {
                                 appKeyApp = true;
                             }
                         }
-                        if (!toolAppKey && !appKeyApp) {
+                        // check for matching aggregation type if tool has no appkey
+                        if (!toolAppKey) {
                             // check for aggregation type match
                              if (!aggrFolderBased) {
                                 // file based aggregation selected (single file aggregation, model program/instance aggregation)
@@ -897,18 +904,18 @@ function bindFileBrowserItemEvents() {
                         }
                     }
                 }
-                else {  //folder selected (right-clicked)
+                else {  //folder based aggregation selected (right-clicked)
                     // check for matching appkey
                     if ($(this).attr("data-tool-appkey")) {
                         toolAppKey = $(this).attr("data-tool-appkey");
                     }
-                    if (aggrAppKey || toolAppKey) {
+                    if (aggrAppKey && toolAppKey) {
                         if (aggrAppKey === toolAppKey) {
                             appKeyApp = true;
                         }
                     }
-                    // check for matching aggregation type
-                    if (!aggrAppKey && !toolAppKey && !appKeyApp) {
+                    // check for matching aggregation type if tool has no appkey
+                    if (!toolAppKey) {
                         if ($(this).attr("data-agg-types")) {
                             aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
                         }

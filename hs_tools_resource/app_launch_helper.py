@@ -87,9 +87,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         file_extensions = tool_res_obj.metadata.supported_file_extensions.value
 
     if is_open_with_app or is_approved_app:
-        if (tool_url_resource_new is not None) or \
-                (tool_url_agg_new is not None) or \
-                (tool_url_file_new is not None):
+        if any([tool_url_resource_new is not None, tool_url_agg_new is not None, tool_url_file_new is not None]):
             tl = {'title': str(tool_res_obj.metadata.title.value),
                   'res_id': tool_res_obj.short_id,
                   'icon_url': tool_icon_url,
