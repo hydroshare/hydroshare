@@ -481,22 +481,23 @@ class ToolIconFormHelper(BaseFormHelper):
                         </a>
                         """),
                     HTML("""
-                    <a type="button" id="icon-delete-btn" class="" title="Clear icon">
-                        <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
-                    </a>
-                    """),
-                    css_class='form-group col-md-6 mb-0'
+                        <a type="button" id="icon-delete-btn" class="" title="Clear icon">
+                            <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                        </a>
+                        """),
+                    css_class='form-group col-sm-6'
                 ),
-                css_class='form-row'
             ),
             Row(
-                HTML("""
-                    <span id="icon-preview-label" class="control-label">Preview</span>
-                    <br>
-                    <img id="tool-icon-preview" src="{data_url_db}">
-                    """.format(data_url_db=data_url_db)),
-                css_class='form-row'
+                Column(
+                    HTML("""
+                        <span id="icon-preview-label" class="control-label">Preview</span>
+                        <br>
+                        <img id="tool-icon-preview" src="{data_url_db}">
+                        """.format(data_url_db=data_url_db)),
+                    css_class='form-group col-sm-12'
                 ),
+            )
         )
         kwargs['element_name_label'] = 'Icon URL or File'
         super(ToolIconFormHelper, self).__init__(allow_edit,
