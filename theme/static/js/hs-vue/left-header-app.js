@@ -124,10 +124,35 @@ Vue.component('add-author-modal', {
     },
     mounted(){
         let that = this;
-        $('.modal-body').click(function(e){
-            if($(e.target).attr('class') === "remove"){
-                that.addAuthorError = "";
-            }
+
+        // THIS COMMENTED CODE DOES WORK
+        // $('.modal-body').click(function(e){
+        //     if($(e.target).attr('class') === "remove"){
+        //         that.addAuthorError = "";
+        //     }
+        // });
+
+        // THIS BELOW DOESNT WORK
+        // $('#user-wrapper .remove').click(function(e){
+        //     alert("removing");
+        //     if($(e.target).attr('class') === "remove"){
+        //         that.addAuthorError = "";
+        //     }
+        // });
+
+        // THIS also doesn't work, attempting a "span" selector instead
+        // $('span.remove').click(function(e){
+        //     alert("removing");
+        //     if($(e.target).attr('class') === "remove"){
+        //         that.addAuthorError = "";
+        //     }
+        // });
+        
+        // VANILLA JS SUGGESTED ALSO DOESN'T WORK
+        let elem = document.querySelector('#user-wrapper .remove');
+        elem.addEventListener("click", function(){
+            alert("vanilla");
+            that.addAuthorError = "";
         });
     },
     methods: {
