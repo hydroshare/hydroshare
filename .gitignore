@@ -31,6 +31,7 @@ docker-compose.yml
 init-defaultworker
 init-dockerworker
 init-hydroshare
+.vscode
 run-server
 schema.xml
 *.sublime-*
