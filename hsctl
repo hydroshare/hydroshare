@@ -21,8 +21,8 @@ sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE}  | grep -v '^#' | grep 
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
 ### Docker Variables ###
-HS_DOCKER_CONTAINERS=(hydroshare defaultworker)
-HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker)
+HS_DOCKER_CONTAINERS=(hydroshare defaultworker tusd)
+HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker hydroshare_tusd)
 OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
 
 ### Pre-flight Variables ###
@@ -41,6 +41,7 @@ display_usage() {
     echo "usage: $0 maint_on        # displays maintenance page (only if USE_NGINX = true)"
     echo "usage: $0 rebuild         # deletes hydroshare container contents only and deploys using exsiting database"
     echo "usage: $0 rebuild --db    # deletes all database and container contents and deploys from scratch"
+    echo "usage: $0 rebuild --db --nosolr  # same as 'rebuild --db' but skips solr update"
     echo "usage: $0 rebuild_index   # rebuild solr index in a non-interactive way"
     echo "usage: $0 reset_all       # remove all data, containers and images that were previously deployed"
     echo "usage: $0 restart         # restarts the hydroshare container without rebuilding (includes preflight)"
@@ -70,10 +71,10 @@ get_nginx_ip() {
 restart_hs() {
     echo "RESTART HYDROSHARE:"
     stop_nginx
-    docker-compose stop hydroshare defaultworker
+    docker-compose stop ${HS_DOCKER_CONTAINERS}
     delete_celerybeat_scheduler
     preflight_hs
-    docker-compose start hydroshare defaultworker
+    docker-compose start ${HS_DOCKER_CONTAINERS} 
     if [ "${USE_NGINX}" = true ]; then
         start_nginx;
     fi
@@ -191,6 +192,7 @@ preflight_hs() {
         touch ${HS_LOG_FILES}/gunicorn_supervisor.log
         touch ${HS_LOG_FILES}/hydroshare.log
         touch ${HS_LOG_FILES}/system.log;
+        touch ${HS_LOG_FILES}/tusd.log;
     fi
     # Create celery directory if it does not exist
     if [[ ! -f ${HS_PATH}/celery/readme.txt ]]; then
@@ -367,8 +369,12 @@ rebuild_hs() {
     sleep 2s
     solr_reload_hs
     sleep 2s
-    rebuild_solr_index
-    sleep 2s
+    if [ "$3" != "--nosolr" ]; then
+        rebuild_solr_index
+        sleep 2s
+    else
+        echo "Skipping filling SOLR index. Fill via './hsctl managepy solr_update'"
+    fi
     restart_hs
     echo "END BUILD"
 }
@@ -378,8 +384,6 @@ reloaddb_hs() {
     migrate_hs
     sleep 3s
     solr_schema_hs
-    sleep 2s
-    rebuild_solr_index
     sleep 2s
     solr_reload_hs
     sleep 2s
@@ -407,6 +411,9 @@ reset_all_hs() {
     while read line; do
         docker rmi -f ${line};
     done < <(docker images | grep "^hydroshare_" | tr -s ' ' | cut -d ' ' -f 3)
+    echo "  - INFO: Removing hanging (unused) images and volumes"
+    docker system prune -f
+    docker volume prune -f
     echo "  - INFO: Removing transient directories and files"
     if [[ -d hydroshare/static ]]; then rm -rf hydroshare/static; fi
     if [[ -d log ]]; then rm -rf log; fi
@@ -485,13 +492,13 @@ case "$1" in
         ;;
     update_index) update_solr_index $1
         ;;
-    rebuild_index) rebuild_solr_index $1
+    rebuild_index) rebuild_solr_index $1 
         ;;
     maint_off) maint_off_hs $1
         ;;
     maint_on) maint_on_hs $1
         ;;
-    rebuild) rebuild_hs $1 $2
+    rebuild) rebuild_hs $1 $2 $3
         ;;
     reset_all) reset_all_hs $1
         ;;

@@ -15,27 +15,6 @@ solr:
   # ports:
   # - "8983"
   command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
-tusd: 
-  build: .
-  dockerfile: Dockerfile-tusd
-  container_name: tusd
-  volumes:
-    # hydroshare repository
-    - "/home/hydro/hydroshare:/hydroshare"
-    # pycharm debugging
-    # - "/home/hydro/pycharm-debug:/pycharm-debug"
-    # log files
-    - "/home/hydro/hydroshare/log:/hydroshare/log"
-    # shared location for gunicorn.sock between containers
-    - "/hs_tmp"
-    # temp directory shared with celery workers
-    - "/shared_tmp"
-    - "/irods/hydroshare:/irods/hydroshare"
-    - "/irods/hydroshare_vault:/irods/hydroshare_vault"
-  ports:
-    - "1080:1080"
-  user: root
-  command: /bin/bash /tusd-init
 hydroshare:
   build: .
   container_name: hydroshare
@@ -95,3 +74,13 @@ defaultworker:
     - postgis:postgis
     - rabbitmq:rabbitmq
   command: /bin/bash init-defaultworker
+tusd: 
+  build: .
+  dockerfile: Dockerfile-tusd
+  container_name: tusd
+  volumes_from:
+    - hydroshare 
+  ports:
+    - "1080:1080"
+  user: root
+  command: /bin/bash /hydroshare/init-tusd

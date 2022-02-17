@@ -6,5 +6,5 @@ RUN addgroup --gid 10000 irods \
     && mkdir -p /tmp/irods/data \
     && chown irods:irods /tmp/irods /tmp/irods/data
 
-COPY tusd-init /tusd-init
-CMD /bin/bash /tusd-init
+COPY init-tusd /init-tusd
+CMD /bin/bash /init-tusd

@@ -90,7 +90,7 @@ server {
     # This clutters logs without usefulness 2021/06/21 ALC
     # error_log       /var/log/nginx/system.log notice;
     # Uncomment the following line to generate debugging log entries
-    # error_log       /var/log/nginx/system.log debug;
+    error_log       /var/log/nginx/system.log debug;
 
     charset         utf-8;
     client_max_body_size 4096m;
@@ -128,6 +128,14 @@ server {
         proxy_pass http://unix:/hs_tmp/gunicorn.sock;
         proxy_set_header X-Django-Reverse-Proxy true;
     }
+
+    location /upload/ {
+        if (-f $document_root/maintenance_on.html) {
+            return 503;
+        }
+        proxy_pass http://unix:/hs_tmp/tusd.sock;
+        proxy_set_header X-Reverse-Proxy true;
+    } 
 
     location / {
         if (-f $document_root/maintenance_on.html) {
