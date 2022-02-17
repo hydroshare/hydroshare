@@ -167,7 +167,7 @@ def data_store_structure(request):
             if f.extension and main_extension.endswith(f.extension):
                 if not hasattr(f.logical_file, 'folder') or f.logical_file.folder is None:
                     aggregation_appkey = f.logical_file.metadata.extra_metadata.get(_APPKEY, '')
-                    
+
                 aggregations.append({'logical_file_id': f.logical_file.id,
                                      'name': f.logical_file.dataset_name,
                                      'logical_type': f.logical_file.get_aggregation_class_name(),
