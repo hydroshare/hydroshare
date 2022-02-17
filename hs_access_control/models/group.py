@@ -1,3 +1,5 @@
+import os
+from uuid import uuid4
 from django.contrib.auth.models import User, Group
 from django.db import models
 from django.db.models import Q, F, Exists, OuterRef
@@ -23,6 +25,13 @@ from django.contrib.contenttypes.models import ContentType
 #   community privileges.
 # (Revised Sept 17, 2021)
 #############################################
+
+
+def get_upload_path(instance, filename):
+    file_base, file_ext = os.path.splitext(filename)
+    unique_id = uuid4().hex
+    name = instance.group.name
+    return f'group/{file_base}_{name}_{unique_id}{file_ext}'
 
 
 class GroupMembershipRequest(models.Model):
@@ -78,7 +87,7 @@ class GroupAccess(models.Model):
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
-    picture = models.ImageField(upload_to='group', null=True, blank=True)
+    picture = models.ImageField(upload_to=get_upload_path, null=True, blank=True)
 
     ####################################
     # group membership: owners, edit_users, view_users are parallel to those in resources

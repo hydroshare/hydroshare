@@ -1,5 +1,6 @@
 import datetime
 import os
+from uuid import uuid4
 import logging
 
 from django.core.validators import RegexValidator
@@ -248,9 +249,16 @@ class UserQuota(models.Model):
         return self.used_value + convert_file_size_to_unit(size, self.unit)
 
 
+def get_upload_path(instance, filename):
+    file_base, file_ext = os.path.splitext(filename)
+    unique_id = uuid4().hex
+    username = instance.user.username
+    return f'profile/{file_base}_{username}_{unique_id}{file_ext}'
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
-    picture = models.ImageField(upload_to='profile', null=True, blank=True)
+    picture = models.ImageField(upload_to=get_upload_path, null=True, blank=True)
     middle_name = models.CharField(max_length=1024, null=True, blank=True)
     website = models.URLField(null=True, blank=True)
     title = models.CharField(
