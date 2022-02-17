@@ -1,6 +1,7 @@
 import csv
 from django.core.management.base import BaseCommand
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
+from hs_core.hydroshare.utils import get_resource_by_shortkey, set_dirty_bag_flag
+from hs_core.enums import RelationTypes
 
 
 class Command(BaseCommand):
@@ -41,13 +42,15 @@ class Command(BaseCommand):
                 if not row[version_of_col] and not row[replace_by_col]:
                     # both isVersionOf and isReplacedby are empty, so clean up any versioning
                     # relationships for this resource if any
-                    if res.metadata.relations.filter(type='isVersionOf').exists():
-                        res.metadata.relations.filter(type='isVersionOf').delete()
-                        resource_modified(res, overwrite_bag=False)
+                    if res.metadata.relations.filter(type=RelationTypes.isVersionOf).exists():
+                        res.metadata.relations.filter(type=RelationTypes.isVersionOf).delete()
+                        res.save()
+                        set_dirty_bag_flag(res)
                         fixed = True
-                    if res.metadata.relations.filter(type='isReplacedBy').exists():
-                        res.metadata.relations.filter(type='isReplacedBy').delete()
-                        resource_modified(res, overwrite_bag=False)
+                    if res.metadata.relations.filter(type=RelationTypes.isReplacedBy).exists():
+                        res.metadata.relations.filter(type=RelationTypes.isReplacedBy).delete()
+                        res.save()
+                        set_dirty_bag_flag(res)
                         fixed = True
                     if res_id == '4111306529e74503b090494ef1e808e2':
                         # for this single resource, isCopyOf relation needs to be added
@@ -71,10 +74,11 @@ class Command(BaseCommand):
                     except Exception:
                         print(f'Resource {version_res_id} does not exist', flush=True)
                         continue
-                    hs_identifier = version_res.metadata.identifiers.filter(name="hydroShareIdentifier").first()
-                    res.metadata.relations.filter(type='isVersionOf').delete()
-                    res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
-                    resource_modified(res, overwrite_bag=False)
+                    res.metadata.relations.filter(type=RelationTypes.isVersionOf).delete()
+                    res.metadata.create_element('relation', type=RelationTypes.isReplacedBy,
+                                                value=version_res.get_citation())
+                    res.save()
+                    set_dirty_bag_flag(res)
                     fixed = True
                 elif not row[version_of_col]:
                     # isVersionOf is empty but isReplacedBy is not empty
@@ -84,10 +88,11 @@ class Command(BaseCommand):
                     except Exception:
                         print(f'Resource {replace_by_res_id} does not exist', flush=True)
                         continue
-                    hs_identifier = replace_by_res.metadata.identifiers.filter(name="hydroShareIdentifier").first()
-                    res.metadata.relations.filter(type='isReplacedBy').delete()
-                    res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
-                    resource_modified(res, overwrite_bag=False)
+                    res.metadata.relations.filter(type=RelationTypes.isReplacedBy).delete()
+                    res.metadata.create_element('relation', type=RelationTypes.isReplacedBy,
+                                                value=replace_by_res.get_citation())
+                    res.save()
+                    set_dirty_bag_flag(res)
                     fixed = True
                 else:
                     # both isReplacedBy and isVersionOf are not empty - need to only keep this pair of relationship
@@ -104,13 +109,14 @@ class Command(BaseCommand):
                     except Exception:
                         print(f'Resource {replace_res_id} does not exist', flush=True)
                         continue
-                    res.metadata.relations.filter(type='isVersionOf').delete()
-                    hs_identifier = version_res.metadata.identifiers.filter(name="hydroShareIdentifier").first()
-                    res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
-                    res.metadata.relations.filter(type='isReplacedBy').delete()
-                    hs_identifier = replace_res.metadata.identifiers.filter(name="hydroShareIdentifier").first()
-                    res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
-                    resource_modified(res, overwrite_bag=False)
+                    res.metadata.relations.filter(type=RelationTypes.isVersionOf).delete()
+                    res.metadata.create_element('relation', type=RelationTypes.isVersionOf,
+                                                value=version_res.get_citation())
+                    res.metadata.relations.filter(type=RelationTypes.isReplacedBy).delete()
+                    res.metadata.create_element('relation', type=RelationTypes.isReplacedBy,
+                                                value=replace_res.get_citation())
+                    res.save()
+                    set_dirty_bag_flag(res)
                     fixed = True
                 if fixed:
                     count += 1
