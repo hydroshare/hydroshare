@@ -8,7 +8,6 @@
 {% for key, value in object.extra_metadata.items %}{{key}} {{value}} {% endfor %} 
 {% for format in object.metadata.formats.all %}{{ format.value }} {% endfor %}
 {% for ident in object.metadata.identifiers.all %}{{ ident.value }} {% endfor %}
-{% for source in object.metadata.sources.all %}{{ source.derived_from }} {% endfor %}
 {% for relation in object.metadata.relations.all %}{{ relation.value }} {% endfor %}
 {{ object.verbose_name }}
 {% for f in object.logical_files %} {{ f.get_discovery_content_type }} {% endfor %} 

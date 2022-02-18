@@ -184,7 +184,7 @@ def migrate_core_meta_elements(orig_meta_obj, comp_res):
     single_meta_elements = ['title', 'type', 'language', 'rights', 'description',
                             'publisher']
     multiple_meta_elements = ['creators', 'contributors', 'coverages', 'subjects',
-                              'dates', 'formats', 'identifiers', 'sources', 'relations',
+                              'dates', 'formats', 'identifiers', 'relations',
                               'funding_agencies']
     for meta_element_name in single_meta_elements:
         meta_element = getattr(orig_meta_obj, meta_element_name)
