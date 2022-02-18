@@ -1,14 +1,15 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from hs_core.models import BaseResource
 from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.contenttypes.models import ContentType
+
+from hs_core.models import BaseResource
+from theme.utils import get_upload_path_community
 
 
 ###################################
 # Communities of groups
 ###################################
-
 class Community(models.Model):
     """ a placeholder class for a community of groups """
     name = models.TextField(null=False, blank=False)
@@ -16,7 +17,7 @@ class Community(models.Model):
     purpose = models.TextField(null=True, blank=True)
     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
-    picture = models.ImageField(upload_to='community', null=True, blank=True)
+    picture = models.ImageField(upload_to=get_upload_path_community, null=True, blank=True)
 
     def __str__(self):
         return self.name
