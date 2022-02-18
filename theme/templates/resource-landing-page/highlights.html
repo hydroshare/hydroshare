@@ -6,10 +6,12 @@
                 Published
             {% elif cm.raccess.public %}
                 Public
+            {% elif cm.raccess.discoverable and cm.raccess.allow_private_sharing %}
+                Discoverable (Accessible via direct link sharing)
             {% elif cm.raccess.discoverable %}
                 Discoverable
             {% elif cm.raccess.allow_private_sharing %}
-                Private (link sharing enabled)
+                Private (Accessible via direct link sharing)
             {% else %}
                 Private
             {% endif %}

@@ -55,11 +55,14 @@ let manageAccessApp = new Vue({
             if (newAccess.isPublic && newAccess.isDiscoverable) {
                 accessStr = "Public";
             }
+            else if (!newAccess.isPublic && newAccess.isDiscoverable && newAccess.isPrivateLinkSharing) {
+                accessStr = "Discoverable (Accessible via direct link sharing)";
+            }
             else if (!newAccess.isPublic && newAccess.isDiscoverable) {
                 accessStr = "Discoverable";
             }
             else if (!newAccess.isPublic && newAccess.isPrivateLinkSharing) {
-                accessStr = "Private (link sharing enabled)";
+                accessStr = "Private (Accessible via direct link sharing)";
             }
             $("#hl-sharing-status").text(accessStr);    // Update highlight sharing status
         },
