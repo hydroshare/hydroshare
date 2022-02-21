@@ -64,10 +64,10 @@ class LinuxStorage(FileSystemStorage):
         return new_path
 
     '''
-            What is AVU doing?
-            setAVU -- stores the metadata associated with the file
-            getAVU -- There is a lookup table for each one and its deafault value; check that and return the default value
-            Alva: he will generate default AVUs for everything.
+    What is AVU doing?
+    setAVU -- stores the metadata associated with the file
+    getAVU -- There is a lookup table for each one and its default value; check that and return the default value
+    Alva: he will generate default AVUs for everything.
     '''
 
     def setAVU(self, name, attName, attVal, attUnit=""):
@@ -84,7 +84,7 @@ class LinuxStorage(FileSystemStorage):
         obj = LinuxAVU.objects.get(path__exact=name, name__exact=attName)
         obj.delete()
 
-    ##########################################################################################################################
+    #################################################################################################################
 
     def removeDirecotry(self, dirname):
         directory = self.prepend_path(dirname)
@@ -121,7 +121,7 @@ class LinuxStorage(FileSystemStorage):
 
     # copies files or directories recursively from linux to irods
     def saveFile(self, from_name, to_name, create_directory=False, data_type_str=''):
-        if create_directory == True:
+        if create_directory:
             splitted_directory = to_name.rsplit("/", 1)
             os.makedirs(splitted_directory[0])
             if (len(splitted_directory) <= 0):

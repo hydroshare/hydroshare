@@ -1,6 +1,7 @@
 from django.test import TestCase
 from hs_linux.storage import LinuxStorage
-import os, shutil
+import os
+import shutil
 
 
 class LinuxStorageTest(TestCase):
@@ -52,9 +53,11 @@ class LinuxStorageTest(TestCase):
         self.assertFalse(os.path.exists("./irods/test/subtest2"))
 
         # file -> file
-        with open('./irods/test/subtest1/testfile11.txt') as f: testfile11_string = f.read()
+        with open('./irods/test/subtest1/testfile11.txt') as f:
+            testfile11_string = f.read()
         LinuxStorage.moveFile(LinuxStorage, "test/subtest1/testfile11.txt", "test/subtest1/subtest2/testfile22.txt")
-        with open('./irods/test/subtest1/subtest2/testfile22.txt') as f: testfile22_string = f.read()
+        with open('./irods/test/subtest1/subtest2/testfile22.txt') as f:
+            testfile22_string = f.read()
         self.assertTrue(testfile11_string == testfile22_string)
         self.assertFalse(os.path.exists("./irods/test/subtest1/testfile11.txt"))
 
@@ -90,9 +93,11 @@ class LinuxStorageTest(TestCase):
         self.assertTrue(os.path.exists("./irods/test/subtest2"))
 
         # file -> file
-        with open('./irods/test/subtest1/testfile11.txt') as f: testfile11_string = f.read()
+        with open('./irods/test/subtest1/testfile11.txt') as f:
+            testfile11_string = f.read()
         LinuxStorage.copyFiles(LinuxStorage, "test/subtest1/testfile11.txt", "test/subtest1/subtest2/testfile22.txt")
-        with open('./irods/test/subtest1/subtest2/testfile22.txt') as f: testfile22_string = f.read()
+        with open('./irods/test/subtest1/subtest2/testfile22.txt') as f:
+            testfile22_string = f.read()
         self.assertTrue(testfile11_string == testfile22_string)
         self.assertTrue(os.path.exists("./irods/test/subtest1/testfile11.txt"))
 

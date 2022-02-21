@@ -3,8 +3,8 @@ from django.db import models
 
 # We need a precise simulation of what iRODS does for HydroShare.
 # This includes memorizing AVUs and returning what was memorized.
-# At present, the AVUs are only allocated at the root level of a resource, 
-# i.e., at the level where the resource root folders are. 
+# At present, the AVUs are only allocated at the root level of a resource,
+# i.e., at the level where the resource root folders are.
 
 
 class LinuxAVU(models.Model):
