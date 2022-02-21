@@ -485,7 +485,6 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
 
         # since an isReplaceBy relation element is added to original resource, needs to call
         # resource_modified() for original resource
-        utils.resource_modified(ori_res, by_user=username, overwrite_bag=False)
         # if everything goes well up to this point, set original resource to be immutable so that
         # obsoleted resources cannot be modified from REST API
         ori_res.raccess.immutable = True

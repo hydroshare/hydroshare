@@ -27,7 +27,7 @@ class Command(BaseCommand):
     def process_resource(self, model_res, resource_type, logger):
         istorage = model_res.get_storage()
         model_res_type_folder_mapping = {"ModelProgram": "model-program", "ModelInstance": "model-instance",
-                                         "MODFLOWModelInstance": "modflow-instance",
+                                         "MODFLOWModelInstance": "modflow-model-instance",
                                          "SWATModelInstance": "swat-instance"}
         if not istorage.exists(model_res.root_path):
             err_msg = ">> Resource (ID:{}) doesn't exist in iRODS"
