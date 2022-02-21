@@ -4,29 +4,31 @@ from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from pprint import pprint
 
-def index_resource(r): 
+
+def index_resource(r):
     """ index a resource with computed metadata """
     # prints everything you might take into account when computing HUC metadata. 
-    if r.metadata:   # a small number of objects don't have any metadata.  
+    if r.metadata:  # a small number of objects don't have any metadata.
         print("computing metadata for resource {}".format(r.short_id))
-        if r.resource_type != 'CompositeResource': 
-            for c in r.metadata.coverages.all(): 
-                if c.type == 'point' or c.type == 'box': 
+        if r.resource_type != 'CompositeResource':
+            for c in r.metadata.coverages.all():
+                if c.type == 'point' or c.type == 'box':
                     print("whole resource coverage of type {}".format(c.type))
                     value = c.value
                     pprint(value)
                     # use your code to compute all HUC codes that are relevant. 
-       else:  # it's a Composite Resource  
-            for lfo in r.logical_files: 
-                if lfo.metadata: 
-                    for c in lfo.metadata.coverages.all(): 
-                        if c.type == 'point' or c.type == 'box': 
-                            value = c.value
-                            print("logical file coverage of type {}".format(c.type))
-                            pprint(value)
-                            # use your code to compute all HUC codes that are relevant.
-    else: 
-        print("resource {} has no metadata".format(r.short_id))
+    else:  # it's a Composite Resource
+        for lfo in r.logical_files:
+            if lfo.metadata:
+                for c in lfo.metadata.coverages.all():
+                    if c.type == 'point' or c.type == 'box':
+                        value = c.value
+                        print("logical file coverage of type {}".format(c.type))
+                        pprint(value)
+                        # use your code to compute all HUC codes that are relevant.
+    else:
+    print("resource {} has no metadata".format(r.short_id))
+
 
 class Command(BaseCommand):
     help = "Computed extended metadata for discovery"

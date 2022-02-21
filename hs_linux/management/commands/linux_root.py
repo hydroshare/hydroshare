@@ -13,10 +13,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        external  = getattr(settings, 'EXTERNAL_CONFIG', None)
+        external = getattr(settings, 'EXTERNAL_CONFIG', None)
         pprint(external)
-        if 'LINUX_ROOT' in external: 
+        if 'LINUX_ROOT' in external:
             root = external['LINUX_ROOT']
-        else: 
-            root = '/tmp' 
+        else:
+            root = '/tmp'
         print(root)

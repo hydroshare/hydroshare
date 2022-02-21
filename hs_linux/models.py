@@ -1,4 +1,5 @@
-from django.db import models  
+from django.db import models
+
 
 # We need a precise simulation of what iRODS does for HydroShare.
 # This includes memorizing AVUs and returning what was memorized.
