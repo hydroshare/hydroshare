@@ -926,8 +926,8 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
 def create_empty_contents_directory(resource):
     res_contents_dir = resource.file_path
     istorage = resource.get_storage()
-    # if not istorage.exists(res_contents_dir):
-        # istorage.session.run("imkdir", None, '-p', res_contents_dir)
+    if not istorage.exists(res_contents_dir):
+        istorage.session.run("imkdir", None, '-p', res_contents_dir)
     istorage.createDirectory(res_contents_dir)
 
 
