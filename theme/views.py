@@ -72,6 +72,8 @@ class UserProfileView(TemplateView):
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
 
         # if requesting user is not the profile user, then show only resources that the
+        num_private_resources = None
+        
         # requesting user has access
         if self.request.user != u:
             if self.request.user.is_authenticated():
@@ -89,6 +91,9 @@ class UserProfileView(TemplateView):
                 # discoverable
                 resources = resources.filter(Q(raccess__public=True) |
                                              Q(raccess__discoverable=True))
+                
+                num_private_resources = resources.filter(Q(raccess__public=False) |
+                                             Q(raccess__discoverable=False)).count()
 
         # get resource attributes used in profile page
         resources = resources.only('title', 'resource_type', 'created')
@@ -108,6 +113,7 @@ class UserProfileView(TemplateView):
             'resources': resources,
             'quota_message': get_quota_message(u),
             'group_membership_requests': group_membership_requests,
+            'num_private_resources': num_private_resources,
         }
 
 

@@ -674,6 +674,12 @@
                                             <td><span>Web App</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
+                                        {% if num_private_resources %}
+                                        <tr id="badge-generic" data-type="type-Generic">
+                                            <td><span>Private Resources</span></td>
+                                            <td><span class="badge">{{ num_private_resources }}</span></td>
+                                        </tr>
+                                        {% endif %}
                                     </tbody>
                                 </table>
                             </div>
