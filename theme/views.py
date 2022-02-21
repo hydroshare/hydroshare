@@ -82,6 +82,8 @@ class UserProfileView(TemplateView):
                     pass
                 else:
                     # filter out any resources the requesting user doesn't have access
+                    num_private_resources = resources.filter(Q(raccess__public=False) |
+                            Q(raccess__discoverable=False)).count
                     resources = resources.filter(
                         Q(pk__in=self.request.user.uaccess.view_resources) |
                         Q(raccess__public=True) |
@@ -89,6 +91,10 @@ class UserProfileView(TemplateView):
             else:
                 # for anonymous requesting user show only resources that are either public or
                 # discoverable
+                
+                num_private_resources = resources.filter(Q(raccess__public=False) |
+                                Q(raccess__discoverable=False)).count()
+                                
                 resources = resources.filter(Q(raccess__public=True) |
                                              Q(raccess__discoverable=True))
                 

@@ -675,7 +675,8 @@
                                             <td><span class="badge">0</span></td>
                                         </tr>
                                         {% if num_private_resources %}
-                                        <tr id="badge-generic" data-type="type-Generic">
+                                        <tr id="num_private_resources" data-type="type-Private">
+                                            <meta id="private_resources" data-number="{{num_private_resources}}">
                                             <td><span>Private Resources</span></td>
                                             <td><span class="badge">{{ num_private_resources }}</span></td>
                                         </tr>
@@ -780,8 +781,37 @@
                                     </div>
                                     {% endwith %}
                                 {% endfor %}
+                                    {% if num_private_resources %}
+                                        <div id="private-contribution" data-type="type-Private" class="contribution">
+                                            <div class="icon-resource-type-wrapper">
+                                                <span class="icon-resource-type">
+                                                    <span><strong>Private</strong></span>
+                                                        <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                            alt="Private"
+                                                            title="Private"/>
+                                                </span>
+                                            </div>
+                                            <div class="activity-block row">
+                                                <div class="activity-info col-sm-12">
+                                                    <span class="title">Private</span>
+                                                </div>
+
+                                                <div class="activity-description col-sm-12">
+                                                    <p>
+                                                        User has created {{ num_private_resources }} private
+                                                        {% comment %} Pluralize library not available here {% endcomment %}
+                                                        {% if num_private_resources > 1 %}
+                                                            resources that are not visible to you.
+                                                            {% else %}
+                                                            resource that is not visible to you.
+                                                            {% endif %}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                 {% else %}
-                                    <span class="text-muted">This user has not shared any resources.</span>
+                                    <span class="text-muted">This user has not contributed any resources.</span>
                                 {% endif %}
                             </div>
                         </div>
