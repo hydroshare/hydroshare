@@ -2,8 +2,9 @@ from uuid import uuid4
 
 from django.core.files.storage import  FileSystemStorage
 from hs_linux.models import LinuxAVU
-import os, tarfile, shutil, errno
-from pprint import pprint
+import os
+import shutil
+import tarfile
 
 IRODS_PATH = "./irods/"
 class LinuxStorage(FileSystemStorage):

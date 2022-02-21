@@ -931,8 +931,8 @@ def create_empty_contents_directory(resource):
     istorage.createDirectory(res_contents_dir)
 
 
-def add_file_to_resource(resource, f, folder='', source_name='',
-                         check_target_folder=False, add_to_aggregation=True, user=None):
+def add_file_to_resource(resource, f, folder='', source_name='', check_target_folder=False, add_to_aggregation=True,
+                         user=None):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param  resource: Resource to which file should be added

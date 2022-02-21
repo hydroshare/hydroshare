@@ -127,7 +127,7 @@ def data_store_structure(request):
     for index, fname in enumerate(store[1]):  # files
         f_store_path = os.path.join(store_path, fname)
         file_in_irods = resource.get_irods_path(f_store_path)
-        #size = store[2][index]
+        # size = store[2][index]
         # TODO get the size
         size = 1
         mtype = get_file_mime_type(fname)

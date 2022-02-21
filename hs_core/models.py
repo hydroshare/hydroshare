@@ -2242,7 +2242,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         istorage = self.get_storage()
         root_path = self.root_path
-        #istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
+        istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
         istorage.removeAVU(root_path, attribute)
 
     def setAVU(self, attribute, value):
@@ -2258,8 +2258,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # has to create the resource collection directory if it does not exist already due to
         # the need for setting quota holder on the resource collection before adding files into
         # the resource collection in order for the real-time iRODS quota micro-services to work
-        # if not istorage.exists(root_path):
-            # istorage.session.run("imkdir", None, '-p', root_path)
+        if not istorage.exists(root_path):
+            istorage.session.run("imkdir", None, '-p', root_path)
         istorage.createDirectory(root_path)
         istorage.setAVU(root_path, attribute, value)
 
@@ -3432,8 +3432,8 @@ class BaseResource(Page, AbstractResource):
         """Return either IrodsStorage or FedStorage."""
         # if self.resource.storage_type == StorageCodes.IRODS:
         return LinuxStorage()
-        #self, location = None, base_url = None, file_permissions_mode = None,
-        #directory_permissions_mode = None
+        # self, location = None, base_url = None, file_permissions_mode = None,
+        # directory_permissions_mode = None
         # elif self.resource.storage_type == StorageCodes.FEDERATED:
         #     return FedStorage()
         # elif self.resource.storage_type == StorageCodes.LINUX:
