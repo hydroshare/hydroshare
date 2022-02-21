@@ -1359,6 +1359,28 @@ function initializeDatePickers(){
             $(this).datepicker("setDate", pickerDate);
         }
     });
+
+    // Temporal coverage: only allow submit if both dates are completed
+    $("#coverage-temporal .dateinput").each(function () {
+        $(this).on('change', function (e) {
+            let button = $(this).closest("form").find("button")
+            let this_date = $(this).val()
+            let other_date = $(this).closest("form").find(".form-control").not(this).first().val();
+            if (this_date && other_date) {
+                button.removeClass("disabled")
+                    .text("Save changes")
+                    .addClass('btn-primary')
+                    .removeClass('btn-warning')
+            }else if ( this_date || other_date){
+                button.addClass("disabled")
+                        .text("Fill both dates to save")
+                        .removeClass('btn-primary')
+                        .addClass('btn-warning')
+            }else{
+                button.hide()
+            }
+        });
+    });
 }
 
 function updateEditCoverageStateFileType() {
