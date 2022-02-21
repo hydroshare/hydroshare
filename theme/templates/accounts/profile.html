@@ -798,7 +798,7 @@
 
                                                 <div class="activity-description col-sm-12">
                                                     <p>
-                                                        User has created {{ num_private_resources }} private
+                                                        {{ profile_user|best_name }} has created {{ num_private_resources }} private
                                                         {% comment %} Pluralize library not available here {% endcomment %}
                                                         {% if num_private_resources > 1 %}
                                                             resources that are not visible to you.
@@ -811,7 +811,7 @@
                                         </div>
                                     {% endif %}
                                 {% else %}
-                                    <span class="text-muted">This user has not contributed any resources.</span>
+                                    <span class="text-muted">{{ profile_user|best_name }} has not contributed any resources.</span>
                                 {% endif %}
                             </div>
                         </div>
