@@ -5,14 +5,13 @@
         <p>{% trans "User " %}{{ user.first_name }} {{ user.last_name }} 
             (<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}">{{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}</a>), 
             has requested to join your HydroShare group ({{ group.name }}).</p>
+        
         User Type: {{ user.userprofile.user_type }}<br>
-        {% if user.userprofile.title %}
-            User Title: {{ user.userprofile.title }}<br>
-        {%  endif %}
         Organization: {{ user.userprofile.organization }}<br>
         Country: {{ user.userprofile.country }}<br>
         State/Province: {{ user.userprofile.state }}<br>
         Email: {{ user.email }}<br>
+        {% if user.userprofile.title %}User Title: {{ user.userprofile.title }}<br>{% endif %}
         
         <p>Click on the link below to accept this request.</p>
     {% else %}

@@ -3,14 +3,13 @@
     {% if group_owner %}
         {% trans "Dear " %}{{ group_owner.first_name }}{{ group_owner.last_name }},
         {% trans "User " %}{{ user.first_name }} {{ user.last_name }} ({{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}), has requested to join your HydroShare group ({{ group.name }}).
+        
         User Type: {{ user.userprofile.user_type }}
-        {% if user.userprofile.title %}
-            User Title: {{ user.userprofile.title }}
-        {%  endif %}
         Organization: {{ user.userprofile.organization }}
         Country: {{ user.userprofile.country }}
         State/Province: {{ user.userprofile.state }}
         Email: {{ user.email }}
+        {% if user.userprofile.title %}User Title: {{ user.userprofile.title }}{% endif %}
         
         Click on the link below to accept this request.
     {% else %}
