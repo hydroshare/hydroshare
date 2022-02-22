@@ -1137,7 +1137,7 @@ function setupModelInstanceTypeUI() {
             // optional fields are not displayed by default in JSONEditor form for editing
             // user needs to select any optional properties to make it available for editing
             display_required_only: false,
-            required_by_default: true,
+            required_by_default: false,
             object_layout: "table"
         });
         editor.on("change", function () {
