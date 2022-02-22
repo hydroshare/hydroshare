@@ -15,7 +15,7 @@ class ResourceIRODSMixin(models.Model):
         abstract = True
 
     @property
-    def irods_home_path(self):
+    def home_path(self):
         """
         Return the home path for local iRODS resources
 
@@ -23,7 +23,7 @@ class ResourceIRODSMixin(models.Model):
         """
         return settings.IRODS_CWD
 
-    def irods_full_path(self, path):
+    def full_path(self, path):
         """
         Return fully qualified path for local paths
 
@@ -34,7 +34,7 @@ class ResourceIRODSMixin(models.Model):
         if path.startswith('/'):
             return path
         else:
-            return os.path.join(self.irods_home_path, path)
+            return os.path.join(self.home_path, path)
 
     def update_bag(self):
         """
@@ -140,7 +140,7 @@ class ResourceIRODSMixin(models.Model):
         istorage = self.get_storage()
         read_or_write = 'write' if write else 'read'
         if path.startswith(self.short_id) or path.startswith('bags/'):  # local path
-            path = os.path.join(self.irods_home_path, path)
+            path = os.path.join(self.home_path, path)
         stdout, stderr = istorage.session.run("iticket", None, 'create', read_or_write, path)
         if not stdout.startswith('ticket:'):
             raise ValidationError("ticket creation failed: {}", stderr)
@@ -161,7 +161,7 @@ class ResourceIRODSMixin(models.Model):
                              'expire', formatted)
 
         # fully qualify home paths with their iRODS prefix when returning them.
-        return ticket_id, self.irods_full_path(path)
+        return ticket_id, self.full_path(path)
 
     def list_ticket(self, ticket_id):
         """ List a ticket's attributes """
@@ -188,7 +188,7 @@ class ResourceIRODSMixin(models.Model):
                                 assert(location >= 0)
                             if location == 0:
                                 output['long_path'] = value
-                                output['home_path'] = self.irods_home_path
+                                output['home_path'] = self.home_path
                             else:
                                 output['long_path'] = value[location:]
                                 # omit trailing slash

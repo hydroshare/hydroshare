@@ -23,9 +23,9 @@ class IrodsStorage(Storage):
             # resource should be saved in federated zone
             self.set_fed_zone_session()
         else:
-            self.session = GLOBAL_SESSION
+            self._session = GLOBAL_SESSION
             self.environment = GLOBAL_ENVIRONMENT
-            icommands.ACTIVE_SESSION = self.session
+            icommands.ACTIVE_SESSION = self._session
 
     @property
     def getUniqueTmpPath(self):
@@ -71,17 +71,17 @@ class IrodsStorage(Storage):
             irods_default_hash_scheme='MD5'
         )
         if sess_id is None:
-            self.session = Session(session_id=uuid4())
-            self.environment = self.session.create_environment(myEnv=userEnv)
+            self._session = Session(session_id=uuid4())
+            self.environment = self._session.create_environment(myEnv=userEnv)
         else:
-            self.session = Session(session_id=sess_id)
-            if self.session.session_file_exists():
+            self._session = Session(session_id=sess_id)
+            if self._session.session_file_exists():
                 self.environment = userEnv
             else:
-                self.environment = self.session.create_environment(myEnv=userEnv)
+                self.environment = self._session.create_environment(myEnv=userEnv)
 
-        self.session.run('iinit', None, self.environment.auth)
-        icommands.ACTIVE_SESSION = self.session
+        self._session.run('iinit', None, self.environment.auth)
+        icommands.ACTIVE_SESSION = self._session
 
     # Set iRODS session to wwwHydroProxy for irods_storage input object for iRODS federated
     # zone direct file operations
@@ -96,14 +96,14 @@ class IrodsStorage(Storage):
                                   sess_id='federated_session')
 
     def delete_user_session(self):
-        if self.session != GLOBAL_SESSION and self.session.session_file_exists():
-            self.session.delete_environment()
+        if self._session != GLOBAL_SESSION and self._session.session_file_exists():
+            self._session.delete_environment()
 
     def download(self, name):
         return self._open(name, mode='rb')
 
     def getFile(self, src_name, dest_name):
-        self.session.run("iget", None, '-f', src_name, dest_name)
+        self._session.run("iget", None, '-f', src_name, dest_name)
 
     def runBagitRule(self, rule_name, input_path, input_resource):
         """
@@ -116,7 +116,7 @@ class IrodsStorage(Storage):
         :return: None
         """
         # SessionException will be raised from run() in icommands.py
-        self.session.run("irule", None, '-F', rule_name, input_path, input_resource)
+        self._session.run("irule", None, '-F', rule_name, input_path, input_resource)
 
     def zipup(self, in_name, out_name):
         """
@@ -125,9 +125,9 @@ class IrodsStorage(Storage):
         :param out_name: the output zipped file name
         :return: None
         """
-        self.session.run("imkdir", None, '-p', out_name.rsplit('/', 1)[0])
+        self._session.run("imkdir", None, '-p', out_name.rsplit('/', 1)[0])
         # SessionException will be raised from run() in icommands.py
-        self.session.run("ibun", None, '-cDzip', '-f', out_name, in_name)
+        self._session.run("ibun", None, '-cDzip', '-f', out_name, in_name)
 
     def unzip(self, zip_file_path, unzipped_folder=''):
         """
@@ -145,7 +145,7 @@ class IrodsStorage(Storage):
         unzipped_folder = self._get_nonexistant_path(os.path.join(abs_path, unzipped_folder))
 
         # SessionException will be raised from run() in icommands.py
-        self.session.run("ibun", None, '-xDzip', zip_file_path, unzipped_folder)
+        self._session.run("ibun", None, '-xDzip', zip_file_path, unzipped_folder)
         return unzipped_folder
 
     def _get_nonexistant_path(self, path):
@@ -174,9 +174,9 @@ class IrodsStorage(Storage):
 
         # SessionException will be raised from run() in icommands.py
         if attUnit:
-            self.session.run("imeta", None, 'set', '-C', name, attName, attVal, attUnit)
+            self._session.run("imeta", None, 'set', '-C', name, attName, attVal, attUnit)
         else:
-            self.session.run("imeta", None, 'set', '-C', name, attName, attVal)
+            self._session.run("imeta", None, 'set', '-C', name, attName, attVal)
 
     def getAVU(self, name, attName):
         """
@@ -193,7 +193,7 @@ class IrodsStorage(Storage):
         """
 
         # SessionException will be raised from run() in icommands.py
-        stdout = self.session.run("imeta", None, 'ls', '-C', name, attName)[0].split("\n")
+        stdout = self._session.run("imeta", None, 'ls', '-C', name, attName)[0].split("\n")
         ret_att = stdout[1].strip()
         if ret_att == 'None':  # queried attribute does not exist
             return None
@@ -215,11 +215,11 @@ class IrodsStorage(Storage):
             if '/' in dest_name:
                 splitstrs = dest_name.rsplit('/', 1)
                 if not self.exists(splitstrs[0]):
-                    self.session.run("imkdir", None, '-p', splitstrs[0])
+                    self._session.run("imkdir", None, '-p', splitstrs[0])
             if ires:
-                self.session.run("icp", None, '-rf', '-R', ires, src_name, dest_name)
+                self._session.run("icp", None, '-rf', '-R', ires, src_name, dest_name)
             else:
-                self.session.run("icp", None, '-rf', src_name, dest_name)
+                self._session.run("icp", None, '-rf', src_name, dest_name)
         return
 
     def moveFile(self, src_name, dest_name):
@@ -235,8 +235,8 @@ class IrodsStorage(Storage):
             if '/' in dest_name:
                 splitstrs = dest_name.rsplit('/', 1)
                 if not self.exists(splitstrs[0]):
-                    self.session.run("imkdir", None, '-p', splitstrs[0])
-            self.session.run("imv", None, src_name, dest_name)
+                    self._session.run("imkdir", None, '-p', splitstrs[0])
+            self._session.run("imv", None, src_name, dest_name)
         return
 
     def saveFile(self, from_name, to_name, create_directory=False, data_type_str=''):
@@ -251,51 +251,51 @@ class IrodsStorage(Storage):
         """
         if create_directory:
             splitstrs = to_name.rsplit('/', 1)
-            self.session.run("imkdir", None, '-p', splitstrs[0])
+            self._session.run("imkdir", None, '-p', splitstrs[0])
             if len(splitstrs) <= 1:
                 return
 
         if from_name:
             try:
                 if data_type_str:
-                    self.session.run("iput", None, '-D', data_type_str, '-f', from_name, to_name)
+                    self._session.run("iput", None, '-D', data_type_str, '-f', from_name, to_name)
                 else:
-                    self.session.run("iput", None, '-f', from_name, to_name)
+                    self._session.run("iput", None, '-f', from_name, to_name)
             except:
                 if data_type_str:
-                    self.session.run("iput", None, '-D', data_type_str, '-f', from_name, to_name)
+                    self._session.run("iput", None, '-D', data_type_str, '-f', from_name, to_name)
                 else:
                     # IRODS 4.0.2, sometimes iput fails on the first try.
                     # A second try seems to fix it.
-                    self.session.run("iput", None, '-f', from_name, to_name)
+                    self._session.run("iput", None, '-f', from_name, to_name)
         return
 
     def _open(self, name, mode='rb'):
         tmp = NamedTemporaryFile()
-        self.session.run("iget", None, '-f', name, tmp.name)
+        self._session.run("iget", None, '-f', name, tmp.name)
         return tmp
 
     def _save(self, name, content):
-        self.session.run("imkdir", None, '-p', name.rsplit('/', 1)[0])
+        self._session.run("imkdir", None, '-p', name.rsplit('/', 1)[0])
         with NamedTemporaryFile(delete=False) as f:
             for chunk in content.chunks():
                 f.write(chunk)
             f.flush()
             f.close()
             try:
-                self.session.run("iput", None, '-f', f.name, name)
+                self._session.run("iput", None, '-f', f.name, name)
             except:
                 # IRODS 4.0.2, sometimes iput fails on the first try. A second try seems to fix it.
-                self.session.run("iput", None, '-f', f.name, name)
+                self._session.run("iput", None, '-f', f.name, name)
             os.unlink(f.name)
         return name
 
     def delete(self, name):
-        self.session.run("irm", None, "-rf", name)
+        self._session.run("irm", None, "-rf", name)
 
     def exists(self, name):
         try:
-            stdout = self.session.run("ils", None, name)[0]
+            stdout = self._session.run("ils", None, name)[0]
             return stdout != ""
         except SessionException:
             return False
@@ -314,7 +314,7 @@ class IrodsStorage(Storage):
         # objects/files under the path collection/directory
         qrystr = "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS != '0' " \
                  "AND {}".format(IrodsStorage.get_absolute_path_query(path))
-        stdout = self.session.run("iquest", None, "--no-page", "%s,%s",
+        stdout = self._session.run("iquest", None, "--no-page", "%s,%s",
                                   qrystr)[0].split("\n")
 
         for i in range(len(stdout)):
@@ -337,7 +337,7 @@ class IrodsStorage(Storage):
         # under the path collection/directory
 
         qrystr = "select COLL_NAME where {}".format(IrodsStorage.get_absolute_path_query(path, parent=True))
-        stdout = self.session.run("iquest", None, "--no-page", "%s",
+        stdout = self._session.run("iquest", None, "--no-page", "%s",
                                   qrystr)[0].split("\n")
         for i in range(len(stdout)):
             if not stdout[i] or "CAT_NO_ROWS_FOUND" in stdout[i]:
@@ -366,7 +366,7 @@ class IrodsStorage(Storage):
         # check first whether the path is an iRODS collection/directory or not, and if not, need
         # to raise SessionException, and if yes, can proceed to get files and sub-dirs under it
         qrystr = "select COLL_NAME where {}".format(IrodsStorage.get_absolute_path_query(path))
-        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
+        stdout = self._session.run("iquest", None, "%s", qrystr)[0]
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise SessionException(-1, '', 'folder {} does not exist'.format(path))
 
@@ -392,7 +392,7 @@ class IrodsStorage(Storage):
         file_name = file_info[1]
         qrystr = "select DATA_SIZE where DATA_REPL_STATUS != '0' AND " \
                  "{} AND DATA_NAME = '{}'".format(IrodsStorage.get_absolute_path_query(coll_name), file_name)
-        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
+        stdout = self._session.run("iquest", None, "%s", qrystr)[0]
 
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS to retrieve "
@@ -408,7 +408,7 @@ class IrodsStorage(Storage):
         """
         # first force checksum (re)computation
         if force_compute:
-            self.session.run("ichksum", None, "-f", full_name)
+            self._session.run("ichksum", None, "-f", full_name)
         # retrieve checksum using iquest
         # get data object name only from the full_name input parameter to be used by iquest
         if '/' in full_name:
@@ -420,7 +420,7 @@ class IrodsStorage(Storage):
             obj_name = full_name
 
         qrystr = "SELECT DATA_CHECKSUM WHERE {} AND DATA_NAME = '{}'".format(coll_name_query, obj_name)
-        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
+        stdout = self._session.run("iquest", None, "%s", qrystr)[0]
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS to retrieve "
                                   "checksum".format(obj_name))
@@ -461,10 +461,17 @@ class IrodsStorage(Storage):
             coll_name_query = "COLL_NAME = '{}'".format(settings.IRODS_HOME_COLLECTION)
             obj_name = name
         qrystr = "SELECT DATA_MODIFY_TIME WHERE {} AND DATA_NAME = '{}'".format(coll_name_query, obj_name)
-        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
+        stdout = self._session.run("iquest", None, "%s", qrystr)[0]
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS".format(name))
         # remove potential '\n' from stdout
         timestamp = float(stdout.split("\n", 1)[0])
         utc_dt = datetime.fromtimestamp(timestamp, pytz.utc)
         return utc_dt
+
+    def createDirectory(self, dirname):
+        # has to create the resource collection directory if it does not exist already due to
+        # the need for setting quota holder on the resource collection before adding files into
+        # the resource collection in order for the real-time iRODS quota micro-services to work
+        if not self.exists(dirname):
+            self._session.run("imkdir", None, '-p', dirname)
