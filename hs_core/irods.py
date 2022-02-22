@@ -141,12 +141,12 @@ class ResourceIRODSMixin(models.Model):
         read_or_write = 'write' if write else 'read'
         if path.startswith(self.short_id) or path.startswith('bags/'):  # local path
             path = os.path.join(self.home_path, path)
-        stdout, stderr = istorage.session.run("iticket", None, 'create', read_or_write, path)
+        stdout, stderr = istorage._session.run("iticket", None, 'create', read_or_write, path)
         if not stdout.startswith('ticket:'):
             raise ValidationError("ticket creation failed: {}", stderr)
         ticket = stdout.split('\n')[0]
         ticket_id = ticket[len('ticket:'):]
-        istorage.session.run('iticket', None, 'mod', ticket_id,
+        istorage._session.run('iticket', None, 'mod', ticket_id,
                              'uses', str(allowed_uses))
 
         # This creates a timestamp with a one-hour timeout.
@@ -157,7 +157,7 @@ class ResourceIRODSMixin(models.Model):
         # server from within iRODS; shell access is required.
         timeout = datetime.now() + timedelta(hours=1)
         formatted = timeout.strftime("%Y-%m-%d.%H:%M")
-        istorage.session.run('iticket', None, 'mod', ticket_id,
+        istorage._session.run('iticket', None, 'mod', ticket_id,
                              'expire', formatted)
 
         # fully qualify home paths with their iRODS prefix when returning them.
@@ -166,7 +166,7 @@ class ResourceIRODSMixin(models.Model):
     def list_ticket(self, ticket_id):
         """ List a ticket's attributes """
         istorage = self.get_storage()
-        stdout, stderr = istorage.session.run("iticket", None, 'ls', ticket_id)
+        stdout, stderr = istorage._session.run("iticket", None, 'ls', ticket_id)
         if stdout.startswith('id:'):
             stuff = stdout.split('\n')
             output = {}
@@ -261,7 +261,7 @@ class ResourceIRODSMixin(models.Model):
                 raise PermissionDenied("user {} cannot delete view ticket {} for {}"
                                        .format(user.username, ticket_id, self.short_id))
         istorage = self.get_storage()
-        istorage.session.run('iticket', None, 'delete', ticket_id)
+        istorage._session.run('iticket', None, 'delete', ticket_id)
         return meta
 
 
@@ -272,5 +272,4 @@ class ResourceFileIRODSMixin(models.Model):
 
     def create_ticket(self, user, write=False):
         """ This creates a ticket to read or modify this file """
-        pass
-        # return self.resource.create_ticket(user, path=self.storage_path, write=write)
+        return self.resource.create_ticket(user, path=self.storage_path, write=write)
