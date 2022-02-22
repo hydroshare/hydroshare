@@ -2860,7 +2860,12 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
-            kwargs['linux_resource_file'] = file
+            if resource.is_federated:
+                kwargs['resource_file'] = None
+                kwargs['fed_resource_file'] = file
+            else:
+                kwargs['resource_file'] = file
+                kwargs['fed_resource_file'] = None
 
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
@@ -3003,7 +3008,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
             try:
-                self._size = self.linux_resource_file.size
+                self._size = self.resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))

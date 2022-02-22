@@ -140,7 +140,7 @@ def data_store_structure(request):
                                             fed_resource_file=file_in_irods).first()
         else:
             f = ResourceFile.objects.filter(object_id=resource.id,
-                                            linux_resource_file=file_in_irods).first()
+                                            resource_file=file_in_irods).first()
 
         if not f:
             # skip metadata files

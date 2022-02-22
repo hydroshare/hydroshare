@@ -123,9 +123,8 @@ def upload_add(request):
         return JsonResponse({'error': "Invalid file type: {ext}".format(ext=ext)},
                             status=status.HTTP_400_BAD_REQUEST)
     else:
-        homepath = irods_fnames_list[0]
         # TODO: this should happen whether resource is federated or not
-        irods_federated = resource.is_federated(homepath)
+        irods_federated = resource.is_federated()
         if irods_federated:
             source_names = irods_fnames.split(',')
         else:

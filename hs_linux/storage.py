@@ -6,7 +6,7 @@ import os
 import shutil
 import tarfile
 
-IRODS_PATH = "./irods/"
+IRODS_PATH = "./irods/tmp/"
 
 
 class LinuxStorage(FileSystemStorage):
