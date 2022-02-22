@@ -124,36 +124,9 @@ Vue.component('add-author-modal', {
     },
     mounted(){
         let that = this;
-
-        // THIS COMMENTED CODE DOES WORK
-        // $('.modal-body').click(function(e){
-        //     if($(e.target).attr('class') === "remove"){
-        //         that.addAuthorError = "";
-        //     }
-        // });
-
-        // THIS BELOW DOESNT WORK
-        // $('#user-wrapper .remove').click(function(e){
-        //     alert("removing");
-        //     if($(e.target).attr('class') === "remove"){
-        //         that.addAuthorError = "";
-        //     }
-        // });
-
-        // THIS also doesn't work, attempting a "span" selector instead
-        // $('span.remove').click(function(e){
-        //     alert("removing");
-        //     if($(e.target).attr('class') === "remove"){
-        //         that.addAuthorError = "";
-        //     }
-        // });
-        
-        // VANILLA JS SUGGESTED ALSO DOESN'T WORK
-        let elem = document.querySelector('#user-wrapper .remove');
-        elem.addEventListener("click", function(){
-            alert("vanilla");
+        $("#add-author-modal #user-wrapper").on("click", ".remove", function() {
             that.addAuthorError = "";
-        });
+        })
     },
     methods: {
         addAuthorExistingUser: function () {
@@ -166,7 +139,7 @@ Vue.component('add-author-modal', {
             if (!userId) {
                 vue.addAuthorError = "Select a user to add as an author";
                 return;
-            }else {
+            } else {
                 const alreadyExists = leftHeaderApp.$data.authors.some(function (author) {
                     return author.profileUrl === "/user/" + userId + "/"; 
                 });
