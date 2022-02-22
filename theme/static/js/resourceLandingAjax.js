@@ -338,32 +338,32 @@ function showCompletedMessage(json_response) {
                 showMetaStatus = json_response.show_meta_status;
             }
             if (showMetaStatus) {
-                if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1 &&
-                    manageAccessApp.canChangeResourceFlags) {
-                        manageAccessApp.$data.canBePublicDiscoverable = true;
-                        let resourceType = RES_TYPE;
-                        let promptMessage = "";
-                        if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
-                            promptMessage = "All required fields are completed. The resource can now be made discoverable " +
-                                "or public. To permanently publish the resource and obtain a DOI, the resource " +
-                                "must first be made public.";
-                        else
-                            promptMessage = "All required fields are completed. The resource can now be made discoverable " +
-                                "or public.";
+                let sufficient = json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1;
+                if (sufficient && manageAccessApp.canChangeResourceFlags) {
+                    manageAccessApp.$data.canBePublicDiscoverable = true;
+                    let resourceType = RES_TYPE;
+                    let promptMessage = "";
+                    if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
+                        promptMessage = "All required fields are completed. The resource can now be made discoverable " +
+                            "or public. To permanently publish the resource and obtain a DOI, the resource " +
+                            "must first be made public.";
+                    else
+                        promptMessage = "All required fields are completed. The resource can now be made discoverable " +
+                            "or public.";
 
-                        if (!metadata_update_ajax_submit.resourceSatusDisplayed) {
-                            metadata_update_ajax_submit.resourceSatusDisplayed = true;
-                            if (json_response.hasOwnProperty('res_public_status')) {
-                                if (json_response.res_public_status.toLowerCase() === "not public") {
-                                    // if the resource is already public no need to show the following alert message
-                                    customAlert("Resource Status:", promptMessage, "success", 8000);
-                                }
-                            } else {
+                    if (!metadata_update_ajax_submit.resourceSatusDisplayed) {
+                        metadata_update_ajax_submit.resourceSatusDisplayed = true;
+                        if (json_response.hasOwnProperty('res_public_status')) {
+                            if (json_response.res_public_status.toLowerCase() === "not public") {
+                                // if the resource is already public no need to show the following alert message
                                 customAlert("Resource Status:", promptMessage, "success", 8000);
                             }
+                        } else {
+                            customAlert("Resource Status:", promptMessage, "success", 8000);
                         }
-                        $("#missing-metadata-or-file:not(.persistent)").fadeOut();
-                        $("#missing-metadata-file-type:not(.persistent)").fadeOut();
+                    }
+                    $("#missing-metadata-or-file:not(.persistent)").fadeOut();
+                    $("#missing-metadata-file-type:not(.persistent)").fadeOut();
                 } else {
                     manageAccessApp.onMetadataInsufficient();
                 }
