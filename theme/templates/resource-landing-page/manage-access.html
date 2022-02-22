@@ -155,7 +155,7 @@
                                     <div class="btn-group" role="group">
                                         {# -------- PUBLIC -------- #}
                                         <button
-                                            :disabled="!canBePublicDiscoverable || resAccess.isPublic || isProcessingAccess"
+                                            :disabled="!canBePublicDiscoverable || !canChangeResourceFlags || isProcessingAccess"
                                             @click="setResourceAccess('make_public')"
                                             :class="{active: resAccess.isPublic}"
                                             class="btn btn-default"
@@ -165,7 +165,7 @@
                                         </button>
 
                                         {# -------- DISCOVERABLE -------- #}
-                                        <button :disabled="!canBePublicDiscoverable || isProcessingAccess"
+                                        <button :disabled="!canBePublicDiscoverable || !canChangeResourceFlags || isProcessingAccess"
                                                 @click="setResourceAccess('make_discoverable')"
                                                 :class="{active: resAccess.isDiscoverable && !resAccess.isPublic}"
                                                 class="btn btn-default"
@@ -176,7 +176,7 @@
 
                                         {# -------- PRIVATE -------- #}
                                         <button
-                                            :disabled="!resAccess.isPublic && !resAccess.isDiscoverable || isProcessingAccess"
+                                            :disabled="!resAccess.isPublic && !resAccess.isDiscoverable || !canChangeResourceFlags || isProcessingAccess"
                                             @click="setResourceAccess('make_private')"
                                             :class="{active: !resAccess.isPublic && !resAccess.isDiscoverable}"
                                             class="btn btn-default"
