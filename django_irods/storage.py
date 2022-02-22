@@ -315,7 +315,7 @@ class IrodsStorage(Storage):
         qrystr = "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS != '0' " \
                  "AND {}".format(IrodsStorage.get_absolute_path_query(path))
         stdout = self._session.run("iquest", None, "--no-page", "%s,%s",
-                                  qrystr)[0].split("\n")
+                                   qrystr)[0].split("\n")
 
         for i in range(len(stdout)):
             if not stdout[i] or "CAT_NO_ROWS_FOUND" in stdout[i]:
@@ -338,7 +338,7 @@ class IrodsStorage(Storage):
 
         qrystr = "select COLL_NAME where {}".format(IrodsStorage.get_absolute_path_query(path, parent=True))
         stdout = self._session.run("iquest", None, "--no-page", "%s",
-                                  qrystr)[0].split("\n")
+                                   qrystr)[0].split("\n")
         for i in range(len(stdout)):
             if not stdout[i] or "CAT_NO_ROWS_FOUND" in stdout[i]:
                 break
