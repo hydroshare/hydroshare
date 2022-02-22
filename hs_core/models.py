@@ -3423,6 +3423,10 @@ class BaseResource(Page, AbstractResource):
 
     def get_storage(self):
         """Return either IrodsStorage or FedStorage."""
+        if self.resource_federation_path:
+            return FedStorage()
+        else:
+            return IrodsStorage()
         return IrodsStorage()
         # TODO, clean this up
         # if self.resource.storage_type == StorageCodes.IRODS:
