@@ -97,9 +97,6 @@ class UserProfileView(TemplateView):
                                 
                 resources = resources.filter(Q(raccess__public=True) |
                                              Q(raccess__discoverable=True))
-                
-                num_private_resources = resources.filter(Q(raccess__public=False) |
-                                             Q(raccess__discoverable=False)).count()
 
         # get resource attributes used in profile page
         resources = resources.only('title', 'resource_type', 'created')
