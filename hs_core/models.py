@@ -51,7 +51,7 @@ from .languages_iso import languages as iso_languages
 class StorageCodes(object):
     """
     Storage codes describe what file storage medium is in use.
-    Storage is a numeric code 1-4:
+    Storage is a numeric code 1-3:
 
         * 1 or StorageCodes.IRODS:
             object is stored in Native iRODs
@@ -72,19 +72,17 @@ class StorageCodes(object):
         (LINUX, 'Linux')
     )
     # Names of privileges for printing
-    NAMES = ('Unspecified', 'iRODs', 'Federated iRODs', 'Linux')
+    NAMES = ('iRODs', 'Federated iRODs', 'Linux')
 
     @classmethod
     def from_string(self, privilege):
         """ Converts a string representation to a StorageCode """
-        if privilege.lower() == 'view':
-            return StorageCodes.VIEW
-        if privilege.lower() == 'edit':
-            return StorageCodes.CHANGE
-        if privilege.lower() == 'owner':
-            return StorageCodes.OWNER
-        if privilege.lower() == 'none':
-            return StorageCodes.NONE
+        if privilege.lower() == 'irods':
+            return StorageCodes.IRODS
+        if privilege.lower() == 'federated irods':
+            return StorageCodes.FEDERATED
+        if privilege.lower() == 'linux':
+            return StorageCodes.Linux
         return None
 
 
@@ -2791,7 +2789,8 @@ class ResourceFile(ResourceFileIRODSMixin):
     # See get_path and get_resource_file_path above.
     file_folder = models.CharField(max_length=4096, null=False, default="")
 
-    # This triple of FileFields deals with the fact that there are two kinds of storage
+    # This triple of FileFields deals with the fact that there are three kinds of storage
+    # TODO - Is there a better way?  One FileField with a dynamic storage option?
 
     resource_file = models.FileField(upload_to=get_path, max_length=4096,
                                      null=True, blank=True, storage=IrodsStorage())
@@ -3424,10 +3423,10 @@ class BaseResource(Page, AbstractResource):
 
     def get_storage(self):
         """Return either IrodsStorage or FedStorage."""
+        return IrodsStorage()
+        # TODO, clean this up
         # if self.resource.storage_type == StorageCodes.IRODS:
-        return LinuxStorage()
-        # self, location = None, base_url = None, file_permissions_mode = None,
-        # directory_permissions_mode = None
+        #     return IrodsStorage()
         # elif self.resource.storage_type == StorageCodes.FEDERATED:
         #     return FedStorage()
         # elif self.resource.storage_type == StorageCodes.LINUX:
