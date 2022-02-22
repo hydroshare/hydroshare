@@ -125,7 +125,7 @@ def upload_add(request):
     else:
         homepath = irods_fnames_list[0]
         # TODO: this should happen whether resource is federated or not
-        irods_federated = utils.is_federated(homepath)
+        irods_federated = resource.is_federated(homepath)
         if irods_federated:
             source_names = irods_fnames.split(',')
         else:
