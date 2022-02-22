@@ -2242,7 +2242,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         istorage = self.get_storage()
         root_path = self.root_path
-        istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
         istorage.removeAVU(root_path, attribute)
 
     def setAVU(self, attribute, value):

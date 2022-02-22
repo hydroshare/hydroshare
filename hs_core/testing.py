@@ -174,7 +174,6 @@ class TestCaseCommonUtilities(object):
 
         # create a temporary zips folder to make sure no duplicate folders are returned from listdir()
         zip_res_coll_path = os.path.join('zips', '2020-02-03', res.short_id, 'data', 'contents', 'sub_test_dir')
-        # istorage.session.run("imkdir", None, '-p', zip_res_coll_path)
         istorage.createDirectory(zip_res_coll_path)
         store = istorage.listdir(res_path)
         self.assertEqual(store[0].count('sub_test_dir'), 1, msg='duplicate folder: sub_test_dir occurred more '

@@ -70,18 +70,18 @@ class LinuxStorage(FileSystemStorage):
     Alva: he will generate default AVUs for everything.
     '''
 
-    def setAVU(self, name, attName, attVal, attUnit=""):
-        obj, _ = LinuxAVU.objects.get_or_create(path=name, name=attName)
-        obj.value = attVal
-        obj.unit = attUnit
+    def setAVU(self, path, name, value, unit=""):
+        obj, _ = LinuxAVU.objects.get_or_create(path=path, name=name)
+        obj.value = value
+        obj.unit = unit
         obj.save()
 
-    def getAVU(self, name, attName):
-        obj = LinuxAVU.objects.get(path__exact=name, name__exact=attName)
+    def getAVU(self, path, name):
+        obj = LinuxAVU.objects.get(path__exact=path, name__exact=name)
         return obj.value
 
-    def removeAVU(self, name, attName):
-        obj = LinuxAVU.objects.get(path__exact=name, name__exact=attName)
+    def removeAVU(self, path, name):
+        obj = LinuxAVU.objects.get(path__exact=path, name__exact=name)
         obj.delete()
 
     #################################################################################################################

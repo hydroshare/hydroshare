@@ -475,3 +475,6 @@ class IrodsStorage(Storage):
         # the resource collection in order for the real-time iRODS quota micro-services to work
         if not self.exists(dirname):
             self._session.run("imkdir", None, '-p', dirname)
+
+    def removeAVU(self, name, att_name):
+        self._session.run("imeta", None, 'rm', '-C', name, att_name)

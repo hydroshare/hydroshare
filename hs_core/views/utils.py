@@ -893,7 +893,9 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     content_dir = os.path.dirname(res_coll_input)
     output_zip_full_path = os.path.join(content_dir, output_zip_fname)
-    istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
+    istorage.zipup(output_zip_full_path, res_coll_input)
+    # TODO - zipup also creates a directory from the output path... not sure if we need that
+    # istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
 
     output_zip_size = istorage.size(output_zip_full_path)
 
@@ -1147,7 +1149,6 @@ def create_folder(res_id, folder_path, migrating_resource=False):
     # check for duplicate folder path
     if istorage.exists(coll_path):
         raise ValidationError("Folder already exists")
-    # istorage.session.run("imkdir", None, '-p', coll_path)
     istorage.createDirectory(coll_path)
 
 

@@ -142,7 +142,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # automatically when files are added into this resource
         # programmatically set quota size for the test user in data zone
         if not istorage.exists(settings.IRODS_BAGIT_PATH):
-            istorage.session.run("imkdir", None, '-p', settings.IRODS_BAGIT_PATH)
+            istorage.createDirectory(settings.IRODS_BAGIT_PATH)
         istorage.setAVU(settings.IRODS_BAGIT_PATH, attname, test_qsize)
 
         get_qsize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
