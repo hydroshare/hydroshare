@@ -893,7 +893,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     content_dir = os.path.dirname(res_coll_input)
     output_zip_full_path = os.path.join(content_dir, output_zip_fname)
-    istorage.zipup(output_zip_full_path, res_coll_input)
+    istorage.zipup(res_coll_input, output_zip_full_path, mkdir=False)
 
     output_zip_size = istorage.size(output_zip_full_path)
 

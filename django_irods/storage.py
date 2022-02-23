@@ -118,14 +118,15 @@ class IrodsStorage(Storage):
         # SessionException will be raised from run() in icommands.py
         self._session.run("irule", None, '-F', rule_name, input_path, input_resource)
 
-    def zipup(self, in_name, out_name):
+    def zipup(self, in_name, out_name, mkdir=True):
         """
         run iRODS ibun command to generate zip file for the bag
         :param in_name: input parameter to indicate the collection path to generate zip
         :param out_name: the output zipped file name
         :return: None
         """
-        self._session.run("imkdir", None, '-p', out_name.rsplit('/', 1)[0])
+        if mkdir:
+            self._session.run("imkdir", None, '-p', out_name.rsplit('/', 1)[0])
         # SessionException will be raised from run() in icommands.py
         self._session.run("ibun", None, '-cDzip', '-f', out_name, in_name)
 
