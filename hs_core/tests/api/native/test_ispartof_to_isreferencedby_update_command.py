@@ -107,7 +107,7 @@ class TestRelationTypeUpdateCommand(MockIRODSTestCaseMixin, TestCase):
         call_command(self.update_command)
         self.assertEqual(metadata.relations.filter(type=RelationTypes.isPartOf).count(), 1)
         self.assertEqual(metadata.relations.filter(type=RelationTypes.isReferencedBy).count(), 2)
-        
+
     def _create_resource(self, res_type='CompositeResource', add_keywords=False):
         res = hydroshare.create_resource(res_type, self.user, "Testing updating relation type isPartOf")
         if add_keywords:
