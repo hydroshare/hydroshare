@@ -277,14 +277,16 @@ class ModelProgramMetadataValidationForm(forms.Form):
                         # check for nested objects - we are not allowing nested objects to keep the form
                         # generated from the schema by json-editor to not get complicated
                         nested_object_found = False
-                        for k_child, v_child in v.items():
-                            if isinstance(v_child, dict):
-                                if 'type' in v_child and v_child['type'] == 'object':
-                                    msg = "Not a valid metadata schema. Nested objects are not allowed. " \
-                                          "Attribute '{}' contains nested object"
-                                    msg = msg.format(k_child)
-                                    self.add_error(field_name, msg)
-                                    nested_object_found = True
+                        if 'type' in v and v['type'] == 'object':
+                            # parent type is object - check child type is not object
+                            for k_child, v_child in v.items():
+                                if isinstance(v_child, dict):
+                                    if 'type' in v_child and v_child['type'] == 'object':
+                                        msg = "Not a valid metadata schema. Nested object types are not allowed. " \
+                                              "Attribute '{}' contains nested object types"
+                                        msg = msg.format(k_child)
+                                        self.add_error(field_name, msg)
+                                        nested_object_found = True
                         if not nested_object_found:
                             validate_schema(v)
 

@@ -1,11 +1,13 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
 from django.db.models import Q, F, Exists, OuterRef
+from django.contrib.contenttypes.models import ContentType
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
 from hs_access_control.models.community import Community
-from django.contrib.contenttypes.models import ContentType
+from theme.utils import get_upload_path_group
+
 
 #############################################
 # Group access data.
@@ -23,8 +25,6 @@ from django.contrib.contenttypes.models import ContentType
 #   community privileges.
 # (Revised Sept 17, 2021)
 #############################################
-
-
 class GroupMembershipRequest(models.Model):
     request_from = models.ForeignKey(User, related_name='ru2gmrequest')
 
@@ -78,7 +78,7 @@ class GroupAccess(models.Model):
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
-    picture = models.ImageField(upload_to='group', null=True, blank=True)
+    picture = models.ImageField(upload_to=get_upload_path_group, null=True, blank=True)
 
     ####################################
     # group membership: owners, edit_users, view_users are parallel to those in resources

@@ -233,3 +233,11 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         super(FileSetLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
         for child_aggr in self.get_children():
             child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)
+
+    def get_copy(self, copied_resource):
+        """Overrides the base class method"""
+
+        copy_of_logical_file = super(FileSetLogicalFile, self).get_copy(copied_resource)
+        copy_of_logical_file.folder = self.folder
+        copy_of_logical_file.save()
+        return copy_of_logical_file
