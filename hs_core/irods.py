@@ -146,8 +146,7 @@ class ResourceIRODSMixin(models.Model):
             raise ValidationError("ticket creation failed: {}", stderr)
         ticket = stdout.split('\n')[0]
         ticket_id = ticket[len('ticket:'):]
-        istorage._session.run('iticket', None, 'mod', ticket_id,
-                             'uses', str(allowed_uses))
+        istorage._session.run('iticket', None, 'mod', ticket_id, 'uses', str(allowed_uses))
 
         # This creates a timestamp with a one-hour timeout.
         # Note that this is a timeout on when the ticket is first used, and
@@ -157,8 +156,7 @@ class ResourceIRODSMixin(models.Model):
         # server from within iRODS; shell access is required.
         timeout = datetime.now() + timedelta(hours=1)
         formatted = timeout.strftime("%Y-%m-%d.%H:%M")
-        istorage._session.run('iticket', None, 'mod', ticket_id,
-                             'expire', formatted)
+        istorage._session.run('iticket', None, 'mod', ticket_id, 'expire', formatted)
 
         # fully qualify home paths with their iRODS prefix when returning them.
         return ticket_id, self.full_path(path)
