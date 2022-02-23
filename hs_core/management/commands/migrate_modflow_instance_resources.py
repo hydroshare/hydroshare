@@ -175,7 +175,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(msg))
             self.stdout.flush()
             # check resource exists on irods
-            istorage = mi_res.get_irods_storage()
+            istorage = mi_res.get_storage()
             if not istorage.exists(mi_res.root_path):
                 err_resource_counter += 1
                 err_msg = "{}MODFLOW instance resource not found in iRODS (ID: {})"
