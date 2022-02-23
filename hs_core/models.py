@@ -42,7 +42,6 @@ from rdflib.namespace import DC, DCTERMS, RDF
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import RelationTypes
-from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 from hs_linux.storage import LinuxStorage
 from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
 from .languages_iso import languages as iso_languages
@@ -1899,7 +1898,7 @@ class ResourceManager(PageManager):
         return qs
 
 
-class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
+class AbstractResource(ResourcePermissionsMixin):
     """
     Create Abstract Class for all Resources.
 
@@ -2772,7 +2771,7 @@ class FedStorage(IrodsStorage):
 
 # TODO: revise path logic for rename_resource_file_in_django for proper path.
 # TODO: utilize antibugging to check that paths are coherent after each operation.
-class ResourceFile(ResourceFileIRODSMixin):
+class ResourceFile(models.Model):
     """
     Represent a file in a resource.
     """
