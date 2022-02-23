@@ -1383,11 +1383,11 @@ function initializeDatePickers(){
             if (this_date.val() && other_date.val()) {
                 temporal_button.removeClass("disabled");
                 temporal_warn.hide();
-            }else if ( this_date.val()){
+            }else if (this_date.val()) {
                 temporal_button.addClass("disabled");
                 other_date.after(temporal_warn);
                 temporal_warn.show();
-            }else if(other_date.val()){
+            }else if (other_date.val()) {
                 temporal_button.addClass("disabled");
                 this_date.after(temporal_warn);
                 temporal_warn.show();
