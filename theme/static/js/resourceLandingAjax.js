@@ -1361,23 +1361,39 @@ function initializeDatePickers(){
     });
 
     // Temporal coverage: only allow submit if both dates are completed
+    let temporal_button = $("#coverage-temporal button");
+    let temporal_warn = $('#temporal-warn');
+    if (temporal_warn.length === 0) {
+        temporal_warn = $("<em>", {
+            id: "temporal-warn",
+            text: "Both a Start Date and End Date are required when providing temporal information",
+            css: {
+                "font-style": "italic",
+                "color": "red"
+            }
+        });
+        temporal_button.closest('div').before(temporal_warn);
+    }
+    temporal_warn.hide();
+
     $("#coverage-temporal .dateinput").each(function () {
         $(this).on('change', function (e) {
-            let button = $(this).closest("form").find("button")
-            let this_date = $(this).val()
-            let other_date = $(this).closest("form").find(".form-control").not(this).first().val();
-            if (this_date && other_date) {
-                button.removeClass("disabled")
-                    .text("Save changes")
-                    .addClass('btn-primary')
-                    .removeClass('btn-warning')
-            }else if ( this_date || other_date){
-                button.addClass("disabled")
-                        .text("Fill both dates to save")
-                        .removeClass('btn-primary')
-                        .addClass('btn-warning')
+            let this_date = $(this)
+            let other_date = $(this).closest("form").find(".form-control").not(this).first();
+            if (this_date.val() && other_date.val()) {
+                temporal_button.removeClass("disabled");
+                temporal_warn.hide();
+            }else if ( this_date.val()){
+                temporal_button.addClass("disabled");
+                other_date.after(temporal_warn);
+                temporal_warn.show();
+            }else if(other_date.val()){
+                temporal_button.addClass("disabled");
+                this_date.after(temporal_warn);
+                temporal_warn.show();
             }else{
-                button.hide()
+                temporal_button.hide()
+                temporal_warn.hide()
             }
         });
     });
