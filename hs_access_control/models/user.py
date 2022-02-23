@@ -1434,6 +1434,20 @@ class UserAccess(models.Model):
             return True
 
         return False
+    
+    def can_view_resources_owned_by(self, owner):
+        """
+        Whether user can view the resources owned by another user
+
+        :param owner: The owner whose resources will be checked for viewing
+        :return: Count of owner's resources that can be viewed
+        """
+        these_resources = owner.uaccess.owned_resources
+        viewable_count = 0
+        for resource in these_resources:
+            if self.can_view_resource(resource):
+                viewable_count += 1
+        return viewable_count
 
     def can_delete_resource(self, this_resource):
         """

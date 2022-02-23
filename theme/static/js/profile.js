@@ -318,7 +318,7 @@ $(document).ready(function () {
     var collection = [];
     collection["total"] = 0;
 
-    var rows = $(".contribution").not('#private-contribution');
+    var rows = $(".contribution");
     for (var i = 0; i < rows.length; i++) {
         if (collection[$(rows[i]).attr("data-type")]) {
             collection[$(rows[i]).attr("data-type")]++;
@@ -328,10 +328,6 @@ $(document).ready(function () {
         }
         collection["total"]++;
     }
-
-    // Add private resources to the total
-    let private_count = $('#private_resources').data()?.number || 0;
-    collection["total"] += private_count;
 
     for (var item in collection) {
         $("tr[data-type='" + item + "']").find(".badge").text(collection[item]);
