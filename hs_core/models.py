@@ -2754,7 +2754,7 @@ class FedStorage(IrodsStorage):
         super(FedStorage, self).__init__("federated")
 
     def get_path(self, path):
-        return os.path.join(self.resource_federation_path, full_path)
+        return os.path.join(self.resource_federation_path, path)
 
 
 # TODO: revise path logic for rename_resource_file_in_django for proper path.
@@ -2781,11 +2781,11 @@ class ResourceFile(models.Model):
     # TODO - Is there a better way?  One FileField with a dynamic storage option?
 
     _resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                     null=True, default=None, storage=IrodsStorage())
+                                      null=True, default=None, storage=IrodsStorage())
     _fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                         null=True, default=None, storage=FedStorage())
+                                          null=True, default=None, storage=FedStorage())
     _linux_resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                           null=True, default=None, storage=LinuxStorage())
+                                            null=True, default=None, storage=LinuxStorage())
 
     @property
     def resource_file(self):
@@ -2802,7 +2802,6 @@ class ResourceFile(models.Model):
     @property
     def fed_resource_file(self):
         return self._fed_resource_file
-
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -3330,7 +3329,7 @@ class BaseResource(Page, AbstractResource):
         elif self.storage_type == StorageCodes.LINUX:
             return LinuxStorage()
         else:
-            raise StorageTypeNotFoundException( "unknown storage type {}".format(self.storage_type))
+            raise StorageTypeNotFoundException("unknown storage type {}".format(self.storage_type))
 
     def list_folder(self, folder, sub_folders=True):
         """List files (instances of ResourceFile) in a given folder.

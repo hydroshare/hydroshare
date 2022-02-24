@@ -124,7 +124,6 @@ def data_store_structure(request):
                      'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
                      'folder_short_path': os.path.join(folder_path, d_pk)})
 
-    is_federated = resource.is_federated
     for index, fname in enumerate(store[1]):  # files
         f_store_path = os.path.join(store_path, fname)
         file_path = resource.get_path(f_store_path)

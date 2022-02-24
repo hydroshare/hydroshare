@@ -6,7 +6,7 @@ import os
 from django.contrib.auth.models import Group, User
 
 from hs_core import hydroshare
-from hs_core.models import ResourceFile, GenericResource
+from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 

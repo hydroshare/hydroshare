@@ -14,8 +14,6 @@ from django.core.exceptions import ObjectDoesNotExist
 
 import bagit
 
-from hs_core.models import ResourceFile
-
 
 class HsBagitException(Exception):
     pass

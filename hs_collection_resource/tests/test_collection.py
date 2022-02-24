@@ -11,7 +11,6 @@ from hs_collection_resource.views import _update_collection_coverages
 from hs_core.hydroshare import create_resource, create_account, \
     create_empty_resource, create_new_version_resource, \
     update_science_metadata, copy_resource
-from hs_core.hydroshare.resource import ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
