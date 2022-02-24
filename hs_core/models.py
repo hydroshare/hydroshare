@@ -3273,9 +3273,10 @@ class BaseResource(Page, AbstractResource):
     locked_time = models.DateTimeField(null=True, blank=True)
 
     # TODO update default StorageCodes to Linux for Neal
-    storage_type = models.IntegerField(choices=StorageCodes.CHOICES,
-                                       editable=False,
-                                       default=StorageCodes.IRODS)
+    # storage_type = models.IntegerField(choices=StorageCodes.CHOICES,
+    #                                    editable=False,
+    #                                    default=StorageCodes.IRODS)
+    storage_type = StorageCodes.IRODS
 
     # This only applies if storage_type == FEDERATED
     # The resource_federation_path is added to record where a HydroShare resource is
