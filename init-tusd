@@ -1,5 +1,6 @@
 #!/bin/bash 
-su irods -g irods -c '/usr/local/bin/tusd \
+umask 000
+su irods -c '/usr/local/bin/tusd \
      -behind-proxy \
      -upload-dir /tmp/irods/data \
      -unix-sock /hs_tmp/tusd.sock \

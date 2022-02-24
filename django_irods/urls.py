@@ -1,5 +1,7 @@
 from django.conf.urls import url
-from django_irods.views import rest_check_task_status, rest_download, download
+from django_irods.views import rest_check_task_status,\
+        rest_download, download,\
+        rest_upload, upload 
 
 urlpatterns = [
     # for download request from resource landing page
@@ -11,4 +13,9 @@ urlpatterns = [
     url(r'^rest_check_task_status/(?P<task_id>[A-z0-9\-]+)$',
         rest_check_task_status,
         name='rest_check_task_status'),
+    # for upload request from resource landing page
+    url(r'^upload/(?P<path>.*)$', upload, name='upload'),
+    # for download request from REST API
+    url(r'^rest_upload/(?P<path>.*)$', rest_upload,
+        name='rest_upload'),
 ]

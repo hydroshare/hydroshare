@@ -95,6 +95,7 @@ start_nginx() {
         echo "  - docker run ${NGINX_DOCKER_IMG} as ${NGINX_DOCKER_CNTR}"
         docker run -d --name ${NGINX_DOCKER_CNTR} \
             --link ${HYDROSHARE_CID}:hydroshare \
+            --link ${HYDROSHARE_CID}:tusd \
             -p 80:80 -p 443:443 \
             --volume ${HOST_SSL_DIR}:/hs-certs \
             --volume ${IRODS_LOCAL_MOUNT}:${IRODS_DOCKER_MAP} \
