@@ -938,7 +938,6 @@ function bindFileBrowserItemEvents() {
         // register a listener for clicks outside of the context menu
         $(document).on('click.menu', function(event) {
             var $target = $(event.target);
-            console.log(this);
             if(!$target.closest('#right-click-menu').length && 
                 $('#right-click-menu').css("display") !== "none") {
                 $('#right-click-menu').hide();
