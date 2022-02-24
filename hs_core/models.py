@@ -192,7 +192,7 @@ def get_access_object(user, user_type, user_access):
     access_object = None
     picture = None
 
-    if user_access != "owner":
+    if not hasattr(user, 'viewable_contributions'):
         user.viewable_contributions = 0
 
     if user_type == "user":
@@ -391,7 +391,7 @@ class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
         """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
         for key, value in list(kwargs.items()):
-                setattr(element, key, value)
+            setattr(element, key, value)
         element.save()
         return element
 
