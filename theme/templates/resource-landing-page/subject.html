@@ -45,20 +45,20 @@
                         {% if resource_edit_mode %}
                             {% if cm.raccess.published  %}
                                 <span v-if="resKeywords.length" class="tag">
-                                    {% templatetag openvariable %} k {% templatetag closevariable %}<span v-if="resKeywords.length > 1"
+                                    ${ k }<span v-if="resKeywords.length > 1"
                                         @click="removeKeyword('{{ cm.short_id }}', k )"
                                         class="glyphicon glyphicon-remove-circle icon-remove"></span>
                                 </span>
                             {% else %}
                                 <span v-if="resKeywords.length" class="tag">
-                                    {% templatetag openvariable %} k {% templatetag closevariable %}<span
+                                    ${ k }<span
                                         @click="removeKeyword('{{ cm.short_id }}', k )"
                                         class="glyphicon glyphicon-remove-circle icon-remove"></span>
                                 </span>
                             {% endif %}
                         {% else %}
                             <a class='tag' target="_blank"
-                               :href="'/search/?subject=' + safeJS(k)">{% templatetag openvariable %} k {% templatetag closevariable %}</a>
+                               :href="'/search/?subject=' + safeJS(k)">${ k }</a>
                         {% endif %}
                     </li>
                 </ul>
@@ -66,7 +66,8 @@
             <div id="subj-inline-error" style="display:none">
                 <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
                 <div v-if="error" class='alert alert-danger space-top small'>
-                    <strong>Error: </strong>{% templatetag openvariable %} k {% templatetag closevariable %}
+                    <strong>Error: </strong>
+                    <span v-html="error"></span>
                 </div>
             </div>
         </div>

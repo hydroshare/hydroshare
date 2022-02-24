@@ -3,6 +3,7 @@
 */
 let subjKeywordsApp = new Vue({
     el: '#app-keyword',
+    delimiters: ['${', '}'],
     components: {
         VueBootstrapTypeahead
     },
@@ -20,6 +21,8 @@ let subjKeywordsApp = new Vue({
     },
     methods: {
         addKeyword: function (resIdShort) {
+            this.showIsDuplicate = false;  // Reset
+            
             // Remove any empty keywords from the list
             let newKeywords = this.newKeyword.split(",");
             newKeywords = newKeywords.filter(function(a) {
@@ -30,17 +33,18 @@ let subjKeywordsApp = new Vue({
             this.newKeyword = newKeywords.join(",").trim();
 
             if (this.newKeyword.trim() === "") {
+                this.error = "Your keyword was empty. Please try again";
                 return; // Empty string detected
             }
 
             let newVal =  (this.resKeywords.join(",").length ? this.resKeywords.join(",") + ",": "") + this.newKeyword;
             this.error = "";
+            let vue = this;
             $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
                 if (resp.status === "success") {
                     // Append new keywords to our data array
                     let newKeywordsArray = this.newKeyword.trim().split(",");
 
-                    this.showIsDuplicate = false;  // Reset
                     for (let i = 0; i < newKeywordsArray.length; i++) {
                         if ($.inArray(newKeywordsArray[i].trim(), this.resKeywords) >= 0) {
                             this.showIsDuplicate = true;
@@ -53,7 +57,7 @@ let subjKeywordsApp = new Vue({
                     }
                 }
                 else {
-                    this.error = resp.message;
+                    vue.error = resp.message;
                 }
                 showCompletedMessage(resp);
             }.bind(this), "json");
