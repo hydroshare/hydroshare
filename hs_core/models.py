@@ -3742,7 +3742,12 @@ class BaseResource(Page, AbstractResource):
             if relation_meta_obj.value and '/resource/' in relation_meta_obj.value:
                 version_citation = relation_meta_obj.value
                 version_res_id = version_citation.split('/resource/')[-1]
-                version_res = get_resource_by_shortkey(version_res_id)
+                try:
+                    version_res = get_resource_by_shortkey(version_res_id, or_404=False)
+                except BaseResource.DoesNotExist:
+                    relation_meta_obj.delete()
+                    relation_updated = True
+                    return relation_updated
                 current_version_citation = version_res.get_citation()
                 if current_version_citation != version_citation:
                     relation_meta_obj.value = current_version_citation
