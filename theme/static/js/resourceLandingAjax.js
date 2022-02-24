@@ -1299,13 +1299,25 @@ function BindKeyValueFileTypeClickHandlers(){
     keyvalue_add_modal_form.find("button.btn-primary").click(function () {
         addFileTypeExtraMetadata();
     });
+    
+    // clear the form on cancel
+    keyvalue_add_modal_form.find("button.btn-default:contains('Cancel')").click(function () {
+        keyvalue_add_modal_form.find("input[type=text], textarea").val("");
+    });
 
     // bind all key value edit modal forms OK button click event
     $("#fileTypeMetaData").find('[id^=edit-keyvalue-filetype-metadata]').each(function(){
         var formId = $(this).attr('id');
         $(this).find("button.btn-primary").click(function (){
             updateFileTypeExtraMetadata(formId);
-        })
+        });
+
+        // reset the form on cancel
+        $(this).find("button.btn-default:contains('Cancel')").click(function() {
+            $(this).closest('form').find("input[type=text], textarea").each(function(){
+                $(this).val($(this).prop("defaultValue"));
+            });
+        });
     });
 
     // bind all key value delete modal forms Delete button click event
