@@ -46,7 +46,7 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
 
     def test_delete_file(self):
         # test if the test file is added to the resource
-        resource_file_objects = ResourceFile.objects.filter(object_id=self.res.pk)
+        resource_file_objects = self.res.files.all()
         self.assertIn(
             self.file.name,
             [os.path.basename(rf.resource_file.name) for rf in resource_file_objects],
@@ -57,7 +57,7 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
         # delete the resource file - this is the api we are testing
         hydroshare.delete_resource_file(self.res.short_id, self.file.name, self.user)
         # test if the added test file is deleted
-        resource_file_objects = ResourceFile.objects.filter(object_id=self.res.pk)
+        resource_file_objects = self.res.files.all()
         self.assertNotIn(
             self.file.name,
             [os.path.basename(rf.resource_file.name) for rf in resource_file_objects],

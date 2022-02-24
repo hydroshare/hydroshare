@@ -988,9 +988,9 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resCollection.resources.add(self.resGen2)
         self.resCollection.resources.add(self.resGen3)
         self.assertEqual(self.resCollection.resources.count(), 3)
-        self.assertEqual(ResourceFile.objects.filter(object_id=self.resCollection.id).count(), 0)
+        self.assertEqual(self.resCollection.files.all().count(), 0)
         csv_list = update_collection_list_csv(self.resCollection)
-        self.assertEqual(ResourceFile.objects.filter(object_id=self.resCollection.id).count(), 1)
+        self.assertEqual(self.resCollection.files.all().count(), 1)
 
         # csv_list should have 4 rows: header row + 3 data rows
         self.assertEqual(len(csv_list), 4)

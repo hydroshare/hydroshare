@@ -5,7 +5,7 @@ from hs_core.models import BaseResource
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
-
+# TODO fix storage_type
 class Command(BaseCommand):
     help = "Migrate all resources in iRODS user zone to iRODS data zone"
 

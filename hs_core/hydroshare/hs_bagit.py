@@ -58,9 +58,9 @@ def create_bagit_files_by_irods(res, istorage):
 
     bag_path = res.bag_path
 
-    irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
+    irods_bagit_input_path = res.get_path(resource_id, prepend_short_id=False)
     # check to see if bagit readme.txt file exists or not
-    bagit_readme_file = res.get_irods_path('readme.txt')
+    bagit_readme_file = res.get_path('readme.txt')
     is_bagit_readme_exist = istorage.exists(bagit_readme_file)
     if irods_bagit_input_path.startswith(resource_id):
         # resource is in data zone, need to append the full path for iRODS bagit rule execution
@@ -77,9 +77,9 @@ def create_bagit_files_by_irods(res, istorage):
     bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
 
     bagit_files = [
-        res.get_irods_path('bagit.txt'),
-        res.get_irods_path('manifest-md5.txt'),
-        res.get_irods_path('tagmanifest-md5.txt'),
+        res.get_path('bagit.txt'),
+        res.get_path('manifest-md5.txt'),
+        res.get_path('tagmanifest-md5.txt'),
         bag_path
     ]
 
@@ -216,7 +216,7 @@ def create_bag_metadata_files(resource):
     a.add_resource(resMetaFile)
 
     # Add the resource files to the aggregation
-    files = ResourceFile.objects.filter(object_id=resource.id)
+    files = resource.files.all()
 
     for f in files:
         # only the files that are not part of file type aggregation (logical file)

@@ -1331,14 +1331,17 @@ def create_resource(request, *args, **kwargs):
                                                          requesting_user=request.user,
                                                          **kwargs)
     except utils.ResourceFileSizeException as ex:
+        logger.error("WOOOOOOOOOOOOOOT")
         ajax_response_data['message'] = str(ex)
         return JsonResponse(ajax_response_data)
 
     except utils.ResourceFileValidationException as ex:
+        logger.error("WOOOOOOOOOOOOOOT")
         ajax_response_data['message'] = str(ex)
         return JsonResponse(ajax_response_data)
 
     except Exception as ex:
+        logger.error("WOOOOOOOOOOOOOOT")
         ajax_response_data['message'] = str(ex)
         return JsonResponse(ajax_response_data)
 
@@ -1352,9 +1355,11 @@ def create_resource(request, *args, **kwargs):
                 content=res_title, full_paths=full_paths, auto_aggregate=auto_aggregate
         )
     except SessionException as ex:
+        logger.error("WOOOOOOOOOOOOOOT")
         ajax_response_data['message'] = ex.stderr
         return JsonResponse(ajax_response_data)
     except Exception as ex:
+        logger.error("WOOOOOOOOOOOOOOT")
         ajax_response_data['message'] = str(ex)
         return JsonResponse(ajax_response_data)
 
@@ -1362,6 +1367,7 @@ def create_resource(request, *args, **kwargs):
         utils.resource_post_create_actions(request=request, resource=resource,
                                            user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
+        logger.error("WOOOOOOOOOOOOOOT")
         request.session['validation_error'] = str(ex)
         ajax_response_data['message'] = str(ex)
         ajax_response_data['status'] = 'success'

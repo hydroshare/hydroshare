@@ -1003,7 +1003,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             for file in res_files:
                 destination_file = _get_destination_filename(file.name, unzipped_foldername)
                 destination_file = destination_file.replace(res_id + "/", "")
-                destination_file = resource.get_irods_path(destination_file)
+                destination_file = resource.get_path(destination_file)
                 res_file = link_irods_file_to_django(resource, destination_file)
                 added_resource_files.append(res_file)
 
@@ -1076,7 +1076,7 @@ def ingest_bag(resource, bag_file, user):
         destination_file = destination_filename(resource, file.name)
         istorage.moveFile(file.name, destination_file)
 
-        irods_path = resource.get_irods_path(destination_file)
+        irods_path = resource.get_path(destination_file)
         res_file = link_irods_file_to_django(resource, irods_path)
         added_resource_files.append(res_file)
 

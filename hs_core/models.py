@@ -2171,7 +2171,7 @@ class AbstractResource(ResourcePermissionsMixin):
         # must start with a / in order to concat with current_site_url.
         return '/' + os.path.join('resource', self.short_id, path)
 
-    def get_irods_path(self, path, prepend_short_id=True):
+    def get_path(self, path, prepend_short_id=True):
         """Return the irods path by which the given path is accessed.
            The input path includes data/contents/ as needed.
         """
@@ -2180,10 +2180,8 @@ class AbstractResource(ResourcePermissionsMixin):
         else:
             full_path = path
 
-        if self.is_federated:
-            return os.path.join(self.resource_federation_path, full_path)
-        else:
-            return full_path
+        istorage = self.get_storage()
+        return istorage.get_path(full_path)
 
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
@@ -2648,19 +2646,6 @@ class AbstractResource(ResourcePermissionsMixin):
         """Check if resource allows the original folder to be deleted upon zip."""
         return True
 
-    @property
-    def storage_type(self):
-        if not self.is_federated:
-            return 'local'
-        userpath = '/' + os.path.join(
-            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
-            'home',
-            getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
-        if self.resource_federation_path == userpath:
-            return 'user'
-        else:
-            return 'federated'
-
     def is_folder(self, folder_path):
         """Determine whether a given path (relative to resource root, including /data/contents/)
            is a folder or not. Returns False if the path does not exist.
@@ -2768,6 +2753,9 @@ class FedStorage(IrodsStorage):
         """Initialize method with no arguments for federated storage."""
         super(FedStorage, self).__init__("federated")
 
+    def get_path(self, path):
+        return os.path.join(self.resource_federation_path, full_path)
+
 
 # TODO: revise path logic for rename_resource_file_in_django for proper path.
 # TODO: utilize antibugging to check that paths are coherent after each operation.
@@ -2776,8 +2764,9 @@ class ResourceFile(models.Model):
     Represent a file in a resource.
     """
     class Meta:
-        index_together = [['object_id', 'resource_file'],
-                          ['object_id', 'fed_resource_file'],
+        index_together = [['object_id', '_resource_file'],
+                          ['object_id', '_fed_resource_file'],
+                          ['object_id', '_linux_resource_file'],
                           ]
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
@@ -2791,12 +2780,29 @@ class ResourceFile(models.Model):
     # This triple of FileFields deals with the fact that there are three kinds of storage
     # TODO - Is there a better way?  One FileField with a dynamic storage option?
 
-    resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                     null=True, blank=True, storage=IrodsStorage())
-    fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                         null=True, blank=True, storage=FedStorage())
-    linux_resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                           null=True, blank=True, storage=LinuxStorage())
+    _resource_file = models.FileField(upload_to=get_path, max_length=4096,
+                                     null=True, default=None, storage=IrodsStorage())
+    _fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
+                                         null=True, default=None, storage=FedStorage())
+    _linux_resource_file = models.FileField(upload_to=get_path, max_length=4096,
+                                           null=True, default=None, storage=LinuxStorage())
+
+    @property
+    def resource_file(self):
+        if not getattr(self, "_res_file", False):
+            # find the use storage type for the field
+            possible_resource_files = [self._resource_file, self._fed_resource_file, self._linux_resource_file]
+            res_file_list = [f for f in filter(lambda x: x, possible_resource_files)]
+            if len(res_file_list) != 1:
+                raise Exception("This is in an invalid ResourceFile, TODO")
+            self._res_file = res_file_list[0]
+
+        return self._res_file
+
+    @property
+    def fed_resource_file(self):
+        return self._fed_resource_file
+
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -2857,16 +2863,7 @@ class ResourceFile(models.Model):
 
         kwargs['file_folder'] = folder
 
-        # if file is an open file, use native copy by setting appropriate variables
-        if isinstance(file, File):
-            if resource.is_federated:
-                kwargs['resource_file'] = None
-                kwargs['fed_resource_file'] = file
-            else:
-                kwargs['resource_file'] = file
-                kwargs['fed_resource_file'] = None
-
-        else:  # if file is not an open file, then it's a basename (string)
+        if not isinstance(file, File):  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
                 if __debug__:
                     assert(isinstance(source, str))
@@ -2892,13 +2889,15 @@ class ResourceFile(models.Model):
                 raise ValidationError(
                     "ResourceFile.create: exactly one of source or file must be specified")
 
-            # we've copied or moved if necessary; now set the paths
-            if resource.is_federated:
-                kwargs['resource_file'] = None
-                kwargs['fed_resource_file'] = target
-            else:
-                kwargs['resource_file'] = target
-                kwargs['fed_resource_file'] = None
+        # we've copied or moved if necessary; now set the paths
+        if resource.storage_type == StorageCodes.FEDERATED:
+            kwargs['_fed_resource_file'] = file
+        elif resource.storage_type == StorageCodes.IRODS:
+            kwargs['_resource_file'] = file
+        elif resource.storage_type == StorageCodes.LINUX:
+            kwargs['_linux_resource_file'] = file
+        else:
+            raise ValidationError("Unknown StorageCode " + resource.storage_type)
 
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
@@ -2976,42 +2975,16 @@ class ResourceFile(models.Model):
         in federated mode.
 
         """
-        # instance.content_object can be stale after changes.
-        # Re-fetch based upon key; bypass type system; it is not relevant
-        resource = self.resource
-        if resource.is_federated:  # false if None or empty
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            return self.fed_resource_file.name
-        else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            return self.resource_file.name
+        return self.resource_file.name
 
     def calculate_size(self):
         """Reads the file size and saves to the DB"""
-        if self.resource.resource_federation_path:
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            try:
-                self._size = self.fed_resource_file.size
-            except (SessionException, ValidationError):
-                logger = logging.getLogger(__name__)
-                logger.warn("file {} not found".format(self.storage_path))
-                self._size = 0
-        else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            try:
-                self._size = self.resource_file.size
-            except (SessionException, ValidationError):
-                logger = logging.getLogger(__name__)
-                logger.warn("file {} not found".format(self.storage_path))
-                self._size = 0
+        try:
+            self._size = self.resource_file.size
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warn("file {} not found".format(self.storage_path))
+            self._size = 0
         self.save()
 
     # ResourceFile API handles file operations
@@ -3041,20 +3014,7 @@ class ResourceFile(models.Model):
         """
         folder, base = self.path_is_acceptable(path, test_exists=test_exists)
         self.file_folder = folder
-        self.save()
-
-        # self.content_object can be stale after changes. Re-fetch based upon key
-        # bypass type system; it is not relevant
-        resource = self.resource
-
-        # switch FileFields based upon federation path
-        if resource.is_federated:
-            # uses file_folder; must come after that setting.
-            self.fed_resource_file = get_path(self, base)
-            self.resource_file = None
-        else:
-            self.fed_resource_file = None
-            self.resource_file = get_path(self, base)
+        self.resource_file = get_path(self, base)
         self.save()
 
     @property
@@ -3067,10 +3027,8 @@ class ResourceFile(models.Model):
 
         This is the path that should be used as a key to index things such as file type.
         """
-        if self.resource.is_federated:
-            folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
-        else:
-            folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
+
+        folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
         if folder is not None:
             return os.path.join(folder, base)
         else:
@@ -3085,12 +3043,7 @@ class ResourceFile(models.Model):
         """
         folder, base = os.path.split(path)
         self.file_folder = folder  # must precede call to get_path
-        if self.resource.is_federated:
-            self.resource_file = None
-            self.fed_resource_file = get_path(self, base)
-        else:
-            self.resource_file = get_path(self, base)
-            self.fed_resource_file = None
+        self.resource_file = get_path(self, base)
         self.save()
 
     def parse(self):
@@ -3167,72 +3120,9 @@ class ResourceFile(models.Model):
     @classmethod
     def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
-        if resource.resource_federation_path:
-            return ResourceFile.objects.get(object_id=resource.id,
-                                            fed_resource_file=get_resource_file_path(resource,
-                                                                                     file,
-                                                                                     folder))
-        else:
-            return ResourceFile.objects.get(object_id=resource.id,
-                                            resource_file=get_resource_file_path(resource,
-                                                                                 file,
-                                                                                 folder))
-
-    # TODO: move to BaseResource as instance method
-    @classmethod
-    def list_folder(cls, resource, folder, sub_folders=True):
-        """List files (instances of ResourceFile) in a given folder.
-
-        :param resource: resource for which to list the folder
-        :param folder: folder listed as either short_path or fully qualified path
-        :param sub_folders: if true files from sub folders of *folder* will be included in the list
-        """
-        file_folder_to_match = folder
-
-        if not folder:
-            folder = resource.file_path
-        elif not folder.startswith(resource.file_path):
-            folder = os.path.join(resource.file_path, folder)
-        else:
-            file_folder_to_match = folder[len(resource.file_path) + 1:]
-
-        if sub_folders:
-            # append trailing slash to match only this folder
-            if not folder.endswith("/"):
-                folder += "/"
-            if resource.is_federated:
-                return ResourceFile.objects.filter(
-                    object_id=resource.id,
-                    fed_resource_file__startswith=folder)
-            else:
-                return ResourceFile.objects.filter(
-                    object_id=resource.id,
-                    resource_file__startswith=folder)
-        else:
-            return ResourceFile.objects.filter(
-                object_id=resource.id,
-                file_folder=file_folder_to_match)
-
-    # TODO: move to BaseResource as instance method
-    @classmethod
-    def create_folder(cls, resource, folder, migrating_resource=False):
-        """Create a folder for a resource."""
-        # avoid import loop
-        from hs_core.views.utils import create_folder
-        path_is_allowed(folder)
-        # TODO: move code from location used below to here
-        create_folder(resource.short_id, os.path.join('data', 'contents', folder),
-                      migrating_resource=migrating_resource)
-
-    # TODO: move to BaseResource as instance method
-    @classmethod
-    def remove_folder(cls, resource, folder, user):
-        """Remove a folder for a resource."""
-        # avoid import loop
-        from hs_core.views.utils import remove_folder
-        path_is_allowed(folder)
-        # TODO: move code from location used below to here
-        remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
+        resource_file_path = get_resource_file_path(resource, file, folder)
+        return resource.files.get(Q(_fed_resource_file=resource_file_path) | Q(_resource_file=resource_file_path) |
+                                  Q(_linux_resource_file=resource_file_path))
 
     @property
     def has_logical_file(self):
@@ -3347,7 +3237,7 @@ class ResourceFile(models.Model):
         """ Return the irods path for accessing a file, including possible federation information.
             This consists of the resource id, /data/contents/, and the file path.
         """
-
+        # TODO!!!!!!!!!!!
         if self.resource.is_federated:
             return os.path.join(self.resource.resource_federation_path, self.public_path)
         else:
@@ -3383,9 +3273,10 @@ class BaseResource(Page, AbstractResource):
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
 
-    # storage_type = models.IntegerField(choices=StorageCodes.CHOICES,
-    #                                    editable=False,
-    #                                    default=StorageCodes.IRODS)
+    # TODO update default StorageCodes to Linux for Neal
+    storage_type = models.IntegerField(choices=StorageCodes.CHOICES,
+                                       editable=False,
+                                       default=StorageCodes.IRODS)
 
     # This only applies if storage_type == FEDERATED
     # The resource_federation_path is added to record where a HydroShare resource is
@@ -3427,21 +3318,62 @@ class BaseResource(Page, AbstractResource):
 
     def get_storage(self):
         """Return either IrodsStorage or FedStorage."""
-        if self.resource_federation_path:
-            return FedStorage()
-        else:
-            return IrodsStorage()
-        return IrodsStorage()
-        # TODO, clean this up
-        # if self.resource.storage_type == StorageCodes.IRODS:
-        #     return IrodsStorage()
-        # elif self.resource.storage_type == StorageCodes.FEDERATED:
+        # if self.resource_federation_path:
         #     return FedStorage()
-        # elif self.resource.storage_type == StorageCodes.LINUX:
-        #     return LinuxStorage()
         # else:
-        #     raise StorageTypeNotFoundException(
-        #         "unknown storage type {}".format(self.storage_type))
+        #     return IrodsStorage()
+        # TODO, write migration to find federated resources and correc the storage code
+        if self.storage_type == StorageCodes.IRODS:
+            return IrodsStorage()
+        elif self.storage_type == StorageCodes.FEDERATED:
+            return FedStorage()
+        elif self.storage_type == StorageCodes.LINUX:
+            return LinuxStorage()
+        else:
+            raise StorageTypeNotFoundException( "unknown storage type {}".format(self.storage_type))
+
+    def list_folder(self, folder, sub_folders=True):
+        """List files (instances of ResourceFile) in a given folder.
+
+        :param resource: resource for which to list the folder
+        :param folder: folder listed as either short_path or fully qualified path
+        :param sub_folders: if true files from sub folders of *folder* will be included in the list
+        """
+        file_folder_to_match = folder
+
+        if not folder:
+            folder = self.file_path
+        elif not folder.startswith(self.file_path):
+            folder = os.path.join(self.file_path, folder)
+        else:
+            file_folder_to_match = folder[len(self.file_path) + 1:]
+
+        if sub_folders:
+            # append trailing slash to match only this folder TODO!!!!!
+            if not folder.endswith("/"):
+                folder += "/"
+            from django.db.models import Q
+            return self.files.filter(Q(_fed_resource_file__startswith=folder) | Q(_resource_file__startswith=folder) |
+                                     Q(_linux_resource_file__startswith=folder))
+        else:
+            return self.files.filter(file_folder=file_folder_to_match)
+
+    def create_folder(self, folder, migrating_resource=False):
+        """Create a folder for a resource."""
+        # avoid import loop
+        from hs_core.views.utils import create_folder
+        path_is_allowed(folder)
+        # TODO: move code from location used below to here
+        create_folder(self.short_id, os.path.join('data', 'contents', folder),
+                      migrating_resource=migrating_resource)
+
+    def remove_folder(self, folder, user):
+        """Remove a folder for a resource."""
+        # avoid import loop
+        from hs_core.views.utils import remove_folder
+        path_is_allowed(folder)
+        # TODO: move code from location used below to here
+        remove_folder(user, self.short_id, os.path.join('data', 'contents', folder))
 
     @property
     def is_federated(self):
@@ -3457,6 +3389,7 @@ class BaseResource(Page, AbstractResource):
         Note that this folder doesn't directly contain the resource files;
         They are contained in ./data/contents/* instead.
         """
+        # TODO!!!!!
         if self.is_federated:
             return os.path.join(self.resource_federation_path, self.short_id)
         else:
@@ -3494,6 +3427,7 @@ class BaseResource(Page, AbstractResource):
         """
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
         bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
+        # TODO!!!!!!
         if self.is_federated:
             return os.path.join(self.resource_federation_path, bagit_path,
                                 self.short_id + '.' + bagit_postfix)

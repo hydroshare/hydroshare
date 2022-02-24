@@ -53,7 +53,7 @@ class Command(BaseCommand):
             self.stdout.flush()
         else:
             # check for empty folder
-            directory_in_irods = model_res.get_irods_path(full_folder_path_to_delete)
+            directory_in_irods = model_res.get_path(full_folder_path_to_delete)
             store = istorage.listdir(directory_in_irods)
             # store[1] is a list of files in the directory
             if len(store[1]) > 0:

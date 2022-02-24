@@ -379,7 +379,7 @@ def create_bag_by_irods(resource_id, create_zip=True):
         res.setAVU("bag_modified", False)
 
     if create_zip:
-        irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
+        irods_bagit_input_path = res.get_path(resource_id, prepend_short_id=False)
 
         # only proceed when the resource is not deleted potentially by another request
         # when being downloaded

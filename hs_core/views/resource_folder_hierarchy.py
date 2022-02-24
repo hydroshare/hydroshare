@@ -3,6 +3,7 @@ import logging
 import os
 
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 
 from rest_framework.decorators import api_view
@@ -63,7 +64,7 @@ def data_store_structure(request):
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_storage()
-    directory_in_irods = resource.get_irods_path(store_path)
+    directory_in_irods = resource.get_path(store_path)
 
     try:
         store = istorage.listdir(directory_in_irods)
@@ -86,7 +87,7 @@ def data_store_structure(request):
         folder_aggregation_id = ''
         folder_aggregation_type_to_set = ''
         if resource.resource_type == "CompositeResource":
-            dir_path = resource.get_irods_path(d_store_path)
+            dir_path = resource.get_path(d_store_path)
             # find if this folder *dir_path* represents (contains) an aggregation object
             aggregation_object = resource.get_folder_aggregation_object(dir_path)
             # folder aggregation type is not relevant for single file aggregation types - which
@@ -126,7 +127,7 @@ def data_store_structure(request):
     is_federated = resource.is_federated
     for index, fname in enumerate(store[1]):  # files
         f_store_path = os.path.join(store_path, fname)
-        file_in_irods = resource.get_irods_path(f_store_path)
+        file_path = resource.get_path(f_store_path)
         # size = store[2][index]
         # TODO get the size
         size = 1
@@ -135,12 +136,8 @@ def data_store_structure(request):
         if idx >= 0:
             mtype = mtype[idx + 1:]
 
-        if is_federated:
-            f = ResourceFile.objects.filter(object_id=resource.id,
-                                            fed_resource_file=file_in_irods).first()
-        else:
-            f = ResourceFile.objects.filter(object_id=resource.id,
-                                            resource_file=file_in_irods).first()
+        f = resource.files.filter(Q(_fed_resource_file=file_path) | Q(_resource_file=file_path) |
+                                  Q(_linux_resource_file=file_path)).first()
 
         if not f:
             # skip metadata files

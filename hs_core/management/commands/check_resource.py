@@ -43,7 +43,7 @@ class Command(BaseCommand):
             dest='storage',
             help='limit to specific storage medium (local, user, federated)'
         )
-
+# TODO!!~!!! resource.storage_type fix
     def handle(self, *args, **options):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:

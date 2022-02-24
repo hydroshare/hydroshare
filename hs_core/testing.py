@@ -191,7 +191,7 @@ class TestCaseCommonUtilities(object):
                                       'data/contents/' + file_name_list[1],
                                       'data/contents/sub_test_dir/' + file_name_list[1])
         updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=res.id):
+        for rf in res.files.all():
             updated_res_file_names.append(rf.short_path)
 
         self.assertIn('new_' + file_name_list[2], updated_res_file_names,
@@ -264,7 +264,7 @@ class TestCaseCommonUtilities(object):
         # Now resource should contain three files: file1.txt, file2.txt, and file3_new.txt
         self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
         updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=res.id):
+        for rf in res.files.all():
             updated_res_file_names.append(rf.short_path)
         self.assertNotIn('sub_test_dir.zip', updated_res_file_names,
                          msg="resource still contains the zip file after unzipping")
@@ -280,7 +280,7 @@ class TestCaseCommonUtilities(object):
                                       'data/contents/sub_test_dir/sub_test_dir',
                                       'data/contents/sub_dir')
         updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=res.id):
+        for rf in res.files.all():
             updated_res_file_names.append(rf.short_path)
 
         self.assertNotIn('sub_test_dir/sub_test_dir/' + file_name_list[0], updated_res_file_names,
@@ -302,7 +302,7 @@ class TestCaseCommonUtilities(object):
         # Now resource only contains one file
         self.assertEqual(res.files.all().count(), 1, msg="resource file count didn't match")
         updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=res.id):
+        for rf in res.files.all():
             updated_res_file_names.append(rf.short_path)
 
         self.assertEqual(len(updated_res_file_names), 1)

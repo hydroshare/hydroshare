@@ -120,7 +120,7 @@ def res_has_web_reference(res):
     if res.resource_type != "CompositeResource":
         return False
 
-    for f in ResourceFile.objects.filter(object_id=res.id):
+    for f in res.files.all():
         if f.has_logical_file:
             if 'url' in f.logical_file.extra_data:
                 return True
@@ -193,7 +193,7 @@ def get_resource_file(pk, filename):
     filename = filename.strip("/")
     if not filename.startswith("data/contents/"):
         filename = os.path.join("data", "contents", filename)
-    for f in ResourceFile.objects.filter(object_id=resource.id):
+    for f in resource.files.all():
         if f.resource_file.name.endswith(filename):
             return f
     raise ObjectDoesNotExist(filename)
@@ -222,7 +222,7 @@ def update_resource_file(pk, filename, f):
     """
     # TODO: does not update metadata; does not check resource state
     resource = utils.get_resource_by_shortkey(pk)
-    for rf in ResourceFile.objects.filter(object_id=resource.id):
+    for rf in resource.files.all():
         if rf.short_path == filename:
             if rf.resource_file:
                 # TODO: should use delete_resource_file
@@ -904,7 +904,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             f = ResourceFile.objects.get(id=filename_or_id)
         else:
             folder, base = os.path.split(filename_or_id)
-            f = ResourceFile.get(resource=resource, file=base, folder=folder)
+            f = resource.files.all().get(file=base, folder=folder)
     except ObjectDoesNotExist:
         raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
                                             resource.short_id, filename_or_id))

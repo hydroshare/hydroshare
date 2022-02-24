@@ -99,7 +99,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
 
     istorage = res.get_storage()
 
-    irods_path = res.get_irods_path(path, prepend_short_id=False)
+    irods_path = res.get_path(path, prepend_short_id=False)
 
     # in many cases, path and output_path are the same.
     output_path = path
@@ -125,15 +125,15 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
 
-            irods_path = res.get_irods_path(path, prepend_short_id=False)
-            irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
+            irods_path = res.get_path(path, prepend_short_id=False)
+            irods_output_path = res.get_path(output_path, prepend_short_id=False)
 
         store_path = '/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
         if res.is_folder(store_path):  # automatically zip folders
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-            irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
+            irods_output_path = res.get_path(output_path, prepend_short_id=False)
 
             if not settings.DEBUG:
                 logger.debug("automatically zipping folder {} to {}".format(path, output_path))
@@ -145,7 +145,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             if is_zip_request:
                 daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
                 output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-                irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
+                irods_output_path = res.get_path(output_path, prepend_short_id=False)
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped

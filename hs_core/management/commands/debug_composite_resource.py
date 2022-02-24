@@ -33,7 +33,7 @@ def debug_resource(short_id):
         '''
         storage = resource.get_storage()
         single_file_aggregation has been removed
-        for f in ResourceFile.objects.filter(object_id=resource.id):
+        for f in resource.files.all():
             if f.has_logical_file and f.logical_file.is_single_file_aggregation:
                 print("  {} is single file aggregation {} "
                       .format(f.short_path,
