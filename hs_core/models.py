@@ -2799,6 +2799,12 @@ class ResourceFile(models.Model):
 
         return self._res_file
 
+    @resource_file.setter
+    def resource_file(self, value):
+        # TODO make this compatible with different types
+        self._resource_file = value
+        self._res_file = self._resource_file
+
     @property
     def fed_resource_file(self):
         return self._fed_resource_file
