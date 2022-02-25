@@ -6,44 +6,39 @@ from hs_tools_resource.app_keys import tool_app_key
 
 
 def resource_level_tool_urls(resource_obj, request_obj):
-    res_type_str = resource_obj.resource_type
-
     tool_list = []
     tool_res_id_list = []
     resource_level_app_counter = 0
+    if _check_user_can_view_resource(request_obj, resource_obj):
+        # associate resources with app tools using extended metadata name-value pair with 'appkey' key
+        filterd_res_obj = BaseResource.objects.exclude(resource_type='ToolResource').filter(
+            short_id=resource_obj.short_id, extra_metadata__has_key=tool_app_key).first()
+        if filterd_res_obj:
+            # check appkey matching with web app tool resources
+            appkey_dict = {tool_app_key: filterd_res_obj.extra_metadata[tool_app_key]}
+            for tool_res_obj in ToolResource.objects.filter(extra_metadata__contains=appkey_dict):
+                # tool_res_obj has the same appkey-value pair so needs to associate with the resource
+                if _check_user_can_view_app(request_obj, tool_res_obj) and \
+                        _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj):
+                    tl = _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=True)
+                    if tl:
+                        tool_list.append(tl)
+                        tool_res_id_list.append(tl['res_id'])
+                        if tl['url']:
+                            resource_level_app_counter += 1
 
-    # associate resources with app tools using extended metadata name-value pair with 'appkey' key
-    filterd_res_obj = BaseResource.objects.exclude(resource_type='ToolResource').filter(
-        short_id=resource_obj.short_id, extra_metadata__has_key=tool_app_key).first()
-    if filterd_res_obj:
-        # check appkey matching with web app tool resources
-        appkey_dict = {tool_app_key: filterd_res_obj.extra_metadata[tool_app_key]}
-        for tool_res_obj in ToolResource.objects.filter(extra_metadata__contains=appkey_dict):
-            # tool_res_obj has the same appkey-value pair so needs to associate with the resource
-            if _check_user_can_view_resource(request_obj, resource_obj) and \
-                    _check_user_can_view_app(request_obj, tool_res_obj) and \
-                    _check_app_supports_resource_sharing_status(resource_obj,
-                                                                tool_res_obj):
-                tl = _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=True)
-                if tl:
-                    tool_list.append(tl)
-                    tool_res_id_list.append(tl['res_id'])
-                    if tl['url']:
-                        resource_level_app_counter += 1
+        for choice_obj in SupportedResTypeChoices.objects.filter(description__iexact=resource_obj.resource_type):
+            for supported_res_types_obj in choice_obj.associated_with.all():
+                tool_res_obj = ToolResource.objects.get(object_id=supported_res_types_obj.object_id)
+                if tool_res_obj.short_id not in tool_res_id_list and \
+                        _check_user_can_view_app(request_obj, tool_res_obj) and \
+                        _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj):
 
-    for choice_obj in SupportedResTypeChoices.objects.filter(description__iexact=res_type_str):
-        for supported_res_types_obj in choice_obj.associated_with.all():
-            tool_res_obj = ToolResource.objects.get(object_id=supported_res_types_obj.object_id)
-            if tool_res_obj.short_id not in tool_res_id_list and \
-                    _check_user_can_view_resource(request_obj, resource_obj) and \
-                    _check_user_can_view_app(request_obj, tool_res_obj) and \
-                    _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj):
-
-                tl = _get_app_tool_info(request_obj, resource_obj, tool_res_obj)
-                if tl:
-                    tool_list.append(tl)
-                    if tl['url']:
-                        resource_level_app_counter += 1
+                    tl = _get_app_tool_info(request_obj, resource_obj, tool_res_obj)
+                    if tl:
+                        tool_list.append(tl)
+                        if tl['url']:
+                            resource_level_app_counter += 1
 
     if len(tool_list) > 0:
         return {"tool_list": tool_list,
@@ -75,8 +70,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     tool_icon_url = tool_res_obj.metadata.app_icon.data_url \
         if tool_res_obj.metadata.app_icon else "raise-img-error"
 
-    url_key_values = get_app_dict(request_obj.user, resource_obj, tool_res_obj.extra_metadata)
-
+    url_key_values = get_app_dict(request_obj.user, resource_obj, tool_res_obj)
     tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
     tool_url_agg_new = parse_app_url_template(tool_url_aggregation, url_key_values)
     tool_url_file_new = parse_app_url_template(tool_url_file, url_key_values)
@@ -85,16 +79,15 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
     agg_types = ""
     file_extensions = ""
-    if tool_res_obj.metadata._supported_agg_types.first():
-        agg_types = tool_res_obj.metadata._supported_agg_types.first() \
-            .get_supported_agg_types_str()
+    tool_appkey = ""
+    if tool_res_obj.metadata.supported_aggregation_types:
+        agg_types = tool_res_obj.metadata.supported_aggregation_types.get_supported_agg_types_str()
+        tool_appkey = tool_res_obj.extra_metadata.get(tool_app_key, '')
     if tool_res_obj.metadata.supported_file_extensions:
         file_extensions = tool_res_obj.metadata.supported_file_extensions.value
 
     if is_open_with_app or is_approved_app:
-        if (tool_url_resource_new is not None) or \
-                (tool_url_agg_new is not None) or \
-                (tool_url_file_new is not None):
+        if any([tool_url_resource_new is not None, tool_url_agg_new is not None, tool_url_file_new is not None]):
             tl = {'title': str(tool_res_obj.metadata.title.value),
                   'res_id': tool_res_obj.short_id,
                   'icon_url': tool_icon_url,
@@ -102,7 +95,8 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
                   'url_aggregation': tool_url_agg_new,
                   'url_file': tool_url_file_new,
                   'agg_types': agg_types,
-                  'file_extensions': file_extensions
+                  'tool_appkey': tool_appkey,
+                  'file_extensions': file_extensions,
                   }
 
             return tl
@@ -110,7 +104,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         return {}
 
 
-def get_app_dict(user, resource, default_resource_term_dict):
+def get_app_dict(user, resource, web_app_resource):
     hs_term_dict_user = {}
     hs_term_dict_user["HS_USR_NAME"] = user.username if user.is_authenticated() else "anonymous"
     hs_term_dict_file = {}
@@ -119,6 +113,7 @@ def get_app_dict(user, resource, default_resource_term_dict):
     hs_term_dict_file["HS_AGG_PATH"] = "HS_JS_AGG_KEY"
     hs_term_dict_file["HS_FILE_PATH"] = "HS_JS_FILE_KEY"
     hs_term_dict_file["HS_MAIN_FILE"] = "HS_JS_MAIN_FILE_KEY"
+    default_resource_term_dict = web_app_resource.extra_metadata
     default_resource_term_dict.update(resource.get_hs_term_dict())
     return [default_resource_term_dict, hs_term_dict_user, hs_term_dict_file]
 

@@ -21,7 +21,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
-from hs_core.hydroshare import utils, create_empty_resource
+from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
 from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref
 from hs_core.task_utils import get_or_create_task_notification
@@ -572,6 +572,18 @@ def delete_resource_task(resource_id, request_username=None):
             if not obsolete_res.raccess.published:
                 obsolete_res.raccess.immutable = False
                 obsolete_res.raccess.save()
+
+    for res_in_col in res.resources.all():
+        # res being deleted is a collection resource - delete isPartOf relation of all resources that are part of the
+        # collection
+        if res_in_col.metadata.relations.filter(type='isPartOf', value__endswith=res.short_id).exists():
+            res_in_col.metadata.relations.filter(type='isPartOf', value__endswith=res.short_id).delete()
+            set_dirty_bag_flag(res_in_col)
+
+    for collection_res in resource_related_collections:
+        # res being deleted is part of one or more collections - delete hasPart relation for all those collections
+        collection_res.metadata.relations.filter(type='hasPart', value__endswith=res.short_id).delete()
+        set_dirty_bag_flag(collection_res)
 
     res.delete()
     if request_username:
