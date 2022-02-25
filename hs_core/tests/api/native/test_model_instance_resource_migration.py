@@ -8,7 +8,6 @@ from django.core.management import call_command
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource
-from hs_core.models import ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_file_types.models import ModelInstanceLogicalFile, ModelProgramLogicalFile
 from hs_model_program.models import ModelProgramResource

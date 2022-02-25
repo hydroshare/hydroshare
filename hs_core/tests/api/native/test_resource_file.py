@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 
-from hs_core.models import ResourceFile, get_path
+from hs_core.models import get_path
 
 
 class TestResourceFileAPI(MockIRODSTestCaseMixin,

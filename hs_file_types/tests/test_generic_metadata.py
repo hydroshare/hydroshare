@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
-from hs_core.models import Coverage, ResourceFile
+from hs_core.models import Coverage
 from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
 from .utils import CompositeResourceTestMixin
 from hs_file_types.models import GenericLogicalFile, GenericFileMetaData

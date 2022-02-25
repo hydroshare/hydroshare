@@ -7,7 +7,6 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from hs_core import hydroshare
-from hs_core.models import ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
 
 from hs_file_types.views import set_file_type, add_metadata_element, update_metadata_element, \

@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from rest_framework.exceptions import ValidationError as RF_ValidationError
 
-from hs_core.hydroshare import add_file_to_resource, ResourceFile
+from hs_core.hydroshare import add_file_to_resource
 from hs_core.views.utils import move_or_rename_file_or_folder, delete_resource_file
 from hs_file_types.models import ModelProgramLogicalFile, GenericLogicalFile, ModelInstanceLogicalFile, \
     ModelProgramResourceFileType

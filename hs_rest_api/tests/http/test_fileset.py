@@ -3,7 +3,6 @@ import tempfile
 from django.core.urlresolvers import reverse
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
-from hs_core.models import ResourceFile
 from hs_core.tests.api.rest.base import HSRESTTestCase
 from hs_file_types.models import FileSetLogicalFile
 

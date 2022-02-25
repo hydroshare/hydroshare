@@ -22,7 +22,7 @@ from requests import post
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.hydroshare import get_resource_by_shortkey
-from hs_core.models import BaseResource, ResourceFile
+from hs_core.models import BaseResource
 from hs_core.views.utils import link_irods_file_to_django
 from hs_file_types.utils import set_logical_file_type, get_logical_file_type
 

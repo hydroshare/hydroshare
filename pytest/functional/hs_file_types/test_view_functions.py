@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from django.test import RequestFactory
 from rest_framework import status
 
-from hs_core.hydroshare import add_file_to_resource, ResourceFile, add_resource_files
+from hs_core.hydroshare import add_file_to_resource, add_resource_files
 from hs_file_types.models import (
     ModelProgramLogicalFile,
     ModelInstanceLogicalFile,

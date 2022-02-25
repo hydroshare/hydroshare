@@ -8,8 +8,6 @@ from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 from hs_core.management.utils import check_irods_files
 
-from hs_core.models import ResourceFile
-
 
 class TestResourceFileAPI(MockIRODSTestCaseMixin,
                           TestCaseCommonUtilities, TransactionTestCase):

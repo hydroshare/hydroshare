@@ -4,7 +4,6 @@ import os
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from hs_core.models import ResourceFile
 from .base import AbstractLogicalFile, FileTypeContext, NestedLogicalFileMixin
 from .generic import GenericFileMetaDataMixin
 

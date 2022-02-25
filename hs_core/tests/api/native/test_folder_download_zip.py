@@ -7,7 +7,6 @@ from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.models import GenericResource
 from hs_core.tasks import create_temp_zip
 from django_irods.storage import IrodsStorage
-from hs_core.models import ResourceFile
 
 
 class TestFolderDownloadZip(TestCase):

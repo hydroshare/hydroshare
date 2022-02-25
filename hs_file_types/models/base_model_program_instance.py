@@ -11,7 +11,6 @@ from django.db import models
 from foresite import utils, Aggregation, URIRef, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace
 
-from hs_core.models import ResourceFile
 from hs_core.signals import post_remove_file_aggregation
 from hs_file_types.models import AbstractLogicalFile
 from hs_file_types.models.base import FileTypeContext, SCHEMA_JSON_FILE_ENDSWITH

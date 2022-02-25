@@ -20,7 +20,6 @@ from dominate.tags import div, legend, form, button
 
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
-from hs_core.models import ResourceFile
 from hs_core.signals import post_add_raster_aggregation
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \

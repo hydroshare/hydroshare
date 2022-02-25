@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
-from hs_core.models import Coverage, ResourceFile
+from hs_core.models import Coverage
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_app_netCDF.models import OriginalCoverage, Variable

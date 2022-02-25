@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import UploadedFile
 
 from hs_access_control.models import UserAccess
 from hs_core import hydroshare
-from hs_core.hydroshare import add_file_to_resource, ResourceFile
+from hs_core.hydroshare import add_file_to_resource
 from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFile
 from hs_labels.models import UserLabels
 
