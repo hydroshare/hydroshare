@@ -3276,7 +3276,7 @@ class BaseResource(Page, AbstractResource):
     # storage_type = models.IntegerField(choices=StorageCodes.CHOICES,
     #                                    editable=False,
     #                                    default=StorageCodes.IRODS)
-    storage_type = StorageCodes.LINUX
+    storage_type = StorageCodes.IRODS
 
     # This only applies if storage_type == FEDERATED
     # The resource_federation_path is added to record where a HydroShare resource is
