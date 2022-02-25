@@ -47,7 +47,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
 
     # create a new folder for model aggregation to which all files and folders will be moved
     new_folder = _get_model_aggregation_folder_name(comp_res, aggr_name)
-    ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
+    comp_res.create_folder(new_folder, migrating_resource=True)
     model_aggr.folder = new_folder
     model_aggr.dataset_name = new_folder
     model_aggr.save()
@@ -93,7 +93,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
                     command.stdout.flush()
 
                     # Note: some of the files returned by list_folder() may not exist in iRODS
-                    res_file_objs = ResourceFile.list_folder(comp_res, folder_to_move)
+                    res_file_objs = comp_res.list_folder(folder_to_move)
                     tgt_short_path = os.path.join('data', 'contents', new_folder, folder_to_move)
                     src_short_path = os.path.join('data', 'contents', folder_to_move)
                     for fobj in res_file_objs:

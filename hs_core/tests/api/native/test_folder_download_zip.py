@@ -29,7 +29,7 @@ class TestFolderDownloadZip(TestCase):
                                    title='Test Resource',
                                    metadata=[])
 
-        ResourceFile.create_folder(self.res, 'foo')
+        self.res.create_folder('foo')
 
         # create files
         self.n1 = "test1.txt"

@@ -290,7 +290,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, TimeSeriesLogicalFile.objects.count())
         if new_folder:
             # create a folder
-            hydroshare.ResourceFile.create_folder(self.composite_resource, folder=new_folder)
+            self.composite_resource.create_folder(folder=new_folder)
         # upload the csv file to the folder (new-folder)
         csv_file_name = "ODM2_One_Site_One_Series_Test.csv"
         csv_file = open(self.test_file_path.format(csv_file_name), 'rb')

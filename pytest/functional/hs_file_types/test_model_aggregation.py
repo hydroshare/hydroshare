@@ -58,7 +58,7 @@ def test_create_aggregation_from_file_2(composite_resource, aggr_cls, mock_irods
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     new_folder = 'mp_folder'
-    ResourceFile.create_folder(res, new_folder)
+    res.create_folder(new_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -90,7 +90,7 @@ def test_create_aggregation_from_file_3(composite_resource, aggr_cls, mock_irods
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     fs_folder = 'fs_folder'
-    ResourceFile.create_folder(res, fs_folder)
+    res.create_folder(fs_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -125,7 +125,7 @@ def test_create_aggregation_from_folder(composite_resource, aggr_cls, mock_irods
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     new_folder = 'mp_folder'
-    ResourceFile.create_folder(res, new_folder)
+    res.create_folder(new_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -161,7 +161,7 @@ def test_create_aggregation_from_folder_inside_fileset(composite_resource, aggr_
     # create fileset aggregation
     file_path = 'pytest/assets/logan.vrt'
     fs_folder = 'fileset_folder'
-    ResourceFile.create_folder(res, fs_folder)
+    res.create_folder(fs_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -175,7 +175,7 @@ def test_create_aggregation_from_folder_inside_fileset(composite_resource, aggr_
     file_path = 'pytest/assets/generic_file.txt'
     mp_folder = 'mp_folder'
     mp_folder_path = '{0}/{1}'.format(fs_folder, mp_folder)
-    ResourceFile.create_folder(res, mp_folder_path)
+    res.create_folder(mp_folder_path)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -209,7 +209,7 @@ def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, 
     # create fileset aggregation
     file_path = 'pytest/assets/logan.vrt'
     new_folder = 'fileset_folder'
-    ResourceFile.create_folder(res, new_folder)
+    res.create_folder(new_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -221,7 +221,7 @@ def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, 
     assert fs_aggregation.files.count() == 1
     # create model program/instance aggregation
     if aggr_folder:
-        ResourceFile.create_folder(res, aggr_folder)
+        res.create_folder(aggr_folder)
 
     generic_file_name = 'generic_file.txt'
     file_path = 'pytest/assets/{}'.format(generic_file_name)
@@ -267,7 +267,7 @@ def test_upload_file_to_aggregation_folder(composite_resource, aggr_cls, mock_ir
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     new_folder = 'mp_or_mi_folder'
-    ResourceFile.create_folder(res, new_folder)
+    res.create_folder(new_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -304,7 +304,7 @@ def test_upload_file_to_aggregation_sub_folder(composite_resource, aggr_cls, moc
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     new_folder = 'mp_mi_folder'
-    ResourceFile.create_folder(res, new_folder)
+    res.create_folder(new_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -320,7 +320,7 @@ def test_upload_file_to_aggregation_sub_folder(composite_resource, aggr_cls, moc
     # add another file to the model program/instance aggregation sub folder
     file_path = 'pytest/assets/logan.vrt'
     new_sub_folder = '{}/mp_mi_sub_folder'.format(new_folder)
-    ResourceFile.create_folder(res, new_sub_folder)
+    res.create_folder(new_sub_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
     add_file_to_resource(res, file_to_upload, folder=new_sub_folder, check_target_folder=True)
@@ -342,7 +342,7 @@ def test_create_aggregation_from_folder_failure_1(composite_resource, aggr_cls, 
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     new_folder = 'mp_folder'
-    ResourceFile.create_folder(res, new_folder)
+    res.create_folder(new_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -374,8 +374,8 @@ def test_create_aggregation_from_folder_failure_2(composite_resource, aggr_cls, 
     file_path = 'pytest/assets/generic_file.txt'
     parent_mp_mi_folder = 'mp_mi_folder'
     child_fs_folder = '{}/fs_folder'.format(parent_mp_mi_folder)
-    ResourceFile.create_folder(res, parent_mp_mi_folder)
-    ResourceFile.create_folder(res, child_fs_folder)
+    res.create_folder(parent_mp_mi_folder)
+    res.create_folder(child_fs_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -412,8 +412,8 @@ def test_create_aggregation_from_folder_failure_3(composite_resource, aggr_cls, 
     file_path = 'pytest/assets/generic_file.txt'
     parent_mp_mi_folder = 'mp_mi_folder'
     child_mp_mi_folder = '{}/child_folder'.format(parent_mp_mi_folder)
-    ResourceFile.create_folder(res, parent_mp_mi_folder)
-    ResourceFile.create_folder(res, child_mp_mi_folder)
+    res.create_folder(parent_mp_mi_folder)
+    res.create_folder(child_mp_mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -449,8 +449,8 @@ def test_create_fileset_from_folder_failure(composite_resource, aggr_cls, mock_i
     file_path = 'pytest/assets/generic_file.txt'
     parent_mp_mi_folder = 'mp_mi_folder'
     child_mp_mi_folder = '{}/child_folder'.format(parent_mp_mi_folder)
-    ResourceFile.create_folder(res, parent_mp_mi_folder)
-    ResourceFile.create_folder(res, child_mp_mi_folder)
+    res.create_folder(parent_mp_mi_folder)
+    res.create_folder(child_mp_mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -518,7 +518,7 @@ def test_delete_aggregation_res_file_2(composite_resource, aggr_cls, mock_irods)
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     new_folder = 'mp_mi_folder'
-    ResourceFile.create_folder(res, new_folder)
+    res.create_folder(new_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -556,7 +556,7 @@ def test_move_model_aggr_into_model_aggr_folder_failure(composite_resource, aggr
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     mp_mi_folder = 'mp_mi_folder'
-    ResourceFile.create_folder(res, mp_mi_folder)
+    res.create_folder(mp_mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -578,7 +578,7 @@ def test_move_model_aggr_into_model_aggr_folder_failure(composite_resource, aggr
         folder = ''
     else:
         folder = 'mp_mi_folder_2'
-        ResourceFile.create_folder(res, folder)
+        res.create_folder(folder)
 
     file_path = 'pytest/assets/{}'.format(mp_mi_file_name)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
@@ -617,7 +617,7 @@ def test_move_fileset_into_model_aggr_folder_failure(composite_resource, aggr_cl
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     fs_folder = 'fs_folder'
-    ResourceFile.create_folder(res, fs_folder)
+    res.create_folder(fs_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
     add_file_to_resource(res, file_to_upload, folder=fs_folder, check_target_folder=True)
@@ -627,7 +627,7 @@ def test_move_fileset_into_model_aggr_folder_failure(composite_resource, aggr_cl
 
     # create model program/instance aggregation from a folder
     mp_mi_folder = 'mp_mi_folder'
-    ResourceFile.create_folder(res, mp_mi_folder)
+    res.create_folder(mp_mi_folder)
     mp_mi_file_name = 'logan.vrt'
     file_path = 'pytest/assets/{}'.format(mp_mi_file_name)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
@@ -661,7 +661,7 @@ def test_move_model_aggregation_file_1(composite_resource, aggr_cls, mock_irods)
     generic_file_name = 'generic_file.txt'
     file_path = 'pytest/assets/{}'.format(generic_file_name)
     mp_mi_folder = 'mp_mi_folder'
-    ResourceFile.create_folder(res, mp_mi_folder)
+    res.create_folder(mp_mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -686,7 +686,7 @@ def test_move_model_aggregation_file_1(composite_resource, aggr_cls, mock_irods)
 
     # moving the generic file into another folder
     another_folder = 'another_folder'
-    ResourceFile.create_folder(res, another_folder)
+    res.create_folder(another_folder)
     src_path = 'data/contents/{}/{}'.format(mp_mi_folder, generic_file_name)
     tgt_path = 'data/contents/{}/{}'.format(another_folder, generic_file_name)
     move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
@@ -714,7 +714,7 @@ def test_move_model_aggregation_file_2(composite_resource, aggr_cls, mock_irods)
     generic_file_name = 'generic_file.txt'
     file_path = 'pytest/assets/{}'.format(generic_file_name)
     parent_mp_mi_folder = 'parent_mp_mi_folder'
-    ResourceFile.create_folder(res, parent_mp_mi_folder)
+    res.create_folder(parent_mp_mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -740,7 +740,7 @@ def test_move_model_aggregation_file_2(composite_resource, aggr_cls, mock_irods)
 
     # moving the generic file to into the child folder
     child_mp_mi_folder = '{}/child_mp_mi_folder'.format(parent_mp_mi_folder)
-    ResourceFile.create_folder(res, child_mp_mi_folder)
+    res.create_folder(child_mp_mi_folder)
     src_path = 'data/contents/{}/{}'.format(parent_mp_mi_folder, generic_file_name)
     tgt_path = 'data/contents/{}/{}'.format(child_mp_mi_folder, generic_file_name)
     move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
@@ -766,7 +766,7 @@ def test_rename_model_aggregation_folder(composite_resource, aggr_cls, mock_irod
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     mp_mi_folder = 'mp_mi_folder'
-    ResourceFile.create_folder(res, mp_mi_folder)
+    res.create_folder(mp_mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -799,7 +799,7 @@ def test_delete_model_aggregation_folder(composite_resource, aggr_cls, mock_irod
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     mp_mi_folder = 'mp_mi_folder'
-    ResourceFile.create_folder(res, mp_mi_folder)
+    res.create_folder(mp_mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
     add_file_to_resource(res, file_to_upload, folder=mp_mi_folder, check_target_folder=True)
     file_path = 'pytest/assets/logan.vrt'
@@ -828,7 +828,7 @@ def test_resource_copy(composite_resource, mock_irods):
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     mp_mi_folder = 'mp_mi_folder'
-    ResourceFile.create_folder(res, mp_mi_folder)
+    res.create_folder(mp_mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
     mi_res_file = add_file_to_resource(res, file_to_upload, folder=mp_mi_folder, check_target_folder=True)
     file_path = 'pytest/assets/logan.vrt'
@@ -887,8 +887,8 @@ def test_resource_copy_with_aggregations_with_no_files(composite_resource, mock_
     file_path = 'pytest/assets/generic_file.txt'
     mi_folder = 'mi_folder'
     mp_folder = 'mp_folder'
-    ResourceFile.create_folder(res, mi_folder)
-    ResourceFile.create_folder(res, mp_folder)
+    res.create_folder(mi_folder)
+    res.create_folder(mp_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
     add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
     file_path = 'pytest/assets/logan.vrt'
@@ -961,7 +961,7 @@ def test_resource_copy_after_aggr_delete(composite_resource, aggr_to_delete, moc
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     mp_mi_folder = 'mp_mi_folder'
-    ResourceFile.create_folder(res, mp_mi_folder)
+    res.create_folder(mp_mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
     mi_res_file = add_file_to_resource(res, file_to_upload, folder=mp_mi_folder, check_target_folder=True)
     file_path = 'pytest/assets/logan.vrt'

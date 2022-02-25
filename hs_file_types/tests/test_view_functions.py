@@ -97,7 +97,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.create_composite_resource()
         # create a folder to place the raster file
         new_folder = 'raster_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the tif file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
 
@@ -164,7 +164,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.create_composite_resource()
         # create a folder to place the nc file
         new_folder = 'netcdf_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the tif file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
 
@@ -231,7 +231,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.create_composite_resource()
         # create a folder to place the nc file
         new_folder = 'timeseries_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the tif file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
 
@@ -266,7 +266,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.create_composite_resource()
         # create a folder and put a file in that folder
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the text file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
 
@@ -300,7 +300,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.create_composite_resource()
         new_folder = 'my_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -348,7 +348,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.create_composite_resource()
         # new_folder = 'my_folder'
-        # ResourceFile.create_folder(self.composite_resource, new_folder)
+        # self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -392,8 +392,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.create_composite_resource()
         new_folder = 'my_folder'
         tgt_folder = 'moved_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
-        ResourceFile.create_folder(self.composite_resource, tgt_folder)
+        self.composite_resource.create_folder(new_folder)
+        self.composite_resource.create_folder(tgt_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -442,8 +442,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.create_composite_resource()
         new_folder = 'my_folder'
         tgt_folder = 'my_folder/moved_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
-        ResourceFile.create_folder(self.composite_resource, tgt_folder)
+        self.composite_resource.create_folder(new_folder)
+        self.composite_resource.create_folder(tgt_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -492,8 +492,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.create_composite_resource()
         new_folder = ''
         tgt_folder = 'moved_folder'
-        # ResourceFile.create_folder(self.composite_resource, new_folder)
-        ResourceFile.create_folder(self.composite_resource, tgt_folder)
+        # self.composite_resource.create_folder(new_folder)
+        self.composite_resource.create_folder(tgt_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -541,8 +541,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.create_composite_resource()
         new_folder = 'new_folder'
-        # ResourceFile.create_folder(self.composite_resource, new_folder)
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # self.composite_resource.create_folder(new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -641,7 +641,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.create_composite_resource()
         # create a folder and put a file in that folder
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the text file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
 
@@ -709,7 +709,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the text file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
 
@@ -991,7 +991,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the text file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
 
@@ -1605,7 +1605,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the text file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
 

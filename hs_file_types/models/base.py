@@ -1143,8 +1143,7 @@ class AbstractLogicalFile(models.Model):
         :param  folder: folder from which all files need to be made part of this aggregation
         """
 
-        res_files = ResourceFile.list_folder(resource=resource, folder=folder,
-                                             sub_folders=False)
+        res_files = resource.list_folder(folder=folder, sub_folders=False)
 
         for res_file in res_files:
             self.add_resource_file(res_file)

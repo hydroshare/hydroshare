@@ -436,8 +436,7 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
     file_name_part, ext = os.path.splitext(os.path.basename(raster_file))
     ext = ext.lower()
     if ext == '.tif' or ext == '.tiff':
-        res_files = ResourceFile.list_folder(resource=resource, folder=raster_folder,
-                                             sub_folders=False)
+        res_files = resource.list_folder(folder=raster_folder, sub_folders=False)
 
         uploaded_vrt = None
         if resource.resource_type == "RasterResource":

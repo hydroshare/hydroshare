@@ -498,7 +498,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         if parent_aggregation is not None:
             if parent_aggregation.is_fileset:
                 # check that all resource files under the target folder 'dir_path' are associated with fileset only
-                files_in_path = ResourceFile.list_folder(resource, folder=irods_path, sub_folders=True)
+                files_in_path = resource.list_folder(folder=irods_path, sub_folders=True)
                 # if all the resource files are associated with fileset then we can set the folder to model program
                 # or model instance aggregation
                 if files_in_path:
@@ -510,7 +510,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         else:
             # none of the parent folders represents an aggregation
             # check the files in the target path
-            files_in_path = ResourceFile.list_folder(resource, folder=irods_path, sub_folders=True)
+            files_in_path = resource.list_folder(folder=irods_path, sub_folders=True)
 
             if files_in_path:
                 # if none of the resource files in the target path has logical file then we can set the folder

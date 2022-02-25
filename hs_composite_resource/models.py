@@ -532,7 +532,7 @@ class CompositeResource(BaseResource):
         if not full_path.startswith(self.file_path):
             full_path = os.path.join(self.file_path, full_path)
         # get all resource files at full_path and its sub-folders
-        res_file_objects = ResourceFile.list_folder(self, full_path)
+        res_file_objects = self.list_folder(full_path)
 
         # check any logical file associated with the resource file supports zip functionality
         for res_file in res_file_objects:
@@ -551,7 +551,7 @@ class CompositeResource(BaseResource):
             full_path = os.path.join(self.file_path, full_path)
 
         # get all resource files at full_path and its sub-folders
-        res_file_objects = ResourceFile.list_folder(self, full_path)
+        res_file_objects = self.list_folder(full_path)
 
         # check any logical file associated with the resource file supports deleting the folder
         # after its zipped

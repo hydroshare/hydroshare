@@ -76,7 +76,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'netcdf_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
 
@@ -114,7 +114,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'my_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
 
@@ -166,9 +166,9 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'my_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         another_folder = '{}/another_folder'.format(new_folder)
-        ResourceFile.create_folder(self.composite_resource, another_folder)
+        self.composite_resource.create_folder(another_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
 
@@ -270,7 +270,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'nc_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         # make the netcdf file part of the NetCDFLogicalFile
@@ -506,7 +506,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'nc_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         nc_res_file = self.composite_resource.files.first()
@@ -597,7 +597,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         expected_folder_path = nc_res_file.file_folder
         self.assertEqual(res_file.file_folder, expected_folder_path)
         new_folder = 'netcdf_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
 
         # moving any of the resource files to this new folder should raise exception
         tgt_path = 'data/contents/{}'.format(new_folder)
@@ -616,7 +616,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'netcdf_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         nc_res_file = self.composite_resource.files.first()
@@ -675,7 +675,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'netcdf_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         nc_res_file = self.composite_resource.files.first()
@@ -704,7 +704,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a folder to be the parent folder of the aggregation folder
         parent_folder = 'parent_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         # move the aggregation folder to the parent folder
         src_path = 'data/contents/{}'.format(aggregation_folder_name)
         tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, aggregation_folder_name)
@@ -748,7 +748,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'netcdf_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         nc_res_file = self.composite_resource.files.first()
@@ -764,7 +764,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a folder to move the aggregation folder there
         parent_folder = 'parent_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         # move the aggregation folder to the parent folder
         src_path = 'data/contents/{}'.format(aggregation_folder_name)
         tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, aggregation_folder_name)
@@ -797,7 +797,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'netcdf_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         nc_res_file = self.composite_resource.files.first()
@@ -807,7 +807,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
         # create a folder to move into the aggregation folder
         folder_to_move = 'folder_to_move'
-        ResourceFile.create_folder(self.composite_resource, folder_to_move)
+        self.composite_resource.create_folder(folder_to_move)
         # move the folder_to_move into the aggregation folder
         src_path = 'data/contents/{}'.format(folder_to_move)
         tgt_path = 'data/contents/{}'.format(aggregation_folder_name)
@@ -822,7 +822,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'netcdf_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         nc_res_file = self.composite_resource.files.first()
@@ -834,7 +834,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertNotEqual(res_file.file_folder, None)
         # create a folder inside the aggregation folder
         new_folder = '{}/sub_folder'.format(res_file.file_folder)
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -843,7 +843,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'netcdf_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         nc_res_file = self.composite_resource.files.first()
@@ -871,7 +871,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'netcdf_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         res_file = self.composite_resource.files.first()

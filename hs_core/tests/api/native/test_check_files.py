@@ -125,7 +125,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertEqual(self.res.files.all().count(), 0,
                          msg="resource file count didn't match")
 
-        ResourceFile.create_folder(self.res, 'foo')
+        self.res.create_folder('foo')
 
         # should succeed without errors
         check_irods_files(self.res, stop_on_error=True)

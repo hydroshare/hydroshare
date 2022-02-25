@@ -91,7 +91,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # aggregation from the sqlite file
 
         new_folder = 'timeseries_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -127,7 +127,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # aggregation from the sqlite file
 
         new_folder = 'my_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -158,9 +158,9 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # aggregation from the sqlite file
 
         new_folder = 'my_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         another_folder = '{}/another_folder'.format(new_folder)
-        ResourceFile.create_folder(self.composite_resource, another_folder)
+        self.composite_resource.create_folder(another_folder)
         self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -201,7 +201,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'timeseries_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.add_file_to_resource(file_to_add=self.odm2_csv_file, upload_folder=new_folder)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -619,7 +619,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'timeseries_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -718,7 +718,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.file_folder, '')
         new_folder = 'timeseries_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
 
         # moving any of the resource files to this new folder should raise exception
         tgt_path = 'data/contents/{}'.format(new_folder)
@@ -737,7 +737,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'timeseries_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
 
         res_file = self.composite_resource.files.first()
@@ -799,7 +799,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'timeseries_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
         res_file = self.composite_resource.files.first()
         sqlite_file_name = res_file.file_name
@@ -831,7 +831,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a folder to be the parent folder of the aggregation folder
         parent_folder = 'parent_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         # move the aggregation folder to the parent folder
         src_path = 'data/contents/{}'.format(aggregation_folder_name)
         tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, aggregation_folder_name)
@@ -884,7 +884,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'timeseries_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.add_file_to_resource(file_to_add=self.sqlite_file, upload_folder=new_folder)
 
         res_file = self.composite_resource.files.first()
@@ -901,7 +901,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a folder to move the aggregation folder there
         parent_folder = 'parent_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         # move the aggregation folder to the parent folder
         src_path = 'data/contents/{}'.format(aggregation_folder_name)
         tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, aggregation_folder_name)

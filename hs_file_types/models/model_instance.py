@@ -522,7 +522,7 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         """
 
         # get all resource files that in folder *folder* and all its sub folders
-        res_files = ResourceFile.list_folder(resource=resource, folder=folder, sub_folders=True)
+        res_files = resource.list_folder(folder=folder, sub_folders=True)
 
         for res_file in res_files:
             if not res_file.has_logical_file:

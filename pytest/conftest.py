@@ -280,7 +280,7 @@ def composite_resource_with_mi_aggregation_folder(composite_resource):
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     mi_folder = "mi-folder"
-    ResourceFile.create_folder(res, mi_folder)
+    res.create_folder(mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 

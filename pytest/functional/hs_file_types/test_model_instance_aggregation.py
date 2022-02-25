@@ -157,7 +157,7 @@ def test_model_instance_on_model_program_rename_2(composite_resource_with_mi_agg
     # create a model program aggregation
     file_path = 'pytest/assets/logan.vrt'
     mp_folder = "mp_folder"
-    ResourceFile.create_folder(res, mp_folder)
+    res.create_folder(mp_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -400,7 +400,7 @@ def test_canot_create_fileset_within_mi_aggregation(composite_resource_with_mi_a
     file_path = 'pytest/assets/logan.vrt'
     fs_folder = 'fileset_folder'
     fs_folder_path = os.path.join(mi_aggr_path, fs_folder)
-    ResourceFile.create_folder(resource, fs_folder)
+    resource.create_folder(fs_folder)
     _add_files_to_resource(resource=resource, files_to_add=[file_path], upload_folder=fs_folder_path)
     # trying to set folder to fileset logical file type (aggregation) should fail
     assert FileSetLogicalFile.objects.count() == 0
@@ -422,7 +422,7 @@ def test_canot_create_mi_aggregation_within_mi_aggregation(composite_resource_wi
     file_path = 'pytest/assets/logan.vrt'
     mi_sub_folder = 'mi_sub_folder'
     mi_sub_folder_path = os.path.join(mi_aggr_path, mi_sub_folder)
-    ResourceFile.create_folder(resource, mi_sub_folder)
+    resource.create_folder(mi_sub_folder)
     _add_files_to_resource(resource=resource, files_to_add=[file_path], upload_folder=mi_sub_folder_path)
     # trying to set folder to model instance should fail
     assert ModelInstanceLogicalFile.objects.count() == 1
@@ -441,7 +441,7 @@ def test_move_single_file_aggr_into_model_instance_aggregation(composite_resourc
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     mi_folder = 'mi_folder'
-    ResourceFile.create_folder(res, mi_folder)
+    res.create_folder(mi_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 

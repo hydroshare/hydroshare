@@ -672,7 +672,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         add_file_to_resource(mi_res, file_to_upload, folder=upload_folder_1)
         upload_folder_2 = 'folder-2'
-        ResourceFile.create_folder(mi_res, upload_folder_2)
+        mi_res.create_folder(upload_folder_2)
 
         self.assertEqual(mi_res.files.count(), 1)
         # run  migration command

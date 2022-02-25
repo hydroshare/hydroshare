@@ -255,7 +255,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'raster_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the raster file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
 
@@ -1925,7 +1925,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         self.assertEqual(CompositeResource.objects.count(), 1)
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # set folder to fileset logical file type (aggregation)
@@ -1952,7 +1952,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         self.assertEqual(CompositeResource.objects.count(), 1)
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # set folder to fileset logical file type (aggregation)
@@ -1989,7 +1989,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         self.assertEqual(CompositeResource.objects.count(), 1)
         parent_fs_folder = 'parent_fs_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
+        self.composite_resource.create_folder(parent_fs_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_fs_folder)
         # set folder to fileset logical file type (aggregation)
@@ -1997,7 +1997,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                          folder_path=parent_fs_folder)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         child_fs_folder = '{}/child_fs_folder'.format(parent_fs_folder)
-        ResourceFile.create_folder(self.composite_resource, child_fs_folder)
+        self.composite_resource.create_folder(child_fs_folder)
         # add the the txt file to the resource at the above child folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=child_fs_folder)
         # set the child folder to fileset logical file type (aggregation)
@@ -2025,7 +2025,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         self.assertEqual(CompositeResource.objects.count(), 1)
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # set folder to fileset logical file type (aggregation)
@@ -2242,7 +2242,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         self.assertEqual(CompositeResource.objects.count(), 1)
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # set folder to fileset logical file type (aggregation)
@@ -2268,7 +2268,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         self.assertEqual(CompositeResource.objects.count(), 1)
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # set folder to fileset logical file type (aggregation)
@@ -2304,7 +2304,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         self.assertEqual(CompositeResource.objects.count(), 1)
         parent_fs_folder = 'parent_fs_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
+        self.composite_resource.create_folder(parent_fs_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_fs_folder)
         # set folder to fileset logical file type (aggregation)
@@ -2312,7 +2312,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                          folder_path=parent_fs_folder)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         child_fs_folder = '{}/child_fs_folder'.format(parent_fs_folder)
-        ResourceFile.create_folder(self.composite_resource, child_fs_folder)
+        self.composite_resource.create_folder(child_fs_folder)
         # add the the txt file to the resource at the above child folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=child_fs_folder)
         # set the child folder to fileset logical file type (aggregation)

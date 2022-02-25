@@ -104,7 +104,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         # create a folder to place the tif file before creating an aggregation from the tif file
         new_folder = 'raster_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -141,7 +141,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         # create a folder to place the tif file before creating an aggregation from the tif file
         new_folder = 'my_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -191,9 +191,9 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         # create a folder to place the tif file before creating an aggregation from the tif file
         new_folder = 'my_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         another_folder = '{}/another_folder'.format(new_folder)
-        ResourceFile.create_folder(self.composite_resource, another_folder)
+        self.composite_resource.create_folder(another_folder)
         self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -287,7 +287,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         # create a folder to place the zip file before creating an aggregation from the zip file
         new_folder = 'raster_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         self.add_file_to_resource(file_to_add=self.raster_zip_file, upload_folder=new_folder)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -886,7 +886,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.count(), 2)
 
         new_folder = 'georaster_aggr'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
 
         # moving any of the resource files to this new folder should raise exception
         tgt_path = 'data/contents/{}'.format(new_folder)
@@ -905,7 +905,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         folder_for_raster = 'raster_folder'
-        ResourceFile.create_folder(self.composite_resource, folder_for_raster)
+        self.composite_resource.create_folder(folder_for_raster)
         self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=folder_for_raster)
         res_file = self.composite_resource.files.first()
 
@@ -961,7 +961,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         folder_for_raster = 'raster_folder'
-        ResourceFile.create_folder(self.composite_resource, folder_for_raster)
+        self.composite_resource.create_folder(folder_for_raster)
         self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=folder_for_raster)
         res_file = self.composite_resource.files.first()
         base_file_name, ext = os.path.splitext(res_file.file_name)
@@ -990,7 +990,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a folder to be the parent folder of the aggregation folder
         parent_folder = 'parent_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         # move the aggregation folder to the parent folder
         src_path = 'data/contents/{}'.format(folder_for_raster)
         tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, folder_for_raster)
@@ -1035,7 +1035,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         folder_for_raster = 'raster_folder'
-        ResourceFile.create_folder(self.composite_resource, folder_for_raster)
+        self.composite_resource.create_folder(folder_for_raster)
         self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=folder_for_raster)
         res_file = self.composite_resource.files.first()
 
@@ -1053,7 +1053,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         map_short_file_path = logical_file.map_short_file_path
         # create a folder to move the aggregation folder there
         parent_folder = 'parent_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         # move the aggregation folder to the parent folder
         src_path = 'data/contents/{}'.format(folder_for_raster)
         tgt_path = 'data/contents/{0}/{1}'.format(parent_folder, folder_for_raster)

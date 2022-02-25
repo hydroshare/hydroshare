@@ -67,7 +67,7 @@ def test_create_model_aggregation_from_folder(composite_resource, aggr_type, moc
     file_path = 'pytest/assets/generic_file.txt'
     # create a folder and put a file in that folder
     aggr_folder = 'model_folder'
-    ResourceFile.create_folder(res, aggr_folder)
+    res.create_folder(aggr_folder)
     upload_folder = aggr_folder
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))

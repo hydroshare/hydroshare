@@ -60,7 +60,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # there should be one resource file
@@ -89,7 +89,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # add the the json file to the resource at the above folder
@@ -134,9 +134,9 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no resource file at this point
         self.assertEqual(self.composite_resource.files.all().count(), 0)
         parent_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         raster_child_folder = '{}/raster_folder'.format(parent_folder)
-        ResourceFile.create_folder(self.composite_resource, raster_child_folder)
+        self.composite_resource.create_folder(raster_child_folder)
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         # upload a raster tif file to the child folder to auto create a raster aggregation there
         self.add_files_to_resource(files_to_add=[self.raster_file],
@@ -164,13 +164,13 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no resource file at this point
         self.assertEqual(self.composite_resource.files.all().count(), 0)
         parent_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_folder)
         # there should be one resource file at this point
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         raster_child_folder = '{}/raster_folder'.format(parent_folder)
-        ResourceFile.create_folder(self.composite_resource, raster_child_folder)
+        self.composite_resource.create_folder(raster_child_folder)
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         # upload a raster tif file to the child folder to auto create a raster aggregation there
         self.add_files_to_resource(files_to_add=[self.raster_file],
@@ -196,13 +196,13 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no resource file at this point
         self.assertEqual(self.composite_resource.files.all().count(), 0)
         parent_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_folder)
         # there should be one resource file at this point
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         empty_child_folder = '{}/empty_folder'.format(parent_folder)
-        ResourceFile.create_folder(self.composite_resource, empty_child_folder)
+        self.composite_resource.create_folder(empty_child_folder)
 
         # test now that we can create a fileset aggregation from the parent folder
         self.assertEqual(FileSetLogicalFile.objects.count(), 0)
@@ -221,13 +221,13 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no resource file at this point
         self.assertEqual(self.composite_resource.files.all().count(), 0)
         parent_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_folder)
         # there should be one resource file at this point
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         non_empty_child_folder = '{}/non_empty_folder'.format(parent_folder)
-        ResourceFile.create_folder(self.composite_resource, non_empty_child_folder)
+        self.composite_resource.create_folder(non_empty_child_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file,
                                   upload_folder=non_empty_child_folder)
@@ -258,13 +258,13 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no resource file at this point
         self.assertEqual(self.composite_resource.files.all().count(), 0)
         parent_folder = 'mp_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        self.composite_resource.create_folder(parent_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_folder)
         # there should be one resource file at this point
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         child_folder = '{}/sub_folder'.format(parent_folder)
-        ResourceFile.create_folder(self.composite_resource, child_folder)
+        self.composite_resource.create_folder(child_folder)
         # add the the prj file to the resource at the sub folder
         self.add_file_to_resource(file_to_add=self.states_prj_file, upload_folder=child_folder)
         # there should be two resource file at this point
@@ -290,7 +290,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
 
@@ -339,7 +339,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
 
@@ -400,7 +400,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
 
@@ -477,7 +477,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # add the the json file to the resource at the above folder
@@ -523,7 +523,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # there should be one resource file
@@ -560,7 +560,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # add the the json file to the resource at the above folder
@@ -616,7 +616,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         fs_aggr_path = fs_aggr.aggregation_name
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         raster_folder_path = '{}/raster_folder'.format(fs_aggr_path)
-        ResourceFile.create_folder(self.composite_resource, raster_folder_path)
+        self.composite_resource.create_folder(raster_folder_path)
         # upload a raster tif file to the new_folder - folder that represents the above fileset
         # aggregation
         self.add_files_to_resource(files_to_add=[self.raster_file],
@@ -663,7 +663,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # there should be one resource file
@@ -683,7 +683,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a folder inside fileset_folder
         agg_sub_folder = 'fileset_folder/folder_1'
-        ResourceFile.create_folder(self.composite_resource, agg_sub_folder)
+        self.composite_resource.create_folder(agg_sub_folder)
         # add the the json file to the resource at the above sub folder
         self.add_file_to_resource(file_to_add=self.json_file, upload_folder=agg_sub_folder)
         # there should be two resource files
@@ -700,7 +700,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a folder inside folder_1 - case of nested folders inside fileset folder
         agg_sub_folder = agg_sub_folder + '/folder_1_1'
-        ResourceFile.create_folder(self.composite_resource, agg_sub_folder)
+        self.composite_resource.create_folder(agg_sub_folder)
         # add the the json file to the resource at the above sub folder
         self.add_file_to_resource(file_to_add=self.json_file, upload_folder=agg_sub_folder)
         # there should be three resource files
@@ -728,7 +728,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         fileset_folder = self.composite_resource.files.first().file_folder
         new_folder = '{}/normal_folder'.format(fileset_folder)
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # there should be two resource files
@@ -753,7 +753,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 0)
         normal_folder = 'normal_folder'
         fileset_folder = '{}/fileset_folder'.format(normal_folder)
-        ResourceFile.create_folder(self.composite_resource, fileset_folder)
+        self.composite_resource.create_folder(fileset_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=fileset_folder)
         # there should be one resource file
@@ -780,7 +780,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no resource file
         self.assertEqual(self.composite_resource.files.all().count(), 0)
         fileset_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, fileset_folder)
+        self.composite_resource.create_folder(fileset_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=fileset_folder)
         # there should be one resource file
@@ -1052,7 +1052,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         root_folder = 'normal_folder'
         parent_fs_folder = '{}/parent_fileset_folder'.format(root_folder)
-        ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
+        self.composite_resource.create_folder(parent_fs_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_fs_folder)
         # there should be one resource file
@@ -1065,7 +1065,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a folder inside fileset folder - parent_fs_folder
         child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
-        ResourceFile.create_folder(self.composite_resource, child_fs_folder)
+        self.composite_resource.create_folder(child_fs_folder)
         # add the the json file to the resource at the above sub folder
         self.add_file_to_resource(file_to_add=self.json_file, upload_folder=child_fs_folder)
         # there should be two resource files
@@ -1106,7 +1106,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         fs_1_folder = 'fs_1_folder'
-        ResourceFile.create_folder(self.composite_resource, fs_1_folder)
+        self.composite_resource.create_folder(fs_1_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=fs_1_folder)
         # there should be one resource file
@@ -1119,7 +1119,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a another folder for the 2nd fileset aggregation
         fs_2_folder = 'fs_2_folder'
-        ResourceFile.create_folder(self.composite_resource, fs_2_folder)
+        self.composite_resource.create_folder(fs_2_folder)
         # add the the json file to the resource at the above sub folder
         self.add_file_to_resource(file_to_add=self.json_file, upload_folder=fs_2_folder)
         # there should be two resource files
@@ -1515,7 +1515,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
     def _create_fileset_aggregation(self):
         self.create_composite_resource()
         new_folder = 'fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
 
@@ -1525,7 +1525,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
     def _create_nested_fileset_aggregations(self):
         self.create_composite_resource()
         parent_fs_folder = 'parent_fileset_folder'
-        ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
+        self.composite_resource.create_folder(parent_fs_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_fs_folder)
         # there should be one resource file
@@ -1546,7 +1546,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # create a folder inside fileset folder - new_folder
         child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
-        ResourceFile.create_folder(self.composite_resource, child_fs_folder)
+        self.composite_resource.create_folder(child_fs_folder)
         # add the the json file to the resource at the above sub folder
         self.add_file_to_resource(file_to_add=self.json_file, upload_folder=child_fs_folder)
         # there should be two resource files

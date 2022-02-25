@@ -62,7 +62,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.create_composite_resource()
         new_folder = 'generic_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
         # there should be one resource file

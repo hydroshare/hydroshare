@@ -693,7 +693,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         add_file_to_resource(mp_res, file_to_upload, folder=upload_folder_1)
         upload_folder_2 = 'folder-2'
-        ResourceFile.create_folder(mp_res, upload_folder_2)
+        mp_res.create_folder(upload_folder_2)
 
         self.assertEqual(mp_res.files.count(), 1)
         # run  migration command
@@ -891,7 +891,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
         self.assertEqual(mp_res.files.count(), 1)
-        ResourceFile.create_folder(mp_res, folder='model-program')
+        mp_res.create_folder(folder='model-program')
         # run  migration command
         call_command(self.migration_command)
         self.assertEqual(ModelProgramResource.objects.count(), 0)

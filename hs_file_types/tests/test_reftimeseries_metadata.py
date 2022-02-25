@@ -81,7 +81,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.res_title = "Untitled resource"
         self.create_composite_resource()
         new_folder = 'refts_folder'
-        ResourceFile.create_folder(self.composite_resource, new_folder)
+        self.composite_resource.create_folder(new_folder)
         # add the the json file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.refts_file, upload_folder=new_folder)
 

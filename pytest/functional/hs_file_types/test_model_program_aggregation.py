@@ -58,7 +58,7 @@ def test_mark_multiple_res_files_as_mp_file_type(composite_resource, mock_irods)
     txt_file_path = file_path.format('generic_file.txt')
     vrt_file_path = file_path.format('logan.vrt')
     upload_folder = 'mp_folder'
-    ResourceFile.create_folder(res, upload_folder)
+    res.create_folder(upload_folder)
     file_to_upload = UploadedFile(file=open(txt_file_path, 'rb'),
                                   name=os.path.basename(txt_file_path))
 
@@ -405,7 +405,7 @@ def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, 
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     mp_folder = 'mp_folder'
-    ResourceFile.create_folder(res, mp_folder)
+    res.create_folder(mp_folder)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
