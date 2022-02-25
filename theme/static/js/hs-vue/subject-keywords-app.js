@@ -57,7 +57,7 @@ let subjKeywordsApp = new Vue({
                     }
                 }
                 else {
-                    vue.error = resp.message;
+                    vue.error = resp.message.slice(0, -1);
                 }
                 showCompletedMessage(resp);
             }.bind(this), "json");
@@ -67,19 +67,20 @@ let subjKeywordsApp = new Vue({
             newVal.splice($.inArray(keywordName, this.resKeywords), 1);   // Remove the keyword
 
             this.error = "";
+            let vue = this;
 
             $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/",
                 {value: newVal.join(",")}, function (resp) {
                     if (resp.status === "success") {
-                        this.resKeywords = newVal;
+                        vue.resKeywords = newVal;
                         if (!newVal.length) {
                             // If no keywords, the metadata is no longer sufficient to make the resource public
                             manageAccessApp.onMetadataInsufficient();
                         }
                     }
                     else {
-                        if (this.resKeywords.length){
-                            this.error = this.message;
+                        if (vue.resKeywords.length){
+                            vue.error = resp.message;
                         }
                     }
                 }.bind(this), "json");
