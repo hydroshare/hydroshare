@@ -21,7 +21,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
-from hs_core.hydroshare import utils, create_empty_resource
+from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
 from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref
 from hs_core.task_utils import get_or_create_task_notification
@@ -32,6 +32,7 @@ from django_irods.icommands import SessionException
 from celery.result import states
 
 from hs_core.models import BaseResource, TaskNotification
+from hs_core.enums import RelationTypes
 from theme.utils import get_quota_message
 from hs_collection_resource.models import CollectionDeletedResource
 
@@ -412,17 +413,17 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
             new_res = utils.get_resource_by_shortkey(new_res_id)
         utils.copy_and_create_metadata(ori_res, new_res)
 
-        if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
+        if new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
             # the resource to be copied is a versioned resource, need to delete this isVersionOf
             # relation element to maintain the single versioning obsolescence chain
-            new_res.metadata.relations.all().filter(type='isVersionOf').first().delete()
+            new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
 
         # create the relation element for the new_res
         today = date.today().strftime("%m/%d/%Y")
         derived_from = "{}, accessed on: {}".format(ori_res.get_citation(), today)
         # since we are allowing user to add relation of type source, need to check we don't already have it
-        if not new_res.metadata.relations.all().filter(type='source', value=derived_from).exists():
-            new_res.metadata.create_element('relation', type='source', value=derived_from)
+        if not new_res.metadata.relations.all().filter(type=RelationTypes.source, value=derived_from).exists():
+            new_res.metadata.create_element('relation', type=RelationTypes.source, value=derived_from)
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
@@ -464,15 +465,15 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         utils.copy_and_create_metadata(ori_res, new_res)
 
         # add or update Relation element to link source and target resources
-        ori_res.metadata.create_element('relation', type='isReplacedBy', value=new_res.get_citation())
+        ori_res.metadata.create_element('relation', type=RelationTypes.isReplacedBy, value=new_res.get_citation())
 
-        if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
+        if new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
             # the original resource is already a versioned resource, and its isVersionOf relation
             # element is copied over to this new version resource, needs to delete this element so
             # it can be created to link to its original resource correctly
-            new_res.metadata.relations.all().filter(type='isVersionOf').first().delete()
+            new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
 
-        new_res.metadata.create_element('relation', type='isVersionOf', value=ori_res.get_citation())
+        new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf, value=ori_res.get_citation())
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
@@ -484,7 +485,6 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
 
         # since an isReplaceBy relation element is added to original resource, needs to call
         # resource_modified() for original resource
-        utils.resource_modified(ori_res, by_user=username, overwrite_bag=False)
         # if everything goes well up to this point, set original resource to be immutable so that
         # obsoleted resources cannot be modified from REST API
         ori_res.raccess.immutable = True
@@ -556,22 +556,34 @@ def delete_resource_task(resource_id, request_username=None):
     # when the most recent version of a resource in an obsolescence chain is deleted, the previous
     # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
     # relation element
-    if res.metadata.relations.all().filter(type='isVersionOf').exists():
+    if res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
         is_version_of_res_link = \
-            res.metadata.relations.all().filter(type='isVersionOf').first().value
+            res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().value
         idx = is_version_of_res_link.rindex('/')
         if idx == -1:
             obsolete_res_id = is_version_of_res_link
         else:
             obsolete_res_id = is_version_of_res_link[idx + 1:]
         obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
-        if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
-            eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
+        if obsolete_res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).exists():
+            eid = obsolete_res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first().id
             obsolete_res.metadata.delete_element('relation', eid)
             # also make this obsoleted resource editable if not published now that it becomes the latest version
             if not obsolete_res.raccess.published:
                 obsolete_res.raccess.immutable = False
                 obsolete_res.raccess.save()
+
+    for res_in_col in res.resources.all():
+        # res being deleted is a collection resource - delete isPartOf relation of all resources that are part of the
+        # collection
+        if res_in_col.metadata.relations.filter(type='isPartOf', value__endswith=res.short_id).exists():
+            res_in_col.metadata.relations.filter(type='isPartOf', value__endswith=res.short_id).delete()
+            set_dirty_bag_flag(res_in_col)
+
+    for collection_res in resource_related_collections:
+        # res being deleted is part of one or more collections - delete hasPart relation for all those collections
+        collection_res.metadata.relations.filter(type='hasPart', value__endswith=res.short_id).delete()
+        set_dirty_bag_flag(collection_res)
 
     res.delete()
     if request_username:

@@ -48,8 +48,20 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             dom_tags.legend("Executed By (Model Program)")
             if self.executed_by:
                 mp_aggr = self.executed_by
-                display_string = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
-                dom_tags.p(display_string)
+                # check if the mp aggregation is from another resource (possible only in the case of
+                # migrated mi resource)
+                if self.logical_file.resource.short_id != mp_aggr.resource.short_id:
+                    hs_res_url = os.path.join(current_site_url(), 'resource', mp_aggr.resource.short_id)
+                    display_string = "HydroShare resource that contains the Model Program:"
+                    with dom_tags.p(display_string):
+                        with dom_tags.span():
+                            dom_tags.a(hs_res_url, href=hs_res_url)
+                    aggr_path = "Aggregation in HydroShare resource that contains the Model Program:"
+                    with dom_tags.p(aggr_path):
+                        dom_tags.span(mp_aggr.aggregation_name, style="font-weight: bold;")
+                else:
+                    display_string = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
+                    dom_tags.p(display_string)
             else:
                 dom_tags.p("Unspecified")
 
@@ -59,7 +71,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             if self.logical_file.metadata_schema_json:
                 metadata_schema = self.logical_file.metadata_schema_json
             with metadata_json_div:
-                dom_tags.legend("Schema Based Metadata")
+                dom_tags.legend("Schema-based Metadata")
                 schema_properties_key = 'properties'
                 for k, v in self.metadata_json.items():
                     if type(v) not in (int, float, bool):
@@ -80,7 +92,11 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         def display_json_meta_field(field_name, field_value):
                             value = ''
                             if isinstance(field_value, list):
-                                if field_value:
+                                # check if list items are dict type
+                                if isinstance(field_value[0], dict):
+                                    for item in field_value:
+                                        display_dict_type_value(item)
+                                elif field_value:
                                     value = ", ".join(field_value)
                             elif isinstance(field_value, str):
                                 value = field_value.strip()
@@ -93,17 +109,23 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                 with dom_tags.div(cls="col-md-6"):
                                     dom_tags.p(value)
 
-                        if isinstance(v, dict):
-                            for child_k, child_v in v.items():
+                        def display_dict_type_value(value):
+                            for child_k, child_v in value.items():
                                 child_k_title = child_k
                                 if metadata_schema:
                                     child_properties_schema_node = root_properties_schema_node[k]
+                                    if 'type' in child_properties_schema_node:
+                                        if child_properties_schema_node['type'] == 'array':
+                                            child_properties_schema_node = child_properties_schema_node['items']
                                     child_properties_schema_node = child_properties_schema_node[
                                         schema_properties_key]
                                     if child_k in child_properties_schema_node:
                                         child_k_title = child_properties_schema_node[child_k]['title']
 
                                 display_json_meta_field(field_name=child_k_title, field_value=child_v)
+
+                        if isinstance(v, dict):
+                            display_dict_type_value(v)
                         else:
                             display_json_meta_field(field_name=k_title, field_value=v)
 
@@ -129,7 +151,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 with dom_tags.form(id="id-schema-based-form", action=json_form_action,
                                    method="post", enctype="multipart/form-data"):
                     with dom_tags.fieldset():
-                        dom_tags.legend("Schema Based Metadata")
+                        dom_tags.legend("Schema-based Metadata")
                         json_schema = json.dumps(self.logical_file.metadata_schema_json)
                         json_data = "{}"
                         if self.metadata_json:
@@ -180,6 +202,32 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                 dom_tags.option(option, value=mp_aggr.id)
                         else:
                             dom_tags.option(option, value=mp_aggr.id)
+                    if self.executed_by:
+                        mp_aggr = self.executed_by
+                        # check if the mp aggregation is from another resource (possible only in the case of
+                        # migrated mi resource)
+                        if self.logical_file.resource.short_id != mp_aggr.resource.short_id:
+                            option = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
+                            dom_tags.option(option, selected="selected", value=mp_aggr.id)
+
+                if self.executed_by:
+                    mp_aggr = self.executed_by
+                    # check if the mp aggregation is from another resource (possible only in the case of
+                    # migrated mi resource)
+                    if self.logical_file.resource.short_id != mp_aggr.resource.short_id:
+                        hs_res_url = os.path.join(current_site_url(), 'resource', mp_aggr.resource.short_id)
+                        display_string = "HydroShare resource that contains the Model Program:"
+                        with dom_tags.p(display_string):
+                            with dom_tags.span():
+                                dom_tags.a(hs_res_url, href=hs_res_url)
+                        aggr_path = "Aggregation in HydroShare resource that contains the Model Program:"
+                        with dom_tags.p(aggr_path):
+                            dom_tags.span(mp_aggr.aggregation_name, style="font-weight: bold;")
+
+                        external_mp_aggr_msg = "Selected model program exists in a different resource. " \
+                                               "With the current release of HydroShare, you can now move your Model " \
+                                               "Program into the same resource as Model Instance."
+                        dom_tags.p(external_mp_aggr_msg, cls="alert alert-info")
                 if invalid_schema:
                     dom_tags.div("Metadata schema in the associated model program fails to validate existing metadata. "
                                  "Updating the schema from model program will lead to loss of all schema based "
@@ -197,7 +245,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                         id="btn-mi-schema-update", data_schema_update_url=schema_update_url,
                                         cls=btn_cls)
                 if self.logical_file.metadata_schema_json:
-                    dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
+                    dom_tags.button("Show/Hide Model Instance Metadata JSON Schema", type="button",
                                     cls="btn btn-success btn-block",
                                     data_toggle="collapse", data_target="#meta-schema")
                     mi_schema_div = dom_tags.div(cls="content-block collapse", id="meta-schema",
@@ -206,8 +254,12 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         json_schema = json.dumps(self.logical_file.metadata_schema_json, indent=4)
                         dom_tags.textarea(json_schema, readonly=True, rows='30', style="min-width: 100%;",
                                           cls="form-control")
-                if self.executed_by and not self.executed_by.metadata_schema_json:
-                    dom_tags.div("Selected model program is missing metadata schema", cls="alert alert-danger")
+                if self.executed_by and not self.executed_by.metadata_schema_json and \
+                        not self.logical_file.metadata_schema_json:
+                    missing_schema_msg = "Selected model program is missing metadata schema. With the current " \
+                                         "release of HydroShare, you can now specify specific metadata schema " \
+                                         "for a Model Program."
+                    dom_tags.div(missing_schema_msg, cls="alert alert-info")
 
             return executed_by_div
 
@@ -285,10 +337,15 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         graph.add((subject, HSTERMS.includesModelOutput, Literal(self.has_model_output)))
 
         if self.executed_by:
-            resource = self.logical_file.resource
-            hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
-            aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
-            graph.add((subject, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
+            if self.executed_by:
+                resource = self.logical_file.resource
+                if resource.short_id != self.executed_by.resource.short_id:
+                    # case of model instance resource migrated to composite resource where the
+                    # model program aggregation can live in another resource
+                    resource = self.executed_by.resource
+                hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
+                aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
+                graph.add((subject, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
 
         if self.logical_file.metadata_schema_json:
             graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_url)))

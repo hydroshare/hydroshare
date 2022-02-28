@@ -45,11 +45,12 @@ class Command(BaseCommand):
 
             # migrate source elements to relation elements
             source_migrated = False
-            for source in res.metadata.sources.all():
-                if not res.metadata.relations.filter(type='source', value=source.derived_from).exists():
-                    res.metadata.create_element('relation', type='source', value=source.derived_from)
-                    source_migrated = True
-            res.metadata.sources.all().delete()
+            if hasattr(res.metadata, 'sources'):
+                for source in res.metadata.sources.all():
+                    if not res.metadata.relations.filter(type='source', value=source.derived_from).exists():
+                        res.metadata.create_element('relation', type='source', value=source.derived_from)
+                        source_migrated = True
+                res.metadata.sources.all().delete()
 
             # update relation type 'isVersionOf' and 'isReplacedBy' with resource citation
             for rel in res.metadata.relations.filter(Q(type='isVersionOf') | Q(type='isReplacedBy')).all():

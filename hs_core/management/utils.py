@@ -11,21 +11,165 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 """
 
 import json
+import logging
+import os
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
-from django_irods.storage import IrodsStorage
-from django_irods.icommands import SessionException
-from hs_file_types.utils import set_logical_file_type, get_logical_file_type
-
 from requests import post
 
-from hs_core.models import BaseResource
+from django_irods.icommands import SessionException
+from django_irods.storage import IrodsStorage
 from hs_core.hydroshare import get_resource_by_shortkey
+from hs_core.models import BaseResource, ResourceFile
 from hs_core.views.utils import link_irods_file_to_django
+from hs_file_types.utils import set_logical_file_type, get_logical_file_type
 
-import logging
+
+def _get_model_aggregation_folder_name(comp_res, default_folder_name):
+    # generate a folder name if the default folder name already exists
+    # used for migrating model resources
+    folder_name = default_folder_name
+    istorage = comp_res.get_irods_storage()
+    folder_path = os.path.join(comp_res.file_path, default_folder_name)
+    post_fix = 1
+    while istorage.exists(folder_path):
+        folder_name = "{}-{}".format(default_folder_name, post_fix)
+        folder_path = os.path.join(comp_res.file_path, folder_name)
+        post_fix += 1
+    return folder_name
+
+
+def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, logger, aggr_name):
+    """Helper function used in migrating model resources to create new aggregation folder and move
+    files and folders into that folder"""
+
+    # create a new folder for model aggregation to which all files and folders will be moved
+    new_folder = _get_model_aggregation_folder_name(comp_res, aggr_name)
+    ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
+    model_aggr.folder = new_folder
+    model_aggr.dataset_name = new_folder
+    model_aggr.save()
+    msg = "Added a new folder '{}' to the resource:{}".format(new_folder, comp_res.short_id)
+    logger.info(msg)
+    command.stdout.write(command.style.SUCCESS(msg))
+
+    # move files and folders to the new aggregation folder
+    istorage = comp_res.get_irods_storage()
+    moved_folders = []
+    aggr_name = aggr_name.replace("-", " ")
+    for res_file in comp_res.files.all().iterator():
+        if res_file != comp_res.readme_file:
+            moving_folder = False
+            if res_file.file_folder:
+                if "/" in res_file.file_folder:
+                    folder_to_move = res_file.file_folder.split("/")[0]
+                else:
+                    folder_to_move = res_file.file_folder
+                if folder_to_move not in moved_folders:
+                    moved_folders.append(folder_to_move)
+                    moving_folder = True
+                else:
+                    continue
+                src_short_path = folder_to_move
+            else:
+                src_short_path = res_file.file_name
+
+            src_full_path = os.path.join(comp_res.root_path, 'data', 'contents', src_short_path)
+            if istorage.exists(src_full_path):
+                tgt_full_path = os.path.join(comp_res.root_path, 'data', 'contents', new_folder, src_short_path)
+                if moving_folder:
+                    msg = "Moving folder ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                else:
+                    msg = "Moving file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                command.stdout.write(msg)
+
+                istorage.moveFile(src_full_path, tgt_full_path)
+                if moving_folder:
+                    msg = "Moved folder ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                    logger.info(msg)
+                    command.stdout.write(command.style.SUCCESS(msg))
+                    command.stdout.flush()
+
+                    # Note: some of the files returned by list_folder() may not exist in iRODS
+                    res_file_objs = ResourceFile.list_folder(comp_res, folder_to_move)
+                    tgt_short_path = os.path.join('data', 'contents', new_folder, folder_to_move)
+                    src_short_path = os.path.join('data', 'contents', folder_to_move)
+                    for fobj in res_file_objs:
+                        src_path = fobj.storage_path
+                        new_path = src_path.replace(src_short_path, tgt_short_path, 1)
+                        if istorage.exists(new_path):
+                            fobj.set_storage_path(new_path)
+                            model_aggr.add_resource_file(fobj)
+                            msg = "Added file ({}) to {} aggregation".format(fobj.short_path, aggr_name)
+                            logger.info(msg)
+                            command.stdout.write(command.style.SUCCESS(msg))
+                        else:
+                            err_msg = "File ({}) is missing in iRODS. File not added to the aggregation"
+                            err_msg = err_msg.format(new_path)
+                            logger.warn(err_msg)
+                            command.stdout.write(command.style.WARNING(err_msg))
+                else:
+                    msg = "Moved file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                    logger.info(msg)
+                    command.stdout.write(command.style.SUCCESS(msg))
+                    res_file.set_storage_path(tgt_full_path)
+                    model_aggr.add_resource_file(res_file)
+                    msg = "Added file ({}) to {} aggregation".format(res_file.short_path, aggr_name)
+                    logger.info(msg)
+                    command.stdout.write(command.style.SUCCESS(msg))
+            else:
+                err_msg = "File path ({}) not found in iRODS. Couldn't make this file part of " \
+                          "the {} aggregation.".format(src_full_path, aggr_name)
+                logger.warn(err_msg)
+                command.stdout.write(command.style.WARNING(err_msg))
+            command.stdout.flush()
+
+
+def set_executed_by(command, mi_aggr, comp_res, logger):
+    """Helper function used in migrating model instance resources to set the
+    executed_by attribute of the model instance aggregation in the migrated resource"""
+
+    linked_res_id = comp_res.extra_data[command._EXECUTED_BY_EXTRA_META_KEY]
+    try:
+        linked_res = get_resource_by_shortkey(linked_res_id)
+    except Exception as err:
+        msg = "{}Resource (ID:{}) for executed_by was not found. Error:{}"
+        msg = msg.format(command._MIGRATION_ISSUE, linked_res_id, str(err))
+        logger.warning(msg)
+        command.stdout.write(command.style.WARNING(msg))
+        command.stdout.flush()
+        return False
+
+    # check the linked resource is a composite resource
+    if linked_res.resource_type == 'CompositeResource':
+        # get the mp aggregation
+        mp_aggr = linked_res.modelprogramlogicalfile_set.first()
+        if mp_aggr:
+            # use the external mp aggregation for executed_by
+            mi_aggr.metadata.executed_by = mp_aggr
+            mi_aggr.metadata.save()
+            msg = 'Setting executed_by to external model program aggregation of resource (ID:{})'
+            msg = msg.format(linked_res.short_id)
+            logger.info(msg)
+            command.stdout.write(command.style.SUCCESS(msg))
+            command.stdout.flush()
+            return True
+        else:
+            msg = "{}No model program aggregation was found in composite resource ID:{} to set executed_by"
+            msg = msg.format(command._MIGRATION_ISSUE, linked_res.short_id)
+            logger.warning(msg)
+            command.stdout.write(command.style.WARNING(msg))
+            command.stdout.flush()
+            return False
+    else:
+        msg = "{}Resource ID:{} to be used for executed_by is not a composite resource"
+        msg = msg.format(command._MIGRATION_ISSUE, linked_res.short_id)
+        logger.warning(msg)
+        command.stdout.write(command.style.WARNING(msg))
+        command.stdout.flush()
+        return False
 
 
 def migrate_core_meta_elements(orig_meta_obj, comp_res):
@@ -40,7 +184,7 @@ def migrate_core_meta_elements(orig_meta_obj, comp_res):
     single_meta_elements = ['title', 'type', 'language', 'rights', 'description',
                             'publisher']
     multiple_meta_elements = ['creators', 'contributors', 'coverages', 'subjects',
-                              'dates', 'formats', 'identifiers', 'sources', 'relations',
+                              'dates', 'formats', 'identifiers', 'relations',
                               'funding_agencies']
     for meta_element_name in single_meta_elements:
         meta_element = getattr(orig_meta_obj, meta_element_name)
@@ -665,3 +809,9 @@ class CheckResource(object):
                 print("  Logical file errors:")
                 for e in logical_issues:
                     print("    {}".format(e))
+
+
+def get_modflow_meta_schema():
+    meta_schema_path = "hs_core/management/model_aggr_meta_schema/modflow.json"
+    with open(meta_schema_path) as f:
+        return json.loads(f.read())
