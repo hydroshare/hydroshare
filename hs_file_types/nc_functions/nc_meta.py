@@ -318,10 +318,13 @@ def get_original_box_info(nc_dataset):
 
     original_box_info = get_original_box_info_by_data(nc_dataset)
 
-    if original_box_info.get('units', '') == 'degree' and \
-            get_original_box_info_by_acdd_convention(nc_dataset):
+    if original_box_info:
+        # if original_box_info.get('units', '') == 'degree' and \
+        #         get_original_box_info_by_acdd_convention(nc_dataset):
+        if original_box_info.get('units', '') == 'degree':
+            original_box_info = get_original_box_info_by_acdd_convention(nc_dataset)
+    else:
         original_box_info = get_original_box_info_by_acdd_convention(nc_dataset)
-
     return original_box_info
 
 
