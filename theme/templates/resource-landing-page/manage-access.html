@@ -159,8 +159,9 @@
                                             @click="setResourceAccess('make_public')"
                                             :class="{active: resAccess.isPublic}"
                                             class="btn btn-default"
-                                            id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                            title='Can be viewed and downloaded by anyone.' type="button">
+                                            id="btn-public" data-toggle="tooltip" data-placement="auto" 
+                                            :title="!canChangeResourceFlags ? this.accessDeniedTitle : 'Can be viewed and downloaded by anyone'" 
+                                            type="button">
                                             Public
                                         </button>
 
@@ -169,8 +170,9 @@
                                                 @click="setResourceAccess('make_discoverable')"
                                                 :class="{active: resAccess.isDiscoverable && !resAccess.isPublic}"
                                                 class="btn btn-default"
-                                                id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                                type="button" title='Metadata is public but data are protected.'>
+                                                id="btn-discoverable" data-toggle="tooltip" data-placement="auto" 
+                                                :title="!canChangeResourceFlags ? this.accessDeniedTitle : 'Metadata is public but data are protected.'"
+                                                type="button">
                                             Discoverable
                                         </button>
 
@@ -181,7 +183,7 @@
                                             :class="{active: !resAccess.isPublic && !resAccess.isDiscoverable}"
                                             class="btn btn-default"
                                             id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                            title='Can be viewed and downloaded only by designated users or research groups.'
+                                            :title="!canChangeResourceFlags ? this.accessDeniedTitle : 'Can be viewed and downloaded only by designated users or research groups.'"
                                             type="button">
                                             Private
                                         </button>
