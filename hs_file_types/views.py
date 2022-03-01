@@ -1222,7 +1222,6 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@login_required
 def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
     """
     Gets metadata html for the aggregation type (logical file type)
@@ -1242,6 +1241,8 @@ def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
     logical_file, json_response = _get_logical_file("TimeSeriesLogicalFile", file_type_id)
     if json_response is not None:
         return json_response
+
+    authorize(request, logical_file.resource.short_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
     series_ids = logical_file.metadata.series_ids_with_labels
     if series_id not in list(series_ids.keys()):
