@@ -34,6 +34,9 @@ let subjKeywordsApp = new Vue({
 
             if (this.newKeyword.trim() === "") {
                 return; // Empty string detected
+            }else if (this.newKeyword.length > 500) {
+                this.error = "Your keyword is too long. Ensure it has at most 500 characters.";
+                return;
             }
 
             let newVal =  (this.resKeywords.join(",").length ? this.resKeywords.join(",") + ",": "") + this.newKeyword;
@@ -65,8 +68,8 @@ let subjKeywordsApp = new Vue({
             let newVal = this.resKeywords.slice(); // Get a copy
             newVal.splice($.inArray(keywordName, this.resKeywords), 1);   // Remove the keyword
 
-            this.error = "";
             let vue = this;
+            vue.error = "";
 
             $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/",
                 {value: newVal.join(",")}, function (resp) {
@@ -79,7 +82,9 @@ let subjKeywordsApp = new Vue({
                     }
                     else {
                         if (vue.resKeywords.length){
-                            vue.error = resp.message;
+                            // vue.error = resp.message;
+                            // Response message is not very user-friendly so:
+                            vue.error = "There was a problem removing your keyword.";
                         }
                     }
                 }.bind(this), "json");
