@@ -33,7 +33,6 @@ let subjKeywordsApp = new Vue({
             this.newKeyword = newKeywords.join(",").trim();
 
             if (this.newKeyword.trim() === "") {
-                this.error = "Your keyword was empty. Please try again";
                 return; // Empty string detected
             }
 
