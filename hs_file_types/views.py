@@ -1198,14 +1198,7 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-
-    from hs_core.views.utils import authorize
-    from rest_framework.exceptions import PermissionDenied
-
-    _, authorized, _ = authorize(request, logical_file.resource.short_id,
-                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
-    if not authorized:
-        raise PermissionDenied()
+    authorize(request, logical_file.resource.short_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
     if json_response is not None:
         return json_response
