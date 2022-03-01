@@ -39,6 +39,13 @@
                         </div>
                     {% endif %}
                 {% endif %}
+                <div id="subj-inline-error" style="display:none">
+                    <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
+                    <div v-if="error" class='alert alert-danger space-top small'>
+                        <strong>Error: </strong>
+                        <span v-html="error"></span>
+                    </div>
+                </div>
                 <ul id="lst-tags" class="custom-well tag-list" style="display:none">
                     <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
                     <li v-else v-for="k in resKeywords">
@@ -62,13 +69,6 @@
                         {% endif %}
                     </li>
                 </ul>
-            </div>
-            <div id="subj-inline-error" style="display:none">
-                <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
-                <div v-if="error" class='alert alert-danger space-top small'>
-                    <strong>Error: </strong>
-                    <span v-html="error"></span>
-                </div>
             </div>
         </div>
         {% if not cm.raccess.published %}
