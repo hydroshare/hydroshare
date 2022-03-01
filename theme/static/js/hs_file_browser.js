@@ -935,12 +935,16 @@ function bindFileBrowserItemEvents() {
 
         $(".selection-menu").hide();    // Hide other menus
 
-        // register a listener for clicks outside of the context menu
+        // register a listener for clicks outside of the context menus
         $(document).on('click.menu', function(event) {
             var $target = $(event.target);
             if(!$target.closest('#right-click-menu').length && 
                 $('#right-click-menu').css("display") !== "none") {
                 $('#right-click-menu').hide();
+            }
+            if(!$target.closest('#right-click-container-menu').length && 
+                $('#right-click-container-menu').css("display") !== "none") {
+                $('#right-click-container-menu').hide();
             }
             // de-register listener to allow bubbling
             $(document).off('click.menu');
