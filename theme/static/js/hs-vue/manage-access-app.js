@@ -52,16 +52,16 @@ let manageAccessApp = new Vue({
             $("#publish").attr("data-toggle", !newAccess.isPublic ? "" : "modal");   // Disable the agreement modal
 
             let accessStr = "Private";
-            if (newAccess.isPublic && newAccess.isDiscoverable) {
+            if (newAccess.isPublic) {
                 accessStr = "Public";
             }
-            else if (!newAccess.isPublic && newAccess.isDiscoverable && newAccess.isPrivateLinkSharing) {
+            else if (newAccess.isDiscoverable && newAccess.isPrivateLinkSharing) {
                 accessStr = "Discoverable (Accessible via direct link sharing)";
             }
-            else if (!newAccess.isPublic && newAccess.isDiscoverable) {
+            else if (newAccess.isDiscoverable) {
                 accessStr = "Discoverable";
             }
-            else if (!newAccess.isPublic && newAccess.isPrivateLinkSharing) {
+            else if (newAccess.isPrivateLinkSharing) {
                 accessStr = "Private (Accessible via direct link sharing)";
             }
             $("#hl-sharing-status").text(accessStr);    // Update highlight sharing status
