@@ -224,7 +224,7 @@ class IrodsStorage(Storage):
                 # have to remove the old AVU first before setting to the new one in order to trigger
                 # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
                 # holder will be reduced as a result of setting quota holder to a different user
-                self.remove_metadata(attname, oldqu)
+                self.remove_metadata(coll_id, attname)
         self.set_metadata(coll_id, attname, new_holder_name)
 
     def copyFiles(self, src_name, dest_name, ires=None):
