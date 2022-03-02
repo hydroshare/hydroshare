@@ -227,7 +227,28 @@
                                         Check this box to allow others to share the resource without the
                                         owner's permission.
                                     </p>
+                                    <div v-if="!resAccess.isPublic">
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox" v-model="resAccess.isPrivateLinkSharing" :disabled="isProcessingPrivateLinkSharing"
+                                                       @change="setPrivateLinkSharing(resAccess.isPrivateLinkSharing ? 'enable_private_sharing_link' : 'remove_private_sharing_link')">
+                                                Enable private link sharing
+                                            </label>
+                                        </div>
+                                        <div class="text-muted small">
+                                            <ul>
+                                                <li>
+                                                   <p>
+                                                   Check the box to let any user (including anonymous not logged in) with the link access the resource.
+                                                   This capability is to enable resources still private to be shared with journal paper reviewers while a
+                                                   paper citing the resource is under review.
+                                                   </p>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
+
                             </template>
 
                             <div v-if="sharingError" class='alert alert-danger space-top small'>
