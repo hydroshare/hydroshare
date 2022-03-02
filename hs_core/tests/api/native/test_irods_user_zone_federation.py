@@ -145,7 +145,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             istorage.createDirectory(settings.IRODS_BAGIT_PATH)
         istorage.set_metadata(settings.IRODS_BAGIT_PATH, attname, test_qsize)
 
-        get_qsize = istorage.get_storage_metadata(settings.IRODS_BAGIT_PATH, attname)
+        get_qsize = istorage.get_metadata(settings.IRODS_BAGIT_PATH, attname)
         self.assertEqual(test_qsize, get_qsize)
 
         # Although the resource creation operation above will trigger quota update celery task,

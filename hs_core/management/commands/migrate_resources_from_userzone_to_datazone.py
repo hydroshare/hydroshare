@@ -27,7 +27,7 @@ class Command(BaseCommand):
                     # copy AVU over for the resource collection from iRODS user zone to data zone
 
                     for avu_name in avu_list:
-                        value = storage.get_storage_metadata(src_coll, avu_name)
+                        value = storage.get_metadata(src_coll, avu_name)
                         # bag_modified AVU needs to be set to true for the new resource so the bag
                         # can be regenerated in the data zone
                         if avu_name == 'bag_modified':
