@@ -11,8 +11,8 @@ from hs_core.models import BaseResource
 def set_resource_dirty(rid):
     try:
         resource = BaseResource.objects.get(short_id=rid)
-        resource.setAVU('metadata_dirty', 'true')
-        resource.setAVU('bag_modified', 'true')
+        resource.set_storage_metadata('metadata_dirty', 'true')
+        resource.set_storage_metadata('bag_modified', 'true')
         print("Resource with id {} was set dirty.".format(rid))
     except BaseResource.DoesNotExist:
         print(">> Resource with id {} NOT FOUND in Django".format(rid))

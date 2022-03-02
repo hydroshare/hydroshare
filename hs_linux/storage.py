@@ -64,23 +64,22 @@ class LinuxStorage(FileSystemStorage):
         return new_path
 
     '''
-    What is AVU doing?
-    setAVU -- stores the metadata associated with the file
-    getAVU -- There is a lookup table for each one and its default value; check that and return the default value
-    Alva: he will generate default AVUs for everything.
+    set_storage_metadata -- stores the metadata associated with the file
+    get_storage_metadata -- There is a lookup table for each one and its default value; check that and return the default value
+    Alva: he will generate default storage metadata for everything.
     '''
 
-    def setAVU(self, path, name, value, unit=""):
+    def set_metadata(self, path, name, value, unit=""):
         obj, _ = LinuxAVU.objects.get_or_create(path=path, name=name)
         obj.value = value
         obj.unit = unit
         obj.save()
 
-    def getAVU(self, path, name):
+    def get_metadata(self, path, name):
         obj = LinuxAVU.objects.get(path__exact=path, name__exact=name)
         return obj.value
 
-    def removeAVU(self, path, name):
+    def remove_metadata(self, path, name):
         obj = LinuxAVU.objects.get(path__exact=path, name__exact=name)
         obj.delete()
 

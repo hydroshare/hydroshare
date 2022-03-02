@@ -204,7 +204,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
         output_path = os.path.join('bags', bag_file_name)
         irods_output_path = res.bag_path
         res.update_relation_meta()
-        bag_modified = res.getAVU('bag_modified')
+        bag_modified = res.get_storage_metadata('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
         if not settings.DEBUG:
             logger.debug("irods_output_path is {}".format(irods_output_path))
@@ -273,9 +273,9 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
                     f"{res_id}/bagit.txt"]:
 
             res.update_relation_meta()
-            bag_modified = res.getAVU("bag_modified")
+            bag_modified = res.get_storage_metadata("bag_modified")
             if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
-                res.setAVU("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
+                res.set_storage_metadata("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
                 create_bag_by_irods(res_id, False)
 
         # send signal for pre download file

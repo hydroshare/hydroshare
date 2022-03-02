@@ -26,10 +26,10 @@ def debug_resource(request, shortkey):
         'owners': resource.raccess.owners,
         'editors': resource.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE),
         'viewers': resource.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
-        'public_AVU': resource.getAVU('isPublic'),
-        'type_AVU': resource.getAVU('resourceType'),
-        'modified_AVU': resource.getAVU('bag_modified'),
-        'quota_AVU': resource.getAVU('quotaUserName'),
+        'public_AVU': resource.get_storage_metadata('isPublic'),
+        'type_AVU': resource.get_storage_metadata('resourceType'),
+        'modified_AVU': resource.get_storage_metadata('bag_modified'),
+        'quota_AVU': resource.get_storage_metadata('quotaUserName'),
     }
     return HttpResponse(template.render(context, request))
 

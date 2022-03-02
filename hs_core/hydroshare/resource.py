@@ -47,7 +47,7 @@ def get_quota_usage_from_irods(username):
     # get quota size for user in iRODS data zone by retrieving AVU set on irods bagit path
     # collection
     try:
-        uqDataZoneSize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
+        uqDataZoneSize = istorage.get_metadata(settings.IRODS_BAGIT_PATH, attname)
         if uqDataZoneSize is None:
             # user may not have resources in data zone, so corresponding quota size AVU may not
             # exist for this user
@@ -64,7 +64,7 @@ def get_quota_usage_from_irods(username):
         uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
                                      settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
                                      settings.IRODS_BAGIT_PATH)
-        uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
+        uqUserZoneSize = istorage.get_metadata(uz_bagit_path, attname)
         if uqUserZoneSize is None:
             # user may not have resources in user zone, so corresponding quota size AVU may not
             # exist for this user
@@ -546,10 +546,10 @@ def create_resource(
             hs_bagit.create_bag(resource)
 
     # set the resource to private
-    resource.setAVU('isPublic', resource.raccess.public)
+    resource.set_storage_metadata('isPublic', resource.raccess.public)
 
     # set the resource type (which is immutable)
-    resource.setAVU("resourceType", resource._meta.object_name)
+    resource.set_storage_metadata("resourceType", resource._meta.object_name)
 
     return resource
 

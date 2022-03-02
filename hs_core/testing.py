@@ -143,7 +143,7 @@ class TestCaseCommonUtilities(object):
         uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
                                      settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
                                      settings.IRODS_BAGIT_PATH)
-        get_qsize = istorage.getAVU(uz_bagit_path, attname)
+        get_qsize = istorage.get_metadata(uz_bagit_path, attname)
         self.assertEqual(qsize, get_qsize)
 
     def resource_file_oprs(self):

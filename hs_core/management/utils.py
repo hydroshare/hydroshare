@@ -311,7 +311,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
         django_public = resource.raccess.public
         irods_public = None
         try:
-            irods_public = resource.getAVU('isPublic')
+            irods_public = resource.get_storage_metadata('isPublic')
         except SessionException as ex:
             msg = "cannot read isPublic attribute of {}: {}"\
                 .format(resource.short_id, ex.stderr)
@@ -336,7 +336,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                     .format(resource.short_id)
                 if sync_ispublic:
                     try:
-                        resource.setAVU('isPublic', 'false')
+                        resource.set_storage_metadata('isPublic', 'false')
                         msg += " (REPAIRED IN IRODS)"
                     except SessionException as ex:
                         msg += ": (CANNOT REPAIR: {})"\
@@ -347,7 +347,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                     .format(resource.short_id)
                 if sync_ispublic:
                     try:
-                        resource.setAVU('isPublic', 'true')
+                        resource.set_storage_metadata('isPublic', 'true')
                         msg += " (REPAIRED IN IRODS)"
                     except SessionException as ex:
                         msg += ": (CANNOT REPAIR: {})"\
@@ -719,9 +719,9 @@ class CheckResource(object):
             print("resource {}:".format(self.resource.short_id))
             self.header = True
 
-    def check_avu(self, label):
+    def check_storage_metadata(self, label):
         try:
-            value = self.resource.getAVU(label)
+            value = self.resource.get_storage_metadata(label)
             if value is None:
                 self.label()
                 print("  AVU {} is None".format(label))
@@ -760,7 +760,7 @@ class CheckResource(object):
             return
 
         for a in ('bag_modified', 'isPublic', 'resourceType', 'quotaUserName'):
-            value = self.check_avu(a)
+            value = self.check_storage_metadata(a)
             if a == 'resourceType' and value is not None and value != self.resource.resource_type:
                 self.label()
                 print(("  AVU resourceType is {}, should be {}".format(value,
