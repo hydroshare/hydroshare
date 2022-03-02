@@ -29,6 +29,7 @@ let manageAccessApp = new Vue({
             edit: 'Can edit',
             owner: 'Is owner'
         },
+        accessDeniedTitle: "You do not have permission to change the sharing status.",
         error: "",
         quotaError: "",
         sharingError: "",

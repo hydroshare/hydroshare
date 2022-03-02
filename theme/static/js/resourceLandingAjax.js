@@ -338,7 +338,8 @@ function showCompletedMessage(json_response) {
                 showMetaStatus = json_response.show_meta_status;
             }
             if (showMetaStatus) {
-                if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                let sufficient = json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1;
+                if (sufficient && manageAccessApp.canChangeResourceFlags) {
                     manageAccessApp.$data.canBePublicDiscoverable = true;
                     let resourceType = RES_TYPE;
                     let promptMessage = "";
