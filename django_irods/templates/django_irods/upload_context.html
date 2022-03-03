@@ -1,0 +1,12 @@
+{% extends "pages/page.html" %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% block title %}File upload{% endblock %}
+
+{% block main %}
+
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
+{% endblock %}

@@ -9,6 +9,7 @@ from django.conf import settings
 from django.http import HttpResponse, FileResponse, HttpResponseRedirect, JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework import status
+from django.views.generic.base import TemplateView
 
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
@@ -54,8 +55,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     6. a previously zipped file that was zipped asynchronously.
 
     """
-    if not settings.DEBUG:
-        logger.debug("request path is {}".format(path))
+    logger.debug("request path is {}".format(path))
 
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':
@@ -83,8 +83,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     else:  # regular download request
         res_id = split_path_strs[0]
 
-    if not settings.DEBUG:
-        logger.debug("resource id is {}".format(res_id))
+    logger.debug("resource id is {}".format(res_id))
 
     # now we have the resource Id and can authorize the request
     # if the resource does not exist in django, authorized will be false
@@ -135,11 +134,9 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
             irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
-            if not settings.DEBUG:
-                logger.debug("automatically zipping folder {} to {}".format(path, output_path))
+            logger.debug("automatically zipping folder {} to {}".format(path, output_path))
         elif istorage.exists(irods_path):
-            if not settings.DEBUG:
-                logger.debug("request for single file {}".format(path))
+            logger.debug("request for single file {}".format(path))
             is_sf_request = True
 
             if is_zip_request:
@@ -206,8 +203,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
         res.update_relation_meta()
         bag_modified = res.getAVU('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
-        if not settings.DEBUG:
-            logger.debug("irods_output_path is {}".format(irods_output_path))
+        logger.debug("irods_output_path is {}".format(irods_output_path))
         if bag_modified is None or not bag_modified:
             if not istorage.exists(irods_output_path):
                 bag_modified = True
@@ -267,11 +263,9 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             return JsonResponse(task_dict)
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
-
-        if path in [f"{res_id}/data/resourcemap.xml", f"{res_id}/data/resourcemetadata.xml",
-                    f"{res_id}/manifest-md5.txt", f"{res_id}/tagmanifest-md5.txt", f"{res_id}/readme.txt",
-                    f"{res_id}/bagit.txt"]:
-
+        if path in ["{res_id}/data/resourcemap.xml", "{res_id}/data/resourcemetadata.xml",
+                    "{res_id}/manifest-md5.txt", "{res_id}/tagmanifest-md5.txt", "{res_id}/readme.txt",
+                    "{res_id}/bagit.txt"]:
             res.update_relation_meta()
             bag_modified = res.getAVU("bag_modified")
             if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
@@ -337,8 +331,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
         response['Content-Length'] = flen
         response['X-Accel-Redirect'] = '/'.join([
             getattr(settings, 'IRODS_DATA_URI', '/irods-data'), output_path])
-        if not settings.DEBUG:
-            logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
+        logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
         return response
 
     # if we get here, none of the above conditions are true
@@ -347,8 +340,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
 
     options = ('-',)  # we're redirecting to stdout.
     # this unusual way of calling works for streaming federated or local resources
-    if not settings.DEBUG:
-        logger.debug("Locally streaming {}".format(output_path))
+    logger.debug("Locally streaming {}".format(output_path))
     # track download count
     res.update_download_count()
     proc = session.run_safe('iget', None, irods_output_path, *options)
@@ -360,12 +352,108 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     return response
 
 
+class UploadContextView(TemplateView):
+    """ generate a form to start the upload as a separate JavaScript.
+    :param request: the request object
+    :param path: the path of the folder in which the upload should be placed.
+
+    This builds a JavaScript environment on the client browser that handles uploads.
+    It checks the upload request for validity and -- if valid -- loads all context needed.
+    The argument `path` says where in what resource the file should be stored, and is of the form
+        `{resource-id}/data/contents/subpath`
+    The path must exist.
+
+    Given this path, this JavaScript template builds a query form that asks the user
+    for a filename and then places it here in this path under the same name.  The file
+    must not already exist on the path.
+
+    The logic in this script is complex:
+        1. Display the target path.
+        2. Ask the user for a local file.
+        3. Begin uploading the file via a reverse proxy call to the upload view below.
+        4. Upon completion, call upload_complete below to complete the upload.
+        5. This script must remain open until the upload completes.
+
+    Because of this complexity, this view has to retain the context of the complete upload, including
+        1. The identity of the local file.
+        2. The remote destination path.
+        3. The state of the upload.
+        4. The temporary file chosen to store the upload until completion.
+
+    """
+    template_name = "upload_context.html"
+    http_method_names = ["get"]
+
+    def dispatch(self, *args, **kwargs):
+        """ before dispatching normally, authenticate request """
+
+        if 'path' not in kwargs:
+            response = HttpResponse(status=401)
+            content_msg = "No upload path specified!"
+            response.content = content_msg
+            return response
+
+        path = kwargs['path']
+
+        # remove trailing /'s
+        split_path_strs = path.split('/')
+        while split_path_strs[-1] == '':
+            split_path_strs.pop()
+        path = '/'.join(split_path_strs)
+
+        logger.debug("request path is {}".format(path))
+
+        # TODO: verify that this is a valid file path at time of request.
+        # TODO: perhaps create intermediate directories before upload.
+
+        # first path element is resource short_path
+        res_id = split_path_strs[0]
+
+        logger.debug("resource id is {}".format(res_id))
+
+        # now we have the resource Id and can authorize the request
+        # if the resource does not exist in django, authorized will be false
+        res, authorized, _ = authorize(self.request, res_id,
+                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                       raises_exception=False)
+        if not authorized:
+            response = HttpResponse(status=401)
+            content_msg = "You do not have permission to upload files to resource {}!".format(res_id)
+            response.content = content_msg
+            return response
+
+        istorage = res.get_irods_storage()  # deal with federated storage
+        irods_path = res.get_irods_path(path, prepend_short_id=False)
+
+        if not istorage.exists(irods_path):
+            response = HttpResponse(status=401)
+            content_msg = "Path {} must already exist!".format(path)
+            response.content = content_msg
+            return response
+
+        try:
+            istorage.listdir(irods_path)  # is this a folder?
+        except icommands.SessionException:
+            response = HttpResponse(status=401)
+            content_msg = "Path {} is not a folder!".format(path)
+            response.content = content_msg
+            return response
+
+        # fully authorized: generate the view, including calling get_context_data below.
+        return super(UploadContextView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['path'] = kwargs['path']  # guaranteed to succeed and exist
+        return context
+
+
 def upload(request, path, use_reverse_proxy=True,
              *args, **kwargs):
-    """ perform an upload request, either asynchronously or synchronously
+    """ perform an upload request asynchronously
 
     :param request: the request object.
-    :param path: the path of the thing to be downloaded.
+    :param path: the path of the thing to be uploaded.
     :param use_reverse_proxy: True means to utilize NGINX reverse proxy for streaming.
 
     The following variables are computed:
@@ -376,8 +464,7 @@ def upload(request, path, use_reverse_proxy=True,
     A path must point to a single file.
 
     """
-    if not settings.DEBUG:
-        logger.debug("request path is {}".format(path))
+    logger.debug("request path is {}".format(path))
 
     # remove trailing /'s
     split_path_strs = path.split('/')
@@ -385,8 +472,7 @@ def upload(request, path, use_reverse_proxy=True,
         split_path_strs.pop()
     path = '/'.join(split_path_strs)
 
-    if not settings.DEBUG:
-        logger.debug("request path is {}".format(path))
+    logger.debug("request path is {}".format(path))
 
     # TODO: verify that this is a valid file path at time of request.
     # TODO: perhaps create intermediate directories before upload.
@@ -394,8 +480,7 @@ def upload(request, path, use_reverse_proxy=True,
     # first path element is resource short_path
     res_id = split_path_strs[0]
 
-    if not settings.DEBUG:
-        logger.debug("resource id is {}".format(res_id))
+    logger.debug("resource id is {}".format(res_id))
 
     # now we have the resource Id and can authorize the request
     # if the resource does not exist in django, authorized will be false
@@ -403,6 +488,7 @@ def upload(request, path, use_reverse_proxy=True,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
     if not authorized:
+        # TODO: this should return a JSON abort code rather than HTML
         response = HttpResponse(status=401)
         content_msg = "You do not have permission to upload to this location!"
         response.content = content_msg
@@ -412,10 +498,9 @@ def upload(request, path, use_reverse_proxy=True,
     irods_path = res.get_irods_path(path, prepend_short_id=False)
 
     if istorage.exists(irods_path):
-        if not settings.DEBUG:
-            logger.debug("irods path {} already exists".format(irods_path))
-            logger.debug("file {} already exists".format(path))
+        logger.debug("file {} already exists".format(path))
 
+        # TODO: this should return a JSON abort code rather than HTML 
         response = HttpResponse(status=401)
         content_msg = "File {} already exists!".format(path)
         response.content = content_msg
@@ -427,13 +512,14 @@ def upload(request, path, use_reverse_proxy=True,
     if use_reverse_proxy and 'HTTP_X_DJANGO_REVERSE_PROXY' in request.META:
         # invoke X-Accel-Redirect on physical vault file in nginx
         response = HttpResponse()
-        response['X-Accel-Redirect'] = '/'.join(['/upload_private', output_path])
-        if not settings.DEBUG:
-            logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
+        response['X-Accel-Redirect'] = '/'.join(['/upload_private', path])
+        logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
         return response
 
     # if we get here, none of the above conditions are true --> do upload normally
     else:
+        # TODO: this should return a JSON abort code rather than HTML
+        logger.debug("no support for non-Proxy upload yet for {}".format(path))
         response = HttpResponse(status=401)
         content_msg = "Non-proxied uploads aren't implemented yet!"
         response.content = content_msg

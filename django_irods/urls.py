@@ -1,21 +1,29 @@
 from django.conf.urls import url
 from django_irods.views import rest_check_task_status,\
         rest_download, download,\
-        rest_upload, upload 
+        rest_upload, upload,\
+        UploadContextView
 
 urlpatterns = [
     # for download request from resource landing page
     url(r'^download/(?P<path>.*)$', download, name='django_irods_download'),
+
     # for download request from REST API
-    url(r'^rest_download/(?P<path>.*)$', rest_download,
-        name='rest_download'),
+    url(r'^rest_download/(?P<path>.*)$', rest_download, name='rest_download'),
+
     # for REST API poll
     url(r'^rest_check_task_status/(?P<task_id>[A-z0-9\-]+)$',
         rest_check_task_status,
         name='rest_check_task_status'),
-    # for upload request from resource landing page
+
+    # for upload setup request from resource landing page
+    url(r'^upload_context/(?P<path.*)$', UploadContextView.as_view(),
+        name='upload_context'),
+
+    # for upload proxy request from upload context page
     url(r'^upload/(?P<path>.*)$', upload, name='upload'),
-    # for download request from REST API
-    url(r'^rest_upload/(?P<path>.*)$', rest_upload,
-        name='rest_upload'),
+
+    # for upload proxy request from REST API
+    url(r'^rest_upload/(?P<path>.*)$', rest_upload, name='rest_upload')
+
 ]
