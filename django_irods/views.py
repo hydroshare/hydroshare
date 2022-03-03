@@ -394,6 +394,7 @@ class UploadContextView(TemplateView):
             return response
 
         path = kwargs['path']
+        logger.debug("request path is '{}'".format(path))
 
         # remove trailing /'s
         split_path_strs = path.split('/')
@@ -401,7 +402,7 @@ class UploadContextView(TemplateView):
             split_path_strs.pop()
         path = '/'.join(split_path_strs)
 
-        logger.debug("request path is {}".format(path))
+        logger.debug("request path is now '{}'".format(path))
 
         # TODO: verify that this is a valid file path at time of request.
         # TODO: perhaps create intermediate directories before upload.
@@ -453,7 +454,7 @@ def upload(request, path, use_reverse_proxy=True,
     """ perform an upload request asynchronously
 
     :param request: the request object.
-    :param path: the path of the thing to be uploaded.
+    :param path: the destination path of the thing to be uploaded.
     :param use_reverse_proxy: True means to utilize NGINX reverse proxy for streaming.
 
     The following variables are computed:
@@ -497,8 +498,8 @@ def upload(request, path, use_reverse_proxy=True,
     istorage = res.get_irods_storage()  # deal with federated storage
     irods_path = res.get_irods_path(path, prepend_short_id=False)
 
-    if istorage.exists(irods_path):
-        logger.debug("file {} already exists".format(path))
+    if not istorage.exists(irods_path):
+        logger.debug("path {} does not exist".format(path))
 
         # TODO: this should return a JSON abort code rather than HTML 
         response = HttpResponse(status=401)
@@ -512,7 +513,7 @@ def upload(request, path, use_reverse_proxy=True,
     if use_reverse_proxy and 'HTTP_X_DJANGO_REVERSE_PROXY' in request.META:
         # invoke X-Accel-Redirect on physical vault file in nginx
         response = HttpResponse()
-        response['X-Accel-Redirect'] = '/'.join(['/upload_private', path])
+        response['X-Accel-Redirect'] = '/'.join(['upload_private', path])
         logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
         return response
 

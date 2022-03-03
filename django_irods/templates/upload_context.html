@@ -1,0 +1,97 @@
+{% extends "pages/page.html" %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% block title %}File upload{% endblock %}
+
+{% block main %}
+<script src="/static/js/tus.min.js"></script> 
+<h1>Uploading to destination '{{ path }}'</h1>
+
+<form> 
+{% csrf_token %}
+<input type='file' id='what'>
+</form>
+
+<div id='upload_status'> 
+Upload not yet started. 
+</div> 
+
+<script>
+// using jQuery
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+var csrftoken = getCookie('csrftoken');
+
+what = document.getElementById("what"); 
+
+what.addEventListener("change", function(e) {
+    // Get the selected file from the input element
+    var file = e.target.files[0]
+
+    // Create a new tus upload
+    var upload = new tus.Upload(file, {
+        // Endpoint is the upload creation URL from your tus server
+        // This is a direct passthough to tusd from nginx
+        endpoint: "https://cuahsi-dev-1.hydroshare.org/upload/" + '{{ path }}',
+        // csr token header 
+        headers: { 
+            'X-CSRFToken': csrftoken,
+        }, 
+        // Retry delays will enable tus-js-client to automatically retry on errors
+        retryDelays: [0, 3000, 5000, 10000, 20000],
+        // Attach additional meta data about the file for the server
+        metadata: {
+            filename: file.name,
+            filetype: file.type
+        },
+        // Callback for errors which cannot be fixed using retries
+        onError: function(error) {
+            console.log("Failed because: " + error); 
+            document.getElementById('upload_status').innerHTML = "<p>failed because: " + error + "</p>"; 
+        },
+        // Callback for reporting upload progress
+        onProgress: function(bytesUploaded, bytesTotal) {
+            var percentage = (bytesUploaded / bytesTotal * 100).toFixed(2); 
+            console.log(bytesUploaded, bytesTotal, percentage + "%"); 
+            document.getElementById('upload_status').innerHTML = 
+                "<p>uploaded: " + bytesUploaded + ", total: " + bytesTotal + "</p>"; 
+        },
+        // Callback for once the upload is completed
+        onSuccess: function() {
+            console.log("Upload completed:  %s from %s", upload.file.name, upload.url); 
+            document.getElementById("upload_status").innerHTML = "done";
+        }
+    })
+
+     // Check if there are any previous uploads to continue.
+    upload.findPreviousUploads().then(function (previousUploads) {
+        // Found previous uploads so we select the first one. 
+        if (previousUploads.length) {
+            upload.resumeFromPreviousUpload(previousUploads[0])
+        }
+
+        // Start the upload
+        upload.start()
+    })
+})
+</script>
+<span id="csrf">{% csrf_token %}</span>
+
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
+{% endblock %}

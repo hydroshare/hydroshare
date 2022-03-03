@@ -1,4 +1,6 @@
 from django.conf.urls import url
+from django.views.decorators.csrf import csrf_exempt
+
 from django_irods.views import rest_check_task_status,\
         rest_download, download,\
         rest_upload, upload,\
@@ -17,11 +19,13 @@ urlpatterns = [
         name='rest_check_task_status'),
 
     # for upload setup request from resource landing page
-    url(r'^upload_context/(?P<path.*)$', UploadContextView.as_view(),
+    url(r'^upload_context/(?P<path>.*)$', UploadContextView.as_view(),
         name='upload_context'),
 
     # for upload proxy request from upload context page
-    url(r'^upload/(?P<path>.*)$', upload, name='upload'),
+    # can't authenticate due to packet requirements
+    # TODO: use extension headers.  
+    # url(r'^upload/(?P<path>.*)$', csrf_exempt(upload), name='upload'),
 
     # for upload proxy request from REST API
     url(r'^rest_upload/(?P<path>.*)$', rest_upload, name='rest_upload')
