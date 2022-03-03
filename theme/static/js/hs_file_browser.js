@@ -2523,6 +2523,38 @@ $(document).ready(function () {
         }
 
         $("#txtFileURL").val(basePath + url);
+
+        // update message for URL sharing depending on raccess
+        if(!RESOURCE_ACCESS.isPublic){
+            if (RESOURCE_ACCESS.isDiscoverable){
+                $('#warnTxtFileURL p').text("You have requested the URL for a file that is within a Discoverable resource. ");
+                if (RESOURCE_ACCESS.isPrivateLinkSharing){
+                    $('#warnTxtFileURL p').append(
+                        'This resource has Private Link Sharing enabled. \
+                        This means that anyone with the link will be able to access the file, \
+                        but users without the link will not be permitted unless they have "view" permission on this resource.');
+                }else{
+                    $('#warnTxtFileURL p').append(
+                        'Only you and other HydroShare users who have been granted at least "view" permission will be able to access this URL. \
+                        If you want this URL to be publicly available, \
+                        change the sharing status of your resource to "public" or enable Private Link Sharing.');
+                }
+            }else if (RESOURCE_ACCESS.isPrivateLinkSharing){
+                $('#warnTxtFileURL p').text(
+                    'You have requested the URL for a file that is within a Private resource. \
+                    This resource has Private Link Sharing enabled. \
+                    This means that anyone with the link will be able to access the file, \
+                    but users without the link will not be permitted unless they have "view" permission on this resource.');
+            }else{
+                $('#warnTxtFileURL p').text(
+                    'You have requested the URL for a file that is within a Private resource. \
+                    Only you and other HydroShare users who have been granted at least "view" permission will be able to access this URL. \
+                    If you want this URL to be publicly available, change the sharing status of your resource to "public" or enable Private Link Sharing.');
+            }
+            $("#warnTxtFileURL").show();
+        }else{
+            $("#warnTxtFileURL").hide();
+        }
     });
 
     // set generic file type method

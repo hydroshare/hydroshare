@@ -1775,10 +1775,10 @@
             </div>
 
             <div class="modal-body">
-                {% if not cm.raccess.published and not cm.raccess.public %}
-                    <div id="warnTxtFileURL" class="row">
-                        <span class="ui-icon ui-icon-alert access-warning"></span>
-                        <p>
+                <div id="warnTxtFileURL" class="row">
+                    {% if not cm.raccess.published and not cm.raccess.public %}
+                    <span class="ui-icon ui-icon-alert access-warning"></span>
+                    <p>
                         {% if cm.raccess.discoverable %}
                             You have requested the URL for a file that is within a Discoverable resource.
                             {% if cm.raccess.allow_private_sharing %}
@@ -1800,9 +1800,9 @@
                             Only you and other HydroShare users who have been granted at least "view" permission will be able to access this URL.
                             If you want this URL to be publicly available, change the sharing status of your resource to "public" or enable Private Link Sharing.
                         {% endif %}
-                        </p>
-                    </div>
+                    </p>
                 {% endif %}
+                </div>
                 
                 <div class="row">
                     <fieldset class="col-sm-12">
