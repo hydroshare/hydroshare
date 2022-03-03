@@ -1779,15 +1779,17 @@
                     <div id="warnTxtFileURL" class="row">
                         <span class="ui-icon ui-icon-alert access-warning"></span>
                         <p>
-                        {% if cm.raccess.discoverable and not cm.raccess.allow_private_sharing %}
+                        {% if cm.raccess.discoverable %}
                             You have requested the URL for a file that is within a Discoverable resource.
-                            Only you and other HydroShare users who have been granted at least "view" permission will be able to access this URL.
-                            If you want this URL to be publicly available, change the sharing status of your resource to "public" or enable Private Link Sharing.
-                        {% elif cm.raccess.discoverable and cm.raccess.allow_private_sharing %}
-                            You have requested the URL for a file that is within a Discoverable resource.
-                            This resource has Private Link Sharing enabled.
-                            This means that anyone with the link will be able to access the file,
-                            but users without the link will not be permitted unless they have "view" permission on this resource.
+                            {% if cm.raccess.allow_private_sharing %}
+                                This resource has Private Link Sharing enabled.
+                                This means that anyone with the link will be able to access the file,
+                                but users without the link will not be permitted unless they have "view" permission on this resource.
+                            {% else %}
+                                Only you and other HydroShare users who have been granted at least "view" permission will be able to access this URL.
+                                If you want this URL to be publicly available, 
+                                change the sharing status of your resource to "public" or enable Private Link Sharing.
+                            {% endif %}
                         {% elif cm.raccess.allow_private_sharing %}
                             You have requested the URL for a file that is within a Private resource.
                             This resource has Private Link Sharing enabled.
