@@ -53,6 +53,12 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     content_model = page.get_content_model()
 
+    can_view = content_model.can_view(request)
+    if not can_view:
+        raise PermissionDenied()
+    # if not user.is_authenticated():
+    #     return redirect_to_login(request.path)
+
     discoverable = content_model.raccess.discoverable
     validation_error = None
     resource_is_mine = False
