@@ -4,7 +4,6 @@ import json
 
 from dateutil import parser
 from django.conf import settings
-from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
@@ -56,9 +55,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     # whether the user has permission to view this resource
     can_view = content_model.can_view(request)
     if not can_view:
-        if user.is_authenticated():
-            raise PermissionDenied()
-        return redirect_to_login(request.path)
+        raise PermissionDenied()
 
     discoverable = content_model.raccess.discoverable
     validation_error = None
