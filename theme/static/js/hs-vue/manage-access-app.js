@@ -2,8 +2,6 @@
  * Created by Mauriel on 5/19/2019.
  */
 
-// const bus = new Vue();
-
 let manageAccessApp = new Vue({
     el: '#manage-access',
     delimiters: ['${', '}'],
