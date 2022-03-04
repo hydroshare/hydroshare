@@ -397,12 +397,13 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         opendap_url = f'{settings.THREDDS_SERVER_URL}dodsC/hydroshare/resources/{res_id}/data/contents/{file_name}.html'
         with opendap_div:
             html_tags.legend('OPeNDAP using DAP2')
-            html_tags.em('The netCDF data in this multidimensional content aggregation may be accessed at the link below '
-               'using the OPeNDAP DAP2 protocol enabled on the HydroShare deployment of Unidata’s THREDDS data server. '
-               'This enables direct and programmable access to this data through ')
+            html_tags.em(
+                'The netCDF data in this multidimensional content aggregation may be accessed at the link below '
+                'using the OPeNDAP DAP2 protocol enabled on the HydroShare deployment of Unidata’s THREDDS data '
+                'server. This enables direct and programmable access to this data through ')
             html_tags.a(" OPeNDAP client software",
-              href="https://www.opendap.org/support/OPeNDAP-clients",
-              target="_blank")
+                        href="https://www.opendap.org/support/OPeNDAP-clients",
+                        target="_blank")
             with html_tags.div(style="margin-top:10px;"):
                 html_tags.a(opendap_url, href=opendap_url, target='_blank')
 
@@ -441,28 +442,28 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             with html_tags.div():
                 with html_tags.div(cls="content-block", id="original-coverage-filetype"):
                     with html_tags.form(id="id-origcoverage-file-type",
-                              action="{{ orig_coverage_form.action }}",
-                              method="post", enctype="multipart/form-data"):
+                                        action="{{ orig_coverage_form.action }}",
+                                        method="post", enctype="multipart/form-data"):
                         html_tags.div("{% crispy orig_coverage_form %}")
                         with html_tags.div(cls="row", style="margin-top:10px;"):
                             with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
+                                                   "col-md-2 col-xs-6"):
                                 html_tags.button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;")
+                                                 cls="btn btn-primary pull-right",
+                                                 style="display: none;")
 
             with html_tags.div(cls="content-block", id="spatial-coverage-filetype"):
                 with html_tags.form(id="id-spatial-coverage-file-type",
-                          cls='hs-coordinates-picker', data_coordinates_type="box",
-                          action="{{ spatial_coverage_form.action }}",
-                          method="post", enctype="multipart/form-data"):
+                                    cls='hs-coordinates-picker', data_coordinates_type="box",
+                                    action="{{ spatial_coverage_form.action }}",
+                                    method="post", enctype="multipart/form-data"):
                     html_tags.div("{% crispy spatial_coverage_form %}")
                     with html_tags.div(cls="row", style="margin-top:10px;"):
                         with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
-                                     "col-md-2 col-xs-6"):
+                                               "col-md-2 col-xs-6"):
                             html_tags.button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;")
+                                             cls="btn btn-primary pull-right",
+                                             style="display: none;")
 
             with html_tags.div():
                 html_tags.legend("Variables")
@@ -470,15 +471,15 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                 with html_tags.div(id="variables"):
                     with html_tags.div("{% for form in variable_formset_forms %}"):
                         with html_tags.form(id="{{ form.form_id }}", action="{{ form.action }}",
-                                  method="post", enctype="multipart/form-data",
-                                  cls="well"):
+                                            method="post", enctype="multipart/form-data",
+                                            cls="well"):
                             html_tags.div("{% crispy form %}")
                             with html_tags.div(cls="row", style="margin-top:10px;"):
                                 with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
-                                             "col-md-2 col-xs-6"):
+                                                       "col-md-2 col-xs-6"):
                                     html_tags.button("Save changes", type="button",
-                                           cls="btn btn-primary pull-right",
-                                           style="display: none;")
+                                                     cls="btn btn-primary pull-right",
+                                                     style="display: none;")
                     html_tags.div("{% endfor %}")
 
             self.get_ncdump_html()
@@ -536,7 +537,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                     html_tags._input(id="metadata-dirty", type="hidden", value=self.is_dirty)
                     with html_tags.form(action=form_action, method="post", id="update-netcdf-file"):
                         html_tags.button("Update NetCDF File", type="button", cls="btn btn-primary",
-                               id="id-update-netcdf-file")
+                                         id="id-update-netcdf-file")
 
         return root_div
 
@@ -547,8 +548,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     def get_variable_formset(self):
         from ..forms import VariableForm
         VariableFormSetEdit = formset_factory(
-            wraps(VariableForm)(partial(VariableForm, allow_edit=True)),
-            formset=BaseFormSet, extra=0)
+            wraps(VariableForm)(partial(VariableForm, allow_edit=True)), formset=BaseFormSet, extra=0)
         variable_formset = VariableFormSetEdit(
             initial=list(self.variables.all().values()), prefix='Variable')
 
@@ -581,7 +581,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                 header_info = nc_dump_res_file.resource_file.read()
                 header_info = header_info.decode('utf-8')
                 html_tags.textarea(header_info, readonly="", rows="15",
-                         cls="input-xlarge", style="min-width: 100%; resize: vertical;")
+                                   cls="input-xlarge", style="min-width: 100%; resize: vertical;")
 
         return nc_dump_div
 
