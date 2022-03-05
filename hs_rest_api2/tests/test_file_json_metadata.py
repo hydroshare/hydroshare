@@ -76,9 +76,6 @@ class TestFileBasedJSON(HSRESTTestCase):
                 result_json['modified'] = expected_json['modified']
                 result_json['created'] = expected_json['created']
                 result_json['creators'][0]['description'] = expected_json['creators'][0]['description']
-                # TODO: Until hsmodels package is updated to remove support for 'Source' metadata element
-                #  we have to set the expect_json['sources'] to empty list
-                expected_json['sources'] = []
             self.assertEqual(sorting(result_json), sorting(expected_json))
 
         kwargs = {"pk": self.res.short_id}
