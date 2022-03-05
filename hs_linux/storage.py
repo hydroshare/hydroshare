@@ -65,7 +65,7 @@ class LinuxStorage(FileSystemStorage):
 
     '''
     set_storage_metadata -- stores the metadata associated with the file
-    get_storage_metadata -- There is a lookup table for each one and its default value; 
+    get_storage_metadata -- There is a lookup table for each one and its default value;
     check that and return the default value
     Alva: he will generate default storage metadata for everything.
     '''
@@ -104,11 +104,11 @@ class LinuxStorage(FileSystemStorage):
         dest_irods = self.prepend_path(dest_name)
         try:
             shutil.copytree(src_irods, dest_irods)
-        except FileExistsError as e:
+        except FileExistsError:
             # if a dest_name is already present, create a directory within dest_name
             dest_irods = dest_irods + "/" + src_irods.rsplit("/", 1)[1]
             shutil.copytree(src_irods, dest_irods)
-        except NotADirectoryError as exc:
+        except NotADirectoryError:
             # if copying a file, use shutil.copy
             if (not os.path.exists(dest_irods.rsplit('/', 1)[0])):
                 os.makedirs(dest_irods.rsplit('/', 1)[0])
@@ -131,11 +131,11 @@ class LinuxStorage(FileSystemStorage):
                 dest_irods = self.prepend_path(to_name)
                 try:
                     shutil.copytree(from_name, dest_irods)
-                except FileExistsError as e:
+                except FileExistsError:
                     # if a dest_name is already present, create a directory within dest_name
                     dest_irods = dest_irods + "/" + from_name.rsplit("/", 1)[1]
                     shutil.copytree(from_name, dest_irods)
-                except NotADirectoryError as exc:
+                except NotADirectoryError:
                     # if copying a file, use shutil.copy
                     if (not os.path.exists(dest_irods.rsplit('/', 1)[0])):
                         os.makedirs(dest_irods.rsplit('/', 1)[0])
@@ -146,11 +146,11 @@ class LinuxStorage(FileSystemStorage):
         src_irods = self.prepend_path(source_name)
         try:
             shutil.copytree(src_irods, destination_name)
-        except FileExistsError as e:
+        except FileExistsError:
             # if a dest_name is already present, create a directory within dest_name
             destination_name = destination_name + "/" + src_irods.rsplit("/", 1)[1]
             shutil.copytree(src_irods, destination_name)
-        except NotADirectoryError as exc:
+        except NotADirectoryError:
             # if copying a file, use shutil.copy
             if (not os.path.exists(destination_name.rsplit('/', 1)[0])):
                 os.makedirs(destination_name.rsplit('/', 1)[0])

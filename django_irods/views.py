@@ -276,7 +276,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             bag_modified = res.get_storage_metadata("bag_modified")
             if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
                 # ensure bag_modified is set when irods_output_path does not exist
-                res.set_storage_metadata("bag_modified", True) 
+                res.set_storage_metadata("bag_modified", True)
                 create_bag_by_irods(res_id, False)
 
         # send signal for pre download file
