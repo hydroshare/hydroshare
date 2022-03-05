@@ -65,7 +65,8 @@ class LinuxStorage(FileSystemStorage):
 
     '''
     set_storage_metadata -- stores the metadata associated with the file
-    get_storage_metadata -- There is a lookup table for each one and its default value; check that and return the default value
+    get_storage_metadata -- There is a lookup table for each one and its default value; 
+    check that and return the default value
     Alva: he will generate default storage metadata for everything.
     '''
 
