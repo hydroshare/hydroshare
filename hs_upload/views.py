@@ -26,10 +26,11 @@ class UploadContextView(TemplateView):
     must not already exist on the path.
 
     The logic in this script is complex:
-        1. Display the target path.
+        1. Authorize write access to the target path.
+        2. Display the target path.
         2. Ask the user for a local file.
-        3. Begin uploading the file via a reverse proxy call to the upload view below.
-        4. Upon completion, call upload_complete below to complete the upload.
+        3. Begin uploading the file via a reverse proxy call to tusd via NGINX.
+        4. Upon completion, call complete below to complete the upload.
         5. This script must remain open until the upload completes.
 
     Because of this complexity, this view has to retain the context of the complete upload, including
@@ -39,7 +40,7 @@ class UploadContextView(TemplateView):
         4. The temporary file chosen to store the upload until completion.
 
     """
-    template_name = "upload_context.html"
+    template_name = "context.html"
     http_method_names = ["get"]
 
     def dispatch(self, *args, **kwargs):
@@ -105,87 +106,3 @@ class UploadContextView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['path'] = kwargs['path']  # guaranteed to succeed and exist
         return context
-
-
-def upload(request, path, use_reverse_proxy=True,
-             *args, **kwargs):
-    """ perform an upload request asynchronously
-
-    :param request: the request object.
-    :param path: the destination path of the thing to be uploaded.
-    :param use_reverse_proxy: True means to utilize NGINX reverse proxy for streaming.
-
-    The following variables are computed:
-
-    * `irods_path` is the location of `path` in irods.
-
-    A path must point to a single file.
-
-    """
-    logger.debug("request path is {}".format(path))
-
-    # remove trailing /'s
-    split_path_strs = path.split('/')
-    while split_path_strs[-1] == '':
-        split_path_strs.pop()
-    path = '/'.join(split_path_strs)
-
-    logger.debug("request path is {}".format(path))
-
-    # TODO: verify that this is a valid file path at time of request.
-    # TODO: perhaps create intermediate directories before upload.
-
-    # first path element is resource short_path
-    res_id = split_path_strs[0]
-
-    logger.debug("resource id is {}".format(res_id))
-
-    # now we have the resource Id and can authorize the request
-    # if the resource does not exist in django, authorized will be false
-    res, authorized, _ = authorize(request, res_id,
-                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                   raises_exception=False)
-    if not authorized:
-        # TODO: this should return a JSON abort code rather than HTML
-        response = HttpResponse(status=401)
-        content_msg = "You do not have permission to upload to this location!"
-        response.content = content_msg
-        return response
-
-    istorage = res.get_irods_storage()  # deal with federated storage
-    irods_path = res.get_irods_path(path, prepend_short_id=False)
-
-    if not istorage.exists(irods_path):
-        logger.debug("path {} does not exist".format(path))
-
-        # TODO: this should return a JSON abort code rather than HTML
-        response = HttpResponse(status=401)
-        content_msg = "File {} already exists!".format(path)
-        response.content = content_msg
-        return response
-
-    # After this point, we have valid path and irods_path
-    # Allow reverse proxy if request was forwarded by nginx
-    # and reverse proxy isn't overridden by user
-    if use_reverse_proxy and 'HTTP_X_DJANGO_REVERSE_PROXY' in request.META:
-        # invoke X-Accel-Redirect on physical vault file in nginx
-        response = HttpResponse()
-        response['X-Accel-Redirect'] = '/'.join(['upload_private', path])
-        logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
-        return response
-
-    # if we get here, none of the above conditions are true --> do upload normally
-    else:
-        # TODO: this should return a JSON abort code rather than HTML
-        logger.debug("no support for non-Proxy upload yet for {}".format(path))
-        response = HttpResponse(status=401)
-        content_msg = "Non-proxied uploads aren't implemented yet!"
-        response.content = content_msg
-        return response
-
-
-@swagger_auto_schema(method='get', auto_schema=None)
-@api_view(['GET'])
-def rest_upload(request, path, *args, **kwargs):
-    # need to have a separate view function just for REST API call
-    return upload(request, path, rest_call=True, *args, **kwargs)

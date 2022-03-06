@@ -139,7 +139,6 @@ server {
     # 2. Django validates the connection and access control. 
     # 3. Django redirects to /upload/, which invokes tusd. 
     # 4. Tus js client calls /upload/complete/ to complete the upload. 
-
     # perform the upload by calling tusd. 
     # everything else is a regular Django call without reverse proxy. 
     location /upload/ {

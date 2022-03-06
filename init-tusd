@@ -3,6 +3,7 @@ umask 000
 su irods -c '/usr/local/bin/tusd \
      -behind-proxy \
      -upload-dir /tmp/tusd \
+     -hooks-http https://cuahsi-dev-1.hydroshare.org/hs_upload/events \ 
      -hooks-dir /srv/tusd-hooks \
      -hooks-enabled-events pre-finish,post-finish \
      -unix-sock /hs_tmp/tusd.sock \
