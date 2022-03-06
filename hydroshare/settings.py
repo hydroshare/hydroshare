@@ -310,7 +310,8 @@ INSTALLED_APPS = (
     "security",
     "markdown",
     "hs_communities",
-    "hs_discover"
+    "hs_discover",
+    "hs_upload"
 )
 
 SWAGGER_SETTINGS = {

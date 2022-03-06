@@ -135,38 +135,31 @@ server {
     }
 
     # large file upload theory of operation: 
-    # 1. Receive connection at /upload/ with file location pattern. 
+    # 1. Receive connection at /upload/context with file location pattern. 
     # 2. Django validates the connection and access control. 
-    # 3. Django redirects to /upload_private/, which invokes tusd. 
-    # 4. Tus js client calls /upload_complete/ to complete the upload. 
+    # 3. Django redirects to /upload/, which invokes tusd. 
+    # 4. Tus js client calls /upload/complete/ to complete the upload. 
 
-    # validate and redirect upload request
-    location /django_irods/upload/ { 
-        proxy_pass http://unix:/hs_tmp/gunicorn.sock;
-        proxy_set_header X-Django-Reverse-Proxy true;
-    } 
-        
     # perform the upload by calling tusd. 
+    # everything else is a regular Django call without reverse proxy. 
     location /upload/ {
         # doesn't work for some reason involving docker networking setup: 
-        # proxy_pass http://tusd:1080;
+        # --> proxy_pass http://tusd:1080;
         # use unix socket instead: 
         proxy_pass http://unix:/hs_tmp/tusd.sock;
-        # proxy_set_header X-Reverse-Proxy true;
+         
         # Disable request and response buffering
         proxy_request_buffering  off;
         proxy_buffering          off;
         proxy_http_version       1.1;
+        
         # Add X-Forwarded-* headers
-        # proxy_set_header X-Forwarded-Host $host;
-        # proxy_set_header X-Forwarded-Proto $scheme;
-        # proxy_set_header X-Real-IP $remote_addr;
-        client_max_body_size     0;
-    } 
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
 
-    # complete the upload by placing the file into HydroShare storage. 
-    location /upload_complete/ { 
-        proxy_pass http://unix:/hs_tmp/gunicorn.sock;
+        client_max_body_size     0;
     } 
 
     # default response if no patterns above are matched. 

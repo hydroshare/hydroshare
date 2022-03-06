@@ -2,6 +2,8 @@
 umask 000
 su irods -c '/usr/local/bin/tusd \
      -behind-proxy \
-     -upload-dir /tmp/irods/data \
+     -upload-dir /tmp/tusd \
+     -hooks-dir /srv/tusd-hooks \
+     -hooks-enabled-events pre-finish,post-finish \
      -unix-sock /hs_tmp/tusd.sock \
      -base-path /upload/' >> /hydroshare/log/tusd.log 2>&1

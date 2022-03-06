@@ -10,4 +10,7 @@ RUN apt-get update && apt-get -y install net-tools procps
 
 # how to start
 COPY init-tusd /init-tusd
+COPY tusd/hooks/* /srv/tusd-hooks
+RUN chmod +x /srv/tusd-hooks/*
 CMD /bin/bash /init-tusd
+

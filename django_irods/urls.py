@@ -18,16 +18,15 @@ urlpatterns = [
         rest_check_task_status,
         name='rest_check_task_status'),
 
-    # for upload setup request from resource landing page
-    url(r'^upload_context/(?P<path>.*)$', UploadContextView.as_view(),
-        name='upload_context'),
+    # # for upload setup request from resource landing page
+    # url(r'^upload_context/(?P<path>.*)$', UploadContextView.as_view(),
+    #     name='upload_context'),
 
-    # for upload proxy request from upload context page
-    # can't authenticate due to packet requirements
-    # TODO: use extension headers.  
-    # url(r'^upload/(?P<path>.*)$', csrf_exempt(upload), name='upload'),
+    # # for upload proxy request from upload context page
+    # # can't authenticate due to packet requirements
+    # # TODO: use extension headers.  
+    # # url(r'^upload/(?P<path>.*)$', csrf_exempt(upload), name='upload'),
 
-    # for upload proxy request from REST API
-    url(r'^rest_upload/(?P<path>.*)$', rest_upload, name='rest_upload')
-
+    # # for upload proxy request from REST API
+    # url(r'^rest_upload/(?P<path>.*)$', rest_upload, name='rest_upload')
 ]

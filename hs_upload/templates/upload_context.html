@@ -1,39 +1,18 @@
 {% extends "pages/page.html" %}
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
-{% block title %}File upload{% endblock %}
+{% block title %}Upload{% endblock %}
 
 {% block main %}
 <script src="/static/js/tus.min.js"></script> 
 <h1>Uploading to destination '{{ path }}'</h1>
 
-<form> 
-{% csrf_token %}
-<input type='file' id='what'>
-</form>
+<form> <input type='file' id='what'> </form>
 
 <div id='upload_status'> 
 Upload not yet started. 
 </div> 
 
 <script>
-// using jQuery
-function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = jQuery.trim(cookies[i]);
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-var csrftoken = getCookie('csrftoken');
-
 what = document.getElementById("what"); 
 
 what.addEventListener("change", function(e) {
@@ -44,11 +23,7 @@ what.addEventListener("change", function(e) {
     var upload = new tus.Upload(file, {
         // Endpoint is the upload creation URL from your tus server
         // This is a direct passthough to tusd from nginx
-        endpoint: "https://cuahsi-dev-1.hydroshare.org/upload/" + '{{ path }}',
-        // csr token header 
-        headers: { 
-            'X-CSRFToken': csrftoken,
-        }, 
+        endpoint: "https://cuahsi-dev-1.hydroshare.org/upload/",
         // Retry delays will enable tus-js-client to automatically retry on errors
         retryDelays: [0, 3000, 5000, 10000, 20000],
         // Attach additional meta data about the file for the server
