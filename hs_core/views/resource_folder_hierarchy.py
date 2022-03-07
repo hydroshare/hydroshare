@@ -3,7 +3,6 @@ import logging
 import os
 
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 
 from rest_framework.decorators import api_view

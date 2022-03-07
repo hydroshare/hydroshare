@@ -246,7 +246,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
         folder = curr_path[len(prefix_path) + 1:]
 
     # update url in extra_data in url file's logical file object
-    filepath = get_resource_file_path(res, url_filename)
+    filepath = get_resource_file_path(res, url_filename, folder=folder)
     f = res.files.get(resource_file=filepath)
     extra_data = f.logical_file.extra_data
     extra_data['url'] = new_ref_url

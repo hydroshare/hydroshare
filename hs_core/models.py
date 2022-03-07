@@ -2778,8 +2778,8 @@ class ResourceFile(models.Model):
     # This triple of FileFields deals with the fact that there are three kinds of storage
     # TODO - Is there a better way?  One FileField with a dynamic storage option?
 
-    resource_file = models.FileField(upload_to=get_path, max_length=4096, null=True, default=None, storage=IrodsStorage())
-
+    resource_file = models.FileField(upload_to=get_path, max_length=4096, null=True, default=None,
+                                     storage=IrodsStorage())
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -3297,7 +3297,6 @@ class BaseResource(Page, AbstractResource):
             # append trailing slash to match only this folder TODO!!!!!
             if not folder.endswith("/"):
                 folder += "/"
-            from django.db.models import Q
             return self.files.filter(resource_file__startswith=folder)
         else:
             return self.files.filter(file_folder=file_folder_to_match)
