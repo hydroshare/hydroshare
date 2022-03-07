@@ -384,15 +384,22 @@ function label_ajax_submit() {
     var el = $(this);
     var labelText = $("#txtLabelName").val();
     var sanitizedLabelText = $("<div/>").html(labelText.trim()).text();
-    if (labelText !== sanitizedLabelText){
-        // red outline and messaging for invalid input
-        let text = "";
-        if (labelText.trim().length === 0){
-            text = "This label was empty, please try again.";
-        }else{
-            text = "This label contains HTML and cannot be saved.";
+    let message = "";
+    if (labelText.length >= 75){
+        message = "Your label was too long. Please trim it to < 75 characters.";
+    }else if (labelText.trim().length === 0){
+        message = "Your label was empty, please try again.";
+    }else if (labelText !== sanitizedLabelText){
+        message = "Your label contains HTML and cannot be saved.";
+    }
+    $("#user-labels-left input").each(function(i, el){
+        if ($(el).attr("data-label") === sanitizedLabelText){
+            message = "You entered a duplicate label.";
         }
-        $("#txtLabelName").closest(".modal-body").append(errorLabel(text))
+    });
+
+    if(message){
+        $("#txtLabelName").closest(".modal-body").append(errorLabel(message))
         $("#txtLabelName").addClass("invalid-input");
         return;
     }
