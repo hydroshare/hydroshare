@@ -54,6 +54,17 @@ class Command(BaseCommand):
                                   'have the value of {}'.format(resource.short_id,
                                                                 res_file.resource_file.name))
                             break
+                        file_path = res_file.fed_resource_file.name
+                        if not file_path:
+                            print('The fed_resource_file field should not be empty for '
+                                  'resource {}'.format(resource.short_id))
+                            break
+                        elif file_path.startswith(resource.resource_federation_path):
+                            file_path = file_path[len(resource.resource_federation_path)+1:]
+                            res_file.resource_file.name = file_path
+                            res_file.fed_resource_file.name = ''
+                            res_file.save()
+                            path_migrated = True
                         else:
                             res_file.resource_file.name = file_path
                             res_file.fed_resource_file.name = ''
