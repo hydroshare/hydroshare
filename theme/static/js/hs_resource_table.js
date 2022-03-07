@@ -386,7 +386,13 @@ function label_ajax_submit() {
     var sanitizedLabelText = $("<div/>").html(labelText.trim()).text();
     if (labelText !== sanitizedLabelText){
         // red outline and messaging for invalid input
-        $("#txtLabelName").closest(".modal-body").append(errorLabel("This label contains HTML and cannot be saved."))
+        let text = "";
+        if (labelText.trim().length === 0){
+            text = "This label was empty, please try again.";
+        }else{
+            text = "This label contains HTML and cannot be saved.";
+        }
+        $("#txtLabelName").closest(".modal-body").append(errorLabel(text))
         $("#txtLabelName").addClass("invalid-input");
         return;
     }
