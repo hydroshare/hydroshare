@@ -216,7 +216,8 @@ class IrodsStorage(Storage):
 
     def set_quota_holder(self, coll_id, old_holder_name, new_holder_name):
         attname = "quotaUserName"
-
+        if not self.exists(coll_id):
+            self.createDirectory(coll_id)
         if old_holder_name != new_holder_name:
             # this condition check is needed to make sure attname exists as AVU before getting it
             oldqu = self.get_metadata(coll_id, attname)
