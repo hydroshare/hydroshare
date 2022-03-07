@@ -2975,6 +2975,7 @@ span.you-flag {
 	padding-bottom: 5px;
 	padding-right: 32px;
 	margin: 0;
+	word-wrap: break-word;
 }
 
 .noselect {
