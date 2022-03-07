@@ -2871,6 +2871,12 @@ class ResourceFile(models.Model):
         # otherwise, the copy must precede this step.
         return ResourceFile.objects.create(**kwargs)
 
+    @classmethod
+    def get(cls, resource, file, folder=''):
+        """Get a ResourceFile record via its short path."""
+        resource_file_path = get_resource_file_path(resource, file, folder)
+        return ResourceFile.objects.get(object_id=resource.id, resource_file=resource_file_path)
+
     # TODO: automagically handle orphaned logical files
     def delete(self, delete_logical_file=False):
         """Delete a resource file record and the file contents.
