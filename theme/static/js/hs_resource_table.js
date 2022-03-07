@@ -667,6 +667,7 @@ function createLabel () {
 
         userLabelsTable.find(".no-items-found").remove();
 
+        $(".btn-label-remove").click(label_ajax_submit);
         $("#modalCreateLabel").modal('hide');
         $("#txtLabelName").val("");
         updateLabelsList();
