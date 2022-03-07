@@ -2078,9 +2078,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 # public or private composite resource that includes netCDF files becomes public
 
                 is_netcdf_to_public = False
-                if self.resource_type == 'NetcdfResource':
-                    is_netcdf_to_public = True
-                elif self.resource_type == 'CompositeResource' and \
+                if self.resource_type == 'CompositeResource' and \
                         self.get_logical_files('NetCDFLogicalFile'):
                     is_netcdf_to_public = True
 
