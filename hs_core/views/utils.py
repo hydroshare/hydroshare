@@ -39,7 +39,7 @@ from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.hydroshare.utils import check_aggregations
 from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
-    ResourceFile, get_user, CoreMetaData
+    ResourceFile, get_user, CoreMetaData, get_resource_file_path
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_core.enums import RelationTypes
 
@@ -246,7 +246,8 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
         folder = curr_path[len(prefix_path) + 1:]
 
     # update url in extra_data in url file's logical file object
-    f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
+    filepath = get_resource_file_path(res, url_filename)
+    f = res.files.get(resource_file=filepath)
     extra_data = f.logical_file.extra_data
     extra_data['url'] = new_ref_url
     f.logical_file.extra_data = extra_data
@@ -715,7 +716,8 @@ def link_irods_file_to_django(resource, filepath):
                                                                 test_exists=False)
         ret = None
         try:
-            ret = ResourceFile.get(resource=resource, file=base, folder=folder)
+            filepath = get_resource_file_path(resource, base, folder)
+            ret = resource.files.get(resource_file=filepath)
         except ObjectDoesNotExist:
             # this does not copy the file from anywhere; it must exist already
             b_add_file = True
@@ -794,7 +796,8 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     tgt_folder, _ = ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=False)
     file_or_folder_move = src_folder != tgt_folder
     try:
-        res_file_obj = ResourceFile.get(resource=resource, file=base, folder=src_folder)
+        filepath = get_resource_file_path(resource, base, src_folder)
+        res_file_obj = resource.files.get(resource_file=filepath)
         # if the source file is part of a FileSet or Model Program/Instance aggregation (based on folder),
         # we need to remove it from that aggregation in the case the file is being moved out of that aggregation
         if file_or_folder_move and resource.resource_type == 'CompositeResource':
@@ -836,7 +839,7 @@ def remove_irods_folder_in_django(resource, folder_path, user):
 
     # we need to delete only the files that are under the folder_path
     rel_folder_path = folder_path[len(resource.file_path) + 1:]
-    res_file_set = ResourceFile.objects.filter(object_id=resource.id, file_folder__startswith=rel_folder_path)
+    res_file_set = resource.files.filter(file_folder__startswith=rel_folder_path)
 
     if resource.resource_type == 'CompositeResource':
         # delete all aggregation objects that are under the folder_path
@@ -900,7 +903,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     link_irods_file_to_django(resource, output_zip_full_path)
 
     if bool_remove_original:
-        for f in ResourceFile.objects.filter(object_id=resource.id):
+        for f in resource.files.all():
             full_path_name = f.storage_path
             if res_coll_input in full_path_name and output_zip_full_path not in full_path_name:
                 delete_resource_file(res_id, f.short_path, user)

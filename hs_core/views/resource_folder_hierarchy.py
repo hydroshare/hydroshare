@@ -13,7 +13,7 @@ from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, get_resource_file_path
 from hs_core.task_utils import get_or_create_task_notification
 from hs_core.tasks import unzip_task
 from hs_core.views import utils as view_utils
@@ -140,8 +140,7 @@ def data_store_structure(request):
         if idx >= 0:
             mtype = mtype[idx + 1:]
 
-        f = resource.files.filter(Q(_fed_resource_file=file_path) | Q(_resource_file=file_path) |
-                                  Q(_linux_resource_file=file_path)).first()
+        f = resource.files.get(resource_file=file_path)
 
         if not f:
             # skip metadata files
@@ -711,7 +710,8 @@ def data_store_move_to_folder(request, pk=None):
 
         if not irods_path_is_directory(istorage, src_storage_path):  # there is django record
             try:
-                ResourceFile.get(resource, file, folder=folder)
+                filepath = get_resource_file_path(resource, file, folder)
+                resource.files.get(resource_file=filepath)
             except ResourceFile.DoesNotExist:
                 return HttpResponse('Source file {} does not exist'.format(src_short_path),
                                     status=status.HTTP_400_BAD_REQUEST)
@@ -811,7 +811,8 @@ def data_store_rename_file_or_folder(request, pk=None):
 
     if not irods_path_is_directory(istorage, src_storage_path):
         try:  # Django record should exist for each file
-            ResourceFile.get(resource, base, folder=folder)
+            filepath = get_resource_file_path(resource, base, folder)
+            resource.files.get(resource_file=filepath)
         except ResourceFile.DoesNotExist:
             return HttpResponse('Object to be renamed does not exist',
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -831,7 +832,8 @@ def data_store_rename_file_or_folder(request, pk=None):
                             .format(tgt_short_path),
                             status=status.HTTP_400_BAD_REQUEST)
     try:
-        ResourceFile.get(resource, base, folder=tgt_short_path)
+        filepath = get_resource_file_path(resource, base, tgt_short_path)
+        resource.files.get(resource_file=filepath)
         return HttpResponse('Desired name {} is already in use'
                             .format(tgt_short_path),
                             status=status.HTTP_400_BAD_REQUEST)

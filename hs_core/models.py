@@ -2764,9 +2764,7 @@ class ResourceFile(models.Model):
     Represent a file in a resource.
     """
     class Meta:
-        index_together = [['object_id', '_resource_file'],
-                          ['object_id', '_fed_resource_file'],
-                          ['object_id', '_linux_resource_file'],
+        index_together = [['object_id', 'resource_file'],
                           ]
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
@@ -2780,34 +2778,8 @@ class ResourceFile(models.Model):
     # This triple of FileFields deals with the fact that there are three kinds of storage
     # TODO - Is there a better way?  One FileField with a dynamic storage option?
 
-    _resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                      null=True, default=None, storage=IrodsStorage())
-    _fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                          null=True, default=None, storage=FedStorage())
-    _linux_resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                            null=True, default=None, storage=LinuxStorage())
+    resource_file = models.FileField(upload_to=get_path, max_length=4096, null=True, default=None, storage=IrodsStorage())
 
-    @property
-    def resource_file(self):
-        if not getattr(self, "_res_file", False):
-            # find the use storage type for the field
-            possible_resource_files = [self._resource_file, self._fed_resource_file, self._linux_resource_file]
-            res_file_list = [f for f in filter(lambda x: x, possible_resource_files)]
-            if len(res_file_list) != 1:
-                raise Exception("This is in an invalid ResourceFile, TODO")
-            self._res_file = res_file_list[0]
-
-        return self._res_file
-
-    @resource_file.setter
-    def resource_file(self, value):
-        # TODO make this compatible with different types
-        self._resource_file = value
-        self._res_file = self._resource_file
-
-    @property
-    def fed_resource_file(self):
-        return self._fed_resource_file
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -2821,10 +2793,7 @@ class ResourceFile(models.Model):
 
     def __str__(self):
         """Return resource filename or federated resource filename for string representation."""
-        if self.resource.resource_federation_path:
-            return self.fed_resource_file.name
-        else:
-            return self.resource_file.name
+        return self.resource_file.name
 
     @classmethod
     def create(cls, resource, file, folder='', source=None):
@@ -2894,15 +2863,8 @@ class ResourceFile(models.Model):
                 raise ValidationError(
                     "ResourceFile.create: exactly one of source or file must be specified")
 
-        # we've copied or moved if necessary; now set the paths
-        if resource.storage_type == StorageCodes.FEDERATED:
-            kwargs['_fed_resource_file'] = file
-        elif resource.storage_type == StorageCodes.IRODS:
-            kwargs['_resource_file'] = file
-        elif resource.storage_type == StorageCodes.LINUX:
-            kwargs['_linux_resource_file'] = file
-        else:
-            raise ValidationError("Unknown StorageCode " + resource.storage_type)
+        kwargs['resource_file'] = file
+        # TODO, probably check storage code here and set it up correctly
 
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
@@ -2921,8 +2883,6 @@ class ResourceFile(models.Model):
             if delete_logical_file and self.logical_file is not None:
                 # deleting logical file metadata deletes the logical file as well
                 self.logical_file.metadata.delete()
-            if self.fed_resource_file:
-                self.fed_resource_file.delete()
             if self.resource_file:
                 self.resource_file.delete()
         super(ResourceFile, self).delete()
@@ -2953,23 +2913,11 @@ class ResourceFile(models.Model):
     def exists(self):
         """Check existence of files for both federated and non-federated."""
         istorage = self.resource.get_storage()
-        if self.resource.is_federated:
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            return istorage.exists(self.fed_resource_file.name)
-        else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            return istorage.exists(self.resource_file.name)
+        return istorage.exists(self.resource_file.name)
 
     # TODO: write unit test
     def read(self):
-        if self.resource.is_federated:
-            return self.fed_resource_file.read()
-        else:
-            return self.resource_file.read()
+        return self.resource_file.read()
 
     @property
     def storage_path(self):
@@ -3119,15 +3067,6 @@ class ResourceFile(models.Model):
                 raise ValidationError("Local path does not exist in irods")
 
         return folder, base
-
-    # classmethods do things that query or affect all files.
-
-    @classmethod
-    def get(cls, resource, file, folder=''):
-        """Get a ResourceFile record via its short path."""
-        resource_file_path = get_resource_file_path(resource, file, folder)
-        return resource.files.get(Q(_fed_resource_file=resource_file_path) | Q(_resource_file=resource_file_path) |
-                                  Q(_linux_resource_file=resource_file_path))
 
     @property
     def has_logical_file(self):
@@ -3359,8 +3298,7 @@ class BaseResource(Page, AbstractResource):
             if not folder.endswith("/"):
                 folder += "/"
             from django.db.models import Q
-            return self.files.filter(Q(_fed_resource_file__startswith=folder) | Q(_resource_file__startswith=folder) |
-                                     Q(_linux_resource_file__startswith=folder))
+            return self.files.filter(resource_file__startswith=folder)
         else:
             return self.files.filter(file_folder=file_folder_to_match)
 

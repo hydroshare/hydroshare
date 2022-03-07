@@ -17,7 +17,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 
 from hs_core.hydroshare import hs_bagit
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, get_resource_file_path
 from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
@@ -229,12 +229,6 @@ def update_resource_file(pk, filename, f):
                 rf.resource_file.delete()
                 # TODO: should use add_file_to_resource
                 rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
-                rf.save()
-            if rf.fed_resource_file:
-                # TODO: should use delete_resource_file
-                rf.fed_resource_file.delete()
-                # TODO: should use add_file_to_resource
-                rf.fed_resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
             return rf
     raise ObjectDoesNotExist(filename)
@@ -904,7 +898,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             f = ResourceFile.objects.get(id=filename_or_id)
         else:
             folder, base = os.path.split(filename_or_id)
-            f = resource.files.all().get(file=base, folder=folder)
+            filepath = get_resource_file_path(resource, base, folder)
+            f = resource.files.get(resource_file=filepath)
     except ObjectDoesNotExist:
         raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
                                             resource.short_id, filename_or_id))
