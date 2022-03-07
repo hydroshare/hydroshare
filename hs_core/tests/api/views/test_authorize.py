@@ -630,6 +630,8 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         # >> test private resource
         self.assertFalse(self.res.raccess.public)
+        # test private link sharing is not enabled
+        self.assertFalse(self.res.raccess.allow_private_sharing)
 
         # test owner
         self.request.user = self.user
@@ -701,6 +703,7 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         # >> test for discoverable resource
         self.assertFalse(self.res.raccess.discoverable)
+        self.assertFalse(self.res.raccess.allow_private_sharing)
         self.res.raccess.discoverable = True
         self.res.raccess.public = False
         self.res.raccess.save()
@@ -824,6 +827,24 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(authorized, False)
         self.assertEqual(res, self.res)
         self.assertEqual(user, authenticated_user)
+
+    def test_authorization_for_private_link_sharing(self):
+        """Test that anonymous user is authorized to view resource when private share link enabled"""
+
+        self.request.user = AnonymousUser()
+        # check private link sharing is not enabled
+        self.assertFalse(self.res.raccess.allow_private_sharing)
+        _, authorized, _ = authorize(self.request, res_id=self.res.short_id,
+                                     needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
+        # test anonymous user is not authorized to vew resource
+        self.assertFalse(authorized)
+        # enable private link sharing
+        self.res.raccess.allow_private_sharing = True
+        self.res.raccess.save()
+        _, authorized, _ = authorize(self.request, res_id=self.res.short_id,
+                                     needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
+        # test anonymous user is authorized to vew resource
+        self.assertTrue(authorized)
 
     def test_return_data(self):
         # test authorization True
