@@ -34,8 +34,8 @@ let subjKeywordsApp = new Vue({
 
             if (this.newKeyword.trim() === "") {
                 return; // Empty string detected
-            }else if (this.newKeyword.length > 500) {
-                this.error = "Your keyword is too long. Ensure it has at most 500 characters.";
+            }else if (this.newKeyword.length > 100) {
+                this.error = "Your keyword is too long. Ensure it has at most 100 characters.";
                 return;
             }
 
