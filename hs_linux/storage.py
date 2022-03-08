@@ -158,6 +158,3 @@ class LinuxStorage(FileSystemStorage):
 
     def ils_l(self, path):
         return os.listdir(path)
-
-    def get_path(self, path):
-        return path

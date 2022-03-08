@@ -479,6 +479,3 @@ class IrodsStorage(Storage):
 
     def removeAVU(self, name, att_name):
         self._session.run("imeta", None, 'rm', '-C', name, att_name)
-
-    def get_path(self, path):
-        return path

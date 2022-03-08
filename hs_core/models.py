@@ -2180,8 +2180,7 @@ class AbstractResource(ResourcePermissionsMixin):
         else:
             full_path = path
 
-        istorage = self.get_storage()
-        return istorage.get_path(full_path)
+        return full_path
 
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
@@ -2837,7 +2836,11 @@ class ResourceFile(models.Model):
 
         kwargs['file_folder'] = folder
 
-        if not isinstance(file, File):  # if file is not an open file, then it's a basename (string)
+        # if file is an open file, use native copy by setting appropriate variables
+        if isinstance(file, File):
+            kwargs['resource_file'] = file
+
+        else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
                 if __debug__:
                     assert(isinstance(source, str))
@@ -2845,7 +2848,7 @@ class ResourceFile(models.Model):
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
                 target = get_resource_file_path(resource, newfile, folder=folder)
-                istorage = resource.get_storage()
+                istorage = resource.get_irods_storage()
                 if not istorage.exists(source):
                     raise ValidationError("ResourceFile.create: source {} of copy not found"
                                           .format(source))
@@ -2863,14 +2866,12 @@ class ResourceFile(models.Model):
                 raise ValidationError(
                     "ResourceFile.create: exactly one of source or file must be specified")
 
-        kwargs['resource_file'] = file
-        # TODO, probably check storage code here and set it up correctly
+            kwargs['resource_file'] = target
 
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
         # otherwise, the copy must precede this step.
         return ResourceFile.objects.create(**kwargs)
-
     @classmethod
     def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
