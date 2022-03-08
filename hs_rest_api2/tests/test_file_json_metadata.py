@@ -76,6 +76,7 @@ class TestFileBasedJSON(HSRESTTestCase):
                 result_json['modified'] = expected_json['modified']
                 result_json['created'] = expected_json['created']
                 result_json['creators'][0]['description'] = expected_json['creators'][0]['description']
+
             self.assertEqual(sorting(result_json), sorting(expected_json))
 
         kwargs = {"pk": self.res.short_id}
