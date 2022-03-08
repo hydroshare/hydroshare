@@ -2848,7 +2848,7 @@ class ResourceFile(models.Model):
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
                 target = get_resource_file_path(resource, newfile, folder=folder)
-                istorage = resource.get_irods_storage()
+                istorage = resource.get_storage()
                 if not istorage.exists(source):
                     raise ValidationError("ResourceFile.create: source {} of copy not found"
                                           .format(source))
