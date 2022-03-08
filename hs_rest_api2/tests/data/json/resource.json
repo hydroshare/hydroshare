@@ -62,7 +62,7 @@
   ],
   "relations": [
     {
-      "type": "The content of this resource can be executed by",
+      "type": "This resource is required by",
       "value": "https://www.hydroshare.org/resource/12345abc"
     },
     {

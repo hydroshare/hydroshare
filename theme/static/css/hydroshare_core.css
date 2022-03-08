@@ -1070,6 +1070,12 @@ a[data-toggle='tab']{
     border-color: #20833F;
 }
 
+#btn-public:disabled, 
+#btn-private:disabled, 
+#btn-discoverable:disabled {
+	pointer-events: auto;
+}
+
 #btn-private.active {
     color: #FFF;
     background: #d9534f;

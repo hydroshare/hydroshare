@@ -2102,6 +2102,21 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         self.raccess.require_download_agreement = value
         self.raccess.save()
 
+    def set_private_sharing_link(self, user, value):
+        """Set resource 'allow_private_sharing' flag to True or False.
+        If allow_private_sharing is True then any user including anonymous user will be able to use the resource url
+        to view the resource (view mode).
+
+        :param user: user requesting the change
+        :param value: True or False
+        :raises PermissionDenied: if the user lacks permission to change resource flag
+        """
+        if not user.uaccess.can_change_resource_flags(self):
+            raise PermissionDenied("You don't have permission to change resource private link sharing "
+                                   " status")
+        self.raccess.allow_private_sharing = value
+        self.raccess.save()
+
     def update_public_and_discoverable(self):
         """Update the settings of the public and discoverable flags for changes in metadata."""
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
