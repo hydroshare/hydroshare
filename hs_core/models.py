@@ -2778,7 +2778,7 @@ class ResourceFile(models.Model):
     # TODO - Is there a better way?  One FileField with a dynamic storage option?
 
     resource_file = models.FileField(upload_to=get_path, max_length=4096, null=True, default=None,
-                                     storage=IrodsStorage())
+                                     storage=LinuxStorage())
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -3229,7 +3229,7 @@ class BaseResource(Page, AbstractResource):
     # storage_type = models.IntegerField(choices=StorageCodes.CHOICES,
     #                                    editable=False,
     #                                    default=StorageCodes.IRODS)
-    storage_type = StorageCodes.IRODS
+    storage_type = StorageCodes.LINUX
 
     # This only applies if storage_type == FEDERATED
     # The resource_federation_path is added to record where a HydroShare resource is
