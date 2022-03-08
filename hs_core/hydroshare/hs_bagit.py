@@ -294,7 +294,7 @@ def create_bag_metadata_files(resource):
         resource.create_aggregation_meta_files()
 
     res_coll = resource.root_path
-    istorage.setAVU(res_coll, 'metadata_dirty', "false")
+    istorage.set_metadata(res_coll, 'metadata_dirty', "false")
     shutil.rmtree(temp_path)
     return istorage
 
@@ -318,7 +318,7 @@ def create_bag(resource):
 
     # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be
     # created when user clicks on download button
-    resource.setAVU("bag_modified", True)
+    resource.set_storage_metadata("bag_modified", True)
 
     return
 

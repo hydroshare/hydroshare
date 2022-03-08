@@ -159,7 +159,7 @@ class IrodsStorage(Storage):
             new_path = "{}-{}".format(path, i)
         return new_path
 
-    def setAVU(self, name, attName, attVal, attUnit=None):
+    def set_metadata(self, name, attName, attVal, attUnit=None):
         """
         set AVU on resource collection - this is used for on-demand bagging by indicating
         whether the resource has been modified via AVU pairs
@@ -179,7 +179,7 @@ class IrodsStorage(Storage):
         else:
             self._session.run("imeta", None, 'set', '-C', name, attName, attVal)
 
-    def getAVU(self, name, attName):
+    def get_metadata(self, name, attName):
         """
         set AVU on resource collection - this is used for on-demand bagging by indicating
         whether the resource has been modified via AVU pairs
@@ -201,6 +201,32 @@ class IrodsStorage(Storage):
         else:
             vals = stdout[2].split(":")
             return vals[1].strip()
+
+    def get_quota_holder(self, coll_id):
+        """
+        get resource/collection quota holder
+        :param coll_id: resource id which is used as the collection name
+        :return: quota holder for the resource/collection
+        """
+        try:
+            return self.get_metadata(coll_id, "quotaUserName")
+        except SessionException:
+            # quotaUserName AVU does not exist, return None
+            return None
+
+    def set_quota_holder(self, coll_id, old_holder_name, new_holder_name):
+        attname = "quotaUserName"
+        if not self.exists(coll_id):
+            self.createDirectory(coll_id)
+        if old_holder_name != new_holder_name:
+            # this condition check is needed to make sure attname exists as AVU before getting it
+            oldqu = self.get_metadata(coll_id, attname)
+            if oldqu:
+                # have to remove the old AVU first before setting to the new one in order to trigger
+                # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
+                # holder will be reduced as a result of setting quota holder to a different user
+                self.remove_metadata(coll_id, attname)
+        self.set_metadata(coll_id, attname, new_holder_name)
 
     def copyFiles(self, src_name, dest_name, ires=None):
         """
@@ -477,5 +503,5 @@ class IrodsStorage(Storage):
         if not self.exists(dirname):
             self._session.run("imkdir", None, '-p', dirname)
 
-    def removeAVU(self, name, att_name):
+    def remove_metadata(self, name, att_name):
         self._session.run("imeta", None, 'rm', '-C', name, att_name)

@@ -404,8 +404,8 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             res_files=self.files.all()
         )
 
-        self.resource.setAVU("bag_modified", True)
-        self.resource.setAVU('metadata_dirty', 'true')
+        self.resource.set_storage_metadata("bag_modified", True)
+        self.resource.set_storage_metadata('metadata_dirty', 'true')
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(AbstractModelLogicalFile, self).create_aggregation_xml_documents(create_map_xml)

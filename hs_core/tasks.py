@@ -366,17 +366,17 @@ def create_bag_by_irods(resource_id, create_zip=True):
 
     bag_path = res.bag_path
 
-    metadata_dirty = res.getAVU('metadata_dirty')
+    metadata_dirty = res.get_storage_metadata('metadata_dirty')
     metadata_dirty = metadata_dirty is None or metadata_dirty
     # if metadata has been changed, then regenerate metadata xml files
     if metadata_dirty:
         create_bag_metadata_files(res)
 
-    bag_modified = res.getAVU("bag_modified")
+    bag_modified = res.get_storage_metadata("bag_modified")
     bag_modified = bag_modified is None or bag_modified
     if metadata_dirty or bag_modified:
         create_bagit_files_by_irods(res, istorage)
-        res.setAVU("bag_modified", False)
+        res.set_storage_metadata("bag_modified", False)
 
     if create_zip:
         irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
@@ -517,7 +517,7 @@ def replicate_resource_bag_to_user_zone_task(res_id, request_username):
     res_coll = res.root_path
     istorage = res.get_storage()
     if istorage.exists(res_coll):
-        bag_modified = res.getAVU('bag_modified')
+        bag_modified = res.get_storage_metadata('bag_modified')
         if bag_modified is None or not bag_modified:
             if not istorage.exists(res.bag_path):
                 create_bag_by_irods(res_id)

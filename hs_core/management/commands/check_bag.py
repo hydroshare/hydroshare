@@ -47,14 +47,14 @@ def check_bag(rid, options):
             else:
                 print("bag {} NOT FOUND".format(resource.bag_path))
 
-            dirty = resource.getAVU('metadata_dirty')
+            dirty = resource.get_storage_metadata('metadata_dirty')
             print("{}.metadata_dirty is {}".format(rid, str(dirty)))
 
-            modified = resource.getAVU('bag_modified')
+            modified = resource.get_storage_metadata('bag_modified')
             print("{}.bag_modified is {}".format(rid, str(modified)))
 
             if options['reset']:  # reset all data to pristine
-                resource.setAVU('metadata_dirty', 'true')
+                resource.set_storage_metadata('metadata_dirty', 'true')
                 print("{}.metadata_dirty set to true".format(rid))
                 try:
                     istorage.delete(resource.scimeta_path)
@@ -71,7 +71,7 @@ def check_bag(rid, options):
                           .format(resource.resmap_path,
                                   ex.stderr))
 
-                resource.setAVU('bag_modified', 'true')
+                resource.set_storage_metadata('bag_modified', 'true')
                 print("{}.bag_modified set to true".format(rid))
                 try:
                     istorage.delete(resource.bag_path)
@@ -82,7 +82,7 @@ def check_bag(rid, options):
                                   ex.stderr))
 
             if options['reset_metadata']:
-                resource.setAVU('metadata_dirty', 'true')
+                resource.set_storage_metadata('metadata_dirty', 'true')
                 print("{}.metadata_dirty set to true".format(rid))
                 try:
                     istorage.delete(resource.scimeta_path)
@@ -100,7 +100,7 @@ def check_bag(rid, options):
                                   ex.stderr))
 
             if options['reset_bag']:
-                resource.setAVU('bag_modified', 'true')
+                resource.set_storage_metadata('bag_modified', 'true')
                 print("{}.bag_modified set to true".format(rid))
                 try:
                     istorage.delete(resource.bag_path)
@@ -119,14 +119,14 @@ def check_bag(rid, options):
                         return
 
                     print("{} metadata generated from Django".format(rid))
-                    resource.setAVU('metadata_dirty', 'false')
-                    resource.setAVU('bag_modified', 'true')
+                    resource.set_storage_metadata('metadata_dirty', 'false')
+                    resource.set_storage_metadata('bag_modified', 'true')
                     print("{}.metadata_dirty set to false".format(rid))
 
                 if not options['if_needed'] or modified or not bag_exists:
                     create_bag_by_irods(rid)
                     print("{} bag generated from iRODs".format(rid))
-                    resource.setAVU('bag_modified', 'false')
+                    resource.set_storage_metadata('bag_modified', 'false')
                     print("{}.bag_modified set to false".format(rid))
 
             if options['generate_metadata']:
@@ -137,16 +137,16 @@ def check_bag(rid, options):
                         print(("{}: value error encountered: {}".format(rid, str(e))))
                         return
                     print("{}: metadata generated from Django".format(rid))
-                    resource.setAVU('metadata_dirty', 'false')
+                    resource.set_storage_metadata('metadata_dirty', 'false')
                     print("{}.metadata_dirty set to false".format(rid))
-                    resource.setAVU('bag_modified', 'true')
+                    resource.set_storage_metadata('bag_modified', 'true')
                     print("{}.bag_modified set to false".format(rid))
 
             if options['generate_bag']:
                 if not options['if_needed'] or modified or not bag_exists:
                     create_bag_by_irods(rid)
                     print("{}: bag generated from iRODs".format(rid))
-                    resource.setAVU('bag_modified', 'false')
+                    resource.set_storage_metadata('bag_modified', 'false')
                     print("{}.bag_modified set to false".format(rid))
 
             if options['download_bag']:

@@ -108,7 +108,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # test replication of this resource to user zone even if the bag_modified AVU for this
         # resource is wrongly set to False when the bag for this resource does not exist and
         # need to be recreated
-        res.setAVU('bag_modified', 'false')
+        res.set_storage_metadata('bag_modified', 'false')
         replicate_resource_bag_to_user_zone_task(res.short_id, self.user.username)
         self.assertTrue(self.irods_storage.exists(user_path + res.short_id + '.zip'),
                         msg='replicated resource bag is not in the user zone')
@@ -143,9 +143,9 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # programmatically set quota size for the test user in data zone
         if not istorage.exists(settings.IRODS_BAGIT_PATH):
             istorage.createDirectory(settings.IRODS_BAGIT_PATH)
-        istorage.setAVU(settings.IRODS_BAGIT_PATH, attname, test_qsize)
+        istorage.set_metadata(settings.IRODS_BAGIT_PATH, attname, test_qsize)
 
-        get_qsize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
+        get_qsize = istorage.get_metadata(settings.IRODS_BAGIT_PATH, attname)
         self.assertEqual(test_qsize, get_qsize)
 
         # Although the resource creation operation above will trigger quota update celery task,

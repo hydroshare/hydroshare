@@ -356,19 +356,19 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     src_coll = src_res.root_path
     tgt_coll = tgt_res.root_path
     for avu_name in avu_list:
-        value = istorage.getAVU(src_coll, avu_name)
+        value = istorage.get_metadata(src_coll, avu_name)
 
         # make formerly public things private
         if avu_name == 'isPublic':
-            istorage.setAVU(tgt_coll, avu_name, 'false')
+            istorage.set_metadata(tgt_coll, avu_name, 'false')
 
         # bag_modified AVU needs to be set to true for copied resource
         elif avu_name == 'bag_modified':
-            istorage.setAVU(tgt_coll, avu_name, 'true')
+            istorage.set_metadata(tgt_coll, avu_name, 'true')
 
         # everything else gets copied literally
         else:
-            istorage.setAVU(tgt_coll, avu_name, value)
+            istorage.set_metadata(tgt_coll, avu_name, value)
 
     # link copied resource files to Django resource model
     files = src_res.files.all()
@@ -500,8 +500,8 @@ def set_dirty_bag_flag(resource):
 
     istorage = resource.get_storage()
     res_coll = resource.root_path
-    istorage.setAVU(res_coll, "bag_modified", "true")
-    istorage.setAVU(res_coll, "metadata_dirty", "true")
+    istorage.set_metadata(res_coll, "bag_modified", "true")
+    istorage.set_metadata(res_coll, "metadata_dirty", "true")
 
 
 def _validate_email(email):

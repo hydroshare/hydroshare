@@ -25,10 +25,10 @@ def debug_resource(short_id):
     print("resource: {}".format(short_id))
     print("resource type: {}".format(resource.resource_type))
     print("resource creator: {} {}".format(resource.creator.first_name, resource.creator.last_name))
-    print("resource irods bag modified: {}".format(str(resource.getAVU('bag_modified'))))
-    print("resource irods isPublic: {}".format(str(resource.getAVU('isPublic'))))
-    print("resource irods resourceType: {}".format(str(resource.getAVU('resourceType'))))
-    print("resource irods quotaUserName: {}".format(str(resource.getAVU('quotaUserName'))))
+    print("resource irods bag modified: {}".format(str(resource.get_storage_metadata('bag_modified'))))
+    print("resource irods isPublic: {}".format(str(resource.get_storage_metadata('isPublic'))))
+    print("resource irods resourceType: {}".format(str(resource.get_storage_metadata('resourceType'))))
+    print("resource irods quotaUserName: {}".format(str(resource.get_storage_metadata('quotaUserName'))))
     if irods_errors:
         print("iRODS errors:")
         for e in irods_issues:
@@ -52,10 +52,10 @@ def debug_resource(short_id):
     #     'owners': resource.raccess.owners,
     #     'editors': resource.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE),
     #     'viewers': resource.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
-    #     'public_AVU': resource.getAVU('isPublic'),
-    #     'type_AVU': resource.getAVU('resourceType'),
-    #     'modified_AVU': resource.getAVU('bag_modified'),
-    #     'quota_AVU': resource.getAVU('quotaUserName'),
+    #     'public_storage_metadata': resource.get_storage_metadata('isPublic'),
+    #     'type_storage_metadata': resource.get_storage_metadata('resourceType'),
+    #     'modified_storage_metadata': resource.get_storage_metadata('bag_modified'),
+    #     'quota_storage_metadata': resource.get_storage_metadata('quotaUserName'),
     #     'irods_issues': irods_issues,
     #     'irods_errors': irods_errors,
     # }

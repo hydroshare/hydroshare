@@ -67,8 +67,8 @@ class Command(BaseCommand):
         try:
             with transaction.atomic():
                 print("Deleting existing bag")
-                res.setAVU("bag_modified", True)
-                res.setAVU('metadata_dirty', 'true')
+                res.set_storage_metadata("bag_modified", True)
+                res.set_storage_metadata('metadata_dirty', 'true')
 
                 print("Updating BaseResource short_id from {} to {}".format(res_id, new_res_id))
                 res.short_id = new_res_id

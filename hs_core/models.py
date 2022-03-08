@@ -2106,7 +2106,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
             # public changed state: set isPublic metadata AVU accordingly
             if value != old_value:
-                self.setAVU("isPublic", self.raccess.public)
+                self.set_storage_metadata("isPublic", self.raccess.public)
 
                 # TODO: why does this only run when something becomes public?
                 # TODO: Should it be run when a NetcdfResource becomes private?
@@ -2142,6 +2142,21 @@ class AbstractResource(ResourcePermissionsMixin):
             raise PermissionDenied("You don't have permission to change resource download agreement"
                                    " status")
         self.raccess.require_download_agreement = value
+        self.raccess.save()
+
+    def set_private_sharing_link(self, user, value):
+        """Set resource 'allow_private_sharing' flag to True or False.
+        If allow_private_sharing is True then any user including anonymous user will be able to use the resource url
+        to view the resource (view mode).
+
+        :param user: user requesting the change
+        :param value: True or False
+        :raises PermissionDenied: if the user lacks permission to change resource flag
+        """
+        if not user.uaccess.can_change_resource_flags(self):
+            raise PermissionDenied("You don't have permission to change resource private link sharing "
+                                   " status")
+        self.raccess.allow_private_sharing = value
         self.raccess.save()
 
     def update_public_and_discoverable(self):
@@ -2202,28 +2217,14 @@ class AbstractResource(ResourcePermissionsMixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        attname = "quotaUserName"
-
-        if setter.username != new_holder.username:
-            # this condition check is needed to make sure attname exists as AVU before getting it
-            oldqu = self.getAVU(attname)
-            if oldqu:
-                # have to remove the old AVU first before setting to the new one in order to trigger
-                # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
-                # holder will be reduced as a result of setting quota holder to a different user
-                self.removeAVU(attname, oldqu)
-        self.setAVU(attname, new_holder.username)
+        self.get_storage().set_quota_holder(self.short_id, setter.username, new_holder.username)
 
     def get_quota_holder(self):
         """Get quota holder of the resource.
 
         return User instance of the quota holder for the resource or None if it does not exist
         """
-        try:
-            uname = self.getAVU("quotaUserName")
-        except SessionException:
-            # quotaUserName AVU does not exist, return None
-            return None
+        uname = self.get_storage().get_quota_holder(self.short_id)
 
         if uname:
             return User.objects.filter(username=uname).first()
@@ -2231,7 +2232,7 @@ class AbstractResource(ResourcePermissionsMixin):
             # quotaUserName AVU does not exist, return None
             return None
 
-    def removeAVU(self, attribute, value):
+    def remove_storage_metadata(self, attribute, value):
         """Remove an AVU at the resource level.
 
         This avoids mistakes in setting AVUs by assuring that the appropriate root path
@@ -2239,9 +2240,9 @@ class AbstractResource(ResourcePermissionsMixin):
         """
         istorage = self.get_storage()
         root_path = self.root_path
-        istorage.removeAVU(root_path, attribute)
+        istorage.remove_metadata(root_path, attribute)
 
-    def setAVU(self, attribute, value):
+    def set_storage_metadata(self, attribute, value):
         """Set an AVU at the resource level.
 
         This avoids mistakes in setting AVUs by assuring that the appropriate root path
@@ -2252,9 +2253,9 @@ class AbstractResource(ResourcePermissionsMixin):
         istorage = self.get_storage()
         root_path = self.root_path
         istorage.createDirectory(root_path)
-        istorage.setAVU(root_path, attribute, value)
+        istorage.set_metadata(root_path, attribute, value)
 
-    def getAVU(self, attribute):
+    def get_storage_metadata(self, attribute):
         """Get an AVU for a resource.
 
         This avoids mistakes in getting AVUs by assuring that the appropriate root path
@@ -2262,7 +2263,7 @@ class AbstractResource(ResourcePermissionsMixin):
         """
         istorage = self.get_storage()
         root_path = self.root_path
-        value = istorage.getAVU(root_path, attribute)
+        value = istorage.get_metadata(root_path, attribute)
 
         # Convert selected boolean attribute values to bool; non-existence implies False
         # "Private" is the appropriate response if "isPublic" is None
@@ -3809,8 +3810,8 @@ class BaseResource(Page, AbstractResource):
                 has_part_relation_updated = True
 
         if any([replace_relation_updated, part_of_relation_updated, has_part_relation_updated]):
-            self.setAVU("bag_modified", True)
-            self.setAVU("metadata_dirty", True)
+            self.set_storage_metadata("bag_modified", True)
+            self.set_storage_metadata("metadata_dirty", True)
 
 
 # TODO Deprecated

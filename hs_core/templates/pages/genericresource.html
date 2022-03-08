@@ -1052,7 +1052,8 @@
           const RESOURCE_ACCESS = {
               isPublic: "{{ cm.raccess.public }}" === "True",
               isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
-              isShareable: "{{ cm.raccess.shareable }}" === "True"
+              isShareable: "{{ cm.raccess.shareable }}" === "True",
+              isPrivateLinkSharing : "{{ cm.raccess.allow_private_sharing }}" === "True",
           };
       {% endif %}
       var spatial_coverage_type = "{{ spatial_coverage.type }}";
