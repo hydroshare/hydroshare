@@ -2872,6 +2872,7 @@ class ResourceFile(models.Model):
         # when file is a File, the file is copied to storage in this step
         # otherwise, the copy must precede this step.
         return ResourceFile.objects.create(**kwargs)
+
     @classmethod
     def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
