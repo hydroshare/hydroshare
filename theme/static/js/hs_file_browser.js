@@ -1245,9 +1245,10 @@ function setupModelInstanceTypeUI() {
             disable_edit_json: true,
             disable_array_add: false,
             disable_array_delete: false,
-            // optional fields are not displayed by default in JSONEditor form for editing
+            // only required fields are displayed by default in JSONEditor form for editing
             // user needs to select any optional properties to make it available for editing
-            display_required_only: false,
+            display_required_only: true,
+            // only fields that are specified as required in the schema should be required by the JSONEditor form
             required_by_default: false,
             object_layout: "table"
         });

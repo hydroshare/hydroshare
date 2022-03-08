@@ -64,3 +64,11 @@ class SWATModelInstanceMetaDataSerializer(ModelInstanceMetaDataSerializer):
 
     class Meta:
         model = SWATModelInstanceMetaData
+
+
+class SWATModelInstanceMetaDataSerializerMigration(serializers.Serializer):
+    model_objective = ModelObjectiveMetaDataSerializer(required=False, many=False)
+    simulation_type = SimulationTypeMetaDataSerializer(required=False, many=False)
+    model_method = ModelMethodMetaDataSerializer(required=False, many=False)
+    model_parameter = ModelParameterMetaDataSerializer(required=False, many=False)
+    model_input = ModelInputMetaDataSerializer(required=False, many=False)
