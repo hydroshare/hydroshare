@@ -115,21 +115,21 @@ def contact(content):
         return ''
 
     if not content.is_authenticated():
-        content="Anonymous"
+        content = "Anonymous"
     elif content.first_name:
         if content.userprofile.middle_name:
-            content=format_html("<a href='/user/{uid}/'>{fn} {mn} {ln}</a>",
-                                  fn = content.first_name,
-                                  mn = content.userprofile.middle_name,
-                                  ln = content.last_name,
-                                  uid = content.pk)
+            content = format_html("<a href='/user/{uid}/'>{fn} {mn} {ln}</a>",
+                                  fn=content.first_name,
+                                  mn=content.userprofile.middle_name,
+                                  ln=content.last_name,
+                                  uid=content.pk)
         else:
-            content=format_html("<a href='/user/{uid}/'>{fn} {ln}</a>",
-                                  fn = content.first_name,
-                                  ln = content.last_name,
-                                  uid = content.pk)
+            content = format_html("<a href='/user/{uid}/'>{fn} {ln}</a>",
+                                  fn=content.first_name,
+                                  ln=content.last_name,
+                                  uid=content.pk)
     else:
-        content=format_html("<a href='/user/{uid}/'>{un}</a>",
+        content = format_html("<a href='/user/{uid}/'>{un}</a>",
                               uid=content.pk,
                               un=content.username)
 
@@ -151,8 +151,7 @@ def best_name(content):
                                               mn=content.userprofile.middle_name,
                                               ln=content.last_name)
         else:
-            content = "{fn} {ln}".format(
-                fn=content.first_name, ln=content.last_name)
+            content = "{fn} {ln}".format(fn=content.first_name, ln=content.last_name)
     else:
         content = content.username
 
@@ -218,7 +217,7 @@ def to_int(value):
 @register.filter
 def relative_irods_path(fed_irods_file_name):
     idx = fed_irods_file_name.find('/data/contents/')
-    return fed_irods_file_name[idx + 1:]
+    return fed_irods_file_name[idx+1:]
 
 
 @register.filter
@@ -243,16 +242,16 @@ def res_uuid_from_res_path(path):
     prefix_str = 'resource/'
     prefix_idx = path.find(prefix_str)
     if prefix_idx >= 0:
-        sidx = prefix_idx + len(prefix_str)
+        sidx = prefix_idx+len(prefix_str)
         # resource uuid is 32 bits
-        return path[sidx:sidx + 32]
+        return path[sidx:sidx+32]
     else:
         return path
 
 
 @register.filter
 def remove_last_char(statement):
-    return statement[:len(statement) - 1]
+    return statement[:len(statement)-1]
 
 
 @register.filter
@@ -309,8 +308,7 @@ def creator_json_ld_element(crs):
 
         if cr.description:
             if cr.name:
-                # append www.hydroshare.org since schema.org script is only
-                # embedded in production
+                # append www.hydroshare.org since schema.org script is only embedded in production
                 urls.append("https://www.hydroshare.org" + cr.description)
             else:
                 # organization
@@ -325,8 +323,7 @@ def creator_json_ld_element(crs):
         elif len(urls) > 1:
             cr_dict['url'] = urls
         crs_array.append(cr_dict)
-    # reformat json dumped str a bit to fix the indentation issue with the
-    # last bracket
+    # reformat json dumped str a bit to fix the indentation issue with the last bracket
     default_dump = dumps({"@list": crs_array}, sort_keys=True, indent=6)
     format_dump = '{}    {}'.format(default_dump[:-1], default_dump[-1])
     return format_dump
