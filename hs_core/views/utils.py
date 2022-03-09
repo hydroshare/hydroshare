@@ -378,7 +378,9 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
     if needed_permission == ACTION_TO_AUTHORIZE.VIEW_METADATA:
-        if res.raccess.discoverable or res.raccess.public or res.raccess.allow_private_sharing:
+        if res.raccess.discoverable or res.raccess.public:
+            authorized = True
+        elif not user.is_authenticated() and res.raccess.allow_private_sharing:
             authorized = True
         elif user.is_authenticated() and user.is_active:
             authorized = user.uaccess.can_view_resource(res)
@@ -396,7 +398,7 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS:
             authorized = user.uaccess.can_view_resource(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS:
-            authorized = user.uaccess.can_share_resource(res, 2)
+            authorized = user.uaccess.can_share_resource(res, PrivilegeCodes.CHANGE)
     elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
         authorized = res.raccess.public or res.raccess.allow_private_sharing
 
