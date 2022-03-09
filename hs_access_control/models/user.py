@@ -1088,9 +1088,7 @@ class UserAccess(models.Model):
         """
 
         if not self.user.is_active:
-            pass
-            # raise PermissionDenied("Requesting user is not active")
-
+            raise PermissionDenied("Requesting user is not active")
         return BaseResource.objects.filter(r2urp__user=self.user,
                                            r2urp__privilege=PrivilegeCodes.OWNER)
 
