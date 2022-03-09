@@ -29,6 +29,8 @@ from hs_core.enums import RelationTypes
 class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     # the metadata element models are from the netcdf resource type app
     model_app_label = 'hs_app_netCDF'
+    # flag to track when the .nc file of the aggregation needs to be updated
+    is_update_file = models.BooleanField(default=False)
 
     def get_metadata_elements(self):
         elements = super(NetCDFFileMetaData, self).get_metadata_elements()
@@ -184,7 +186,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         form_action = "/hsapi/_internal/{}/update-netcdf-file/".format(self.logical_file.id)
         style = "display:none;"
         self.refresh_from_db()
-        if self.is_dirty:
+        if self.is_update_file:
             style = "margin-bottom:15px"
         root_div = div(id="div-netcdf-file-update", cls="row", style=style)
 
@@ -192,7 +194,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
                     div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
-                    _input(id="metadata-dirty", type="hidden", value=self.is_dirty)
+                    _input(id="metadata-dirty", type="hidden", value=self.is_update_file)
                     with form(action=form_action, method="post", id="update-netcdf-file"):
                         button("Update NetCDF File", type="button", cls="btn btn-primary",
                                id="id-update-netcdf-file")
@@ -1012,9 +1014,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
                                          user)
 
     metadata = instance.metadata
-    if file_type:
-        instance.create_aggregation_xml_documents(create_map_xml=False)
-    metadata.is_dirty = False
+    metadata.is_update_file = False
     metadata.save()
 
     # cleanup the temp dir
