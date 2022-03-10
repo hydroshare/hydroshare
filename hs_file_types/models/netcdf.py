@@ -29,7 +29,7 @@ from hs_core.enums import RelationTypes
 class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     # the metadata element models are from the netcdf resource type app
     model_app_label = 'hs_app_netCDF'
-    # flag to track when the .nc file of the aggregation needs to be updated
+    # flag to track when the .nc file of the aggregation needs to be updated.
     is_update_file = models.BooleanField(default=False)
 
     def get_metadata_elements(self):
