@@ -270,7 +270,7 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         self.assertIn('title = "new title"',
                       nc_dump_res_file.resource_file.read().decode('utf-8'))
         res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
+        self.assertTrue(res_metadata.is_dirty)
 
         # test extra metadata update for setting flag
         self.assertEqual(self.resNetcdf.extra_metadata, {})
