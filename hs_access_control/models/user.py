@@ -1412,7 +1412,7 @@ class UserAccess(models.Model):
 
         Note that:
 
-        * One can view resources that are public, that one does not own.
+        * One can view resources that are public or have private link sharing enabled, that one does not own.
         * Thus, this returns True for many public resources that are not returned from
           view_resources.
         * This is not sensitive to the setting for the "immutable" flag. That only affects editing.
@@ -1422,12 +1422,15 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
 
+        access_resource = this_resource.raccess
+
+        if access_resource.public or access_resource.allow_private_sharing:
+            return True
+
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        access_resource = this_resource.raccess
-
-        if access_resource.public or self.user.is_superuser:
+        if self.user.is_superuser:
             return True
 
         if self.view_resources.filter(id=this_resource.id).exists():
