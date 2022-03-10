@@ -470,8 +470,7 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
         if logical_file.type_name() == "NetCDFLogicalFile":
             logical_file.metadata.is_update_file = True
             logical_file.metadata.save()
-            print(">> set is_update_file to true")
-
+            
         if logical_file.type_name() == "TimeSeriesLogicalFile":
             logical_file.metadata.is_update_file = True
             logical_file.metadata.save()
