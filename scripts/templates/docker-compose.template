@@ -78,9 +78,9 @@ tusd:
   build: .
   dockerfile: Dockerfile-tusd
   container_name: tusd
-  volumes_from:
-    - hydroshare 
+  volumes: 
+    - "/tusd_tmp"
   ports:
     - "1080:1080"
   user: root
-  command: /bin/bash /hydroshare/init-tusd
+  command: /init-tusd

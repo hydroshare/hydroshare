@@ -1,9 +1,8 @@
-#!/bin/bash 
+#! /bin/bash 
 umask 000
-su irods -c '/usr/local/bin/tusd \
-     -behind-proxy \
-     -unix-sock /hs_tmp/tusd.sock \
-     -upload-dir /tmp/tusd \
-     -hooks-dir /srv/tusd-hooks \
-     -hooks-enabled-events pre-finish,post-finish \
-     -base-path /upload/' >> /hydroshare/log/tusd.log 2>&1
+chown -R tusd:tusd /tusd_tmp
+chmod 03777 /tusd_tmp
+whoami
+ls -ld /tusd_tmp
+su tusd -c \
+'/usr/local/bin/tusd -base-path /upload/ -behind-proxy -unix-sock /tusd_tmp/tusd.sock -upload-dir /tmp/tusd -hooks-dir /srv/tusd-hooks'

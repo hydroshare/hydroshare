@@ -106,3 +106,17 @@ class UploadContextView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['path'] = kwargs['path']  # guaranteed to succeed and exist
         return context
+
+
+def event(request, path, *args, **kwargs):
+    """ consume a tusd event """
+    event = request.GET.get('event')
+    filename = request.GET.get('filename')
+    filetype = request.GET.get('filetype')
+    uploaded = request.GET.get('uploaded')
+    total = request.GET.get('total')
+
+    logger.debug("tusd event = {},  path = {}, filename = {}, filetype = {}".format(event, path, filename, filetype))
+    if uploaded is not None:
+        logger.debug("tusd event = {}, bytes uploaded = {}, total bytes = {}".format(event, uploaded, total))
+    return HttpResponse(status=200)

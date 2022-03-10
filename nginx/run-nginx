@@ -90,6 +90,7 @@ start_nginx() {
     fi
     # Launch nginx as docker container nginx
     HYDROSHARE_CID=`docker-compose ps | grep hydroshare | tr -s ' ' | cut -d ' ' -f 1`
+    TUSD_CID=`docker-compose ps | grep tusd | tr -s ' ' | cut -d ' ' -f 1`
     CHECK_NGINX_CID=`docker ps -a | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`
     if [[ -z "${CHECK_NGINX_CID}" ]]; then
         echo "  - docker run ${NGINX_DOCKER_IMG} as ${NGINX_DOCKER_CNTR}"
@@ -101,6 +102,7 @@ start_nginx() {
             --volume ${IRODS_LOCAL_MOUNT}:${IRODS_DOCKER_MAP} \
             --volume ${HS_LOG_FILES}:/var/log/nginx \
             --volumes-from ${HYDROSHARE_CID} \
+            --volumes-from ${TUSD_CID} \
             -ti ${NGINX_DOCKER_IMG};
     else
         CHECK_NGINX_CID=`docker ps | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`

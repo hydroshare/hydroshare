@@ -135,17 +135,18 @@ server {
     }
 
     # large file upload theory of operation: 
-    # 1. Receive connection at /upload/context with file location pattern. 
+    # 1. Receive connection at /hs_upload/context with file location pattern. 
     # 2. Django validates the connection and access control. 
     # 3. Django redirects to /upload/, which invokes tusd. 
-    # 4. Tus js client calls /upload/complete/ to complete the upload. 
+    # 4. Tus js client calls /hs_upload/complete/ to complete the upload. 
+
     # perform the upload by calling tusd. 
     # everything else is a regular Django call without reverse proxy. 
     location /upload/ {
         # doesn't work for some reason involving docker networking setup: 
         # --> proxy_pass http://tusd:1080;
         # use unix socket instead: 
-        proxy_pass http://unix:/hs_tmp/tusd.sock;
+        proxy_pass http://unix:/tusd_tmp/tusd.sock;
          
         # Disable request and response buffering
         proxy_request_buffering  off;

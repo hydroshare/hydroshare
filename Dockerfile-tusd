@@ -1,16 +1,12 @@
 FROM hydroshare/tusd:latest
 
-USER root
-RUN addgroup --gid 10000 irods \
-    && adduser --uid 20022 --ingroup irods --shell /bin/bash --disabled-password --no-create-home --gecos 'irods user' irods \
-    && mkdir -p /tmp/irods/data \
-    && chown irods:irods /tmp/irods /tmp/irods/data
-# for debugging
-RUN apt-get update && apt-get -y install net-tools procps
+USER root:root 
 
-# how to start
 COPY init-tusd /init-tusd
-COPY tusd/hooks/* /srv/tusd-hooks
-RUN chmod +x /srv/tusd-hooks/*
-CMD /bin/bash /init-tusd
+RUN chown tusd:tusd /init-tusd
 
+COPY tusd/hooks/* /srv/tusd-hooks
+RUN chown tusd:tusd /srv/tusd-hooks/*
+
+# run daemon
+CMD /bin/bash
