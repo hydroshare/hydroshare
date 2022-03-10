@@ -88,24 +88,6 @@ def resource_first_author(content):
 
 
 @register.filter
-def resource_incative_owner(content):
-    if not content:
-        return ''
-    if content.first_creator.name and content.first_creator.description:
-        return content.first_creator.name
-    elif content.first_creator.name:
-        return content.first_creator.name
-    else:
-        first_creator=content.metadata.creators.filter(order = 1).first()
-        if first_creator.name:
-            return first_creator.name
-        if first_creator.organization:
-            return first_creator.organization
-
-        return ''
-
-
-@register.filter
 def contact(content):
     """
     Takes a value edited via the WYSIWYG editor, and passes it through

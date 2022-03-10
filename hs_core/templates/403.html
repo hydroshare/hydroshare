@@ -7,9 +7,7 @@
             <div class="col-sm-12">
                 {% with res=request.path|res_uuid_from_res_path|resource_from_uuid %}
                     {% if not res.raccess.owners.all %}
-                        <h2 class="page-title">{{ res.metadata.title }}</h2>
-                        This resource is not currently active. 
-                        The inactive owner is: {{ res|resource_incative_owner|name_without_commas }}
+                        The resource you attempted to access is not currently active. 
                     {% else %}
                         <strong>The resource you have attempted to access is private. </strong>
                         {% if request.user.is_authenticated %}
