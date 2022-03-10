@@ -54,7 +54,7 @@
                 </tr>
                 <tr>
                     <th>Owners:</th>
-                    <td class="owners-wrapper">
+                    <td v-if="owners.length" class="owners-wrapper">
                         <template v-for="owner in owners">
                             <profile-link
                                 :user="owner" :key="owner.id" @load-card="onLoadOwnerCard($event)">
@@ -62,6 +62,15 @@
                         </template>
 
                         <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
+                    </td>
+                    <td v-else class="owners-wrapper">
+                        This resource does not have an owner who is an active HydroShare user.
+                        Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
+                        {% if cm.raccess.public %}
+                            for information on this resource.
+                        {% else %}
+                            to determine if accessing this resource is possible.
+                        {% endif %}
                     </td>
                 </tr>
                 <tr>
