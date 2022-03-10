@@ -12,7 +12,9 @@
                     <strong>This is a link to a private HydroShare resource. 
                         To access it you need a HydroShare account and permission from its owner.
                         <span id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Log in</a></span> or
-                        <span id="signup-menu"><a href="{% url 'signup' %}"><span class="glyphicon glyphicon-user"></span> create account</a></span>.
+                        {% with request.path|res_uuid_from_res_path as next %}
+                            <span id="signup-menu"><a href="/sign-up/?next={{ next }}"><span class="glyphicon glyphicon-user"></span> create account</a></span>.
+                        {% endwith %}
                     </strong>
                 {% endif %}
                 {% with res=request.path|res_uuid_from_res_path|resource_from_uuid %}
