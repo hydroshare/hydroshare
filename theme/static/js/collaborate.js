@@ -12,32 +12,33 @@ function request_join_group_ajax_submit() {
     if($(this).attr("requires_justification")){
         // show a modal requesting justification
         $('#justification-dialog').modal('toggle');
+        $('#justification').unbind('.group_ns');
 
         // on modal submission
         $('#justification_btn').click(()=>{
-            // TODO: check not html and not blank, sanitize
             let justification = $("#justification").val().trim();
         
-            let sanitized_justification = sanitizeUserInput(justification)
+            let sanitized_justification = $("<div/>").html(justification.trim()).text();
             if (sanitized_justification !== justification) {
-                $("#justification").addClass("form-invalid");
-                $("#justification_msg").html("<div class='alert alert-danger'>" +
-                    "The justification text contains html code and cannot be saved.</div>");
-                $("#justification_msg").show();
+                showError("The justification text contains html code and cannot be saved.");
                 return;
             }else if (sanitized_justification == 0) {
-                $("#justification_msg").html("<div class='alert alert-danger'>" +
-                    "Justificaiton is a required field that cannot be left blank.</div>");
-                $("#justification_msg").show();
+                showError("Justificaiton is a required field that cannot be left blank.");
                 return;
             }else{
-                // submitGroupRequest(datastring + "&justification=" + justification);
                 submitGroupRequest(datastring + "&" + $('#justification').serialize());
+                $('#justification-dialog').modal('toggle');
             }
         });
-        // removes html tags from the userInput
-        function sanitizeUserInput(userInput) {
-            return $("<div/>").html(userInput.trim()).text();
+        function showError(errorText){
+            $("#justification").addClass("form-invalid");
+            $("#justification_msg").html(
+                "<div class='alert alert-danger'>" + errorText + "</div>");
+            $("#justification_msg").show();
+            $('#justification').bind('input propertychange.group_ns', function() {
+                $("#justification").removeClass("form-invalid");
+                $("#justification_msg").hide();
+            });
         }
     }else{
         submitGroupRequest(datastring);
@@ -88,9 +89,6 @@ function act_on_request_ajax_submit() {
     //don't submit the form
     return false;
 }
-// TODO: hide errors
-// $("#extra_meta_msg").hide();
-// $("#extra_meta_name_input").removeClass("form-invalid");
 
 // File name preview for picture field, change method
 $(document).on('change', '.btn-file :file', function () {
