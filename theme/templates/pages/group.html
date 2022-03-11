@@ -95,7 +95,7 @@
                                       action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-primary" role="button">Ask to join
-                                        <!-- TODO: what does this join do...? -->
+                                        <!-- TODO: what does this join do...?! -->
                                     </button>
                                 </form>
                             {% endif %}
@@ -794,8 +794,6 @@
                                 </fieldset>
 
                                 {# justification #}
-                                <!-- This template is when editing existing group -->
-                                <!-- TODO: only show justification if auto-approve is not selected -->
                                 <fieldset class="col-sm-12">
                                     <input id="requires_justification" type="checkbox"  name="requires_justification"
                                             {% if group.gaccess.requires_justification %}checked{% endif %}>

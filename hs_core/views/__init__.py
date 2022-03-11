@@ -1534,7 +1534,6 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     user_to_join = None
     if request.method == "POST":
         justification = request.POST['justification'] if request.POST['justification'] else None
-    # TODO: sanitize POST
     if user_id is not None:
         user_to_join = utils.user_from_id(user_id)
     try:
