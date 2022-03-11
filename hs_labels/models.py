@@ -89,7 +89,7 @@ class UserResourceLabels(models.Model):
                                  help_text='resource to which a label applies',
                                  on_delete=models.CASCADE)
 
-    label = models.TextField(null=False)
+    label = models.TextField(null=False, max_length=75)
 
     class Meta:
         unique_together = ('user', 'resource', 'label')
