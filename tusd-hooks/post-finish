@@ -1,0 +1,93 @@
+#! /usr/bin/python3
+
+# Read state from stdin as JSON
+
+import os
+import sys
+import json
+from pprint import pprint
+
+complete_input = sys.stdin.read()
+data = json.loads(complete_input)
+
+# pprint(data)  # outputs this:
+# {'HTTPRequest': {'Header': {'Accept': ['*/*'],
+#                             'Accept-Encoding': ['gzip, deflate, br'],
+#                             'Accept-Language': ['en-US,en;q=0.9'],
+#                             'Connection': ['upgrade'],
+#                             'Content-Length': ['1607202'],
+#                             'Content-Type': ['application/offset+octet-stream'],
+#                             'Cookie': ['_ga=GA1.2.2108607388.1586802401; '
+#                                        '_hp2_id.1320547260=%7B%22userId%22%3A%224447980...'
+#                                        'csrftoken=cjx5NKgLSMZlAlvEKZS6w3zqA5LWQezQW4q03t7d11HEhixAepjyyA02i9eIQv7i; '
+#                                        'sessionid=qnbtv2o1965kp9mkw783kxrk5z71vy5h'],
+#                             'Origin': ['https://cuahsi-dev-1.hydroshare.org'],
+#                             'Referer': ['https://cuahsi-dev-1.hydroshare.org/.../'],
+#                             'Sec-Ch-Ua': ['" Not A;Brand";v="99", '
+#                                           '"Chromium";v="99", "Google '
+#                                           'Chrome";v="99"'],
+#                             'Sec-Ch-Ua-Mobile': ['?0'],
+#                             'Sec-Ch-Ua-Platform': ['"Windows"'],
+#                             'Sec-Fetch-Dest': ['empty'],
+#                             'Sec-Fetch-Mode': ['cors'],
+#                             'Sec-Fetch-Site': ['same-origin'],
+#                             'Tus-Resumable': ['1.0.0'],
+#                             'Upload-Offset': ['0'],
+#                             'User-Agent': ['Mozilla/5.0 (Windows NT 10.0; '
+#                                            'Win64; x64) AppleWebKit/537.36 '
+#                                            '(KHTML, like Gecko) '
+#                                            'Chrome/99.0.4844.51 Safari/537.36'],
+#                             'X-Forwarded-Host': ['cuahsi-dev-1.hydroshare.org'],
+#                             'X-Forwarded-Proto': ['https']},
+#                  'Method': 'PATCH',
+#                  'RemoteAddr': '@',
+#                  'URI': '/upload/d0786b0f1f19cee2d5eec3767d9e5104'},
+#  'Upload': {'ID': 'd0786b0f1f19cee2d5eec3767d9e5104',
+#             'IsFinal': False,
+#             'IsPartial': False,
+#             'MetaData': {'filename': '20211120_095211.jpg',
+#                          'filepath': '4b4c4c9fe8054d06bf57c2f22e2c06cb/data/contents/',
+#                          'filetype': 'image/jpeg'},
+#             'Offset': 1607202,
+#             'PartialUploads': None,
+#             'Size': 1607202,
+#             'SizeIsDeferred': False,
+#             'Storage': {'Path': '/tmp/tusd/d0786b0f1f19cee2d5eec3767d9e5104',
+#                         'Type': 'filestore'}}}
+
+
+# TODO: put this in a configuration file
+# Local resource iRODS configuration
+IRODS_HOST = 'cuahsi-irods-1.hydroshare.org'
+IRODS_PORT = '1247'
+IRODS_ZONE = 'hydroshareZone'
+IRODS_USERNAME = 'cuahsi1DataProxy'
+IRODS_AUTH = 'icaxahreiFah9oojaiz7Cieg7nah3jah'
+IRODS_HOME_COLLECTION = '/hydroshareZone/home/cuahsi1DataProxy'
+
+localPath = data['Upload']['Storage']['Path']
+resPath = data['Upload']['MetaData']['filepath'] + data['Upload']['MetaData']['filename']
+
+print("localPath is {}, resPath is {}".format(localPath, resPath))
+irodsPath = os.path.join(IRODS_HOME_COLLECTION, resPath)
+print("irodsPath is {}".format(irodsPath))
+
+from irods.session import iRODSSession
+with iRODSSession(host=IRODS_HOST,
+                  port=IRODS_PORT,
+                  user=IRODS_USERNAME,
+                  password=IRODS_AUTH,
+                  zone=IRODS_ZONE) as session:
+    resid = resPath.split('/')[0]
+    try: 
+        print("trying to put file")
+        session.data_objects.create(irodsPath)
+        session.data_objects.put(localPath, irodsPath)
+    except Exception as e: 
+        print(e)
+        print("exception in irods put!")
+
+# if we get here, even through an error, clean up
+os.unlink(localPath)
+os.unlink(localPath + '.info')
+exit(0)

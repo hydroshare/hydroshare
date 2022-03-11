@@ -29,14 +29,15 @@ what.addEventListener("change", function(e) {
         // Attach additional meta data about the file for the server
         metadata: {
             filename: file.name,
-            filetype: file.type
+            filetype: file.type,
+            filepath: "{{ path }}"
         },
         // Callback for errors which cannot be fixed using retries
         onError: function(error) {
             console.log("Failed because: " + error); 
             document.getElementById('upload_status').innerHTML = "<p>failed because: " + error + "</p>"; 
             $.ajax("https://cuahsi-dev-1.hydroshare.org/hs_upload/event/{{ path }}", 
-                {data: {event: 'error', filename: file.name, filetype: file.type, reason: error}});
+                {data: {event: 'error', filename: file.name, filetype: file.type, reason: error, url: upload.url}});
         },
         // Callback for reporting upload progress
         onProgress: function(bytesUploaded, bytesTotal) {
@@ -46,14 +47,15 @@ what.addEventListener("change", function(e) {
                 "<p>uploaded: " + bytesUploaded + ", total: " + bytesTotal + "</p>"; 
             $.ajax("https://cuahsi-dev-1.hydroshare.org/hs_upload/event/{{ path }}", 
                 {data: {event: 'progress', filename: file.name, filetype: file.type, 
-                        uploaded: bytesUploaded, total: bytesTotal}});
+                        uploaded: bytesUploaded, total: bytesTotal, url: upload.url}});
         },
         // Callback for once the upload is completed
         onSuccess: function() {
             console.log("Upload completed:  %s from %s", upload.file.name, upload.url); 
             document.getElementById("upload_status").innerHTML = "done";
             $.ajax("https://cuahsi-dev-1.hydroshare.org/hs_upload/event/{{ path }}", 
-                {data: {event: 'success', filename: file.name, filetype: file.type}});
+                {data: {event: 'success', filename: file.name, filetype: file.type, 
+                 url: upload.url}});
         }}
     );
 

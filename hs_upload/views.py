@@ -2,9 +2,10 @@ from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from django.views.generic.base import TemplateView
 from django_irods import icommands
-
+from hs_core.models import BaseResource
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from drf_yasg.utils import swagger_auto_schema
+from hs_core.hydroshare import get_resource_by_shortkey
+from hs_upload.models import Upload
 
 import logging
 logger = logging.getLogger(__name__)
@@ -114,9 +115,23 @@ def event(request, path, *args, **kwargs):
     filename = request.GET.get('filename')
     filetype = request.GET.get('filetype')
     uploaded = request.GET.get('uploaded')
-    total = request.GET.get('total')
+    size = request.GET.get('size')
+    url = request.GET.get('url')
 
-    logger.debug("tusd event = {},  path = {}, filename = {}, filetype = {}".format(event, path, filename, filetype))
+    path = path.split('/')
+    rid = path[0]
+    try:
+        resource = get_resource_by_shortkey(rid, or_404=False)
+    except BaseResource.DoesNotExist:
+        logger.debug("resource {} does not exist".format(rid))
+        return HttpResponse(status=403)  # no content body needed
+
+    path = '/'.join(path[1:])
+    user = request.user
+
+    logger.debug("tusd event = {},  rid = {}, path = {}, filename = {}, filetype = {}, url = {}"
+                 .format(event, rid, path, filename, filetype, url))
     if uploaded is not None:
-        logger.debug("tusd event = {}, bytes uploaded = {}, total bytes = {}".format(event, uploaded, total))
-    return HttpResponse(status=200)
+        logger.debug("tusd event = {}, bytes uploaded = {}, size = {}".format(event, uploaded, size))
+
+    return HttpResponse(status=200)  # no content body needed

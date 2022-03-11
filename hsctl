@@ -21,9 +21,9 @@ sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE}  | grep -v '^#' | grep 
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
 ### Docker Variables ###
-HS_DOCKER_CONTAINERS=(hydroshare defaultworker tusd)
-HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker hydroshare_tusd)
-OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
+HS_DOCKER_CONTAINERS=(hydroshare defaultworker)
+HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker)
+OTHER_DOCKER_CONTAINERS=(postgis rabbitmq solr tusd)
 
 ### Pre-flight Variables ###
 DEV_SERVER='runuser -p -u hydro-service -g storage-hydro ./run-server'
@@ -80,6 +80,15 @@ restart_hs() {
     fi
     get_nginx_ip
 }
+
+restart_nginx() { 
+    echo "RESTART NGINX:"
+    stop_nginx
+    if [ "${USE_NGINX}" = true ]; then
+        start_nginx;
+    fi
+    get_nginx_ip
+} 
 
 maint_on_hs() {
     echo "MAINTENANCE ON:"
@@ -507,6 +516,8 @@ case "$1" in
     start) start_hs $1
         ;;
     stop) stop_hs $1
+        ;;
+    restart_nginx) restart_nginx $1
         ;;
     preflight) preflight_hs $1
         ;;
