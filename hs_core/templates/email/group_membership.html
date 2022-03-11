@@ -12,8 +12,7 @@
         State/Province: {{ user.userprofile.state }}<br>
         Email: {{ user.email }}<br>
         {% if user.userprofile.title %}User Title: {{ user.userprofile.title }}<br>{% endif %}
-        
-        Justification: {{ justification }}<br>
+        {% if justification %}Justification: {{ justification }}<br>{% endif %}
         
         <p>Click on the link below to accept this request.</p>
     {% else %}
