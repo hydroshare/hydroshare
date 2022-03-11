@@ -3867,7 +3867,7 @@ div.group-thumbnails {
     width: 40px;
 }
 
-.table-members-list tr > td:last-child {
+.table-members-list .justification{
     overflow: hidden;
 	text-overflow: ellipsis;
 }
