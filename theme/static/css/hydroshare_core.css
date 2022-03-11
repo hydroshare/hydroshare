@@ -3856,6 +3856,7 @@ div.group-thumbnails {
 
 .table-members-list {
     width: 100%;
+	table-layout: fixed;
 }
 
 .table-members-list button.dropdown-toggle {
@@ -3864,6 +3865,10 @@ div.group-thumbnails {
 
 .table-members-list tr > td:first-child {
     width: 40px;
+}
+.table-members-list tr > td:last-child {
+    overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .table-members-list tr > td {
@@ -3938,6 +3943,7 @@ div.group-add-photo {
     border: 1px solid #DDD;
     padding: 10px;
     border-radius: 4px;
+	word-wrap: anywhere;
 }
 
 .request-block .activity-block {

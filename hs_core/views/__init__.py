@@ -1,6 +1,5 @@
 import json
 import datetime
-import re
 import pytz
 import logging
 
@@ -1390,7 +1389,6 @@ def create_resource(request, *args, **kwargs):
 
 @login_required
 def create_user_group(request, *args, **kwargs):
-    # group create
     group_form = GroupCreateForm(request.POST, request.FILES)
     if group_form.is_valid():
         try:
@@ -1533,7 +1531,9 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     group_to_join = utils.group_from_id(group_id)
     user_to_join = None
     if request.method == "POST":
-        justification = request.POST['justification'] if request.POST['justification'] else None
+        justification = request.POST.get('justification', None)
+    else:
+        justification = None
     if user_id is not None:
         user_to_join = utils.user_from_id(user_id)
     try:

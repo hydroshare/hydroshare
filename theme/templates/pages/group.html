@@ -95,8 +95,8 @@
                                       action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-primary" role="button">Ask to join
-                                        <!-- TODO: what does this join do...?! -->
                                     </button>
+                                    {% comment %}TODO: do we need to add justification abilities on this join?{% endcomment %}
                                 </form>
                             {% endif %}
                         {% else %}
@@ -390,9 +390,8 @@
                                                     {% endif %}
                                                 </td>
                                                 {% if pendingrequest.justification %}
-                                                <td class="text-muted">Justification: {{ pendingrequest.justification }} </td>
+                                                <td class="text-muted" title="{{ pendingrequest.justification }}">Justification: {{ pendingrequest.justification }} </td>
                                                 {% endif %}
-                                                <!-- TODO: see if this throws off the table formatting -->
                                             </tr>
                                         {% else %}
                                             <tr>

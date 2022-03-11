@@ -8,8 +8,7 @@ function request_join_group_ajax_submit() {
     var form = $("#" + dataFormID);
     var datastring = form.serialize();
     var url = form.attr('action');
-
-    if($(this).attr("requires_justification")){
+    if($(this).attr("requires_justification") === 'True'){
         // show a modal requesting justification
         $('#justification-dialog').modal('toggle');
         $('#justification').unbind('.group_ns');
@@ -24,6 +23,9 @@ function request_join_group_ajax_submit() {
                 return;
             }else if (sanitized_justification == 0) {
                 showError("Justificaiton is a required field that cannot be left blank.");
+                return;
+            }else if(sanitized_justification.length > 300){
+                showError("The justificaiton is too long. Please shorten to 300 characters.")
                 return;
             }else{
                 submitGroupRequest(datastring + "&" + $('#justification').serialize());
