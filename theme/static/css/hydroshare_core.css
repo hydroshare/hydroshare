@@ -3866,6 +3866,7 @@ div.group-thumbnails {
 .table-members-list tr > td:first-child {
     width: 40px;
 }
+
 .table-members-list tr > td:last-child {
     overflow: hidden;
 	text-overflow: ellipsis;
@@ -3944,6 +3945,11 @@ div.group-add-photo {
     padding: 10px;
     border-radius: 4px;
 	word-wrap: anywhere;
+}
+.request-block .mygroups_justification{
+	max-height: 100px;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .request-block .activity-block {
