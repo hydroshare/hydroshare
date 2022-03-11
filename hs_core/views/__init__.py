@@ -1527,7 +1527,6 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                     is inviting
     :return:
     """
-    # 
     requesting_user = request.user
     group_to_join = utils.group_from_id(group_id)
     user_to_join = None
