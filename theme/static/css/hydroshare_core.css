@@ -3946,7 +3946,7 @@ div.group-add-photo {
     border-radius: 4px;
 	word-wrap: anywhere;
 }
-.request-block .mygroups_justification{
+.request-block .justification{
 	max-height: 100px;
 	overflow: hidden;
 	text-overflow: ellipsis;
