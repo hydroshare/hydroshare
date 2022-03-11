@@ -656,7 +656,8 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     be passed into this function
     """
     email_to = kwargs.get('group_owner', user)
-    context = {'request': request, 'user': user}
+    justification = kwargs.get('justification', None)
+    context = {'request': request, 'user': user, 'justification': justification}
     if action_type == 'group_membership':
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={

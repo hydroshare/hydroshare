@@ -11,6 +11,8 @@
         Email: {{ user.email }}
         {% if user.userprofile.title %}User Title: {{ user.userprofile.title }}{% endif %}
         
+        Justification: {{ justification }}
+
         Click on the link below to accept this request.
     {% else %}
         {% trans "Dear " %}{{ user.first_name }}

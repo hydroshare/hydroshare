@@ -13,6 +13,8 @@
         Email: {{ user.email }}<br>
         {% if user.userprofile.title %}User Title: {{ user.userprofile.title }}<br>{% endif %}
         
+        Justification: {{ justification }}<br>
+        
         <p>Click on the link below to accept this request.</p>
     {% else %}
         <p>{% trans "Dear " %}{{ user.first_name }}</p>

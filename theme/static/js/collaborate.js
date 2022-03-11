@@ -8,21 +8,57 @@ function request_join_group_ajax_submit() {
     var form = $("#" + dataFormID);
     var datastring = form.serialize();
     var url = form.attr('action');
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var container = target.parent().parent();
-            target.parent().remove();
-            container.append('<h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>');
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            console.log("error");
+
+    if($(this).attr("requires_justification")){
+        // show a modal requesting justification
+        $('#justification-dialog').modal('toggle');
+
+        // on modal submission
+        $('#justification_btn').click(()=>{
+            // TODO: check not html and not blank, sanitize
+            let justification = $("#justification").val().trim();
+        
+            let sanitized_justification = sanitizeUserInput(justification)
+            if (sanitized_justification !== justification) {
+                $("#justification").addClass("form-invalid");
+                $("#justification_msg").html("<div class='alert alert-danger'>" +
+                    "The justification text contains html code and cannot be saved.</div>");
+                $("#justification_msg").show();
+                return;
+            }else if (sanitized_justification == 0) {
+                $("#justification_msg").html("<div class='alert alert-danger'>" +
+                    "Justificaiton is a required field that cannot be left blank.</div>");
+                $("#justification_msg").show();
+                return;
+            }else{
+                // submitGroupRequest(datastring + "&justification=" + justification);
+                submitGroupRequest(datastring + "&" + $('#justification').serialize());
+            }
+        });
+        // removes html tags from the userInput
+        function sanitizeUserInput(userInput) {
+            return $("<div/>").html(userInput.trim()).text();
         }
-    });
-    //don't submit the form
+    }else{
+        submitGroupRequest(datastring);
+    }
+
+    function submitGroupRequest(data){
+        $.ajax({
+            type: "POST",
+            url: url,
+            dataType: 'html',
+            data: data,
+            success: function (result) {
+                var container = target.parent().parent();
+                target.parent().remove();
+                container.append('<h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>');
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                console.log("error");
+            }
+        });
+    }
     return false;
 }
 
@@ -52,6 +88,9 @@ function act_on_request_ajax_submit() {
     //don't submit the form
     return false;
 }
+// TODO: hide errors
+// $("#extra_meta_msg").hide();
+// $("#extra_meta_name_input").removeClass("form-invalid");
 
 // File name preview for picture field, change method
 $(document).on('change', '.btn-file :file', function () {

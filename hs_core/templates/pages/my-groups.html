@@ -45,6 +45,10 @@
                                 {% endif %}
                                 <div class="text-muted">{{ request.date_requested }}</div>
                                 <br>
+                                {% if request.justification %}
+                                    <div class="text-muted">Justification: {{ request.justification }}</div>
+                                {% endif %}
+                                <br>
                                 <table>
                                     <tr>
                                         <form id="act-on-request"
@@ -243,6 +247,15 @@
                                <input id="auto-approve" type="checkbox"  name="auto_approve">
                                <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
                             </fieldset>
+
+                            {# justification #}
+                            <!-- this template used in my groups create group -->
+                            <!-- TODO: only show justification is auto-approve is not selected -->
+                            <fieldset class="col-sm-12">
+                                <input id="justification" type="checkbox"  name="justification">
+                                <label class="checkbox-label" for="justification">Require members to provide justification when requesting membership</label>
+                             </fieldset>
+
                             {# Picture #}
                             <div class="col-sm-12">
                                 <fieldset>

@@ -1,5 +1,6 @@
 import json
 import datetime
+import re
 import pytz
 import logging
 
@@ -1226,6 +1227,7 @@ class GroupForm(forms.Form):
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
     auto_approve = forms.BooleanField(required=False)
+    requires_justification = forms.BooleanField(required=False)
 
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
@@ -1254,7 +1256,8 @@ class GroupCreateForm(GroupForm):
         new_group = request.user.uaccess.create_group(title=frm_data['name'],
                                                       description=frm_data['description'],
                                                       purpose=frm_data['purpose'],
-                                                      auto_approve=frm_data['auto_approve'])
+                                                      auto_approve=frm_data['auto_approve'],
+                                                      requires_justification=frm_data['requires_justification'])
         if 'picture' in request.FILES:
             new_group.gaccess.picture = request.FILES['picture']
 
@@ -1272,6 +1275,7 @@ class GroupUpdateForm(GroupForm):
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
         group_to_update.gaccess.auto_approve = frm_data['auto_approve']
+        group_to_update.gaccess.requires_justification = frm_data['requires_justification']
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 
@@ -1386,6 +1390,7 @@ def create_resource(request, *args, **kwargs):
 
 @login_required
 def create_user_group(request, *args, **kwargs):
+    # group create
     group_form = GroupCreateForm(request.POST, request.FILES)
     if group_form.is_valid():
         try:
@@ -1527,16 +1532,20 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     requesting_user = request.user
     group_to_join = utils.group_from_id(group_id)
     user_to_join = None
+    if request.method == "POST":
+        justification = request.POST['justification'] if request.POST['justification'] else None
+    # TODO: sanitize POST
     if user_id is not None:
         user_to_join = utils.user_from_id(user_id)
     try:
         membership_request = requesting_user.uaccess.create_group_membership_request(
-            group_to_join, user_to_join)
+            group_to_join, user_to_join, justification=justification)
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
             send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
-                                      group=group_to_join, membership_request=membership_request)
+                                      group=group_to_join, membership_request=membership_request,
+                                      justification=justification)
         else:
             message = 'You are now a member of this group'
             # membership_request is None in case where group allows auto approval of membership
@@ -1548,7 +1557,8 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                     send_action_to_take_email(request, user=requesting_user,
                                               action_type='group_membership',
                                               group=group_to_join, group_owner=grp_owner,
-                                              membership_request=membership_request)
+                                              membership_request=membership_request,
+                                              justification=justification)
             else:
                 # send mail to all owners of the group to let them know that someone has
                 # joined this group
@@ -1556,7 +1566,8 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                     send_action_to_take_email(request, user=requesting_user,
                                               action_type='group_auto_membership',
                                               group=group_to_join,
-                                              group_owner=grp_owner)
+                                              group_owner=grp_owner,
+                                              justification=justification)
         messages.success(request, message)
     except PermissionDenied as ex:
         messages.error(request, str(ex))
