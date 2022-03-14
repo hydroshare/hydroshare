@@ -1600,6 +1600,7 @@ div#sharing-status .col-sm-12{
     -webkit-box-shadow: inset 0 1px 0 #ffffff;
     -moz-box-shadow: inset 0 1px 0 #ffffff;
     box-shadow: inset 0 1px 0 #ffffff;
+	overflow-wrap: anywhere;
 }
 
 .tag-list li {
