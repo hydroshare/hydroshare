@@ -33,7 +33,7 @@ class GroupMembershipRequest(models.Model):
     invitation_to = models.ForeignKey(User, null=True, blank=True, related_name='iu2gmrequest')
     group_to_join = models.ForeignKey(Group, related_name='g2gmrequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
-    justification = models.TextField(null=True, blank=True)
+    explanation = models.TextField(null=True, blank=True)
     redeemed = models.BooleanField(default=False)
 
 
@@ -76,9 +76,9 @@ class GroupAccess(models.Model):
                                        editable=False,
                                        help_text='whether group membership can be auto approved')
 
-    requires_justification = models.BooleanField(default=False,
+    requires_explanation = models.BooleanField(default=False,
                                                         editable=False,
-                                                        help_text='whether membership requests include justification')
+                                                        help_text='whether membership requests include explanation')
 
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)

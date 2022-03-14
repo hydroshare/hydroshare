@@ -96,7 +96,7 @@
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-primary" role="button">Ask to join
                                     </button>
-                                    {% comment %}TODO: do we need to add justification abilities on this join?{% endcomment %}
+                                    {% comment %}TODO: do we need to add explanation abilities on this join?{% endcomment %}
                                 </form>
                             {% endif %}
                         {% else %}
@@ -389,10 +389,10 @@
                                                         </form>
                                                     {% endif %}
                                                 </td>
-                                                {% if pendingrequest.justification %}
-                                                <td class="text-muted justification" title="{{ pendingrequest.justification }}">Justification: {{ pendingrequest.justification }} </td>
+                                                {% if pendingrequest.explanation %}
+                                                <td class="text-muted explanation" title="{{ pendingrequest.explanation }}">Explanation: {{ pendingrequest.explanation }} </td>
                                                 {% else %}
-                                                <td class="text-muted justification" title="">Justification not required. You can modify this setting by editing the group.</td>
+                                                <td class="text-muted explanation" title="">Explanation not required. You can modify this setting by editing the group.</td>
                                                 {% endif %}
                                             </tr>
                                         {% else %}
@@ -794,11 +794,11 @@
                                     <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
                                 </fieldset>
 
-                                {# justification #}
+                                {# explanation #}
                                 <fieldset class="col-sm-12">
-                                    <input id="requires_justification" type="checkbox"  name="requires_justification"
-                                            {% if group.gaccess.requires_justification %}checked{% endif %}>
-                                    <label class="checkbox-label" for="requires_justification">Require members to provide justification when requesting membership</label>
+                                    <input id="requires_explanation" type="checkbox"  name="requires_explanation"
+                                            {% if group.gaccess.requires_explanation %}checked{% endif %}>
+                                    <label class="checkbox-label" for="requires_explanation">Require members to provide explanation when requesting membership</label>
                                 </fieldset>
 
                                 {# Picture #}

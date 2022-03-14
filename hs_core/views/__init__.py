@@ -1226,7 +1226,7 @@ class GroupForm(forms.Form):
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
     auto_approve = forms.BooleanField(required=False)
-    requires_justification = forms.BooleanField(required=False)
+    requires_explanation = forms.BooleanField(required=False)
 
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
@@ -1256,7 +1256,7 @@ class GroupCreateForm(GroupForm):
                                                       description=frm_data['description'],
                                                       purpose=frm_data['purpose'],
                                                       auto_approve=frm_data['auto_approve'],
-                                                      requires_justification=frm_data['requires_justification'])
+                                                      requires_explanation=frm_data['requires_explanation'])
         if 'picture' in request.FILES:
             new_group.gaccess.picture = request.FILES['picture']
 
@@ -1274,7 +1274,7 @@ class GroupUpdateForm(GroupForm):
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
         group_to_update.gaccess.auto_approve = frm_data['auto_approve']
-        group_to_update.gaccess.requires_justification = frm_data['requires_justification']
+        group_to_update.gaccess.requires_explanation = frm_data['requires_explanation']
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 
@@ -1531,20 +1531,20 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     group_to_join = utils.group_from_id(group_id)
     user_to_join = None
     if request.method == "POST":
-        justification = request.POST.get('justification', None)
+        explanation = request.POST.get('explanation', None)
     else:
-        justification = None
+        explanation = None
     if user_id is not None:
         user_to_join = utils.user_from_id(user_id)
     try:
         membership_request = requesting_user.uaccess.create_group_membership_request(
-            group_to_join, user_to_join, justification=justification)
+            group_to_join, user_to_join, explanation=explanation)
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
             send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
                                       group=group_to_join, membership_request=membership_request,
-                                      justification=justification)
+                                      explanation=explanation)
         else:
             message = 'You are now a member of this group'
             # membership_request is None in case where group allows auto approval of membership
@@ -1557,7 +1557,7 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                                               action_type='group_membership',
                                               group=group_to_join, group_owner=grp_owner,
                                               membership_request=membership_request,
-                                              justification=justification)
+                                              explanation=explanation)
             else:
                 # send mail to all owners of the group to let them know that someone has
                 # joined this group
@@ -1566,7 +1566,7 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                                               action_type='group_auto_membership',
                                               group=group_to_join,
                                               group_owner=grp_owner,
-                                              justification=justification)
+                                              explanation=explanation)
         messages.success(request, message)
     except PermissionDenied as ex:
         messages.error(request, str(ex))

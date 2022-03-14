@@ -164,7 +164,7 @@
                                             {% csrf_token %}
                                             <a href="#"
                                                data-form-id="join-{{ group.id }}"
-                                               requires_justification="{{ group.gaccess.requires_justification }}"
+                                               requires_explanation="{{ group.gaccess.requires_explanation }}"
                                                class="btn btn-primary btn-ask-to-join"
                                                role="button">Ask to join</a>
                                         </form>
@@ -223,10 +223,10 @@
                                <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
                             </fieldset>
 
-                            {# justification #}
+                            {# explanation #}
                             <fieldset class="col-sm-12">
-                                <input id="requires_justification" type="checkbox"  name="requires_justification">
-                                <label class="checkbox-label" for="requires_justification" maxlength="300">Require members to provide justification when requesting membership</label>
+                                <input id="requires_explanation" type="checkbox"  name="requires_explanation">
+                                <label class="checkbox-label" for="requires_explanation" maxlength="300">Require members to provide explanation when requesting membership</label>
                              </fieldset>
 
                             {# Picture #}
@@ -289,31 +289,31 @@
         </div>
     </div>
 
-    <!-- Justification Modal -->
-    <div class="modal fade" id="justification-dialog" tabindex="-1" role="dialog" aria-labelledby="Provide Justification">
+    <!-- Explanation Modal -->
+    <div class="modal fade" id="explanation-dialog" tabindex="-1" role="dialog" aria-labelledby="Explanation of Interest">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"
                             aria-label="Close"><span aria-hidden="true">&times;</span>
                     </button>
-                    <h4 class="modal-title">Justification</h4>
+                    <h4 class="modal-title">Explanation of Interest</h4>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <fieldset class="col-sm-12">
-                            <textarea class="form-control" id="justification" type="text"  name="justification"></textarea>
-                            <label class="control-label" for="justification">
-                                This group requires you to submit a justification for your request to join. 
+                            <textarea class="form-control" id="explanation" type="text"  name="explanation"></textarea>
+                            <label class="control-label" for="explanation">
+                                This group requests an explanation of interest in membership, prior to membership approval.
                                 Please enter your explanation here.
                             </label>
-                            <div id="justification_msg" style="display: None"></div>
+                            <div id="explanation_msg" style="display: None"></div>
                         </fieldset>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button id="justification_btn" type="submit" class="btn btn-primary">Submit</button>
+                    <button id="explanation_btn" type="submit" class="btn btn-primary">Submit</button>
                 </div>
             </div>
         </div>

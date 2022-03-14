@@ -10,7 +10,7 @@
         State/Province: {{ user.userprofile.state }}
         Email: {{ user.email }}
         {% if user.userprofile.title %}User Title: {{ user.userprofile.title }}{% endif %}
-        {% if justification %}Justification: {{ justification }}{% endif %}
+        {% if explanation %}Explanation: {{ explanation }}{% endif %}
 
         Click on the link below to accept this request.
     {% else %}

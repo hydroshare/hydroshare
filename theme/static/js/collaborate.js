@@ -8,38 +8,38 @@ function request_join_group_ajax_submit() {
     var form = $("#" + dataFormID);
     var datastring = form.serialize();
     var url = form.attr('action');
-    if($(this).attr("requires_justification") === 'True'){
-        // show a modal requesting justification
-        $('#justification-dialog').modal('toggle');
-        $('#justification').unbind('.group_ns');
+    if($(this).attr("requires_explanation") === 'True'){
+        // show a modal requesting explanation
+        $('#explanation-dialog').modal('toggle');
+        $('#explanation').unbind('.group_ns');
 
         // on modal submission
-        $('#justification_btn').click(()=>{
-            let justification = $("#justification").val().trim();
+        $('#explanation_btn').click(()=>{
+            let explanation = $("#explanation").val().trim();
         
-            let sanitized_justification = $("<div/>").html(justification.trim()).text();
-            if (sanitized_justification !== justification) {
-                showError("The justification text contains html code and cannot be saved.");
+            let sanitized_explanation = $("<div/>").html(explanation.trim()).text();
+            if (sanitized_explanation !== explanation) {
+                showError("The explanation text contains html code and cannot be saved.");
                 return;
-            }else if (sanitized_justification == 0) {
+            }else if (sanitized_explanation == 0) {
                 showError("Justificaiton is a required field that cannot be left blank.");
                 return;
-            }else if(sanitized_justification.length > 300){
+            }else if(sanitized_explanation.length > 300){
                 showError("The justificaiton is too long. Please shorten to 300 characters.")
                 return;
             }else{
-                submitGroupRequest(datastring + "&" + $('#justification').serialize());
-                $('#justification-dialog').modal('toggle');
+                submitGroupRequest(datastring + "&" + $('#explanation').serialize());
+                $('#explanation-dialog').modal('toggle');
             }
         });
         function showError(errorText){
-            $("#justification").addClass("form-invalid");
-            $("#justification_msg").html(
+            $("#explanation").addClass("form-invalid");
+            $("#explanation_msg").html(
                 "<div class='alert alert-danger'>" + errorText + "</div>");
-            $("#justification_msg").show();
-            $('#justification').bind('input propertychange.group_ns', function() {
-                $("#justification").removeClass("form-invalid");
-                $("#justification_msg").hide();
+            $("#explanation_msg").show();
+            $('#explanation').bind('input propertychange.group_ns', function() {
+                $("#explanation").removeClass("form-invalid");
+                $("#explanation_msg").hide();
             });
         }
     }else{
@@ -133,17 +133,17 @@ $(document).ready(function () {
         input.val(label);
     });
     
-    // Hide justification checkbox if auto-approval is enabled
+    // Hide explanation checkbox if auto-approval is enabled
     if($('#auto-approve').is(':checked')){
-        $('#requires_justification').prop( "checked", false );
-        $('#requires_justification').parent().hide();
+        $('#requires_explanation').prop( "checked", false );
+        $('#requires_explanation').parent().hide();
     }
     $('#auto-approve').change(function() {
         if(this.checked) {
-            $('#requires_justification').prop( "checked", false );
-            $('#requires_justification').parent().hide();
+            $('#requires_explanation').prop( "checked", false );
+            $('#requires_explanation').parent().hide();
         }else{
-            $('#requires_justification').parent().show();
+            $('#requires_explanation').parent().show();
         }
     });
 });

@@ -45,8 +45,8 @@
                                 {% endif %}
                                 <div class="text-muted">{{ request.date_requested }}</div>
                                 <br>
-                                {% if request.justification %}
-                                    <div class="text-muted justification" title="{{ request.justification }}">Justification: {{ request.justification }}</div>
+                                {% if request.explanation %}
+                                    <div class="text-muted explanation" title="{{ request.explanation }}">Explanation: {{ request.explanation }}</div>
                                 {% endif %}
                                 <br>
                                 <table>
@@ -248,10 +248,10 @@
                                <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
                             </fieldset>
 
-                            {# justification #}
+                            {# explanation #}
                             <fieldset class="col-sm-12">
-                                <input id="requires_justification" type="checkbox"  name="requires_justification">
-                                <label class="checkbox-label" for="requires_justification">Require members to provide justification when requesting membership</label>
+                                <input id="requires_explanation" type="checkbox"  name="requires_explanation">
+                                <label class="checkbox-label" for="requires_explanation">Require members to provide explanation when requesting membership</label>
                              </fieldset>
 
                             {# Picture #}
