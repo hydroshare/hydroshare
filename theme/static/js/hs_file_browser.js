@@ -2526,6 +2526,25 @@ $(document).ready(function () {
         }
 
         $("#txtFileURL").val(basePath + url);
+
+        // update message for URL sharing depending on raccess
+        $('#warnTxtFileURL p').hide();
+        if(!RESOURCE_ACCESS.isPublic){
+            if (RESOURCE_ACCESS.isDiscoverable){
+                if (RESOURCE_ACCESS.isPrivateLinkSharing){
+                    $('#warnTxtFileURL p.discoverable_sharing').show();
+                }else{
+                    $('#warnTxtFileURL p.discoverable').show();
+                }
+            }else if (RESOURCE_ACCESS.isPrivateLinkSharing){
+                $('#warnTxtFileURL p.private_sharing').show();
+            }else{
+                $('#warnTxtFileURL p.private').show();
+            }
+            $("#warnTxtFileURL").show();
+        }else{
+            $("#warnTxtFileURL").hide();
+        }
     });
 
     // set generic file type method
