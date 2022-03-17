@@ -11,22 +11,20 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 """
 
 import json
+import logging
 import os
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
-from django_irods.storage import IrodsStorage
-from django_irods.icommands import SessionException
-from hs_file_types.utils import set_logical_file_type, get_logical_file_type
-
 from requests import post
 
-from hs_core.models import BaseResource, ResourceFile
+from django_irods.icommands import SessionException
+from django_irods.storage import IrodsStorage
 from hs_core.hydroshare import get_resource_by_shortkey
+from hs_core.models import BaseResource, ResourceFile
 from hs_core.views.utils import link_irods_file_to_django
-
-import logging
+from hs_file_types.utils import set_logical_file_type, get_logical_file_type
 
 
 def _get_model_aggregation_folder_name(comp_res, default_folder_name):
@@ -186,7 +184,7 @@ def migrate_core_meta_elements(orig_meta_obj, comp_res):
     single_meta_elements = ['title', 'type', 'language', 'rights', 'description',
                             'publisher']
     multiple_meta_elements = ['creators', 'contributors', 'coverages', 'subjects',
-                              'dates', 'formats', 'identifiers', 'sources', 'relations',
+                              'dates', 'formats', 'identifiers', 'relations',
                               'funding_agencies']
     for meta_element_name in single_meta_elements:
         meta_element = getattr(orig_meta_obj, meta_element_name)
@@ -811,3 +809,15 @@ class CheckResource(object):
                 print("  Logical file errors:")
                 for e in logical_issues:
                     print("    {}".format(e))
+
+
+def get_modflow_meta_schema():
+    meta_schema_path = "hs_core/management/model_aggr_meta_schema/modflow.json"
+    with open(meta_schema_path) as f:
+        return json.loads(f.read())
+
+
+def get_swat_meta_schema():
+    meta_schema_path = "hs_core/management/model_aggr_meta_schema/swat.json"
+    with open(meta_schema_path) as f:
+        return json.loads(f.read())

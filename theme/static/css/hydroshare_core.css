@@ -12,7 +12,7 @@ body {
     overflow-x: hidden;
 }
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Lato', sans-serif;
+    font-family: 'Roboto', sans-serif;
 }
 h1.hl, h2.hl, h3.hl, h4.hl, h5.hl, h6.hl {
     color: #eaeaea;
@@ -91,7 +91,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     color: #fff;
 }
 #wrap h1 {
-    font-family: 'Lato', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-weight: 100;
     font-size: 48px;
     margin-top: 70px;
@@ -951,7 +951,7 @@ div.readme .readme-content {
 	border: 0;
 	background-color: #FFF;
 	font-size: 14px;
-	font-family: 'Roboto', 'sans-serif';
+	font-family: 'Roboto', sans-serif;
 	word-break: break-word;
 }
 
@@ -1007,6 +1007,7 @@ div.readme .readme-header h4 > span {
 	position: absolute;
 	right: 8px;
 	top: 10px;
+	font-size: 0px;
 }
 
 .form-control, .controls .input-group .form-control {
@@ -1067,6 +1068,12 @@ a[data-toggle='tab']{
     color: #FFF;
     background: #5cb85c;
     border-color: #20833F;
+}
+
+#btn-public:disabled, 
+#btn-private:disabled, 
+#btn-discoverable:disabled {
+	pointer-events: auto;
 }
 
 #btn-private.active {
@@ -1448,7 +1455,7 @@ body > .main-container {
 }
 
 .button-label{
-    font-family: Lato, sans-serif;
+    font-family: 'Roboto', sans-serif;
 }
 
 .btn-remove{
@@ -1593,6 +1600,7 @@ div#sharing-status .col-sm-12{
     -webkit-box-shadow: inset 0 1px 0 #ffffff;
     -moz-box-shadow: inset 0 1px 0 #ffffff;
     box-shadow: inset 0 1px 0 #ffffff;
+	overflow-wrap: anywhere;
 }
 
 .tag-list li {
@@ -2765,6 +2773,8 @@ span.you-flag {
 .resource-custom-table tbody td {
 	border-bottom: 1px solid #EEE;
 	padding: 8px 10px;
+	word-break: keep-all;
+	word-wrap: anywhere;
 }
 
 .resource-custom-table thead th {
@@ -3981,7 +3991,7 @@ div.group-add-photo {
 	z-index: 5;
 	padding: 5px;
 	text-align: center;
-	font-family: 'Roboto','sans-serif';
+	font-family: 'Roboto', sans-serif;
 	padding-left: 10px;
 	background-color: rgba(255,255,255,0.75);
 	border: 1px solid #DDD;

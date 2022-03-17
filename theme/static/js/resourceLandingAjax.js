@@ -338,7 +338,8 @@ function showCompletedMessage(json_response) {
                 showMetaStatus = json_response.show_meta_status;
             }
             if (showMetaStatus) {
-                if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                let sufficient = json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1;
+                if (sufficient && manageAccessApp.canChangeResourceFlags) {
                     manageAccessApp.$data.canBePublicDiscoverable = true;
                     let resourceType = RES_TYPE;
                     let promptMessage = "";
@@ -1299,13 +1300,25 @@ function BindKeyValueFileTypeClickHandlers(){
     keyvalue_add_modal_form.find("button.btn-primary").click(function () {
         addFileTypeExtraMetadata();
     });
+    
+    // clear the form on cancel
+    keyvalue_add_modal_form.find("button.btn-default:contains('Cancel')").click(function () {
+        keyvalue_add_modal_form.find("input[type=text], textarea").val("");
+    });
 
     // bind all key value edit modal forms OK button click event
     $("#fileTypeMetaData").find('[id^=edit-keyvalue-filetype-metadata]').each(function(){
         var formId = $(this).attr('id');
         $(this).find("button.btn-primary").click(function (){
             updateFileTypeExtraMetadata(formId);
-        })
+        });
+
+        // reset the form on cancel
+        $(this).find("button.btn-default:contains('Cancel')").click(function() {
+            $(this).closest('form').find("input[type=text], textarea").each(function(){
+                $(this).val($(this).prop("defaultValue"));
+            });
+        });
     });
 
     // bind all key value delete modal forms Delete button click event
@@ -1358,6 +1371,44 @@ function initializeDatePickers(){
         if(pickerDate != null){
             $(this).datepicker("setDate", pickerDate);
         }
+    });
+
+    // Temporal coverage: only allow submit if both dates are completed
+    let temporal_button = $("#coverage-temporal button");
+    let temporal_warn = $('#temporal-warn');
+    if (temporal_warn.length === 0) {
+        temporal_warn = $("<em>", {
+            id: "temporal-warn",
+            text: "Both a Start Date and End Date are required when providing temporal information",
+            css: {
+                "font-style": "italic",
+                "color": "red"
+            }
+        });
+        temporal_button.closest('div').before(temporal_warn);
+    }
+    temporal_warn.hide();
+
+    $("#coverage-temporal .dateinput").each(function () {
+        $(this).on('change', function (e) {
+            let this_date = $(this)
+            let other_date = $(this).closest("form").find(".form-control").not(this).first();
+            if (this_date.val() && other_date.val()) {
+                temporal_button.removeClass("disabled");
+                temporal_warn.hide();
+            }else if (this_date.val()) {
+                temporal_button.addClass("disabled");
+                other_date.after(temporal_warn);
+                temporal_warn.show();
+            }else if (other_date.val()) {
+                temporal_button.addClass("disabled");
+                this_date.after(temporal_warn);
+                temporal_warn.show();
+            }else{
+                temporal_button.hide()
+                temporal_warn.hide()
+            }
+        });
     });
 }
 

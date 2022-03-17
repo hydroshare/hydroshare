@@ -23,6 +23,7 @@ from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
 from hs_core.models import Creator, Contributor
 from hs_core.signals import post_add_netcdf_aggregation
+from hs_core.enums import RelationTypes
 
 
 class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
@@ -323,7 +324,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
-        netcdf_metadata = NetCDFFileMetaData.objects.create(keywords=[])
+        netcdf_metadata = NetCDFFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=netcdf_metadata, resource=resource)
@@ -973,7 +974,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             if hasattr(nc_dataset, 'references'):
                 delattr(nc_dataset, 'references')
 
-            reference_list = instance.metadata.relations.all().filter(type='references')
+            reference_list = instance.metadata.relations.all().filter(type=RelationTypes.references)
             if reference_list:
                 res_meta_ref = []
                 for reference in reference_list:
@@ -984,7 +985,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             if hasattr(nc_dataset, 'source'):
                 delattr(nc_dataset, 'source')
 
-            source_list = instance.metadata.relations.filter(type='source').all()
+            source_list = instance.metadata.relations.filter(type=RelationTypes.source).all()
             if source_list:
                 res_meta_source = []
                 for source in source_list:

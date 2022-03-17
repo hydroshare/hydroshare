@@ -13,6 +13,7 @@ from hs_core.signals import pre_add_files_to_resource, \
     post_add_files_to_resource, post_create_resource
 from hs_core.hydroshare.resource import ResourceFile, delete_resource_file_only
 from hs_core.hydroshare import utils
+from hs_core.enums import RelationTypes
 
 from hs_app_netCDF.forms import VariableValidationForm, OriginalCoverageForm, VariableForm
 from hs_app_netCDF.models import NetcdfResource
@@ -214,10 +215,10 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                         nc_res.metadata.create_element('subject', value=keyword)
 
             # update source
-            if 'source' in res_dublin_core_meta:
-                nc_res.metadata.relations.filter(type='source').all().delete()
-                nc_res.metadata.create_element('relation', type='source',
-                                               value=res_dublin_core_meta.get('source'))
+            if RelationTypes.source in res_dublin_core_meta:
+                nc_res.metadata.relations.filter(type=RelationTypes.source).all().delete()
+                nc_res.metadata.create_element('relation', type=RelationTypes.source,
+                                               value=res_dublin_core_meta.get(RelationTypes.source))
 
             # update license element:
             if res_dublin_core_meta.get('rights'):
