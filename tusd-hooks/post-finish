@@ -5,7 +5,7 @@
 import os
 import sys
 import json
-from pprint import pprint
+# from pprint import pprint
 
 complete_input = sys.stdin.read()
 data = json.loads(complete_input)
@@ -64,12 +64,16 @@ IRODS_ZONE = 'hydroshareZone'
 IRODS_USERNAME = 'cuahsi1DataProxy'
 IRODS_AUTH = 'icaxahreiFah9oojaiz7Cieg7nah3jah'
 IRODS_HOME_COLLECTION = '/hydroshareZone/home/cuahsi1DataProxy'
+IRODS_TUSD = os.path.join(IRODS_HOME_COLLECTION, 'tusd')
 
 localPath = data['Upload']['Storage']['Path']
 resPath = data['Upload']['MetaData']['filepath'] + data['Upload']['MetaData']['filename']
 
 print("localPath is {}, resPath is {}".format(localPath, resPath))
-irodsPath = os.path.join(IRODS_HOME_COLLECTION, resPath)
+# irodsPath = os.path.join(IRODS_HOME_COLLECTION, resPath)
+localRoot = localPath.split('/')[-1]
+print("localRoot is {}".format(localRoot))
+irodsPath = os.path.join(IRODS_HOME_COLLECTION, 'tusd', localRoot)
 print("irodsPath is {}".format(irodsPath))
 
 from irods.session import iRODSSession
@@ -79,13 +83,12 @@ with iRODSSession(host=IRODS_HOST,
                   password=IRODS_AUTH,
                   zone=IRODS_ZONE) as session:
     resid = resPath.split('/')[0]
-    try: 
-        print("trying to put file")
+    try:
+        print("trying to put {} into {}".format(localPath, irodsPath))
         session.data_objects.create(irodsPath)
         session.data_objects.put(localPath, irodsPath)
-    except Exception as e: 
-        print(e)
-        print("exception in irods put!")
+    except Exception as e:
+        print("exception in irods put: {}".format(e))
 
 # if we get here, even through an error, clean up
 os.unlink(localPath)
