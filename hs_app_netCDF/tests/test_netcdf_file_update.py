@@ -3,7 +3,7 @@ import tempfile
 import shutil
 
 from django.test import TestCase, RequestFactory
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth.models import Group
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.files.uploadedfile import UploadedFile

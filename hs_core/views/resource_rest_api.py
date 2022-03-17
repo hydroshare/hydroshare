@@ -6,7 +6,7 @@ import shutil
 import logging
 import json
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect

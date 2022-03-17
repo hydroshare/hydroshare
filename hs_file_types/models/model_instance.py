@@ -402,7 +402,7 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
 
     # attribute to store type of model instance (SWAT, UEB etc)
     model_instance_type = models.CharField(max_length=255, default="Unknown Model Instance")
-    metadata = models.OneToOneField(ModelInstanceFileMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(ModelInstanceFileMetaData, related_name="logical_file", on_delete=models.CASCADE)
     data_type = "Model Instance"
 
     @classmethod

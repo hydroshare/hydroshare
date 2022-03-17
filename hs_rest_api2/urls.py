@@ -10,6 +10,7 @@ from drf_yasg import openapi
 from rest_framework import permissions
 
 
+app_name = 'hsapi2'
 hsapi2_urlpatterns = [
     url('^hsapi2/', include('hs_rest_api2.urls', namespace='hsapi2')),
 ]

@@ -140,7 +140,7 @@ class IconBox(Orderable):
     '''
     An icon box on a HomePage
     '''
-    homepage = models.ForeignKey(HomePage, related_name="boxes")
+    homepage = models.ForeignKey(HomePage, related_name="boxes", on_delete=models.CASCADE)
     icon = models.CharField(max_length=50,
         help_text="Enter the name of a font awesome icon, i.e. "
                   "fa-eye. A list is available here "
@@ -251,7 +251,7 @@ class UserQuota(models.Model):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     picture = models.ImageField(upload_to=get_upload_path_userprofile, null=True, blank=True)
     middle_name = models.CharField(max_length=1024, null=True, blank=True)
     website = models.URLField(null=True, blank=True)

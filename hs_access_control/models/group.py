@@ -26,12 +26,12 @@ from theme.utils import get_upload_path_group
 # (Revised Sept 17, 2021)
 #############################################
 class GroupMembershipRequest(models.Model):
-    request_from = models.ForeignKey(User, related_name='ru2gmrequest')
+    request_from = models.ForeignKey(User, related_name='ru2gmrequest', on_delete=models.CASCADE)
 
     # when user is requesting to join a group this will be blank
     # when a group owner is sending an invitation, this field will represent the inviting user
-    invitation_to = models.ForeignKey(User, null=True, blank=True, related_name='iu2gmrequest')
-    group_to_join = models.ForeignKey(Group, related_name='g2gmrequest')
+    invitation_to = models.ForeignKey(User, null=True, blank=True, related_name='iu2gmrequest', on_delete=models.CASCADE)
+    group_to_join = models.ForeignKey(Group, related_name='g2gmrequest', on_delete=models.CASCADE)
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     redeemed = models.BooleanField(default=False)
 
@@ -52,7 +52,7 @@ class GroupAccess(models.Model):
                                  null=False,
                                  related_name='gaccess',
                                  related_query_name='gaccess',
-                                 help_text='group object that this object protects')
+                                 help_text='group object that this object protects', on_delete=models.CASCADE)
 
     active = models.BooleanField(default=True,
                                  editable=False,

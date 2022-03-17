@@ -93,7 +93,7 @@ class Visitor(models.Model):
 
 class Session(models.Model):
     begin = models.DateTimeField(auto_now_add=True)
-    visitor = models.ForeignKey(Visitor, related_name='session')
+    visitor = models.ForeignKey(Visitor, related_name='session', on_delete=models.CASCADE)
     # TODO: hostname = models.CharField(null=True, default=None, max_length=256)
 
     objects = SessionManager()
@@ -125,7 +125,7 @@ class Variable(models.Model):
 
     from hs_core.models import BaseResource
 
-    session = models.ForeignKey(Session, related_name='variable')
+    session = models.ForeignKey(Session, related_name='variable', on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=32)
     type = models.IntegerField(choices=TYPE_CHOICES)

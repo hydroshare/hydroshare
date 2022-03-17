@@ -327,19 +327,19 @@ class UserGroupProvenance(ProvenanceBase):
                              null=False,
                              editable=False,
                              related_name='u2ugq',
-                             help_text='user to be granted privilege')
+                             help_text='user to be granted privilege', on_delete=models.CASCADE)
 
     group = models.ForeignKey(Group,
                               null=False,
                               editable=False,
                               related_name='g2ugq',
-                              help_text='group to which privilege applies')
+                              help_text='group to which privilege applies', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=True,
                                 editable=False,
                                 related_name='x2ugq',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     undone = models.BooleanField(editable=False,
                                  default=False,
@@ -433,19 +433,19 @@ class UserResourceProvenance(ProvenanceBase):
                              null=False,
                              editable=False,
                              related_name='u2urq',
-                             help_text='user to be granted privilege')
+                             help_text='user to be granted privilege', on_delete=models.CASCADE)
 
     resource = models.ForeignKey(BaseResource,
                                  null=False,
                                  editable=False,
                                  related_name='r2urq',
-                                 help_text='resource to which privilege applies')
+                                 help_text='resource to which privilege applies', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=True,
                                 editable=False,
                                 related_name='x2urq',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     exhibit = models.BooleanField(default=False,
                                   null=False,
@@ -542,19 +542,19 @@ class GroupResourceProvenance(ProvenanceBase):
                               null=False,
                               editable=False,
                               related_name='g2grq',
-                              help_text='group to be granted privilege')
+                              help_text='group to be granted privilege', on_delete=models.CASCADE)
 
     resource = models.ForeignKey(BaseResource,
                                  null=False,
                                  editable=False,
                                  related_name='r2grq',
-                                 help_text='resource to which privilege applies')
+                                 help_text='resource to which privilege applies', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=True,
                                 editable=False,
                                 related_name='x2grq',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     exhibit = models.BooleanField(default=False,
                                   null=False,
@@ -648,19 +648,19 @@ class UserCommunityProvenance(ProvenanceBase):
                                   null=False,
                                   editable=False,
                                   related_name='c2ucq',
-                                  help_text='community to be granted privilege')
+                                  help_text='community to be granted privilege', on_delete=models.CASCADE)
 
     user = models.ForeignKey(User,
                              null=False,
                              editable=False,
                              related_name='u2ucq',
-                             help_text='user to which privilege applies')
+                             help_text='user to which privilege applies', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=True,
                                 editable=False,
                                 related_name='x2ucq',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     undone = models.BooleanField(editable=False,
                                  default=False,
@@ -759,19 +759,19 @@ class GroupCommunityProvenance(ProvenanceBase):
                                   null=False,
                                   editable=False,
                                   related_name='c2gcq',
-                                  help_text='group to be granted privilege')
+                                  help_text='group to be granted privilege', on_delete=models.CASCADE)
 
     group = models.ForeignKey(Group,
                               null=False,
                               editable=False,
                               related_name='g2gcq',
-                              help_text='group to which privilege applies')
+                              help_text='group to which privilege applies', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=True,
                                 editable=False,
                                 related_name='x2gcq',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     undone = models.BooleanField(editable=False,
                                  default=False,
@@ -870,19 +870,19 @@ class CommunityResourceProvenance(ProvenanceBase):
                                   null=False,
                                   editable=False,
                                   related_name='r2crq',
-                                  help_text='community to be granted privilege')
+                                  help_text='community to be granted privilege', on_delete=models.CASCADE)
 
     community = models.ForeignKey(Community,
                                   null=False,
                                   editable=False,
                                   related_name='c2crq',
-                                  help_text='community to which privilege applies')
+                                  help_text='community to which privilege applies', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=True,
                                 editable=False,
                                 related_name='x2crq',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     exhibit = models.BooleanField(default=False,
                                   null=False,

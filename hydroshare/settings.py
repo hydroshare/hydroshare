@@ -248,7 +248,8 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 
 INSTALLED_APPS = (
     'test_without_migrations',
-    "autocomplete_light",
+    'dal',
+    'dal_select2',
     "django.contrib.admin",
     "django.contrib.auth",
     "oauth2_provider",
@@ -261,6 +262,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
+    "django.contrib.messages",
     "inplaceeditform",
     "django_nose",
     "django_irods",

@@ -67,9 +67,9 @@ processor_for(CollectionResource)(resource_processor)
 
 class CollectionDeletedResource(models.Model):
     resource_title = models.TextField(null=False, blank=False)
-    deleted_by = models.ForeignKey(User)
+    deleted_by = models.ForeignKey(User, on_delete=models.CASCADE)
     date_deleted = models.DateTimeField(auto_now_add=True)
-    collection = models.ForeignKey(BaseResource)
+    collection = models.ForeignKey(BaseResource, on_delete=models.CASCADE)
     resource_id = models.CharField(max_length=32)
     resource_type = models.CharField(max_length=50)
     resource_owners = models.ManyToManyField(User, related_name='collectionDeleted')

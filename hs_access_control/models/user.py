@@ -51,7 +51,7 @@ class Feature(models.Model):
     A UI customization can be enabled or disabled, and is a property of a User.
 
     """
-    user = models.ForeignKey(User, null=True, related_name='feature')
+    user = models.ForeignKey(User, null=True, related_name='feature', on_delete=models.CASCADE)
     feature = models.IntegerField(choices=FeatureCodes.CHOICES, default=FeatureCodes.NONE)
     enabled = models.BooleanField(null=False, blank=False, default=False)
 
@@ -74,7 +74,7 @@ class UserAccess(models.Model):
                                 editable=False,
                                 null=False,
                                 related_name='uaccess',
-                                related_query_name='uaccess')
+                                related_query_name='uaccess', on_delete=models.CASCADE)
 
     ##########################################
     # PUBLIC METHODS: groups

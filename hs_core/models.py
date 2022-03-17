@@ -18,7 +18,7 @@ from django.contrib.postgres.fields import HStoreField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
     SuspiciousFileOperation, PermissionDenied
 from django.core.files import File
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.validators import URLValidator
 from django.db import models
 from django.db import transaction
@@ -98,8 +98,8 @@ def clean_for_xml(s):
 class GroupOwnership(models.Model):
     """Define lookup table allowing django auth users to own django auth groups."""
 
-    group = models.ForeignKey(Group)
-    owner = models.ForeignKey(User)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 def get_user(request):
@@ -145,7 +145,7 @@ class ResourcePermissionsMixin(Ownable):
     creator = models.ForeignKey(User,
                                 related_name='creator_of_%(app_label)s_%(class)s',
                                 help_text='This is the person who first uploaded the resource',
-                                )
+                                on_delete=models.CASCADE)
 
     class Meta:
         """Define meta properties for ResourcePermissionsMixin, make abstract."""
@@ -365,7 +365,7 @@ class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
     # see the following link the reason for having the related_name setting
     # for the content_type attribute
     # https://docs.djangoproject.com/en/1.6/topics/db/models/#abstract-related-name
-    content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related")
+    content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related", on_delete=models.CASCADE)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __str__(self):
@@ -1900,7 +1900,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
                                         null=False,
-                                        default=1
+                                        default=1,
+                                        on_delete=models.CASCADE
                                         )
 
     files = GenericRelation('hs_core.ResourceFile',
@@ -1923,7 +1924,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # this is to establish a relationship between a resource and
     # any metadata container object (e.g., CoreMetaData object)
     object_id = models.PositiveIntegerField(null=True, blank=True)
-    content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     extra_metadata = HStoreField(default={})
@@ -2781,7 +2782,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                           ]
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     # This is used to direct uploads to a subfolder of the root folder for the resource.
@@ -2804,7 +2805,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     logical_file_object_id = models.PositiveIntegerField(null=True, blank=True)
     logical_file_content_type = models.ForeignKey(ContentType,
                                                   null=True, blank=True,
-                                                  related_name="files")
+                                                  related_name="files", on_delete=models.CASCADE)
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
     _size = models.BigIntegerField(default=-1)

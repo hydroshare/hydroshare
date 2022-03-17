@@ -27,7 +27,7 @@ class ResourceAccess(models.Model):
                                     editable=False,
                                     null=False,
                                     related_name='raccess',
-                                    related_query_name='raccess')
+                                    related_query_name='raccess', on_delete=models.CASCADE)
 
     # only for resources
     active = models.BooleanField(default=True,

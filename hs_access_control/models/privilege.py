@@ -201,19 +201,19 @@ class UserGroupPrivilege(PrivilegeBase):
                              null=False,
                              editable=False,
                              related_name='u2ugp',
-                             help_text='user to be granted privilege')
+                             help_text='user to be granted privilege', on_delete=models.CASCADE)
 
     group = models.ForeignKey(Group,
                               null=False,
                               editable=False,
                               related_name='g2ugp',
-                              help_text='group to which privilege applies')
+                              help_text='group to which privilege applies', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=False,
                                 editable=False,
                                 related_name='x2ugp',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('user', 'group')
@@ -379,19 +379,19 @@ class UserResourcePrivilege(PrivilegeBase):
                              null=False,
                              editable=False,
                              related_name='u2urp',
-                             help_text='user to be granted privilege')
+                             help_text='user to be granted privilege', on_delete=models.CASCADE)
 
     resource = models.ForeignKey(BaseResource,
                                  null=False,
                                  editable=False,
                                  related_name='r2urp',
-                                 help_text='resource to which privilege applies')
+                                 help_text='resource to which privilege applies', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=False,
                                 editable=False,
                                 related_name='x2urp',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     exhibit = models.BooleanField(default=False,
                                   null=False,
@@ -550,19 +550,19 @@ class GroupResourcePrivilege(PrivilegeBase):
                               null=False,
                               editable=False,
                               related_name='g2grp',
-                              help_text='group to be granted privilege')
+                              help_text='group to be granted privilege', on_delete=models.CASCADE)
 
     resource = models.ForeignKey(BaseResource,
                                  null=False,
                                  editable=False,
                                  related_name='r2grp',
-                                 help_text='resource to which privilege applies')
+                                 help_text='resource to which privilege applies', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=False,
                                 editable=False,
                                 related_name='x2grp',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     exhibit = models.BooleanField(default=False,
                                   null=False,
@@ -705,19 +705,19 @@ class UserCommunityPrivilege(PrivilegeBase):
                                   null=False,
                                   editable=False,
                                   related_name='c2ucp',
-                                  help_text='community to be granted privilege')
+                                  help_text='community to be granted privilege', on_delete=models.CASCADE)
 
     user = models.ForeignKey(User,
                              null=False,
                              editable=False,
                              related_name='u2ucp',
-                             help_text='group providing privilege')
+                             help_text='group providing privilege', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=False,
                                 editable=False,
                                 related_name='x2ucp',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('community', 'user')
@@ -887,19 +887,19 @@ class GroupCommunityPrivilege(PrivilegeBase):
                                   null=False,
                                   editable=False,
                                   related_name='c2gcp',
-                                  help_text='community to be granted privilege')
+                                  help_text='community to be granted privilege', on_delete=models.CASCADE)
 
     group = models.ForeignKey(Group,
                               null=False,
                               editable=False,
                               related_name='g2gcp',
-                              help_text='group providing privilege')
+                              help_text='group providing privilege', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=False,
                                 editable=False,
                                 related_name='x2gcp',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     exhibit = models.BooleanField(default=False,
                                   null=False,
@@ -1074,19 +1074,19 @@ class CommunityResourcePrivilege(PrivilegeBase):
                                   null=False,
                                   editable=False,
                                   related_name='c2crp',
-                                  help_text='community to be granted privilege')
+                                  help_text='community to be granted privilege', on_delete=models.CASCADE)
 
     resource = models.ForeignKey(BaseResource,
                                  null=False,
                                  editable=False,
                                  related_name='r2crp',
-                                 help_text='resource providing privilege')
+                                 help_text='resource providing privilege', on_delete=models.CASCADE)
 
     grantor = models.ForeignKey(User,
                                 null=False,
                                 editable=False,
                                 related_name='x2crp',
-                                help_text='grantor of privilege')
+                                help_text='grantor of privilege', on_delete=models.CASCADE)
 
     exhibit = models.BooleanField(default=False,
                                   null=False,

@@ -1,8 +1,8 @@
-from autocomplete_light import shortcuts as autocomplete_light
+from dal import widgets as autocomplete_light
 from django.contrib.auth.models import User, Group
 
 
-class UserAutocomplete(autocomplete_light.AutocompleteModelBase):
+class UserAutocomplete(autocomplete_light.ChoiceWidget):
     search_fields = ['username', 'first_name', 'last_name']
     split_words = True
 
@@ -26,7 +26,7 @@ class UserAutocomplete(autocomplete_light.AutocompleteModelBase):
 autocomplete_light.register(User, UserAutocomplete)
 
 
-class GroupAutocomplete(autocomplete_light.AutocompleteModelBase):
+class GroupAutocomplete(autocomplete_light.ChoiceWidget):
     search_fields=['name']
 
     def choices_for_request(self):

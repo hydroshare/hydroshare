@@ -21,7 +21,7 @@ from django.core import signing
 from django.db import Error, IntegrityError
 from django import forms
 from django.views.generic import TemplateView
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.forms.models import model_to_dict
 
 from rest_framework import status
@@ -31,7 +31,7 @@ from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import subject_template, send_mail_template
 
-from autocomplete_light import shortcuts as autocomplete_light
+from dal import widgets as autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.icommands import SessionException
@@ -1888,7 +1888,7 @@ class MyGroupsView(TemplateView):
 
 
 class AddUserForm(forms.Form):
-    user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
+    user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.Select("UserAutocomplete"))
 
 
 class GroupView(TemplateView):

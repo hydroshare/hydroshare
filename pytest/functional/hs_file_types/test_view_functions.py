@@ -3,7 +3,7 @@ import os
 
 import pytest
 from django.core.files.uploadedfile import UploadedFile
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import RequestFactory
 from rest_framework import status
 

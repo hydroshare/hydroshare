@@ -18,7 +18,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.validators import URLValidator
 from django.db.models import When, Case, Value, BooleanField, Prefetch
 from django.db.models.query import prefetch_related_objects

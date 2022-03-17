@@ -484,7 +484,7 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
     # attribute to store type of model program (SWAT, UEB etc)
     model_program_type = models.CharField(max_length=255, default="Unknown Model Program")
 
-    metadata = models.OneToOneField(ModelProgramFileMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(ModelProgramFileMetaData, related_name="logical_file", on_delete=models.CASCADE)
     data_type = "Model Program"
 
     @classmethod

@@ -8,8 +8,6 @@ from mezzanine.core.views import direct_to_template
 from mezzanine.conf import settings
 from mezzanine.pages.views import page
 
-from autocomplete_light import shortcuts as autocomplete_light
-
 from hs_core.views.discovery_json_view import DiscoveryJsonView
 from hs_core.views.oauth2_view import GroupAuthorizationView
 from hs_rest_api.urls import hsapi_urlpatterns
@@ -23,7 +21,6 @@ import hs_communities.views.communities
 from theme.views import delete_resource_comment
 from hs_discover.views import SearchView, SearchAPI
 
-autocomplete_light.autodiscover()
 admin.autodiscover()
 
 # Add the urlpatterns for any custom Django applications here.
@@ -71,7 +68,6 @@ urlpatterns = i18n_patterns(
         theme.email_verify_password_reset, name='email_verify_password_reset'),
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', hs_core_views.verify),
     url(r'^django_irods/', include('django_irods.urls')),
-    url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^discoverapi/$', SearchAPI.as_view(), name='DiscoverAPI'),
     url(r'^search/$', SearchView.as_view(), name='Discover'),
     url(r'^topics/$', hs_communities.views.communities.TopicsView.as_view(), name='topics'),
