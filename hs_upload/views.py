@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from rest_framework.decorators import api_view
+# from rest_framework.decorators import api_view
 from django.views.generic.base import TemplateView
 from django.conf import settings
 from django_irods import icommands
@@ -117,15 +117,10 @@ class UploadContextView(TemplateView):
 
 def nameok(request, path, *args, **kwargs):
     """ check whether upload file name is acceptable """
-    url = request.GET.get(url)
-    if url is None: 
-        response = HttpResponse(status=401)
-        content_msg = "malformed upload request!".format(rid)
-        response.content = content_msg
-        logger.debug(content_msg)
-        return response
-    tempfile = url.split('/')[-1]
 
+    user = request.user
+    filename = request.GET.get('filename')
+    size = request.GET.get('size')
     rid = path.split('/')[0]
     try:
         resource = get_resource_by_shortkey(rid, or_404=False)
@@ -147,8 +142,7 @@ def nameok(request, path, *args, **kwargs):
         return response
 
     # file name should not exist
-    filename = request.GET.get('filename')
-    file_path = os.path.join(path, filename)
+    path = os.path.join(path, filename)
     irods_path = resource.get_irods_path(path)
     if istorage.exists(irods_path):
         response = HttpResponse(status=401)
@@ -157,11 +151,31 @@ def nameok(request, path, *args, **kwargs):
         logger.debug(content_msg)
         return response
 
-    return HttpResponse(status=200)  # ok to proceed
+    # upload in progress should not exist
+    # TODO: fold this code into Upload.create under an atomic transaction
+    path = os.path.join(path, filename)
+    in_progress = Upload.objects.get(resource=resource, path=path).exists()
+    if in_progress:
+        response = HttpResponse(status=401)
+        content_msg = "upload to resource {} path {} already in progress!".format(rid, path)
+        response.content = content_msg
+        logger.debug(content_msg)
+        return response
+
+    try:
+        Upload.create(user, resource, path, size)
+        return HttpResponse(status=200)  # ok to proceed
+    except Exception as e:
+        response = HttpResponse(status=401)
+        content_msg = "cannot initiate upload: {}".format(e)
+        response.content = content_msg
+        logger.debug(content_msg)
+        return response
 
 
 def event(request, path, *args, **kwargs):
     """ consume a tusd event """
+    # user = request.user
     event = request.GET.get('event')
     filename = request.GET.get('filename')
     filetype = request.GET.get('filetype')
@@ -172,7 +186,7 @@ def event(request, path, *args, **kwargs):
     path = path.split('/')
     rid = path[0]
     try:
-        resource = get_resource_by_shortkey(rid, or_404=False)
+        _ = get_resource_by_shortkey(rid, or_404=False)
     except BaseResource.DoesNotExist:
         response = HttpResponse(status=403)
         content_msg = "resource {} does not exist!".format(rid)
@@ -181,7 +195,6 @@ def event(request, path, *args, **kwargs):
         return response
 
     path = '/'.join(path[1:])
-    user = request.user
 
     logger.debug("tusd event = {},  rid = {}, path = {}, filename = {}, filetype = {}, url = {}"
                  .format(event, rid, path, filename, filetype, url))
