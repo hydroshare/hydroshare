@@ -192,6 +192,9 @@ def get_access_object(user, user_type, user_access):
     access_object = None
     picture = None
 
+    if not hasattr(user, 'viewable_contributions'):
+        user.viewable_contributions = 0
+
     if user_type == "user":
         if user.userprofile.picture:
             picture = user.userprofile.picture.url
@@ -209,6 +212,7 @@ def get_access_object(user, user_type, user_access):
             "organization": user.userprofile.organization,
             "title": user.userprofile.title,
             "contributions": len(user.uaccess.owned_resources),
+            "viewable_contributions": user.viewable_contributions,
             "subject_areas": user.userprofile.subject_areas,
             "identifiers": user.userprofile.identifiers,
             "state": user.userprofile.state,
@@ -260,9 +264,12 @@ def page_permissions_page_processor(request, page):
     edit_groups = cm.raccess.edit_groups
     view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
+    last_changed_by = cm.last_changed_by
+
     if request.user.is_authenticated():
         for owner in owners:
             owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
+            owner.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(owner)
 
         for viewer in viewers:
             viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, viewer)
@@ -277,6 +284,9 @@ def page_permissions_page_processor(request, page):
         for edit_grp in edit_groups:
             edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
                                                                                         edit_grp)
+
+        last_changed_by.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(last_changed_by)
+
     else:
         for owner in owners:
             owner.can_undo = False
@@ -288,6 +298,7 @@ def page_permissions_page_processor(request, page):
             view_grp.can_undo = False
         for edit_grp in edit_groups:
             edit_grp.can_undo = False
+    last_changed_by.can_undo = False
 
     users_json = []
 
@@ -305,6 +316,17 @@ def page_permissions_page_processor(request, page):
 
     for usr in view_groups:
         users_json.append(get_access_object(usr, "group", "view"))
+
+    lcb_access_level = cm.raccess.get_effective_user_privilege(last_changed_by)
+    if lcb_access_level == PrivilegeCodes.OWNER:
+        lcb_access_level = 'owner'
+    elif lcb_access_level == PrivilegeCodes.CHANGE:
+        lcb_access_level = 'edit'
+    elif lcb_access_level == PrivilegeCodes.VIEW:
+        lcb_access_level = 'view'
+
+    # last_changed_by.can_undo = False
+    last_changed_by = json.dumps(get_access_object(last_changed_by, "user", lcb_access_level))
 
     users_json = json.dumps(users_json)
 
@@ -331,7 +353,8 @@ def page_permissions_page_processor(request, page):
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
-        "show_manage_access": show_manage_access
+        "show_manage_access": show_manage_access,
+        "last_changed_by": last_changed_by
     }
 
 
@@ -368,7 +391,7 @@ class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
         """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
         for key, value in list(kwargs.items()):
-                setattr(element, key, value)
+            setattr(element, key, value)
         element.save()
         return element
 
