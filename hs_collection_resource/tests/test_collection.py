@@ -78,12 +78,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
             title='Test Time Series Resource'
         )
 
-        self.resNetCDF = create_resource(
-                    resource_type='NetcdfResource',
-                    owner=self.user1,
-                    title='Test NetCDF Resource'
-                )
-
         self.resGeoFeature = create_resource(
                     resource_type='GeographicFeatureResource',
                     owner=self.user1,
