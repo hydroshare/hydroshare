@@ -1001,6 +1001,7 @@
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
+      const LAST_CHANGED_BY = {{ last_changed_by|safe }};
       const AUTHORS = [
           {% for author in creators %}
               {
@@ -1022,27 +1023,6 @@
           {% endfor %}
       ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
-
-      {% with cm.last_changed_by as usr %}
-          const LAST_CHANGED_BY = {
-          "id": {{ usr.id }},
-          "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
-          "best_name": "{{ usr|best_name|escapejs }}",
-          "email": "{{ usr.email|safe }}",
-          "organization": "{{ usr.userprofile.organization|escapejs }}",
-          "title": "{{ usr.userprofile.title|escapejs }}",
-          "contributions": "{{ usr.uaccess.owned_resources|length  }}",
-          "subject_areas": "{{ usr.userprofile.subject_areas|escapejs }}",
-          "identifiers": {
-              {% for name, link in usr.userprofile.identifiers.items %}
-                  "{{ name }}": "{{ link }}",
-              {% endfor %}
-          },
-          "state": "{{ usr.userprofile.state|escapejs }}",
-          "country": "{{ usr.userprofile.country }}",
-          "joined": "{{ usr.date_joined|date:"M d, Y" }}"
-      };
-      {% endwith %}
 
       {% if show_manage_access %}
           const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};

@@ -11,8 +11,7 @@ from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
-from hs_app_netCDF.models import OriginalCoverage, Variable
-from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData
+from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData, OriginalCoverage, Variable
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from .utils import assert_netcdf_file_type_metadata, CompositeResourceTestMixin, \
     get_path_with_no_file_extension

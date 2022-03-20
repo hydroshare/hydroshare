@@ -815,3 +815,9 @@ def get_modflow_meta_schema():
     meta_schema_path = "hs_core/management/model_aggr_meta_schema/modflow.json"
     with open(meta_schema_path) as f:
         return json.loads(f.read())
+
+
+def get_swat_meta_schema():
+    meta_schema_path = "hs_core/management/model_aggr_meta_schema/swat.json"
+    with open(meta_schema_path) as f:
+        return json.loads(f.read())

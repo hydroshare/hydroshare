@@ -1245,9 +1245,10 @@ function setupModelInstanceTypeUI() {
             disable_edit_json: true,
             disable_array_add: false,
             disable_array_delete: false,
-            // optional fields are not displayed by default in JSONEditor form for editing
+            // only required fields are displayed by default in JSONEditor form for editing
             // user needs to select any optional properties to make it available for editing
-            display_required_only: false,
+            display_required_only: true,
+            // only fields that are specified as required in the schema should be required by the JSONEditor form
             required_by_default: false,
             object_layout: "table"
         });
@@ -2351,9 +2352,9 @@ $(document).ready(function () {
     $("#btn-confirm-delete").click(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
         var filesToDelete = "";
-        $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
         if (deleteList.length) {
+            $(".file-browser-container, #fb-files-container").css("cursor", "progress");
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
                 let item = $(deleteList[i]);
@@ -2402,6 +2403,7 @@ $(document).ready(function () {
                         }
                     });
                 }
+                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
 
             $.when.apply($, calls).fail(function () {
@@ -2412,6 +2414,7 @@ $(document).ready(function () {
                 else {
                     refreshFileBrowser();
                 }
+                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
         }
     });
@@ -2523,6 +2526,25 @@ $(document).ready(function () {
         }
 
         $("#txtFileURL").val(basePath + url);
+
+        // update message for URL sharing depending on raccess
+        $('#warnTxtFileURL p').hide();
+        if(!RESOURCE_ACCESS.isPublic){
+            if (RESOURCE_ACCESS.isDiscoverable){
+                if (RESOURCE_ACCESS.isPrivateLinkSharing){
+                    $('#warnTxtFileURL p.discoverable_sharing').show();
+                }else{
+                    $('#warnTxtFileURL p.discoverable').show();
+                }
+            }else if (RESOURCE_ACCESS.isPrivateLinkSharing){
+                $('#warnTxtFileURL p.private_sharing').show();
+            }else{
+                $('#warnTxtFileURL p.private').show();
+            }
+            $("#warnTxtFileURL").show();
+        }else{
+            $("#warnTxtFileURL").hide();
+        }
     });
 
     // set generic file type method
