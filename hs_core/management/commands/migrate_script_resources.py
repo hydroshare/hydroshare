@@ -1,10 +1,8 @@
-import logging
-
 from django.core.management.base import BaseCommand
 
+from hs_core.hydroshare import current_site_url, set_dirty_bag_flag
 from hs_core.models import CoreMetaData
 from hs_script_resource.models import ScriptResource
-from hs_core.hydroshare import current_site_url, set_dirty_bag_flag
 from ..utils import migrate_core_meta_elements
 
 
@@ -12,12 +10,10 @@ class Command(BaseCommand):
     help = "Convert all script resources to composite resource"
 
     def handle(self, *args, **options):
-        logger = logging.getLogger(__name__)
         resource_counter = 0
         to_resource_type = 'CompositeResource'
         msg = "THERE ARE CURRENTLY {} SCRIPT RESOURCES TO MIGRATE TO COMPOSITE RESOURCE.".format(
             ScriptResource.objects.count())
-        logger.info(msg)
         print(msg, flush=True)
         for script_res in ScriptResource.objects.all():
             msg = "Migrating script resource:{}".format(script_res.short_id)
@@ -26,7 +22,6 @@ class Command(BaseCommand):
             istorage = script_res.get_irods_storage()
             if not istorage.exists(script_res.root_path):
                 err_msg = "Script resource was not found in iRODS (ID: {})".format(script_res.short_id)
-                logger.error(err_msg)
                 print("ERROR: {}".format(err_msg), flush=True)
                 # skip this script resource for migration
                 continue
@@ -76,14 +71,12 @@ class Command(BaseCommand):
             set_dirty_bag_flag(comp_res)
             resource_counter += 1
             msg = "Migrated script resource:{}".format(script_res.short_id)
-            logger.info(msg)
             print(msg, flush=True)
             # delete the instance of ScriptMetaData that was part of the original script resource
             script_metadata_obj.delete()
 
         msg = "{} SCRIPT RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE.".format(resource_counter)
-        logger.info(msg)
         print(msg)
         msg = "THERE ARE CURRENTLY {} SCRIPT RESOURCES AFTER MIGRATION.".format(ScriptResource.objects.count())
-        logger.info(msg)
         print(msg)
+
