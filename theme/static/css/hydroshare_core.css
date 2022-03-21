@@ -2070,6 +2070,11 @@ table.user-scope tr {
     display: table-row !important;
 }
 
+.access-table tbody > tr.is-group {
+    background-color: #093e541f;
+}
+
+
 #templateRow {
 	display:none !important;
 }
@@ -2976,6 +2981,7 @@ span.you-flag {
 	padding-bottom: 5px;
 	padding-right: 32px;
 	margin: 0;
+	word-wrap: break-word;
 }
 
 .noselect {
