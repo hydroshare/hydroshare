@@ -173,6 +173,8 @@ class UserAccess(models.Model):
             else this_request.request_from
 
         if not user_to_join_group.is_active:
+            this_request.redeemed = True
+            this_request.save()
             raise PermissionDenied("User to be granted group membership is not active")
 
         if not this_request.group_to_join.gaccess.active:
