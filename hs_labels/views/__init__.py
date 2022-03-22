@@ -43,6 +43,8 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
     elif label_type == LABEL or label_type == SAVEDLABEL:
         if label is None:
             err_msg = "A value for label is missing"
+        elif len(label) >= 75:
+            err_msg = "The label is too long (> 75 characters)"
     elif label_type != SAVEDLABEL and shortkey is None:
             err_msg = "Resource ID is missing"
 

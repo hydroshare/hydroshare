@@ -66,6 +66,9 @@ let manageAccessApp = new Vue({
                 accessStr = "Private (Accessible via direct link sharing)";
             }
             $("#hl-sharing-status").text(accessStr);    // Update highlight sharing status
+
+            // update global resaccess so that we can react in UI without refresh
+            Object.assign(RESOURCE_ACCESS, this.resAccess)
         },
         users: function () {
             leftHeaderApp.$data.owners = this.users.filter(function (user) {

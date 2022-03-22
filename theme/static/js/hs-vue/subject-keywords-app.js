@@ -3,6 +3,7 @@
 */
 let subjKeywordsApp = new Vue({
     el: '#app-keyword',
+    delimiters: ['${', '}'],
     components: {
         VueBootstrapTypeahead
     },
@@ -20,6 +21,8 @@ let subjKeywordsApp = new Vue({
     },
     methods: {
         addKeyword: function (resIdShort) {
+            this.showIsDuplicate = false;  // Reset
+            
             // Remove any empty keywords from the list
             let newKeywords = this.newKeyword.split(",");
             newKeywords = newKeywords.filter(function(a) {
@@ -31,16 +34,19 @@ let subjKeywordsApp = new Vue({
 
             if (this.newKeyword.trim() === "") {
                 return; // Empty string detected
+            }else if (this.newKeyword.length > 100) {
+                this.error = "Your keyword is too long. Ensure it has at most 100 characters.";
+                return;
             }
 
             let newVal =  (this.resKeywords.join(",").length ? this.resKeywords.join(",") + ",": "") + this.newKeyword;
             this.error = "";
+            let vue = this;
             $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/", {value: newVal}, function (resp) {
                 if (resp.status === "success") {
                     // Append new keywords to our data array
                     let newKeywordsArray = this.newKeyword.trim().split(",");
 
-                    this.showIsDuplicate = false;  // Reset
                     for (let i = 0; i < newKeywordsArray.length; i++) {
                         if ($.inArray(newKeywordsArray[i].trim(), this.resKeywords) >= 0) {
                             this.showIsDuplicate = true;
@@ -53,7 +59,7 @@ let subjKeywordsApp = new Vue({
                     }
                 }
                 else {
-                    this.error = resp.message;
+                    vue.error = resp.message.slice(0, -1);
                 }
                 showCompletedMessage(resp);
             }.bind(this), "json");
@@ -62,20 +68,23 @@ let subjKeywordsApp = new Vue({
             let newVal = this.resKeywords.slice(); // Get a copy
             newVal.splice($.inArray(keywordName, this.resKeywords), 1);   // Remove the keyword
 
-            this.error = "";
+            let vue = this;
+            vue.error = "";
 
             $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/",
                 {value: newVal.join(",")}, function (resp) {
                     if (resp.status === "success") {
-                        this.resKeywords = newVal;
+                        vue.resKeywords = newVal;
                         if (!newVal.length) {
                             // If no keywords, the metadata is no longer sufficient to make the resource public
                             manageAccessApp.onMetadataInsufficient();
                         }
                     }
                     else {
-                        if (this.resKeywords.length){
-                            this.error = this.message;
+                        if (vue.resKeywords.length){
+                            // vue.error = resp.message;
+                            // Response message is not very user-friendly so:
+                            vue.error = "There was a problem removing your keyword.";
                         }
                     }
                 }.bind(this), "json");

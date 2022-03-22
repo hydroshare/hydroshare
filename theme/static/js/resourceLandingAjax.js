@@ -131,7 +131,7 @@ function handleIsDirty(json_response) {
     }
     // show update sqlite file update option for TimeSeriesLogicalFile
     if (json_response.logical_file_type === "TimeSeriesLogicalFile" &&
-        json_response.is_dirty && json_response.can_update_sqlite) {
+        json_response.is_update_file && json_response.can_update_sqlite) {
         $("#div-sqlite-file-update").show();
     }
     // show update netcdf resource
@@ -1371,6 +1371,44 @@ function initializeDatePickers(){
         if(pickerDate != null){
             $(this).datepicker("setDate", pickerDate);
         }
+    });
+
+    // Temporal coverage: only allow submit if both dates are completed
+    let temporal_button = $("#coverage-temporal button");
+    let temporal_warn = $('#temporal-warn');
+    if (temporal_warn.length === 0) {
+        temporal_warn = $("<em>", {
+            id: "temporal-warn",
+            text: "Both a Start Date and End Date are required when providing temporal information",
+            css: {
+                "font-style": "italic",
+                "color": "red"
+            }
+        });
+        temporal_button.closest('div').before(temporal_warn);
+    }
+    temporal_warn.hide();
+
+    $("#coverage-temporal .dateinput").each(function () {
+        $(this).on('change', function (e) {
+            let this_date = $(this)
+            let other_date = $(this).closest("form").find(".form-control").not(this).first();
+            if (this_date.val() && other_date.val()) {
+                temporal_button.removeClass("disabled");
+                temporal_warn.hide();
+            }else if (this_date.val()) {
+                temporal_button.addClass("disabled");
+                other_date.after(temporal_warn);
+                temporal_warn.show();
+            }else if (other_date.val()) {
+                temporal_button.addClass("disabled");
+                this_date.after(temporal_warn);
+                temporal_warn.show();
+            }else{
+                temporal_button.hide()
+                temporal_warn.hide()
+            }
+        });
     });
 }
 
