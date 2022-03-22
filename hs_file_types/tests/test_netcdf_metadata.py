@@ -63,6 +63,10 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test file level keywords
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.nc file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
         self.assertEqual(len(logical_file.metadata.keywords), 1)
         self.assertEqual(logical_file.metadata.keywords[0], 'Snow water equivalent')
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -95,6 +99,10 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test file level keywords
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.nc file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
         self.assertEqual(len(logical_file.metadata.keywords), 1)
         self.assertEqual(logical_file.metadata.keywords[0], 'Snow water equivalent')
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -142,6 +150,10 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.assertEqual(res_file.file_folder, expected_file_folder)
         self.assertTrue(isinstance(logical_file, NetCDFLogicalFile))
         self.assertTrue(logical_file.metadata, NetCDFLogicalFile)
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.nc file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
 
         # test the location of the file that's not part of the netcdf aggregation
         other_res_file = None
@@ -193,6 +205,10 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.assertEqual(res_file.file_folder, expected_file_folder)
         self.assertTrue(isinstance(logical_file, NetCDFLogicalFile))
         self.assertTrue(logical_file.metadata, NetCDFLogicalFile)
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.nc file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -395,6 +411,11 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertNotEqual(logical_file.metadata.originalCoverage, None)
         self.assertEqual(Variable.objects.count(), 5)
         self.assertEqual(logical_file.metadata.variables.all().count(), 5)
+
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.nc file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
 
         # delete the logical file
         logical_file.logical_delete(self.user)
