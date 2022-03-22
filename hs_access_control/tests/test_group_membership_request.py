@@ -1,4 +1,3 @@
-from doctest import debug_script
 from django.test import TestCase
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Group
