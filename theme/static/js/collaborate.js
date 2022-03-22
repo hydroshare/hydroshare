@@ -10,7 +10,7 @@ function request_join_group_ajax_submit() {
     var url = form.attr('action');
     if($(this).attr("requires_explanation") === 'True'){
         // show a modal requesting explanation
-        $('#explanation-dialog').modal('toggle');
+        $('#explanation-dialog').modal('show');
         $('#explanation').unbind('.group_ns');
 
         // on modal submission
@@ -29,7 +29,7 @@ function request_join_group_ajax_submit() {
                 return;
             }else{
                 submitGroupRequest(datastring + "&" + $('#explanation').serialize());
-                $('#explanation-dialog').modal('toggle');
+                $('#explanation-dialog').modal('hide');
             }
         });
         function showError(errorText){
