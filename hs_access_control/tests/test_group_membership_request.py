@@ -620,6 +620,34 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
             self.mike_group_owner.uaccess.act_on_group_membership_request(
                 membership_request, accept_request=False)
 
+        # previously existing requests are redeemed if a user is deactivated
+        # kelly has no open requests
+        self.assertEqual(
+            self.kelly_group_member.uaccess.group_membership_requests.count(), 0)
+
+        kelly_membership_request = self.kelly_group_member.uaccess.create_group_membership_request(
+            self.modeling_group)
+        # user lisa should have pending request to join group
+        self.assertIn(kelly_membership_request,
+                      self.modeling_group.gaccess.group_membership_requests)
+        self.kelly_group_member.is_active = False
+        self.kelly_group_member.save()
+
+        # john acts on the existing request
+        with self.assertRaises(PermissionDenied):
+            self.john_group_owner.uaccess.act_on_group_membership_request(
+                kelly_membership_request, accept_request=False)
+
+        # reactivate kelly
+        self.kelly_group_member.is_active = True
+        self.kelly_group_member.save()
+
+        # Kelly has no active membership requests
+        self.assertEqual(
+            self.kelly_group_member.uaccess.group_membership_requests.count(), 0)
+        self.assertNotIn(kelly_membership_request,
+                            self.modeling_group.gaccess.group_membership_requests)
+
     def test_super_user(self):
         # super user/ admin can send invitation, accept/decline request to join
         # a group
