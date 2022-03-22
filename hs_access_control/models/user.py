@@ -112,10 +112,13 @@ class UserAccess(models.Model):
             if this_group.gaccess.members.filter(id=self.user.id).exists():
                 raise PermissionDenied("You are already a member of this group")
         elif this_group.gaccess.members.filter(id=this_user.id).exists():
-                raise PermissionDenied("User is already a member of this group")
+            raise PermissionDenied("User is already a member of this group")
 
-        if this_group.gaccess.requires_explanation and not explanation:
-            raise PermissionDenied("This group requires an explanation for requests")
+        if this_group.gaccess.requires_explanation:
+            if not explanation:
+                raise PermissionDenied("This group requires an explanation for requests")
+            elif len(explanation) > 300:
+                raise PermissionDenied("Explanation too long. Shorten to 300 characters")
 
         # user (self) requesting to join a group
         if this_user is None:

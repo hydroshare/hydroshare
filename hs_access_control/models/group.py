@@ -33,7 +33,7 @@ class GroupMembershipRequest(models.Model):
     invitation_to = models.ForeignKey(User, null=True, blank=True, related_name='iu2gmrequest')
     group_to_join = models.ForeignKey(Group, related_name='g2gmrequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
-    explanation = models.TextField(null=True, blank=True)
+    explanation = models.TextField(null=True, blank=True, max_length=300)
     redeemed = models.BooleanField(default=False)
 
 

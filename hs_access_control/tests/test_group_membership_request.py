@@ -420,9 +420,16 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
-        # let kelly send a membership request to join modeling group
+        # let kelly send a membership request to join modeling group that is too long
+        long_string = "Sometimes I just start writing and I can not stop. " * 6
+        print(long_string)
+        with self.assertRaises(PermissionDenied):
+            membership_request = self.kelly_group_member.uaccess.create_group_membership_request(
+                self.modeling_group, explanation=long_string)
+
+        # let kelly send a membership request to join modeling group that is appropriate length
         membership_request = self.kelly_group_member.uaccess.create_group_membership_request(
-            self.modeling_group, explanation="I always have to explain myself twice")
+            self.modeling_group, explanation="Sometimes I start writing and I am able to stop.")
         # let john (group owner) decline kelly's request
         self.john_group_owner.uaccess.act_on_group_membership_request(
             membership_request, accept_request=False)
