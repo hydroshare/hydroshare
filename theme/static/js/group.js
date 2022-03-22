@@ -89,7 +89,6 @@ var colDefs = [
 ];
 
 function group_invite_ajax_submit() {
-    alert("dev2");
     if (!$("#id_user-deck > .hilight").length) {
         return false; // If no user selected, ignore the request
     }
