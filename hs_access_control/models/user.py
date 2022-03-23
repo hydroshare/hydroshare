@@ -173,8 +173,7 @@ class UserAccess(models.Model):
             else this_request.request_from
 
         if not user_to_join_group.is_active:
-            this_request.redeemed = True
-            this_request.save()
+            self.user.uaccess.redeem_group_membership_request(this_request, user_to_join_group)
             raise PermissionDenied("User to be granted group membership is not active")
 
         if not this_request.group_to_join.gaccess.active:
@@ -209,6 +208,45 @@ class UserAccess(models.Model):
                                                      this_privilege=PrivilegeCodes.VIEW)
         this_request.redeemed = True
         this_request.save()
+
+    def redeem_group_membership_request(self, this_request, for_user=None):
+        """
+        redeem membership request for the user
+
+        When for_user is None, requests will be redeemed for self.user
+        Otherwise, self.user is redeeming those requests associated with for_user
+
+        :param this_request: an instance of GroupMembershipRequest class
+        :param for_user: The user whose requests will be redeemed
+
+        :return:
+
+        User self must be one of:
+
+                * admin
+                * group owner
+                * user who made the request (this_request)
+        """
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_request.group_to_join.gaccess.active:
+            raise PermissionDenied("Group is not active")
+
+        if self.owns_group(this_request.group_to_join) or self.user.is_superuser:
+            pass
+        elif self.user == this_request.request_from or self.user == this_request.invitation_to:
+            pass
+        elif for_user == this_request.request_from or for_user == this_request.invitation_to:
+            pass
+        else:
+            raise PermissionDenied(
+                "You don't have permission to redeem the group membership request")
+
+        if for_user is None:
+            for_user = self.user
+
+        for_user.uaccess.group_membership_requests.update(redeemed=True)
 
     @property
     def group_membership_requests(self):
