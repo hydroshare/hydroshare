@@ -899,7 +899,10 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     output_zip_size = istorage.size(output_zip_full_path)
 
-    link_irods_file_to_django(resource, output_zip_full_path)
+    zip_res_file = link_irods_file_to_django(resource, output_zip_full_path)
+    if resource.resource_type == "CompositeResource":
+        # make the newly added zip file part of an aggregation if needed
+        resource.add_file_to_aggregation(zip_res_file)
 
     if bool_remove_original:
         for f in ResourceFile.objects.filter(object_id=resource.id):

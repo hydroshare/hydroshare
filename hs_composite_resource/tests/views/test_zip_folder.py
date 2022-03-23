@@ -142,6 +142,43 @@ class TestZipFolderViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         json_content = json.loads(response.content.decode())
         self.assertEqual(json_content['name'], zip_file_name)
 
+    def test_zip_folder_in_aggregation(self):
+        """Here we are testing the view function 'data_store_folder_zip' for zipping a folder that is a sub-folder
+        of a folder that represents a fileset aggregation"""
+
+        # create a folder
+        fs_folder = 'fs_folder'
+        ResourceFile.create_folder(self.resource, fs_folder)
+        # add the the text  file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.txt_file_path, upload_folder=fs_folder)
+        # create a fileset aggregation from the folder
+        FileSetLogicalFile.set_file_type(self.resource, self.user, folder_path=fs_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        logical_file = FileSetLogicalFile.objects.first()
+        self.assertEqual(logical_file.aggregation_name, fs_folder)
+        self.assertEqual(logical_file.files.count(), 1)
+        fs_child_folder = f"{fs_folder}/fs-child-folder"
+        ResourceFile.create_folder(self.resource, fs_child_folder)
+        # prepare post data to zip the folder
+        zip_file_name = 'fs_child_folder.zip'
+        post_data = {'res_id': self.resource.short_id,
+                     'input_coll_path': fs_child_folder,
+                     'output_zip_file_name': zip_file_name
+                     }
+        url = reverse('zip_folder')
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
+
+        response = data_store_folder_zip(request, res_id=self.resource.short_id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        json_content = json.loads(response.content.decode())
+        self.assertEqual(json_content['name'], zip_file_name)
+        logical_file = FileSetLogicalFile.objects.first()
+        # check the newly created zip file is part of the fileset aggregation
+        self.assertEqual(logical_file.files.count(), 2)
+
     def add_file_to_resource(self, file_to_add, upload_folder=''):
         file_to_upload = UploadedFile(file=open(file_to_add, 'rb'),
                                       name=os.path.basename(file_to_add))
