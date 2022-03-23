@@ -247,6 +247,7 @@ class UserAccess(models.Model):
             for_user = self.user
 
         this_request.redeemed = True
+        this_request.save()
 
     @property
     def group_membership_requests(self):
