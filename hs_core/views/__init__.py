@@ -1639,7 +1639,6 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
 
             except PermissionDenied as ex:
                 messages.error(request, str(ex))
-                # 
         else:
             messages.error(request, "Group is not active")
 
