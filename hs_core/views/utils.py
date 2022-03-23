@@ -882,14 +882,16 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     # check resource supports zipping of a folder
     if not resource.supports_zip(res_coll_input):
-        raise ValidationError("Folder zipping is not supported. "
-                              "Folder seems to contain aggregation(s).")
+        raise ValidationError("Zipping of this folder is not supported.")
 
     # check if resource supports deleting the original folder after zipping
     if bool_remove_original:
         if not resource.supports_delete_folder_on_zip(input_coll_path):
             raise ValidationError("Deleting of original folder is not allowed after "
                                   "zipping of a folder.")
+
+    if resource.resource_type == "CompositeResource":
+        resource.create_aggregation_meta_files()
 
     content_dir = os.path.dirname(res_coll_input)
     output_zip_full_path = os.path.join(content_dir, output_zip_fname)

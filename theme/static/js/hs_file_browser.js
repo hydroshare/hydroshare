@@ -316,7 +316,6 @@ function updateSelectionMenuContext() {
             }
             else {
                 //  ------------- Folder is a logical file type -------------
-                uiActionStates.zip.disabled = true;
                 uiActionStates.paste.disabled = true;
                 uiActionStates.subMenuSetContentType.disabled = true;
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
