@@ -79,4 +79,3 @@ class Command(BaseCommand):
         print(msg)
         msg = "THERE ARE CURRENTLY {} SCRIPT RESOURCES AFTER MIGRATION.".format(ScriptResource.objects.count())
         print(msg)
-
