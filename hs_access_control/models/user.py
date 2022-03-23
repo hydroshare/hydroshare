@@ -246,7 +246,7 @@ class UserAccess(models.Model):
         if for_user is None:
             for_user = self.user
 
-        for_user.uaccess.group_membership_requests.update(redeemed=True)
+        this_request.redeemed = True
 
     @property
     def group_membership_requests(self):
