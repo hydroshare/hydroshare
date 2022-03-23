@@ -944,6 +944,10 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
         res.set_require_download_agreement(user, value=True)
     elif flag == 'make_not_require_lic_agreement':
         res.set_require_download_agreement(user, value=False)
+    elif flag == 'enable_private_sharing_link':
+        res.set_private_sharing_link(user, value=True)
+    elif flag == 'remove_private_sharing_link':
+        res.set_private_sharing_link(user, value=False)
     else:
         message = "Invalid resource flag"
     if message is not None:
