@@ -732,6 +732,7 @@ def link_irods_folder_to_django(resource, istorage, foldername, auto_aggregate=T
     res_files = _link_irods_folder_to_django(resource, istorage, foldername)
     if auto_aggregate:
         check_aggregations(resource, res_files)
+    return res_files
 
 
 def listfolders_recursively(istorage, path):
@@ -1012,6 +1013,11 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 res_file = link_irods_file_to_django(resource, destination_file)
                 added_resource_files.append(res_file)
 
+            if resource.resource_type == "CompositeResource":
+                # make the newly added files part of an aggregation if needed
+                for res_file in added_resource_files:
+                    resource.add_file_to_aggregation(res_file)
+
             if auto_aggregate:
                 check_aggregations(resource, added_resource_files)
             if ingest_metadata:
@@ -1024,7 +1030,11 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
-            link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
+            res_files = link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
+            if resource.resource_type == 'CompositeResource':
+                # make the newly added files part of an aggregation if needed
+                for res_file in res_files:
+                    resource.add_file_to_aggregation(res_file)
 
     except Exception:
         logger.exception("failed to unzip")
