@@ -316,6 +316,11 @@ function updateSelectionMenuContext() {
             }
             else {
                 //  ------------- Folder is a logical file type -------------
+                let logicalFileType = selected.children('span.fb-logical-file-type').attr("data-logical-file-type");
+                if(logicalFileType !== "FileSetLogicalFile" && logicalFileType !== "ModelProgramLogicalFile" &&
+                    logicalFileType !== "ModelInstanceLogicalFile") {
+                    uiActionStates.zip.disabled = true;
+                }
                 uiActionStates.paste.disabled = true;
                 uiActionStates.subMenuSetContentType.disabled = true;
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
