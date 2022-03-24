@@ -758,7 +758,6 @@ def update_science_metadata(pk, metadata, user):
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
             {'rights': {'statement': 'This is the rights statement for this resource',
                         'url': 'http://rights.ord/001'}},
-            {'source': {'derived_from': 'http://hydroshare.org/resource/0001'}},
             {'subject': {'value': 'sub-1'}},
             {'subject': {'value': 'sub-2'}},
         ]
@@ -917,6 +916,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             # to delete each of its contained ResourceFile objects
             logical_file.logical_delete(user)
             return filename_or_id
+        else:
+            logical_file.set_metadata_dirty()
 
     signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
                                                resource=resource, user=user)

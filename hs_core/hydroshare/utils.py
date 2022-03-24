@@ -113,24 +113,29 @@ def user_from_id(user, raise404=True):
     if isinstance(user, User):
         return user
 
-    try:
-        tgt = User.objects.get(username=user)
-    except ObjectDoesNotExist:
+    tgt = None
+    if str(user).isnumeric():
         try:
-            tgt = User.objects.get(email=user)
+            tgt = User.objects.get(pk=int(user))
+        except ValueError:
+            pass
+        except ObjectDoesNotExist:
+            pass
+    else:
+        try:
+            tgt = User.objects.get(username__iexact=user)
         except ObjectDoesNotExist:
             try:
-                tgt = User.objects.get(pk=int(user))
-            except ValueError:
-                if raise404:
-                    raise Http404('User not found')
-                else:
-                    raise User.DoesNotExist
+                tgt = User.objects.get(email__iexact=user)
             except ObjectDoesNotExist:
-                if raise404:
-                    raise Http404('User not found')
-                else:
-                    raise
+                pass
+
+    if tgt is None:
+        if raise404:
+            raise Http404('User not found')
+        else:
+            raise
+
     return tgt
 
 
@@ -401,10 +406,9 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     # link copied resource files to Django resource model
     files = src_res.files.all()
 
-    # if resource files are part of logical files, then logical files also need copying
-    src_logical_files = list(set([f.logical_file for f in files if f.has_logical_file]))
+    # if resource has logical files, then those logical files also need copying
     map_logical_files = {}
-    for src_logical_file in src_logical_files:
+    for src_logical_file in src_res.logical_files:
         map_logical_files[src_logical_file] = src_logical_file.get_copy(tgt_res)
 
     for n, f in enumerate(files):
@@ -415,9 +419,6 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         # add the corresponding new resource file to the copy of that logical file
         if f.has_logical_file:
             tgt_logical_file = map_logical_files[f.logical_file]
-            if f.logical_file.extra_data:
-                tgt_logical_file.extra_data = copy.deepcopy(f.logical_file.extra_data)
-                tgt_logical_file.save()
             tgt_logical_file.add_resource_file(new_resource_file)
 
     for lf in map_logical_files:

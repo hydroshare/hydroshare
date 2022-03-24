@@ -249,7 +249,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # to TimeSeries file type which should fail
 
         self.create_composite_resource(self.sqlite_invalid_file)
-        self._test_invalid_file()
+        self._test_invalid_sqlite_file()
         self.composite_resource.delete()
 
     def test_create_aggregation_from_csv_invalid_file(self):
@@ -335,7 +335,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(site.elevation_m, 1445)
         self.assertEqual(site.elevation_datum, 'NGVD29')
         self.assertEqual(site.site_type, 'Stream')
-        self.assertFalse(logical_file.metadata.is_dirty)
+        self.assertTrue(logical_file.metadata.is_dirty)
 
         site_name = 'Little Bear River at Logan, Utah'
         site_data = {'site_name': site_name, 'elevation_m': site.elevation_m,
@@ -957,6 +957,10 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.file_folder, file_folder_path)
         self.assertTrue(isinstance(logical_file, TimeSeriesLogicalFile))
         self.assertTrue(logical_file.metadata, TimeSeriesFileMetaData)
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.sqlite file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
 
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -979,6 +983,10 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(sqlite_res_file.logical_file_type_name, "TimeSeriesLogicalFile")
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
         logical_file = csv_res_file.logical_file
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.sqlite file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
 
         # test that both csv and sqlite files of the logical file are in a folder
         for res_file in logical_file.files.all():
@@ -1096,7 +1104,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
-    def _test_invalid_file(self):
+    def _test_invalid_sqlite_file(self):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
@@ -1108,11 +1116,13 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
     def _test_invalid_csv_file(self, invalid_csv_file_name):
         invalid_csv_file = self._get_invalid_csv_file(invalid_csv_file_name)
@@ -1134,6 +1144,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()

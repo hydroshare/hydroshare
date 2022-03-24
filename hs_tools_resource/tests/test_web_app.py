@@ -115,12 +115,12 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create 1 SupportedResTypes obj with required params
         resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                         supported_res_types=['NetcdfResource'])
+                                         supported_res_types=['CompositeResource'])
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
         # Try creating the 2nd SupportedResTypes obj with required params
         with self.assertRaises(Exception):
             resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                             supported_res_types=['NetcdfResource'])
+                                             supported_res_types=['CompositeResource'])
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
 
         # update existing meta
@@ -227,7 +227,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(data["is_valid"])
 
         # SupportedResTypes
-        request.POST = {'supportedResTypes': ['NetCDF Resource']}
+        request.POST = {'supportedResTypes': ['Composite Resource']}
         data = metadata_element_pre_create_handler(sender=ToolResource,
                                                    element_name="SupportedResTypes",
                                                    request=request)
@@ -271,7 +271,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create SupportedResTypes obj with required params
         metadata.append({'supportedrestypes': {
-            'supported_res_types': ['NetcdfResource', 'TimeSeriesResource']}})
+            'supported_res_types': ['CollectionResource', 'CompositeResource']}})
 
         # update tool version
         metadata.append({'toolversion': {'value': '2.0'}})
@@ -280,7 +280,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
         supported_res_type = SupportedResTypes.objects.first()
         for res_type in supported_res_type.supported_res_types.all():
-            self.assertIn(res_type.description, ['NetcdfResource', 'TimeSeriesResource'])
+            self.assertIn(res_type.description, ['CollectionResource', 'CompositeResource'])
         self.assertEqual(supported_res_type.supported_res_types.count(), 2)
         self.assertEqual(ToolVersion.objects.first().value, '2.0')
 
@@ -399,9 +399,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(tl['res_id'], self.resWebApp.short_id)
         self.assertEqual(tl['agg_types'], '')
         self.assertEqual(tl['file_extensions'], '')
-
-        url = "{}?{}".format(tl['url_res_path'], tl['url_res_query'])
-        self.assertEqual(url, "https://www.google.com?s=it works")
+        self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=it works'}")
 
         self.resComposite.extra_metadata = {}
         self.resComposite.save()
@@ -417,8 +415,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with a default '
                                                  'web app key')
         tl = relevant_tools['tool_list'][0]
-        url = "{}?{}".format(tl['url_res_path'], tl['url_res_query'])
-        self.assertEqual(url, 'https://www.google.com?s=it works')
+        self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=it works'}")
 
         # test for resource override of default custom key value specified in the web app
         self.resComposite.extra_metadata = {'search_string': 'overridden'}
@@ -427,8 +424,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with a default '
                                                  'web app key')
         tl = relevant_tools['tool_list'][0]
-        url = "{}?{}".format(tl['url_res_path'], tl['url_res_query'])
-        self.assertEqual(url, 'https://www.google.com?s=overridden')
+        self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=overridden'}")
 
     def test_web_app_do_needed_work_when_being_launched(self):
         # testing a web app does needed work when being launched. Currently, the needed work when
@@ -645,7 +641,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create 1 SupportedResTypes obj with required params
         resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                         supported_res_types=['NetcdfResource'])
+                                         supported_res_types=['CompositeResource'])
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
 
         # set url launching pattern for aggregations

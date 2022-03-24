@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import re
@@ -6,28 +7,371 @@ from functools import partial, wraps
 
 import netCDF4
 import numpy as np
-from django.core.exceptions import ValidationError
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context
-from dominate.tags import div, legend, form, button, p, em, a, textarea, _input
+from dominate import tags as html_tags
+from rdflib import RDF, BNode, Literal
+from rdflib.namespace import DCTERMS
 
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
 import hs_file_types.nc_functions.nc_utils as nc_utils
-from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
-from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
-from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
+from hs_core.enums import RelationTypes
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
+from hs_core.hs_rdf import HSTERMS, rdf_terms
 from hs_core.hydroshare import utils
-from hs_core.models import Creator, Contributor
+from hs_core.models import Creator, Contributor, AbstractMetaDataElement
 from hs_core.signals import post_add_netcdf_aggregation
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+
+
+@rdf_terms(HSTERMS.spatialReference)
+class OriginalCoverage(AbstractMetaDataElement):
+    PRO_STR_TYPES = (
+        ('', '---------'),
+        ('WKT String', 'WKT String'),
+        ('Proj4 String', 'Proj4 String')
+    )
+
+    term = 'OriginalCoverage'
+    """
+    _value field stores a json string. The content of the json as box coverage info
+         _value = "{'northlimit':northenmost coordinate value,
+                    'eastlimit':easternmost coordinate value,
+                    'southlimit':southernmost coordinate value,
+                    'westlimit':westernmost coordinate value,
+                    'units:units applying to 4 limits (north, east, south & east),
+                    'projection': name of the projection (optional)}"
+    """
+    _value = models.CharField(max_length=1024, null=True)
+    projection_string_type = models.CharField(max_length=20, choices=PRO_STR_TYPES, null=True)
+    projection_string_text = models.TextField(null=True, blank=True)
+    datum = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        # OriginalCoverage element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    @property
+    def value(self):
+        return json.loads(self._value)
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
+            value = graph.value(subject=cov, predicate=RDF.value)
+            value_dict = {}
+            datum = ''
+            projection_string_text = ''
+            for key_value in value.split(";"):
+                key_value = key_value.strip()
+                k, v = key_value.split("=")
+                if k == 'datum':
+                    datum = v
+                elif k == 'projection_string':
+                    projection_string_text = v
+                elif k == 'projection_name':
+                    value_dict['projection'] = v
+                elif k == 'projection_string_type':
+                    projection_string_type = v
+                else:
+                    value_dict[k] = v
+            OriginalCoverage.create(projection_string_type=projection_string_type,
+                                    projection_string_text=projection_string_text, _value=json.dumps(value_dict),
+                                    datum=datum, content_object=content_object)
+
+    def rdf_triples(self, subject, graph):
+        coverage = BNode()
+        graph.add((subject, self.get_class_term(), coverage))
+        graph.add((coverage, RDF.type, DCTERMS.box))
+        value_dict = {}
+        for k, v in self.value.items():
+            if k == 'projection':
+                value_dict['projection_name'] = v
+            else:
+                value_dict[k] = v
+        value_dict['datum'] = self.datum
+        value_dict['projection_string'] = self.projection_string_text
+        value_dict['projection_string_type'] = self.projection_string_type
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
+        graph.add((coverage, RDF.value, Literal(value_string)))
+
+    @classmethod
+    def create(cls, **kwargs):
+        """
+        The '_value' subelement needs special processing. (Check if the 'value' includes the
+        required information and convert 'value' dict as Json string to be the '_value'
+        subelement value.) The base class create() can't do it.
+
+        :param kwargs: the 'value' in kwargs should be a dictionary
+                       the '_value' in kwargs is a serialized json string
+        """
+        value_arg_dict = None
+        if 'value' in kwargs:
+            value_arg_dict = kwargs['value']
+        elif '_value' in kwargs:
+            value_arg_dict = json.loads(kwargs['_value'])
+
+        if value_arg_dict:
+            # check that all the required sub-elements exist and create new original coverage meta
+            for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+                if value_item not in value_arg_dict:
+                    raise ValidationError("For original coverage meta, one or more bounding "
+                                          "box limits or 'units' is missing.")
+
+            value_dict = {k: v for k, v in list(value_arg_dict.items())
+                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
+                                   'westlimit', 'projection')}
+
+            cls._validate_bounding_box(value_dict)
+            value_json = json.dumps(value_dict)
+            if 'value' in kwargs:
+                del kwargs['value']
+            kwargs['_value'] = value_json
+            return super(OriginalCoverage, cls).create(**kwargs)
+        else:
+            raise ValidationError('Coverage value is missing.')
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        """
+        The '_value' subelement needs special processing. (Convert 'value' dict as Json string
+        to be the '_value' subelement value) and the base class update() can't do it.
+
+        :param kwargs: the 'value' in kwargs should be a dictionary
+        """
+
+        ori_cov = OriginalCoverage.objects.get(id=element_id)
+        if 'value' in kwargs:
+            value_dict = ori_cov.value
+
+            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit',
+                              'westlimit', 'projection'):
+                if item_name in kwargs['value']:
+                    value_dict[item_name] = kwargs['value'][item_name]
+
+            cls._validate_bounding_box(value_dict)
+            value_json = json.dumps(value_dict)
+            del kwargs['value']
+            kwargs['_value'] = value_json
+            super(OriginalCoverage, cls).update(element_id, **kwargs)
+
+    @classmethod
+    def _validate_bounding_box(cls, box_dict):
+        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            try:
+                box_dict[limit] = float(box_dict[limit])
+            except ValueError:
+                raise ValidationError("Bounding box data is not numeric")
+
+    @classmethod
+    def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        """Generates html form code for this metadata element so that this element can be edited"""
+
+        from ..forms import OriginalCoverageForm
+
+        ori_coverage_data_dict = dict()
+        if element is not None:
+            ori_coverage_data_dict['projection'] = element.value.get('projection', None)
+            ori_coverage_data_dict['datum'] = element.datum
+            ori_coverage_data_dict['projection_string_type'] = element.projection_string_type
+            ori_coverage_data_dict['projection_string_text'] = element.projection_string_text
+            ori_coverage_data_dict['units'] = element.value['units']
+            ori_coverage_data_dict['northlimit'] = element.value['northlimit']
+            ori_coverage_data_dict['eastlimit'] = element.value['eastlimit']
+            ori_coverage_data_dict['southlimit'] = element.value['southlimit']
+            ori_coverage_data_dict['westlimit'] = element.value['westlimit']
+
+        originalcov_form = OriginalCoverageForm(
+            initial=ori_coverage_data_dict, allow_edit=allow_edit,
+            res_short_id=resource.short_id if resource else None,
+            element_id=element.id if element else None, file_type=file_type)
+
+        return originalcov_form
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = html_tags.div(cls='content-block')
+
+        def get_th(heading_name):
+            return html_tags.th(heading_name, cls="text-muted")
+
+        with root_div:
+            html_tags.legend('Spatial Reference')
+            if self.value.get('projection', ''):
+                html_tags.div('Coordinate Reference System', cls='text-muted')
+                html_tags.div(self.value.get('projection', ''))
+            if self.datum:
+                html_tags.div('Datum', cls='text-muted space-top')
+                html_tags.div(self.datum)
+            if self.projection_string_type:
+                html_tags.div('Coordinate String Type', cls='text-muted space-top')
+                html_tags.div(self.projection_string_type)
+            if self.projection_string_text:
+                html_tags.div('Coordinate String Text', cls='text-muted space-top')
+                html_tags.div(self.projection_string_text)
+
+            html_tags.h4('Extent', cls='space-top')
+            with html_tags.table(cls='custom-table'):
+                with html_tags.tbody():
+                    with html_tags.tr():
+                        get_th('North')
+                        html_tags.td(self.value['northlimit'])
+                    with html_tags.tr():
+                        get_th('West')
+                        html_tags.td(self.value['westlimit'])
+                    with html_tags.tr():
+                        get_th('South')
+                        html_tags.td(self.value['southlimit'])
+                    with html_tags.tr():
+                        get_th('East')
+                        html_tags.td(self.value['eastlimit'])
+                    with html_tags.tr():
+                        get_th('Unit')
+                        html_tags.td(self.value['units'])
+
+        return root_div.render(pretty=pretty)
+
+
+class Variable(AbstractMetaDataElement):
+    # variable types are defined in OGC enhanced_data_model_extension_standard
+    # left is the given value stored in database right is the value for the drop down list
+    VARIABLE_TYPES = (
+        ('Char', 'Char'),  # 8-bit byte that contains uninterpreted character data
+        ('Byte', 'Byte'),  # integer(8bit)
+        ('Short', 'Short'),  # signed integer (16bit)
+        ('Int', 'Int'),  # signed integer (32bit)
+        ('Float', 'Float'),  # floating point (32bit)
+        ('Double', 'Double'),  # floating point(64bit)
+        ('Int64', 'Int64'),  # integer(64bit)
+        ('Unsigned Byte', 'Unsigned Byte'),
+        ('Unsigned Short', 'Unsigned Short'),
+        ('Unsigned Int', 'Unsigned Int'),
+        ('Unsigned Int64', 'Unsigned Int64'),
+        ('String', 'String'),  # variable length character string
+        ('User Defined Type', 'User Defined Type'),  # compound, vlen, opaque, enum
+        ('Unknown', 'Unknown')
+    )
+    term = 'Variable'
+    # required variable attributes
+    name = models.CharField(max_length=1000)
+    unit = models.CharField(max_length=1000)
+    type = models.CharField(max_length=1000, choices=VARIABLE_TYPES)
+    shape = models.CharField(max_length=1000)
+    # optional variable attributes
+    descriptive_name = models.CharField(max_length=1000, null=True, blank=True,
+                                        verbose_name='long name')
+    method = models.TextField(null=True, blank=True, verbose_name='comment')
+    missing_value = models.CharField(max_length=1000, null=True, blank=True)
+
+    def __unicode__(self):
+        return self.name
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("The variable of the resource can't be deleted.")
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = html_tags.div(cls="content-block")
+
+        def get_th(heading_name):
+            return html_tags.th(heading_name, cls="text-muted")
+
+        with root_div:
+            with html_tags.div(cls="custom-well"):
+                html_tags.strong(self.name)
+                with html_tags.table(cls='custom-table'):
+                    with html_tags.tbody():
+                        with html_tags.tr():
+                            get_th('Unit')
+                            html_tags.td(self.unit)
+                        with html_tags.tr():
+                            get_th('Type')
+                            html_tags.td(self.type)
+                        with html_tags.tr():
+                            get_th('Shape')
+                            html_tags.td(self.shape)
+                        if self.descriptive_name:
+                            with html_tags.tr():
+                                get_th('Long Name')
+                                html_tags.td(self.descriptive_name)
+                        if self.missing_value:
+                            with html_tags.tr():
+                                get_th('Missing Value')
+                                html_tags.td(self.missing_value)
+                        if self.method:
+                            with html_tags.tr():
+                                get_th('Comment')
+                                html_tags.td(self.method)
+
+        return root_div.render(pretty=pretty)
+
+
+class NetCDFMetaDataMixin(models.Model):
+    """This class must be the first class in the multi-inheritance list of classes"""
+    variables = GenericRelation(Variable)
+    ori_coverage = GenericRelation(OriginalCoverage)
+
+    class Meta:
+        abstract = True
+
+    @property
+    def originalCoverage(self):
+        return self.ori_coverage.all().first()
+
+    def has_all_required_elements(self):
+        # checks if all required metadata elements have been created
+        if not super(NetCDFMetaDataMixin, self).has_all_required_elements():
+            return False
+        if not self.variables.all():
+            return False
+        if not (self.coverages.all().filter(type='box').first() or
+                self.coverages.all().filter(type='point').first()):
+            return False
+        if not self.originalCoverage:
+            return False
+        return True
+
+    def get_required_missing_elements(self):
+        # get a list of missing required metadata element names
+        missing_required_elements = super(NetCDFMetaDataMixin, self).get_required_missing_elements()
+        if not (self.coverages.all().filter(type='box').first() or
+                self.coverages.all().filter(type='point').first()):
+            missing_required_elements.append('Spatial Coverage')
+        if not self.variables.all().first():
+            missing_required_elements.append('Variable')
+        if not self.originalCoverage:
+            missing_required_elements.append('Spatial Reference')
+        return missing_required_elements
+
+    def delete_all_elements(self):
+        super(NetCDFMetaDataMixin, self).delete_all_elements()
+        self.ori_coverage.all().delete()
+        self.variables.all().delete()
+
+    @classmethod
+    def get_supported_element_names(cls):
+        # get the class names of all supported metadata elements for this resource type
+        # or file type
+        elements = super(NetCDFMetaDataMixin, cls).get_supported_element_names()
+        # add the name of any additional element to the list
+        elements.append('Variable')
+        elements.append('OriginalCoverage')
+        return elements
 
 
 class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
-    # the metadata element models are from the netcdf resource type app
-    model_app_label = 'hs_app_netCDF'
+    # used in finding ContentType for the metadata model classes
+    model_app_label = 'hs_file_types'
+    # flag to track when the .nc file of the aggregation needs to be updated.
+    is_update_file = models.BooleanField(default=False)
 
     def get_metadata_elements(self):
         elements = super(NetCDFFileMetaData, self).get_metadata_elements()
@@ -49,20 +393,21 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         return self.ori_coverage.all().first()
 
     def _get_opendap_html(self):
-        opendap_div = div(cls="content-block")
+        opendap_div = html_tags.div(cls="content-block")
         res_id = self.logical_file.resource.short_id
         file_name = self.logical_file.aggregation_name
         opendap_url = f'{settings.THREDDS_SERVER_URL}dodsC/hydroshare/resources/{res_id}/data/contents/{file_name}.html'
         with opendap_div:
-            legend('OPeNDAP using DAP2')
-            em('The netCDF data in this multidimensional content aggregation may be accessed at the link below '
-               'using the OPeNDAP DAP2 protocol enabled on the HydroShare deployment of Unidata’s THREDDS data server. '
-               'This enables direct and programmable access to this data through ')
-            a(" OPeNDAP client software",
-              href="https://www.opendap.org/support/OPeNDAP-clients",
-              target="_blank")
-            with div(style="margin-top:10px;"):
-                a(opendap_url, href=opendap_url, target='_blank')
+            html_tags.legend('OPeNDAP using DAP2')
+            html_tags.em(
+                'The netCDF data in this multidimensional content aggregation may be accessed at the link below '
+                'using the OPeNDAP DAP2 protocol enabled on the HydroShare deployment of Unidata’s THREDDS data '
+                'server. This enables direct and programmable access to this data through ')
+            html_tags.a(" OPeNDAP client software",
+                        href="https://www.opendap.org/support/OPeNDAP-clients",
+                        target="_blank")
+            with html_tags.div(style="margin-top:10px;"):
+                html_tags.a(opendap_url, href=opendap_url, target='_blank')
 
         return opendap_div.render()
 
@@ -78,7 +423,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             html_string += self.originalCoverage.get_html()
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
-        variable_legend = legend("Variables")
+        variable_legend = html_tags.legend("Variables")
         html_string += variable_legend.render()
         for variable in self.variables.all():
             html_string += variable.get_html()
@@ -92,52 +437,52 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
         """overrides the base class function"""
 
-        root_div = div("{% load crispy_forms_tags %}")
+        root_div = html_tags.div("{% load crispy_forms_tags %}")
         with root_div:
             self.get_update_netcdf_file_html_form()
             super(NetCDFFileMetaData, self).get_html_forms()
-            with div():
-                with div(cls="content-block", id="original-coverage-filetype"):
-                    with form(id="id-origcoverage-file-type",
-                              action="{{ orig_coverage_form.action }}",
-                              method="post", enctype="multipart/form-data"):
-                        div("{% crispy orig_coverage_form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;")
+            with html_tags.div():
+                with html_tags.div(cls="content-block", id="original-coverage-filetype"):
+                    with html_tags.form(id="id-origcoverage-file-type",
+                                        action="{{ orig_coverage_form.action }}",
+                                        method="post", enctype="multipart/form-data"):
+                        html_tags.div("{% crispy orig_coverage_form %}")
+                        with html_tags.div(cls="row", style="margin-top:10px;"):
+                            with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
+                                                   "col-md-2 col-xs-6"):
+                                html_tags.button("Save changes", type="button",
+                                                 cls="btn btn-primary pull-right",
+                                                 style="display: none;")
 
-            with div(cls="content-block", id="spatial-coverage-filetype"):
-                with form(id="id-spatial-coverage-file-type",
-                          cls='hs-coordinates-picker', data_coordinates_type="box",
-                          action="{{ spatial_coverage_form.action }}",
-                          method="post", enctype="multipart/form-data"):
-                    div("{% crispy spatial_coverage_form %}")
-                    with div(cls="row", style="margin-top:10px;"):
-                        with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                     "col-md-2 col-xs-6"):
-                            button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;")
+            with html_tags.div(cls="content-block", id="spatial-coverage-filetype"):
+                with html_tags.form(id="id-spatial-coverage-file-type",
+                                    cls='hs-coordinates-picker', data_coordinates_type="box",
+                                    action="{{ spatial_coverage_form.action }}",
+                                    method="post", enctype="multipart/form-data"):
+                    html_tags.div("{% crispy spatial_coverage_form %}")
+                    with html_tags.div(cls="row", style="margin-top:10px;"):
+                        with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
+                                               "col-md-2 col-xs-6"):
+                            html_tags.button("Save changes", type="button",
+                                             cls="btn btn-primary pull-right",
+                                             style="display: none;")
 
-            with div():
-                legend("Variables")
+            with html_tags.div():
+                html_tags.legend("Variables")
                 # id has to be variables to get the vertical scrollbar
-                with div(id="variables"):
-                    with div("{% for form in variable_formset_forms %}"):
-                        with form(id="{{ form.form_id }}", action="{{ form.action }}",
-                                  method="post", enctype="multipart/form-data",
-                                  cls="well"):
-                            div("{% crispy form %}")
-                            with div(cls="row", style="margin-top:10px;"):
-                                with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                             "col-md-2 col-xs-6"):
-                                    button("Save changes", type="button",
-                                           cls="btn btn-primary pull-right",
-                                           style="display: none;")
-                    div("{% endfor %}")
+                with html_tags.div(id="variables"):
+                    with html_tags.div("{% for form in variable_formset_forms %}"):
+                        with html_tags.form(id="{{ form.form_id }}", action="{{ form.action }}",
+                                            method="post", enctype="multipart/form-data",
+                                            cls="well"):
+                            html_tags.div("{% crispy form %}")
+                            with html_tags.div(cls="row", style="margin-top:10px;"):
+                                with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
+                                                       "col-md-2 col-xs-6"):
+                                    html_tags.button("Save changes", type="button",
+                                                     cls="btn btn-primary pull-right",
+                                                     style="display: none;")
+                    html_tags.div("{% endfor %}")
 
             self.get_ncdump_html()
 
@@ -183,18 +528,18 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         form_action = "/hsapi/_internal/{}/update-netcdf-file/".format(self.logical_file.id)
         style = "display:none;"
         self.refresh_from_db()
-        if self.is_dirty:
+        if self.is_update_file:
             style = "margin-bottom:15px"
-        root_div = div(id="div-netcdf-file-update", cls="row", style=style)
+        root_div = html_tags.div(id="div-netcdf-file-update", cls="row", style=style)
 
         with root_div:
-            with div(cls="col-sm-12"):
-                with div(cls="alert alert-warning alert-dismissible", role="alert"):
-                    div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
-                    _input(id="metadata-dirty", type="hidden", value=self.is_dirty)
-                    with form(action=form_action, method="post", id="update-netcdf-file"):
-                        button("Update NetCDF File", type="button", cls="btn btn-primary",
-                               id="id-update-netcdf-file")
+            with html_tags.div(cls="col-sm-12"):
+                with html_tags.div(cls="alert alert-warning alert-dismissible", role="alert"):
+                    html_tags.div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
+                    html_tags._input(id="metadata-dirty", type="hidden", value=self.is_update_file)
+                    with html_tags.form(action=form_action, method="post", id="update-netcdf-file"):
+                        html_tags.button("Update NetCDF File", type="button", cls="btn btn-primary",
+                                         id="id-update-netcdf-file")
 
         return root_div
 
@@ -203,9 +548,9 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                                               file_type=True)
 
     def get_variable_formset(self):
+        from ..forms import VariableForm
         VariableFormSetEdit = formset_factory(
-            wraps(VariableForm)(partial(VariableForm, allow_edit=True)),
-            formset=BaseFormSet, extra=0)
+            wraps(VariableForm)(partial(VariableForm, allow_edit=True)), formset=BaseFormSet, extra=0)
         variable_formset = VariableFormSetEdit(
             initial=list(self.variables.all().values()), prefix='Variable')
 
@@ -224,27 +569,28 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         :return:
         """
 
-        nc_dump_div = div()
+        nc_dump_div = html_tags.div()
         nc_dump_res_file = None
         for f in self.logical_file.files.all():
             if f.extension == ".txt":
                 nc_dump_res_file = f
                 break
         if nc_dump_res_file is not None:
-            nc_dump_div = div(style="clear: both", cls="content-block")
+            nc_dump_div = html_tags.div(style="clear: both", cls="content-block")
             with nc_dump_div:
-                legend("NetCDF Header Information")
-                p(nc_dump_res_file.full_path[33:])
+                html_tags.legend("NetCDF Header Information")
+                html_tags.p(nc_dump_res_file.full_path[33:])
                 header_info = nc_dump_res_file.resource_file.read()
                 header_info = header_info.decode('utf-8')
-                textarea(header_info, readonly="", rows="15",
-                         cls="input-xlarge", style="min-width: 100%; resize: vertical;")
+                html_tags.textarea(header_info, readonly="", rows="15",
+                                   cls="input-xlarge", style="min-width: 100%; resize: vertical;")
 
         return nc_dump_div
 
     @classmethod
     def validate_element_data(cls, request, element_name):
         """overriding the base class method"""
+        from ..forms import VariableValidationForm, OriginalCoverageForm
 
         if element_name.lower() not in [el_name.lower() for el_name
                                         in cls.get_supported_element_names()]:
@@ -323,7 +669,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
-        netcdf_metadata = NetCDFFileMetaData.objects.create(keywords=[])
+        netcdf_metadata = NetCDFFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=netcdf_metadata, resource=resource)
@@ -416,7 +762,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             nc_dataset = nc_utils.get_nc_dataset(temp_file)
             if isinstance(nc_dataset, netCDF4.Dataset):
                 msg = "NetCDF aggregation. Error when creating aggregation. Error:{}"
-                file_type_success = False
                 # extract the metadata from netcdf file
                 res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
                 # populate resource_metadata and file_type_metadata lists with extracted metadata
@@ -428,14 +773,24 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 for file in resource.files.filter(file_folder=folder_path):
                     # look for and delete an existing header_file before creating it below.
                     fname = os.path.basename(file.resource_file.name)
-                    if fname in dump_file_name:
+                    if fname == dump_file_name:
                         file.delete()
                         break
+                else:
+                    # check if the dump file in irods and then delete it
+                    istorage = resource.get_irods_storage()
+                    if folder_path:
+                        dump_file_path = os.path.join(resource.file_path, folder_path, dump_file_name)
+                    else:
+                        dump_file_path = os.path.join(resource.file_path, dump_file_name)
+                    if istorage.exists(dump_file_path):
+                        istorage.delete(dump_file_path)
+
                 dump_file = create_header_info_txt_file(temp_file, nc_file_name)
                 file_folder = res_file.file_folder
                 upload_folder = file_folder
                 dataset_title = res_dublin_core_meta.get('title', nc_file_name)
-
+                logical_file = None
                 with transaction.atomic():
                     try:
                         # create a netcdf logical file object
@@ -478,21 +833,36 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                         resource.metadata.create_element('subject', value=kw)
                             else:
                                 logical_file.metadata.create_element(k, **v)
-                        log.info("NetCDF aggregation - metadata was saved in aggregation")
 
-                        file_type_success = True
+                        log.info("NetCDF aggregation - metadata was saved in aggregation")
                         ft_ctx.logical_file = logical_file
                     except Exception as ex:
+                        if logical_file is not None:
+                            logical_file.remove_aggregation()
                         msg = msg.format(str(ex))
                         log.exception(msg)
+                        raise ValidationError(msg)
 
-                if not file_type_success:
-                    raise ValidationError(msg)
                 return logical_file
             else:
                 err_msg = "Not a valid NetCDF file. NetCDF aggregation validation failed."
                 log.error(err_msg)
                 raise ValidationError(err_msg)
+
+    def remove_aggregation(self):
+        """Deletes the aggregation object (logical file) *self* and the associated metadata
+        object. If the aggregation contains a system generated txt file that resource file also will be
+        deleted."""
+
+        # need to delete the system generated ncdump txt file
+        txt_file = None
+        for res_file in self.files.all():
+            if res_file.file_name.lower().endswith(".txt"):
+                txt_file = res_file
+                break
+        super(NetCDFLogicalFile, self).remove_aggregation()
+        if txt_file is not None:
+            txt_file.delete()
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
@@ -565,14 +935,14 @@ def add_metadata_to_list(res_meta_list, extracted_core_meta, extracted_specific_
         add_contributors_metadata(res_meta_list, extracted_core_meta,
                                   Contributor.objects.none())
 
-    # add source (applies only to NetCDF resource type)
+    # add relation of type 'source' (applies only to NetCDF resource type)
     if extracted_core_meta.get('source') and file_meta_list is None:
-        source = {'source': {'derived_from': extracted_core_meta['source']}}
-        res_meta_list.append(source)
+        relation = {'relation': {'type': 'source', 'value': extracted_core_meta['source']}}
+        res_meta_list.append(relation)
 
-    # add relation (applies only to NetCDF resource type)
+    # add relation of type 'references' (applies only to NetCDF resource type)
     if extracted_core_meta.get('references') and file_meta_list is None:
-        relation = {'relation': {'type': 'cites',
+        relation = {'relation': {'type': 'references',
                                  'value': extracted_core_meta['references']}}
         res_meta_list.append(relation)
 
@@ -960,7 +1330,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             if hasattr(nc_dataset, 'references'):
                 delattr(nc_dataset, 'references')
 
-            reference_list = instance.metadata.relations.all().filter(type='cites')
+            reference_list = instance.metadata.relations.all().filter(type=RelationTypes.references)
             if reference_list:
                 res_meta_ref = []
                 for reference in reference_list:
@@ -971,11 +1341,11 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             if hasattr(nc_dataset, 'source'):
                 delattr(nc_dataset, 'source')
 
-            source_list = instance.metadata.sources.all()
+            source_list = instance.metadata.relations.filter(type=RelationTypes.source).all()
             if source_list:
                 res_meta_source = []
                 for source in source_list:
-                    res_meta_source.append(source.derived_from)
+                    res_meta_source.append(source.value)
                 nc_dataset.source = ' \n'.join(res_meta_source)
 
         # close nc dataset
@@ -998,9 +1368,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
                                          user)
 
     metadata = instance.metadata
-    if file_type:
-        instance.create_aggregation_xml_documents(create_map_xml=False)
-    metadata.is_dirty = False
+    metadata.is_update_file = False
     metadata.save()
 
     # cleanup the temp dir

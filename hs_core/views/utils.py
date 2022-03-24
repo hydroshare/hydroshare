@@ -41,6 +41,8 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
+from hs_core.enums import RelationTypes
+
 from hs_file_types.utils import set_logical_file_type
 from theme.backends import without_login_date_token_generator
 
@@ -376,7 +378,7 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
     if needed_permission == ACTION_TO_AUTHORIZE.VIEW_METADATA:
-        if res.raccess.discoverable or res.raccess.public:
+        if res.raccess.discoverable or res.raccess.public or res.raccess.allow_private_sharing:
             authorized = True
         elif user.is_authenticated() and user.is_active:
             authorized = user.uaccess.can_view_resource(res)
@@ -394,9 +396,9 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS:
             authorized = user.uaccess.can_view_resource(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS:
-            authorized = user.uaccess.can_share_resource(res, 2)
+            authorized = user.uaccess.can_share_resource(res, PrivilegeCodes.CHANGE)
     elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
-        authorized = res.raccess.public
+        authorized = res.raccess.public or res.raccess.allow_private_sharing
 
     if raises_exception and not authorized:
         raise PermissionDenied
@@ -692,7 +694,7 @@ def show_relations_section(res_obj):
     """
 
     all_relation_count = res_obj.metadata.relations.count()
-    has_part_count = res_obj.metadata.relations.filter(type="hasPart").count()
+    has_part_count = res_obj.metadata.relations.filter(type=RelationTypes.hasPart).count()
     if all_relation_count > has_part_count:
         return True
     return False
@@ -1119,20 +1121,21 @@ def listfolders(istorage, path):
     return istorage.listdir(path)[0]
 
 
-def create_folder(res_id, folder_path):
+def create_folder(res_id, folder_path, migrating_resource=False):
     """
     create a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
     resource backend store.
     :param res_id: resource uuid
     :param folder_path: relative path for the new folder to be created under
     res_id collection/directory
+    :param migrating_resource: A flag to indicate if the folder is being created as part of resource migration
     :return:
     """
     if __debug__:
         assert(folder_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    if resource.raccess.published:
+    if resource.raccess.published and not migrating_resource:
         raise ValidationError("Folder creation is not allowed for a published resource")
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
@@ -1232,7 +1235,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     if resource.resource_type == "CompositeResource":
         orig_src_path = src_full_path[len(resource.file_path) + 1:]
         new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1278,7 +1281,7 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     if resource.resource_type == "CompositeResource":
         orig_src_path = src_full_path[len(resource.file_path) + 1:]
         new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1334,7 +1337,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         if resource.resource_type == "CompositeResource":
             orig_src_path = src_full_path[len(resource.file_path) + 1:]
             new_tgt_path = tgt_qual_path[len(resource.file_path) + 1:]
-            resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+            resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     # TODO: should check can_be_public_or_discoverable here
 

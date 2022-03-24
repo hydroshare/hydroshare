@@ -102,13 +102,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session['just_published']
 
     bag_url = content_model.bag_url
-
-    if user.is_authenticated():
+    show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
+    if not show_content_files and user.is_authenticated():
         show_content_files = user.uaccess.can_view_resource(content_model)
-    else:
-        # if anonymous user getting access to a private resource (since resource is discoverable),
-        # then don't show content files
-        show_content_files = content_model.raccess.public
 
     rights_allow_copy = rights_allows_copy(content_model, user)
 
@@ -122,6 +118,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
     topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
     topics = list(topics)  # force QuerySet evaluation
+    content_model.update_relation_meta()
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -189,7 +186,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'keywords': keywords,
                    'language': language,
                    'rights': content_model.metadata.rights,
-                   'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
                    'show_relations_section': show_relations_section(content_model),
                    'fundingagencies': content_model.metadata.funding_agencies.all(),
@@ -282,7 +278,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'readme': readme,
                'contributors': content_model.metadata.contributors.all(),
                'relations': content_model.metadata.relations.all(),
-               'sources': content_model.metadata.sources.all(),
                'fundingagencies': content_model.metadata.funding_agencies.all(),
                'temporal_coverage': temporal_coverage_data_dict,
                'spatial_coverage': spatial_coverage_data_dict,
@@ -303,9 +298,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'just_created': just_created,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
-                                              if type_value != 'isReplacedBy' and
-                                              type_value != 'isVersionOf' and
-                                              type_value != 'hasPart'),
+                                              if type_value not in Relation.NOT_USER_EDITABLE),
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
                'maps_key': maps_key,

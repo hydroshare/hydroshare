@@ -118,6 +118,7 @@ def test_update_model_program_metadata(composite_resource_with_mp_aggregation, m
     assert mp_aggr.metadata.version == "2.1"
     mp_aggr.refresh_from_db()
     assert mp_aggr.model_program_type == mp_program_type
+    assert mp_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
 
@@ -139,6 +140,7 @@ def test_update_model_instance_metadata(composite_resource_with_mi_aggregation, 
     assert response.status_code == status.HTTP_200_OK
     mi_aggr.metadata.refresh_from_db()
     assert mi_aggr.metadata.has_model_output is True
+    assert mi_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
 
@@ -188,6 +190,7 @@ def test_update_model_instance_metadata_json(composite_resource_with_mi_mp_aggre
     assert response.status_code == status.HTTP_200_OK
     mi_aggr.metadata.refresh_from_db()
     assert len(mi_aggr.metadata.metadata_json) > 0
+    assert mi_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
 
@@ -261,4 +264,6 @@ def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregati
     assert move_aggr_cls.objects.count() == 1
     move_aggr.refresh_from_db()
     assert move_aggr.aggregation_name == "{}/{}".format(mi_folder, expected_aggr_name)
+    assert move_aggr.metadata.is_dirty
+    assert mi_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()

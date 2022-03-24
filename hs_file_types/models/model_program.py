@@ -164,7 +164,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             val = graph.value(subject=subject, predicate=term)
             if val:
                 if is_date:
-                    date = parser.parse(str(val))
+                    date = parser.parse(str(val)).date()
                     setattr(obj, field_name, date)
                 else:
                     setattr(obj, field_name, str(val.toPython()))
@@ -443,9 +443,11 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                                    name='mi_json_schema_file', id='mi-json-schema-file')
 
                                         if json_schema:
-                                            dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
+                                            dom_tags.button("Show/Hide Model Instance Metadata JSON Schema",
+                                                            type="button",
                                                             cls="btn btn-success btn-block",
-                                                            data_toggle="collapse", data_target="#meta-schema")
+                                                            data_toggle="collapse",
+                                                            data_target="#meta-schema")
                                             mi_schema_div = dom_tags.div(cls="content-block collapse", id="meta-schema",
                                                                          style="margin-top:10px; padding-bottom: 20px;")
                                             with mi_schema_div:
@@ -488,7 +490,7 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
-        mp_metadata = ModelProgramFileMetaData.objects.create(keywords=[])
+        mp_metadata = ModelProgramFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=mp_metadata, resource=resource)
@@ -566,3 +568,14 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
             mi_meta.save()
+
+    def set_metadata_dirty(self):
+        super(ModelProgramLogicalFile, self).set_metadata_dirty()
+        for mi_meta in self.mi_metadata_objects.all():
+            mi_meta.is_dirty = True
+            mi_meta.save()
+
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
+        # set metadata to dirty for all model instance aggregations related to this model program aggregation
+        self.set_model_instances_dirty()

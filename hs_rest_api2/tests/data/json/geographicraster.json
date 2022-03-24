@@ -1,0 +1,61 @@
+{
+  "type": "GeoRaster",
+  "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/logan_resmap.xml#aggregation",
+  "title": "logan1a",
+  "subjects": [
+    "key2",
+    "key1"
+  ],
+  "language": "eng",
+  "additional_metadata": {
+    "key": "value",
+    "key2": "value2"
+  },
+  "spatial_coverage": {
+    "type": "box",
+    "name": "box coverage",
+    "northlimit": 42.050028785767275,
+    "eastlimit": -111.5773750264389,
+    "southlimit": 41.98745777902698,
+    "westlimit": -111.65768822411239,
+    "units": "Decimal degrees",
+    "projection": "WGS 84 EPSG:4326"
+  },
+  "period_coverage": {
+    "start": "2020-11-05T00:00:00",
+    "end": "2020-11-26T00:00:00"
+  },
+  "rights": {
+    "statement": "my statement",
+    "url": "http://studio.bakajo.com"
+  },
+  "band_information": {
+    "name": "Band_1",
+    "variable_name": "variablename",
+    "variable_unit": "variableunit",
+    "no_data_value": "-3.4028234663852886E+38",
+    "maximum_value": "6.9103932008822E-310",
+    "comment": "comment",
+    "method": "method",
+    "minimum_value": "2.67393466E-316"
+  },
+  "spatial_reference": {
+    "type": "box",
+    "northlimit": 4655492.446916306,
+    "eastlimit": 452174.01909127034,
+    "southlimit": 4648592.446916306,
+    "westlimit": 445574.01909127034,
+    "units": "meter",
+    "projection": "NAD83 / UTM zone 12N",
+    "projection_string": "PROJCS[\"NAD83 / UTM zone 12N\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.2572221010002,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",-111],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AUTHORITY[\"EPSG\",\"26912\"]]",
+    "datum": "North_American_Datum_1983"
+  },
+  "cell_information": {
+    "name": "logan.vrt",
+    "rows": 230,
+    "columns": 220,
+    "cell_size_x_value": 30.0,
+    "cell_data_type": "Float32",
+    "cell_size_y_value": 30.0
+  }
+}

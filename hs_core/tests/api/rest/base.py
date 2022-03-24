@@ -30,6 +30,7 @@ class HSRESTTestCase(APITestCase):
             password='foobar', 
             first_name='some_first_name',
             last_name='some_last_name',
+            organization='RENCI',
             superuser=False)
 
         self.client.force_authenticate(user=self.user)

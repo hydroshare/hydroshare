@@ -1,6 +1,7 @@
 import logging
 import os
 
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from hs_core.models import ResourceFile
@@ -24,7 +25,7 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
-        generic_metadata = FileSetMetaData.objects.create(keywords=[])
+        generic_metadata = FileSetMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=generic_metadata, resource=resource)
@@ -140,6 +141,7 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
                              post_aggr_signal=None,
                              is_temp_file=False) as ft_ctx:
 
+            msg = "Fileset aggregation. Error when creating aggregation. Error:{}"
             folder_name = folder_path
             if '/' in folder_path:
                 folder_name = os.path.basename(folder_path)
@@ -151,12 +153,19 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
                                                   new_files_to_upload=[],
                                                   folder_path=folder_path)
 
-            logical_file.folder = folder_path
-            logical_file.save()
-            # make all the files in the selected folder as part of the aggregation
-            logical_file.add_resource_files_in_folder(resource, folder_path)
-            ft_ctx.logical_file = logical_file
-            log.info("File set aggregation was created for folder:{}.".format(folder_path))
+            try:
+                logical_file.folder = folder_path
+                logical_file.save()
+                # make all the files in the selected folder as part of the aggregation
+                logical_file.add_resource_files_in_folder(resource, folder_path)
+                log.info("File set aggregation was created for folder:{}.".format(folder_path))
+                ft_ctx.logical_file = logical_file
+            except Exception as ex:
+                logical_file.remove_aggregation()
+                msg = msg.format(str(ex))
+                log.exception(msg)
+                raise ValidationError(msg)
+
             return logical_file
 
     def xml_file_short_path(self, resmap=True):
@@ -215,7 +224,20 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         self.folder = new_folder + self.folder[len(old_folder):]
         self.save()
 
+    def set_metadata_dirty(self):
+        super(FileSetLogicalFile, self).set_metadata_dirty()
+        for child_aggr in self.get_children():
+            child_aggr.set_metadata_dirty()
+
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(FileSetLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
         for child_aggr in self.get_children():
             child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)
+
+    def get_copy(self, copied_resource):
+        """Overrides the base class method"""
+
+        copy_of_logical_file = super(FileSetLogicalFile, self).get_copy(copied_resource)
+        copy_of_logical_file.folder = self.folder
+        copy_of_logical_file.save()
+        return copy_of_logical_file

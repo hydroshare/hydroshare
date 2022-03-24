@@ -16,7 +16,6 @@ class TestResourceTypes(APITestCase):
                                'RasterResource',
                                'RefTimeSeriesResource',
                                'TimeSeriesResource',
-                               'NetcdfResource',
                                'ModelProgramResource',
                                'ModelInstanceResource',
                                'ToolResource',

@@ -3,6 +3,7 @@ import datetime
 import pytz
 import logging
 
+from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 
 from django.core.mail import send_mail
@@ -50,6 +51,7 @@ from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by
     set_task_delivered_by_id, get_or_create_task_notification, get_task_user_id, get_resource_delete_task
 from hs_core.tasks import copy_resource_task, replicate_resource_bag_to_user_zone_task, \
     create_new_version_resource_task, delete_resource_task
+from hs_core.enums import RelationTypes
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -767,7 +769,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
     if usertext != "DELETE":
         return HttpResponse("'usertext' path parameter must be provided with value 'DELETE'",
                             status=status.HTTP_400_BAD_REQUEST)
-    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
+    if res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).exists():
         return HttpResponse('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.',
                             status=status.HTTP_400_BAD_REQUEST)
     if request.is_ajax():
@@ -942,6 +944,10 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
         res.set_require_download_agreement(user, value=True)
     elif flag == 'make_not_require_lic_agreement':
         res.set_require_download_agreement(user, value=False)
+    elif flag == 'enable_private_sharing_link':
+        res.set_private_sharing_link(user, value=True)
+    elif flag == 'remove_private_sharing_link':
+        res.set_private_sharing_link(user, value=False)
     else:
         message = "Invalid resource flag"
     if message is not None:
@@ -1847,7 +1853,10 @@ class FindGroupsView(TemplateView):
                 'groups': groups
             }
         else:
-            groups = GroupAccess.groups_with_public_resources().exclude(name="Hydroshare Author")  # active is included in this query
+            # for anonymous user
+            groups = Group.objects.filter(Q(gaccess__active=True) &
+                                          (Q(gaccess__discoverable=True) |
+                                          Q(gaccess__public=True))).exclude(name="Hydroshare Author")
 
             return {
                 'groups': groups
@@ -1912,15 +1921,17 @@ class GroupView(TemplateView):
         group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
 
         if self.request.user.is_authenticated():
-
             u = User.objects.get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
             u.is_group_editor = g in u.uaccess.edit_groups
-            u.is_group_viewer = g in u.uaccess.view_groups
+            u.is_group_viewer = g in u.uaccess.view_groups or g.gaccess.public or g.gaccess.discoverable
+            u.is_group_member = u in g.gaccess.members
 
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
             g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+            if u not in g.gaccess.members:
+                group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 
             return {
                 'group': g,

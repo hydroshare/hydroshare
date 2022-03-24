@@ -55,7 +55,8 @@ function getFolderTemplateInstance(folder) {
         }
         return "<li class='fb-folder droppable draggable' data-url='" +
             folder['url'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] +
-            "' title='" + folder['name'] + "&#13;" + folder['folder_aggregation_name'] + "' >" +
+            "' title='" + folder['name'] + "&#13;" + folder['folder_aggregation_name'] +
+            "' data-aggregation-appkey='" + folder['folder_aggregation_appkey']  +"' >" +
             iconTemplate +
             "<span class='fb-file-name'>" + folder['name'] + "</span>" +
             "<span class='fb-file-type'>File Folder</span>" +
@@ -90,7 +91,8 @@ function getVirtualFolderTemplateInstance(agg) {
 
     return "<li class='fb-folder droppable draggable' data-url='" + agg.url +
       "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
-      agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file + "' >" +
+      agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file +
+      "' data-aggregation-appkey='" + agg.aggregation_appkey  + "' >" +
       iconTemplate +
       "<span class='fb-file-name'>" + agg.name + "</span>" +
       "<span class='fb-file-type'>File Folder</span>" +
@@ -136,7 +138,7 @@ function getFileTemplateInstance(file) {
         "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
         file.is_single_file_aggregation + "' data-has-model-program-aggr-folder='" +
         file.has_model_program_aggr_folder + "' data-has-model-instance-aggr-folder='" +
-        file.has_model_instance_aggr_folder +"'>" +
+        file.has_model_instance_aggr_folder + "' data-aggregation-appkey='" + file.aggregation_appkey  + "'>" +
         iconTemplate +
         "<span class='fb-file-name'>" + file.name + "</span>" +
         "<span class='fb-file-type'>" + file.type + " File</span>" +
@@ -753,11 +755,6 @@ function bindFileBrowserItemEvents() {
         }
     });
 
-    // Dismiss right click menu when mouse down outside of it
-    $("#fb-files-container, #fb-files-container li, #hsDropzone").mousedown(function () {
-        $(".selection-menu").hide();
-    });
-
     var timer = 0;
     var delay = 200;
     var prevent = false;
@@ -801,35 +798,134 @@ function bindFileBrowserItemEvents() {
             }
             menu = $("#right-click-menu");
 
-            var fileAggType = [];
+            let fileAggType = '';
+            let aggrAppKey = '';
             let target = $(event.target).closest("li");
+            let fileSelected = false;
+            let aggrFolderBased = false;
+            const virtualFolderAggregationTypes = ["NetCDFLogicalFile", "GeoFeatureLogicalFile",
+                "GeoRasterLogicalFile", "TimeSeriesLogicalFile", "RefTimeseriesLogicalFile"]
 
-            // main-file is available on the aggregation folder and only single file aggregations have a data-pk of 1 on the file
-            if (isVirtualFolder(target) || target.attr("main-file") || target.attr("is-single-file-aggregation") === "true"){
+            // get the aggregation type from the user right clicked file/folder element
+            if (target.find("span.fb-logical-file-type").attr("data-logical-file-type")) {
                 fileAggType = target.find("span.fb-logical-file-type").attr("data-logical-file-type");
             }
-            var fileName = target.find("span.fb-file-name").text();
-            var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
+            if (fileAggType) {
+                if (virtualFolderAggregationTypes.includes(fileAggType)) {
+                    aggrFolderBased = true;
+                }
+                else if (fileAggType === 'ModelInstanceLogicalFile') {
+                    if (target.attr("data-has-model-instance-aggr-folder") === 'true') {
+                        aggrFolderBased = true;
+                    }
+                }
+                else if (fileAggType === 'ModelProgramLogicalFile') {
+                    if (target.attr("data-has-model-program-aggr-folder") === 'true') {
+                        aggrFolderBased = true;
+                    }
+                }
+            }
 
-            // toggle apps by file extension and aggregations
+            if (target.hasClass('fb-file')) {
+                fileSelected = true;
+            }
+            if (target.attr("data-aggregation-appkey")) {
+                aggrAppKey = target.attr("data-aggregation-appkey");
+            }
+
+            let fileName = '';
+            let fileExtension = '';
+            if (fileSelected) {
+                fileName = target.find("span.fb-file-name").text();
+                fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
+            }
+
+            // toggle apps by file extension, appkey and aggregation type
             let hasTools = false;
             menu.find("li.btn-open-with").each(function() {
-                let agg_app = false;
-                if ($(this).attr("data-agg-types")){
-                    agg_app = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
-                }
-                var extension_app = false;
-                if ($(this).attr("data-file-extensions")){
-                    let extensions = $(this).attr("data-file-extensions").split(",");
-                    for (let i = 0; i < extensions.length; ++i) {
-                        if (fileExtension.toLowerCase() === extensions[i].trim().toLowerCase()){
-                            extension_app = true;
-                            break;
+                // when file extension and extension supported by the tool matches, this will be set to true
+                let extensionApp = false;
+                // when appkey in aggregation matches with the appkey of the tool, this will be set to true
+                let appKeyApp = false;
+                // when aggregation type of the aggregation matches with the aggregation type supported by the tool
+                // matches, this will be set to true
+                let aggrApp = false;
+                let toolExtensions = '';
+                let toolAppKey = '';
+                if (fileSelected) {
+                    // check for file extension match
+                    if ($(this).attr("data-file-extensions")) {
+                        toolExtensions = $(this).attr("data-file-extensions").split(",");
+                        for (let i = 0; i < toolExtensions.length; ++i) {
+                            if (fileExtension.toLowerCase() === toolExtensions[i].trim().toLowerCase()) {
+                                extensionApp = true;
+                                break;
+                            }
                         }
                     }
                 }
-                $(this).toggle(agg_app || extension_app);
-                hasTools = hasTools || agg_app || extension_app;
+                if (fileSelected) {
+                    if (!extensionApp) {
+                        // file extension and tool supported extension didn't match - now check for appkey match
+                        if (!aggrFolderBased) {
+                            // file based aggregation selected (single file aggregation, model program/instance aggregation)
+                            if ($(this).attr("data-tool-appkey")) {
+                                toolAppKey = $(this).attr("data-tool-appkey");
+                            }
+                        }
+                        // file selected
+                        else if ($(this).attr("data-tool-appkey") && $(this).attr("data-url-file")) {
+                            toolAppKey = $(this).attr("data-tool-appkey");
+                        }
+
+                        if (aggrAppKey && toolAppKey) {
+                            if (aggrAppKey === toolAppKey) {
+                                appKeyApp = true;
+                            }
+                        }
+                        if ($(this).attr("data-agg-types"))  {
+                            // tool has restricted aggregation types - need to also match aggregation type
+                            if (!aggrFolderBased) {
+                                // file based aggregation selected (single file aggregation, model program/instance aggregation)
+                                aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                             }
+                             // file selected
+                             else if ($(this).attr("data-url-file")) {
+                                aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                            }
+                            if (toolAppKey && !appKeyApp) {
+                                aggrApp = false;
+                            }
+                            if (!aggrApp) {
+                                appKeyApp = false;
+                            }
+                        }
+                    }
+                }
+                else {  //folder based aggregation selected (right-clicked)
+                    // check for matching appkey
+                    if ($(this).attr("data-tool-appkey")) {
+                        toolAppKey = $(this).attr("data-tool-appkey");
+                    }
+                    if (aggrAppKey && toolAppKey) {
+                        if (aggrAppKey === toolAppKey) {
+                            appKeyApp = true;
+                        }
+                    }
+                    if ($(this).attr("data-agg-types")) {
+                        // tool has restricted aggregation types - need to also match aggregation type
+                        aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                        if (toolAppKey && !appKeyApp) {
+                            aggrApp = false;
+                        }
+                        if (!aggrApp) {
+                            appKeyApp = false;
+                        }
+                    }
+                }
+
+                $(this).toggle(extensionApp || appKeyApp || aggrApp);
+                hasTools = hasTools || extensionApp || appKeyApp || aggrApp;
             });
             $("#tools-separator").toggleClass("hidden", !hasTools);
         }
@@ -838,6 +934,21 @@ function bindFileBrowserItemEvents() {
         }
 
         $(".selection-menu").hide();    // Hide other menus
+
+        // register a listener for clicks outside of the context menus
+        $(document).on('click.menu', function(event) {
+            var $target = $(event.target);
+            if(!$target.closest('#right-click-menu').length && 
+                $('#right-click-menu').css("display") !== "none") {
+                $('#right-click-menu').hide();
+            }
+            if(!$target.closest('#right-click-container-menu').length && 
+                $('#right-click-container-menu').css("display") !== "none") {
+                $('#right-click-container-menu').hide();
+            }
+            // de-register listener to allow bubbling
+            $(document).off('click.menu');
+        });
 
         var top = event.pageY;
         var left = event.pageX;
@@ -1134,10 +1245,11 @@ function setupModelInstanceTypeUI() {
             disable_edit_json: true,
             disable_array_add: false,
             disable_array_delete: false,
-            // optional fields are not displayed by default in JSONEditor form for editing
+            // only required fields are displayed by default in JSONEditor form for editing
             // user needs to select any optional properties to make it available for editing
-            display_required_only: false,
-            required_by_default: true,
+            display_required_only: true,
+            // only fields that are specified as required in the schema should be required by the JSONEditor form
+            required_by_default: false,
             object_layout: "table"
         });
         editor.on("change", function () {
@@ -2240,9 +2352,9 @@ $(document).ready(function () {
     $("#btn-confirm-delete").click(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
         var filesToDelete = "";
-        $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
         if (deleteList.length) {
+            $(".file-browser-container, #fb-files-container").css("cursor", "progress");
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
                 let item = $(deleteList[i]);
@@ -2291,6 +2403,7 @@ $(document).ready(function () {
                         }
                     });
                 }
+                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
 
             $.when.apply($, calls).fail(function () {
@@ -2301,6 +2414,7 @@ $(document).ready(function () {
                 else {
                     refreshFileBrowser();
                 }
+                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
         }
     });
@@ -2412,6 +2526,25 @@ $(document).ready(function () {
         }
 
         $("#txtFileURL").val(basePath + url);
+
+        // update message for URL sharing depending on raccess
+        $('#warnTxtFileURL p').hide();
+        if(!RESOURCE_ACCESS.isPublic){
+            if (RESOURCE_ACCESS.isDiscoverable){
+                if (RESOURCE_ACCESS.isPrivateLinkSharing){
+                    $('#warnTxtFileURL p.discoverable_sharing').show();
+                }else{
+                    $('#warnTxtFileURL p.discoverable').show();
+                }
+            }else if (RESOURCE_ACCESS.isPrivateLinkSharing){
+                $('#warnTxtFileURL p.private_sharing').show();
+            }else{
+                $('#warnTxtFileURL p.private').show();
+            }
+            $("#warnTxtFileURL").show();
+        }else{
+            $("#warnTxtFileURL").hide();
+        }
     });
 
     // set generic file type method

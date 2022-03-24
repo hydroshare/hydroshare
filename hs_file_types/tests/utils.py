@@ -187,9 +187,6 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
                          "Oct. 2009 to June 2010 for TWDEF site in Utah."
     self.assertEqual(self.composite_resource.metadata.description.abstract, extracted_abstract)
 
-    # there should be no source element
-    self.assertEqual(self.composite_resource.metadata.sources.all().count(), 0)
-
     # there should be one license element:
     self.assertNotEqual(self.composite_resource.metadata.rights.statement, 1)
 
@@ -459,6 +456,10 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     res_file = self.composite_resource.files.first()
     logical_file = res_file.logical_file
     self.assertTrue(isinstance(logical_file.metadata, TimeSeriesFileMetaData))
+    # test the metadata for the aggregation is in dirty state
+    self.assertTrue(logical_file.metadata.is_dirty)
+    # test that the update file (.sqlite file) state is false
+    self.assertFalse(logical_file.metadata.is_update_file)
 
     # test extracted metadata that updates resource level metadata
 

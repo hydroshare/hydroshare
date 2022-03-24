@@ -1,54 +1,50 @@
 """Declare critical models for Hydroshare hs_core app."""
 import copy
-import os.path
 import json
-import arrow
 import logging
+import os.path
 import re
+import unicodedata
 from uuid import uuid4
 
-from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
-from .languages_iso import languages as iso_languages
+import arrow
 from dateutil import parser
-from lxml import etree
-from markdown import markdown
-
-from django_irods.icommands import SessionException
-
-from django.contrib.postgres.fields import HStoreField
+from django.conf import settings
+from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
-from django.db.models import Q, Sum
-from django.db.models.signals import post_save
-from django.db import transaction
-from django.dispatch import receiver
-from django.utils.timezone import now
-from django_irods.storage import IrodsStorage
-from django.conf import settings
-from django.core.files import File
+from django.contrib.postgres.fields import HStoreField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
     SuspiciousFileOperation, PermissionDenied
+from django.core.files import File
 from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
+from django.db import models
+from django.db import transaction
+from django.db.models import Q, Sum
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.forms.models import model_to_dict
-
-from mezzanine.pages.models import Page
+from django.utils.timezone import now
+from dominate.tags import div, legend, table, tbody, tr, th, td, h4
+from lxml import etree
+from markdown import markdown
+from mezzanine.conf import settings as s
 from mezzanine.core.managers import PublishedManager
 from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
-from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
-
-from dominate.tags import div, legend, table, tbody, tr, th, td, h4
-
-from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from mezzanine.pages.models import Page
 from rdflib import Literal, BNode, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 
-import unicodedata
+from django_irods.icommands import SessionException
+from django_irods.storage import IrodsStorage
+from hs_core.enums import RelationTypes
+from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
+from .languages_iso import languages as iso_languages
 
 
 def clean_for_xml(s):
@@ -196,6 +192,9 @@ def get_access_object(user, user_type, user_access):
     access_object = None
     picture = None
 
+    if not hasattr(user, 'viewable_contributions'):
+        user.viewable_contributions = 0
+
     if user_type == "user":
         if user.userprofile.picture:
             picture = user.userprofile.picture.url
@@ -213,6 +212,7 @@ def get_access_object(user, user_type, user_access):
             "organization": user.userprofile.organization,
             "title": user.userprofile.title,
             "contributions": len(user.uaccess.owned_resources),
+            "viewable_contributions": user.viewable_contributions,
             "subject_areas": user.userprofile.subject_areas,
             "identifiers": user.userprofile.identifiers,
             "state": user.userprofile.state,
@@ -264,9 +264,12 @@ def page_permissions_page_processor(request, page):
     edit_groups = cm.raccess.edit_groups
     view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
+    last_changed_by = cm.last_changed_by
+
     if request.user.is_authenticated():
         for owner in owners:
             owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
+            owner.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(owner)
 
         for viewer in viewers:
             viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, viewer)
@@ -281,6 +284,9 @@ def page_permissions_page_processor(request, page):
         for edit_grp in edit_groups:
             edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
                                                                                         edit_grp)
+
+        last_changed_by.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(last_changed_by)
+
     else:
         for owner in owners:
             owner.can_undo = False
@@ -292,6 +298,7 @@ def page_permissions_page_processor(request, page):
             view_grp.can_undo = False
         for edit_grp in edit_groups:
             edit_grp.can_undo = False
+    last_changed_by.can_undo = False
 
     users_json = []
 
@@ -310,17 +317,21 @@ def page_permissions_page_processor(request, page):
     for usr in view_groups:
         users_json.append(get_access_object(usr, "group", "view"))
 
+    lcb_access_level = cm.raccess.get_effective_user_privilege(last_changed_by)
+    if lcb_access_level == PrivilegeCodes.OWNER:
+        lcb_access_level = 'owner'
+    elif lcb_access_level == PrivilegeCodes.CHANGE:
+        lcb_access_level = 'edit'
+    elif lcb_access_level == PrivilegeCodes.VIEW:
+        lcb_access_level = 'view'
+
+    # last_changed_by.can_undo = False
+    last_changed_by = json.dumps(get_access_object(last_changed_by, "user", lcb_access_level))
+
     users_json = json.dumps(users_json)
 
-    if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
-        is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
-    else:
-        is_replaced_by = ''
-
-    if cm.metadata.relations.all().filter(type='isVersionOf').exists():
-        is_version_of = cm.metadata.relations.all().filter(type='isVersionOf').first().value
-    else:
-        is_version_of = ''
+    is_replaced_by = cm.get_relation_version_res_url(RelationTypes.isReplacedBy)
+    is_version_of = cm.get_relation_version_res_url(RelationTypes.isVersionOf)
 
     permissions_allow_copy = False
     if request.user.is_authenticated:
@@ -342,7 +353,8 @@ def page_permissions_page_processor(request, page):
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
-        "show_manage_access": show_manage_access
+        "show_manage_access": show_manage_access,
+        "last_changed_by": last_changed_by
     }
 
 
@@ -379,7 +391,7 @@ class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
         """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
         for key, value in list(kwargs.items()):
-                setattr(element, key, value)
+            setattr(element, key, value)
         element.save()
         return element
 
@@ -949,26 +961,32 @@ class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
     SOURCE_TYPES = (
-        ('isHostedBy', 'The content of this resource is hosted by'),
-        ('isCopiedFrom', 'The content of this resource was copied from'),
-        ('isPartOf', 'The content of this resource is part of'),
-        ('hasPart', 'Has Part'),
-        ('isExecutedBy', 'The content of this resource can be executed by'),
-        ('isCreatedBy', 'The content of this resource was created by'),
-        ('isVersionOf', 'Version Of'),
-        ('isReplacedBy', 'Replaced By'),
-        ('isDataFor', 'The content of this resource serves as the data for'),
-        ('cites', 'This resource cites'),
-        ('isDescribedBy', 'This resource is described by'),
+        (RelationTypes.isPartOf.value, 'The content of this resource is part of'),
+        (RelationTypes.hasPart.value, 'This resource includes'),
+        (RelationTypes.isExecutedBy.value, 'The content of this resource can be executed by'),
+        (RelationTypes.isCreatedBy.value,
+         'The content of this resource was created by a related App or software program'),
+        (RelationTypes.isVersionOf.value, 'This resource updates and replaces a previous version'),
+        (RelationTypes.isReplacedBy.value, 'This resource has been replaced by a newer version'),
+        (RelationTypes.isDescribedBy.value, 'This resource is described by'),
+        (RelationTypes.conformsTo.value, 'This resource conforms to established standard described by'),
+        (RelationTypes.hasFormat.value, 'This resource has a related resource in another format'),
+        (RelationTypes.isFormatOf.value, 'This resource is a different format of'),
+        (RelationTypes.isRequiredBy.value, 'This resource is required by'),
+        (RelationTypes.requires.value, 'This resource requires'),
+        (RelationTypes.isReferencedBy.value, 'This resource is referenced by'),
+        (RelationTypes.references.value, 'The content of this resource references'),
+        (RelationTypes.replaces.value, 'This resource replaces'),
+        (RelationTypes.source.value, 'The content of this resource is derived from')
     )
 
-    # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom', 'isExecutedBy', 'isCreatedBy', 'isDataFor',
-                         'cites', 'isDescribedBy')
-
+    # these are hydroshare custom terms that are not Dublin Core terms
+    HS_RELATION_TERMS = (RelationTypes.isExecutedBy, RelationTypes.isCreatedBy, RelationTypes.isDescribedBy)
+    NOT_USER_EDITABLE = (RelationTypes.isVersionOf, RelationTypes.isReplacedBy,
+                         RelationTypes.isPartOf, RelationTypes.hasPart, RelationTypes.replaces)
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
-    value = models.CharField(max_length=500)
+    value = models.TextField()
 
     def __str__(self):
         """Return {type} {value} for string representation."""
@@ -978,10 +996,20 @@ class Relation(AbstractMetaDataElement):
         """Return {type} {value} for unicode representation (deprecated)."""
         return "{type} {value}".format(type=self.type, value=self.value)
 
+    @classmethod
+    def get_supported_types(cls):
+        return dict(cls.SOURCE_TYPES).keys()
+
+    def type_description(self):
+        return dict(self.SOURCE_TYPES)[self.type]
+
     def rdf_triples(self, subject, graph):
         relation_node = BNode()
         graph.add((subject, self.get_class_term(), relation_node))
-        graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+        if self.type in self.HS_RELATION_TERMS:
+            graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+        else:
+            graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
@@ -1018,17 +1046,6 @@ class Relation(AbstractMetaDataElement):
             raise ValidationError('Relation element of the same type '
                                   'and value already exists.')
 
-        if kwargs['type'] == 'isHostedBy' and \
-           Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id,
-                                   content_type=metadata_type).exists():
-            raise ValidationError('Relation type:%s cannot be created since '
-                                  'isCopiedFrom relation already exists.' % kwargs['type'])
-        elif kwargs['type'] == 'isCopiedFrom' and \
-                Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id,
-                                        content_type=metadata_type).exists():
-            raise ValidationError('Relation type:%s cannot be created since '
-                                  'isHostedBy relation already exists.' % kwargs['type'])
-
         return super(Relation, cls).create(**kwargs)
 
     @classmethod
@@ -1042,21 +1059,8 @@ class Relation(AbstractMetaDataElement):
         if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
-        # ensure isHostedBy and isCopiedFrom are mutually exclusive
-        rel = Relation.objects.get(id=element_id)
-        if rel.type != kwargs['type']:
-            if kwargs['type'] == 'isHostedBy' and \
-                Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
-                                        content_type__pk=rel.content_type.id).exists():
-                raise ValidationError('Relation type:%s cannot be updated since '
-                                      'isCopiedFrom relation already exists.' % rel.type)
-            elif kwargs['type'] == 'isCopiedFrom' and \
-                Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
-                                        content_type__pk=rel.content_type.id).exists():
-                raise ValidationError('Relation type:%s cannot be updated since '
-                                      'isHostedBy relation already exists.' % rel.type)
-
         # avoid changing this relation to an existing relation of same type and same value
+        rel = Relation.objects.get(id=element_id)
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
         qs = Relation.objects.filter(type=kwargs['type'],
@@ -1560,6 +1564,16 @@ class Coverage(AbstractMetaDataElement):
     @classmethod
     def validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         """Validate values based on coverage type."""
+        def compute_longitude(key_name):
+            if value_dict[key_name] <= -180 and value_dict[key_name] >= -360:
+                value_dict[key_name] = value_dict[key_name] + 360
+            elif value_dict[key_name] >= 180 and value_dict[key_name] <= 360:
+                value_dict[key_name] = value_dict[key_name] - 360
+            if value_dict[key_name] < -180 or value_dict[key_name] > 180:
+                err_msg = "Invalid value for {}:{}. Value for {} longitude should be in the range of -180 to 180"
+                err_msg = err_msg.format(key_name, value_dict[key_name], key_name)
+                raise ValidationError(err_msg)
+
         if coverage_type == 'period':
             # check that all the required sub-elements exist
             if 'start' not in value_dict or 'end' not in value_dict:
@@ -1577,10 +1591,7 @@ class Coverage(AbstractMetaDataElement):
                 except TypeError:
                     raise ValidationError("Value for '{}' must be numeric".format(value_item))
 
-            if value_dict['east'] < -180 or value_dict['east'] > 180:
-                raise ValidationError("Value for East longitude should be "
-                                      "in the range of -180 to 180")
-
+            compute_longitude(key_name='east')
             if value_dict['north'] < -90 or value_dict['north'] > 90:
                 raise ValidationError("Value for North latitude should be "
                                       "in the range of -90 to 90")
@@ -1613,13 +1624,8 @@ class Coverage(AbstractMetaDataElement):
                     raise ValidationError("Value for North latitude must be greater than or "
                                           "equal to that of South latitude.")
 
-            if value_dict['eastlimit'] < -180 or value_dict['eastlimit'] > 180:
-                raise ValidationError("Value for East longitude should be "
-                                      "in the range of -180 to 180")
-
-            if value_dict['westlimit'] < -180 or value_dict['westlimit'] > 180:
-                raise ValidationError("Value for West longitude should be "
-                                      "in the range of -180 to 180")
+            compute_longitude(key_name='eastlimit')
+            compute_longitude(key_name='westlimit')
 
     def get_html(self, pretty=True):
         """Use the dominate module to generate element display HTML.
@@ -1815,23 +1821,6 @@ class Subject(AbstractMetaDataElement):
     def ingest_rdf(cls, graph, subject, content_object):
         for _, _, o in graph.triples((subject, cls.get_class_term(), None)):
             Subject.create(value=str(o), content_object=content_object)
-
-
-@rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
-class Source(AbstractMetaDataElement):
-    """Define Source custom metadata element model."""
-
-    term = 'Source'
-    derived_from = models.CharField(max_length=300)
-
-    class Meta:
-        """Define meta properties for Source model."""
-
-        unique_together = ("derived_from", "content_type", "object_id")
-
-    def __unicode__(self):
-        """Return derived_from field for unicode representation."""
-        return self.derived_from
 
 
 @rdf_terms(DC.rights, statement=HSTERMS.rightsStatement, url=HSTERMS.URL)
@@ -2112,9 +2101,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 # public or private composite resource that includes netCDF files becomes public
 
                 is_netcdf_to_public = False
-                if self.resource_type == 'NetcdfResource':
-                    is_netcdf_to_public = True
-                elif self.resource_type == 'CompositeResource' and \
+                if self.resource_type == 'CompositeResource' and \
                         self.get_logical_files('NetCDFLogicalFile'):
                     is_netcdf_to_public = True
 
@@ -2134,6 +2121,21 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             raise PermissionDenied("You don't have permission to change resource download agreement"
                                    " status")
         self.raccess.require_download_agreement = value
+        self.raccess.save()
+
+    def set_private_sharing_link(self, user, value):
+        """Set resource 'allow_private_sharing' flag to True or False.
+        If allow_private_sharing is True then any user including anonymous user will be able to use the resource url
+        to view the resource (view mode).
+
+        :param user: user requesting the change
+        :param value: True or False
+        :raises PermissionDenied: if the user lacks permission to change resource flag
+        """
+        if not user.uaccess.can_change_resource_flags(self):
+            raise PermissionDenied("You don't have permission to change resource private link sharing "
+                                   " status")
+        self.raccess.allow_private_sharing = value
         self.raccess.save()
 
     def update_public_and_discoverable(self):
@@ -3137,7 +3139,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         elif path.startswith(locpath):
             # strip optional local path prefix
             if test_exists and not storage.exists(path):
-                raise ValidationError("Local path does not exist in irods")
+                raise ValidationError("Local path ({}) does not exist in irods".format(path))
             plen = len(locpath)
             relpath = relpath[plen:]  # strip local prefix, omit /
 
@@ -3212,13 +3214,14 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # TODO: move to BaseResource as instance method
     @classmethod
-    def create_folder(cls, resource, folder):
+    def create_folder(cls, resource, folder, migrating_resource=False):
         """Create a folder for a resource."""
         # avoid import loop
         from hs_core.views.utils import create_folder
         path_is_allowed(folder)
         # TODO: move code from location used below to here
-        create_folder(resource.short_id, os.path.join('data', 'contents', folder))
+        create_folder(resource.short_id, os.path.join('data', 'contents', folder),
+                      migrating_resource=migrating_resource)
 
     # TODO: move to BaseResource as instance method
     @classmethod
@@ -3694,20 +3697,33 @@ class BaseResource(Page, AbstractResource):
     def replaced_by(self):
         """ return a list or resources that replaced this one """
         from hs_core.hydroshare import get_resource_by_shortkey, current_site_url   # prevent import loop
-        replacedby = self.metadata.relations.all().filter(type='isReplacedBy')
+        replacedby = self.metadata.relations.all().filter(type=RelationTypes.isReplacedBy)
         rlist = []
         for r in replacedby:
-            replacement = r.value
+            citation = r.value
+            res_id = citation[-32:]
             # TODO: This is a mistake. This hardcodes the server on which the URI is created as its URI
-            if replacement.startswith(current_site_url() + "/resource/"):
-                replacement = replacement[-32:]  # strip header
+            res_path = "{}/resource/{}".format(current_site_url(), res_id)
+            if citation.endswith(res_path):
                 try:
-                    rv = get_resource_by_shortkey(replacement, or_404=False)
-                except BaseResource.DoesNotExist:
-                    rv = None
-                if rv is not None:
+                    rv = get_resource_by_shortkey(res_id, or_404=False)
                     rlist.append(rv)
+                except BaseResource.DoesNotExist:
+                    pass
         return rlist
+
+    def get_relation_version_res_url(self, rel_type):
+        """Extracts the resource url from resource citation stored in relation metadata for resource
+        versioning
+        :param rel_type: type of relation (allowed types are: 'isVersionOf' and 'isReplacedBy')
+        """
+        relation_meta_obj = self.metadata.relations.filter(type=rel_type).first()
+        if relation_meta_obj is not None:
+            # get the resource url from resource citation
+            version_res_url = relation_meta_obj.value.split(',')[-1]
+            return version_res_url
+        else:
+            return ''
 
     @property
     def show_in_discover(self):
@@ -3735,6 +3751,49 @@ class BaseResource(Page, AbstractResource):
                 replacedby.extend(r.replaced_by())
                 visited[r.short_id] = True
         return True  # no reason not to show it
+
+    def update_relation_meta(self):
+        """Updates the citation stored in relation metadata for relation type
+        'isReplacedBy', 'isPartOf' and 'hasPart' if needed"""
+
+        from hs_core.hydroshare import get_resource_by_shortkey
+
+        def _update_relation_meta(relation_meta_obj):
+            relation_updated = False
+            if relation_meta_obj.value and '/resource/' in relation_meta_obj.value:
+                version_citation = relation_meta_obj.value
+                version_res_id = version_citation.split('/resource/')[-1]
+                try:
+                    version_res = get_resource_by_shortkey(version_res_id, or_404=False)
+                except BaseResource.DoesNotExist:
+                    relation_meta_obj.delete()
+                    relation_updated = True
+                    return relation_updated
+                current_version_citation = version_res.get_citation()
+                if current_version_citation != version_citation:
+                    relation_meta_obj.value = current_version_citation
+                    relation_meta_obj.save()
+                    relation_updated = True
+            return relation_updated
+
+        replace_relation = self.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
+        replace_relation_updated = False
+        if replace_relation is not None:
+            replace_relation_updated = _update_relation_meta(replace_relation)
+
+        part_of_relation_updated = False
+        for part_of_relation in self.metadata.relations.filter(type=RelationTypes.isPartOf).all():
+            if _update_relation_meta(part_of_relation):
+                part_of_relation_updated = True
+
+        has_part_relation_updated = False
+        for has_part_relation in self.metadata.relations.filter(type=RelationTypes.hasPart).all():
+            if _update_relation_meta(has_part_relation):
+                has_part_relation_updated = True
+
+        if any([replace_relation_updated, part_of_relation_updated, has_part_relation_updated]):
+            self.setAVU("bag_modified", True)
+            self.setAVU("metadata_dirty", True)
 
 
 # TODO Deprecated
@@ -3797,7 +3856,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     identifiers = GenericRelation(Identifier)
     _language = GenericRelation(Language)
     subjects = GenericRelation(Subject)
-    sources = GenericRelation(Source)
     relations = GenericRelation(Relation)
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
@@ -3998,7 +4056,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 'Identifier',
                 'Language',
                 'Subject',
-                'Source',
                 'Relation',
                 'Publisher',
                 'FundingAgency']
@@ -4099,7 +4156,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         self.coverages.all().delete()
         self.formats.all().delete()
         self.subjects.all().delete()
-        self.sources.all().delete()
         self.relations.all().delete()
         self.funding_agencies.all().delete()
 
@@ -4136,7 +4192,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """
         from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
             RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
-            SourceValidationForm, RelationValidationForm, FundingAgencyValidationForm
+            RelationValidationForm, FundingAgencyValidationForm
 
         validation_forms_mapping = {'title': TitleValidationForm,
                                     'description': AbstractValidationForm,
@@ -4144,7 +4200,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                                     'rights': RightsValidationForm,
                                     'creator': CreatorValidationForm,
                                     'contributor': ContributorValidationForm,
-                                    'source': SourceValidationForm,
                                     'relation': RelationValidationForm,
                                     'fundingagency': FundingAgencyValidationForm
                                     }
@@ -4384,20 +4439,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 terms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
             else:
                 terms_type.text = rel.value
-
-        for src in self.sources.all():
-            dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
-            dc_source_rdf_Description = etree.SubElement(dc_source,
-                                                         '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_derived_from = etree.SubElement(
-                dc_source_rdf_Description, '{%s}isDerivedFrom' % self.NAMESPACES['hsterms'])
-
-            # if the source value starts with 'http://' or 'https://' add value as an attribute
-            if src.derived_from.lower().find('http://') == 0 or \
-                    src.derived_from.lower().find('https://') == 0:
-                hsterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
-            else:
-                hsterms_derived_from.text = src.derived_from
 
         if self.rights:
             dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % self.NAMESPACES['dc'])

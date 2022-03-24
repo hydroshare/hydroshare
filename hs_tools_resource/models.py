@@ -1,6 +1,7 @@
 import requests
 import base64
 import imghdr
+from hs_core.hydroshare.utils import get_file_mime_type
 
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
@@ -472,12 +473,17 @@ class ToolIcon(AbstractMetaDataElement):
         if response.status_code != 200:
             raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
                                format(response.status_code))
-        image_size_mb = float(response.headers["content-length"])
+        if 'Transfer-Encoding' in response.headers and response.headers["Transfer-Encoding"] == "chunked":
+            image_size_mb = len(response.content)
+        else:
+            image_size_mb = float(response.headers["content-length"])
         if image_size_mb > 1000000:  # 1mb
             raise ValidationError("Icon image size should be less than 1MB.")
         image_type = imghdr.what(None, h=response.content)
-        if image_type not in ["png", "gif", "jpeg"]:
-            raise ValidationError("Supported icon image types are png, gif and jpeg")
+        if not image_type:
+            image_type = get_file_mime_type(url).rsplit('/', 1)[1]
+        if image_type not in ["png", "gif", "jpeg", "svg+xml", "vnd.microsoft.icon", "svg", "ico"]:
+            raise ValidationError("Supported icon image types are png, gif, jpeg, ico, and svg")
         base64_string = base64.b64encode(response.content)
         data_url = "data:image/{image_type};base64,{base64_string}". \
             format(image_type=image_type, base64_string=base64_string.decode())
@@ -485,10 +491,9 @@ class ToolIcon(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'value' in kwargs and "data_url" not in kwargs:
+        if "value" in kwargs:
             url = kwargs["value"]
-            data_url = cls._validate_tool_icon(url)
-
+            data_url = cls._validate_tool_icon(url) if url else ""
             metadata_obj = kwargs['content_object']
             new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
             new_meta_instance.value = url
@@ -498,24 +503,33 @@ class ToolIcon(AbstractMetaDataElement):
         elif "data_url" in kwargs:
             metadata_obj = kwargs['content_object']
             new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
-            new_meta_instance.value = kwargs["value"] if "value" in kwargs else ""
+            new_meta_instance.value = ""
             new_meta_instance.data_url = kwargs["data_url"]
             new_meta_instance.save()
             return new_meta_instance
         else:
-            raise ValidationError("No value parameter was found in the **kwargs list")
+            raise ValidationError("Value and data_url parameter were empty")
 
     @classmethod
     def update(cls, element_id, **kwargs):
         meta_instance = ToolIcon.objects.get(id=element_id)
-        if 'value' in kwargs:
-            url = kwargs["value"]
-            data_url = cls._validate_tool_icon(url)
-            meta_instance.value = url
-            meta_instance.data_url = data_url
-            meta_instance.save()
+        if "value" in kwargs or "data_url" in kwargs:
+            if kwargs["value"]:
+                url = kwargs["value"]
+                data_url = cls._validate_tool_icon(url) if url else ""
+                meta_instance.value = url
+                meta_instance.data_url = data_url
+                meta_instance.save()
+            elif kwargs["data_url"]:
+                data_url = kwargs["data_url"]
+                meta_instance.data_url = data_url
+                meta_instance.save()
+            else:
+                meta_instance.value = ""
+                meta_instance.data_url = ""
+                meta_instance.save()
         else:
-            raise ValidationError("No value parameter was found in the **kwargs list")
+            raise ValidationError("No value/data_url parameter was found in the **kwargs list")
 
     class Meta:
         # ToolIcon element is not repeatable
@@ -806,9 +820,10 @@ class ToolMetaData(CoreMetaData):
                     validate_form(validation_form)
                     request_url = self.url_base
                     if request_url is not None:
-                        self.update_element('requesturlbase', request_url.id, **dict_item['requesturlbase'])
+                        self.update_element('requesturlbase', request_url.id,
+                                            value=dict_item['requesturlbase'])
                     else:
-                        self.create_element('requesturlbase', **dict_item['requesturlbase'])
+                        self.create_element('requesturlbase', value=dict_item['requesturlbase'])
                 elif 'requesturlbaseaggregation' in dict_item:
                     validation_form = AppAggregationLevelUrlValidationForm(
                         dict_item['requesturlbaseaggregation'])
@@ -816,18 +831,20 @@ class ToolMetaData(CoreMetaData):
                     request_url = self.url_base_aggregation
                     if request_url is not None:
                         self.update_element('requesturlbaseaggregation', request_url.id,
-                                            **dict_item['requesturlbaseaggregation'])
+                                            value=dict_item['requesturlbaseaggregation'])
                     else:
-                        self.create_element('requesturlbaseaggregation', **dict_item['requesturlbaseaggregation'])
+                        self.create_element('requesturlbaseaggregation',
+                                            value=dict_item['requesturlbaseaggregation'])
                 elif 'requesturlbasefile' in dict_item:
                     validation_form = AppFileLevelUrlValidationForm(dict_item['requesturlbasefile'])
                     validate_form(validation_form)
                     request_url = self.url_base_file
                     if request_url is not None:
                         self.update_element('requesturlbasefile', request_url.id,
-                                            **dict_item['requesturlbasefile'])
+                                            value=dict_item['requesturlbasefile'])
                     else:
-                        self.create_element('requesturlbasefile', **dict_item['requesturlbasefile'])
+                        self.create_element('requesturlbasefile',
+                                            value=dict_item['requesturlbasefile'])
                 elif 'toolversion' in dict_item:
                     validation_form = VersionValidationForm(dict_item['toolversion'])
                     validate_form(validation_form)

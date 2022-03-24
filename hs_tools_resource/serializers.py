@@ -89,7 +89,7 @@ class SupportedSharingStatusMetaDataSerializer(serializers.ModelSerializer):
 class ToolIconMetaDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = ToolIcon
-        fields = ('value',)
+        fields = ('value', 'data_url')
 
 
 class MailingListSerializer(serializers.ModelSerializer):

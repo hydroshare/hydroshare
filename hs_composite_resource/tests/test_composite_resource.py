@@ -2,6 +2,7 @@
 import os
 import datetime
 import pytz
+from django.core.exceptions import ValidationError
 
 from django.core.files.uploadedfile import UploadedFile
 from django.test import TransactionTestCase
@@ -15,7 +16,7 @@ from hs_core.models import BaseResource, ResourceFile
 from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey, ResourceVersioningException, \
     add_file_to_resource
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
-    unzip_file, add_reference_url_to_resource, edit_reference_url_in_resource
+    unzip_file, add_reference_url_to_resource, edit_reference_url_in_resource, delete_resource_file
 from hs_composite_resource.models import CompositeResource
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData, \
     RefTimeseriesLogicalFile, FileSetLogicalFile, NetCDFLogicalFile, TimeSeriesLogicalFile, \
@@ -326,8 +327,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.metadata.relations.count(), 0)
         # there should be 1 rights element
         self.assertNotEqual(self.composite_resource.metadata.rights, None)
-        # there shouldn't be any source element
-        self.assertEqual(self.composite_resource.metadata.sources.count(), 0)
         # there should not be any subject elements
         self.assertEqual(self.composite_resource.metadata.subjects.count(), 0)
         # there should be 1 type element
@@ -404,10 +403,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                 value='http://hydroshare.org/resource/001')
         # there should be 1 relation element
         self.assertEqual(self.composite_resource.metadata.relations.count(), 1)
-        # add a source element of uri type
-        metadata.create_element('source', derived_from='http://hydroshare.org/resource/0001')
-        # there should be 1 source element
-        self.assertEqual(self.composite_resource.metadata.sources.count(), 1)
+
         # add 2 subject elements
         metadata.create_element('subject', value='sub-1')
         metadata.create_element('subject', value='sub-2')
@@ -466,12 +462,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         rel_to_update = self.composite_resource.metadata.relations.all().filter(
             type='isVersionOf').first()
         self.assertEqual(rel_to_update.value, "dummy value 2")
-        src_1 = self.composite_resource.metadata.sources.all().filter(
-            derived_from='http://hydroshare.org/resource/0001').first()
-        metadata.update_element('source', src_1.id,
-                                derived_from='http://hydroshare.org/resource/0002')
-        src_1 = self.composite_resource.metadata.sources.first()
-        self.assertEqual(src_1.derived_from, 'http://hydroshare.org/resource/0002')
+
         # change the point coverage to type box
         # even if we deleted the content file, the resource should still have the 2 coverage
         # elements
@@ -522,6 +513,345 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
             metadata.update_element('title', self.composite_resource.metadata.title.id,
                                     value="Updated Title")
 
+    def test_spatial_coverage_update_long_extent(self):
+        """
+        Here we are testing updating spatial coverage with longitude that crosses dateline
+        """
+        self.create_composite_resource()
+        metadata = self.composite_resource.metadata
+        # add a point type coverage
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        self.assertEqual(cov_pt.value['east'], 56.45678)
+        value_dict = {'east': '-181.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.update_element('coverage', cov_pt.id, type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        expected_east_value = -181.45678 + 360
+        self.assertEqual(cov_pt.value['east'], expected_east_value)
+        value_dict = {'east': '200.1122', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.update_element('coverage', cov_pt.id, type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        expected_east_value = 200.1122 - 360
+        self.assertEqual(cov_pt.value['east'], expected_east_value)
+
+        # using invalid east value (>360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '361.0', 'north': '12.6789', 'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_pt.id, type='point', value=value_dict)
+
+        # using invalid east value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '-361.0', 'north': '12.6789', 'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_pt.id, type='point', value=value_dict)
+
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
+                      'westlimit': '16.6789',
+                      'units': 'decimal deg'}
+
+        metadata.update_element('coverage', cov_pt.id, type='box', value=value_dict)
+        cov_box = self.composite_resource.metadata.coverages.all().filter(type='box').first()
+        expected_east_value = 120.6789
+        self.assertEqual(cov_box.value['eastlimit'], expected_east_value)
+        expected_west_value = 16.6789
+        self.assertEqual(cov_box.value['westlimit'], expected_west_value)
+
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '-181.6789', 'southlimit': '16.45678',
+                      'westlimit': '181.6789',
+                      'units': 'decimal deg'}
+
+        metadata.update_element('coverage', cov_box.id, type='box', value=value_dict)
+        cov_box = self.composite_resource.metadata.coverages.all().filter(type='box').first()
+        expected_east_value = -181.6789 + 360
+        self.assertEqual(cov_box.value['eastlimit'], expected_east_value)
+        expected_west_value = 181.6789 - 360
+        self.assertEqual(cov_box.value['westlimit'], expected_west_value)
+
+        # using invalid eastlimt value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-361.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_box.id, type='box', value=value_dict)
+
+        # using invalid eastlimit value (> 360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '361.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_box.id, type='box', value=value_dict)
+
+        # using invalid westlimit value (> 360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '16.45678',
+                          'westlimit': '361.6789',
+                          'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_box.id, type='box', value=value_dict)
+
+        # using invalid westlimit value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '16.45678',
+                          'westlimit': '-361.6789',
+                          'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_box.id, type='box', value=value_dict)
+
+    def test_spatial_coverage_create_long_extent(self):
+        """
+        Here we are testing creating spatial coverage with longitude that crosses dateline
+        """
+        self.create_composite_resource()
+        metadata = self.composite_resource.metadata
+        # add a point type coverage
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        self.assertEqual(cov_pt.value['east'], 56.45678)
+        cov_pt.delete()
+        self.assertFalse(self.composite_resource.metadata.coverages.all().filter(type='point').exists())
+        value_dict = {'east': '-181.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        expected_east_value = -181.45678 + 360
+        self.assertEqual(cov_pt.value['east'], expected_east_value)
+        cov_pt.delete()
+        self.assertFalse(self.composite_resource.metadata.coverages.all().filter(type='point').exists())
+
+        value_dict = {'east': '200.1122', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        expected_east_value = 200.1122 - 360
+        self.assertEqual(cov_pt.value['east'], expected_east_value)
+        cov_pt.delete()
+        self.assertFalse(self.composite_resource.metadata.coverages.all().filter(type='point').exists())
+        # using invalid east value (>360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '361.0', 'north': '12.6789', 'units': 'decimal deg'}
+            metadata.create_element('coverage', type='point', value=value_dict)
+
+        # using invalid east value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '-361.0', 'north': '12.6789', 'units': 'decimal deg'}
+            metadata.create_element('coverage', type='point', value=value_dict)
+
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
+                      'westlimit': '16.6789',
+                      'units': 'decimal deg'}
+
+        metadata.create_element('coverage', type='box', value=value_dict)
+        cov_box = self.composite_resource.metadata.coverages.all().filter(type='box').first()
+        expected_east_value = 120.6789
+        self.assertEqual(cov_box.value['eastlimit'], expected_east_value)
+        expected_west_value = 16.6789
+        self.assertEqual(cov_box.value['westlimit'], expected_west_value)
+        cov_box.delete()
+        self.assertFalse(self.composite_resource.metadata.coverages.all().filter(type='box').exists())
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '-181.6789', 'southlimit': '16.45678',
+                      'westlimit': '181.6789',
+                      'units': 'decimal deg'}
+
+        metadata.create_element('coverage', type='box', value=value_dict)
+        cov_box = self.composite_resource.metadata.coverages.all().filter(type='box').first()
+        expected_east_value = -181.6789 + 360
+        self.assertEqual(cov_box.value['eastlimit'], expected_east_value)
+        expected_west_value = 181.6789 - 360
+        self.assertEqual(cov_box.value['westlimit'], expected_west_value)
+        cov_box.delete()
+        self.assertFalse(self.composite_resource.metadata.coverages.all().filter(type='box').exists())
+        # using invalid eastlimt value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-361.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid eastlimit value (> 360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '361.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid westlimit value (> 360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '16.45678',
+                          'westlimit': '361.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid westlimit value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '16.45678',
+                          'westlimit': '-361.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+    def test_spatial_coverage_update_lat_extent(self):
+        """
+        Here we are testing updating spatial coverage with latitude
+        """
+        self.create_composite_resource()
+        metadata = self.composite_resource.metadata
+        # add a point type coverage
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        self.assertEqual(cov_pt.value['east'], 56.45678)
+        value_dict = {'east': '-181.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.update_element('coverage', cov_pt.id, type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        expected_north_value = 12.6789
+        self.assertEqual(cov_pt.value['north'], expected_north_value)
+        value_dict = {'east': '200.1122', 'north': '89.6789', 'units': 'decimal deg'}
+        metadata.update_element('coverage', cov_pt.id, type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        expected_north_value = 89.6789
+        self.assertEqual(cov_pt.value['north'], expected_north_value)
+        value_dict = {'east': '200.1122', 'north': '-89.6789', 'units': 'decimal deg'}
+        metadata.update_element('coverage', cov_pt.id, type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        expected_north_value = -89.6789
+        self.assertEqual(cov_pt.value['north'], expected_north_value)
+
+        # using invalid north value (>90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '61.0', 'north': '90.6789', 'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_pt.id, type='point', value=value_dict)
+
+        # using invalid noth value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '-61.0', 'north': '-90.6789', 'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_pt.id, type='point', value=value_dict)
+
+        value_dict = {'northlimit': '89.45678', 'eastlimit': '120.6789', 'southlimit': '-89.45678',
+                      'westlimit': '16.6789',
+                      'units': 'decimal deg'}
+
+        metadata.update_element('coverage', cov_pt.id, type='box', value=value_dict)
+        cov_box = self.composite_resource.metadata.coverages.all().filter(type='box').first()
+        expected_north_value = 89.45678
+        self.assertEqual(cov_box.value['northlimit'], expected_north_value)
+        expected_south_value = -89.45678
+        self.assertEqual(cov_box.value['southlimit'], expected_south_value)
+
+        value_dict = {'northlimit': '-89.45678', 'eastlimit': '-181.6789', 'southlimit': '89.45678',
+                      'westlimit': '181.6789',
+                      'units': 'decimal deg'}
+
+        metadata.update_element('coverage', cov_box.id, type='box', value=value_dict)
+        cov_box = self.composite_resource.metadata.coverages.all().filter(type='box').first()
+        expected_north_value = -89.45678
+        self.assertEqual(cov_box.value['northlimit'], expected_north_value)
+        expected_south_value = 89.45678
+        self.assertEqual(cov_box.value['southlimit'], expected_south_value)
+
+        # using invalid northlimit value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '-90.45678', 'eastlimit': '-61.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_box.id, type='box', value=value_dict)
+
+        # using invalid northlimit value (> 90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '90.45678', 'eastlimit': '61.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_box.id, type='box', value=value_dict)
+
+        # using invalid southlimit value (> 90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '90.45678',
+                          'westlimit': '61.6789',
+                          'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_box.id, type='box', value=value_dict)
+
+        # using invalid southlimit value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '-90.45678',
+                          'westlimit': '-61.6789',
+                          'units': 'decimal deg'}
+            metadata.update_element('coverage', cov_box.id, type='box', value=value_dict)
+
+    def test_spatial_coverage_create_lat_extent(self):
+        """
+        Here we are testing creating spatial coverage with latitude
+        """
+        self.create_composite_resource()
+        metadata = self.composite_resource.metadata
+        # add a point type coverage
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        self.assertEqual(cov_pt.value['east'], 56.45678)
+        cov_pt.delete()
+        self.assertFalse(self.composite_resource.metadata.coverages.all().filter(type='point').exists())
+        value_dict = {'east': '-181.45678', 'north': '89.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        expected_north_value = 89.6789
+        self.assertEqual(cov_pt.value['north'], expected_north_value)
+        cov_pt.delete()
+        self.assertFalse(self.composite_resource.metadata.coverages.all().filter(type='point').exists())
+
+        value_dict = {'east': '200.1122', 'north': '-89.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
+        expected_north_value = -89.6789
+        self.assertEqual(cov_pt.value['north'], expected_north_value)
+        cov_pt.delete()
+        self.assertFalse(self.composite_resource.metadata.coverages.all().filter(type='point').exists())
+
+        # using invalid north value (>90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '61.0', 'north': '90.6789', 'units': 'decimal deg'}
+            metadata.create_element('coverage', type='point', value=value_dict)
+
+        # using invalid north value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '-61.0', 'north': '-90.6789', 'units': 'decimal deg'}
+            metadata.create_element('coverage', type='point', value=value_dict)
+
+        value_dict = {'northlimit': '89.45678', 'eastlimit': '120.6789', 'southlimit': '-89.45678',
+                      'westlimit': '16.6789',
+                      'units': 'decimal deg'}
+
+        metadata.create_element('coverage', type='box', value=value_dict)
+        cov_box = self.composite_resource.metadata.coverages.all().filter(type='box').first()
+        expected_north_value = 89.45678
+        self.assertEqual(cov_box.value['northlimit'], expected_north_value)
+        expected_south_value = -89.45678
+        self.assertEqual(cov_box.value['southlimit'], expected_south_value)
+        cov_box.delete()
+        self.assertFalse(self.composite_resource.metadata.coverages.all().filter(type='box').exists())
+
+        # using invalid northlimt value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '-90.45678', 'eastlimit': '-61.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid northlimit value (> 90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '90.45678', 'eastlimit': '61.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid southlimit value (> 90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '90.45678',
+                          'westlimit': '61.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid southlimit value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '-90.45678',
+                          'westlimit': '-61.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
     def test_delete_coverage(self):
         """Here we are testing deleting of temporal and coverage metadata for composite resource"""
 
@@ -570,8 +900,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # add a relation element of uri type
         metadata.create_element('relation', type='isPartOf',
                                 value='http://hydroshare.org/resource/001')
-        # add a source element of uri type
-        metadata.create_element('source', derived_from='http://hydroshare.org/resource/0001')
+
         # add 2 subject elements
         metadata.create_element('subject', value='sub-1')
         metadata.create_element('subject', value='sub-2')
@@ -1688,6 +2017,41 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                          new_composite_resource.files.count())
         self.assertEqual(new_composite_resource.files.count(), 2)
         self.assertEqual(FileSetLogicalFile.objects.count(), 4)
+
+    def test_copy_resource_with_file_set_aggregation_4(self):
+        """Here we are testing that we can create a copy of a composite resource that contains one
+        file set aggregation where the file set aggregation has no files"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        self.assertEqual(FileSetLogicalFile.objects.first().files.count(), 1)
+        # delete the file that's part of the fileset aggregation
+        res_file = FileSetLogicalFile.objects.first().files.first()
+        delete_resource_file(self.composite_resource.short_id, res_file.id, self.user)
+        self.assertEqual(FileSetLogicalFile.objects.first().files.count(), 0)
+        # create a copy of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user,
+                                                                  action='copy')
+        new_composite_resource = hydroshare.copy_resource(self.composite_resource,
+                                                          new_composite_resource)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 0)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        for fs in FileSetLogicalFile.objects.all():
+            self.assertEqual(fs.folder, new_folder)
+            self.assertEqual(fs.files.count(), 0)
 
     def test_copy_resource_with_netcdf_aggregation(self):
         """Here were testing that we can create a copy of a composite resource that contains a

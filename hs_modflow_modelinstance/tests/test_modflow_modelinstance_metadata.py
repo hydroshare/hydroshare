@@ -11,7 +11,7 @@ from django.db.utils import IntegrityError
 from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
-    Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
+    Publisher, Identifier, Type, Subject, Description, Date, Format, Relation
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_modflow_modelinstance.models import MODFLOWModelInstanceMetaData, ModelOutput, ExecutedBy, \
     StudyArea, GridDimensions, StressPeriod, GroundWaterFlow, BoundaryCondition, ModelCalibration, \
@@ -139,9 +139,6 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
         # there should be rights element
         self.assertNotEqual(self.res.metadata.rights, None)
-
-        # there shouldn't any source element
-        self.assertEqual(self.res.metadata.sources.count(), 0)
 
         # there shouldn't any relation element
         self.assertEqual(self.res.metadata.relations.count(), 0)
@@ -1164,8 +1161,6 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Type metadata objects
         self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Relation metadata objects
         self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Publisher metadata objects
@@ -1223,8 +1218,6 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Type metadata objects
         self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Relation metadata objects
         self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Publisher metadata objects

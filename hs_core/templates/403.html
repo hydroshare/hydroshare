@@ -25,6 +25,16 @@
                             </td>
                         </tr>
                     </table>
+                    {% with replaced_by=res|resource_replaced_by %}
+                        {% if replaced_by %}
+                            <i><p>A newer version of this resource {{ replaced_by|urlize }} is available that replaces this version.</i></p>
+                        {% endif %}
+                    {% endwith %}
+                    {% with version_of=res|resource_version_of %}
+                        {% if version_of %}
+                            <i>An older version of this resource {{ version_of|urlize }} is available.</i>
+                    {% endif %}
+                    {% endwith %}
                 {% endwith %}
             </div>
         </div>

@@ -31,6 +31,7 @@ docker-compose.yml
 init-defaultworker
 init-dockerworker
 init-hydroshare
+.vscode
 run-server
 schema.xml
 *.sublime-*
@@ -40,6 +41,7 @@ celerybeat.pid
 .c9
 /nginx/cert*
 pg.deploy.sql
+pylint.out
 
 # Frontend
 node_modules/

@@ -6,8 +6,12 @@
                 Published
             {% elif cm.raccess.public %}
                 Public
+            {% elif cm.raccess.discoverable and cm.raccess.allow_private_sharing %}
+                Discoverable (Accessible via direct link sharing)
             {% elif cm.raccess.discoverable %}
                 Discoverable
+            {% elif cm.raccess.allow_private_sharing %}
+                Private (Accessible via direct link sharing)
             {% else %}
                 Private
             {% endif %}
@@ -18,7 +22,7 @@
             <tr>
                 <th>Publication Status: </th>
                 <td>
-                    <div>Pending publication</div>
+                    <div>Pending Publication</div>
                     <div class="small text-muted">
                         Note that the DOI will not be available until it has been registered and activated.
                     </div>

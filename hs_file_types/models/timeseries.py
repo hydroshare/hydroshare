@@ -76,6 +76,9 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
     # this is to store abstract
     abstract = models.TextField(null=True, blank=True)
 
+    # flag to track when the .sqlite file of the aggregation needs to be updated
+    is_update_file = models.BooleanField(default=False)
+
     def get_metadata_elements(self):
         elements = super(TimeSeriesFileMetaData, self).get_metadata_elements()
         elements += list(self.sites)
@@ -307,7 +310,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         can_update_sqlite_file = 'False'
         if self.logical_file.can_update_sqlite_file:
             can_update_sqlite_file = 'True'
-        if self.is_dirty:
+        if self.is_update_file:
             style = "margin-bottom:10px"
             is_dirty = 'True'
         root_div = div(id="div-sqlite-file-update", cls="row", style=style)
@@ -578,7 +581,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
-        ts_metadata = TimeSeriesFileMetaData.objects.create(keywords=[])
+        ts_metadata = TimeSeriesFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=ts_metadata, resource=resource)
@@ -694,7 +697,6 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             base_file_name = file_name[:-len(res_file.extension)]
             file_folder = res_file.file_folder
             upload_folder = file_folder
-            file_type_success = False
             res_files_for_aggr = [res_file]
             msg = "TimeSeries aggregation type. Error when creating. Error:{}"
             with transaction.atomic():
@@ -723,15 +725,13 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     else:
                         # populate CV metadata django models from the blank sqlite file
                         extract_cv_metadata_from_blank_sqlite_file(logical_file)
-
-                    file_type_success = True
                     ft_ctx.logical_file = logical_file
                 except Exception as ex:
+                    logical_file.remove_aggregation()
                     msg = msg.format(str(ex))
                     log.exception(msg)
+                    raise ValidationError(msg)
 
-            if not file_type_success:
-                raise ValidationError(msg)
             return logical_file
 
     def remove_aggregation(self):
@@ -1886,7 +1886,9 @@ def sqlite_file_update(instance, sqlite_res_file, user):
         # adding the blank sqlite file is necessary only in case of TimeSeriesResource
         if not instance.has_sqlite_file and instance.can_add_blank_sqlite_file:
             add_blank_sqlite_file(instance, upload_folder='')
-        # instance.add_blank_sqlite_file(user)
+
+    elif not instance.metadata.is_update_file:
+        return
 
     log = logging.getLogger()
 
@@ -1942,9 +1944,7 @@ def sqlite_file_update(instance, sqlite_res_file, user):
                 utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update,
                                                      user)
                 metadata = instance.metadata
-                if is_file_type:
-                    instance.create_aggregation_xml_documents(create_map_xml=False)
-                metadata.is_dirty = False
+                metadata.is_update_file = False
                 metadata.save()
                 log.info("SQLite file update was successful.")
         except sqlite3.Error as ex:
