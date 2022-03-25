@@ -31,18 +31,26 @@ class GroupCommunityRequest(models.Model):
     '''
 
     # target
-    group = models.ForeignKey(Group, editable=False, null=False)
-    # source
-    community = models.ForeignKey(Community, editable=False, null=False)
-    # invitee
-    group_owner = models.ForeignKey(User, editable=False, null=True, default=None, related_name='invite_gcg')
-    # inviter
-    community_owner = models.ForeignKey(User, editable=False, null=True, related_name='invite_gcc')
+    group = models.ForeignKey(
+        Group, editable=False, null=False, related_name='invite_g2gcr')
 
-    # when request was made
-    when_requested = models.DateTimeField(editable=False, null=True, default=None)
-    # when response was given
-    when_responded = models.DateTimeField(editable=False, null=True, default=None)
+    # source
+    community = models.ForeignKey(
+        Community, editable=False, null=False, related_name='invite_c2gcr')
+
+    # invitee
+    group_owner = models.ForeignKey(
+        User, editable=False, null=True, default=None, related_name='invite_go2gcr')
+
+    # inviter
+    community_owner = models.ForeignKey(
+        User, editable=False, null=True, related_name='invite_co2gcr')
+
+    # when community action was taken
+    when_community = models.DateTimeField(editable=False, null=True, default=None)
+
+    # when group action was taken
+    when_group = models.DateTimeField(editable=False, null=True, default=None)
 
     # Privilege with which to share: default is VIEW
     privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
@@ -69,7 +77,10 @@ class GroupCommunityRequest(models.Model):
         See discussion of auto_now and auto_now_add in stack overflow for details
         '''
         if not self.id:  # when created
-            self.when_requested = timezone.now()
+            if self.group_owner:
+                self.when_group = timezone.now()
+            else:
+                self.when_community = timezone.now()
         return super(GroupCommunityRequest, self).save(*args, **kwargs)
 
     @classmethod
@@ -154,7 +165,8 @@ class GroupCommunityRequest(models.Model):
             request.redeemed = True
             request.approved = True
             request.privilege = privilege
-            request.when_responded = timezone.now()
+            request.when_group = timezone.now()
+            request.when_community = timezone.now()
             request.save()
             approved = True
             community_owner.uaccess.share_community_with_group(
@@ -192,7 +204,7 @@ class GroupCommunityRequest(models.Model):
                 request.privilege = privilege
                 request.redeemed = True
                 request.approved = True
-                request.when_responded = timezone.now()
+                request.when_community = timezone.now()
                 request.save()
                 approved = True
                 community_owner.uaccess.share_community_with_group(
@@ -207,8 +219,8 @@ class GroupCommunityRequest(models.Model):
                 request.privilege = privilege
                 request.redeemed = False
                 request.approved = False
-                request.when_requested = timezone.now()
-                request.when_responded = None
+                request.when_community = timezone.now()
+                request.when_group = None
                 request.save()
                 message = "Request updated: connect group '{}' to community '{}'."\
                     .format(group.name, community.name)
@@ -232,7 +244,7 @@ class GroupCommunityRequest(models.Model):
                 request.group_owner = group_owner
                 request.redeemed = True
                 request.approved = True
-                request.when_responded = timezone.now()
+                request.when_group = timezone.now()
                 request.save()
                 approved = True
                 request.community_owner.uaccess.share_community_with_group(
@@ -248,7 +260,8 @@ class GroupCommunityRequest(models.Model):
                 request.privilege = PrivilegeCodes.VIEW
                 request.redeemed = True
                 request.approved = True
-                request.when_responded = timezone.now()
+                request.when_group = timezone.now()
+                request.when_community = timezone.now()
                 request.save()
                 approved = True
                 request.community_owner.uaccess.share_community_with_group(
@@ -261,8 +274,8 @@ class GroupCommunityRequest(models.Model):
                 request.privilege = None
                 request.redeemed = False
                 request.approved = False
-                request.when_requested = timezone.now()
-                request.when_responded = None
+                request.when_group = timezone.now()
+                request.when_community = None
                 request.save()
                 message = "Request updated: connect group '{}' to community '{}'."\
                     .format(group.name, community.name)
@@ -358,6 +371,23 @@ class GroupCommunityRequest(models.Model):
         except GroupCommunityRequest.DoesNotExist:
             return None
 
+    def reset(self, responder):
+        ''' make a completed request approvable again '''
+        if not self.redeemed:
+            message = "One can only reset a redeemed request."
+            return message, False
+        elif responder.uaccess.owns_community(self.community):
+            self.community_owner = None
+            self.when_community = None
+            self.approved = False
+            self.redeemed = False
+            self.save()
+        elif responder.uaccess.owns_group(self.group):
+            self.group_owner = None
+            self.when_group = None
+            self.approved = False
+            self.redeemed = False
+
     def approve(self, responder, privilege=PrivilegeCodes.VIEW):
         ''' approve a request as the owner of the other side of the transaction '''
         assert(isinstance(responder, User))
@@ -370,7 +400,7 @@ class GroupCommunityRequest(models.Model):
                 self.privilege = privilege
                 self.redeemed = True
                 self.approved = True
-                self.when_responded = timezone.now()
+                self.when_community = timezone.now()
                 self.save()
                 self.community_owner.uaccess.share_community_with_group(
                     self.community, self.group, self.privilege)
@@ -385,7 +415,7 @@ class GroupCommunityRequest(models.Model):
                 self.group_owner = responder
                 self.redeemed = True
                 self.approved = True
-                self.when_responded = timezone.now()
+                self.when_group = timezone.now()
                 self.save()
                 message = "Request to connect group '{}' to community '{}' approved."\
                     .format(self.group.name, self.community.name)
@@ -408,7 +438,7 @@ class GroupCommunityRequest(models.Model):
                 self.privilege = PrivilegeCodes.VIEW
                 self.redeemed = True
                 self.approved = False
-                self.when_responded = timezone.now()
+                self.when_community = timezone.now()
                 self.save()
                 message = "Request to connect group '{}' to community '{}' declined."\
                     .format(self.group.name, self.community.name)
@@ -421,7 +451,7 @@ class GroupCommunityRequest(models.Model):
                 self.group_owner = responder
                 self.redeemed = True
                 self.approved = False
-                self.when_responded = timezone.now()
+                self.when_group = timezone.now()
                 self.save()
                 message = "Request to connect group '{}' to community '{}' declined."\
                     .format(self.group.name, self.community.name)
@@ -433,10 +463,9 @@ class GroupCommunityRequest(models.Model):
     @classmethod
     def remove(cls, requester, **kwargs):
         '''
-        Remove a group from a community. This can only be done by a community owner.
+        Remove a group from a community. This can only be done by a community or group owner.
         :param group: target group.
         :param community: target community.
-        :param community_owner: community_owner requesting removal of the object.
 
         Usage:
             GroupCommunityPrivilege.remove(group={X}, community={Y}, community_owner={Z})
@@ -450,9 +479,6 @@ class GroupCommunityRequest(models.Model):
             assert('group' in kwargs)
             assert(isinstance(kwargs['group'], Group))
             assert(kwargs['group'].gaccess.active)
-            assert('community_owner' in kwargs)
-            assert(isinstance(kwargs['community_owner'], User))
-            assert(kwargs['community_owner'].is_active)
             assert('community' in kwargs)
             assert(isinstance(kwargs['community'], Community))
 
@@ -460,15 +486,17 @@ class GroupCommunityRequest(models.Model):
         community = kwargs['community']
 
         # don't allow anything unless the requester is authorized
-        if not requester.owns_community(community):
-            message = "User {} does not own community '{}'"\
-                .format(requester.username, community.name)
+        if not requester.uaccess.owns_community(community) and\
+                not requester.uaccess.owns_group(group):
+            message = "User {} does not own community '{}' or group '{}'"\
+                .format(requester.username, community.name, group.name)
             return message, False
 
         # delete request from provenance chain
         try:
             request = GroupCommunityRequest.get_request(community=community, group=group)
-            request.delete()
+            if request is not None:
+                request.delete()
         except cls.DoesNotExist:
             pass
 
@@ -478,10 +506,60 @@ class GroupCommunityRequest(models.Model):
                 .format(group.name, community.name)
             return message, True
 
-        requester.uaccess_unshare_community_with_group(community, group)
+        requester.uaccess.unshare_community_with_group(community, group)
         message = "Group '{}' removed from community '{}'."\
             .format(group.name, community.name)
         return message, True
+
+    @classmethod
+    def retract(cls, requester, **kwargs):
+        '''
+        Retract an unredeemed request. This can only be done by a community or group owner.
+        :param group: target group.
+        :param community: target community.
+
+        Usage:
+            GroupCommunityPrivilege.retract(group={X}, community={Y}, community_owner={Z})
+
+        Return values: returns a pair of values
+        * message: a status message for the user.
+        * success: whether the removal succeeded.
+
+        '''
+        if __debug__:
+            assert('group' in kwargs)
+            assert(isinstance(kwargs['group'], Group))
+            assert(kwargs['group'].gaccess.active)
+            assert('community' in kwargs)
+            assert(isinstance(kwargs['community'], Community))
+
+        group = kwargs['group']
+        community = kwargs['community']
+
+        # don't allow anything unless the requester is authorized
+        if not requester.uaccess.owns_community(community) and\
+                not requester.uaccess.owns_group(group):
+            message = "User {} does not own community '{}' or group '{}'"\
+                .format(requester.username, community.name, group.name)
+            return message, False
+
+        # delete request from provenance chain
+        try:
+            request = GroupCommunityRequest.get_request(community=community, group=group)
+            if request.redeemed:
+                message = "Request to put group '{}' into community '{}' already redeemed."\
+                    .format(group.name, community.name)
+                return message, False
+            else:
+                request.delete()
+                message = "Removed request to put group '{}' into community '{}'"\
+                    .format(group.name, community.name)
+                return message, True
+
+        except cls.DoesNotExist:
+            message = "Request to put group '{}' into community '{}' does not exist."\
+                .format(group.name, community.name)
+            return message, True
 
 # TODO: we need some kind of user feedback about what happened when something is denied.
 # TODO: it would be nice to know why something's declined.

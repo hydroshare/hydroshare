@@ -1,0 +1,249 @@
+<style>
+table, th, td {
+  border: 1px solid black;
+  vertical-align: top;
+}
+thead {
+  position: sticky;
+  top:0;
+}
+.my-custom-scrollbar {
+  position: relative;
+  max-height: 200px;
+  overflow: auto;
+}
+.table-wrapper-scroll-y {
+  display: block;
+}
+#Approve, #Join {
+  border: none;
+  color: white;
+  background-color: green; 
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Decline, #Retract, #Leave {
+  border: none;
+  color: white;
+  background-color: red; 
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+
+<div>
+{% if denied %}
+<h3> {{ denied }} </h3> 
+{% else %}
+
+<h2> Management functions </h2>
+{{ message }}
+
+<h3>Communities joined</h3> 
+
+{% if joined %}
+  <div class="table-wrapper-scroll-y my-custom-scrollbar"> 
+  <table> 
+  <thead
+     position: sticky;
+     top:0>
+    <tr>
+      <th> Community Name </th>
+      <th> Leave </th>
+    </tr>
+  </thead>
+  <tbody> 
+  {% for c in joined %}
+      <tr>
+      <td> {{ c.name }} </td> 
+      <td> <button type="button" id="Leave" 
+              onclick="group_leave_community({{ gid }}, {{ c.id }})" > 
+              Leave </button> 
+      </td>
+      </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  </div> 
+{% else %}
+   <p><em>There are no community memberships at present. </em></p> 
+{% endif %}
+
+<h3>Community invitations</h3> 
+{% if approvals %}
+  <div class="table-wrapper-scroll-y my-custom-scrollbar"> 
+  <table> 
+  <thead
+     position: sticky;
+     top:0>
+    <tr>
+      <th> Community Name </th>
+      <th> Community Owner </th>
+      <th> Date </th>
+      <th> Approve </th>
+      <th> Decline  </th>
+    </tr>
+  </thead>
+  <tbody> 
+  {% for gcr in approvals %}
+      <tr>
+      <td> {{ gcr.community.name }} </td> 
+      <td> {{ gcr.community_owner.username }} </td>
+      <td> {{ gcr.when_community }} </td>
+      <td> <button type="button" id="Approve" 
+              onclick="group_approve_community_invite({{ gid }}, {{ gcr.community.id }})" > 
+              approve </button> 
+      </td>
+      <td> <button type="button" id="Decline" 
+              onclick="group_decline_community_invite({{ gid }}, {{ gcr.community.id }})"> 
+              decline </button>
+      </td>
+      </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  </div> 
+{% else %}
+   <p><em>There are no community invitations at present. </em></p> 
+{% endif %}
+
+<h3> Request to join a community </h3> 
+{% if communities %}
+  <div class="table-wrapper-scroll-y my-custom-scrollbar"> 
+  <table> 
+  <thead
+     position: sticky;
+     top:0>
+    <tr>
+      <th> Community Name </th>
+      <th> Join  </th>
+    </tr>
+  </thead>
+  <tbody> 
+  {% for c in communities %}
+      <tr>
+      <td> {{ c.name }} </td> 
+      <td> <button type="button" id="Join" 
+              onclick="group_join_community({{ gid }}, {{ c.id }})" > 
+              Join </button> 
+      </td>
+      </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  </div> 
+{% else %}
+  <p><em>There are no communities to join at present.</em></p> 
+{% endif %}
+
+<h3> Pending requests </h3> 
+{% if pending %}
+  <div class="table-wrapper-scroll-y my-custom-scrollbar"> 
+  <table> 
+  <thead
+     position: sticky;
+     top:0>
+    <tr>
+      <th> Community Name </th>
+      <th> Date </th>
+      <th> Retract  </th>
+    </tr>
+  </thead>
+  <tbody> 
+  {% for gcr in pending %}
+      <tr>
+      <td> {{ gcr.community.name }} </td> 
+      <td> {{ gcr.when_group }} </td>
+      <td> <button type="button" id="Retract" 
+              onclick="group_retract_community_request({{ gid }}, {{ gcr.community.id }})" > 
+              Retract </button> 
+      </td>
+      </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  </div> 
+{% else %}
+   <p><em>There are no pending requests at present. </em></p> 
+{% endif %}
+
+<h3> Requests we declined </h3> 
+
+{% if we_declined %}
+    <div class="table-wrapper-scroll-y my-custom-scrollbar">
+    <table>
+      <thead
+         position: sticky;
+         top:0>
+        <tr>
+          <th> Community </th>
+          <th> Community Owner </th>
+          <th> Group Owner </th>
+          <th> When </th>
+          <th> Approve </th>
+        </tr>
+      </thead>
+      <tbody> 
+    {% for gcr in we_declined %}
+    <tr>
+    <td> {{ gcr.community.name }} </td>
+    <td> {{ gcr.community_owner.username }} </td>
+    <td> {{ gcr.group_owner.username }} </td>
+    <td> {{ gcr.when_group }} </td>
+    <td> <button type="button" id="Approve" 
+            onclick="group_approve_community_invite({{ gid }}, {{ gcr.community.id }})" > 
+            Approve </button> 
+    </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    </div> 
+
+{% else %}
+    <p><em> We haven't declined any requests yet. </em></p> 
+{% endif %}
+
+<h3> Invitations that communities declined</h3> 
+
+{% if they_declined %}
+    <div class="table-wrapper-scroll-y my-custom-scrollbar">
+    <table>
+      <thead
+         position: sticky;
+         top:0>
+        <tr>
+          <th> Community </th>
+          <th> Community Owner </th>
+          <th> Group Owner</th>
+          <th> When </th>
+        </tr>
+      </thead>
+      <tbody> 
+    {% for gcr in they_declined %}
+    <tr>
+    <td> {{ gcr.community.name }} </td>
+    <td> {{ gcr.community_owner.username }} </td>
+    <td> {{ gcr.group_owner.username }} </td>
+    <td> {{ gcr.when_community }} </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    </div> 
+{% else %}
+    <p><em> Others haven't declined any requests yet. </em></p> 
+{% endif %}
+
+{% endif %}
+</div>

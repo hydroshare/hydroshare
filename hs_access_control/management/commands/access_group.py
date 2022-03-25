@@ -53,6 +53,13 @@ class Command(BaseCommand):
         parser.add_argument('command', nargs='*', type=str)
 
         parser.add_argument(
+            '--syntax',
+            action='store_true',  # True for presence, False for absence
+            dest='syntax',  # value is options['syntax']
+            help='print help message',
+        )
+
+        parser.add_argument(
             '--owner',
             dest='owner',
             help='owner of group (does not affect quota)'
@@ -71,6 +78,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+
+        if options['syntax']:
+            usage()
+            exit(1)
 
         if len(options['command']) > 0:
             gname = options['command'][0]
@@ -120,17 +131,21 @@ class Command(BaseCommand):
             try:
                 group = Group.objects.get(name=gname)
                 # if it exists, update it
+                print("updating group {}".format(gname))
                 if options['description'] is not None:
                     group.description = options['description']
                     group.save()
+                    print("   updated description")
                 if options['purpose'] is not None:
                     group.purpose = options['purpose']
                     group.save()
+                    print("   updated purpose")
                 UserGroupPrivilege.update(user=owner,
                                           group=group,
                                           privilege=PrivilegeCodes.OWNER,
                                           grantor=owner)
 
+                print("   updated ownership")
             except Group.DoesNotExist:  # create it
 
                 if options['description'] is not None:
@@ -192,7 +207,6 @@ class Command(BaseCommand):
 
         elif command == 'user':
             # at this point, group must exist
-            print("DEBUG: user subcommand")
             group = group_from_name_or_id(gname)
             if group is None:
                 usage()

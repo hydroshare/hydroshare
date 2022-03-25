@@ -29,7 +29,7 @@
                 </div>
                 {% else %}
                     <div class="col-sm-12">
-                    {% if community.picture.url %}
+                    {% if community.picture and community.picture.url %}
                     <div><center><img src='{{ community.picture.url }}' height=200></center></div>
                     {% else %}
                     <div><h1>{{ community.name }}</h1></div>
@@ -212,16 +212,19 @@
                     </div>
                     <div role="tabpanel" class="tab-pane fade in" id="admin">
                         <div class="row">
-                            <div class="col-sm-12 col-md-3">
 			    {% if czo_community %}
-                                <a style="text-decoration: none;" href="/topics/"><h4><span style="::before"
-                                                                                            class="glyphicon glyphicon-pencil"></span>&nbsp;Edit
-                                    Topics</h4></a>
-                                Someone has requested a topic to be created or modified for use in the Title Assistant
+                                <div class="col-sm-12 col-md-3">
+                                    <a style="text-decoration: none;" href="/topics/"><h4><span style="::before"
+                                                                                                class="glyphicon glyphicon-pencil"></span>&nbsp;Edit
+                                        Topics</h4></a>
+                                    Someone has requested a topic to be created or modified for use in the Title Assistant
+                                </div>
 			    {% else %}
-				Administrative commands for this community: owners only. 
+
+                                <!-- this is replaced by the community admin UI --> 
+                                {% include 'hs_access_control/community_wrapper.html' %}
+
 		            {% endif %} 
-                            </div>
                         </div>
                     </div>
                 </div>

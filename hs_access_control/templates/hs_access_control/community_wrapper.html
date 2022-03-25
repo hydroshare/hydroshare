@@ -1,0 +1,95 @@
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+ 
+<script language='JavaScript'> 
+
+function loader() { 
+    // const axios = require('axios');
+    url = '/access/_internal/community/' 
+        + {{ cid }} + '/';
+    container = document.getElementById("community_management");
+    // Make a request for a user with a given ID
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        alert(error);
+        container.innerHtml = error; 
+      });
+} 
+
+$(document).ready(loader); 
+
+function community_approve_group_request(cid, gid) { 
+    url = '/access/_internal/community/' 
+        + cid + '/approve/' + gid + '/';
+    // Make a request for a user with a given ID
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container = document.getElementById("community_management");
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+
+function community_decline_group_request(cid, gid) { 
+    url = '/access/_internal/community/' 
+        + cid + '/decline/' + gid + '/';
+    // Make a request for a user with a given ID
+    container = document.getElementById("community_management");
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+
+function community_invite_group(cid, gid) { 
+    url = '/access/_internal/community/' 
+        + cid + '/invite/' + gid + '/';
+    // Make a request for a user with a given ID
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container = document.getElementById("community_management");
+        container.innerHTML = response.data; 
+      }).catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+
+function community_retract_invite(cid, gid) { 
+    url = '/access/_internal/community/' 
+        + cid + '/retract/' + gid + '/';
+    // Make a request for a user with a given ID
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container = document.getElementById("community_management");
+        container.innerHTML = response.data; 
+      }).catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+
+function community_remove_group(cid, gid) { 
+    url = '/access/_internal/community/' 
+        + cid + '/remove/' + gid + '/';
+    // Make a request for a user with a given ID
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container = document.getElementById("community_management");
+        container.innerHTML = response.data; 
+      }).catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+</script> 
+
+<div id='community_management' class='col-sm-12'>
+<em>Please wait for community management to be loaded.</em>
+</div> 

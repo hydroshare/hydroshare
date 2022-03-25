@@ -27,25 +27,25 @@ def usage():
     print("access_community usage:")
     print("  access_community [{cname} [{request} [{options}]]]")
     print("Where:")
-    print("  {cname} is a community name. Use '' to embed spaces.")
+    print("  {cname} is a community name or id. Use '' to embed spaces.")
     print("  {request} is one of:")
     print("      list: print the configuration of a community.")
     print("      create: create the community.")
-    print("      update: update metadata for community.")
-    print("      remove: remove community.")
-    print("      rename: rename community.")
     print("      Options for create and update include:")
     print("          --owner={username}: set an owner for the community.")
     print("          --description='{description}': set the description to the text provided.")
     print("          --purpose='{purpose}': set the purpose to the text provided.")
+    print("      update: update metadata for community.")
+    print("      remove: remove community.")
+    print("      rename: rename community.")
     print("      group {gname} {request} {options}: group commands.")
-    print("          {gname}: group name.")
+    print("          {gname}: group name or id.")
     print("          {request} is one of:")
     print("              add: add the group to the community.")
     print("              update: update community metadata for the group.")
     print("              remove: remove the group from the community.")
     print("              invite: invite the group to join the community.")
-    print("              request: request from group owner to join the community.")
+    print("              request: make a request from a group owner to join the community.")
     print("              approve: approve a request or invitation.")
     print("              decline: decline a request or invitation.")
     print("      owner {oname} {request}: owner commands")
@@ -168,18 +168,22 @@ class Command(BaseCommand):
         if command == 'update' or command == 'create':
             community = community_from_name_or_id(cname)
             if community is not None:
-                community = Community.objects.get(name=cname)
+                community = Community.objects.get(name=community.name)
+                print("updating community {}".format(community.name))
                 if options['description'] is not None:
                     community.description = options['description']
                     community.save()
+                    print("   updated description")
                 if options['purpose'] is not None:
                     community.purpose = options['purpose']
                     community.save()
+                    print("   updated purpose")
 
                 UserCommunityPrivilege.update(user=owner,
                                               community=community,
                                               privilege=PrivilegeCodes.OWNER,
                                               grantor=owner)
+                print("   updated ownership")
 
             else:  # if it does not exist, create it
                 if options['description'] is not None:
@@ -236,7 +240,7 @@ class Command(BaseCommand):
                 exit(1)
 
             if len(options['command']) < 4:
-                print("user {} owns community '{}' (id={})"
+                print("user {} is a potential owner of community '{}' (id={})"
                       .format(owner.username, community.name, str(community.id)))
             action = options['command'][3]
 
