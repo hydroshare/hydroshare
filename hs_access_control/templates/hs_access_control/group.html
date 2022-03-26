@@ -1,57 +1,14 @@
-<style>
-table, th, td {
-  border: 1px solid black;
-  vertical-align: top;
-}
-thead {
-  position: sticky;
-  top:0;
-}
-.my-custom-scrollbar {
-  position: relative;
-  max-height: 200px;
-  overflow: auto;
-}
-.table-wrapper-scroll-y {
-  display: block;
-}
-#Approve, #Join {
-  border: none;
-  color: white;
-  background-color: green; 
-  padding: 6px 8px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 11px;
-  margin: 4px 2px;
-  cursor: pointer;
-}
-#Decline, #Retract, #Leave {
-  border: none;
-  color: white;
-  background-color: red; 
-  padding: 6px 8px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 11px;
-  margin: 4px 2px;
-  cursor: pointer;
-}
-</style>
-
 <div>
-{% if denied %}
-<h3> {{ denied }} </h3> 
+{% if communities.denied %}
+<h3> {{ communities.denied }} </h3> 
 {% else %}
 
 <h2> Management functions </h2>
-{{ message }}
+{{ communities.message }}
 
 <h3>Communities joined</h3> 
 
-{% if joined %}
+{% if communities.joined %}
   <div class="table-wrapper-scroll-y my-custom-scrollbar"> 
   <table> 
   <thead
@@ -63,7 +20,7 @@ thead {
     </tr>
   </thead>
   <tbody> 
-  {% for c in joined %}
+  {% for c in communities.joined %}
       <tr>
       <td> {{ c.name }} </td> 
       <td> <button type="button" id="Leave" 
@@ -80,7 +37,7 @@ thead {
 {% endif %}
 
 <h3>Community invitations</h3> 
-{% if approvals %}
+{% if communities.approvals %}
   <div class="table-wrapper-scroll-y my-custom-scrollbar"> 
   <table> 
   <thead
@@ -95,7 +52,7 @@ thead {
     </tr>
   </thead>
   <tbody> 
-  {% for gcr in approvals %}
+  {% for gcr in communities.approvals %}
       <tr>
       <td> {{ gcr.community.name }} </td> 
       <td> {{ gcr.community_owner.username }} </td>
@@ -118,7 +75,7 @@ thead {
 {% endif %}
 
 <h3> Request to join a community </h3> 
-{% if communities %}
+{% if communities.communities %}
   <div class="table-wrapper-scroll-y my-custom-scrollbar"> 
   <table> 
   <thead
@@ -130,7 +87,7 @@ thead {
     </tr>
   </thead>
   <tbody> 
-  {% for c in communities %}
+  {% for c in communities.communities %}
       <tr>
       <td> {{ c.name }} </td> 
       <td> <button type="button" id="Join" 
@@ -160,7 +117,7 @@ thead {
     </tr>
   </thead>
   <tbody> 
-  {% for gcr in pending %}
+  {% for gcr in communities.pending %}
       <tr>
       <td> {{ gcr.community.name }} </td> 
       <td> {{ gcr.when_group }} </td>
@@ -179,7 +136,7 @@ thead {
 
 <h3> Requests we declined </h3> 
 
-{% if we_declined %}
+{% if communities.we_declined %}
     <div class="table-wrapper-scroll-y my-custom-scrollbar">
     <table>
       <thead
@@ -194,7 +151,7 @@ thead {
         </tr>
       </thead>
       <tbody> 
-    {% for gcr in we_declined %}
+    {% for gcr in communities.we_declined %}
     <tr>
     <td> {{ gcr.community.name }} </td>
     <td> {{ gcr.community_owner.username }} </td>
@@ -216,7 +173,7 @@ thead {
 
 <h3> Invitations that communities declined</h3> 
 
-{% if they_declined %}
+{% if communities.they_declined %}
     <div class="table-wrapper-scroll-y my-custom-scrollbar">
     <table>
       <thead
@@ -230,7 +187,7 @@ thead {
         </tr>
       </thead>
       <tbody> 
-    {% for gcr in they_declined %}
+    {% for gcr in communities.they_declined %}
     <tr>
     <td> {{ gcr.community.name }} </td>
     <td> {{ gcr.community_owner.username }} </td>

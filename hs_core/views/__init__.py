@@ -1897,8 +1897,43 @@ class AddUserForm(forms.Form):
     user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
 
+from hs_access_control.models import Community, GroupCommunityRequest
+from django.db.models import F
+
 class GroupView(TemplateView):
     template_name = 'pages/group-unauthenticated.html'
+
+    def hydroshare_denied(self, gid, cid=None):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            message = "You must be logged in to access this function."
+            logger.error(message)
+            return message
+
+        try:
+            group = Group.objects.get(id=gid)
+        except Group.DoesNotExist:
+            message = "group id {} not found".format(gid)
+            logger.error(message)
+            return message
+
+        if user.uaccess.owns_group(group):
+            if cid is None:
+                return ""
+            else:
+                community = Community.objects.filter(id=cid)
+                if community.count() < 1:
+                    message = "community id {} not found".format(cid)
+                    logger.error(message)
+                    return message
+                else:
+                    return ""
+
+        else:
+            message = "user {} ({}) does not own group {} ({})"\
+                      .format(user.username, user.id, group.name, group.id)
+            logger.error(message)
+            return message
 
     def dispatch(self, *args, **kwargs):
         if self.request.user.is_authenticated():
@@ -1906,8 +1941,95 @@ class GroupView(TemplateView):
         return super(GroupView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        context = {}
+        message = ''
         group_id = kwargs['group_id']
         g = Group.objects.get(pk=group_id)
+
+        if 'cid' in kwargs:
+            cid = kwargs['cid']
+        else:
+            cid = None
+
+        if 'action' in kwargs:
+            action = kwargs['action']
+        else:
+            action = None
+
+        denied = self.hydroshare_denied(group_id, cid=cid)
+        communitiesContext = {}
+
+        if denied == "":
+            user = self.request.user
+            group = Group.objects.get(id=group_id)
+            if 'action' in kwargs:
+                community = Community.objects.get(id=cid)
+                if action == 'approve':
+                    gcr = GroupCommunityRequest.objects.get(
+                        group=group, community=community)
+                    if gcr.redeemed:  # reset to unredeemed in order to approve
+                        gcr.reset(responder=user)
+                    message, worked = gcr.approve(responder=user)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                elif action == 'decline':
+                    gcr = GroupCommunityRequest.objects.get(
+                        group=group, community=community)
+                    message, worked = gcr.decline(responder=user)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                elif action == 'join':
+                    message, worked = GroupCommunityRequest.create_or_update(
+                        group=group, community=community, requester=user)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                elif action == 'leave':
+                    message, worked = GroupCommunityRequest.remove(
+                        requester=user, group=group, community=community)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                elif action == 'retract':  # remove a pending request
+                    message, worked = GroupCommunityRequest.retract(
+                        requester=user, group=group, community=community)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                else:
+                    message = "unknown action '{}'".format(action)
+                    logger.error(message)
+
+            communitiesContext['denied'] = denied  # empty string means ok
+            communitiesContext['message'] = message
+            communitiesContext['user'] = user
+            communitiesContext['group'] = group
+            communitiesContext['gid'] = group_id
+
+            # communities joined
+            communitiesContext['joined'] = Community.objects.filter(c2gcp__group=group)
+
+            # invites from communities to be approved or declined
+            communitiesContext['approvals'] = GroupCommunityRequest.objects.filter(
+                group=group,
+                group__gaccess__active=True,
+                group_owner__isnull=True)
+
+            # pending requests from this group
+            communitiesContext['pending'] = GroupCommunityRequest.objects.filter(
+                group=group, redeemed=False, community_owner__isnull=True)
+
+            # Communities that can be joined.
+            communitiesContext['communities'] = Community.objects.filter()\
+                .exclude(invite_c2gcr__group=group)\
+                .exclude(c2gcp__group=group)
+
+            # requests that were declined by others
+            communitiesContext['they_declined'] = GroupCommunityRequest.objects.filter(
+                group=group, redeemed=True, approved=False, when_group__lt=F('when_community'))
+
+            # requests that were declined by us
+            communitiesContext['we_declined'] = GroupCommunityRequest.objects.filter(
+                group=group, redeemed=True, approved=False, when_group__gt=F('when_community'))
+        else:  # non-empty denied means an error.
+            communitiesContext['denied'] = denied
 
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
@@ -1919,6 +2041,12 @@ class GroupView(TemplateView):
             group_resources.append(res)
 
         group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
+
+        context['group'] = g
+        context['gid'] = g.id
+        context['view_users'] = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
+        context['add_view_user_form'] = AddUserForm()
+        context['communities'] = communitiesContext
 
         if self.request.user.is_authenticated():
             u = User.objects.get(pk=self.request.user.id)
@@ -1933,25 +2061,13 @@ class GroupView(TemplateView):
             if u not in g.gaccess.members:
                 group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 
-            return {
-                'group': g,
-                'gid': g.id,
-                'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
-                'group_resources': group_resources,
-                'add_view_user_form': AddUserForm(),
-                'profile_user': u
-            }
+            context['group_resources'] = group_resources
+            context['profile_user'] = u
         else:
-            public_group_resources = [r for r in group_resources
-                                      if r.raccess.public or r.raccess.discoverable]
-
-            return {
-                'group': g,
-                'gid': g.id,
-                'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
-                'group_resources': public_group_resources,
-                'add_view_user_form': AddUserForm(),
-            }
+            public_group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
+            context['group_resources'] = public_group_resources
+        
+        return context
 
 
 class MyResourcesView(TemplateView):

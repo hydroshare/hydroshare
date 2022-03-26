@@ -170,14 +170,14 @@
                     </li>
                 {% endif %}
 
-                <!-- This part of the community code doesn't work: commenting it out! 
+                <!-- This part of the community code doesn't work: commenting it out!  -->
                 {% if profile_user.is_group_owner %}
                     <li role="presentation">
                         <a href="#communities" aria-controls="communities" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-user"></i> Communities </a>
                     </li>
                 {% endif %}
-                --> 
+                
             </ul>
 
             <!-- Tab panes -->
@@ -820,11 +820,11 @@
                         {% endif %}
                     </form>
                 </div>
+                {% endif %}
 
                 <div role="tabpanel" class="tab-pane fade" id="communities">
-                {% include "hs_access_control/group_wrapper.html" %}
+                {% include "hs_access_control/group.html" %}
                 </div>
-                --> 
             </div>
         </div>
     </div>
@@ -914,7 +914,6 @@
             </div>
         </div>
     {% endif %}
-
 {% endblock %}
 
 {% block extra_js %}
