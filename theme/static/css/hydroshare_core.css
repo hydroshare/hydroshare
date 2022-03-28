@@ -1,9 +1,6 @@
 /*------------------------------------------------------------------
 theme core
 -------------------------------------------------------------------*/
-.container{
-	width: 1500px;
-}
 
 html, body {
     font-family: 'Roboto', sans-serif;
@@ -1909,6 +1906,13 @@ a.tag:hover {
   .bs-sidebar.affix-bottom,
   .bs-sidebar.affix {
     width: 360px;
+  }
+}
+@media (min-width: 1440px) {
+  /* override bootstrap default container width for large screens*/
+  .container{
+	width: unset;
+	max-width: 90%;
   }
 }
 
