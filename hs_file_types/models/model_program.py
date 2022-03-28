@@ -490,7 +490,7 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
-        mp_metadata = ModelProgramFileMetaData.objects.create(keywords=[])
+        mp_metadata = ModelProgramFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=mp_metadata, resource=resource)

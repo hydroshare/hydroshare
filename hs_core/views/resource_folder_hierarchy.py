@@ -74,6 +74,7 @@ def data_store_structure(request):
     files = []
     dirs = []
     aggregations = []
+    _APPKEY = 'appkey'
     # folder path relative to 'data/contents/' needed for the UI
     folder_path = store_path[len("data/contents/"):]
     for dname in store[0]:     # directories
@@ -85,6 +86,7 @@ def data_store_structure(request):
         folder_aggregation_name = ''
         folder_aggregation_id = ''
         folder_aggregation_type_to_set = ''
+        folder_aggregation_appkey = ''
         if resource.resource_type == "CompositeResource":
             dir_path = resource.get_irods_path(d_store_path)
             # find if this folder *dir_path* represents (contains) an aggregation object
@@ -95,6 +97,7 @@ def data_store_structure(request):
                 folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
+                folder_aggregation_appkey = aggregation_object.metadata.extra_metadata.get(_APPKEY, '')
                 if aggregation_object.get_main_file is not None:
                     main_file = aggregation_object.get_main_file.file_name
             else:
@@ -121,7 +124,9 @@ def data_store_structure(request):
                      'folder_aggregation_name': folder_aggregation_name,
                      'folder_aggregation_id': folder_aggregation_id,
                      'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
-                     'folder_short_path': os.path.join(folder_path, d_pk)})
+                     'folder_short_path': os.path.join(folder_path, d_pk),
+                     'folder_aggregation_appkey': folder_aggregation_appkey,
+                     })
 
     is_federated = resource.is_federated
     for index, fname in enumerate(store[1]):  # files
@@ -153,26 +158,34 @@ def data_store_structure(request):
         # files
         has_model_program_aggr_folder = False
         has_model_instance_aggr_folder = False
+        aggregation_appkey = ''
         if f.has_logical_file:
             main_extension = f.logical_file.get_main_file_type()
             if not main_extension:
                 # accept any extension
                 main_extension = ""
             if f.extension and main_extension.endswith(f.extension):
+                if not hasattr(f.logical_file, 'folder') or f.logical_file.folder is None:
+                    aggregation_appkey = f.logical_file.metadata.extra_metadata.get(_APPKEY, '')
+
                 aggregations.append({'logical_file_id': f.logical_file.id,
                                      'name': f.logical_file.dataset_name,
                                      'logical_type': f.logical_file.get_aggregation_class_name(),
-                                     'aggregation_name':
-                                         f.logical_file.get_aggregation_display_name(),
+                                     'aggregation_name': f.logical_file.get_aggregation_display_name(),
+                                     'aggregation_appkey': aggregation_appkey,
                                      'main_file': f.logical_file.get_main_file.file_name,
                                      'preview_data_url': f.logical_file.metadata.get_preview_data_url(
                                         resource=resource,
                                         folder_path=f_store_path
                                      ),
                                      'url': f.logical_file.url})
+            logical_file = f.logical_file
             logical_file_type = f.logical_file_type_name
-            logical_file_id = f.logical_file.id
+            logical_file_id = logical_file.id
             aggregation_name = f.aggregation_display_name
+            aggregation_appkey = ''
+            if not hasattr(logical_file, 'folder') or logical_file.folder is None:
+                aggregation_appkey = logical_file.metadata.extra_metadata.get(_APPKEY, '')
             if 'url' in f.logical_file.extra_data:
                 f_ref_url = f.logical_file.extra_data['url']
 
@@ -191,6 +204,7 @@ def data_store_structure(request):
                       'aggregation_name': aggregation_name,
                       'logical_type': logical_file_type,
                       'logical_file_id': logical_file_id,
+                      'aggregation_appkey': aggregation_appkey,
                       'has_model_program_aggr_folder': has_model_program_aggr_folder,
                       'has_model_instance_aggr_folder': has_model_instance_aggr_folder})
 

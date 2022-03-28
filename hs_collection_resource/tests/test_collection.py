@@ -10,7 +10,7 @@ from hs_collection_resource.utils import update_collection_list_csv
 from hs_collection_resource.views import _update_collection_coverages
 from hs_core.hydroshare import create_resource, create_account, \
     create_empty_resource, create_new_version_resource, \
-    update_science_metadata, copy_resource
+    update_science_metadata, copy_resource, delete_resource
 from hs_core.hydroshare.resource import ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
 
@@ -77,12 +77,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
             owner=self.user1,
             title='Test Time Series Resource'
         )
-
-        self.resNetCDF = create_resource(
-                    resource_type='NetcdfResource',
-                    owner=self.user1,
-                    title='Test NetCDF Resource'
-                )
 
         self.resGeoFeature = create_resource(
                     resource_type='GeographicFeatureResource',
@@ -1003,3 +997,55 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertIn(self.resGen1.short_id, res_id_list)
         self.assertIn(self.resGen2.short_id, res_id_list)
         self.assertIn(self.resGen3.short_id, res_id_list)
+
+    def test_collection_resource_delete(self):
+        """Here we are testing when a collection resource is deleted, the resources that were part of the
+        collection resource won't have the 'isPartOf' relation metadata"""
+
+        # no contained res in collection resource
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
+        # user 1 login
+        self.api_client.login(username='user1', password='mypassword1')
+        # add 2 private member resources to collection
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list':  [self.resGen1.short_id, self.resGen2.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 2)
+        # check of the resources that are part of the collection resource has 'isPartOf' relation metadata
+        self.assertEqual(self.resGen1.metadata.relations.filter(type='isPartOf').count(), 1)
+        self.assertEqual(self.resGen2.metadata.relations.filter(type='isPartOf').count(), 1)
+        # now delete the collection resource
+        delete_resource(self.resCollection.short_id, request_username=self.user1)
+        # check of the resources that were part of the deleted collection resource has no 'isPartOf' relation metadata
+        self.assertEqual(self.resGen1.metadata.relations.filter(type='isPartOf').count(), 0)
+        self.assertEqual(self.resGen2.metadata.relations.filter(type='isPartOf').count(), 0)
+
+    def test_delete_resource_in_collection(self):
+        """Here we are testing when a resource that is part of a collection resource is deleted, the collection
+        resources won't have the 'hasPart' relation metadata for the deleted resource"""
+
+        # no contained res in collection
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
+        # user 1 login
+        self.api_client.login(username='user1', password='mypassword1')
+        # add 2 private member resources to collection
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list':  [self.resGen1.short_id, self.resGen2.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 2)
+        # collection should have 2 hasPart relation metadata
+        self.assertEqual(self.resCollection.metadata.relations.filter(type='hasPart').count(), 2)
+        # check of the resources that are part of the collection resource has 'isPartOf' relation metadata
+        self.assertEqual(self.resGen1.metadata.relations.filter(type='isPartOf').count(), 1)
+        self.assertEqual(self.resGen2.metadata.relations.filter(type='isPartOf').count(), 1)
+        # now delete resGen1
+        delete_resource(self.resGen1.short_id, request_username=self.user1)
+        self.assertEqual(self.resCollection.resources.count(), 1)
+        # check of the resource that is still part of the collection resource has the isPartOf relation metadata
+        self.assertEqual(self.resGen2.metadata.relations.filter(type='isPartOf').count(), 1)
+        # collection should have 1 hasPart relation metadata
+        self.assertEqual(self.resCollection.metadata.relations.filter(type='hasPart').count(), 1)

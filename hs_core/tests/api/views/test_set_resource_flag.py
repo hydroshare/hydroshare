@@ -259,3 +259,59 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         # clean up
         hydroshare.delete_resource(self.gen_res_one.short_id)
         hydroshare.delete_resource(self.gen_res_two.short_id)
+
+    def test_set_resource_flag_enable_private_sharing_link(self):
+        """Here we are testing the set_resource_flag view function to enable private link sharing"""
+
+        # test that the resource is  not enabled for private link sharing
+        self.assertFalse(self.gen_res_one.raccess.allow_private_sharing)
+        # set it not shareable
+        self.gen_res_one.raccess.shareable = False
+        self.gen_res_one.raccess.save()
+
+        url_params = {'shortkey': self.gen_res_one.short_id}
+        post_data = {'flag': 'enable_private_sharing_link'}
+        url = reverse('set_resource_flag', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
+        response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
+        response_data = json.loads(response.content.decode())
+        self.assertEqual(response_data['status'], 'success')
+
+        # check that the resource is enabled for private link sharing
+        self.gen_res_one.raccess.refresh_from_db()
+        self.assertTrue(self.gen_res_one.raccess.allow_private_sharing)
+        # clean up
+        hydroshare.delete_resource(self.gen_res_one.short_id)
+        hydroshare.delete_resource(self.gen_res_two.short_id)
+
+    def test_set_resource_flag_remove_private_sharing_link(self):
+        """Here we are testing the set_resource_flag view function to not allow private link sharing"""
+
+        # test that the resource is  not enabled for private link sharing
+        self.assertFalse(self.gen_res_one.raccess.allow_private_sharing)
+        # set it not shareable
+        self.gen_res_one.raccess.allow_private_sharing = True
+        self.gen_res_one.raccess.save()
+
+        url_params = {'shortkey': self.gen_res_one.short_id}
+        post_data = {'flag': 'remove_private_sharing_link'}
+        url = reverse('set_resource_flag', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
+        response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
+        response_data = json.loads(response.content.decode())
+        self.assertEqual(response_data['status'], 'success')
+
+        # check that the resource is not enabled for private link sharing
+        self.gen_res_one.raccess.refresh_from_db()
+        self.assertFalse(self.gen_res_one.raccess.allow_private_sharing)
+        # clean up
+        hydroshare.delete_resource(self.gen_res_one.short_id)
+        hydroshare.delete_resource(self.gen_res_two.short_id)
