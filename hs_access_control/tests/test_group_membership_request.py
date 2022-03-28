@@ -627,7 +627,7 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
 
         kelly_membership_request = self.kelly_group_member.uaccess.create_group_membership_request(
             self.modeling_group)
-        # user lisa should have pending request to join group
+        # user kelly should have pending request to join group
         self.assertIn(kelly_membership_request,
                       self.modeling_group.gaccess.group_membership_requests)
         self.kelly_group_member.is_active = False

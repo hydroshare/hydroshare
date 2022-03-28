@@ -584,7 +584,7 @@ def deactivate_user(request):
     # redeem existing membership requests
     member_requests = user.uaccess.group_membership_requests.all()
     for req in member_requests:
-        user.uaccess.redeem_group_membership_request(req)
+        user.uaccess.act_on_group_membership_request(req, accept_request=False)
     user.is_active = False
     user.save()
     messages.success(request, "Your account has been successfully deactivated.")
