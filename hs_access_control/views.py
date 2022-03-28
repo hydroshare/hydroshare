@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class GroupView(TemplateView):
-    template_name = 'hs_access_control/group.html'
+    template_name = 'hs_access_control/group-communities.html'
 
     def hydroshare_denied(self, gid, cid=None):
         user = self.request.user

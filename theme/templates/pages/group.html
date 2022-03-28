@@ -35,7 +35,7 @@
                 {% endif %}
             {% endif %}
 
-            <div class="group-header">
+            <div class="group-header align-flex-start">
                 <div>
                     {#  Group Picture #}
                     {% if group.gaccess.picture and group.gaccess.picture.url %}
@@ -99,16 +99,19 @@
               </div> -->
 
 
-                <div>
-                    <div class="group-title-container">
-                        <h2 class="group-title">{{ group.name }}</h2>
-                        {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                            <div>
-                                <a href="#" id="btn-leave-group" class="btn btn-danger" data-toggle="modal" data-target="#leave-group-dialog">
-                                    Leave Group
-                                </a>
-                            </div>
-                        {% endif %}
+                <div class="flex-grow-1">
+                    <div class="group-title-container flex justify-space-between align-flex-start">
+                        <h2 class="group-title is-marginless">{{ group.name }}</h2>
+
+                        <div class="group-actions flex">
+                            {% if profile_user.is_group_member %}
+                                <div>
+                                    <a href="#" id="btn-leave-group" class="btn btn-default" data-toggle="modal" data-target="#leave-group-dialog">
+                                        Leave Group
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                     
                     {% if group.gaccess.purpose %}<h4>{{ group.gaccess.purpose|linebreaks }}</h4>{% endif %}
@@ -128,16 +131,8 @@
                             </div>
                         {% endif %}
                     {% endif %}
-                    {% if profile_user.is_group_member %}
-                        <a href="#" id="btn-leave-group" data-toggle="modal" data-target="#leave-group-dialog">
-                            <span class="glyphicon glyphicon-hand-left btn-remove icon-button" data-toggle="tooltip"
-                                  data-placement="auto" title="Leave Group"></span></a>
-                    {% endif %}
-                    {% if profile_user.is_group_owner and group.gaccess.active %}
-                        <a href="#" id="btn-delete-group" data-toggle="modal" data-target="#delete-group-dialog">
-                            <span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="tooltip"
-                                  data-placement="auto" title="Delete Group"></span></a>
-                    {% endif %}
+
+                    
                     {% if profile_user.is_group_owner and not group.gaccess.active %}
                         <a href="{% url "restore_user_group" group.id %}">
                             <span class="glyphicon glyphicon-retweet icon-button" data-toggle="tooltip"
@@ -170,11 +165,17 @@
                     </li>
                 {% endif %}
 
-                <!-- This part of the community code doesn't work: commenting it out!  -->
                 {% if profile_user.is_group_owner %}
                     <li role="presentation">
                         <a href="#communities" aria-controls="communities" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-user"></i> Communities </a>
+                    </li>
+                {% endif %}
+
+                {% if profile_user.is_group_owner %}
+                    <li role="presentation">
+                        <a href="#owner-settings" aria-controls="owner-settings" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-user"></i> Owner  Settings </a>
                     </li>
                 {% endif %}
                 
@@ -684,7 +685,7 @@
                 </div>
 
                 {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                <div role="tabpanel" class="tab-pane fade" id="settings">
+                <div role="tabpanel" class="tab-pane fade" id="owner-settings">
                     <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST" enctype="multipart/form-data" class="col-xs-12 col-sm-7">
                         <legend>Group Settings</legend>
                         {% csrf_token %}
@@ -797,8 +798,7 @@
                         </div>
     
                         <button type="submit" class="btn btn-primary">Update Group Profile</button>
-
-                        {% if group.gaccess.active %}
+                        {% if group.gaccess.active  %}
                             <hr>
                             <fieldset style="margin-top: 20px;">
                                 <label>Delete this Group</label>
@@ -823,7 +823,7 @@
                 {% endif %}
 
                 <div role="tabpanel" class="tab-pane fade" id="communities">
-                {% include "hs_access_control/group.html" %}
+                {% include "hs_access_control/group-communities.html" %}
                 </div>
             </div>
         </div>
@@ -881,7 +881,7 @@
 
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-primary">Confirm</button>
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -895,7 +895,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                                aria-label="Cancel"><span aria-hidden="true">&times;</span>
                         </button>
                         <h4 class="modal-title" id="Delete">Delete Group</h4>
                     </div>
@@ -907,7 +907,7 @@
 
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-primary">Confirm</button>
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                         </div>
                     </form>
                 </div>

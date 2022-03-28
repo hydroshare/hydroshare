@@ -3982,6 +3982,77 @@ div.group-add-photo {
 	padding: 2px;
 }
 
+.group-communities--sidebar {
+  width: 210px;
+}
+
+.group-communities--content .heading {
+  margin: 0;
+  margin-bottom: 2rem;
+}
+
+.group-community-card {
+  border-radius: 4px;
+}
+
+.community-card--heading {
+  font-size: 20px;
+}
+
+.group-actions {
+  gap: 1rem;
+}
+/* --------------------------------------------------------- */
+
+/* FLEX HELPERS */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.justify-space-between {
+  justify-content: space-between;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.align-flex-start {
+  align-items: flex-start;
+}
+
+.flex-grow-1 {
+  flex-grow: 1;
+}
+
+.is-marginless {
+  margin: 0;
+}
+
+.gap-1 {
+  gap: 1rem;
+}
+
+.gap-2 {
+  gap: 2rem;
+}
+
+.flex-wrap-wrap {
+  flex-wrap: wrap;
+}
+
+.has-space-top {
+  margin-top: 2rem;
+}
+
+/* --------------------------------------------------------- */
+
+
+
 .access-icon-wrapper {
 	display: inline-block;
 }

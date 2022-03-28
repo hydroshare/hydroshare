@@ -41,7 +41,7 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject, TaskNotification
+from hs_core.models import GenericResource, get_access_object, resource_processor, CoreMetaData, Subject, TaskNotification
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     update_quota_usage as update_quota_usage_utility
 
@@ -1999,7 +1999,7 @@ class GroupView(TemplateView):
 
             communitiesContext['denied'] = denied  # empty string means ok
             communitiesContext['message'] = message
-            communitiesContext['user'] = user
+            # communitiesContext['user'] = get_access_object(user, "user", False)
             communitiesContext['group'] = group
             communitiesContext['gid'] = group_id
 

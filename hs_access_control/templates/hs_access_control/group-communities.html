@@ -1,0 +1,96 @@
+<div id="group-communities" class="flex gap-2 flex-wrap-wrap">
+  <div class="group-communities--sidebar">
+    <div class="alert alert-info">
+      <p>Want your Group to join a HydroShare Community? Click the button below to request that your group be added.</p>
+      <button class="btn btn-primary has-space-top">Ask to join a Community</button>
+    </div>
+  </div>
+
+  <div class="group-communities--content flex-grow-1 flex flex-column gap-2">
+    <!-- PENDING INVITATIONS -->
+    <div v-if="isGroupOwner && pending.length">
+      <h3 class="heading">Pending Community Membership Requests</h3>
+      <div v-for="community of pending" class="group-community-card panel panel-default">
+        <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
+          <div class="group-image-wrapper group-image-wrapper-medium">
+              <div class="group-image group-preview-image-default"
+                  style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+          </div>
+          <div class="community-card--info flex-grow-1">
+            <a class="community-card--heading" href="#">${ community.name }</a>
+            <p>${ community.description }</p>
+            <label :for="'auto-share-' + community.id" class="radio-inline">
+              <input type="checkbox" :id="'auto-share-' + community.id">
+              Automatically share public and and published resources with this Community
+            </label>
+          </div>
+          <div class="community-card--actions">
+            <button class="btn btn-primary" @click="join(community.id)" :disabled="isJoining[community.id]">Join Community</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOINED COMMUNITIES -->
+    <div>
+      <h4 class="heading">This Group is a member of the following Communities</h4>
+      <template v-if="joined.length">
+        <div v-for="community of joined" class="group-community-card panel panel-default">
+          <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
+            <div class="group-image-wrapper group-image-wrapper-medium">
+                <div class="group-image group-preview-image-default"
+                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+            </div>
+            <div class="community-card--info flex-grow-1">
+              <a class="community-card--heading" href="#">${ community.name }</a>
+              <p>${ community.description }</p>
+              <label :for="'auto-share-' + community.id" class="radio-inline">
+                <input type="checkbox" :id="'auto-share-' + community.id">
+                Automatically share public and and published resources with this Community
+              </label>
+            </div>
+            <div class="community-card--actions">
+              <button class="btn btn-default" @click="leave(community.id)" :disabled="isLeaving[community.id]">Leave Community</button>
+            </div>
+          </div>
+        </div>
+      </template>
+      <p v-else>This Group is not a member of any Communities yet.</p>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  const JOINED = [
+      {% for community in communities.joined %}
+          {
+            "id": {{ community.id }},
+            "name": "{{ community.name }}",
+            "picture": "{{ community.picture }}",
+            "description": "{{ community.description|default:"" }}",
+            "autoApprove": "{{ community.auto_approve }}",
+            "dateCreated": "{{ community.date_created }}",
+            // "owners": [
+            //   {% for owner in community.owners %}
+            //     "{{ owner.username }}",
+            //   {% endfor %}
+            // ]
+          },
+      {% endfor %}
+  ];
+  const GROUP_ID = {{ gid }}
+  const IS_GROUP_OWNER = "{{ profile_user.is_group_owner }}" === "True"
+  const PENDING = [
+      {% for pending in communities.pending %}
+          {
+            "id": {{ pending.community.id }},
+            // "name": "{{ community.name }}",
+            // "picture": "{{ community.picture }}",
+            // "description": "{{ community.description|default:"" }}",
+            // "autoApprove": "{{ community.auto_approve }}",
+            // "dateCreated": "{{ community.date_created }}",
+          },
+      {% endfor %}
+  ]
+</script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/group-communities-app.js"></script>
