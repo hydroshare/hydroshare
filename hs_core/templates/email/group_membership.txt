@@ -1,7 +1,7 @@
 {% load i18n %}
 {% block main %}
     {% if group_owner %}
-        {% trans "Dear " %}{{ group_owner.first_name }}{{ group_owner.last_name }},
+        {% trans "Dear " %}{{ group_owner.first_name }} {{ group_owner.last_name }},
         {% trans "User " %}{{ user.first_name }} {{ user.last_name }} ({{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}), has requested to join your HydroShare group ({{ group.name }}).
         
         User Type: {{ user.userprofile.user_type }}

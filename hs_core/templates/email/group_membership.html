@@ -1,7 +1,7 @@
 {% load i18n %}
 {% block main %}
     {% if group_owner %}
-        <p>{% trans "Dear " %}{{ group_owner.first_name }}{{ group_owner.last_name }},</p>
+        <p>{% trans "Dear " %}{{ group_owner.first_name }} {{ group_owner.last_name }},</p>
         <p>{% trans "User " %}{{ user.first_name }} {{ user.last_name }} 
             (<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}">{{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}</a>), 
             has requested to join your HydroShare group ({{ group.name }}).</p>
