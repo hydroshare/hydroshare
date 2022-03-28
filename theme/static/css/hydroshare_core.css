@@ -1911,7 +1911,7 @@ a.tag:hover {
 @media (min-width: 1440px) {
   /* override bootstrap default container width for large screens */
   .container{
-	width: unset;
+	width: 1440px;
 	max-width: 90%;
   }
   .owl-stage {
@@ -1919,13 +1919,6 @@ a.tag:hover {
 	  margin:auto;
   }
 }
-
-@media (min-width: 1600px) {
-	/* upper limit for container width for extra-large screens */
-	.container{
-	  width: 1440px;
-	}
-  }
 
 .resource-search {
 	position: relative;
