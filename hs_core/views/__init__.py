@@ -1934,6 +1934,14 @@ class GroupView(TemplateView):
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
             g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+
+            # This will exclude requests from inactive users made for themselves 
+            # as well as invitations from innactive users to others
+            g.gaccess.active_group_membership_requests = g.gaccess.group_membership_requests.filter(
+                Q(request_from__is_active=True),
+                Q(invitation_to=None) | Q(invitation_to__is_active=True)
+            )
+
             if u not in g.gaccess.members:
                 group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 

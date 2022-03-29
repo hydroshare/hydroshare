@@ -189,7 +189,7 @@
                             {#  All members #}
                             <table data-edit-count="{{ edit_users|length }}"
                                    data-view-count="{{ view_users|length }}"
-                                   data-pending-count="{{ group.gaccess.group_membership_requests|length }}"
+                                   data-pending-count="{{ group.gaccess.active_group_membership_requests|length }}"
                                    id="all-members-table" class="table-members-list active">
 
                                 {% for owner in group.gaccess.owners %}
@@ -349,8 +349,8 @@
 
                             {#  Pending invitation requests #}
                             <table data-filter-by="pending" class="table-members-list">
-                                {% if group.gaccess.group_membership_requests %}
-                                    {% for pendingrequest in group.gaccess.group_membership_requests %}
+                                {% if group.gaccess.active_group_membership_requests %}
+                                    {% for pendingrequest in group.gaccess.active_group_membership_requests %}
                                         {% if not pendingrequest.invitation_to %}
                                             <tr>
                                                 <td data-id="picture">
