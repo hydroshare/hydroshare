@@ -20,7 +20,7 @@ def landing_page(request, page):
     if request.user.is_authenticated() and request.user.uaccess.can_change_resource(content_model):
         netcdf_logical_files = content_model.get_logical_files('NetCDFLogicalFile')
         for lf in netcdf_logical_files:
-            if lf.metadata.is_dirty:
+            if lf.metadata.is_update_file:
                 msg = "One or more NetCDF files are out of sync with metadata changes."
                 # prevent same message being displayed more than once
                 msg_exists = False
@@ -35,7 +35,7 @@ def landing_page(request, page):
 
         timeseries_logical_files = content_model.get_logical_files('TimeSeriesLogicalFile')
         for lf in timeseries_logical_files:
-            if lf.metadata.is_dirty:
+            if lf.metadata.is_update_file:
                 msg = "One or more SQLite files are out of sync with metadata changes."
                 # prevent same message being displayed more than once
                 msg_exists = False

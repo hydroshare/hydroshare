@@ -1070,6 +1070,12 @@ a[data-toggle='tab']{
     border-color: #20833F;
 }
 
+#btn-public:disabled, 
+#btn-private:disabled, 
+#btn-discoverable:disabled {
+	pointer-events: auto;
+}
+
 #btn-private.active {
     color: #FFF;
     background: #d9534f;
@@ -1594,6 +1600,7 @@ div#sharing-status .col-sm-12{
     -webkit-box-shadow: inset 0 1px 0 #ffffff;
     -moz-box-shadow: inset 0 1px 0 #ffffff;
     box-shadow: inset 0 1px 0 #ffffff;
+	overflow-wrap: anywhere;
 }
 
 .tag-list li {
@@ -2062,6 +2069,11 @@ table.user-scope tr {
 .access-table tbody > tr {
     display: table-row !important;
 }
+
+.access-table tbody > tr.is-group {
+    background-color: #093e541f;
+}
+
 
 #templateRow {
 	display:none !important;
@@ -2969,6 +2981,7 @@ span.you-flag {
 	padding-bottom: 5px;
 	padding-right: 32px;
 	margin: 0;
+	word-wrap: break-word;
 }
 
 .noselect {
