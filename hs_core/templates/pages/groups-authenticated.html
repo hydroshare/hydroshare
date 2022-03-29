@@ -164,6 +164,7 @@
                                             {% csrf_token %}
                                             <a href="#"
                                                data-form-id="join-{{ group.id }}"
+                                               requires_explanation="{{ group.gaccess.requires_explanation }}"
                                                class="btn btn-primary btn-ask-to-join"
                                                role="button">Ask to join</a>
                                         </form>
@@ -221,6 +222,12 @@
                                <input id="auto-approve" type="checkbox"  name="auto_approve">
                                <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
                             </fieldset>
+
+                            {# explanation #}
+                            <fieldset class="col-sm-12">
+                                <input id="requires_explanation" type="checkbox"  name="requires_explanation">
+                                <label class="checkbox-label" for="requires_explanation">Require members to provide explanation when requesting membership</label>
+                             </fieldset>
 
                             {# Picture #}
                             <div class="col-sm-12">
@@ -281,6 +288,8 @@
             </div>
         </div>
     </div>
+
+    {% include "includes/group_explanation_modal.html" %}
 
 {% endblock %}
 

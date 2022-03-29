@@ -38,4 +38,18 @@ $(document).ready(function () {
             $(this).text("Show deleted groups");
         }
     })
+
+    // Hide explanation checkbox if auto-approval is enabled
+    if($('#auto-approve').is(':checked')){
+        $('#requires_explanation').prop( "checked", false );
+        $('#requires_explanation').parent().hide();
+    }
+    $('#auto-approve').change(function() {
+        if(this.checked) {
+            $('#requires_explanation').prop( "checked", false );
+            $('#requires_explanation').parent().hide();
+        }else{
+            $('#requires_explanation').parent().show();
+        }
+    });
 });

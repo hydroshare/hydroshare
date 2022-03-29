@@ -100,13 +100,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session['just_published']
 
     bag_url = content_model.bag_url
-
-    if user.is_authenticated():
+    show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
+    if not show_content_files and user.is_authenticated():
         show_content_files = user.uaccess.can_view_resource(content_model)
-    else:
-        # if anonymous user getting access to a private resource (since resource is discoverable),
-        # then don't show content files unless private link sharing is enabled
-        show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
 
     rights_allow_copy = rights_allows_copy(content_model, user)
 

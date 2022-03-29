@@ -957,6 +957,10 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.file_folder, file_folder_path)
         self.assertTrue(isinstance(logical_file, TimeSeriesLogicalFile))
         self.assertTrue(logical_file.metadata, TimeSeriesFileMetaData)
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.sqlite file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
 
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -979,6 +983,10 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(sqlite_res_file.logical_file_type_name, "TimeSeriesLogicalFile")
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
         logical_file = csv_res_file.logical_file
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.sqlite file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
 
         # test that both csv and sqlite files of the logical file are in a folder
         for res_file in logical_file.files.all():

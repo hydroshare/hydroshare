@@ -190,13 +190,6 @@
                                     </div>
                                 {% endif %}
 
-                                <div
-                                    v-if="selfAccessLevel === 'owner' && resType === 'NetcdfResource' && !resAccess.isPublic"
-                                    class="alert alert-warning small space-top">
-                                    Note that making the resource public may take a little extra time to update
-                                    Hyrax server in order to provide OPeNDAP service for this resource.
-                                </div>
-
                                 <div v-if="selfAccessLevel === 'owner'">
                                     <div class="checkbox">
                                         <label>
