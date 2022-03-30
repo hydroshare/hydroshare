@@ -521,6 +521,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
                                                     file_type=True, allow_edit=False)
 
     def get_bandinfo_formset(self):
+        from ..forms import BandInfoForm, BaseBandInfoFormSet
+
         BandInfoFormSetEdit = formset_factory(
             wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=True)),
             formset=BaseBandInfoFormSet, extra=0)
@@ -538,6 +540,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
     @classmethod
     def validate_element_data(cls, request, element_name):
         """overriding the base class method"""
+
+        from ..forms import BandInfoValidationForm
 
         if element_name.lower() not in [el_name.lower() for el_name
                                         in cls.get_supported_element_names()]:
