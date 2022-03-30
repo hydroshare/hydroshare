@@ -32,12 +32,12 @@ class TestResourceList(HSRESTTestCase):
         self.resources_to_delete.append(gen_pid)
 
         raster = open('hs_core/tests/data/cea.tif', 'rb')
-        geo_res = resource.create_resource('RasterResource',
-                                           self.user,
-                                           'My raster resource',
-                                           files=(raster,))
-        geo_pid = geo_res.short_id
-        self.resources_to_delete.append(geo_pid)
+        comp_res = resource.create_resource('CompositeResource',
+                                            self.user,
+                                            'My composite resource',
+                                            files=(raster,))
+        comp_pid = comp_res.short_id
+        self.resources_to_delete.append(comp_pid)
 
         app_res = resource.create_resource('ToolResource',
                                            self.user,
@@ -58,38 +58,33 @@ class TestResourceList(HSRESTTestCase):
         self.assertTrue(content['results'][0]['resource_url']
                         .endswith(res_tail.format(res_id=gen_pid)))
 
-        self.assertEqual(content['results'][1]['resource_id'], geo_pid)
-        self.assertTrue(content['results'][1]['resource_url'].startswith("http://"))
-        self.assertTrue(content['results'][1]['resource_url']
-                        .endswith(res_tail.format(res_id=geo_pid)))
-
         self.assertEqual(content['results'][2]['resource_id'], app_pid)
         self.assertTrue(content['results'][2]['resource_url'].startswith("http://"))
         self.assertTrue(content['results'][2]['resource_url']
                         .endswith(res_tail.format(res_id=app_pid)))
 
         # Filter by type (single)
-        response = self.client.get('/hsapi/resource/', {'type': 'RasterResource'}, format='json')
+        response = self.client.get('/hsapi/resource/', {'type': 'CompositeResource'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content.decode())
 
         self.assertEqual(content['count'], 1)
-        self.assertEqual(content['results'][0]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][0]['resource_id'], comp_pid)
         self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
         self.assertTrue(content['results'][0]['resource_url']
-                        .endswith(res_tail.format(res_id=geo_pid)))
+                        .endswith(res_tail.format(res_id=comp_pid)))
 
         # Filter by type (multiple)
-        response = self.client.get('/hsapi/resource/', {'type': ['RasterResource', 'ToolResource']},
+        response = self.client.get('/hsapi/resource/', {'type': ['CompositeResource', 'ToolResource']},
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 2)
 
-        self.assertEqual(content['results'][0]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][0]['resource_id'], comp_pid)
         self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
         self.assertTrue(content['results'][0]['resource_url']
-                        .endswith(res_tail.format(res_id=geo_pid)))
+                        .endswith(res_tail.format(res_id=comp_pid)))
 
         self.assertEqual(content['results'][1]['resource_id'], app_pid)
         self.assertTrue(content['results'][1]['resource_url'].startswith("http://"))
