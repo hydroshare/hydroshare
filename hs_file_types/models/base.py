@@ -485,7 +485,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         if not self._is_valid_element(element_model_name):
             raise ValidationError("Metadata element type:%s is not one of the "
                                   "supported metadata elements for %s."
-                                  % element_model_name, type(self))
+                                  % (element_model_name, type(self)))
 
         unsupported_element_error = "Metadata element type:%s is not supported." \
                                     % element_model_name

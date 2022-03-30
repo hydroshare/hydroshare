@@ -519,8 +519,6 @@ def _check_if_shape_files(files, temp_files=True):
     :param  temp_files: a flag to treat list of files *files* as temp files or not
     :return: True/False
     """
-    # Note: this is the original function (check_fn_for_shp) in geo feature resource receivers.py
-    # used by is_shapefiles
 
     # at least needs to have 3 mandatory files: shp, shx, dbf
     if len(files) >= 3:
