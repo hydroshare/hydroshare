@@ -1192,7 +1192,7 @@ class AbstractLogicalFile(models.Model):
             element_args.pop('content_type')
             element_args.pop('id')
             element_args.pop('object_id')
-            copy_of_logical_file.metadata.create_element(element.term, **element_args)
+            copy_of_logical_file.metadata.create_element(element.__class__.__name__, **element_args)
 
         return copy_of_logical_file
 
