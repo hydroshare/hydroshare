@@ -192,6 +192,9 @@ def get_access_object(user, user_type, user_access):
     access_object = None
     picture = None
 
+    if not user.is_active:
+        return None
+
     if not hasattr(user, 'viewable_contributions'):
         user.viewable_contributions = 0
 
@@ -256,7 +259,7 @@ def page_permissions_page_processor(request, page):
         elif user_privilege == PrivilegeCodes.VIEW:
             self_access_level = 'view'
 
-    owners = cm.raccess.owners.all()
+    owners = cm.raccess.owners.filter(is_active=True).all()
     editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE,
                                                         include_group_granted_access=False)
     viewers = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW,
@@ -317,13 +320,16 @@ def page_permissions_page_processor(request, page):
     for usr in view_groups:
         users_json.append(get_access_object(usr, "group", "view"))
 
-    lcb_access_level = cm.raccess.get_effective_user_privilege(last_changed_by)
-    if lcb_access_level == PrivilegeCodes.OWNER:
-        lcb_access_level = 'owner'
-    elif lcb_access_level == PrivilegeCodes.CHANGE:
-        lcb_access_level = 'edit'
-    elif lcb_access_level == PrivilegeCodes.VIEW:
-        lcb_access_level = 'view'
+    if last_changed_by.is_active:
+        lcb_access_level = cm.raccess.get_effective_user_privilege(last_changed_by)
+        if lcb_access_level == PrivilegeCodes.OWNER:
+            lcb_access_level = 'owner'
+        elif lcb_access_level == PrivilegeCodes.CHANGE:
+            lcb_access_level = 'edit'
+        elif lcb_access_level == PrivilegeCodes.VIEW:
+            lcb_access_level = 'view'
+    else:
+        lcb_access_level = 'none'
 
     # last_changed_by.can_undo = False
     last_changed_by = json.dumps(get_access_object(last_changed_by, "user", lcb_access_level))

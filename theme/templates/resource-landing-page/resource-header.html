@@ -7,7 +7,7 @@
                 <tr>
                     <th>Authors:</th>
 
-                    <td class="authors-wrapper" v-if="res_mode === 'View'">
+                    <td v-if="authors.length && res_mode === 'View'" class="authors-wrapper">
                         <a v-for="(author, index) in authors" data-toggle="modal"
                            @click="selectAuthor(author, index)"
                            data-target="#view-author-modal">
@@ -15,6 +15,15 @@
                             <template v-else-if="author.organization">${ author.organization }</template>
                             <template v-else>${ author.email }</template>
                         </a>
+                    </td>
+                    <td v-else class="authors-wrapper">
+                        This resource does not have an author who is an active HydroShare user.
+                        Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
+                        {% if cm.raccess.public %}
+                            for information on this resource.
+                        {% else %}
+                            to determine if accessing this resource is possible.
+                        {% endif %}
                     </td>
 
                     <td v-if="res_mode === 'Edit'">

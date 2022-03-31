@@ -11,7 +11,6 @@ from hs_access_control.models.group import GroupAccess, GroupMembershipRequest
 from hs_access_control.models.exceptions import PolymorphismError
 from hs_access_control.models.community import Community
 from hs_access_control.models.invite import GroupCommunityRequest
-import warnings
 
 #############################################
 # Methods and data for users
@@ -1097,8 +1096,7 @@ class UserAccess(models.Model):
         """
 
         if not self.user.is_active:
-            # An innactive user can still own resources so don't raise PermissionDenied
-            warnings.warn("User is not active")
+            raise PermissionDenied("Requesting user is not active")
         return BaseResource.objects.filter(r2urp__user=self.user,
                                            r2urp__privilege=PrivilegeCodes.OWNER)
 

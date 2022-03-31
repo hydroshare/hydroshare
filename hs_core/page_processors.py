@@ -53,9 +53,12 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     content_model = page.get_content_model()
 
+    show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
+    if not show_content_files and user.is_authenticated():
+        show_content_files = user.uaccess.can_view_resource(content_model)
+
     can_view = content_model.can_view(request)
-    # For private resources, respond with a 403 unless the requestor has been granted access
-    if not can_view:
+    if not can_view and not show_content_files:
         raise PermissionDenied()
 
     discoverable = content_model.raccess.discoverable
@@ -100,9 +103,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session['just_published']
 
     bag_url = content_model.bag_url
-    show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
-    if not show_content_files and user.is_authenticated():
-        show_content_files = user.uaccess.can_view_resource(content_model)
 
     rights_allow_copy = rights_allows_copy(content_model, user)
 
