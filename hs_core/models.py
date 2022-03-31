@@ -191,9 +191,9 @@ def get_access_object(user, user_type, user_access):
     from hs_core.templatetags.hydroshare_tags import best_name
     access_object = None
     picture = None
-
-    if not user.is_active:
-        return None
+# 
+    # if not user.is_active:
+    #     return None
 
     if not hasattr(user, 'viewable_contributions'):
         user.viewable_contributions = 0
@@ -214,13 +214,14 @@ def get_access_object(user, user_type, user_access):
             "email": user.email,
             "organization": user.userprofile.organization,
             "title": user.userprofile.title,
-            "contributions": len(user.uaccess.owned_resources),
-            "viewable_contributions": user.viewable_contributions,
+            "contributions": len(user.uaccess.owned_resources) if user.is_active else None,
+            "viewable_contributions": user.viewable_contributions if user.is_active else None,
             "subject_areas": user.userprofile.subject_areas,
             "identifiers": user.userprofile.identifiers,
             "state": user.userprofile.state,
             "country": user.userprofile.country,
             "joined": user.date_joined.strftime("%d %b, %Y"),
+            "is_active": user.is_active
         }
     elif user_type == "group":
         if user.gaccess.picture:

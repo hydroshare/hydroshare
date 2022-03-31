@@ -1,6 +1,7 @@
 """Page processors for hs_core app."""
 
 import json
+import re
 
 from dateutil import parser
 from django.conf import settings
@@ -15,6 +16,7 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     rights_allows_copy
+from hs_core.hydroshare.utils import user_from_id
 from hs_odm2.models import ODM2Variable
 from .forms import ExtendedMetadataForm
 
@@ -168,6 +170,19 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
+        # identify whether Creators and Contributors are linked to active user accounts
+        creators = content_model.metadata.creators.all()
+        for creator in creators:
+            creator.is_active = True
+            id = re.sub("[^0-9]", "", creator.description)
+            creator.is_active = user_from_id(id).is_active
+
+        contributors = content_model.metadata.contributors.all()
+        for contributor in contributors:
+            contributor.is_active = True
+            id = re.sub("[^0-9]", "", contributor.description)
+            contributor.is_active = user_from_id(id).is_active
+
         context = {
                    'cm': content_model,
                    'resource_edit_mode': resource_edit,
@@ -177,8 +192,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'title': title,
                    'readme': readme,
                    'abstract': abstract,
-                   'creators': content_model.metadata.creators.all(),
-                   'contributors': content_model.metadata.contributors.all(),
+                   'creators': creators,
+                   'contributors': contributors,
                    'temporal_coverage': temporal_coverage_data_dict,
                    'spatial_coverage': spatial_coverage_data_dict,
                    'keywords': keywords,
