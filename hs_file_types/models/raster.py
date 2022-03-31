@@ -27,7 +27,6 @@ from hs_file_types import raster_meta_extract
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
-
 # extended metadata for raster aggregation type to store the original box type coverage
 # since the core metadata coverage stores the converted WGS84 geographic coordinate
 # system projection coverage, see issue #210 on github for details
@@ -236,7 +235,7 @@ class BandInformation(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div =  html_tags.div()
+        root_div = html_tags.div()
 
         def get_th(heading_name):
             return html_tags.th(heading_name, cls="text-muted")
@@ -452,16 +451,16 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             super(GeoRasterFileMetaData, self).get_html_forms()
             with html_tags.div(id="spatial-coverage-filetype"):
                 with html_tags.form(id="id-spatial-coverage-file-type",
-                          cls='hs-coordinates-picker', data_coordinates_type="point",
-                          action="{{ coverage_form.action }}",
-                          method="post", enctype="multipart/form-data"):
+                                    cls='hs-coordinates-picker', data_coordinates_type="point",
+                                    action="{{ coverage_form.action }}",
+                                    method="post", enctype="multipart/form-data"):
                     html_tags.div("{% crispy coverage_form %}")
                     with html_tags.div(cls="row", style="margin-top:10px;"):
                         with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
-                                     "col-md-2 col-xs-6"):
+                                               "col-md-2 col-xs-6"):
                             html_tags.button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;")
+                                             cls="btn btn-primary pull-right",
+                                             style="display: none;")
 
                 html_tags.div("{% crispy orig_coverage_form %}", cls="content-block")
 
@@ -470,14 +469,14 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
                 with html_tags.div(id="variables", cls="content-block"):
                     html_tags.div("{% for form in bandinfo_formset_forms %}")
                     with html_tags.form(id="{{ form.form_id }}", action="{{ form.action }}",
-                              method="post", enctype="multipart/form-data", cls='well'):
+                                        method="post", enctype="multipart/form-data", cls='well'):
                         html_tags.div("{% crispy form %}")
                         with html_tags.div(cls="row", style="margin-top:10px;"):
                             with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
+                                                   "col-md-2 col-xs-6"):
                                 html_tags.button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right btn-form-submit",
-                                       style="display: none;")
+                                                 cls="btn btn-primary pull-right btn-form-submit",
+                                                 style="display: none;")
                     html_tags.div("{% endfor %}")
 
         template = Template(root_div.render())
