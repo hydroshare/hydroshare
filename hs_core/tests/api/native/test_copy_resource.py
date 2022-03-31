@@ -1,4 +1,6 @@
 import os
+import shutil
+import tempfile
 from datetime import date
 
 from django.contrib.auth.models import Group
@@ -81,12 +83,15 @@ class TestCopyResource(TestCase):
             metadata=metadata
         )
 
+        raster_file = 'hs_core/tests/data/cea.tif'
+        temp_dir = tempfile.mkdtemp()
+        self.temp_raster_file = os.path.join(temp_dir, 'cea.tif')
+        shutil.copy(raster_file, self.temp_raster_file)
+
     def tearDown(self):
         super(TestCopyResource, self).tearDown()
         if self.res_generic:
             self.res_generic.delete()
-        if self.res_raster:
-            self.res_raster.delete()
         if self.res_generic_lic_nd:
             self.res_generic_lic_nd.delete()
         if self.res_generic_lic_nc_nd:
