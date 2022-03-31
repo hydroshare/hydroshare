@@ -175,13 +175,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         for creator in creators:
             creator.is_active = True
             id = re.sub("[^0-9]", "", creator.description)
-            creator.is_active = user_from_id(id).is_active
-
-        contributors = content_model.metadata.contributors.all()
-        for contributor in contributors:
-            contributor.is_active = True
-            id = re.sub("[^0-9]", "", contributor.description)
-            contributor.is_active = user_from_id(id).is_active
+            if id.isnumeric():
+                user = user_from_id(id, raise404=False)
+                if user:
+                    creator.is_active = user.is_active
 
         context = {
                    'cm': content_model,
@@ -193,7 +190,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'readme': readme,
                    'abstract': abstract,
                    'creators': creators,
-                   'contributors': contributors,
+                   'contributors': content_model.metadata.contributors.all(),
                    'temporal_coverage': temporal_coverage_data_dict,
                    'spatial_coverage': spatial_coverage_data_dict,
                    'keywords': keywords,

@@ -191,9 +191,6 @@ def get_access_object(user, user_type, user_access):
     from hs_core.templatetags.hydroshare_tags import best_name
     access_object = None
     picture = None
-# 
-    # if not user.is_active:
-    #     return None
 
     if not hasattr(user, 'viewable_contributions'):
         user.viewable_contributions = 0
