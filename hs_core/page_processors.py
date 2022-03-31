@@ -120,6 +120,16 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     topics = list(topics)  # force QuerySet evaluation
     content_model.update_relation_meta()
 
+    # identify whether Creators and Contributors are linked to active user accounts
+    creators = content_model.metadata.creators.all()
+    for creator in creators:
+        creator.is_active = True
+        id = re.sub("[^0-9]", "", creator.description)
+        if id.isnumeric():
+            user = user_from_id(id, raise404=False)
+            if user:
+                creator.is_active = user.is_active
+
     # user requested the resource in READONLY mode
     if not resource_edit:
         content_model.update_view_count(request)
@@ -169,16 +179,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
-
-        # identify whether Creators and Contributors are linked to active user accounts
-        creators = content_model.metadata.creators.all()
-        for creator in creators:
-            creator.is_active = True
-            id = re.sub("[^0-9]", "", creator.description)
-            if id.isnumeric():
-                user = user_from_id(id, raise404=False)
-                if user:
-                    creator.is_active = user.is_active
 
         context = {
                    'cm': content_model,
@@ -283,7 +283,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'cm': content_model,
                'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
-               'creators': content_model.metadata.creators.all(),
+               'creators': creators,
                'title': content_model.metadata.title,
                'readme': readme,
                'contributors': content_model.metadata.contributors.all(),
