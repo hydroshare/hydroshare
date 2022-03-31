@@ -421,6 +421,11 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         elements += list(self.bandInformations.all())
         return elements
 
+    def _get_metadata_element_model_type(self, element_model_name):
+        if element_model_name.lower() == 'originalcoverage':
+            element_model_name = 'originalcoverageraster'
+        return super()._get_metadata_element_model_type(element_model_name)
+
     def get_html(self, **kwargs):
         """overrides the base class function to generate html needed to display metadata
         in view mode"""
