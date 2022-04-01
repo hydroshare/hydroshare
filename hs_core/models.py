@@ -285,8 +285,8 @@ def page_permissions_page_processor(request, page):
         for edit_grp in edit_groups:
             edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
                                                                                         edit_grp)
-
-        last_changed_by.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(last_changed_by)
+        if last_changed_by.is_active:
+            last_changed_by.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(last_changed_by)
 
     else:
         for owner in owners:
