@@ -121,12 +121,21 @@ def nameok(request, path, *args, **kwargs):
     user = request.user
     filename = request.GET.get('filename')
     size = request.GET.get('size')
-    rid = path.split('/')[0]
+    stuff = path.split('/')
+    rid = stuff[0]
     try:
         resource = get_resource_by_shortkey(rid, or_404=False)
     except BaseResource.DoesNotExist:
         response = HttpResponse(status=403)
         content_msg = "resource {} does not exist!".format(rid)
+        response.content = content_msg
+        logger.debug(content_msg)
+        return response
+
+    # file path should start with data/contents
+    if stuff[1] != 'data' or stuff[2] != 'contents':
+        response = HttpResponse(status=401)
+        content_msg = "path must include data/contents/!".format(path)
         response.content = content_msg
         logger.debug(content_msg)
         return response
@@ -146,7 +155,7 @@ def nameok(request, path, *args, **kwargs):
     irods_path = resource.get_irods_path(path)
     if istorage.exists(irods_path):
         response = HttpResponse(status=401)
-        content_msg = "resource file {} already exists!".format(rid)
+        content_msg = "file {} already exists!".format(irods_path)
         response.content = content_msg
         logger.debug(content_msg)
         return response
@@ -154,7 +163,8 @@ def nameok(request, path, *args, **kwargs):
     # upload in progress should not exist
     # TODO: fold this code into Upload.create under an atomic transaction
     path = os.path.join(path, filename)
-    in_progress = Upload.objects.get(resource=resource, path=path).exists()
+    
+    in_progress = Upload.objects.filter(resource=resource, path=path).exists()
     if in_progress:
         response = HttpResponse(status=401)
         content_msg = "upload to resource {} path {} already in progress!".format(rid, path)

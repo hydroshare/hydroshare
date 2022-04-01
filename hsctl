@@ -434,6 +434,7 @@ reset_all_hs() {
     if [[ -f docker-compose.yml ]]; then rm -f docker-compose.yml; fi
     if [[ -f run-server ]]; then rm -f run-server; fi
     if [[ -f schema.xml ]]; then rm -f schema.xml; fi
+    mkdir -p hydroshare/static/media  # aids in building without media
 }
 
 dis_build() {

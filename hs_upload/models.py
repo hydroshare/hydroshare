@@ -6,8 +6,9 @@ from django.db import transaction
 import logging
 logger = logging.getLogger(__name__)
 
+
 class Upload(models.Model):
-    ''' all in-progress uploads '''
+    ''' track all in-progress uploads '''
     user = models.ForeignKey(User, null=True, editable=False)
     resource = models.ForeignKey(BaseResource, null=True, editable=False)
     path = models.TextField(null=True, editable=False)
@@ -19,40 +20,44 @@ class Upload(models.Model):
         unique_together = ('resource', 'path')
 
     @classmethod
-    def create(cls, user, resource, path, tempfile, size):
-        try: 
+    def create(cls, user, resource, path, size):
+        try:
             object = cls.objects.create(user=user,
                                         resource=resource,
                                         path=path,
-                                        tempfile=tempfile, 
                                         size=size)
-            logger.debug("starting upload for {}: {}/{} ({})"
-                         .format(user, resource, path, tempfile))
+            logger.debug("starting upload for {}: {}/{}"
+                         .format(user, resource, path))
             return object
-        except Exception as e: 
+        except Exception as e:
             logger.debug(e)
             return None
 
     @classmethod
-    def update(cls, user, resource, path, uploaded): 
-        try: 
-            object = cls.objects.get(user=user, resource=resource, path=path)
-            object.uploaded=uploaded
-            object.save()
+    def update(cls, resource, path, uploaded, tempfile):
+        try:
+            with transaction.atomic():
+                object = cls.objects.get(resource=resource, path=path)
+                if object.uploaded < uploaded:
+                    object.uploaded = uploaded
+                if object.tempfile is None:
+                    object.tempfile = tempfile
+                object.save()
             logger.debug("updating upload for {}: {}/{} ({}) bytes={}"
-                         .format(user, resource, path, tempfile, uploaded))
+                         .format(object.user, resource, path, tempfile, uploaded))
             return object
-        except Exception as e: 
+        except Exception as e:
             logger.debug(e)
             return None
 
     @classmethod
-    def remove(cls, user, resource, path, filename):
-        try: 
-            cls.objects.get(user=user, resource=resource, path=path).delete()
-            logger.debug("terminating upload for {}: {}/{}/{}"
-                         .format(user, resource, path, filename, tempfile, uploaded))
+    def remove(cls, resource, path):
+        try:
+            object = cls.objects.get(resource=resource, path=path)
+            logger.debug("terminating upload for {}: {}/{}"
+                         .format(object.user, resource, path))
+            object.delete()
             return True
-        except Exception as e: 
+        except Exception as e:
             logger.debug(e)
             return False
