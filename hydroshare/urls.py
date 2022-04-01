@@ -106,6 +106,7 @@ urlpatterns += [
     url('', include('hs_core.metadata_terms_urls')),
     url('', include('hs_core.debug_urls')),
     url('^irods/', include('irods_browser_app.urls')),
+    url('^access/', include('hs_access_control.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
 ]
 
