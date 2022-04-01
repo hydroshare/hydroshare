@@ -12,7 +12,7 @@
                 <div class="col-sm-12">
                     <div class="collaborate-nav">
                         <a href="{% url "groups" %}" class="collaborate-nav-item">Find Groups</a>
-                        <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
+                        <a href="{% url "my_groups" %}" class="collaborate-nav-item active">My Groups</a>
                     </div>
                 </div>
             </div>
@@ -20,8 +20,7 @@
     </div>
 
     <div class="container">
-
-        <div class="row">
+        <div>
             {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                 {% if not group.gaccess.active %}
                     <div class="alert alert-warning alert-dismissible" role="alert">
@@ -31,87 +30,102 @@
                         cannot be shared with the group and other users cannot be invited.
                         <hr>
                         <span class="glyphicon glyphicon-question-sign"></span>
-                        <small> Click on the restore button ( <span class="glyphicon glyphicon-retweet"></span> ) below
-                            if you want to make the group active again.
-                        </small>
+                        <small> Click on the restore button ( <span class="glyphicon glyphicon-retweet"></span> ) in the Owner Settings tab if you want to make the group active again.</small>
                     </div>
                 {% endif %}
             {% endif %}
 
-            <div class="col-sm-3">
-                {#  Group Picture #}
-                {% if group.gaccess.picture and group.gaccess.picture.url %}
-                    <div class="group-image-wrapper group-image-wrapper-medium">
-                        <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                    </div>
+            <div class="group-header">
+                <div>
+                    {#  Group Picture #}
+                    {% if group.gaccess.picture and group.gaccess.picture.url %}
+                        <div class="group-image-wrapper group-image-wrapper-medium">
+                            <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                        </div>
+                    {% else %}
+                        <div class="group-image-wrapper group-image-wrapper-medium">
+                            <div class="group-image group-preview-image-default"
+                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                        </div>
+                    {% endif %}
+                </div>
 
-                {% else %}
-                    <div class="group-image-wrapper group-image-wrapper-medium">
-                        <div class="group-image group-preview-image-default"
-                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                    </div>
-                {% endif %}
-            </div>
+                <!-- <div class="col-sm-7">
+                  {% if not profile_user.is_group_member and profile_user.is_authenticated %}
+                      <div>
+                          {% if group.gaccess.active %}
+                              <hr>
+                              <h4><i>You are not a member of this group.</i></h4>
+                              {% if group.join_request_waiting_user_action %}
+                                  <div class="request-block pull-left">
+                                      <span class="flag-joined">You have been invited to join!</span>
+                                      <br><br>
+                                      <div class="height-fix">
+                                          <form class="act-on-request height-fix"
+                                                action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
+                                                method="POST">
+                                              {% csrf_token %}
+                                              <button type="submit" class="btn btn-success"
+                                                      data-user-action="Accept">Accept
+                                              </button>
+                                          </form>
+  
+                                          <form class="act-on-request height-fix"
+                                                action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
+                                                method="POST">
+                                              {% csrf_token %}
+                                              <button type="submit" class="btn btn-default">
+                                                  Decline
+                                              </button>
+                                          </form>
+                                      </div>
+                                  </div>
+                              {% elif group.join_request_waiting_owner_action %}
+                                  <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request
+                                      Sent</h4>
+                              {% else %}
+                                  <form id="join-{{ group.id }}" method="post"
+                                        action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
+                                      {% csrf_token %}
+                                      <button type="submit" class="btn btn-primary" role="button">Ask to join
+                                      </button>
+                                  </form>
+                              {% endif %}
+                          {% else %}
+                              <h4><i>This group is currently inactive.</i></h4>
+                          {% endif %}
+                      </div>
+                  {% endif %}
+              </div> -->
 
-            <div class="col-sm-7">
-                <h2 class="group-title">{{ group.name }}</h2>
-                <h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>
 
-                <p>{{ group.gaccess.description|linebreaks }}</p>
-                {% if not profile_user.is_group_member and profile_user.is_authenticated %}
-                    <div>
-                        {% if group.gaccess.active %}
-                            <hr>
-                            <h4><i>You are not a member of this group.</i></h4>
-                            {% if group.join_request_waiting_user_action %}
-                                <div class="request-block pull-left">
-                                    <span class="flag-joined">You have been invited to join!</span>
-                                    <br><br>
-                                    <div class="height-fix">
-                                        <form class="act-on-request height-fix"
-                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-success"
-                                                    data-user-action="Accept">Accept
-                                            </button>
-                                        </form>
-
-                                        <form class="act-on-request height-fix"
-                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-default">
-                                                Decline
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            {% elif group.join_request_waiting_owner_action %}
-                                <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request
-                                    Sent</h4>
-                            {% else %}
-                                <form id="join-{{ group.id }}" method="post"
-                                      action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-primary" role="button">Ask to join
-                                    </button>
-                                </form>
-                            {% endif %}
-                        {% else %}
-                            <h4><i>This group is currently inactive.</i></h4>
+                <div>
+                    <div class="group-title-container">
+                        <h2 class="group-title">{{ group.name }}</h2>
+                        {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
+                            <div>
+                                <a href="#" id="btn-leave-group" class="btn btn-danger" data-toggle="modal" data-target="#leave-group-dialog">
+                                    Leave Group
+                                </a>
+                            </div>
                         {% endif %}
                     </div>
-                {% endif %}
-            </div>
+                    
+                    {% if group.gaccess.purpose %}<h4>{{ group.gaccess.purpose|linebreaks }}</h4>{% endif %}
 
-            {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                <div class="col-sm-2">
-                    {% if group.gaccess.active %}
-                        {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                            <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
-                                <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip"
-                                      data-placement="auto" title="Edit Group"></span></a>
+                    {#  Group Info #}
+                    {% if group.gaccess.email or group.gaccess.url %}
+                    <div class="group-info">
+                        {% if group.gaccess.url %}
+                            <div class="text-muted">
+                                <i class="fa fa-link"></i> <a href="{{ group.gaccess.url }}" target="_blank">{{ group.gaccess.url }}</a>
+                            </div>
+                        {% endif %}
+
+                        {% if group.gaccess.email %}
+                            <div class="text-muted">
+                                <i class="fa fa-envelope-o"></i> <a href="mailto:{{ group.gaccess.email }}">{{ group.gaccess.email }}</a>
+                            </div>
                         {% endif %}
                     {% endif %}
                     {% if profile_user.is_group_member %}
@@ -130,8 +144,16 @@
                                   data-placement="auto" title="Restore Group"></span></a>
                     {% endif %}
                 </div>
-            {% endif %}
+            </div>
         </div>
+
+        {% if group.gaccess.description %}
+            <div class="row">
+                <div class="text-muted col-xs-12">
+                    <p class="text-muted">{{ group.gaccess.description|linebreaks }}</p>
+                </div>
+            </div>
+        {% endif %}
 
         <div class="full-width-tabs-container" id="user-profile-tabs">
             <!-- Nav tabs -->
@@ -160,6 +182,7 @@
 
             <!-- Tab panes -->
             <div class="tab-content">
+                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public %}
                 <div role="tabpanel" class="tab-pane fade" id="members">
                     <div class="row">
                         <div class="col-sm-12 col-md-3">
@@ -439,6 +462,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
                 <div role="tabpanel" class="tab-pane fade in active" id="resources">
                     <div class="row">
@@ -660,6 +684,144 @@
                 </div>
 
                 <!-- This part of the community code doesn't work: commenting it out!
+                {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                <div role="tabpanel" class="tab-pane fade" id="settings">
+                    <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST" enctype="multipart/form-data" class="col-xs-12 col-sm-7">
+                        <legend>Group Settings</legend>
+                        {% csrf_token %}
+                        <div class="row">
+                            {# Group Name #}
+                            <fieldset class="col-sm-12">
+                                <label>Group Name *</label>
+                                <input type="text" value="{{ group.name }}" class="form-control" required="required" name="name" maxlength="79">
+                                <small class="text-muted">Group name may be 79 characters or less.</small>
+                            </fieldset>
+
+                            <br>
+                            {# Group Contact Email #}
+                            <fieldset class="col-sm-12">
+                                <label>Group Contact Email</label>
+                                <input class="form-control" type="email" name="email" value="{{ profile_user.email }}"></input>
+                                <small class="text-muted">An email address for someone in charge of the group.</small>
+                            </fieldset>
+                            
+                            <br>
+                            {# Group Url #}
+                            <fieldset class="col-sm-12">
+                                <label>Group URL</label>
+                                <input class="form-control" value="{{ group.gaccess.url }}" type="url" name="url"></input>
+                                <small class="text-muted">A URL for a web page that describes the group in more detail.</small>
+                            </fieldset>
+
+                            <br>
+                            {# Purpose #}
+                            <fieldset class="col-sm-12">
+                                <label>Purpose</label>
+                                <textarea class="form-control" name="purpose" maxlength="300">{{ group.gaccess.purpose }}</textarea>
+                                <small class="text-muted">A brief description of the purpose for which the group was created.</small><br>
+                                <small class="text-muted">300 characters or less.</small>
+                            </fieldset>
+    
+                            <br>
+                            {# Group Description #}
+                            <fieldset class="col-sm-12">
+                                <label>About this group *</label>
+                                <textarea class="form-control" required="required" name="description">{{ group.gaccess.description }}</textarea>
+                                <small class="text-muted">A longer text description for the group.</small>
+                            </fieldset>
+    
+                            <br>
+                            {# auto approve #}
+                            <fieldset class="col-sm-12">
+                                <input id="auto-approve" type="checkbox"  {% if group.gaccess.auto_approve %}checked{% endif %} name="auto_approve">
+                                <label class="checkbox-label" for="auto-approve">Auto approve membership</label><br>
+                                <small class="text-muted">Choose this option if you want group membership requests to be automatically approved.</small>
+                            </fieldset>
+
+                            <br>
+                            {# Picture #}
+                            <div class="col-sm-12">
+                                <fieldset>
+                                    <label>Add a photo</label>
+    
+                                    <div class="input-group">
+                                        <span class="input-group-btn">
+                                            <span id="cv-custom-upload" class="btn btn-default btn-file">
+                                                Browse&hellip; <input class="upload-picture" type="file" name="picture">
+                                            </span>
+                                        </span>
+                                        <input type="text" class="form-control" readonly>
+                                    </div>
+                                    <small class="text-muted">Add a photo, Logo, or icon image to identify your group.</small>
+                                </fieldset>
+                            </div>
+    
+                            <br>
+    
+                            <br>
+                            {# Privacy #}
+                                <fieldset class="col-sm-12">
+                                    <label>Privacy *</label>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="privacy_level" value="public"
+                                                   {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Public
+                                            <div class="text-muted">Other users can find the group and see who has
+                                                membership.
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="privacy_level" value="discoverable"
+                                                   {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Discoverable
+                                            <div class="text-muted">Other users can find this group, but membership
+                                                information is hidden.
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="privacy_level" value="private"
+                                                   {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
+                                            <div class="text-muted">Other users can not find this group.</div>
+                                        </label>
+                                    </div>
+                                </fieldset>
+                            <br>
+                            <fieldset class="col-sm-12">
+                                <small class="text-muted">( * ) Required fields</small>
+                            </fieldset>
+                            <br>
+                        </div>
+    
+                        <button type="submit" class="btn btn-primary">Update Group Profile</button>
+
+                        {% if group.gaccess.active %}
+                            <hr>
+                            <fieldset style="margin-top: 20px;">
+                                <label>Delete this Group</label>
+                                <p><small>Deleting a group does not delete any of the resources that have been shared with the group. 
+                                    However, once your group is deleted, it will be gone forever. Make sure this is what you want to do!</small></p>
+                                <br>
+                                <a href="#" id="btn-delete-group" class="btn btn-danger" data-toggle="modal" data-target="#delete-group-dialog">Delete this group</a>
+                            </fieldset>
+                        {% endif %}
+                        {% if not group.gaccess.active %}
+                        <hr>
+                        <fieldset style="margin-top: 20px;">
+                            <label>Restore this Group</label>
+                            <p><small> Click on the button below if you want to make the group active again.</small></p>
+                            <br>
+                            <a href="{% url "restore_user_group" group.id %}" class="btn btn-success">
+                                <span class="glyphicon glyphicon-retweet"></span> Restore this Group</a>
+                        </fieldset>
+                        {% endif %}
+                    </form>
+                </div>
+
                 <div role="tabpanel" class="tab-pane fade" id="communities">
                 {% include "hs_access_control/group_wrapper.html" %}
                 </div>
@@ -747,123 +909,6 @@
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-primary">Confirm</button>
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-
-    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-        <!-- Edit Group Modal -->
-        <div class="modal fade" id="edit-group-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="Invite">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST"
-                          enctype="multipart/form-data">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal"
-                                    aria-label="Close"><span aria-hidden="true">&times;</span>
-                            </button>
-                            <h4 class="modal-title" id="myModalLabel">Edit Group Details</h4>
-                        </div>
-                        <div class="modal-body">
-                            {% csrf_token %}
-                            <div class="row">
-                                {# Group Name #}
-                                <fieldset class="col-sm-12">
-                                    <label>Group Name *</label>
-                                    <small class="text-muted">150 characters or less</small>
-                                    <input class="form-control" required="required" name="name" value="{{ group.name }}"
-                                           maxlength="150">
-
-                                </fieldset>
-
-                                {# Purpose #}
-                                <fieldset class="col-sm-12">
-                                    <label>Purpose</label>
-                                    <small class="text-muted">300 characters or less</small>
-                                    <textarea class="form-control" name="purpose"
-                                              maxlength="300">{{ group.gaccess.purpose }}</textarea>
-
-                                </fieldset>
-
-                                {# Group Description #}
-                                <fieldset class="col-sm-12">
-                                    <label>About this group *</label>
-                                    <textarea class="form-control" required="required"
-                                              name="description">{{ group.gaccess.description }}</textarea>
-                                </fieldset>
-
-                                {# auto approve #}
-                                <fieldset class="col-sm-12">
-                                    <input id="auto-approve" type="checkbox" name="auto_approve"
-                                           {% if group.gaccess.auto_approve %}checked{% endif %}>
-                                    <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
-                                </fieldset>
-
-                                {# Picture #}
-                                <div class="col-sm-12">
-                                    <fieldset>
-                                        <label>Add a photo</label>
-
-                                        <div class="input-group">
-                                            <span class="input-group-btn">
-                                                <span id="cv-custom-upload" class="btn btn-default btn-file">
-                                                    Browse&hellip; <input class="upload-picture" type="file"
-                                                                          name="picture">
-                                                </span>
-                                            </span>
-                                            <input type="text" class="form-control" readonly>
-                                        </div>
-                                    </fieldset>
-                                </div>
-
-                                <br>
-
-                                {# Privacy #}
-                                <fieldset class="col-sm-12">
-                                    <label>Privacy *</label>
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="privacy_level" value="public"
-                                                   {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Public
-                                            <div class="text-muted">Other users can find the group and see who has
-                                                membership.
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="privacy_level" value="discoverable"
-                                                   {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Discoverable
-                                            <div class="text-muted">Other users can find this group, but membership
-                                                information is hidden.
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="privacy_level" value="private"
-                                                   {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
-                                            <div class="text-muted">Other users can not find this group.</div>
-                                        </label>
-                                    </div>
-                                </fieldset>
-
-                                <br>
-                                <fieldset class="col-sm-12">
-                                    <small class="text-muted">( * ) Required fields</small>
-                                </fieldset>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save</button>
                         </div>
                     </form>
                 </div>

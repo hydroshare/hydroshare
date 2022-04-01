@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from .utils import add_or_remove_relation_metadata, update_collection_list_csv, get_collectable_resources
+from hs_core.enums import RelationTypes
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -98,7 +99,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                                                 set_res_modified=False)
 
                 # delete relation meta element of type 'isPartOf' from the resource removed from the collection
-                res_obj_remove.metadata.relations.filter(type='isPartOf',
+                res_obj_remove.metadata.relations.filter(type=RelationTypes.isPartOf,
                                                          value__contains=collection_res_obj.short_id).first().delete()
                 set_dirty_bag_flag(res_obj_remove)
 

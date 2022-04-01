@@ -8,7 +8,6 @@ from django.conf import settings
 from mezzanine import template
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
-
 from hs_core.search_indexes import normalize_name
 
 
@@ -201,6 +200,16 @@ def to_int(value):
 def relative_irods_path(fed_irods_file_name):
     idx = fed_irods_file_name.find('/data/contents/')
     return fed_irods_file_name[idx+1:]
+
+
+@register.filter
+def resource_replaced_by(res):
+    return res.get_relation_version_res_url('isReplacedBy')
+
+
+@register.filter
+def resource_version_of(res):
+    return res.get_relation_version_res_url('isVersionOf')
 
 
 @register.filter

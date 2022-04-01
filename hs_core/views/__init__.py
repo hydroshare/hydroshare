@@ -51,6 +51,7 @@ from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by
     set_task_delivered_by_id, get_or_create_task_notification, get_task_user_id, get_resource_delete_task
 from hs_core.tasks import copy_resource_task, replicate_resource_bag_to_user_zone_task, \
     create_new_version_resource_task, delete_resource_task
+from hs_core.enums import RelationTypes
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -768,7 +769,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
     if usertext != "DELETE":
         return HttpResponse("'usertext' path parameter must be provided with value 'DELETE'",
                             status=status.HTTP_400_BAD_REQUEST)
-    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
+    if res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).exists():
         return HttpResponse('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.',
                             status=status.HTTP_400_BAD_REQUEST)
     if request.is_ajax():
@@ -943,6 +944,10 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
         res.set_require_download_agreement(user, value=True)
     elif flag == 'make_not_require_lic_agreement':
         res.set_require_download_agreement(user, value=False)
+    elif flag == 'enable_private_sharing_link':
+        res.set_private_sharing_link(user, value=True)
+    elif flag == 'remove_private_sharing_link':
+        res.set_private_sharing_link(user, value=False)
     else:
         message = "Invalid resource flag"
     if message is not None:
@@ -1218,6 +1223,8 @@ class GroupForm(forms.Form):
     name = forms.CharField(required=True)
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
+    email = forms.EmailField(required=False)
+    url = forms.URLField(required=False)
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
     auto_approve = forms.BooleanField(required=False)
@@ -1249,6 +1256,8 @@ class GroupCreateForm(GroupForm):
         new_group = request.user.uaccess.create_group(title=frm_data['name'],
                                                       description=frm_data['description'],
                                                       purpose=frm_data['purpose'],
+                                                      email=frm_data['email'],
+                                                      url=frm_data['url'],
                                                       auto_approve=frm_data['auto_approve'])
         if 'picture' in request.FILES:
             new_group.gaccess.picture = request.FILES['picture']
@@ -1266,6 +1275,8 @@ class GroupUpdateForm(GroupForm):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
+        group_to_update.gaccess.email = frm_data['email']
+        group_to_update.gaccess.url = frm_data['url']
         group_to_update.gaccess.auto_approve = frm_data['auto_approve']
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']

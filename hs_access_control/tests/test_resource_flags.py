@@ -86,6 +86,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(bones.raccess.public)
         self.assertFalse(bones.raccess.published)
         self.assertFalse(bones.raccess.discoverable)
+        self.assertFalse(bones.raccess.allow_private_sharing)
         self.assertTrue(bones.raccess.shareable)
 
     def test_02_shareable(self):
@@ -103,6 +104,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(bones.raccess.public)
         self.assertFalse(bones.raccess.published)
         self.assertFalse(bones.raccess.discoverable)
+        self.assertFalse(bones.raccess.allow_private_sharing)
         self.assertFalse(bones.raccess.shareable)
 
         # dog is an owner, should be able to share even if shareable is False
@@ -150,6 +152,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(bones.raccess.public)
         self.assertFalse(bones.raccess.published)
         self.assertFalse(bones.raccess.discoverable)
+        self.assertFalse(bones.raccess.allow_private_sharing)
         self.assertTrue(bones.raccess.shareable)
 
         # first share
@@ -176,6 +179,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(bones.raccess.public)
         self.assertFalse(bones.raccess.published)
         self.assertTrue(bones.raccess.discoverable)
+        self.assertFalse(bones.raccess.allow_private_sharing)
         self.assertTrue(bones.raccess.shareable)
 
         self.assertTrue(
@@ -195,6 +199,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(bones.raccess.public)
         self.assertFalse(bones.raccess.published)
         self.assertFalse(bones.raccess.discoverable)
+        self.assertFalse(bones.raccess.allow_private_sharing)
         self.assertTrue(bones.raccess.shareable)
 
         names = GenericResource.discoverable_resources.all()
@@ -213,6 +218,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(bones.raccess.public)
         self.assertFalse(bones.raccess.published)
         self.assertFalse(bones.raccess.discoverable)
+        self.assertFalse(bones.raccess.allow_private_sharing)
         self.assertTrue(bones.raccess.shareable)
 
         # ownership should survive downgrading to immutable; otherwise one cuts
@@ -239,6 +245,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(bones.raccess.public)
         self.assertFalse(bones.raccess.published)
         self.assertFalse(bones.raccess.discoverable)
+        self.assertFalse(bones.raccess.allow_private_sharing)
         self.assertTrue(bones.raccess.shareable)
 
         # should restore readwrite to owner
@@ -255,6 +262,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(chewies.raccess.public)
         self.assertFalse(chewies.raccess.published)
         self.assertFalse(chewies.raccess.discoverable)
+        self.assertFalse(chewies.raccess.allow_private_sharing)
         self.assertTrue(chewies.raccess.shareable)
 
         chewies.raccess.public = True
@@ -264,6 +272,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(chewies.raccess.public)
         self.assertFalse(chewies.raccess.published)
         self.assertFalse(chewies.raccess.discoverable)
+        self.assertFalse(chewies.raccess.allow_private_sharing)
         self.assertTrue(chewies.raccess.shareable)
 
         self.assertTrue(
@@ -291,6 +300,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(chewies.raccess.public)
         self.assertFalse(chewies.raccess.published)
         self.assertFalse(chewies.raccess.discoverable)
+        self.assertFalse(chewies.raccess.allow_private_sharing)
         self.assertTrue(chewies.raccess.shareable)
 
         chewies.raccess.discoverable = True
@@ -300,6 +310,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(chewies.raccess.public)
         self.assertFalse(chewies.raccess.published)
         self.assertTrue(chewies.raccess.discoverable)
+        self.assertFalse(chewies.raccess.allow_private_sharing)
         self.assertTrue(chewies.raccess.shareable)
 
         # discoverable doesn't mean public

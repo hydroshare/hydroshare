@@ -1,14 +1,15 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from hs_core.models import BaseResource
 from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.contenttypes.models import ContentType
+
+from hs_core.models import BaseResource
+from theme.utils import get_upload_path_community
 
 
 ###################################
 # Communities of groups
 ###################################
-
 class Community(models.Model):
     """ a placeholder class for a community of groups """
     name = models.TextField(null=False, blank=False)

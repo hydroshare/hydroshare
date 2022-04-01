@@ -71,7 +71,7 @@ let relevantToolsApp = new Vue({
                             let menuItem =
                             '<li class="btn-open-with" data-menu-name="web-app" ' +
                                 'data-agg-types="' + tool['agg_types'] + '" data-url-aggregation="' +
-                                aggregationUrl + '">' +
+                                aggregationUrl + '" data-tool-appkey="' + tool['tool_appkey'] + '">' +
                                 '<img class="file-options-webapp-icon" src="' + tool['icon_url'] +
                                     '" alt="' + tool['title'] + '"/>' + '<span>' + tool['title'] + '</span>' +
                             '</li>';

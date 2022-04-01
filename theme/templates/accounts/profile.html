@@ -60,7 +60,7 @@
                                     <div class="btn-file btn-update-picture">
                                         <span class="glyphicon glyphicon-camera"></span>
                                         <span>&nbsp;&nbsp;Update profile picture</span>
-                                        <input class="upload-picture" type="file" name="picture"></div>
+                                        <input class="upload-picture" type="file" name="picture"  accept="image/*"></div>
                                     <button id="btn-delete-profile-pic" class="no-style icon-button btn-remove" data-toggle="modal"
                                             data-target="#delete-picture" title="Delete profile picture"><span
                                             class="glyphicon glyphicon-trash"></span>
@@ -69,7 +69,7 @@
                                     <fieldset>
                                         <div class="btn-file btn-update-picture upload-picture"><span class="glyphicon glyphicon-camera"></span>
                                             <span>&nbsp;&nbsp;Add a photo</span>
-                                            <input class="upload-picture" type="file" name="picture"></div>
+                                            <input class="upload-picture" type="file" name="picture" accept="image/*"></div>
                                     </fieldset>
                                 {% endif %}
                                 </div>
@@ -711,10 +711,6 @@
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "SWATModelInstanceResource" %}
                                                 <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "NetcdfResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "TimeSeriesResource" %}
