@@ -1,9 +1,9 @@
 {% extends "pages/page.html" %}
-{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags staticfiles %}
 {% block meta_title %}HydroShare Apps{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/apps_page.css" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/apps_page.css' %}" />
 {% endblock %}
 
 {% block main %}

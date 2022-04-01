@@ -317,6 +317,6 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/my-groups.js"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/my-groups.js' %}"></script>
 {% endblock %}

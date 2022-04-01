@@ -1,4 +1,4 @@
-{% load hydroshare_tags %}
+{% load hydroshare_tags staticfiles %}
 
 <div class="container">
     <div class="row">
@@ -129,4 +129,4 @@
     </div>
 </div>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/left-header-app.js"></script>
+<script type="text/javascript" src="{% static 'js/hs-vue/left-header-app.js' %}"></script>
