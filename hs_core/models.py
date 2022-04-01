@@ -211,13 +211,14 @@ def get_access_object(user, user_type, user_access):
             "email": user.email,
             "organization": user.userprofile.organization,
             "title": user.userprofile.title,
-            "contributions": len(user.uaccess.owned_resources),
-            "viewable_contributions": user.viewable_contributions,
+            "contributions": len(user.uaccess.owned_resources) if user.is_active else None,
+            "viewable_contributions": user.viewable_contributions if user.is_active else None,
             "subject_areas": user.userprofile.subject_areas,
             "identifiers": user.userprofile.identifiers,
             "state": user.userprofile.state,
             "country": user.userprofile.country,
             "joined": user.date_joined.strftime("%d %b, %Y"),
+            "is_active": user.is_active
         }
     elif user_type == "group":
         if user.gaccess.picture:
@@ -256,7 +257,7 @@ def page_permissions_page_processor(request, page):
         elif user_privilege == PrivilegeCodes.VIEW:
             self_access_level = 'view'
 
-    owners = cm.raccess.owners.all()
+    owners = cm.raccess.owners.filter(is_active=True).all()
     editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE,
                                                         include_group_granted_access=False)
     viewers = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW,
@@ -284,8 +285,8 @@ def page_permissions_page_processor(request, page):
         for edit_grp in edit_groups:
             edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
                                                                                         edit_grp)
-
-        last_changed_by.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(last_changed_by)
+        if last_changed_by.is_active:
+            last_changed_by.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(last_changed_by)
 
     else:
         for owner in owners:
@@ -317,13 +318,16 @@ def page_permissions_page_processor(request, page):
     for usr in view_groups:
         users_json.append(get_access_object(usr, "group", "view"))
 
-    lcb_access_level = cm.raccess.get_effective_user_privilege(last_changed_by)
-    if lcb_access_level == PrivilegeCodes.OWNER:
-        lcb_access_level = 'owner'
-    elif lcb_access_level == PrivilegeCodes.CHANGE:
-        lcb_access_level = 'edit'
-    elif lcb_access_level == PrivilegeCodes.VIEW:
-        lcb_access_level = 'view'
+    if last_changed_by.is_active:
+        lcb_access_level = cm.raccess.get_effective_user_privilege(last_changed_by)
+        if lcb_access_level == PrivilegeCodes.OWNER:
+            lcb_access_level = 'owner'
+        elif lcb_access_level == PrivilegeCodes.CHANGE:
+            lcb_access_level = 'edit'
+        elif lcb_access_level == PrivilegeCodes.VIEW:
+            lcb_access_level = 'view'
+    else:
+        lcb_access_level = 'none'
 
     # last_changed_by.can_undo = False
     last_changed_by = json.dumps(get_access_object(last_changed_by, "user", lcb_access_level))
