@@ -1,3 +1,4 @@
+{% load static %}
 <div class="col-xs-12 content-block" id="app-keyword">
     <h3>Subject Keywords</h3>
     <div class="row">
@@ -87,10 +88,10 @@
 </div>
 {% block extra_css %}
     {# typeahead is used in title.html #}
-    <link href="{{ STATIC_URL }}css/vue-bootstrap-typeahead.0.2.6.css" rel="stylesheet">
+    <link href="{% static 'css/vue-bootstrap-typeahead.0.2.6.css' %}" rel="stylesheet">
 {% endblock %}
 {% block extra_js %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-bootstrap-typeahead.0.2.6.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/subject-keywords-app.js"></script>
+    <script type="text/javascript" src="{% static 'js/vue-bootstrap-typeahead.0.2.6.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs-vue/subject-keywords-app.js' %}"></script>
 {% endblock %}
 

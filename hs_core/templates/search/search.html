@@ -2,7 +2,7 @@
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block meta_title %}Discover{% endblock %}
 {% block main %}
-    <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
+    <input type="hidden" id="static-url" value="{% static '' %}">
 <div class="container" id="discover-main">
     <div class="row">
         <div class="col-sm-12">
@@ -339,7 +339,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
 {% block extra_js %}
@@ -348,5 +348,5 @@
     <script src="https://maps.googleapis.com/maps/api/js?v=3&libraries=geometry,places{% if maps_key %}&key={{ maps_key }}{% endif %}" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/keydragzoom@1.0.0/index.min.js" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/gh/googlemaps/js-marker-clusterer@gh-pages/src/markerclusterer.js" type="text/javascript"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/discover.js"></script>
+    <script type="text/javascript" src="{% static 'js/discover.js' %}"></script>
 {% endblock %}

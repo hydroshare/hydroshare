@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="{{ LANGUAGE_CODE }}"{% if LANGUAGE_BIDI %} dir="rtl"{% endif %}>
-{% load pages_tags mezzanine_tags i18n staticfiles theme_tags %}
+{% load pages_tags mezzanine_tags i18n static theme_tags %}
 {% get_site_conf as siteconf %}
 <head>
 
@@ -72,7 +72,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="/"><img id="img-brand-logo" src="{{ STATIC_URL }}img/logo-lg.png"
+                <a class="navbar-brand" href="/"><img id="img-brand-logo" src="{% static 'img/logo-lg.png' %}"
                                                       alt="{{ settings.SITE_TITLE }}"/></a>
             </div>
             <div class="collapse navbar-collapse">

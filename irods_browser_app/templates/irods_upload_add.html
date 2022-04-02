@@ -1,3 +1,4 @@
+{% load static %}
 {% block modal_irods_browse %}
     <div class="modal fade" id="irodsContent" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
         <div class="modal-backdrop up-load" style="opacity:0.5"></div>
@@ -37,5 +38,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
+    <script type="text/javascript" src="{% static 'js/irods.js' %}"></script>
 {% endblock %}

@@ -1,3 +1,4 @@
+{% load static %}
 <div class="modal fade" id="manage-access">
     <div class="modal-dialog">
         <div class="modal-content" :style="{'pointer-events': isProcessing ? 'none' : 'auto' }">
@@ -262,4 +263,4 @@
     </div>
 </div>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/manage-access-app.js"></script>
+<script type="text/javascript" src="{% static 'js/hs-vue/manage-access-app.js' %}"></script>

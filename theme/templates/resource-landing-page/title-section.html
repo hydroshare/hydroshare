@@ -1,4 +1,4 @@
-{% load hydroshare_tags %}
+{% load hydroshare_tags static %}
 
 {# ======= Resource Publication just published notification =======#}
 {% if cm.raccess.published and just_published %}
@@ -198,7 +198,7 @@
                      </ul>
                 </div>
             </span>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>
+            <script type="text/javascript" src="{% static 'js/hs-vue/relevant-tools.js' %}"></script>
         </div>
         <hr>
     {% else %}
@@ -259,7 +259,7 @@
             // contents here are required by topics.js
             const topics_from_page = JSON.parse("{{ topics_json }}");
         </script>
-        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
+        <script src="{% static 'js/dual-listbox.js' %}"></script>
 
 
         {% if not cm.raccess.published %}
@@ -322,8 +322,8 @@
 {% endif %}
 
 {% block extra_js %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/title-builder.css">
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
+    <link rel="stylesheet" href="{% static 'css/title-builder.css' %}">
+    <link rel="stylesheet" href="{% static 'css/vue-mover.css' %}">
 
     <style>
         [v-cloak] {
@@ -335,6 +335,6 @@
         }
     </style>
     {#        vue-mover uses Sortable.min.js#}
-    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
-    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
+    <script src="{% static 'js/Sortable.min.js' %}"></script>
+    <script src="{% static 'js/vue-mover.js' %}"></script>
 {% endblock %}

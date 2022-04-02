@@ -1,3 +1,4 @@
+{% load static %}
 {% block modal_irods_login %}
     <div class="modal fade" id="irodsSignin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-sm">
@@ -42,5 +43,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/irods_signin.js"></script>
+    <script type="text/javascript" src="{% static 'js/irods_signin.js' %}"></script>
 {% endblock %}

@@ -1,4 +1,4 @@
-{% load crispy_forms_tags hydroshare_tags %}
+{% load crispy_forms_tags hydroshare_tags static %}
 
 <input id="resID" type="hidden" value="{{ cm.short_id }}"/>
 {% if page.perms.change and resource_edit_mode %}
@@ -1830,6 +1830,6 @@
 </div>
 
 {% block extra_js %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/modals.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/identifiers-form.js"></script>
+    <script type="text/javascript" src="{% static 'js/modals.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/identifiers-form.js' %}"></script>
 {% endblock %}
