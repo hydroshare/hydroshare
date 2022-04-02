@@ -373,7 +373,10 @@ TEMPLATES = [
                 "mezzanine.template.loaders.host_themes.Loader",
                 "django.template.loaders.filesystem.Loader",
                 "django.template.loaders.app_directories.Loader",
-            ]
+            ],
+            'builtins': [
+                'django.templatetags.static',
+            ],
         },
     },
 ]

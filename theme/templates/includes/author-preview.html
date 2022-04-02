@@ -1,3 +1,4 @@
+{% load %}
 <!-- Profile Preview Modal -->
 <script id="author-preview-modal-template" type="text/x-template">
     <div class="modal fade" id="view-author-modal" tabindex="-1" role="dialog" aria-labelledby="profileName"
@@ -64,7 +65,7 @@
                                                data-toggle="tooltip" data-placement="top">
 
                                                 <img v-if="key === 'ResearchGateID'" class="hover-shadow"
-                                                     src="{{ STATIC_URL }}img/researcherID.png"
+                                                     src="{% static 'img/researcherID.png' %}"
                                                      alt="ResearcherID icon"/>
 
                                                 <i v-else :class="identifierAttributes[key].classes"></i>

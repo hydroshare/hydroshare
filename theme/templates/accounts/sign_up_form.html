@@ -1,9 +1,9 @@
-{% load static %}
+{% load %}
 {% load theme_tags %}
 {% get_recaptcha_site_key as sitekey %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.tagsinput-revisited.min.css" />
+  <link rel="stylesheet" href="{% static 'css/jquery.tagsinput-revisited.min.css' %}" />
   <style>
     .tagsinput {
       border: 1px solid #ccc;
@@ -90,8 +90,8 @@
     </div>
 </form>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tagsinput-revisited.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
+<script type="text/javascript" src="{% static 'js/jquery.tagsinput-revisited.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
 <script type="text/javascript">
     $(document).ready(function() {
          $('input[type="button"]').prop('disabled', false);
