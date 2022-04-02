@@ -1,11 +1,11 @@
-import os
-from django.conf import settings
 from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
 
 
-class CustomManifestStaticFilesStorage(ManifestStaticFilesStorage):
+class ForgivingManifestStaticFilesStorage(ManifestStaticFilesStorage):
     def hashed_name(self, name, content=None, filename=None):
         try:
-            return super().hashed_name(name, content, filename)
+            result = super().hashed_name(name, content, filename)
         except ValueError:
-            return name
+            # When the file is missing, let's forgive and ignore that.
+            result = name
+        return result
