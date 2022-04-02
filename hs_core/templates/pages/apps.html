@@ -34,7 +34,7 @@
                 {% if resource.metadata.app_icon.data_url %}
                     <img src="{{ resource.metadata.app_icon.data_url }}" alt="" />
                 {% else %}
-                    <img src="/static/img/web-app-default-icon.png" alt="" />
+                    <img src="{% static 'img/web-app-default-icon.png' %}" alt="" />
                 {% endif %}
               <h3>
                 {{ resource.title }}

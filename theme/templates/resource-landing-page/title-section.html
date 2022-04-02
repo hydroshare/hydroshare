@@ -315,7 +315,7 @@
 {% if cm.resource_type == "ToolResource" and cm.metadata.approved %}
     <div class="col-xs-12">
         <div id="app-approved" class="flex" style="align-items: center">
-            <img src="/static/img/approved_app.png">
+            <img src="{% static 'img/approved_app.png' %}">
             <span>This WebApp resource has been approved by HydroShare admin.</span>
         </div>
     </div>
