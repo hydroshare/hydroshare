@@ -3,8 +3,7 @@
 <script language='JavaScript'> 
 
 function loader() { 
-    url = '/access/_internal/group/' 
-        + {{ gid }} + '/';
+    url = '/access/_internal/group/' + {{ gid }} + '/';
     container = document.getElementById("group_management");
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
@@ -48,8 +47,7 @@ function group_decline_community_invite(gid, cid) {
 } 
 
 function group_retract_community_request(gid, cid) { 
-    url = '/access/_internal/group/' 
-        + gid + '/retract/' + cid + '/';
+    url = '/access/_internal/group/' + gid + '/retract/' + cid + '/';
     // Make a request for a user with a given ID
     container = document.getElementById("group_management");
     axios.get(url, {'responseType': 'text'} )
@@ -62,8 +60,7 @@ function group_retract_community_request(gid, cid) {
 } 
 
 function group_leave_community(gid, cid) { 
-    url = '/access/_internal/group/' 
-        + gid + '/leave/' + cid + '/';
+    url = '/access/_internal/group/' + gid + '/leave/' + cid + '/';
     // Make a request for a user with a given ID
     container = document.getElementById("group_management");
     axios.get(url, {'responseType': 'text'} )
@@ -76,8 +73,7 @@ function group_leave_community(gid, cid) {
 } 
 
 function group_join_community(gid, cid) { 
-    url = '/access/_internal/group/' 
-        + gid + '/join/' + cid + '/';
+    url = '/access/_internal/group/' + gid + '/join/' + cid + '/';
     // Make a request for a user with a given ID
     container = document.getElementById("group_management");
     axios.get(url, {'responseType': 'text'} )
@@ -94,97 +90,3 @@ function group_join_community(gid, cid) {
 <div id='group_management'>
 <em>Please wait for the group approval table to be loaded</em>
 </div> 
-=======
-
-<script language='JavaScript'>
-  function loader() {
-    container = document.getElementById("group_management");
-    const groupId = +container.getAttribute('data-id');
-    const url = '/access/_internal/group/${groupId}/';
-    // Make a request for a user with a given ID
-    axios.get(url, { 'responseType': 'text' })
-      .then(function (response) {
-        container.innerHTML = response.data;
-      })
-      .catch(function (error) {
-        alert(error);
-        container.innerHtml = error;
-      });
-  }
-
-  $(document).ready(loader);
-
-  function group_approve_community_invite(gid, cid) {
-    url = '/access/_internal/group/'
-      + gid + '/approve/' + cid + '/';
-    // Make a request for a user with a given ID
-    axios.get(url, { 'responseType': 'text' })
-      .then(function (response) {
-        container = document.getElementById("group_management");
-        container.innerHTML = response.data;
-      })
-      .catch(function (error) {
-        container.innerHtml = error;
-      });
-  }
-
-  function group_decline_community_invite(gid, cid) {
-    url = '/access/_internal/group/'
-      + gid + '/decline/' + cid + '/';
-    // Make a request for a user with a given ID
-    container = document.getElementById("group_management");
-    axios.get(url, { 'responseType': 'text' })
-      .then(function (response) {
-        container.innerHTML = response.data;
-      })
-      .catch(function (error) {
-        container.innerHtml = error;
-      });
-  }
-
-  function group_retract_community_request(gid, cid) {
-    url = '/access/_internal/group/'
-      + gid + '/retract/' + cid + '/';
-    // Make a request for a user with a given ID
-    container = document.getElementById("group_management");
-    axios.get(url, { 'responseType': 'text' })
-      .then(function (response) {
-        container.innerHTML = response.data;
-      })
-      .catch(function (error) {
-        container.innerHtml = error;
-      });
-  }
-
-  function group_leave_community(gid, cid) {
-    url = '/access/_internal/group/'
-      + gid + '/leave/' + cid + '/';
-    // Make a request for a user with a given ID
-    container = document.getElementById("group_management");
-    axios.get(url, { 'responseType': 'text' })
-      .then(function (response) {
-        container.innerHTML = response.data;
-      })
-      .catch(function (error) {
-        container.innerHtml = error;
-      });
-  }
-
-  function group_join_community(gid, cid) {
-    url = '/access/_internal/group/'
-      + gid + '/join/' + cid + '/';
-    // Make a request for a user with a given ID
-    container = document.getElementById("group_management");
-    axios.get(url, { 'responseType': 'text' })
-      .then(function (response) {
-        container.innerHTML = response.data;
-      })
-      .catch(function (error) {
-        container.innerHtml = error;
-      });
-  }
-</script>
-
-<div id='group_management' data-id="{{ group.id }}">
-  <em>Please wait for the group approval table to be loaded</em>
-</div>

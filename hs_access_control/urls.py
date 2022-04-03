@@ -13,6 +13,11 @@ urlpatterns = [
         views.GroupView.as_view()),
     url(r'^_internal/group/(?P<gid>[0-9]+)/(?P<action>[a-z_ ]*)/(?P<cid>[0-9]+)/$',
         views.GroupView.as_view()),
+    # Group JSON responders
+    url(r'^_internal/groupjson/(?P<gid>[0-9]+)/$',
+        views.GroupJsonView.as_view()),
+    url(r'^_internal/groupjson/(?P<gid>[0-9]+)/(?P<action>[a-z_ ]*)/(?P<cid>[0-9]+)/$',
+        views.GroupJsonView.as_view()),
 
     # tests
     url(r'^test/community/(?P<cid>[0-9]+)/$',
