@@ -257,7 +257,7 @@ def page_permissions_page_processor(request, page):
         elif user_privilege == PrivilegeCodes.VIEW:
             self_access_level = 'view'
 
-    owners = cm.raccess.owners.filter(is_active=True).all()
+    owners = cm.raccess.owners.all()
     editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE,
                                                         include_group_granted_access=False)
     viewers = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW,
