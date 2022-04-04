@@ -460,14 +460,6 @@ class CommunityView(TemplateView):
                          requester=user, group=group, community=community)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == 'remove':  # remove a group from this community
-                    message, worked = GroupCommunityRequest.remove(
-                         requester=user, group=group, community=community)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
-
-                    message = "group {} ({}) removed from community {} ({}). "\
-                        .format(group.name, group.id, community.name, community.id)
-                    logger.debug(message)
                 else:
                     message = "unknown action '{}'".format(action)
                     logger.error(message)
@@ -610,14 +602,6 @@ class CommunityJsonView(View):
                          requester=user, group=group, community=community)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == 'remove':  # remove a group from this community
-                    message, worked = GroupCommunityRequest.remove(
-                         requester=user, group=group, community=community)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
-
-                    message = "group {} ({}) removed from community {} ({}). "\
-                        .format(group.name, group.id, community.name, community.id)
-                    logger.debug(message)
                 else:
                     message = "unknown action '{}'".format(action)
                     logger.error(message)
