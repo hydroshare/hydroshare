@@ -999,7 +999,7 @@
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
       const RESOURCE_PUBLISHED = "{{ cm.raccess.published }}" === "True";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
-      const STATIC_URL = "{% static '' %}";
+      const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
       const LAST_CHANGED_BY = {{ last_changed_by|safe }};
       const AUTHORS = [
@@ -1026,7 +1026,7 @@
 
       {% if show_manage_access %}
           const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
-          const GROUP_IMAGE_DEFAULT_URL = "{% static '' %}" + "img/home-page/step4.png";
+          const GROUP_IMAGE_DEFAULT_URL = "{% static 'img/home-page/step4.png' %}";
           const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
           const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
           const RESOURCE_ACCESS = {
