@@ -4,7 +4,6 @@ from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.contenttypes.models import ContentType
 
 from hs_core.models import BaseResource
-from theme.utils import get_upload_path_community
 
 
 ###################################
