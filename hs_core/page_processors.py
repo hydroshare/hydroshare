@@ -1,7 +1,6 @@
 """Page processors for hs_core app."""
 
 import json
-import re
 
 from dateutil import parser
 from django.conf import settings

@@ -9,7 +9,6 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, HTML
 from crispy_forms.bootstrap import Field
 
-from .hydroshare import utils
 from .models import Party, Creator, Contributor, validate_hydroshare_user_id, Relation, Identifier, \
     FundingAgency, Description
 

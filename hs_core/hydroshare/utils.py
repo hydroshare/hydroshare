@@ -848,7 +848,7 @@ def get_user_party_name(user):
         party_name = ''
     return party_name
 
-# TODO: make a method to do the opposite of this
+
 def get_party_data_from_user(user):
     party_data = {}
     user_profile = get_profile(user)
