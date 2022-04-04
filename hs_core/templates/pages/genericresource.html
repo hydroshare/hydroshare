@@ -1018,7 +1018,7 @@
                     "address": "{{ author.address|default:""|escapejs }}",
                     "phone": "{{ author.phone|default:"" }}",
                     "homepage": "{{ author.homepage|default:"" }}",
-                    "profileUrl": "{{ author.description|default:"" }}",
+                    "profileUrl": "{{ author.relative_uri|default:'' }}",
                     "order": "{{ author.order }}"
                 },
             {% endif %}

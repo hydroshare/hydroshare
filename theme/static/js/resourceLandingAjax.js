@@ -1762,7 +1762,7 @@ function updateResourceAuthors(authors) {
             order: author.order.toString(),
             organization: author.organization,
             phone: author.phone,
-            profileUrl: author.description,
+            profileUrl: author.relative_uri,
             homepage: author.homepage,
         };
     })

@@ -10,7 +10,7 @@ from crispy_forms.layout import Layout, Fieldset, HTML
 from crispy_forms.bootstrap import Field
 
 from .hydroshare import utils
-from .models import Party, Creator, Contributor, validate_user_url, Relation, Identifier, \
+from .models import Party, Creator, Contributor, validate_hydroshare_user_id, Relation, Identifier, \
     FundingAgency, Description
 
 
@@ -151,7 +151,7 @@ class CreatorFormSetHelper(FormHelper):
         self.layout = Layout(
             Fieldset('Creator',
                      Field('name', css_class=field_width),
-                     Field('description', css_class=field_width),
+                     Field('hydroshare_user_id', css_class=field_width),
                      Field('organization', css_class=field_width),
                      Field('email', css_class=field_width),
                      Field('address', css_class=field_width),
@@ -167,14 +167,7 @@ class PartyForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Render form for creating and editing Party models, aka people.
-
-        Removes profile link formset and renders proper description URL
         """
-        if 'initial' in kwargs:
-            if 'description' in kwargs['initial']:
-                if kwargs['initial']['description']:
-                    kwargs['initial']['description'] = utils.current_site_url() + \
-                                                       kwargs['initial']['description']
         super(PartyForm, self).__init__(*args, **kwargs)
         self.profile_link_formset = None
         self.number = 0
@@ -186,10 +179,10 @@ class PartyForm(ModelForm):
         """
 
         model = Party
-        fields = ['name', 'description', 'organization', 'email', 'address', 'phone', 'homepage']
+        fields = ['name', 'hydroshare_user_id', 'organization', 'email', 'address', 'phone', 'homepage']
 
         # TODO: field labels and widgets types to be specified
-        labels = {'description': 'HydroShare User Identifier (URL)'}
+        labels = {'hydroshare_user_id': 'HydroShare User Identifier'}
 
 
 class CreatorForm(PartyForm):
@@ -239,7 +232,7 @@ class CreatorForm(PartyForm):
 class PartyValidationForm(forms.Form):
     """Validate form for Party models."""
 
-    description = forms.CharField(required=False, validators=[validate_user_url])
+    hydroshare_user_id = forms.IntegerField(required=False, validators=[validate_hydroshare_user_id])
     name = forms.CharField(required=False, max_length=100)
     organization = forms.CharField(max_length=200, required=False)
     email = forms.EmailField(required=False)
@@ -247,15 +240,6 @@ class PartyValidationForm(forms.Form):
     phone = forms.CharField(max_length=25, required=False)
     homepage = forms.URLField(required=False)
     identifiers = forms.CharField(required=False)
-
-    def clean_description(self):
-        """Create absolute URL for Party.description field."""
-        user_absolute_url = self.cleaned_data['description']
-        if user_absolute_url:
-            url_parts = user_absolute_url.split('/')
-            if len(url_parts) > 4:
-                return '/user/{user_id}/'.format(user_id=url_parts[4])
-        return user_absolute_url
 
     def clean_identifiers(self):
         data = self.cleaned_data['identifiers']
@@ -317,7 +301,7 @@ class ContributorFormSetHelper(FormHelper):
         self.layout = Layout(
             Fieldset('Contributor',
                      Field('name', css_class=field_width),
-                     Field('description', css_class=field_width),
+                     Field('hydroshare_user_id', css_class=field_width),
                      Field('organization', css_class=field_width),
                      Field('email', css_class=field_width),
                      Field('address', css_class=field_width),

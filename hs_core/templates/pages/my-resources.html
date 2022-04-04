@@ -259,8 +259,8 @@
                             <td>
                                 {% for creator in res.metadata.creators.all %}
                                     {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                    {% if creator.description %}
-                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
+                                    {% if creator.relative_uri %}
+                                        <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
                                     {% else %}
                                         <span>{{ creator.name }}</span>
                                     {% endif %}

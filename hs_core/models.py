@@ -43,6 +43,7 @@ from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import RelationTypes
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from hs_core.hydroshare.utils import user_from_id
 from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
 from .languages_iso import languages as iso_languages
 
@@ -117,6 +118,18 @@ def get_user(request):
         return User.objects.get(pk=request.user.pk)
     else:
         return request.user
+
+
+def validate_hydroshare_user_id(value):
+    """Validate that a hydroshare_user_id is valid for a hydroshare user."""
+    err_message = '%s is not a valid id for hydroshare user' % value
+    if value:
+        if not isinstance(value, int):
+            raise ValidationError(err_message)
+
+        # check the user exists for the provided user id
+        if not User.objects.filter(pk=value).exists():
+            raise ValidationError(err_message)
 
 
 def validate_user_url(value):
@@ -431,8 +444,7 @@ class HSAdaptorEditInline(object):
 class Party(AbstractMetaDataElement):
     """Define party model to define a person."""
 
-    description = models.CharField(null=True, blank=True, max_length=50,
-                                   validators=[validate_user_url])
+    hydroshare_user_id = models.IntegerField(null=True, blank=True, validators=[validate_hydroshare_user_id])
     name = models.CharField(max_length=100, null=True, blank=True)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
@@ -551,11 +563,11 @@ class Party(AbstractMetaDataElement):
         """Define custom update method for Party model."""
         element_name = cls.__name__
         creator_order = None
-        if 'description' in kwargs:
+        if 'hydroshare_user_id' in kwargs:
             party = cls.objects.get(id=element_id)
-            if party.description is not None and kwargs['description'] is not None:
-                if len(party.description.strip()) > 0 and len(kwargs['description'].strip()) > 0:
-                    if party.description != kwargs['description']:
+            if party.hydroshare_user_id is not None and kwargs['hydroshare_user_id'] is not None:
+                if len(party.hydroshare_user_id.strip()) > 0 and len(kwargs['hydroshare_user_id'].strip()) > 0:
+                    if party.hydroshare_user_id != kwargs['hydroshare_user_id']:
                         raise ValidationError("HydroShare user identifier can't be changed.")
 
         if 'order' in kwargs and element_name == 'Creator':
@@ -591,6 +603,18 @@ class Party(AbstractMetaDataElement):
 
                 party.order = creator_order
                 party.save()
+
+    @property
+    def relative_uri(self):
+        return f"/user/{self.hydroshare_user_id}/"
+
+    @property
+    def is_active(self):
+        user = user_from_id(self.hydroshare_user_id, raise404=False)
+        if user:
+            return user.is_active
+        else:
+            return False
 
     @classmethod
     def remove(cls, element_id):
@@ -4562,9 +4586,9 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
             hsterms_name.text = person.name
 
-        if person.description:
+        if person.relative_uri:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
-                                          current_site_url() + person.description)
+                                          current_site_url() + person.relative_uri)
 
         if isinstance(person, Creator):
             hsterms_creatorOrder = etree.SubElement(dc_person_rdf_Description,

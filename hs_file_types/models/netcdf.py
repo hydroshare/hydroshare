@@ -1315,9 +1315,9 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
 
                 if creator.email:
                     nc_dataset.creator_email = creator.email
-                if creator.description or creator.homepage:
+                if creator.relative_uri or creator.homepage:
                     nc_dataset.creator_url = creator.homepage if creator.homepage \
-                        else 'https://www.hydroshare.org' + creator.description
+                        else 'https://www.hydroshare.org' + creator.relative_uri
 
             # update license
             if hasattr(nc_dataset, 'license'):

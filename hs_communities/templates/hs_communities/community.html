@@ -182,9 +182,9 @@
                                                 </strong>
                                             </td>
                                             {# First Author #}
-                                            {% if res.first_creator.description %}
+                                            {% if res.first_creator.relative_uri %}
                                                 <td>
-                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
+                                                    <a href="{{ res.first_creator.relative_uri }}">{{ res.first_creator.name }}</a>
                                                 </td>
                                             {% else %}
                                                 <td>{{ res.first_creator.name }}</td>
