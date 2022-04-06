@@ -8,21 +8,60 @@ function request_join_group_ajax_submit() {
     var form = $("#" + dataFormID);
     var datastring = form.serialize();
     var url = form.attr('action');
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-            var container = target.parent().parent();
-            target.parent().remove();
-            container.append('<h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>');
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            console.log("error");
+    if($(this).attr("requires_explanation") === 'True'){
+        // show a modal requesting explanation
+        $('#explanation-dialog').modal('show');
+        $('#explanation').unbind('.group_ns');
+
+        // on modal submission
+        $('#explanation_btn').click(()=>{
+            let explanation = $("#explanation").val().trim();
+        
+            let sanitized_explanation = $("<div/>").html(explanation.trim()).text();
+            if (sanitized_explanation !== explanation) {
+                showError("The explanation text contains html code and cannot be saved.");
+                return;
+            }else if (sanitized_explanation == 0) {
+                showError("Justificaiton is a required field that cannot be left blank.");
+                return;
+            }else if(sanitized_explanation.length > 300){
+                showError("The justificaiton is too long. Please shorten to 300 characters.")
+                return;
+            }else{
+                submitGroupRequest(datastring + "&" + $('#explanation').serialize());
+                $('#explanation-dialog').modal('hide');
+            }
+        });
+        function showError(errorText){
+            $("#explanation").addClass("form-invalid");
+            $("#explanation_msg").html(
+                "<div class='alert alert-danger'>" + errorText + "</div>");
+            $("#explanation_msg").show();
+            $('#explanation').bind('input propertychange.group_ns', function() {
+                $("#explanation").removeClass("form-invalid");
+                $("#explanation_msg").hide();
+            });
         }
-    });
-    //don't submit the form
+    }else{
+        submitGroupRequest(datastring);
+    }
+
+    function submitGroupRequest(data){
+        $.ajax({
+            type: "POST",
+            url: url,
+            dataType: 'html',
+            data: data,
+            success: function (result) {
+                var container = target.parent().parent();
+                target.parent().remove();
+                container.append('<h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>');
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                console.log("error");
+            }
+        });
+    }
     return false;
 }
 
@@ -94,7 +133,20 @@ $(document).ready(function () {
         var input = $(this).parents('.input-group').find(':text');
         input.val(label);
     });
-
+    
+    // Hide explanation checkbox if auto-approval is enabled
+    if($('#auto-approve').is(':checked')){
+        $('#requires_explanation').prop( "checked", false );
+        $('#requires_explanation').parent().hide();
+    }
+    $('#auto-approve').change(function() {
+        if(this.checked) {
+            $('#requires_explanation').prop( "checked", false );
+            $('#requires_explanation').parent().hide();
+        }else{
+            $('#requires_explanation').parent().show();
+        }
+    });
 });
 
 /**

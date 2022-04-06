@@ -45,6 +45,10 @@
                                 {% endif %}
                                 <div class="text-muted">{{ request.date_requested }}</div>
                                 <br>
+                                {% if request.explanation %}
+                                    <div class="text-muted explanation" title="{{ request.explanation }}">Explanation: {{ request.explanation }}</div>
+                                {% endif %}
+                                <br>
                                 <table>
                                     <tr>
                                         <form id="act-on-request"
@@ -203,6 +207,7 @@
         </div>
     </div>
 
+    <!-- Create Group Modal -->
     {% include "includes/create-group-modal.html" %}
 {% endblock %}
 

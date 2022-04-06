@@ -20,7 +20,6 @@ from hs_access_control.management.utilities import community_from_name_or_id, \
         group_from_name_or_id, user_from_name
 from hs_access_control.models.invite import GroupCommunityRequest
 import os
-from pprint import pprint
 
 
 def usage():
@@ -429,8 +428,6 @@ class Command(BaseCommand):
                           .format(community_owner.username, cname, gname))
                     message, _ = gcr.decline(responder=community_owner)
                 else:
-                    pprint(group)
-                    pprint(group.gaccess)
                     group_owner = group.gaccess.first_owner
                     print("owner '{}' of group '{}' declines invitation from community '{}'"
                           .format(group_owner.username, gname, cname))
