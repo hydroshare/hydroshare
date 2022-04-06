@@ -10,14 +10,23 @@
         State/Province: {{ user.userprofile.state }}
         Email: {{ user.email }}
         {% if user.userprofile.title %}User Title: {{ user.userprofile.title }}{% endif %}
-        
+        {% if explanation %}Explanation: {{ explanation }}{% endif %}
+
         Click on the link below to accept this request.
     {% else %}
         {% trans "Dear " %}{{ user.first_name }}
+        {% if request.user%}
+        {{ request.user.first_name }} {{ request.user.last_name }} ({{ request.scheme }}://{{ request.get_host }}/user/{{ request.user.id }}){% trans " invited you to join HydroShare user group ("%}{{ group.name }} ).
+        {% else %}
         {% trans "You have been invited to join HydroShare user group ("%}{{ group.name }} ).
+        {% endif %}
+
+        {% trans "You can learn more about the group by following the link below:" %}
+        {{ request.scheme }}://{{ request.get_host }}/group/{{ group.id }}
+        
         Click on the link below to join this group.
     {%  endif %}
-    {{ request.scheme }}://{{ request.get_host }}{{ action_url }}
+        {{ request.scheme }}://{{ request.get_host }}{{ action_url }}
 
-    {% trans "Thanks, The HydroShare Team" %}
+        {% trans "Thanks, The HydroShare Team" %}
 {% endblock %}
