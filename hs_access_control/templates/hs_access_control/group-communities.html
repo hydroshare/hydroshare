@@ -2,7 +2,7 @@
   <div class="group-communities--sidebar">
     <div class="alert alert-info">
       <p>Want your Group to join a HydroShare Community? Click the button below to request that your group be added.</p>
-      <button class="btn btn-primary has-space-top">Ask to join a Community</button>
+      <button class="btn btn-primary has-space-top" data-toggle="modal" data-target="#communities-modal">Ask to join a Community</button>
     </div>
   </div>
 
@@ -58,38 +58,18 @@
       <p v-else>This Group is not a member of any Communities yet.</p>
     </div>
   </div>
+
+  {% include "hs_access_control/communities-modal.html" %}
 </div>
 
+
 <script type="text/javascript">
-  const JOINED = [
-      {% for community in communities.joined %}
-          {
-            "id": {{ community.id }},
-            "name": "{{ community.name }}",
-            "description": "{{ community.description|default:"" }}",
-            "autoApprove": "{{ community.auto_approve }}",
-            "dateCreated": "{{ community.date_created }}",
-            // "owners": [
-            //   {% for owner in community.owners %}
-            //     "{{ owner.username }}",
-            //   {% endfor %}
-            // ]
-          },
-      {% endfor %}
-  ];
+
   const GROUP_ID = {{ gid }}
   const IS_GROUP_OWNER = "{{ profile_user.is_group_owner }}" === "True"
-  const PENDING = [
-      {% for pending in communities.pending %}
-          {
-            "id": {{ pending.community.id }},
-            // "name": "{{ community.name }}",
-            // "picture": "{{ community.picture }}",
-            // "description": "{{ community.description|default:"" }}",
-            // "autoApprove": "{{ community.auto_approve }}",
-            // "dateCreated": "{{ community.date_created }}",
-          },
-      {% endfor %}
-  ]
+
+  const JOINED = {{ communities.joined|safe }};
+  const PENDING = {{ communities.pending|safe }};
+  const COMMUNITIES_CAN_JOIN = {{ communities.available_to_join|safe }};
 </script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/group-communities-app.js"></script>

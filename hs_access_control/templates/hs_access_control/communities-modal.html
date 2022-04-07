@@ -1,0 +1,16 @@
+<!-- Create Group Modal -->
+<div class="modal fade" id="communities-modal" tabindex="-1" role="dialog" aria-labelledby="Join Community">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div v-for="community of availableToJoin" class="community-card">
+        <div>${ community.id }</div>
+        <div>${ community.name }</div>
+        <div>${ community.description }</div>
+        <div>${ community.purpose }</div>
+        <button class="btn btn-primary" @click="join(community.id)" :disabled="isJoining[community.id]">
+          ${ isJoining[community.id] ? 'Requesting to join...' : 'Join Community' }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

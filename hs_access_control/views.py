@@ -59,6 +59,7 @@ def community_json(community):
         except ValueError:
             url = ""
         return {
+            'id': community.id,
             'type': 'Community',
             'name': community.name,
             'description': community.description,
@@ -341,11 +342,12 @@ class GroupJsonView(View):
                 context['pending'].append(gcr_json(r))
 
             # Communities that can be joined.
-            context['communities'] = []
+            context['available_to_join'] = []
             for c in Community.objects.filter().exclude(invite_c2gcr__group=group)\
                                                .exclude(c2gcp__group=group)\
-                                               .exclude(closed=True).order_by('name'):
-                context['communities'].append(community_json(c))
+                                               .order_by('name'):
+                                              #  .exclude(closed=True)\
+                context['available_to_join'].append(community_json(c))
 
             # requests that were declined by others
             context['they_declined'] = []
