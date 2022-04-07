@@ -15,6 +15,16 @@ solr:
   # ports:
   # - "8983"
   command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
+tusd: 
+  build: .
+  dockerfile: Dockerfile-tusd
+  container_name: tusd
+  volumes:
+    - "/tusd_tmp"
+  ports:
+    - "1080:1080"
+  user: root
+  command: /init-tusd
 hydroshare:
   build: .
   container_name: hydroshare
@@ -45,6 +55,8 @@ hydroshare:
     - "/shared_tmp"
     - "/irods/hydroshare:/irods/hydroshare"
     - "/irods/hydroshare_vault:/irods/hydroshare_vault"
+  volumes_from: 
+    - tusd
   ports:
     - "1338:2022"
     - "8000:8000"
@@ -74,13 +86,3 @@ defaultworker:
     - postgis:postgis
     - rabbitmq:rabbitmq
   command: /bin/bash init-defaultworker
-tusd: 
-  build: .
-  dockerfile: Dockerfile-tusd
-  container_name: tusd
-  volumes: 
-    - "/tusd_tmp"
-  ports:
-    - "1080:1080"
-  user: root
-  command: /init-tusd

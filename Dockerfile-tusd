@@ -5,8 +5,8 @@ USER root:root
 COPY init-tusd /init-tusd
 RUN chown tusd:tusd /init-tusd
 
-COPY tusd-hooks/post-finish /srv/tusd-hooks/post-finish
-RUN chown tusd:tusd /srv/tusd-hooks/post-finish
+# COPY tusd-hooks/post-finish /srv/tusd-hooks/post-finish
+# RUN chown tusd:tusd /srv/tusd-hooks/post-finish
 
 # run daemon
 CMD /bin/bash

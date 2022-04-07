@@ -14,50 +14,31 @@ class Upload(models.Model):
     path = models.TextField(null=True, editable=False)
     tempfile = models.TextField(null=True, editable=False)
     size = models.IntegerField(null=True, editable=False)
-    uploaded = models.IntegerField(null=True, editable=False)
+    # uploaded = models.IntegerField(null=True, editable=False)
 
     class Meta:  # don't let two downloads of the same file occur at the same time.
         unique_together = ('resource', 'path')
 
     @classmethod
     def create(cls, user, resource, path, size):
-        try:
-            object = cls.objects.create(user=user,
-                                        resource=resource,
-                                        path=path,
-                                        size=size)
-            logger.debug("starting upload for {}: {}/{}"
-                         .format(user, resource, path))
-            return object
-        except Exception as e:
-            logger.debug(e)
-            return None
+        """ start an upload """
+        object = cls.objects.create(user=user,
+                                    resource=resource,
+                                    path=path,
+                                    size=size)
+        logger.debug("starting upload for {}: {}/{}"
+                     .format(user, resource, path))
+        return object
 
     @classmethod
-    def update(cls, resource, path, uploaded, tempfile):
-        try:
-            with transaction.atomic():
-                object = cls.objects.get(resource=resource, path=path)
-                if object.uploaded < uploaded:
-                    object.uploaded = uploaded
-                if object.tempfile is None:
-                    object.tempfile = tempfile
-                object.save()
-            logger.debug("updating upload for {}: {}/{} ({}) bytes={}"
-                         .format(object.user, resource, path, tempfile, uploaded))
-            return object
-        except Exception as e:
-            logger.debug(e)
-            return None
+    def exists(cls, resource, path): 
+        """ is an upload in progress? """
+        return cls.objects.filter(resource=resource, path=path).exists()
 
     @classmethod
-    def remove(cls, resource, path):
-        try:
-            object = cls.objects.get(resource=resource, path=path)
-            logger.debug("terminating upload for {}: {}/{}"
-                         .format(object.user, resource, path))
-            object.delete()
-            return True
-        except Exception as e:
-            logger.debug(e)
-            return False
+    def delete(cls, resource, path):
+        """ terminate an upload """
+        object = cls.objects.get(resource=resource, path=path)
+        logger.debug("terminating upload for {}: {}/{}"
+                     .format(object.user, resource, path))
+        object.delete()

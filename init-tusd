@@ -1,8 +1,8 @@
 #! /bin/bash 
 umask 000
 chown -R tusd:tusd /tusd_tmp
-chmod 03777 /tusd_tmp
-whoami
-ls -ld /tusd_tmp
+chmod 0777 /tusd_tmp
+# whoami
+# ls -ld /tusd_tmp
 su tusd -c \
-'/usr/local/bin/tusd -base-path /upload/ -behind-proxy -unix-sock /tusd_tmp/tusd.sock -upload-dir /tmp/tusd -hooks-dir /srv/tusd-hooks'
+'/usr/local/bin/tusd -base-path /upload/ -behind-proxy -unix-sock /tusd_tmp/tusd.sock -upload-dir /tusd_tmp -hooks-dir /srv/tusd-hooks'
