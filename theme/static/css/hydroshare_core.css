@@ -3666,38 +3666,6 @@ div.group-thumbnails {
 	flex-wrap: wrap;
 }
 
-.group-info {
-  margin-top: 20px;
-  word-break: break-all;
-  display: flex;
-  align-items: flex-start;
-  column-gap: 50px;
-  flex-wrap: wrap;
-}
-
-.group-info > div {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.group-info > div > i {
-  margin-right: 6px;
-}
-
-.group-header {
-  display: flex;
-  column-gap: 30px;
-  align-items: center;
-}
-
-.group-title-container {
-  display: flex;
-  column-gap: 20px;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
 .group-container {
     margin-bottom: 20px;
 }
@@ -3723,7 +3691,7 @@ div.group-thumbnails {
 }
 
 .group-description {
-    margin-top:20px;
+  margin-top:20px;
 	max-height:105px;
 	overflow-y: auto;
 	word-break: break-word;
@@ -3734,7 +3702,7 @@ div.group-thumbnails {
 }
 
 .group-search {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 	width: 100%;
 }
 
@@ -3805,10 +3773,10 @@ div.group-thumbnails {
     text-align: center;
     width: 80px;
     background-size: contain;
-	background-repeat: no-repeat;
-	background-position: center center;
-	display: inline-block;
-	background-color: #093e54;
+    background-repeat: no-repeat;
+    background-position: center center;
+    display: inline-block;
+    background-color: #093e54;
 }
 
 .group-image-extra-small {
