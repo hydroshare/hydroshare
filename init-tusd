@@ -1,8 +1,6 @@
 #! /bin/bash 
-umask 000
-chown -R tusd:tusd /tusd_tmp
+umask 002
+chown -R hydro-service:service-accounts /tusd_tmp
 chmod 0777 /tusd_tmp
-# whoami
-# ls -ld /tusd_tmp
-su tusd -c \
+su hydro-service -c \
 '/usr/local/bin/tusd -base-path /upload/ -behind-proxy -unix-sock /tusd_tmp/tusd.sock -upload-dir /tusd_tmp -hooks-dir /srv/tusd-hooks'

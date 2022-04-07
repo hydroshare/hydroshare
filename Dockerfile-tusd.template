@@ -4,8 +4,8 @@ USER root:root
 
 RUN apt-get update \
     && apt-get install -y ca-certificates jq net-tools procps python3 python3-irodsclient \
-    && addgroup --gid 10000 service-accounts \
-    && adduser --uid 20028 --ingroup service-accounts --shell /bin/sh --disabled-password --no-create-home --gecos 'hydroshare user' hydro-service \
+    && addgroup --gid HS_SERVICE_GID service-accounts \
+    && adduser --uid HS_SERVICE_UID --ingroup service-accounts --shell /bin/sh --disabled-password --no-create-home --gecos 'hydroshare user' hydro-service \
     && chown hydro-service:service-accounts /srv/tusd-data \
     && mkdir -p /srv/tusd-hooks \
     && chown hydro-service:service-accounts /srv/tusd-hooks \

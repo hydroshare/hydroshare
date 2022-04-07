@@ -77,9 +77,9 @@ class UploadContextView(TemplateView):
 
         # now we have the resource Id and can authorize the request
         # if the resource does not exist in django, authorized will be false
-        res, authorized, _ = authorize(self.request, res_id,
-                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                       raises_exception=False)
+        resource, authorized, _ = authorize(self.request, res_id,
+                                            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                            raises_exception=False)
         if not authorized:
             response = HttpResponse(status=401)
             content_msg = "You do not have permission to upload files to resource {}!".format(res_id)
@@ -87,8 +87,8 @@ class UploadContextView(TemplateView):
             logger.error(content_msg)
             return response
 
-        istorage = res.get_irods_storage()  # deal with federated storage
-        irods_path = res.get_irods_path(path, prepend_short_id=False)
+        istorage = resource.get_irods_storage()  # deal with federated storage
+        irods_path = resource.get_irods_path(path, prepend_short_id=False)
 
         if not istorage.exists(irods_path):
             response = HttpResponse(status=401)
@@ -112,6 +112,8 @@ class UploadContextView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['path'] = kwargs['path']  # guaranteed to succeed and exist
+        context['FQDN_OR_IP'] = getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org')
+        logger.debug("FQDN_OR_IP is '{}'".format(context['FQDN_OR_IP']))
         return context
 
 
@@ -120,7 +122,6 @@ def start(request, path, *args, **kwargs):
 
     user = request.user
     filename = request.GET.get('filename')
-    filetype = request.GET.get('filetype')
     size = request.GET.get('size')
     stuff = path.split('/')
     rid = stuff[0]
@@ -164,7 +165,7 @@ def start(request, path, *args, **kwargs):
     # upload in progress should not exist
     # TODO: fold this code into Upload.create under an atomic transaction
     path = os.path.join(path, filename)
-    
+
     if Upload.exists(resource, path):
         response = HttpResponse(status=401)
         content_msg = "upload to resource {} path {} already in progress!".format(rid, path)
@@ -183,41 +184,35 @@ def start(request, path, *args, **kwargs):
         return response
 
 
-def cleanup(resource, path, tmpfile): 
+def cleanup(resource, path, tmpfile):
     """ clean up after a failed upload """
-    try: 
+    try:
         Upload.delete(resource, path)
-    except Upload.DoesNotExist():  # not an error for lockfile not to exist
+    except Upload.DoesNotExist:  # not an error for lockfile not to exist
         pass
-    try: 
+    try:
         os.remove(tmpfile)
-    except Exception as e: 
+    except Exception as e:
+        logger.debug("can't remove file {}: {}".format(tmpfile, str(e)))
+    try:
+        os.remove(tmpfile + '.info')
+    except Exception as e:
         logger.debug("can't remove file {}: {}".format(tmpfile, str(e)))
 
 
-def finish(request, path, *args, **kwargs): 
+def finish(request, path, *args, **kwargs):
     """ finish processing an upload """
-    user = request.user
+    # user = request.user
     filename = request.GET.get('filename')
-    filetype = request.GET.get('filetype')
-    size = request.GET.get('size')
+    # size = request.GET.get('size')
     url = request.GET.get('url')
     tusd_root = url.split('/')[-1]
     tusd_path = os.path.join('/tusd_tmp', tusd_root)
 
-    # uploaded file must still exist as a source
-    if not os.path.exists(tusd_path):
-        response = HttpResponse(status=401)
-        content_msg = "uploaded file {} does not exist!".format(tusd_path)
-        response.content = content_msg
-        logger.error(content_msg)
-        cleanup(resource, path, tusd_path)
-        return response
-
     path = path.split('/')
     rid = path[0]
     try:
-        _ = get_resource_by_shortkey(rid, or_404=False)
+        resource = get_resource_by_shortkey(rid, or_404=False)
     except BaseResource.DoesNotExist:
         response = HttpResponse(status=403)
         content_msg = "resource {} does not exist!".format(rid)
@@ -228,14 +223,23 @@ def finish(request, path, *args, **kwargs):
 
     path = '/'.join(path[1:])  # without resource ID
 
-    logger.debug("tusd upload start:  rid = {}, path = {}, filename = {}, filetype = {}, url = {}"
-                 .format(rid, path, filename, filetype, url))
+    logger.debug("tusd upload start:  rid = {}, path = {}, filename = {}, url = {}"
+                 .format(rid, path, filename, url))
+
+    # uploaded file must still exist as a source
+    if not os.path.exists(tusd_path):
+        response = HttpResponse(status=401)
+        content_msg = "uploaded file {} does not exist!".format(tusd_path)
+        response.content = content_msg
+        logger.error(content_msg)
+        cleanup(resource, path, tusd_path)
+        return response
 
     # now we have the resource Id and can authorize the request
     # if the resource does not exist in django, authorized will be false
-    res, authorized, _ = authorize(request, rid,
-                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                   raises_exception=False)
+    resource, authorized, _ = authorize(request, rid,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
     if not authorized:
         response = HttpResponse(status=401)
         content_msg = "You do not have permission to upload files to resource {}!".format(rid)
@@ -244,8 +248,8 @@ def finish(request, path, *args, **kwargs):
         cleanup(resource, path, tusd_path)
         return response
 
-    istorage = res.get_irods_storage()  # deal with federated storage
-    irods_path = res.get_irods_path(path)
+    istorage = resource.get_irods_storage()  # deal with federated storage
+    irods_path = resource.get_irods_path(path)
 
     # folder should exist in resource
     if not istorage.exists(irods_path):
@@ -276,7 +280,6 @@ def finish(request, path, *args, **kwargs):
         logger.error(content_msg)
         cleanup(resource, path, tusd_path)
         return response
-
 
     # all tests pass: move into appropriate location
     logger.debug("copy uploaded file {} to {}".format(tusd_path, irods_path))
