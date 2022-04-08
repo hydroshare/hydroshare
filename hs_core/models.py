@@ -43,7 +43,6 @@ from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import RelationTypes
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
-from hs_core.hydroshare.utils import user_from_id
 from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
 from .languages_iso import languages as iso_languages
 
@@ -610,6 +609,7 @@ class Party(AbstractMetaDataElement):
 
     @property
     def is_active(self):
+        from hs_core.hydroshare.utils import user_from_id
         user = user_from_id(self.hydroshare_user_id, raise404=False)
         if user:
             return user.is_active
