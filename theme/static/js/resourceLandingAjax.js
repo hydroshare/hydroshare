@@ -887,6 +887,27 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
     });
 }
 
+function zip_aggregation_virtual_folder_ajax_submit(res_id, aggregationPath, zipFileName) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/aggregation-virtual-folder-zip/',
+        async: true,
+        data: {
+            res_id: res_id,
+            aggregation_path: aggregationPath,
+            output_zip_file_name: zipFileName
+        },
+        success: function (result) {
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
+        },
+        error: function (xhr, errmsg, err) {
+            display_error_message('Zipping of Aggregation Failed', xhr.responseText);
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
+        }
+    });
+}
+
 function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({

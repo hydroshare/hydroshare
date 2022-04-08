@@ -316,11 +316,6 @@ function updateSelectionMenuContext() {
             }
             else {
                 //  ------------- Folder is a logical file type -------------
-                let logicalFileType = selected.children('span.fb-logical-file-type').attr("data-logical-file-type");
-                if(logicalFileType !== "FileSetLogicalFile" && logicalFileType !== "ModelProgramLogicalFile" &&
-                    logicalFileType !== "ModelInstanceLogicalFile") {
-                    uiActionStates.zip.disabled = true;
-                }
                 uiActionStates.paste.disabled = true;
                 uiActionStates.subMenuSetContentType.disabled = true;
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
@@ -2053,8 +2048,24 @@ $(document).ready(function () {
     });
 
     $("[data-fb-action='zip']").click(function() {
-         var folderName =$("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        $("#txtZipName").val(folderName);
+        let selected = $("#fb-files-container li.ui-selected");
+        let zipFileName = '';
+        if (isVirtualFolder(selected)) {
+            const aggregationPath = selected.attr('data-url').split('/data/contents/').pop();
+            let aggregationMainFileName = '';
+            if (aggregationPath.indexOf('/') > -1) {
+                aggregationMainFileName = aggregationPath.split('/').pop();
+            }
+            else {
+                aggregationMainFileName = aggregationPath;
+            }
+            zipFileName = aggregationMainFileName.split('.')[0];
+        }
+        else {
+            zipFileName =$("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        }
+
+        $("#txtZipName").val(zipFileName);
     });
 
     $('#zip-folder-dialog').on('shown.bs.modal', function () {
@@ -2602,10 +2613,17 @@ $(document).ready(function () {
     // Zip method
     $("#btn-confirm-zip").click(async function () {
         if ($("#txtZipName").val().trim() !== "") {
-            const folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+            let selected = $("#fb-files-container li.ui-selected");
             const fileName = $("#txtZipName").val() + ".zip";
-            const path = getCurrentPath().path.concat(folderName);
-            await zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
+            if (isVirtualFolder(selected)) {
+                const aggregationPath = selected.attr('data-url').split('/data/contents/').pop();
+                await zip_aggregation_virtual_folder_ajax_submit(SHORT_ID, aggregationPath, fileName)
+            }
+            else {
+                const folderName = selected.children(".fb-file-name").text();
+                const path = getCurrentPath().path.concat(folderName);
+                await zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
+            }
             refreshFileBrowser();
         }
     });
