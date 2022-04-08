@@ -84,6 +84,8 @@ urlpatterns = [
     url(r'^_internal/data-store-structure/$', views.resource_folder_hierarchy.data_store_structure),
     url(r'^_internal/data-store-folder-zip/$',
         views.resource_folder_hierarchy.data_store_folder_zip, name="zip_folder"),
+    url(r'^_internal/aggregation-virtual-folder-zip/$',
+        views.resource_folder_hierarchy.aggregation_virtual_folder_zip, name="zip_aggr_virtual_folder"),
     url(r'^_internal/data-store-folder-unzip/$',
         views.resource_folder_hierarchy.data_store_folder_unzip),
     url(r'^_internal/data-store-create-folder/$',
