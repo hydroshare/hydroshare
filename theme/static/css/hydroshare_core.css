@@ -2765,16 +2765,13 @@ span.you-flag {
     display: none;
 }
 
-#items-discovered, #item-selectors {
-	width: calc(100% - 2px) !important;		/* Makes up for border width */
-}
-
 .resource-custom-table {
 	font-size: 14px;
 	border: 1px solid #ddd !important;
 	margin-bottom: 10px !important;
 	border-top-right-radius: 4px;
 	border-top-left-radius: 4px;
+	width: calc(100% - 2px) !important;     /* Makes up for border width */
 }
 
 #collected-by-table {
