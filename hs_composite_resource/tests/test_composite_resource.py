@@ -1703,9 +1703,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         gen_res_file = self.composite_resource.files.first()
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, gen_res_file.id)
-        # test that we can't zip the folder my_new_folder as this folder has aggregation
+        # test that we can zip the folder my_new_folder which contains an aggregation
         folder_to_zip = os.path.join(self.composite_resource.file_path, new_folder)
-        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
 
     def test_supports_zip_single_file_aggregation_parent_folder(self):
         """Here we are testing the function supports_zip()
@@ -1745,10 +1745,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         gen_res_file = self.composite_resource.files.first()
         self.assertEqual(gen_res_file.file_folder, '{0}/{1}'.format(parent_folder, new_folder))
-        # test that we can't zip the folder parent_folder as this folder contains a
+        # test that we can zip the folder parent_folder which contains a
         # folder (generic-folder) that has an aggregation
         folder_to_zip = os.path.join(self.composite_resource.file_path, parent_folder)
-        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
 
     def test_supports_zip_multi_file_aggregation_folder(self):
         """Here we are testing the function supports_zip()
@@ -1773,9 +1773,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # resource file exists in a folder
         self.assertEqual(res_file.file_folder, raster_folder)
 
-        # test that we can't zip the folder that represents the aggregation
+        # test that we can zip the folder that represents the aggregation
         folder_to_zip = os.path.join(self.composite_resource.file_path, res_file.file_folder)
-        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
 
     def test_supports_zip_multi_file_aggregation_parent_folder(self):
         """Here we are testing the function supports_zip()
@@ -1812,10 +1812,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         tif_res_file = self.composite_resource.files.first()
         self.assertEqual(tif_res_file.file_folder, '{0}/{1}'.format(parent_folder,
                                                                     res_file.file_folder))
-        # test that we can't zip the folder parent_folder as this folder contains a
-        # the folder that represents an aggregation
+        # test that we can zip the folder parent_folder which contains a
+        # a folder that represents an aggregation
         folder_to_zip = os.path.join(self.composite_resource.file_path, parent_folder)
-        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
 
     def test_supports_delete_original_folder_on_zip(self):
         """Here we are testing the function supports_delete_original_folder_on_zip() of the
@@ -1866,8 +1866,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # resource file exists in a folder
         self.assertEqual(tif_res_file.file_folder, raster_folder)
         folder_to_zip = os.path.join(self.composite_resource.file_path, tif_res_file.file_folder)
-        # test that we can't zip the folder my_new_folder
-        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), False)
+        # test that we can zip the folder my_new_folder which contains as raster aggregation
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
         # this is the function we are testing - aggregation folder can't be deleted
         self.assertEqual(self.composite_resource.supports_delete_folder_on_zip(
             folder_to_zip), False)
