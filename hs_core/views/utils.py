@@ -6,8 +6,8 @@ import shutil
 import string
 from collections import namedtuple
 from tempfile import NamedTemporaryFile
-from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 from uuid import uuid4
 
 import paramiko
@@ -35,6 +35,7 @@ from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
+from hs_core.enums import RelationTypes
 from hs_core.hydroshare import add_resource_files
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.hydroshare.utils import check_aggregations, get_file_from_irods, get_temp_dir
@@ -42,8 +43,6 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
-from hs_core.enums import RelationTypes
-
 from hs_file_types.utils import set_logical_file_type
 from theme.backends import without_login_date_token_generator
 
