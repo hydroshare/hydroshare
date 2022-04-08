@@ -3663,10 +3663,8 @@ input.no-style {
 }
 
 div.group-thumbnails {
-	display: flex;
-	flex-wrap: wrap;
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(min(33.3rem, 100%), 1fr)); 
+	grid-template-columns: repeat(auto-fill, minmax(33.3rem, 1fr));
 	gap: 1rem;
 }
 
