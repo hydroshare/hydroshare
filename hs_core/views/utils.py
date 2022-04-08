@@ -18,6 +18,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
+from django.core.files.uploadedfile import UploadedFile
 from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
 from django.db.models import When, Case, Value, BooleanField, Prefetch
@@ -36,7 +37,7 @@ from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.hydroshare import add_resource_files
 from hs_core.hydroshare import check_resource_type, delete_resource_file
-from hs_core.hydroshare.utils import check_aggregations
+from hs_core.hydroshare.utils import check_aggregations, get_file_from_irods, get_temp_dir
 from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user, CoreMetaData
@@ -918,6 +919,64 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
     return output_zip_fname, output_zip_size
+
+
+def zip_aggregation_virtual_folder(user, res_id, aggregation_name, output_zip_fname):
+    """
+    Zips an aggregation that is based on a virtual folder (e.g., netcdf, raster etc)
+    :param user: user requesting the zipping of an aggregation that is based on virtual folder
+    :param res_id: id of the resource that contains the aggregation
+    :param aggregation_name: short path (relative to res_id/data/contents/) of the aggregation to be zipped
+    :param output_zip_fname: name of the zip file
+    :return: name of the zip file and size of the zip file
+    """
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    if resource.raccess.published:
+        raise ValidationError("Aggregation zipping is not allowed for a published resource")
+    istorage = resource.get_irods_storage()
+    if aggregation_name.startswith('data/contents/'):
+        _, aggregation_name = aggregation_name.split('data/contents/')
+
+    if output_zip_fname.lower().endswith('.zip'):
+        output_zip_fname = output_zip_fname[:-4]
+    aggr_folder_path = os.path.dirname(aggregation_name)
+    if aggr_folder_path:
+        zip_file_target_full_path = os.path.join(resource.file_path, aggr_folder_path, f"{output_zip_fname}.zip")
+    else:
+        zip_file_target_full_path = os.path.join(resource.file_path, f"{output_zip_fname}.zip")
+    if istorage.exists(zip_file_target_full_path):
+        raise ValidationError(f"Zip file ({output_zip_fname}.zip) already exists")
+
+    aggregation = resource.get_aggregation_by_name(aggregation_name)
+    aggregation.create_aggregation_xml_documents()
+    # get the aggregation resource files and meta files from iRODS to temp dir
+    temp_staging_dir = get_temp_dir()
+    zip_output_dir = get_temp_dir()
+    try:
+        for res_file in aggregation.files.all():
+            get_file_from_irods(resource=resource, file_path=res_file.storage_path, temp_dir=temp_staging_dir)
+
+        get_file_from_irods(resource=resource, file_path=aggregation.metadata_file_path, temp_dir=temp_staging_dir)
+        get_file_from_irods(resource=resource, file_path=aggregation.map_file_path, temp_dir=temp_staging_dir)
+        zip_file_path = os.path.join(zip_output_dir, output_zip_fname)
+        zip_file_path = shutil.make_archive(base_name=zip_file_path, format='zip', root_dir=temp_staging_dir)
+        file_to_upload = UploadedFile(file=open(zip_file_path, 'rb'), name=os.path.basename(zip_file_path))
+        upload_folder_path = os.path.dirname(aggregation.aggregation_name)
+        zip_res_file = ResourceFile.create(resource=resource, file=file_to_upload, folder=upload_folder_path)
+        file_format_type = get_file_mime_type(zip_res_file.short_path)
+        if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
+            resource.metadata.create_element('format', value=file_format_type)
+        # make the newly added zip file part of an aggregation if needed
+        resource.add_file_to_aggregation(zip_res_file)
+        hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+        output_zip_size = istorage.size(zip_res_file.storage_path)
+        output_zip_fname = os.path.basename(zip_res_file.storage_path)
+        return output_zip_fname, output_zip_size
+    finally:
+        if os.path.exists(temp_staging_dir):
+            shutil.rmtree(temp_staging_dir)
+        if os.path.exists(zip_output_dir):
+            shutil.rmtree(zip_output_dir)
 
 
 class IrodsFile:
