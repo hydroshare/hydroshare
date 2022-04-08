@@ -398,7 +398,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             vrt_file.delete()
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets a resource file that has extension .vrt (if exists) otherwsie 'tif'
         from the list of files *resource_files* """
 

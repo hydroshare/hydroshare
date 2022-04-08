@@ -863,7 +863,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             txt_file.delete()
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets a resource file that has extension .nc from the list of files *resource_files* """
 
         res_files = [f for f in resource_files if f.extension.lower() == '.nc']

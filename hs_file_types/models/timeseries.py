@@ -764,7 +764,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         return copy_of_logical_file
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets a resource file that has extension .sqlite or .csv from the list of files
         *resource_files*
         """
