@@ -476,7 +476,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
                     collect_shape_resource_files(f)
 
         for f in shape_res_files:
-            temp_file = utils.get_file_from_irods(f)
+            temp_file = utils.get_file_from_irods(resource=resource, file_path=f.storage_path)
             if not temp_dir:
                 temp_dir = os.path.dirname(temp_file)
             else:
@@ -488,7 +488,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
             shape_temp_files.append(temp_file)
 
     elif selected_resource_file.extension.lower() == '.zip':
-        temp_file = utils.get_file_from_irods(selected_resource_file)
+        temp_file = utils.get_file_from_irods(resource=resource, file_path=selected_resource_file.storage_path)
         temp_dir = os.path.dirname(temp_file)
         if not zipfile.is_zipfile(temp_file):
             if os.path.isdir(temp_dir):

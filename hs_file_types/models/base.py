@@ -1570,7 +1570,7 @@ class FileTypeContext(object):
 
         if self.is_temp_file:
             # need to get the file from irods to temp dir
-            self.temp_file = get_file_from_irods(self.res_file)
+            self.temp_file = get_file_from_irods(resource=self.resource, file_path=self.res_file.storage_path)
             self.temp_dir = os.path.dirname(self.temp_file)
         return self  # control returned to the caller
 

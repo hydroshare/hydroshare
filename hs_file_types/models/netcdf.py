@@ -1177,7 +1177,8 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
     file_type = isinstance(instance, NetCDFLogicalFile)
 
     # get the file from irods to temp dir
-    temp_nc_file = utils.get_file_from_irods(nc_res_file)
+    resource = nc_res_file.resource
+    temp_nc_file = utils.get_file_from_irods(resource=resource, file_path=nc_res_file.storage_path)
     nc_dataset = netCDF4.Dataset(temp_nc_file, 'a')
 
     try:

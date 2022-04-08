@@ -27,7 +27,7 @@ for res in RasterResource.objects.all():
     try:
         temp_dir = tempfile.mkdtemp()
         for res_file in res.files.all():
-            res_file_tmp_path = get_file_from_irods(res_file)
+            res_file_tmp_path = get_file_from_irods(resource=res, file_path=res_file.storage_path)
             shutil.copy(res_file_tmp_path,
                         os.path.join(temp_dir, os.path.basename(res_file_tmp_path)))
             shutil.rmtree(os.path.dirname(res_file_tmp_path))
