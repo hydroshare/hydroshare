@@ -3666,6 +3666,7 @@ div.group-thumbnails {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(33.3rem, 1fr));
 	gap: 1rem;
+	flex-grow: 1
 }
 
 .group-container {
