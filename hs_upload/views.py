@@ -7,6 +7,8 @@ from hs_core.models import BaseResource
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import get_resource_by_shortkey
 from hs_upload.models import Upload
+from django.core.files.uploadedfile import UploadedFile
+from hs_core.hydroshare.utils import add_file_to_resource
 
 import os
 import logging
@@ -221,6 +223,7 @@ def finish(request, path, *args, **kwargs):
         cleanup(resource, path, tusd_path)
         return response
 
+    short_path = '/'.join(path[3:])  # without data/contents/
     path = '/'.join(path[1:])  # without resource ID
 
     logger.debug("tusd upload start:  rid = {}, path = {}, filename = {}, url = {}"
@@ -282,7 +285,10 @@ def finish(request, path, *args, **kwargs):
         return response
 
     # all tests pass: move into appropriate location
-    logger.debug("copy uploaded file {} to {}".format(tusd_path, irods_path))
-    istorage.saveFile(tusd_path, irods_path)
+    logger.debug("copy uploaded file {} to {}/{}".format(tusd_path, path, filename))
+    upload_object = UploadedFile(file=open(tusd_path, mode="rb"), name=filename)
+    upload_result = add_file_to_resource(resource, upload_object, folder=short_path)
+
+    # istorage.saveFile(tusd_path, irods_path)
     cleanup(resource, path, tusd_path)
     return HttpResponse(status=200)  # no content body needed

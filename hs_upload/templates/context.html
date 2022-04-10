@@ -1,10 +1,10 @@
-{% extends "pages/page.html" %}
-{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
-{% block title %}Upload{% endblock %}
+<script type="text/javascript" src="/static/mezzanine/js/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="/static/js/jquery-ui.js"></script>
+<script type="text/javascript" src="/static/js/bootstrap.3.0.2.min.js"></script>
+<script type="text/javascript" src="/static/js/bootstrap-extras.js"></script>
+<script type="text/javascript" src="/static/js/tus.min.js"></script> 
 
-{% block main %}
-<script src="/static/js/tus.min.js"></script> 
-<h1>Uploading to destination '{{ path }}'</h1>
+<p>Uploading to destination '{{ path }}'</p>
 
 <form> <input type='file' id='what'> </form>
 
@@ -20,7 +20,7 @@ what.addEventListener("change", function(e) {
     var file = e.target.files[0]
 
     // check that name given is acceptable via synchronous call
-    $.ajax({ url: "https://{{ FQDN_OR_IP }}/hs_upload/start/{{ path }}", 
+    $.ajax({ url: "{{ STATIC_URL }}hs_upload/start/{{ path }}", 
              async: false, 
              data: {filename: file.name, filetype: file.type }, 
            }).done(function() { 
@@ -29,7 +29,7 @@ what.addEventListener("change", function(e) {
                 var upload = new tus.Upload(file, {
                     // Endpoint is the upload creation URL from your tus server
                     // This is a direct passthough to tusd from nginx
-                    endpoint: "https://{{ FQDN_OR_IP }}/upload/",
+                    endpoint: "{{ STATIC_URL }}upload/",
                     // Retry delays will enable tus-js-client to automatically retry on errors
                     retryDelays: [0, 3000, 5000, 10000, 20000],
                     // Attach additional meta data about the file for the server
@@ -42,7 +42,7 @@ what.addEventListener("change", function(e) {
                     onError: function(error) {
                         console.log("Failed because: " + error); 
                         document.getElementById('upload_status').innerHTML = "<p>failed because: " + error + "</p>"; 
-                        $.ajax("https://{{ FQDN_OR_IP }}/hs_upload/event/{{ path }}", 
+                        $.ajax("{{ STATIC_URL }}hs_upload/event/{{ path }}", 
                             {data: {event: 'error', filename: file.name, filetype: file.type, reason: error, url: upload.url}});
                     },
                     // Callback for reporting upload progress
@@ -56,7 +56,7 @@ what.addEventListener("change", function(e) {
                     onSuccess: function() {
                         console.log("Upload completed:  %s from %s", upload.file.name, upload.url); 
                         document.getElementById("upload_status").innerHTML = "done";
-                        $.ajax("https://{{ FQDN_OR_IP }}/hs_upload/finish/{{ path }}", 
+                        $.ajax("{{ STATIC_URL }}hs_upload/finish/{{ path }}", 
                             {data: {filename: file.name, filetype: file.type, size: file.size,
                                     url: upload.url}});
                     }}
@@ -69,10 +69,3 @@ what.addEventListener("change", function(e) {
 
 </script>
 <span id="csrf">{% csrf_token %}</span>
-
-{% endblock %}
-
-{% block extra_js %}
-    {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-{% endblock %}
