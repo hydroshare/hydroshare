@@ -139,7 +139,7 @@ urlpatterns += [
     # one out.
 
     # url("^$", direct_to_template, {"template": "index.html"}, name="home"),
-    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),
+    # QUNIT_TESTS_OFF
 
     # HOMEPAGE AS AN EDITABLE PAGE IN THE PAGE TREE
     # ---------------------------------------------
