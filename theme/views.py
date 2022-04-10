@@ -580,6 +580,11 @@ def delete_resource_comment(request, id):
 @login_required
 def deactivate_user(request):
     user = request.user
+    
+    # redeem existing membership requests
+    member_requests = user.uaccess.group_membership_requests.all()
+    for req in member_requests:
+        user.uaccess.act_on_group_membership_request(req, accept_request=False)
     user.is_active = False
     user.save()
     messages.success(request, "Your account has been successfully deactivated.")

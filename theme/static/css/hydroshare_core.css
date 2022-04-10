@@ -2070,6 +2070,11 @@ table.user-scope tr {
     display: table-row !important;
 }
 
+.access-table tbody > tr.is-group {
+    background-color: #093e541f;
+}
+
+
 #templateRow {
 	display:none !important;
 }
@@ -2976,6 +2981,7 @@ span.you-flag {
 	padding-bottom: 5px;
 	padding-right: 32px;
 	margin: 0;
+	word-wrap: break-word;
 }
 
 .noselect {
@@ -3687,7 +3693,7 @@ div.group-thumbnails {
 
 .group-description {
     margin-top:20px;
-	max-height:250px;
+	max-height:105px;
 	overflow-y: auto;
 	word-break: break-word;
 }
@@ -3857,6 +3863,7 @@ div.group-thumbnails {
 
 .table-members-list {
     width: 100%;
+	table-layout: fixed;
 }
 
 .table-members-list button.dropdown-toggle {
@@ -3865,6 +3872,11 @@ div.group-thumbnails {
 
 .table-members-list tr > td:first-child {
     width: 40px;
+}
+
+.table-members-list .explanation{
+    overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .table-members-list tr > td {
@@ -3939,6 +3951,12 @@ div.group-add-photo {
     border: 1px solid #DDD;
     padding: 10px;
     border-radius: 4px;
+	word-wrap: anywhere;
+}
+.request-block .explanation{
+	max-height: 100px;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .request-block .activity-block {

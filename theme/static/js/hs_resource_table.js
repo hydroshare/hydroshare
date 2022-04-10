@@ -90,6 +90,7 @@ $(document).ready(function () {
     // Bind ajax submit events to favorite and label buttons
     $("#item-selectors").on("click", ".btn-inline-favorite, .btn-label-remove", label_ajax_submit);
     $("#btn-create-label").click(label_ajax_submit);
+    $(".btn-label-remove").click(label_ajax_submit);
 
     $("#filter input[type='checkbox']").on("change", function () {
         resourceTable.draw();
@@ -382,19 +383,36 @@ function errorLabel(message) {
 
 function label_ajax_submit() {
     var el = $(this);
-    var labelText = $("#txtLabelName").val();
-    var sanitizedLabelText = $("<div/>").html(labelText.trim()).text();
-    if (labelText !== sanitizedLabelText){
-        // red outline and messaging for invalid input
-        $("#txtLabelName").closest(".modal-body").append(errorLabel("This label contains HTML and cannot be saved."))
-        $("#txtLabelName").addClass("invalid-input");
-        return;
+    var formType = el.attr("data-form-type");
+
+    if (formType == "create-label"){
+        var labelText = $("#txtLabelName").val();
+        var sanitizedLabelText = $("<div/>").html(labelText.trim()).text();
+        let message = "";
+        if (labelText.length >= 75){
+            message = "Your label was too long. Please trim it to < 75 characters.";
+        }else if (labelText.trim().length === 0){
+            message = "Your label was empty, please try again.";
+        }else if (labelText !== sanitizedLabelText){
+            message = "Your label contains HTML and cannot be saved.";
+        }
+        $("#user-labels-left input").each(function(i, el){
+            if ($(el).attr("data-label") === sanitizedLabelText){
+                message = "You entered a duplicate label.";
+            }
+        });
+
+        if(message){
+            $("#txtLabelName").closest(".modal-body").append(errorLabel(message))
+            $("#txtLabelName").addClass("invalid-input");
+            return;
+        }
     }
+    
     $("#txtLabelName").val(labelText);
     var form = $("form[data-id='" + el.attr("data-form-id") + "']");
     var datastring = form.serialize();
     var url = form.attr('action');
-    var formType = el.attr("data-form-type");
     var tableRow = form.closest("tr");
 
     $.ajax({

@@ -12,9 +12,9 @@ http://netcdf4-python.googlecode.com/svn/trunk/docs/netCDF4-module.html
 import re
 from collections import OrderedDict
 
-import osr
 import netCDF4
 import numpy
+import osr
 
 
 # Functions for General Purpose

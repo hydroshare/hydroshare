@@ -396,7 +396,7 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS:
             authorized = user.uaccess.can_view_resource(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS:
-            authorized = user.uaccess.can_share_resource(res, 2)
+            authorized = user.uaccess.can_share_resource(res, PrivilegeCodes.CHANGE)
     elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
         authorized = res.raccess.public or res.raccess.allow_private_sharing
 
@@ -656,7 +656,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     be passed into this function
     """
     email_to = kwargs.get('group_owner', user)
-    context = {'request': request, 'user': user}
+    context = {'request': request, 'user': user, 'explanation': kwargs.get('explanation', None)}
     if action_type == 'group_membership':
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={
