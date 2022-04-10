@@ -20,7 +20,7 @@ what.addEventListener("change", function(e) {
     var file = e.target.files[0]
 
     // check that name given is acceptable via synchronous call
-    $.ajax({ url: "{{ STATIC_URL }}hs_upload/start/{{ path }}", 
+    $.ajax({ url: "/hs_upload/start/{{ path }}", 
              async: false, 
              data: {filename: file.name, filetype: file.type }, 
            }).done(function() { 
@@ -29,7 +29,7 @@ what.addEventListener("change", function(e) {
                 var upload = new tus.Upload(file, {
                     // Endpoint is the upload creation URL from your tus server
                     // This is a direct passthough to tusd from nginx
-                    endpoint: "{{ STATIC_URL }}upload/",
+                    endpoint: "/upload/",
                     // Retry delays will enable tus-js-client to automatically retry on errors
                     retryDelays: [0, 3000, 5000, 10000, 20000],
                     // Attach additional meta data about the file for the server
@@ -42,7 +42,7 @@ what.addEventListener("change", function(e) {
                     onError: function(error) {
                         console.log("Failed because: " + error); 
                         document.getElementById('upload_status').innerHTML = "<p>failed because: " + error + "</p>"; 
-                        $.ajax("{{ STATIC_URL }}hs_upload/event/{{ path }}", 
+                        $.ajax("/hs_upload/event/{{ path }}", 
                             {data: {event: 'error', filename: file.name, filetype: file.type, reason: error, url: upload.url}});
                     },
                     // Callback for reporting upload progress
@@ -56,7 +56,7 @@ what.addEventListener("change", function(e) {
                     onSuccess: function() {
                         console.log("Upload completed:  %s from %s", upload.file.name, upload.url); 
                         document.getElementById("upload_status").innerHTML = "done";
-                        $.ajax("{{ STATIC_URL }}hs_upload/finish/{{ path }}", 
+                        $.ajax("/hs_upload/finish/{{ path }}", 
                             {data: {filename: file.name, filetype: file.type, size: file.size,
                                     url: upload.url}});
                     }}
