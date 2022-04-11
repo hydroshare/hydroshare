@@ -692,6 +692,15 @@ def monthly_group_membership_requests_cleanup():
     GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
 
 
+@periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=0))
+def daily_innactive_group_requests_cleanup():
+    """
+    Redeem group membership requests for innactive users
+    """
+    GroupMembershipRequest.objects.filter(request_from__is_active=False).update(redeemed=True)
+    GroupMembershipRequest.objects.filter(invitation_to__is_active=False).update(redeemed=True)
+
+
 @task_postrun.connect
 def update_task_notification(sender=None, task_id=None, task=None, state=None, retval=None, **kwargs):
     """

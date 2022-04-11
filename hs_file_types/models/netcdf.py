@@ -370,6 +370,8 @@ class NetCDFMetaDataMixin(models.Model):
 class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     # used in finding ContentType for the metadata model classes
     model_app_label = 'hs_file_types'
+    # flag to track when the .nc file of the aggregation needs to be updated.
+    is_update_file = models.BooleanField(default=False)
 
     def get_metadata_elements(self):
         elements = super(NetCDFFileMetaData, self).get_metadata_elements()
@@ -526,7 +528,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         form_action = "/hsapi/_internal/{}/update-netcdf-file/".format(self.logical_file.id)
         style = "display:none;"
         self.refresh_from_db()
-        if self.is_dirty:
+        if self.is_update_file:
             style = "margin-bottom:15px"
         root_div = html_tags.div(id="div-netcdf-file-update", cls="row", style=style)
 
@@ -534,7 +536,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             with html_tags.div(cls="col-sm-12"):
                 with html_tags.div(cls="alert alert-warning alert-dismissible", role="alert"):
                     html_tags.div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
-                    html_tags._input(id="metadata-dirty", type="hidden", value=self.is_dirty)
+                    html_tags._input(id="metadata-dirty", type="hidden", value=self.is_update_file)
                     with html_tags.form(action=form_action, method="post", id="update-netcdf-file"):
                         html_tags.button("Update NetCDF File", type="button", cls="btn btn-primary",
                                          id="id-update-netcdf-file")
@@ -1367,9 +1369,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
                                          user)
 
     metadata = instance.metadata
-    if file_type:
-        instance.create_aggregation_xml_documents(create_map_xml=False)
-    metadata.is_dirty = False
+    metadata.is_update_file = False
     metadata.save()
 
     # cleanup the temp dir

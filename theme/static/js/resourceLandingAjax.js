@@ -131,7 +131,7 @@ function handleIsDirty(json_response) {
     }
     // show update sqlite file update option for TimeSeriesLogicalFile
     if (json_response.logical_file_type === "TimeSeriesLogicalFile" &&
-        json_response.is_dirty && json_response.can_update_sqlite) {
+        json_response.is_update_file && json_response.can_update_sqlite) {
         $("#div-sqlite-file-update").show();
     }
     // show update netcdf resource

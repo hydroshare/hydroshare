@@ -76,6 +76,9 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
     # this is to store abstract
     abstract = models.TextField(null=True, blank=True)
 
+    # flag to track when the .sqlite file of the aggregation needs to be updated
+    is_update_file = models.BooleanField(default=False)
+
     def get_metadata_elements(self):
         elements = super(TimeSeriesFileMetaData, self).get_metadata_elements()
         elements += list(self.sites)
@@ -307,7 +310,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         can_update_sqlite_file = 'False'
         if self.logical_file.can_update_sqlite_file:
             can_update_sqlite_file = 'True'
-        if self.is_dirty:
+        if self.is_update_file:
             style = "margin-bottom:10px"
             is_dirty = 'True'
         root_div = div(id="div-sqlite-file-update", cls="row", style=style)
@@ -1884,7 +1887,9 @@ def sqlite_file_update(instance, sqlite_res_file, user):
         # adding the blank sqlite file is necessary only in case of TimeSeriesResource
         if not instance.has_sqlite_file and instance.can_add_blank_sqlite_file:
             add_blank_sqlite_file(instance, upload_folder='')
-        # instance.add_blank_sqlite_file(user)
+
+    elif not instance.metadata.is_update_file:
+        return
 
     log = logging.getLogger()
 
@@ -1941,9 +1946,7 @@ def sqlite_file_update(instance, sqlite_res_file, user):
                 utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update,
                                                      user)
                 metadata = instance.metadata
-                if is_file_type:
-                    instance.create_aggregation_xml_documents(create_map_xml=False)
-                metadata.is_dirty = False
+                metadata.is_update_file = False
                 metadata.save()
                 log.info("SQLite file update was successful.")
         except sqlite3.Error as ex:
