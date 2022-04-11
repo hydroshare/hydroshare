@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 from hs_core.models import BaseResource
-from django.db import transaction
 
 import logging
 logger = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ class Upload(models.Model):
         return object
 
     @classmethod
-    def exists(cls, resource, path): 
+    def exists(cls, resource, path):
         """ is an upload in progress? """
         return cls.objects.filter(resource=resource, path=path).exists()
 

@@ -287,7 +287,7 @@ def finish(request, path, *args, **kwargs):
     # all tests pass: move into appropriate location
     logger.debug("copy uploaded file {} to {}/{}".format(tusd_path, path, filename))
     upload_object = UploadedFile(file=open(tusd_path, mode="rb"), name=filename)
-    upload_result = add_file_to_resource(resource, upload_object, folder=short_path)
+    add_file_to_resource(resource, upload_object, folder=short_path)
 
     # istorage.saveFile(tusd_path, irods_path)
     cleanup(resource, path, tusd_path)
