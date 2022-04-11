@@ -8,8 +8,9 @@ from hs_composite_resource.models import CompositeResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from django.core.management import call_command
-import shutil
+from hs_core.tests.api.utils import zip_up
 import os
+import zipfile
 
 
 class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
@@ -30,8 +31,8 @@ class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
 
         # delete all resources in case a test isn't cleaning up after itself
         CompositeResource.objects.all().delete()
-
-        shutil.make_archive('hs_core/tests/data/94c34d62d36a4faf97fbccfa18ddd6b9', 'zip', 'hs_core/tests/data/94c34d62d36a4faf97fbccfa18ddd6b9')
+        zipf = zipfile.ZipFile('hs_core/tests/data/94c34d62d36a4faf97fbccfa18ddd6b9.zip', 'w')
+        zip_up(zipf, 'hs_core/tests/data/94c34d62d36a4faf97fbccfa18ddd6b9')
 
     def tearDown(self):
         super(TestIngestBag, self).tearDown()
