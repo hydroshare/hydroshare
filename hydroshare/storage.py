@@ -15,7 +15,8 @@ class ForgivingManifestStaticFilesStorage(ManifestStaticFilesStorage):
             result = super().hashed_name(name, content, filename)
         except ValueError as ex:
             # When the file is missing, let's forgive and ignore that.
-            msg = f"Ignoring ValueError for missing file: {name}, during static collection. Error: {str(ex)}"
-            self.logger.warning(msg)
+            msg = f"Ignoring ValueError for missing file: {name}, during static collection. \nError: {str(ex)}"
+            print(msg)
+            self.logger.error(msg)
             result = name
         return result
