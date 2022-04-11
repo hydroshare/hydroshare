@@ -3665,12 +3665,19 @@ input.no-style {
 div.group-thumbnails {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(33.3rem, 1fr));
+
+	/* I think we might want my originally proposed solution here? */
+	/* grid-template-columns: repeat(auto-fill, minmax(min(33.3rem, 100%), 1fr)); */
+
 	gap: 1rem;
-	flex-grow: 1
 }
 
 .group-container {
     margin-bottom: 20px;
+
+	/* I'm pretty sure this property doesn't have any effect because these child elements aren't in a flexbox*/
+	/* .group-thumbnails doesn't have display: flex, so these .group-container children can't have "flex-" properties */
+	flex-grow: 1
 }
 
 .group-thumbnail img {
