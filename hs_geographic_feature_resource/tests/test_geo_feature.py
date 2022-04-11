@@ -42,7 +42,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_geo_feature_basic_metadata(self):
         # add another creator with all sub_elements
         cr_name = 'Creator A'
-        cr_des = 'http://hydroshare.org/user/001'
+        cr_uid = 1
         cr_org = "BYU"
         cr_email = 'creator.a@byu.edu'
         cr_address = "Provo, UT, USA"
@@ -51,7 +51,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         resource.create_metadata_element(self.resGeoFeature.short_id,
                                          'creator',
                                          name=cr_name,
-                                         description=cr_des,
+                                         hydroshare_user_id=cr_uid,
                                          organization=cr_org,
                                          email=cr_email,
                                          address=cr_address,
@@ -66,7 +66,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test adding a contributor with all sub_elements
         con_name = 'Contributor A'
-        con_des = 'http://hydroshare.org/user/002'
+        con_uid = 2
         con_org = "BYU"
         con_email = 'contributor.a@byu.edu'
         con_address = "Provo, UT, USA"
@@ -75,7 +75,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         resource.create_metadata_element(self.resGeoFeature.short_id,
                                          'contributor',
                                          name=con_name,
-                                         description=con_des,
+                                         hydroshare_user_id=con_uid,
                                          organization=con_org,
                                          email=con_email,
                                          address=con_address,
