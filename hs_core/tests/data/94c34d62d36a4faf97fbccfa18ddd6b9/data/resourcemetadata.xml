@@ -38,7 +38,7 @@
         <hsterms:phone>3399334127</hsterms:phone>
         <hsterms:email>castronova.anthony@gmail.com</hsterms:email>
         <hsterms:ResearchGateID rdf:resource="https://www.researchgate.net/profile/Anthony_Castronova"/>
-        <hsterms:description>/user/11/</hsterms:description>
+        <hsterms:hydroshare_user_id>/user/11/</hsterms:hydroshare_user_id>
         <hsterms:GoogleScholarID rdf:resource="https://scholar.google.com/citations?user=ScWTFoQAAAAJ&amp;hl=en"/>
         <hsterms:creatorOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</hsterms:creatorOrder>
         <hsterms:organization>CUAHSI</hsterms:organization>
