@@ -8,6 +8,22 @@
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
+    <!-- test large file download --> 
+    <script language='JavaScript'> 
+        function callLargeFileUpload() { 
+            var path = getCurrentPath().path;
+            // url prefix  get concatenated to the access URL in order to construct a path. 
+            var prefix = '/hs_upload/context/' + '{{ cm.short_id }}' + '/data/contents';  
+            var target = Array(prefix);
+            target = target.concat(path); 
+            // console.log(target);
+            var url = target.join('/'); 
+            url = url + '/'  // trailing slash needed 
+            // console.log(url); 
+            window.open(url, '_blank'); 
+            return false;
+        } 
+    </script> 
 
 {% if not page|is_debug %}
 {# ======= JSON-LD Structure ======= #}
@@ -641,6 +657,9 @@
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
+                                                    <b><a 
+                                                          onclick="callLargeFileUpload()">
+                                                          TEST UPLOAD</a></b> 
 
                                                     <div id="irods-group" class="btn-group">
                                                         <button type="button"
@@ -796,8 +815,6 @@
                                             </button>
                                             <a class="small" target="_blank"
                                                href="https://help.hydroshare.org/creating-and-managing-resources/view-and-download-a-resource">Learn more about the BagIt download</a>
-                                            <b><a class="small" target="_blank"
-                                               href="/hs_upload/context/{{ cm.short_id }}/data/contents/">UPLOAD A FILE to the resource root data directory."</a></b>
                                         </div>
                                     </div>
                                 </div>
