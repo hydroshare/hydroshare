@@ -726,7 +726,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         dt_valid = self.res.metadata.dates.all().filter(type='valid').first()
         resource.delete_metadata_element(self.res.short_id,'date', dt_valid.id)
 
-    def test_hydroshare_user_id(self):
+    def test_description(self):
 
         # test that the resource metadata does not contain abstract
         self.assertEqual(self.res.metadata.description, None, msg='Abstract exists for the resource')
