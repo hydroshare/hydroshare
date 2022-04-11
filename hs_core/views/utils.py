@@ -840,6 +840,7 @@ def remove_irods_folder_in_django(resource, folder_path, user):
 
     if resource.resource_type == 'CompositeResource':
         # delete all aggregation objects that are under the folder_path
+        rel_folder_path = f"{rel_folder_path}/"
         for lf in resource.logical_files:
             if lf.aggregation_name.startswith(rel_folder_path):
                 lf.logical_delete(user, delete_res_files=False)
