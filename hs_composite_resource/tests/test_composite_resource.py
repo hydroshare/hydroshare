@@ -20,7 +20,7 @@ from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_
     add_file_to_resource, get_file_from_irods
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
     unzip_file, add_reference_url_to_resource, edit_reference_url_in_resource, delete_resource_file, \
-    zip_aggregation_virtual_folder
+    zip_by_aggregation_file
 from hs_composite_resource.models import CompositeResource
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData, \
     RefTimeseriesLogicalFile, FileSetLogicalFile, NetCDFLogicalFile, TimeSeriesLogicalFile, \
@@ -2681,7 +2681,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertNotEqual(RefTimeseriesLogicalFile.objects.first().metadata.abstract,
                             "overwritten")
 
-    def test_zip_aggregation_virtual_folder_1(self):
+    def test_zip_by_aggregation_file_1(self):
         """Test that we can zip a netcdf aggregation that exists at the root of resource path in iRODS
         The aggregation zip file becomes a resource file
         """
@@ -2696,14 +2696,15 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
         self.assertEqual(self.composite_resource.files.count(), 2)
         nc_aggr = NetCDFLogicalFile.objects.first()
-        zip_aggregation_virtual_folder(user=self.user, res_id=self.composite_resource.short_id,
-                                       aggregation_name=nc_aggr.aggregation_name, output_zip_fname='nc_aggr')
+        zip_by_aggregation_file(user=self.user, res_id=self.composite_resource.short_id,
+                                aggregation_name=nc_aggr.aggregation_name, output_zip_fname='nc_aggr')
+        # new zip file should be be part of the resource
         self.assertEqual(self.composite_resource.files.count(), 3)
         zip_res_file = ResourceFile.get(resource=self.composite_resource, file="nc_aggr.zip")
         self.assertTrue(zip_res_file.exists)
         self._test_zip_file_contents(zipfile=zip_res_file, aggregation=nc_aggr)
 
-    def test_zip_aggregation_virtual_folder_2(self):
+    def test_zip_by_aggregation_file_2(self):
         """Test that we can zip a netcdf aggregation that exists in a folder.
            The aggregation zip file becomes a resource file.
         """
@@ -2719,15 +2720,16 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
         self.assertEqual(self.composite_resource.files.count(), 2)
         nc_aggr = NetCDFLogicalFile.objects.first()
-        zip_aggregation_virtual_folder(user=self.user, res_id=self.composite_resource.short_id,
-                                       aggregation_name=nc_aggr.aggregation_name, output_zip_fname='nc_aggr.zip')
+        zip_by_aggregation_file(user=self.user, res_id=self.composite_resource.short_id,
+                                aggregation_name=nc_aggr.aggregation_name, output_zip_fname='nc_aggr.zip')
         self.assertEqual(nc_aggr.aggregation_name, f"{folder}/{self.netcdf_file_name}")
+        # new zip file should be be part of the resource
         self.assertEqual(self.composite_resource.files.count(), 3)
         zip_res_file = ResourceFile.get(resource=self.composite_resource, file="nc_aggr.zip", folder=folder)
         self.assertTrue(zip_res_file.exists)
         self._test_zip_file_contents(zipfile=zip_res_file, aggregation=nc_aggr)
 
-    def test_zip_aggregation_virtual_folder_3(self):
+    def test_zip_by_aggregation_file_3(self):
         """Test that we can zip a netcdf aggregation that exists in a fileset folder.
            The aggregation zip file becomes a resource file and part of the fileset aggregation.
         """
@@ -2750,27 +2752,50 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(fs_aggr.files.count(), 0)
         nc_aggr = NetCDFLogicalFile.objects.first()
         zip_file_name = 'nc_aggr'
-        zip_aggregation_virtual_folder(user=self.user, res_id=self.composite_resource.short_id,
-                                       aggregation_name=nc_aggr.aggregation_name, output_zip_fname=zip_file_name)
+        zip_by_aggregation_file(user=self.user, res_id=self.composite_resource.short_id,
+                                aggregation_name=nc_aggr.aggregation_name, output_zip_fname=zip_file_name)
+        # new zip file should be be part of the resource
         self.assertEqual(self.composite_resource.files.count(), 3)
         zip_res_file = ResourceFile.get(resource=self.composite_resource, file=f"{zip_file_name}.zip", folder=folder)
         self.assertTrue(zip_res_file.exists)
         self.assertEqual(fs_aggr.files.count(), 1)
+        # new zip file should be part of the fileset aggregation
         self.assertEqual(zip_res_file.logical_file_type_name, "FileSetLogicalFile")
         self._test_zip_file_contents(zipfile=zip_res_file, aggregation=nc_aggr)
 
+    def test_zip_by_aggregation_file_4(self):
+        """Test that we can zip a single file aggregation that exists at the root of resource path in iRODS
+        The aggregation zip file becomes a resource file
+        """
+
+        self.create_composite_resource()
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # create a single file aggregation - which we will test for zipping
+        self.add_file_to_resource(file_to_add=self.generic_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        gen_res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(resource=self.composite_resource, file_id=gen_res_file.id, user=self.user)
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        gen_aggr = GenericLogicalFile.objects.first()
+        zip_by_aggregation_file(user=self.user, res_id=self.composite_resource.short_id,
+                                aggregation_name=gen_aggr.aggregation_name, output_zip_fname='gen_aggr')
+        # new zip file should be be part of the resource
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        zip_res_file = ResourceFile.get(resource=self.composite_resource, file="gen_aggr.zip")
+        self.assertTrue(zip_res_file.exists)
+        self._test_zip_file_contents(zipfile=zip_res_file, aggregation=gen_aggr)
+
     def _test_zip_file_contents(self, zipfile, aggregation):
         temp_zip_file = get_file_from_irods(resource=self.composite_resource, file_path=zipfile.storage_path)
-        aggr_files = []
-        for f in aggregation.files.all():
-            aggr_files.append(f.file_name)
+        aggr_files = [f.file_name for f in aggregation.files.all()]
         aggr_files.append(os.path.basename(aggregation.map_file_path))
         aggr_files.append(os.path.basename(aggregation.metadata_file_path))
         with ZipFile(temp_zip_file) as zipfile:
             files = zipfile.namelist()
             self.assertEqual(len(files), len(aggr_files))
-            self.assertEqual(len(files), 4)
             for f in files:
+                # strip out the additional folder path in the zip file
+                f = os.path.basename(f)
                 self.assertIn(f, aggr_files)
-        if os.path.exists(temp_zip_file):
             shutil.rmtree(os.path.dirname(temp_zip_file))
