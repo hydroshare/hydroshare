@@ -529,14 +529,18 @@ function updateSelectionMenuContext() {
 
     //  ------------- A file is included in the selection -------------
     if (selected.hasClass("fb-file")) {
+        const logicalFileType = $(selected).find(".fb-logical-file-type").attr("data-logical-file-type").trim();
         uiActionStates.open.disabled = true;
         uiActionStates.open.fileMenu.hidden = true;
 
         uiActionStates.paste.disabled = true;
         uiActionStates.paste.fileMenu.hidden = true;
 
-        uiActionStates.zip.disabled = true;
-        uiActionStates.zip.fileMenu.hidden = true;
+        if (logicalFileType !=="GenericLogicalFile") {
+            // we allow generic logical file (single aggregation file) to be zipped
+            uiActionStates.zip.disabled = true;
+            uiActionStates.zip.fileMenu.hidden = true;
+        }
     }
 
     if (!sourcePaths.selected.length) {
@@ -1448,6 +1452,11 @@ function isVirtualFolder(item) {
     let isModelProgramFolder = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "ModelProgramLogicalFile";
     let isModelInstanceFolder = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "ModelInstanceLogicalFile";
     return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet && !isModelProgramFolder && !isModelInstanceFolder;
+}
+
+function isSingleFileAggregation(item) {
+    item = $(item);
+    return item.find(".fb-logical-file-type").attr("data-logical-file-type") === "GenericLogicalFile";
 }
 
 function previewData() {
@@ -2615,9 +2624,9 @@ $(document).ready(function () {
         if ($("#txtZipName").val().trim() !== "") {
             let selected = $("#fb-files-container li.ui-selected");
             const fileName = $("#txtZipName").val() + ".zip";
-            if (isVirtualFolder(selected)) {
+            if (isVirtualFolder(selected) || isSingleFileAggregation(selected)) {
                 const aggregationPath = selected.attr('data-url').split('/data/contents/').pop();
-                await zip_aggregation_virtual_folder_ajax_submit(SHORT_ID, aggregationPath, fileName)
+                await zip_by_aggregation_file_ajax_submit(SHORT_ID, aggregationPath, fileName)
             }
             else {
                 const folderName = selected.children(".fb-file-name").text();

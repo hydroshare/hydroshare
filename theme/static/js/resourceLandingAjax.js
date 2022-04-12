@@ -887,11 +887,11 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
     });
 }
 
-function zip_aggregation_virtual_folder_ajax_submit(res_id, aggregationPath, zipFileName) {
+function zip_by_aggregation_file_ajax_submit(res_id, aggregationPath, zipFileName) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
-        url: '/hsapi/_internal/aggregation-virtual-folder-zip/',
+        url: '/hsapi/_internal/zip-by-aggregation-file/',
         async: true,
         data: {
             res_id: res_id,
