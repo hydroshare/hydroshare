@@ -58,7 +58,7 @@ class TestZipFolderViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         new_folder = 'test_folder'
         ResourceFile.create_folder(self.resource, new_folder)
         # add the the text  file to the resource at the above folder
-        self.add_file_to_resource(file_to_add=self.txt_file_path, upload_folder=new_folder)
+        self._add_file_to_resource(file_to_add=self.txt_file_path, upload_folder=new_folder)
 
         # prepare post data to zip the folder
         zip_file_name = 'test_folder.zip'
@@ -85,7 +85,7 @@ class TestZipFolderViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         new_folder = 'test_folder'
         ResourceFile.create_folder(self.resource, new_folder)
         # add the the text  file to the resource at the above folder
-        res_file = self.add_file_to_resource(file_to_add=self.txt_file_path, upload_folder=new_folder)
+        res_file = self._add_file_to_resource(file_to_add=self.txt_file_path, upload_folder=new_folder)
         # create a generic aggregation form the resource file
         GenericLogicalFile.set_file_type(self.resource, self.user, res_file.id)
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
@@ -118,7 +118,7 @@ class TestZipFolderViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         new_folder = 'test_folder'
         ResourceFile.create_folder(self.resource, new_folder)
         # add the the text  file to the resource at the above folder
-        self.add_file_to_resource(file_to_add=self.txt_file_path, upload_folder=new_folder)
+        self._add_file_to_resource(file_to_add=self.txt_file_path, upload_folder=new_folder)
         # create a fileset aggregation from the folder
         FileSetLogicalFile.set_file_type(self.resource, self.user, folder_path=new_folder)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
@@ -150,7 +150,7 @@ class TestZipFolderViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         fs_folder = 'fs_folder'
         ResourceFile.create_folder(self.resource, fs_folder)
         # add the the text  file to the resource at the above folder
-        self.add_file_to_resource(file_to_add=self.txt_file_path, upload_folder=fs_folder)
+        self._add_file_to_resource(file_to_add=self.txt_file_path, upload_folder=fs_folder)
         # create a fileset aggregation from the folder
         FileSetLogicalFile.set_file_type(self.resource, self.user, folder_path=fs_folder)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
@@ -179,7 +179,7 @@ class TestZipFolderViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         # check the newly created zip file is part of the fileset aggregation
         self.assertEqual(logical_file.files.count(), 2)
 
-    def add_file_to_resource(self, file_to_add, upload_folder=''):
+    def _add_file_to_resource(self, file_to_add, upload_folder=''):
         file_to_upload = UploadedFile(file=open(file_to_add, 'rb'),
                                       name=os.path.basename(file_to_add))
 
