@@ -307,6 +307,11 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
         head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
         out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
+        # in the case of user provided zip file name, out_with_folder path may not end with
+        # aggregation file name
+        aggr_filename = os.path.basename(input_path)
+        if not out_with_folder.endswith(aggr_filename):
+            out_with_folder = os.path.join(os.path.dirname(out_with_folder), aggr_filename)
         istorage.copyFiles(input_path, out_with_folder)
         if not aggregation:
             if '/data/contents/' in input_path:
