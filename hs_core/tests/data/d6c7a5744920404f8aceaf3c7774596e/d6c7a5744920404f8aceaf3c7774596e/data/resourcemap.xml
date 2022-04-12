@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+   xmlns:citoterms="http://purl.org/spar/cito/"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:dcterms="http://purl.org/dc/terms/"
+   xmlns:foaf="http://xmlns.com/foaf/0.1/"
+   xmlns:ore="http://www.openarchives.org/ore/terms/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:rdfs1="http://www.w3.org/2001/01/rdf-schema#"
+>
+  <rdf:Description rdf:about="http://www.openarchives.org/ore/terms/ResourceMap">
+    <rdfs1:label>ResourceMap</rdfs1:label>
+    <rdfs1:isDefinedBy>http://www.openarchives.org/ore/terms/</rdfs1:isDefinedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/resourcemap.xml">
+    <ore:describes rdf:resource="http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/resourcemap.xml#aggregation"/>
+    <dc:creator rdf:resource="http://foresite-toolkit.googlecode.com/#pythonAgent"/>
+    <dc:format>application/rdf+xml</dc:format>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/ResourceMap"/>
+    <dc:identifier>d6c7a5744920404f8aceaf3c7774596e</dc:identifier>
+    <dcterms:created>2022-04-12T17:43:14Z</dcterms:created>
+    <dcterms:modified>2022-04-12T17:43:14Z</dcterms:modified>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/contents/README.md">
+    <dc:format>application/md</dc:format>
+    <ore:isAggregatedBy>http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/resourcemap.xml#aggregation</ore:isAggregatedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/resourcemap.xml#aggregation">
+    <ore:aggregates rdf:resource="http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/resourcemetadata.xml"/>
+    <dc:title>czo res</dc:title>
+    <citoterms:isDocumentedBy>http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/resourcemetadata.xml</citoterms:isDocumentedBy>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation"/>
+    <dcterms:type rdf:resource="http://localhost:8000/terms/CompositeResource"/>
+    <ore:aggregates rdf:resource="http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/contents/README.md"/>
+        <ore:isDescribedBy>http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/resourcemap.xml</ore:isDescribedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://foresite-toolkit.googlecode.com/#pythonAgent">
+    <foaf:mbox>foresite@googlegroups.com</foaf:mbox>
+    <foaf:name>Foresite Toolkit (Python)</foaf:name>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://localhost:8000/terms/CompositeResource">
+    <rdfs1:label>Composite Resource</rdfs1:label>
+    <rdfs1:isDefinedBy>http://localhost:8000/terms</rdfs1:isDefinedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.openarchives.org/ore/terms/Aggregation">
+    <rdfs1:label>Aggregation</rdfs1:label>
+    <rdfs1:isDefinedBy>http://www.openarchives.org/ore/terms/</rdfs1:isDefinedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/resourcemetadata.xml">
+    <dc:format>application/rdf+xml</dc:format>
+    <citoterms:documents>http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/resourcemap.xml#aggregation</citoterms:documents>
+    <ore:isAggregatedBy>http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e/data/resourcemap.xml#aggregation</ore:isAggregatedBy>
+    <dc:title>Dublin Core science metadata document describing the HydroShare resource</dc:title>
+  </rdf:Description>
+</rdf:RDF>
