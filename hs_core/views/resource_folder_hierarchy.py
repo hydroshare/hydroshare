@@ -20,7 +20,7 @@ from hs_core.views import utils as view_utils
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
-    add_reference_url_to_resource, edit_reference_url_in_resource, zip_aggregation_virtual_folder
+    add_reference_url_to_resource, edit_reference_url_in_resource, zip_by_aggregation_file
 
 from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
 
@@ -301,9 +301,9 @@ def data_store_folder_zip(request, res_id=None):
     )
 
 
-def aggregation_virtual_folder_zip(request, res_id=None):
+def zip_aggregation_file(request, res_id=None):
     """
-    Zip requested aggregation virtual folder into a zip file in hydroshareZone or any federated zone
+    Zip requested aggregation into a zip file in hydroshareZone or any federated zone
     used for HydroShare resource backend store. It is invoked by an AJAX call and returns
     json object that holds the created zip file name if it succeeds, and an empty string
     if it fails. The AJAX request must be a POST request with input data passed in for
@@ -349,7 +349,7 @@ def aggregation_virtual_folder_zip(request, res_id=None):
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        output_zip_fname, size = zip_aggregation_virtual_folder(user, res_id, aggregation_path, output_zip_fname)
+        output_zip_fname, size = zip_by_aggregation_file(user, res_id, aggregation_path, output_zip_fname)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
