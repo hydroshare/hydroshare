@@ -293,6 +293,62 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 1 GenericLogicalFile objects
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
 
+    def test_delete_folder_1(self):
+        """Here we are testing when a folder is deleted at the root level, no aggregations/files at the
+        same location (root level) get deleted."""
+
+        self.create_composite_resource()
+        # create a folder that has the same name as the file that we will be uploading later for creating a single file
+        # aggregation
+        new_folder = self.generic_file_name.split('.')[0]
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add a generic file type
+        txt_res_file = self.add_file_to_resource(file_to_add=self.generic_file)
+        # there should be no GenericLogicalFile objects
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+
+        # set generic logical file
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, txt_res_file.id)
+        txt_res_file.refresh_from_db()
+        self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
+
+        # now delete the folder new_folder
+        folder_path = "data/contents/{}".format(new_folder)
+        remove_folder(self.user, self.composite_resource.short_id, folder_path)
+        txt_res_file.refresh_from_db()
+        self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
+        # there should be 1 GenericLogicalFile objects
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
+    def test_delete_folder_2(self):
+        """Here we are testing when a sub-folder is deleted, no aggregations/files at the
+        same location (as the folder being deleted) get deleted."""
+
+        self.create_composite_resource()
+        # create a folder that has the same name as the file that we will be uploading later for creating a single file
+        # aggregation
+        child_folder = self.generic_file_name.split('.')[0]
+        parent_folder = "my-folder"
+        new_folder = f"{parent_folder}/{child_folder}"
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add a generic file type to parent folder
+        txt_res_file = self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_folder)
+        # there should be no GenericLogicalFile objects
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+
+        # set generic logical file
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, txt_res_file.id)
+        txt_res_file.refresh_from_db()
+        self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
+
+        # now delete the folder child_folder
+        folder_path = "data/contents/{}".format(new_folder)
+        remove_folder(self.user, self.composite_resource.short_id, folder_path)
+        txt_res_file.refresh_from_db()
+        self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
+        # there should be 1 GenericLogicalFile objects
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
     def test_core_metadata_CRUD(self):
         """test that all core metadata elements work for this resource type"""
 
