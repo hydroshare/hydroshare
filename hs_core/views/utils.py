@@ -19,7 +19,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
-from django.core.files.uploadedfile import UploadedFile
 from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
 from django.db.models import When, Case, Value, BooleanField, Prefetch
@@ -39,7 +38,7 @@ from hs_core import hydroshare
 from hs_core.enums import RelationTypes
 from hs_core.hydroshare import add_resource_files
 from hs_core.hydroshare import check_resource_type, delete_resource_file
-from hs_core.hydroshare.utils import check_aggregations, get_file_from_irods, get_temp_dir
+from hs_core.hydroshare.utils import check_aggregations
 from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user, CoreMetaData

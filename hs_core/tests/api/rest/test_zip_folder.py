@@ -27,10 +27,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
 
         self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
-        self.res = resource.create_resource(self.rtype,
-                                       self.user,
-                                       self.title,
-                                       unpack_file=False)
+        self.res = resource.create_resource(self.rtype, self.user, self.title, unpack_file=False)
 
         self.pid = self.res.short_id
         self.resources_to_delete.append(self.pid)
