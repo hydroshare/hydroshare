@@ -303,18 +303,13 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         new_folder = self.generic_file_name.split('.')[0]
         ResourceFile.create_folder(self.composite_resource, new_folder)
         # add a generic file type
-        self.add_file_to_resource(file_to_add=self.generic_file)
-
+        txt_res_file = self.add_file_to_resource(file_to_add=self.generic_file)
         # there should be no GenericLogicalFile objects
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
-        txt_res_file = [f for f in self.composite_resource.files.all()
-                        if f.extension == ".txt"][0]
-
         # set generic logical file
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, txt_res_file.id)
-        txt_res_file = [f for f in self.composite_resource.files.all()
-                        if f.extension == ".txt"][0]
+        txt_res_file.refresh_from_db()
         self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
 
         # now delete the folder new_folder
@@ -337,18 +332,13 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         new_folder = f"{parent_folder}/{child_folder}"
         ResourceFile.create_folder(self.composite_resource, new_folder)
         # add a generic file type to parent folder
-        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_folder)
-
+        txt_res_file = self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_folder)
         # there should be no GenericLogicalFile objects
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
-        txt_res_file = [f for f in self.composite_resource.files.all()
-                        if f.extension == ".txt"][0]
-
         # set generic logical file
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, txt_res_file.id)
-        txt_res_file = [f for f in self.composite_resource.files.all()
-                        if f.extension == ".txt"][0]
+        txt_res_file.refresh_from_db()
         self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
 
         # now delete the folder child_folder
