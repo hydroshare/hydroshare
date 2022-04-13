@@ -1,0 +1,64 @@
+<div class="flex gap-2 flex-wrap-wrap">
+  <div class="group-communities--sidebar">
+    <button class="btn btn-primary has-space-top" data-toggle="modal" data-target="#invite-groups-modal">Invite Groups</button>
+    <div v-if="!isAdmin || true" class="alert alert-info">
+      <p>Have a HydroShare group you want to add to this community? Click the button below to request that your group be added.</p>
+      <button class="btn btn-primary has-space-top" data-toggle="modal" data-target="#communities-modal">Ask to join</button>
+    </div>
+  </div>
+
+  <div class="group-communities--content flex-grow-1 flex flex-column gap-2">
+    <!-- PENDING INVITATIONS -->
+    <div v-if="isAdmin && pending.length">
+      <h4 class="heading">Pending Group Membership Requests</h4>
+      <div v-for="group of pending" class="group-community-card panel panel-default">
+        <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
+          <div class="group-image-wrapper group-image-wrapper-medium">
+              <div class="group-image group-preview-image-default"
+                  style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+          </div>
+          <div class="community-card--info flex-grow-1">
+            <a class="community-card--heading" href="#">${ group.name }</a>
+            <p>${ group.description }</p>
+          </div>
+          <div class="community-card--actions">
+            <button class="btn btn-primary" @click="approve(group.id)" :disabled="isApproving[group.id]">Approve Group</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROUPS THAT HAVE JOINED -->
+    <div>
+      <h4 class="heading">Groups that are Members of this Community</h4>
+      <template v-if="members.length">
+        <div v-for="group of members" class="group-community-card panel panel-default">
+          <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
+            <div class="group-image-wrapper group-image-wrapper-medium">
+                <div class="group-image group-preview-image-default"
+                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+            </div>
+            <div class="community-card--info flex-grow-1">
+              <a class="community-card--heading" href="#">${ group.name }</a>
+              <p>${ group.description }</p>
+            </div>
+            <div class="community-card--actions">
+              <button class="btn btn-default" @click="remove(group.id)" :disabled="isRemoving[group.id]">Remove Group</button>
+            </div>
+          </div>
+        </div>
+      </template>
+      <p v-else>No Groups have been added to this Community yet.</p>
+    </div>
+  </div>
+
+</div>
+
+{% block extra_js %}
+    <script type="text/javascript">
+      // Constants here
+      const GROUPS = {{ members|safe }}
+      const PENDING = {{ pending|safe }}
+      const MEMBERS = {{ members|safe }}
+    </script>
+{% endblock %}

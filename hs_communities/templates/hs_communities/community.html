@@ -13,45 +13,88 @@
                     <div class="col-sm-12">
                         <div class="collaborate-nav">
                             <a href="{% url "communities" %}" class="collaborate-nav-item">Find Communities</a>
-                            <a href="{% url "my_communities" %}" class="collaborate-nav-item">My Communities</a>
+                            <a href="{% url "my_communities" %}" class="collaborate-nav-item active">My Communities</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
         <div class="container">
-            <div class="row">
-                {% if czo_community %}
-                <div class="col-sm-3">
-                    <div><a href="http://criticalzone.org">
-                         <img src="{{ STATIC_URL }}img/czo-logo-wide.png"
-                              alt="CZO National"></a></div>
-                </div>
-                {% else %}
-                    <div class="col-sm-12">
+            <div class="community-header align-flex-start">
+                <div>
+                    {#  Community Picture #}
                     {% if community.picture and community.picture.url %}
-                    <div><center><img src='{{ community.picture.url }}' height=200></center></div>
+                        <div class="community-image-wrapper community-image-wrapper-medium">
+                            <div class="community-image" style="background-image: url(${community.picture.url})"></div>
+                        </div>
                     {% else %}
-                    <div><h1>{{ community.name }}</h1></div>
+                        <div class="community-image-wrapper community-image-wrapper-medium">
+                            <div class="community-image community-preview-image-default"
+                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                        </div>
                     {% endif %}
-                    <div><p>{{ community.description }}</p></div>
-                    </div>
-                {% endif %}
-                <div class="col-sm-7">
                 </div>
-                <div><!-- [Modals] --></div>
+
+                <div class="flex-grow-1">
+                    <div class="community-title-container flex justify-space-between align-flex-start">
+                        <h2 class="community-title is-marginless">{{ community.name }}</h2>
+        
+                        <div class="community-actions flex">
+                            {% if profile_user.is_group_member %}
+                                <div>
+                                    <a href="#" id="btn-leave-community" class="btn btn-default" data-toggle="modal" data-target="#leave-community-dialog">
+                                        Leave Community
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if community.purpose %}<h4>{{ community.purpose|linebreaks }}</h4>{% endif %}
+
+                    {#  Community Info #}
+                    {% if community.email or community.url %}
+                    <div class="community-info">
+                        {% if community.url %}
+                            <div class="text-muted">
+                                <i class="fa fa-link"></i> <a href="{{ community.url }}" target="_blank">{{ community.url }}</a>
+                            </div>
+                        {% endif %}
+
+                        {% if group.gaccess.email %}
+                            <div class="text-muted">
+                                <i class="fa fa-envelope-o"></i> <a href="mailto:{{ community.email }}">{{ community.email }}</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
             </div>
+
+            {% if community.description %}
+                <div class="community-description">
+                    {{ community.description|linebreaks }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="container">
             <div class="full-width-tabs-container" id="user-profile-tabs">
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs full-width-tabs" role="tablist">
                     <li role="presentation" class="active">
-                        <a href="#public" aria-controls="public" role="tab" data-toggle="tab">
-                            <i class="glyphicon glyphicon-file"></i>&nbsp;PUBLIC</a>
+                        <a href="#resources" aria-controls="public" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-file"></i>&nbsp;RESOURCES</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#groups" aria-controls="groups" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-file"></i>&nbsp;Groups</a>
                     </li>
                     {% if is_admin %}
                         <li role="presentation">
-                            <a href="#admin" aria-controls="admin" role="tab" data-toggle="tab">
-                                <i class="glyphicon glyphicon-file"></i>&nbsp;ADMIN</a>
+                            <a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">
+                                <i class="glyphicon glyphicon-file"></i>&nbsp;Owner Settings</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -59,7 +102,7 @@
                 <!-- Tab panes -->
                 <div class="tab-content" style="size: 800px">
                     <!-- PUBLIC -->
-                    <div role="tabpanel" class="tab-pane fade in active" id="public">
+                    <div role="tabpanel" class="tab-pane fade in active" id="resources">
                         <div class="row">
                             <div class="col-lg-2" id="facets">
                                 <div class="panel panel-default">
@@ -74,8 +117,10 @@
                                                 <div id="groups-list">
                                                     <!-- this id=groups-list is used to construct the VueJS group name to id map -->
                                                     {% if not groups %}
-                                                        <i class="list-group-item no-items-found">No resources have been
+                                                        <div style="margin: 1rem 0;">
+                                                            <i class="list-group-item no-items-found">No resources have been
                                                             shared with this community yet.</i>
+                                                        </div>
                                                     {% else %}
                                                         <ul class="list-group inputs-group">
                                                             {% for g in groups %}
@@ -210,28 +255,16 @@
                             </div>
                         </div>
                     </div>
-                    <div role="tabpanel" class="tab-pane fade in" id="admin">
-                        <div class="row">
-			    {% if czo_community %}
-                                <div class="col-sm-12 col-md-3">
-                                    <a style="text-decoration: none;" href="/topics/"><h4><span style="::before"
-                                                                                                class="glyphicon glyphicon-pencil"></span>&nbsp;Edit
-                                        Topics</h4></a>
-                                    Someone has requested a topic to be created or modified for use in the Title Assistant
-                                </div>
-			    {% else %}
-
-                                <!-- this is replaced by the community admin UI --> 
-                                {% include 'hs_access_control/community_wrapper.html' %}
-
-		            {% endif %} 
-                        </div>
+                    <div role="tabpanel" class="tab-pane fade in" id="settings">
+                        {% include 'hs_communities/community-settings.html' %}
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade in" id="groups">
+                        {% include 'hs_communities/community-groups.html' %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 {% endblock main %}
 
 {% block extra_js %}
@@ -240,4 +273,10 @@
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/communities.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table_community.js"></script>
+    <script type="text/javascript">
+        // Constants here
+        const COMMUNITY = {{ community|safe }}
+        const IS_ADMIN = {{ is_admin }}
+    </script>
 {% endblock %}
+
