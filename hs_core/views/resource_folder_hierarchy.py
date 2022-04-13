@@ -370,6 +370,11 @@ def data_store_folder_zip_public(request, pk):
     return data_store_folder_zip(request, res_id=pk)
 
 
+@api_view(['POST'])
+def zip_aggregation_file_public(request, pk):
+    return zip_aggregation_file(request, res_id=pk)
+
+
 def data_store_folder_unzip(request, **kwargs):
     """
     Unzip requested zip file while preserving folder structures in hydroshareZone or
