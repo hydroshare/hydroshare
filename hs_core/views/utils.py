@@ -911,7 +911,15 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         for f in ResourceFile.objects.filter(object_id=resource.id):
             full_path_name = f.storage_path
             if res_coll_input in full_path_name and output_zip_full_path not in full_path_name:
-                delete_resource_file(res_id, f.short_path, user)
+                folder, base = os.path.split(f.short_path)
+                try:
+                    ResourceFile.get(resource=resource, file=base, folder=folder)
+                except ObjectDoesNotExist:
+                    # this can happen in case of deleting a file that is part of a logical file group
+                    # where deleting one file, deletes all files of the logical file group
+                    pass
+                else:
+                    delete_resource_file(res_id, f.short_path, user)
 
         # remove empty folder in iRODS
         istorage.delete(res_coll_input)

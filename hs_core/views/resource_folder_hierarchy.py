@@ -278,7 +278,7 @@ def data_store_folder_zip(request, res_id=None):
 
     remove_original = resolve_request(request).get('remove_original_after_zip', None)
     bool_remove_original = True
-    if remove_original:
+    if remove_original is not None:
         remove_original = str(remove_original).strip().lower()
         if remove_original == 'false':
             bool_remove_original = False
