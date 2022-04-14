@@ -19,7 +19,6 @@ class TestResourceTypes(APITestCase):
                                'ModelInstanceResource',
                                'ToolResource',
                                'SWATModelInstanceResource',
-                               'GeographicFeatureResource',
                                'ScriptResource',
                                'CollectionResource',
                                'MODFLOWModelInstanceResource',
