@@ -862,6 +862,7 @@ BandInfoLayoutEdit = Layout(HTML("""
 
 # Geofeature aggregation related forms
 
+
 class OriginalCoverageGeofeatureFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
                  element_id=None, element_name=None, *args, **kwargs):
