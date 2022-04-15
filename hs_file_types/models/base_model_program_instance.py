@@ -108,7 +108,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets any one resource file from the list of files *resource_files* """
 
         return resource_files[0] if resource_files else None

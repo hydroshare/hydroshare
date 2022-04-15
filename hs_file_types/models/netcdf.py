@@ -865,7 +865,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             txt_file.delete()
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets a resource file that has extension .nc from the list of files *resource_files* """
 
         res_files = [f for f in resource_files if f.extension.lower() == '.nc']
@@ -1179,7 +1179,8 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
     file_type = isinstance(instance, NetCDFLogicalFile)
 
     # get the file from irods to temp dir
-    temp_nc_file = utils.get_file_from_irods(nc_res_file)
+    resource = nc_res_file.resource
+    temp_nc_file = utils.get_file_from_irods(resource=resource, file_path=nc_res_file.storage_path)
     nc_dataset = netCDF4.Dataset(temp_nc_file, 'a')
 
     try:

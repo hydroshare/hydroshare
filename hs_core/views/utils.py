@@ -5,9 +5,10 @@ import os
 import shutil
 import string
 from collections import namedtuple
+from datetime import datetime
 from tempfile import NamedTemporaryFile
-from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 from uuid import uuid4
 
 import paramiko
@@ -34,6 +35,7 @@ from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
+from hs_core.enums import RelationTypes
 from hs_core.hydroshare import add_resource_files
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.hydroshare.utils import check_aggregations
@@ -41,8 +43,7 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
-from hs_core.enums import RelationTypes
-
+from hs_core.tasks import create_temp_zip
 from hs_file_types.utils import set_logical_file_type
 from theme.backends import without_login_date_token_generator
 
@@ -732,6 +733,7 @@ def link_irods_folder_to_django(resource, istorage, foldername, auto_aggregate=T
     res_files = _link_irods_folder_to_django(resource, istorage, foldername)
     if auto_aggregate:
         check_aggregations(resource, res_files)
+    return res_files
 
 
 def listfolders_recursively(istorage, path):
@@ -883,8 +885,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     # check resource supports zipping of a folder
     if not resource.supports_zip(res_coll_input):
-        raise ValidationError("Folder zipping is not supported. "
-                              "Folder seems to contain aggregation(s).")
+        raise ValidationError("Zipping of this folder is not supported.")
 
     # check if resource supports deleting the original folder after zipping
     if bool_remove_original:
@@ -892,19 +893,33 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
             raise ValidationError("Deleting of original folder is not allowed after "
                                   "zipping of a folder.")
 
+    if resource.resource_type == "CompositeResource":
+        resource.create_aggregation_meta_files()
+
     content_dir = os.path.dirname(res_coll_input)
     output_zip_full_path = os.path.join(content_dir, output_zip_fname)
     istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
 
     output_zip_size = istorage.size(output_zip_full_path)
 
-    link_irods_file_to_django(resource, output_zip_full_path)
+    zip_res_file = link_irods_file_to_django(resource, output_zip_full_path)
+    if resource.resource_type == "CompositeResource":
+        # make the newly added zip file part of an aggregation if needed
+        resource.add_file_to_aggregation(zip_res_file)
 
     if bool_remove_original:
         for f in ResourceFile.objects.filter(object_id=resource.id):
             full_path_name = f.storage_path
             if res_coll_input in full_path_name and output_zip_full_path not in full_path_name:
-                delete_resource_file(res_id, f.short_path, user)
+                folder, base = os.path.split(f.short_path)
+                try:
+                    ResourceFile.get(resource=resource, file=base, folder=folder)
+                except ObjectDoesNotExist:
+                    # this can happen in case of deleting a file that is part of a logical file group
+                    # where deleting one file, deletes all files of the logical file group
+                    pass
+                else:
+                    delete_resource_file(res_id, f.short_path, user)
 
         # remove empty folder in iRODS
         istorage.delete(res_coll_input)
@@ -913,6 +928,56 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
     return output_zip_fname, output_zip_size
+
+
+def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
+    """
+    Zips an aggregation based on aggregation file path (allows zipping of aggregations which are not folder based)
+    :param user: user requesting the zipping of an aggregation
+    :param res_id: id of the resource that contains the aggregation
+    :param aggregation_name: short path (relative to res_id/data/contents/) of the aggregation to be zipped
+    :param output_zip_fname: name of the zip file
+    :return: zip file path and size of the zip file
+    """
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    if resource.resource_type != "CompositeResource":
+        raise ValidationError(f"Aggregation zipping is not allowed for resource type:{resource.resource_type}")
+    if resource.raccess.published:
+        raise ValidationError("Aggregation zipping is not allowed for a published resource")
+    istorage = resource.get_irods_storage()
+    if aggregation_name.startswith('data/contents/'):
+        _, aggregation_name = aggregation_name.split('data/contents/')
+
+    if output_zip_fname.lower().endswith('.zip'):
+        output_zip_fname = output_zip_fname[:-4]
+    aggr_folder_path = os.path.dirname(aggregation_name)
+    if aggr_folder_path:
+        zip_file_target_full_path = os.path.join(resource.file_path, aggr_folder_path, f"{output_zip_fname}.zip")
+    else:
+        zip_file_target_full_path = os.path.join(resource.file_path, f"{output_zip_fname}.zip")
+    if istorage.exists(zip_file_target_full_path):
+        raise ValidationError(f"Zip file ({output_zip_fname}.zip) already exists")
+
+    daily_date = datetime.today().strftime('%Y-%m-%d')
+    output_path = f"zips/{daily_date}/{uuid4().hex}/{output_zip_fname}.zip"
+    irods_output_path = resource.get_irods_path(output_path, prepend_short_id=False)
+    irods_aggr_input_path = os.path.join(resource.file_path, aggregation_name)
+    create_temp_zip(resource_id=res_id, input_path=irods_aggr_input_path, output_path=irods_output_path,
+                    aggregation_name=aggregation_name)
+
+    # move the zip file to the input path
+    move_zip_file_to = os.path.dirname(irods_aggr_input_path)
+    istorage.moveFile(irods_output_path, move_zip_file_to)
+    zip_file_path = os.path.join(move_zip_file_to, os.path.basename(irods_output_path))
+
+    # register the zip file in Django
+    zip_res_file = link_irods_file_to_django(resource, zip_file_path)
+    output_zip_size = istorage.size(zip_res_file.storage_path)
+    # make the newly added zip file part of an aggregation if needed
+    resource.add_file_to_aggregation(zip_res_file)
+
+    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+    return zip_file_path, output_zip_size
 
 
 class IrodsFile:
@@ -1008,6 +1073,11 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 res_file = link_irods_file_to_django(resource, destination_file)
                 added_resource_files.append(res_file)
 
+            if resource.resource_type == "CompositeResource":
+                # make the newly added files part of an aggregation if needed
+                for res_file in added_resource_files:
+                    resource.add_file_to_aggregation(res_file)
+
             if auto_aggregate:
                 check_aggregations(resource, added_resource_files)
             if ingest_metadata:
@@ -1020,7 +1090,11 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
-            link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
+            res_files = link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
+            if resource.resource_type == 'CompositeResource':
+                # make the newly added files part of an aggregation if needed
+                for res_file in res_files:
+                    resource.add_file_to_aggregation(res_file)
 
     except Exception:
         logger.exception("failed to unzip")

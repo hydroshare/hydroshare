@@ -2231,7 +2231,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         sqlite_file_to_update = utils.get_resource_files_by_extension(self.resTimeSeries,
                                                                       ".sqlite")[0]
         # retrieve the sqlite file from iRODS and save it to temp directory
-        temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
+        temp_sqlite_file = utils.get_file_from_irods(resource=self.resTimeSeries,
+                                                     file_path=sqlite_file_to_update.storage_path)
         con = sqlite3.connect(temp_sqlite_file)
         with con:
             # get the records in python dictionary format
@@ -2316,7 +2317,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         sqlite_file_to_update = utils.get_resource_files_by_extension(self.resTimeSeries,
                                                                       ".sqlite")[0]
         # retrieve the sqlite file from iRODS and save it to temp directory
-        temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
+        temp_sqlite_file = utils.get_file_from_irods(resource=self.resTimeSeries,
+                                                     file_path=sqlite_file_to_update.storage_path)
         con = sqlite3.connect(temp_sqlite_file)
         record_count_query = "SELECT COUNT() FROM {}"
         with con:
