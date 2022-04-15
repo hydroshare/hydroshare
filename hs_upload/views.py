@@ -121,6 +121,10 @@ class UploadContextView(TemplateView):
         return context
 
 
+class UploaderView(UploadContextView):
+    template_name = 'uploader.html'
+
+
 def start(request, path, *args, **kwargs):
     """ check whether upload file name is acceptable """
 

@@ -24,6 +24,10 @@ what.addEventListener("change", function(e) {
     // Get the selected file from the input element
     var file = e.target.files[0]
 
+    console.log("file name is " + file.name); 
+    console.log("file type is " + file.type); 
+    console.log("file size is " + file.size); 
+
     // check that name given is acceptable via synchronous call
     $.ajax({ url: "/hs_upload/start/{{ path }}", 
              async: false, 
