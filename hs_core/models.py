@@ -474,6 +474,9 @@ class Party(AbstractMetaDataElement):
         party = BNode()
         graph.add((subject, party_type, party))
         for field_term, field_value in self.get_field_terms_and_values(['identifiers']):
+            # TODO: remove this once we are no longer concerned with backwards compatibility
+            if field_term == HSTERMS.hydroshare_user_id:
+                graph.add((party, HSTERMS.description, field_value))
             graph.add((party, field_term, field_value))
         for k, v in self.identifiers.items():
             graph.add((party, getattr(HSTERMS, k), URIRef(v)))
@@ -487,6 +490,9 @@ class Party(AbstractMetaDataElement):
             identifiers = {}
             fields_by_term = {cls.get_field_term(field.name): field for field in cls._meta.fields}
             for _, p, o in graph.triples((party, None, None)):
+                # TODO: remove this once we are no longer concerned with backwards compatibility
+                if p == HSTERMS.description:
+                    continue
                 if p not in fields_by_term:
                     identifiers[p.rsplit("/", 1)[1]] = str(o)
                 else:
