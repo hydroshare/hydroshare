@@ -109,11 +109,13 @@ class UploadContextView(TemplateView):
             return response
 
         # fully authorized: generate the view, including calling get_context_data below.
+        kwargs['resource'] = resource
         return super(UploadContextView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['path'] = kwargs['path']  # guaranteed to succeed and exist
+        context['resource'] = kwargs['resource']
         context['FQDN_OR_IP'] = getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org')
         logger.debug("FQDN_OR_IP is '{}'".format(context['FQDN_OR_IP']))
         return context
@@ -285,7 +287,7 @@ def finish(request, path, *args, **kwargs):
         return response
 
     # all tests pass: move into appropriate location
-    logger.debug("copy uploaded file {} to {}/{}".format(tusd_path, path, filename))
+    logger.debug("copy uploaded file {} to {}{}".format(tusd_path, path, filename))
     upload_object = UploadedFile(file=open(tusd_path, mode="rb"), name=filename)
     add_file_to_resource(resource, upload_object, folder=short_path)
 

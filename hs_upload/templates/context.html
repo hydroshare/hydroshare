@@ -4,13 +4,18 @@
 <script type="text/javascript" src="/static/js/bootstrap-extras.js"></script>
 <script type="text/javascript" src="/static/js/tus.min.js"></script> 
 
-<p>Uploading to destination '{{ path }}'</p>
+<p> Resource title: '{{ resource.title }}' </p> 
+<p>Upload destination '{{ path }}'</p>
 
 <form> <input type='file' id='what'> </form>
 
 <div id='upload_status'> 
-Upload not yet started. 
+    <p>Upload not yet started. </p>
 </div> 
+
+<div id='upload_close'> 
+    <p><em>Please do not close this window until the upload completes.</em></p> 
+</div>
 
 <script>
 what = document.getElementById("what"); 
@@ -22,9 +27,12 @@ what.addEventListener("change", function(e) {
     // check that name given is acceptable via synchronous call
     $.ajax({ url: "/hs_upload/start/{{ path }}", 
              async: false, 
-             data: {filename: file.name, filetype: file.type }, 
+             data: { filename: file.name, filetype: file.type }, 
+             onError: function(error) { 
+                    console.log("Failed because: " + error); 
+                    document.getElementById('upload_status').innerHTML = "<p>failed because: " + error + "</p>"; 
+             }
            }).done(function() { 
-
                 // Create a new tus upload
                 var upload = new tus.Upload(file, {
                     // Endpoint is the upload creation URL from your tus server
@@ -42,30 +50,35 @@ what.addEventListener("change", function(e) {
                     onError: function(error) {
                         console.log("Failed because: " + error); 
                         document.getElementById('upload_status').innerHTML = "<p>failed because: " + error + "</p>"; 
-                        $.ajax("/hs_upload/event/{{ path }}", 
-                            {data: {event: 'error', filename: file.name, filetype: file.type, reason: error, url: upload.url}});
+                        // $.ajax("/hs_upload/event/{{ path }}", 
+                        //    {data: {event: 'error', filename: file.name, filetype: file.type, reason: error, url: upload.url}});
                     },
                     // Callback for reporting upload progress
                     onProgress: function(bytesUploaded, bytesTotal) {
+                        // This does not involve Django
                         var percentage = (bytesUploaded / bytesTotal * 100).toFixed(2); 
                         console.log(bytesUploaded, bytesTotal, percentage + "%"); 
                         document.getElementById('upload_status').innerHTML = 
                             "<p>uploaded: " + bytesUploaded + ", total: " + bytesTotal + "</p>"; 
-                    },
-                    // Callback for once the upload is completed
-                    onSuccess: function() {
+                    }, 
+                    onSuccess: function() {  // when done, ingest into Django
                         console.log("Upload completed:  %s from %s", upload.file.name, upload.url); 
-                        document.getElementById("upload_status").innerHTML = "done";
+                        document.getElementById("upload_status").innerHTML = "Copying uploaded file to resource";
                         $.ajax("/hs_upload/finish/{{ path }}", 
-                            {data: {filename: file.name, filetype: file.type, size: file.size,
-                                    url: upload.url}});
-                    }}
-                );
+                            {async: false, 
+                             data: {filename: file.name, filetype: file.type, size: file.size,
+                                    url: upload.url}, 
+                             onError: function(error) { 
+                                console.log("Failed because: " + error);
+                                document.getElementById('upload_status').innerHTML = "<p>failed because: " + error + "</p>"; 
+                         }}).done(function() { 
+                            document.getElementById('upload_status').innerHTML = "<p>Upload completed. You may close this window now."; 
+                            document.getElementById('upload_close').innerHTML = ""; 
+                         })
+                }}); 
                 // Start the upload
-                upload.start()
-            });
-
-});
-
+                upload.start();
+       });
+   });
 </script>
 <span id="csrf">{% csrf_token %}</span>
