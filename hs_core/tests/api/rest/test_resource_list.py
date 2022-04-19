@@ -172,8 +172,10 @@ class TestResourceList(HSRESTTestCase):
         comp_res_one = resource.create_resource('CompositeResource', self.user, 'Resource 1',
                                                 metadata=metadata_dict_one)
 
-        # creating GenericFileMeteData objects now so that when we create a generic aggregation
-        # it's GenericFileMetaData object will have the same id as the id of the resource metadata object
+        # creating and deleting GenericFileMeteData objects now so that when we create a generic aggregation in resource
+        # (comp_res_with_aggregation) its GenericFileMetaData object will have the same id as the id of the
+        # resource (comp_res_one) metadata object so we can test that we are not using aggregation level
+        # coverage for filtering resource
         if comp_res_one.metadata.id > 1:
             for _ in range(comp_res_one.metadata.id - 1):
                 GenericFileMetaData.objects.create()
