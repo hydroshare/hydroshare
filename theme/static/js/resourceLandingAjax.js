@@ -1035,9 +1035,9 @@ function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath)
         url: '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/move-aggregation/' + targetPath,
         async: true,
         success: function (task) {
-            $("#fb-files-container, #fb-files-container").css("cursor", "default");
             notificationsApp.registerTask(task);
             notificationsApp.show();
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
             display_error_message('File/Folder Moving Failed', xhr.responseText);

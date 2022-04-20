@@ -595,6 +595,7 @@ function onPaste() {
 function paste(destPath) {
     let calls = [];
     let localSources = [];
+    let is_async_celery_task = false;
 
     // var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
     sourcePaths.selected.each(function () {
@@ -603,6 +604,7 @@ function paste(destPath) {
             const hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
             const file_type_id = item.attr("data-logical-file-id");
             calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, destPath.join('/')));
+            is_async_celery_task = true;
         }
         else {
             const itemName = $(this).find(".fb-file-name").text();
@@ -617,8 +619,10 @@ function paste(destPath) {
 
     // Wait for the asynchronous call to finish to get new folder structure
     $.when.apply($, calls).done(function () {
-        refreshFileBrowser();
-        clearSourcePaths();
+        if (!is_async_celery_task) {
+            refreshFileBrowser();
+            clearSourcePaths();
+        }
     });
 
     $.when.apply($, calls).fail(function () {

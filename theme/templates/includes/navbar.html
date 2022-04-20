@@ -634,6 +634,7 @@
                         type: "GET",
                         url: '/hsapi/_internal/set_task_delivered/' + task.id,
                         success: function (task) {
+                            $("html").css("cursor", "default");
                         },
                         error: function (response) {
                             console.log(response);
