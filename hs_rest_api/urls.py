@@ -162,6 +162,10 @@ urlpatterns = [
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/zip/$',
         core_views.resource_folder_hierarchy.data_store_folder_zip_public),
 
+    # public zip aggregation by file endpoint
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/zip-by-aggregation-file/$',
+        core_views.resource_folder_hierarchy.zip_aggregation_file_public),
+
     # public move or rename
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/move-or-rename/$',
         core_views.resource_folder_hierarchy.data_store_file_or_folder_move_or_rename_public),

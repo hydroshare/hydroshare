@@ -270,22 +270,22 @@ def get_fed_zone_files(irods_fnames):
 
 
 # TODO: make the local cache file (and cleanup) part of ResourceFile state?
-def get_file_from_irods(res_file, temp_dir=None):
+def get_file_from_irods(resource, file_path, temp_dir=None):
     """
-    Copy the file (res_file) from iRODS (local or federated zone)
+    Copy the file (given by file_path) from iRODS (local or federated zone)
     over to django (temp directory) which is
-    necessary for manipulating the file (e.g. metadata extraction).
+    necessary for manipulating the file (e.g. metadata extraction, zipping etc.).
     Note: The caller is responsible for cleaning the temp directory
 
-    :param  res_file: an instance of ResourceFile
+    :param  resource: an instance of CompositeResource
+    :param  file_path: storage path (absolute path) of a file in iRODS
     :param  temp_dir: (optional) existing temp directory to which the file will be copied from
     irods. If temp_dir is None then a new temporary directory will be created.
-    :return: location of the copied file
+    :return: path of the copied file
     """
-    res = res_file.resource
-    istorage = res.get_irods_storage()
-    res_file_path = res_file.storage_path
-    file_name = os.path.basename(res_file_path)
+
+    istorage = resource.get_irods_storage()
+    file_name = os.path.basename(file_path)
 
     if temp_dir is not None:
         if not temp_dir.startswith(settings.TEMP_FILE_DIR):
@@ -295,15 +295,22 @@ def get_file_from_irods(res_file, temp_dir=None):
 
         tmpdir = temp_dir
     else:
-        tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
-        if os.path.exists(tmpdir):
-            shutil.rmtree(tmpdir)
-        os.makedirs(tmpdir)
+        tmpdir = get_temp_dir()
 
     tmpfile = os.path.join(tmpdir, file_name)
-    istorage.getFile(res_file_path, tmpfile)
+    istorage.getFile(file_path, tmpfile)
     copied_file = tmpfile
     return copied_file
+
+
+def get_temp_dir():
+    """Creates a temporary directory"""
+
+    tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
+    if os.path.exists(tmpdir):
+        shutil.rmtree(tmpdir)
+    os.makedirs(tmpdir)
+    return tmpdir
 
 
 # TODO: should be ResourceFile.replace
