@@ -31,11 +31,11 @@
             </div>
         </div>
 
-        <div class="row group-thumbnails">
+        <div class="group-thumbnails">
             {% if groups %}
             {% for group in groups %}
                 {% if group.gaccess.public or group.gaccess.discoverable or group.is_user_member %}
-                    <div class="col-sm-6 col-md-4 group-container">
+                    <div class="group-container">
                         <div class="group-thumbnail contribution">
                             {% if group.gaccess.picture and group.gaccess.picture.url %}
                                 <div class="group-preview-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
