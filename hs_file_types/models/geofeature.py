@@ -187,7 +187,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
-        feature_metadata = GeoFeatureFileMetaData.objects.create(keywords=[])
+        feature_metadata = GeoFeatureFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=feature_metadata, resource=resource)
@@ -318,7 +318,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         return res_file, folder_path
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets a resource file that has extension .shp from the list of files *resource_files* """
 
         res_files = [f for f in resource_files if f.extension.lower() == '.shp']
@@ -476,7 +476,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
                     collect_shape_resource_files(f)
 
         for f in shape_res_files:
-            temp_file = utils.get_file_from_irods(f)
+            temp_file = utils.get_file_from_irods(resource=resource, file_path=f.storage_path)
             if not temp_dir:
                 temp_dir = os.path.dirname(temp_file)
             else:
@@ -488,7 +488,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
             shape_temp_files.append(temp_file)
 
     elif selected_resource_file.extension.lower() == '.zip':
-        temp_file = utils.get_file_from_irods(selected_resource_file)
+        temp_file = utils.get_file_from_irods(resource=resource, file_path=selected_resource_file.storage_path)
         temp_dir = os.path.dirname(temp_file)
         if not zipfile.is_zipfile(temp_file):
             if os.path.isdir(temp_dir):

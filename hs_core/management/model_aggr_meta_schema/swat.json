@@ -1,0 +1,268 @@
+{
+    "type": "object",
+    "title": "SWAT Model Instance Metadata Schema",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "properties": {
+        "modelInput": {
+            "type": "object",
+            "title": "Model Inputs",
+            "properties": {
+                "demSourceURL": {
+                    "type": "string",
+                    "title": "DEM Source URL",
+                    "description": "URL of the source of DEM used in creating this model instance.",
+                    "propertyOrder": 13
+                },
+                "numberOfHRUs": {
+                    "type": "string",
+                    "title": "Number of HRUs",
+                    "description": "Number of HRUs used in creating this model instance.",
+                    "propertyOrder": 10
+                },
+                "demResolution": {
+                    "type": "string",
+                    "title": "DEM Resolution (in meters)",
+                    "description": "DEM resolution used in creating this model instance.",
+                    "propertyOrder": 11
+                },
+                "demSourceName": {
+                    "type": "string",
+                    "title": "DEM Source Name",
+                    "description": "Source name of the DEM used in creating this model instance.",
+                    "propertyOrder": 12
+                },
+                "watershedArea": {
+                    "type": "string",
+                    "title": "Watershed Area (in square killometers)",
+                    "description": "Area of the watershed used in creating this model instance.",
+                    "propertyOrder": 8
+                },
+                "numberOfSubbasins": {
+                    "type": "string",
+                    "title": "Number of Sub-basins",
+                    "description": "Number of sub-basins used in creating this model instance.",
+                    "propertyOrder": 9
+                },
+                "soilDataSourceURL": {
+                    "type": "string",
+                    "title": "Soil Data Source URL",
+                    "description": "URL of the soil data used used in creating this model instance.",
+                    "propertyOrder": 17
+                },
+                "warmupPeriodValue": {
+                    "type": "string",
+                    "title": "Warmup Period in Years",
+                    "description": "Warmup period in years used in creating this model instance.",
+                    "propertyOrder": 1
+                },
+                "soilDataSourceName": {
+                    "type": "string",
+                    "title": "Soil Data Source Name",
+                    "description": "Source name of the soil data used in creating this model instance.",
+                    "propertyOrder": 16
+                },
+                "routingTimeStepType": {
+                    "enum": [
+                        "Daily",
+                        "Hourly"
+                    ],
+                    "type": "string",
+                    "title": "Routing Time Step Type",
+                    "description": "Routing time step type used in creating this model instance.",
+                    "propertyOrder": 4
+                },
+                "landUseDataSourceURL": {
+                    "type": "string",
+                    "title": "Land Use Data Source URL",
+                    "description": "URL of the land data used used in creating this model instance.",
+                    "propertyOrder": 15
+                },
+                "rainfallTimeStepType": {
+                    "enum": [
+                        "Daily",
+                        "Sub-hourly"
+                    ],
+                    "type": "string",
+                    "title": "Rainfall Time Step Type",
+                    "description": "Rainfall time step type used in creating this model instance.",
+                    "propertyOrder": 2
+                },
+                "routingTimeStepValue": {
+                    "type": "string",
+                    "title": "Routing Time Step Value",
+                    "description": "Routing time step value used in creating this model instance.",
+                    "propertyOrder": 5
+                },
+                "landUseDataSourceName": {
+                    "type": "string",
+                    "title": "Land Use Data Source Name",
+                    "description": "Source name of the land used in creating this model instance.",
+                    "propertyOrder": 14
+                },
+                "rainfallTimeStepValue": {
+                    "type": "string",
+                    "title": "Rainfall Time Step Value",
+                    "description": "Rainfall time step value used in creating this model instance.",
+                    "propertyOrder": 3
+                },
+                "simulationTimeStepType": {
+                    "enum": [
+                        "Annual",
+                        "Monthly",
+                        "Daily",
+                        "Hourly"
+                    ],
+                    "type": "string",
+                    "title": "Simulation Time Step Type",
+                    "description": "Simulation time step type used in creating this model instance.",
+                    "propertyOrder": 6
+                },
+                "simulationTimeStepValue": {
+                    "type": "string",
+                    "title": "Simulation Time Step Value",
+                    "description": "Simulation time step value used in creating this model instance.",
+                    "propertyOrder": 7
+                }
+            },
+            "description": "Various inputs used in creating this model instance.",
+            "propertyOrder": 5,
+            "additionalProperties": false
+        },
+        "modelMethod": {
+            "type": "object",
+            "title": "Model Method",
+            "properties": {
+                "flowRoutingMethod": {
+                    "type": "string",
+                    "title": "Flow Routing Method",
+                    "description": "Flow routing method used in creating this model instance.",
+                    "propertyOrder": 2
+                },
+                "petEstimationMethod": {
+                    "type": "string",
+                    "title": "PET Estimation Method",
+                    "description": "Potential evapotranspiration estimation method used in creating this model instance.",
+                    "propertyOrder": 3
+                },
+                "runoffCalculationMethod": {
+                    "type": "string",
+                    "title": "Runoff Calculation Method",
+                    "description": "Runoff calculation method used in creating this model instance.",
+                    "propertyOrder": 1
+                }
+            },
+            "description": "Various methods used in creating this model instance.",
+            "propertyOrder": 3,
+            "additionalProperties": false
+        },
+        "modelObjective": {
+            "type": "object",
+            "title": "Model Objectives",
+            "properties": {
+                "BMPs": {
+                    "type": "boolean",
+                    "title": "BMPs",
+                    "format": "checkbox",
+                    "propertyOrder": 1
+                },
+                "hydrology": {
+                    "type": "boolean",
+                    "title": "Hydrology",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "waterQuality": {
+                    "type": "boolean",
+                    "title": "Water Quality",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
+                "climateLanduseChange": {
+                    "type": "boolean",
+                    "title": "Climate / Landuse Change",
+                    "format": "checkbox",
+                    "propertyOrder": 4
+                },
+                "otherObjectives": {
+                    "type": "string",
+                    "title": "Other Objectives",
+                    "propertyOrder": 5
+                }
+            },
+            "required": ["BMPs", "hydrology", "waterQuality", "climateLanduseChange"],
+            "description": "Objectives of this SWAT model instance.",
+            "propertyOrder": 1,
+            "additionalProperties": false
+        },
+        "modelParameter": {
+            "type": "object",
+            "title": "Model Parameters",
+            "properties": {
+                "fertilizer": {
+                    "type": "boolean",
+                    "title": "Fertilizer",
+                    "format": "checkbox",
+                    "propertyOrder": 4
+                },
+                "pointSource": {
+                    "type": "boolean",
+                    "title": "Point Source",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
+                "cropRotation": {
+                    "type": "boolean",
+                    "title": "Crop Rotation",
+                    "format": "checkbox",
+                    "propertyOrder": 1
+                },
+                "tileDrainage": {
+                    "type": "boolean",
+                    "title": "Tile Drainage",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "tillageOperation": {
+                    "type": "boolean",
+                    "title": "Tillage Operation",
+                    "format": "checkbox",
+                    "propertyOrder": 5
+                },
+                "irrigationOperation": {
+                    "type": "boolean",
+                    "title": "Irrigation Operation",
+                    "format": "checkbox",
+                    "propertyOrder": 7
+                },
+                "inletOfDrainingWatershed": {
+                    "type": "boolean",
+                    "title": "Inlet of Draining Watershed",
+                    "format": "checkbox",
+                    "propertyOrder": 6
+                },
+                "otherParameters": {
+                    "type": "string",
+                    "title": "Other Parameters",
+                    "propertyOrder": 8
+                }
+            },
+            "required": ["fertilizer", "pointSource", "cropRotation", "tileDrainage", "tillageOperation", "irrigationOperation", "inletOfDrainingWatershed"],
+            "description": "Various model parameters used in this model instance.",
+            "propertyOrder": 1,
+            "additionalProperties": false
+        },
+        "simulationType": {
+            "enum": [
+                "Normal Simulation",
+                "Sensitivity Analysis",
+                "Auto-Calibration"
+            ],
+            "type": "string",
+            "title": "Simulation Type",
+            "description": "Type of simulation used.",
+            "propertyOrder": 2
+        }
+    },
+    "description": "A sample schema for SWAT model instance metadata.",
+    "additionalProperties": false
+}

@@ -456,6 +456,10 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     res_file = self.composite_resource.files.first()
     logical_file = res_file.logical_file
     self.assertTrue(isinstance(logical_file.metadata, TimeSeriesFileMetaData))
+    # test the metadata for the aggregation is in dirty state
+    self.assertTrue(logical_file.metadata.is_dirty)
+    # test that the update file (.sqlite file) state is false
+    self.assertFalse(logical_file.metadata.is_update_file)
 
     # test extracted metadata that updates resource level metadata
 

@@ -408,7 +408,7 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
-        mi_metadata = ModelInstanceFileMetaData.objects.create(keywords=[])
+        mi_metadata = ModelInstanceFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=mi_metadata, resource=resource)

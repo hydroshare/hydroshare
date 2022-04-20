@@ -76,6 +76,9 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
     # this is to store abstract
     abstract = models.TextField(null=True, blank=True)
 
+    # flag to track when the .sqlite file of the aggregation needs to be updated
+    is_update_file = models.BooleanField(default=False)
+
     def get_metadata_elements(self):
         elements = super(TimeSeriesFileMetaData, self).get_metadata_elements()
         elements += list(self.sites)
@@ -307,7 +310,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         can_update_sqlite_file = 'False'
         if self.logical_file.can_update_sqlite_file:
             can_update_sqlite_file = 'True'
-        if self.is_dirty:
+        if self.is_update_file:
             style = "margin-bottom:10px"
             is_dirty = 'True'
         root_div = div(id="div-sqlite-file-update", cls="row", style=style)
@@ -578,7 +581,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
-        ts_metadata = TimeSeriesFileMetaData.objects.create(keywords=[])
+        ts_metadata = TimeSeriesFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=ts_metadata, resource=resource)
@@ -764,7 +767,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         return copy_of_logical_file
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets a resource file that has extension .sqlite or .csv from the list of files
         *resource_files*
         """
@@ -1338,7 +1341,8 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
 
     # save some data from the csv file
     # get the csv file from iRODS to a temp directory
-    temp_csv_file = utils.get_file_from_irods(csv_res_file)
+    resource = csv_res_file.resource
+    temp_csv_file = utils.get_file_from_irods(resource=resource, file_path=csv_res_file.storage_path)
     with open(temp_csv_file, 'r') as fl_obj:
         csv_reader = csv.reader(fl_obj, delimiter=',')
         # read the first row - header
@@ -1883,13 +1887,16 @@ def sqlite_file_update(instance, sqlite_res_file, user):
         # adding the blank sqlite file is necessary only in case of TimeSeriesResource
         if not instance.has_sqlite_file and instance.can_add_blank_sqlite_file:
             add_blank_sqlite_file(instance, upload_folder='')
-        # instance.add_blank_sqlite_file(user)
+
+    elif not instance.metadata.is_update_file:
+        return
 
     log = logging.getLogger()
 
     sqlite_file_to_update = sqlite_res_file
+    resource = sqlite_res_file.resource
     # retrieve the sqlite file from iRODS and save it to temp directory
-    temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
+    temp_sqlite_file = utils.get_file_from_irods(resource=resource, file_path=sqlite_file_to_update.storage_path)
 
     if instance.has_csv_file and instance.metadata.series_names:
         instance.metadata.populate_blank_sqlite_file(temp_sqlite_file, user)
@@ -1939,9 +1946,7 @@ def sqlite_file_update(instance, sqlite_res_file, user):
                 utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update,
                                                      user)
                 metadata = instance.metadata
-                if is_file_type:
-                    instance.create_aggregation_xml_documents(create_map_xml=False)
-                metadata.is_dirty = False
+                metadata.is_update_file = False
                 metadata.save()
                 log.info("SQLite file update was successful.")
         except sqlite3.Error as ex:

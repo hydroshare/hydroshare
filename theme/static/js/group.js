@@ -128,6 +128,69 @@ function onRoleSelect(event) {
     $("#selected_role")[0].setAttribute("data-role", el[0].getAttribute("data-role"));
 }
 
+function request_join_group_ajax_submit() {
+    var target = $(this);
+    var dataFormID = $(this).attr("data-form-id");
+    var form = $("#" + dataFormID);
+    var datastring = form.serialize();
+    var url = form.attr('action');
+    if($(this).attr("requires_explanation") === 'True'){
+        // show a modal requesting explanation
+        $('#explanation-dialog').modal('show');
+        $('#explanation').unbind('.group_ns');
+
+        // on modal submission
+        $('#explanation_btn').click(()=>{
+            let explanation = $("#explanation").val().trim();
+        
+            let sanitized_explanation = $("<div/>").html(explanation.trim()).text();
+            if (sanitized_explanation !== explanation) {
+                showError("The explanation text contains html code and cannot be saved.");
+                return;
+            }else if (sanitized_explanation == 0) {
+                showError("Justificaiton is a required field that cannot be left blank.");
+                return;
+            }else if(sanitized_explanation.length > 300){
+                showError("The justificaiton is too long. Please shorten to 300 characters.")
+                return;
+            }else{
+                submitGroupRequest(datastring + "&" + $('#explanation').serialize());
+                $('#explanation-dialog').modal('hide');
+            }
+        });
+        function showError(errorText){
+            $("#explanation").addClass("form-invalid");
+            $("#explanation_msg").html(
+                "<div class='alert alert-danger'>" + errorText + "</div>");
+            $("#explanation_msg").show();
+            $('#explanation').bind('input propertychange.group_ns', function() {
+                $("#explanation").removeClass("form-invalid");
+                $("#explanation_msg").hide();
+            });
+        }
+    }else{
+        submitGroupRequest(datastring);
+    }
+
+    function submitGroupRequest(data){
+        $.ajax({
+            type: "POST",
+            url: url,
+            dataType: 'html',
+            data: data,
+            success: function (result) {
+                var container = target.parent().parent();
+                target.parent().remove();
+                container.append('<h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>');
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                console.log("error");
+            }
+        });
+    }
+    return false;
+}
+
 function act_on_request_ajax_submit() {
     var target = $(this);
     var form = $(this).closest("form");
@@ -308,6 +371,7 @@ $(document).ready(function () {
     $(".btn-share-group").click(share_group_ajax_submit);
     $(".btn-unshare-group").click(unshare_group_ajax_submit);
     $("#btn-group-invite").click(group_invite_ajax_submit);
+    $(".btn-ask-join").click(request_join_group_ajax_submit);
 
     // Initialize filters counters
     updateMembersLabelCount();
@@ -338,4 +402,17 @@ $(document).ready(function () {
         input.val(label);
     });
 
+    // Hide explanation checkbox if auto-approval is enabled
+    if($('#auto-approve').is(':checked')){
+        $('#requires_explanation').prop( "checked", false );
+        $('#requires_explanation').parent().hide();
+    }
+    $('#auto-approve').change(function() {
+        if(this.checked) {
+            $('#requires_explanation').prop( "checked", false );
+            $('#requires_explanation').parent().hide();
+        }else{
+            $('#requires_explanation').parent().show();
+        }
+    });
 });

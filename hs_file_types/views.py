@@ -466,9 +466,15 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                               'metadata_status': metadata_status,
                               'logical_file_type': logical_file.type_name()
                               }
+
+        if logical_file.type_name() in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+            logical_file.metadata.is_update_file = True
+            logical_file.metadata.save()
+            ajax_response_data['is_update_file'] = logical_file.metadata.is_update_file
+
         if logical_file.type_name() == "TimeSeriesLogicalFile":
-            ajax_response_data['is_dirty'] = logical_file.metadata.is_dirty
             ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
+
             if element_name.lower() == 'site':
                 # get the updated spatial coverage of the resource
                 spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -538,9 +544,14 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
                               'element_id': element.id,
                               'metadata_status': metadata_status}
 
+        if logical_file.type_name() in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+            logical_file.metadata.is_update_file = True
+            logical_file.metadata.save()
+            ajax_response_data['is_update_file'] = logical_file.metadata.is_update_file
+
         if logical_file.type_name() == "TimeSeriesLogicalFile":
-            ajax_response_data['is_dirty'] = logical_file.metadata.is_dirty
             ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
+
             if element_name.lower() == 'site':
                 # get the updated spatial coverage of the resource
                 spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -665,6 +676,8 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
 
     logical_file.metadata.extra_metadata[key] = value
     logical_file.metadata.is_dirty = True
+    if logical_file.type_name() == "NetCDFLogicalFile":
+        logical_file.metadata.is_update_file = True
     logical_file.metadata.save()
     resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
@@ -701,6 +714,8 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     if key in list(logical_file.metadata.extra_metadata.keys()):
         del logical_file.metadata.extra_metadata[key]
         logical_file.metadata.is_dirty = True
+        if logical_file.type_name() == "NetCDFLogicalFile":
+            logical_file.metadata.is_update_file = True
         logical_file.metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
 
@@ -757,6 +772,8 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
         metadata.keywords += keywords
         if hs_file_type != "TimeSeriesLogicalFile":
             metadata.is_dirty = True
+        if hs_file_type == "NetCDFLogicalFile":
+            metadata.is_update_file = True
         metadata.save()
         # add keywords to resource
         resource_keywords = [subject.value.lower() for subject in resource.metadata.subjects.all()]
@@ -812,6 +829,8 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
         if hs_file_type != "TimeSeriesLogicalFile":
             metadata = logical_file.metadata
             metadata.is_dirty = True
+            if hs_file_type == "NetCDFLogicalFile":
+                metadata.is_update_file = True
             metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
@@ -856,6 +875,8 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     logical_file.save()
     metadata = logical_file.metadata
     metadata.is_dirty = True
+    if hs_file_type in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+        metadata.is_update_file = True
     metadata.save()
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
@@ -863,6 +884,10 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
                           'message': "Update was successful"}
     if logical_file.type_name() == "TimeSeriesLogicalFile":
         ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
+
+    ajax_response_data['is_update_file'] = False
+    if hs_file_type in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+        ajax_response_data['is_update_file'] = metadata.is_update_file
 
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
@@ -936,11 +961,13 @@ def update_timeseries_abstract(request, file_type_id, **kwargs):
         metadata = logical_file.metadata
         metadata.abstract = abstract
         metadata.is_dirty = True
+        metadata.is_update_file = True
         metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'abstract', "is_dirty": metadata.is_dirty,
                               'can_update_sqlite': logical_file.can_update_sqlite_file,
+                              'is_update_file': metadata.is_update_file,
                               'message': "Update was successful"}
     else:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
@@ -1198,15 +1225,7 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-
-    from hs_core.views.utils import authorize
-    from rest_framework.exceptions import PermissionDenied
-    if not logical_file.resource.raccess.public:
-        if request.user.is_authenticated:
-            authorize(request, logical_file.resource.short_id,
-                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        else:
-            raise PermissionDenied()
+    authorize(request, logical_file.resource.short_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
     if json_response is not None:
         return json_response
@@ -1223,7 +1242,6 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@login_required
 def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
     """
     Gets metadata html for the aggregation type (logical file type)
@@ -1243,6 +1261,8 @@ def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
     logical_file, json_response = _get_logical_file("TimeSeriesLogicalFile", file_type_id)
     if json_response is not None:
         return json_response
+
+    authorize(request, logical_file.resource.short_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
     series_ids = logical_file.metadata.series_ids_with_labels
     if series_id not in list(series_ids.keys()):

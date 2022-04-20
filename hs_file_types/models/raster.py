@@ -250,7 +250,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
-        raster_metadata = GeoRasterFileMetaData.objects.create(keywords=[])
+        raster_metadata = GeoRasterFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=raster_metadata, resource=resource)
@@ -398,7 +398,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             vrt_file.delete()
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets a resource file that has extension .vrt (if exists) otherwsie 'tif'
         from the list of files *resource_files* """
 
@@ -469,7 +469,8 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
             vrt_file = vrt_files_for_raster[0]
             raster_resource_files.extend([vrt_file])
             temp_dir = os.path.dirname(raster_file)
-            temp_vrt_file = utils.get_file_from_irods(vrt_file, temp_dir)
+            temp_vrt_file = utils.get_file_from_irods(resource=resource, file_path=vrt_file.storage_path,
+                                                      temp_dir=temp_dir)
             listed_tif_files = list_tif_files(vrt_file)
             tif_files = [f for f in res_files if f.file_name in listed_tif_files]
             if len(tif_files) != len(listed_tif_files):
@@ -597,7 +598,8 @@ def list_tif_files(vrt_file):
     :param vrt_file: ResourceFile for of a vrt to list associated tif(f) files
     :return: List of string filenames read from vrt_file
     """
-    temp_vrt_file = utils.get_file_from_irods(vrt_file)
+    resource = vrt_file.resource
+    temp_vrt_file = utils.get_file_from_irods(resource=resource, file_path=vrt_file.storage_path)
     with open(temp_vrt_file, 'r') as opened_vrt_file:
         vrt_string = opened_vrt_file.read()
         root = ET.fromstring(vrt_string)
