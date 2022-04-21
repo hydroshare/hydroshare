@@ -331,24 +331,15 @@ class NetCDFMetaDataMixin(models.Model):
         if not super(NetCDFMetaDataMixin, self).has_all_required_elements():
             return False
         if not self.variables.all():
-            return False
-        if not (self.coverages.all().filter(type='box').first() or
-                self.coverages.all().filter(type='point').first()):
-            return False
-        if not self.originalCoverage:
-            return False
+            return False        
         return True
 
     def get_required_missing_elements(self):
         # get a list of missing required metadata element names
-        missing_required_elements = super(NetCDFMetaDataMixin, self).get_required_missing_elements()
-        if not (self.coverages.all().filter(type='box').first() or
-                self.coverages.all().filter(type='point').first()):
-            missing_required_elements.append('Spatial Coverage')
+        missing_required_elements = super(NetCDFMetaDataMixin, self).get_required_missing_elements()       
         if not self.variables.all().first():
             missing_required_elements.append('Variable')
-        if not self.originalCoverage:
-            missing_required_elements.append('Spatial Reference')
+        
         return missing_required_elements
 
     def delete_all_elements(self):
@@ -375,7 +366,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
     def get_metadata_elements(self):
         elements = super(NetCDFFileMetaData, self).get_metadata_elements()
-        elements += [self.original_coverage]
+        elements += [self.originalCoverage]
         elements += list(self.variables.all())
         return elements
 
@@ -390,7 +381,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     def original_coverage(self):
         # There can be at most only one instance of type OriginalCoverage associated
         # with this metadata object
-        return self.ori_coverage.all().first()
+        return self.originalCoverage
 
     def _get_opendap_html(self):
         opendap_div = html_tags.div(cls="content-block")
