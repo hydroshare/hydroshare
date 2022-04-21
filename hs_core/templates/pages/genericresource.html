@@ -222,6 +222,9 @@
             {% include "resource-landing-page/coverage.html" %}
         {% endif %}
 
+        {# ======= Geoconnex ======= #}
+        {% include "resource-landing-page/geoconnex-ref-collection.html" %}
+
         {% block content_block %}
         {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
         {% if cm.resource_type != "ToolResource" %}
