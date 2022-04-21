@@ -115,7 +115,7 @@ def _process_uploaded_file(resource, validate_files_dict):
 
     if res_file:
         # get the file from irods to temp dir
-        temp_file = utils.get_file_from_irods(res_file)
+        temp_file = utils.get_file_from_irods(resource=resource, file_path=res_file.storage_path)
         # validate the file
         validation_results = raster.raster_file_validation(raster_file=temp_file,
                                                            resource=resource)

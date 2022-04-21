@@ -20,7 +20,7 @@ from hs_core.views import utils as view_utils
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
-    add_reference_url_to_resource, edit_reference_url_in_resource
+    add_reference_url_to_resource, edit_reference_url_in_resource, zip_by_aggregation_file
 
 from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
 
@@ -278,7 +278,7 @@ def data_store_folder_zip(request, res_id=None):
 
     remove_original = resolve_request(request).get('remove_original_after_zip', None)
     bool_remove_original = True
-    if remove_original:
+    if remove_original is not None:
         remove_original = str(remove_original).strip().lower()
         if remove_original == 'false':
             bool_remove_original = False
@@ -301,9 +301,78 @@ def data_store_folder_zip(request, res_id=None):
     )
 
 
+def zip_aggregation_file(request, res_id=None):
+    """
+    Zip requested aggregation into a zip file in hydroshareZone or any federated zone
+    used for HydroShare resource backend store. It is invoked by an AJAX call and returns
+    json object that holds the created zip file name if it succeeds, and an empty string
+    if it fails. The AJAX request must be a POST request with input data passed in for
+    res_id, aggregation_path, and output_zip_file_name where
+    aggregation_path  is the relative path under res_id/data/contents representing an aggregation to be zipped,
+    output_zip_file_name is the file name only with no path of the generated zip file name.
+    """
+    res_id = request.POST.get('res_id', res_id)
+    if res_id is None:
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
+    res_id = str(res_id).strip()
+    try:
+        resource, _, user = authorize(request, res_id,
+                                      needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+
+    if resource.resource_type != "CompositeResource":
+        return HttpResponse('Bad request - resource is not a Composite Resource type',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    aggregation_path = resolve_request(request).get('aggregation_path', None)
+
+    try:
+        aggregation_path = _validate_path(aggregation_path, 'aggregation_path')
+    except ValidationError as ex:
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
+
+    output_zip_fname = resolve_request(request).get('output_zip_file_name', None)
+    if output_zip_fname is None:
+        return HttpResponse('Bad request - output_zip_fname is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
+    output_zip_fname = str(output_zip_fname).strip()
+    if not output_zip_fname:
+        return HttpResponse('Bad request - output_zip_fname cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if output_zip_fname.find('/') >= 0:
+        return HttpResponse('Bad request - output_zip_fname cannot contain /',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        output_zip_fname, size = zip_by_aggregation_file(user, res_id, aggregation_path, output_zip_fname)
+    except SessionException as ex:
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except DRF_ValidationError as ex:
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+
+    return_object = {'name': output_zip_fname,
+                     'size': size,
+                     'type': 'zip'}
+
+    return HttpResponse(
+        json.dumps(return_object),
+        content_type="application/json"
+    )
+
+
 @api_view(['POST'])
 def data_store_folder_zip_public(request, pk):
     return data_store_folder_zip(request, res_id=pk)
+
+
+@api_view(['POST'])
+def zip_aggregation_file_public(request, pk):
+    return zip_aggregation_file(request, res_id=pk)
 
 
 def data_store_folder_unzip(request, **kwargs):

@@ -690,7 +690,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         return cls(metadata=rf_ts_metadata, resource=resource)
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets the resource file that has extension '.json as the primary file
         from the list of files *resource_files* """
 
