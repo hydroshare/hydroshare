@@ -64,6 +64,7 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
 # by celery, despite our catch-all handler).
 logger = logging.getLogger('django')
 
+
 # Currently there are two different cleanups scheduled.
 # One is 20 minutes after creation, the other is nightly.
 # TODO Clean up zipfiles in remote federated storage as well.
