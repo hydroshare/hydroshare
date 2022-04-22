@@ -290,6 +290,7 @@ INSTALLED_APPS = (
     "ref_ts",
     "hs_app_timeseries",
     "widget_tweaks",
+    "hs_app_netCDF",
     "hs_model_program",
     "hs_modelinstance",
     "hs_tools_resource",
