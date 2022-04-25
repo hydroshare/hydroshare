@@ -115,7 +115,6 @@ class UrlBaseFileForm(ModelForm):
 
 class UrlValidationForm(forms.Form):
     value = forms.URLField(max_length=1024, required=False)
-    data_url = forms.CharField(required=False)
 
 
 class AppResourceLevelUrlValidationForm(forms.Form):
@@ -528,7 +527,7 @@ class ToolIconForm(ModelForm):
 
 class ToolIconValidationForm(forms.Form):
     value = forms.CharField(max_length=1024, required=False)
-    data_url = forms.URLField(required=False)
+    data_url = forms.CharField(required=False)
 
 
 class MetadataField(Field):
