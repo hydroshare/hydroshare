@@ -437,7 +437,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = move_aggregation(request, resource_id=self.composite_resource.short_id,
                                     file_type_id=logical_file.id,
-                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder, test=True)
+                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder, run_async=False)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # test there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
@@ -487,7 +487,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = move_aggregation(request, resource_id=self.composite_resource.short_id,
                                     file_type_id=logical_file.id,
-                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder, test=True)
+                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder, run_async=False)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # test there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
@@ -537,7 +537,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = move_aggregation(request, resource_id=self.composite_resource.short_id,
                                     file_type_id=logical_file.id,
-                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder, test=True)
+                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder, run_async=False)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # test there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
@@ -585,7 +585,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = move_aggregation(request, resource_id=self.composite_resource.short_id,
                                     file_type_id=logical_file.id,
-                                    hs_file_type='NetCDFLogicalFile', test=True)
+                                    hs_file_type='NetCDFLogicalFile', run_async=False)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # test there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)

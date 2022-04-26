@@ -302,7 +302,7 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
 
 @authorise_for_aggregation_edit
 @login_required
-def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path="", test=False, **kwargs):
+def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path="", run_async=True, **kwargs):
     """
     moves all files associated with an aggregation and all the associated metadata.
     Note that test parameter is added for testing this view function which will not do async move. By default,
@@ -348,7 +348,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
                 response_data['message'] = err_msg
                 return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    if not test:
+    if run_async:
         task = move_aggregation_task.apply_async((resource_id, file_type_id, hs_file_type, tgt_path))
         task_id = task.task_id
         task_dict = get_or_create_task_notification(task_id, name='aggregation move', payload=resource_id,

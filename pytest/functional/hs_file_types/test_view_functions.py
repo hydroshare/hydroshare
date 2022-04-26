@@ -259,7 +259,7 @@ def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregati
     request = factory.post(url)
     request.user = user
     response = move_aggregation(request, resource_id=res.short_id, hs_file_type=aggr_class_name,
-                                file_type_id=move_aggr.id, tgt_path=mi_folder, test=True)
+                                file_type_id=move_aggr.id, tgt_path=mi_folder, run_async=False)
     assert response.status_code == status.HTTP_200_OK
     assert move_aggr_cls.objects.count() == 1
     move_aggr.refresh_from_db()

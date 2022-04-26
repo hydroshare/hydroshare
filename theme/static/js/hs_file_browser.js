@@ -620,7 +620,14 @@ function paste(destPath) {
         calls.push(move_to_folder_ajax_submit(localSources, destPath.join('/')));
     }
 
-    // Wait for the asynchronous call to finish to get new folder structure
+    // Wait for the calls to finish to get new folder structure if the task in the call is not done
+    // asyncronously on the server backend since JSON response return of success indicates the task
+    // is done if the task is NOT run asyncronously in which case the browser needs to be refreshed
+    // for the new folder structure; otherwise, if the task is run asyncronously as a celery task on
+    // the server backend, the task will run in the background after the server returns JSON response
+    // indicating the task is queued to be executed in the celery task queue, in which case, refreshing
+    // file browser is not needed and is actually problematic while the task is running in the background
+    // and has not yet finished
     $.when.apply($, calls).done(function () {
         if (!is_async_celery_task) {
             refreshFileBrowser();
