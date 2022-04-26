@@ -526,7 +526,7 @@ class ToolIconForm(ModelForm):
 
 
 class ToolIconValidationForm(forms.Form):
-    value = forms.CharField(max_length=1024, required=False)
+    value = forms.URLField(max_length=1024, required=False)
     data_url = forms.CharField(required=False)
 
 
