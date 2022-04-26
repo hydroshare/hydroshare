@@ -2478,14 +2478,14 @@ class UserAccess(models.Model):
     # PUBLIC METHODS: community
     ##########################################
 
-    def create_community(self, title, description, auto_approve=False, purpose=None):
+    def create_community(self, title, description, auto_approve=False, purpose=None, email=None, url=None):
         """
         Create a community.
 
-        :param title: Group title/name.
+        :param title: Community title/name.
         :param description: a description of the community
         :param purpose: what's the purpose of the community (optional)
-        :param auto_approve: whether to bypass group-like request/approve process for requests
+        :param auto_approve: whether to bypass Community-like request/approve process for requests
         :return: Community object
 
         Anyone can create a community. The creator is also the first owner.
@@ -2499,12 +2499,17 @@ class UserAccess(models.Model):
             assert isinstance(description, str)
             if purpose:
                 assert isinstance(purpose, str)
+            if email:
+                assert isinstance(email, str)
+            if url:
+                assert isinstance(email, str)
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
         raw_community = Community.objects.create(name=title, description=description,
-                                                 purpose=purpose, auto_approve=auto_approve)
+                                                 purpose=purpose, auto_approve=auto_approve,
+                                                 email=email, url=url)
         raw_user = self.user
 
         # Must bootstrap access control system initially

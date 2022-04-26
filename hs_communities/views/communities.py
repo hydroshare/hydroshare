@@ -44,6 +44,7 @@ def group_json(group):
         except ValueError:
             url = ""
         return {
+            'id': group.id,
             'type': 'Group',
             'name': group.name,
             'active': 1 if group.gaccess.active == True else 0,

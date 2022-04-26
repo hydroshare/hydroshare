@@ -1991,6 +1991,49 @@ def gcr_json(request):
         'redeemed': request.redeemed
     }
 
+
+class CommunityForm(forms.Form):
+    name = forms.CharField(required=True)
+    description = forms.CharField(required=True)
+    purpose = forms.CharField(required=False)
+    email = forms.EmailField(required=False)
+    url = forms.URLField(required=False)
+    picture = forms.ImageField(required=False)
+    auto_approve = forms.BooleanField(required=False)
+
+class RequestNewCommunityForm(CommunityForm):
+    def save(self, request):
+        form_data = self.cleaned_data
+
+        new_community = request.user.uaccess.create_community(title=form_data['name'],
+                                                      description=form_data['description'],
+                                                      purpose=form_data['purpose'],
+                                                      email=form_data['email'],
+                                                      url=form_data['url'])
+        # if 'picture' in request.FILES:
+        #     new_community.gaccess.picture = request.FILES['picture']
+        return new_community
+
+
+@login_required
+def request_new_community(request, *args, **kwargs):
+    community_form = RequestNewCommunityForm(request.POST, request.FILES)
+    if community_form.is_valid():
+        try:
+            new_community = community_form.save(request)
+            messages.success(request, "Community creation was successful.")
+            return HttpResponseRedirect(reverse('community', args=[new_community.id]))
+        except IntegrityError as ex:
+            if community_form.cleaned_data['name'] in str(ex):
+                message = "Community name '{}' already exists".format(community_form.cleaned_data['name'])
+                messages.error(request, "Community creation errors: {}.".format(message))
+            else:
+                messages.error(request, "Community creation errors:{}.".format(str(ex)))
+    else:
+        messages.error(request, "Community creation errors:{}.".format(community_form.errors.as_json))
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 class GroupView(TemplateView):
     template_name = 'pages/group-unauthenticated.html'
 

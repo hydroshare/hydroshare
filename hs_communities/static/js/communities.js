@@ -46,7 +46,41 @@ $(document).ready(function () {
         } else {
           this.$data.filterTo.splice(loc, 1);
         }
-      }
+      },
+      remove: async function(id) {
+        this.$set(this.isRemoving, id, true)
+        // TODO: handle leaving
+        const url = '/access/_internal/communityjson/' + this.community.id + '/remove/' + id + '/';
+        try {
+          const  response = await $.get(url)
+          console.log(response)
+          // this.joined = response.joined
+          // this.availableToJoin = response.available_to_join
+          delete this.isRemoving[id]
+        }
+        catch(e) {
+          console.log(e)
+          // abort
+          this.$set(this.isRemoving, id, false)
+        }
+      },
+      approve: async function(id) {
+        this.$set(this.isApproving, id, true)
+        // TODO: handle leaving
+        const url = '/access/_internal/communityjson/' + this.community.id + '/approve/' + id + '/';
+        try {
+          const response = await $.get(url, { 'responseType': 'text' })
+          console.log(response)
+          // this.joined = response.joined
+          // this.availableToJoin = response.available_to_join
+          delete this.isApproving[id]
+        }
+        catch(e) {
+          console.log(e)
+          // abort
+          this.$set(this.isApproving, id, false)
+        }
+      },
     }
   });
 });

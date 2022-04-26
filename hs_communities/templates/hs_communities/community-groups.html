@@ -1,6 +1,6 @@
 <div class="flex gap-2 flex-wrap-wrap">
   <div class="group-communities--sidebar">
-    <button class="btn btn-primary has-space-top" data-toggle="modal" data-target="#invite-groups-modal">Invite Groups</button>
+    <button v-if="isAdmin" class="btn btn-primary has-space-top" data-toggle="modal" data-target="#invite-groups-modal">Invite Groups</button>
     <div v-if="!isAdmin || true" class="alert alert-info">
       <p>Have a HydroShare group you want to add to this community? Click the button below to request that your group be added.</p>
       <button class="btn btn-primary has-space-top" data-toggle="modal" data-target="#communities-modal">Ask to join</button>
@@ -42,8 +42,8 @@
               <a class="community-card--heading" href="#">${ group.name }</a>
               <p>${ group.description }</p>
             </div>
-            <div class="community-card--actions">
-              <button class="btn btn-default" @click="remove(group.id)" :disabled="isRemoving[group.id]">Remove Group</button>
+            <div v-if="isAdmin" class="community-card--actions">
+              <button class="btn btn-danger" @click="remove(group.id)" :disabled="isRemoving[group.id]">Remove Group</button>
             </div>
           </div>
         </div>
