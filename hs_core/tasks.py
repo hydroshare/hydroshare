@@ -35,7 +35,28 @@ from hs_core.models import BaseResource, TaskNotification
 from hs_core.enums import RelationTypes
 from theme.utils import get_quota_message
 from hs_collection_resource.models import CollectionDeletedResource
+from hs_file_types.models import (
+    FileSetLogicalFile,
+    GenericLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
+    ModelProgramLogicalFile,
+    ModelInstanceLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile
+)
 
+FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
+                 "FileSetLogicalFile": FileSetLogicalFile,
+                 "GeoRasterLogicalFile": GeoRasterLogicalFile,
+                 "NetCDFLogicalFile": NetCDFLogicalFile,
+                 "GeoFeatureLogicalFile": GeoFeatureLogicalFile,
+                 "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
+                 "TimeSeriesLogicalFile": TimeSeriesLogicalFile,
+                 "ModelProgramLogicalFile": ModelProgramLogicalFile,
+                 "ModelInstanceLogicalFile": ModelInstanceLogicalFile
+                 }
 
 # Pass 'django' into getLogger instead of __name__
 # for celery tasks (as this seems to be the
@@ -665,9 +686,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
 def resource_debug(resource_id):
     """Update web services hosted by GeoServer and HydroServer.
     """
-    from hs_core.hydroshare.utils import get_resource_by_shortkey
-
-    resource = get_resource_by_shortkey(resource_id)
+    resource = utils.get_resource_by_shortkey(resource_id)
     from hs_core.management.utils import check_irods_files
     return check_irods_files(resource, log_errors=False, return_errors=True)
 
@@ -678,6 +697,28 @@ def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwri
     from hs_core.views.utils import unzip_file
     user = User.objects.get(pk=user_pk)
     unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata)
+
+
+@shared_task
+def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
+
+    from hs_core.views.utils import rename_irods_file_or_folder_in_django
+
+    res = utils.get_resource_by_shortkey(res_id)
+    istorage = res.get_irods_storage()
+    res_files = []
+    file_type_obj = FILE_TYPE_MAP[file_type]
+    aggregation = file_type_obj.objects.get(id=file_type_id)
+    res_files.extend(aggregation.files.all())
+    orig_aggregation_name = aggregation.aggregation_name
+    for file in res_files:
+        tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
+        istorage.moveFile(file.storage_path, tgt_full_path)
+        rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
+    new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
+    res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
+                                                    new_path=new_aggregation_name)
+    return res.get_absolute_url()
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
