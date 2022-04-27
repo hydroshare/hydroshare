@@ -598,6 +598,7 @@ function onPaste() {
 function paste(destPath) {
     let calls = [];
     let localSources = [];
+    let is_async_celery_task = false;
 
     // var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
     sourcePaths.selected.each(function () {
@@ -606,6 +607,7 @@ function paste(destPath) {
             const hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
             const file_type_id = item.attr("data-logical-file-id");
             calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, destPath.join('/')));
+            is_async_celery_task = true;
         }
         else {
             const itemName = $(this).find(".fb-file-name").text();
@@ -618,10 +620,19 @@ function paste(destPath) {
         calls.push(move_to_folder_ajax_submit(localSources, destPath.join('/')));
     }
 
-    // Wait for the asynchronous call to finish to get new folder structure
+    // Wait for the calls to finish to get new folder structure if the task in the call is not done
+    // asyncronously on the server backend since JSON response return of success indicates the task
+    // is done if the task is NOT run asyncronously in which case the browser needs to be refreshed
+    // for the new folder structure; otherwise, if the task is run asyncronously as a celery task on
+    // the server backend, the task will run in the background after the server returns JSON response
+    // indicating the task is queued to be executed in the celery task queue, in which case, refreshing
+    // file browser is not needed and is actually problematic while the task is running in the background
+    // and has not yet finished
     $.when.apply($, calls).done(function () {
-        refreshFileBrowser();
-        clearSourcePaths();
+        if (!is_async_celery_task) {
+            refreshFileBrowser();
+            clearSourcePaths();
+        }
     });
 
     $.when.apply($, calls).fail(function () {
