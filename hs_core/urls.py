@@ -52,6 +52,8 @@ urlpatterns = [
         views.undo_share_resource_with_group, name='undo_share_resource_with_group'),
     url(r'^_internal/create-user-group/$', views.create_user_group, name='create_user_group'),
     url(r'^_internal/request-new-community/$', views.request_new_community, name='request_new_community'),
+    url(r'^_internal/update-user-community/(?P<community_id>[0-9]+)$', views.update_user_community,
+        name='update_user_community'),
     url(r'^_internal/update-user-group/(?P<group_id>[0-9]+)$', views.update_user_group,
         name='update_user_group'),
     url(r'^_internal/delete-user-group/(?P<group_id>[0-9]+)$', views.delete_user_group,

@@ -3,11 +3,12 @@
 {% block meta_title %}{{ community.name }}{% endblock %}
 {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/community.css">
 {% endblock %}
 
 {% block main %}
-    <div id="communities-app">
-        <div class="collaborate-header">
+    <div id="communities-app" class="container full-width" style="padding: 0;">
+        <div class="collaborate-header row">
             <div class="container">
                 <div class="row">
                     <div class="col-sm-12">
@@ -53,7 +54,7 @@
 
                     {% if community.purpose %}<h4>{{ community.purpose|linebreaks }}</h4>{% endif %}
 
-                    {#  Community Info #}
+                    <!-- Community Info -->
                     {% if community.email or community.url %}
                     <div class="community-info">
                         {% if community.url %}
@@ -62,7 +63,7 @@
                             </div>
                         {% endif %}
 
-                        {% if group.gaccess.email %}
+                        {% if community.email %}
                             <div class="text-muted">
                                 <i class="fa fa-envelope-o"></i> <a href="mailto:{{ community.email }}">{{ community.email }}</a>
                             </div>
@@ -151,7 +152,7 @@
                                         <div id="search-container" class="input-group">
                                             <span class="glyphicon glyphicon-search search-icon"></span>
                                             <input id="resource-search-input" type="text" class="form-control"
-                                                   placeholder="Search" size="600px"/>
+                                                  placeholder="Search" size="600px"/>
                                             <span id="btn-clear-search-input"
                                                   class="glyphicon glyphicon-remove-sign btn-clear-search"
                                                   style="right: 10px"></span>
@@ -187,7 +188,7 @@
                                     </tr>
                                     </thead>
                                     <div id="filter-querystring"
-                                         style="display: none;">{{ grpfilter|default_if_none:'' }}</div>
+                                        style="display: none;">{{ grpfilter|default_if_none:'' }}</div>
                                     <tbody>
                                     {% for res in community_resources %}
                                         <tr class="data-row" v-show="isVisible({{ res.group_id }})">

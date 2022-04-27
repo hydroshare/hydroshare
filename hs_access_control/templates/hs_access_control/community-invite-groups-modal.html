@@ -1,0 +1,32 @@
+<!-- Create Group Modal -->
+<div class="modal fade" id="invite-groups-modal" tabindex="-1" role="dialog" aria-labelledby="Invite Group">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"
+                  aria-label="Close"><span aria-hidden="true">&times;</span>
+          </button>
+          <h4 class="modal-title" id="myModalLabel">Invite Groups</h4>
+      </div>
+      <div class="modal-body">
+        <div v-for="group of availableToInvite" class="group-community-card panel panel-default">
+          <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
+            <div class="group-image-wrapper group-image-wrapper-medium">
+                <div class="group-image group-preview-image-default"
+                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+            </div>
+            <div class="community-card--info flex-grow-1">
+              <a class="community-card--heading" href="#">${ group.name }</a>
+              <p>${ group.description }</p>
+            </div>
+            <div class="community-card--actions">
+              <button class="btn btn-primary" @click="invite(group.id)" :disabled="isInviting[group.id]">
+                ${ isInviting[group.id] ? 'Sending invitation...' : 'Send Invite' }
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

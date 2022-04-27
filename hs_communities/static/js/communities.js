@@ -5,19 +5,17 @@ $(document).ready(function () {
     data: {
       filterTo: [],
       groupIds: [],
-      groups: GROUPS,
+      availableToInvite: GROUPS,
+      members: MEMBERS,
       community: COMMUNITY,
       isAdmin: IS_ADMIN,
       pending: PENDING,
-      members: MEMBERS,
       isRemoving: {},
       isApproving: {},
+      isInviting: {},
     },
     mounted: function () {
       let groupIds = {};
-
-      console.log(this.community)
-      console.log(this.groups)
 
       $('#groups-list li').each(function () {
         let groupId = parseInt($(this).attr('id'));
@@ -53,15 +51,33 @@ $(document).ready(function () {
         const url = '/access/_internal/communityjson/' + this.community.id + '/remove/' + id + '/';
         try {
           const  response = await $.get(url)
-          console.log(response)
-          // this.joined = response.joined
-          // this.availableToJoin = response.available_to_join
+          this.availableToInvite = response.groups
+          this.members = response.members
           delete this.isRemoving[id]
+          customAlert("Remove Group", response.message, "success", 6000);
         }
         catch(e) {
           console.log(e)
           // abort
           this.$set(this.isRemoving, id, false)
+        }
+      },
+      invite: async function(id) {
+        this.$set(this.isInviting, id, true)
+        // TODO: handle leaving
+        const url = '/access/_internal/communityjson/' + this.community.id + '/invite/' + id + '/';
+        try {
+          const response = await $.get(url, { 'responseType': 'text' })
+          console.log(response)
+          this.availableToInvite = response.groups
+          this.members = response.members
+          delete this.isInviting[id]
+          customAlert("Invite Group", response.message, "success", 6000);
+        }
+        catch(e) {
+          console.log(e)
+          // abort
+          this.$set(this.isInviting, id, false)
         }
       },
       approve: async function(id) {

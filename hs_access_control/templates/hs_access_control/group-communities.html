@@ -1,4 +1,4 @@
-<div id="group-communities" class="flex gap-2 flex-wrap-wrap">
+<div id="group-communities" class="flex gap-2">
   <div class="group-communities--sidebar">
     <div class="alert alert-info">
       <p>Want your Group to join a HydroShare Community? Click the button below to request that your group be added.</p>
@@ -17,8 +17,8 @@
                   style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
           </div>
           <div class="community-card--info flex-grow-1">
-            <a class="community-card--heading" href="#">${ community.name }</a>
-            <p>${ community.description }</p>
+            <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>
+            <p v-if="community.purpose">${ community.purpose }</p>
             <label :for="'auto-share-' + community.id" class="radio-inline">
               <input type="checkbox" :id="'auto-share-' + community.id">
               Automatically share public and and published resources with this Community
@@ -36,15 +36,15 @@
       <h4 class="heading">This Group is a member of the following Communities</h4>
       <template v-if="joined.length">
         <div v-for="community of joined" class="group-community-card panel panel-default">
-          <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
+          <div class="panel-body flex gap-1 align-center">
             <div class="group-image-wrapper group-image-wrapper-medium">
                 <div class="group-image group-preview-image-default"
                     style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
             </div>
             <div class="community-card--info flex-grow-1">
-              <a class="community-card--heading" href="#">${ community.name }</a>
-              <p>${ community.description }</p>
-              <label :for="'auto-share-' + community.id" class="radio-inline">
+              <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>
+              <p v-if="community.purpose">${ community.purpose }</p>
+              <label :for="'auto-share-' + community.id" class="radio-inline has-space-top" style="padding: 0;">
                 <input type="checkbox" :id="'auto-share-' + community.id">
                 Automatically share public and and published resources with this Community
               </label>

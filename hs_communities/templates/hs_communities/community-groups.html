@@ -1,28 +1,29 @@
 <div class="flex gap-2 flex-wrap-wrap">
-  <div class="group-communities--sidebar">
-    <button v-if="isAdmin" class="btn btn-primary has-space-top" data-toggle="modal" data-target="#invite-groups-modal">Invite Groups</button>
+  <div class="community-groups--sidebar">
+    <button v-if="isAdmin" class="btn btn-primary has-space-bottom btn-block"
+      data-toggle="modal" data-target="#invite-groups-modal">Invite Groups</button>
     <div v-if="!isAdmin || true" class="alert alert-info">
       <p>Have a HydroShare group you want to add to this community? Click the button below to request that your group be added.</p>
-      <button class="btn btn-primary has-space-top" data-toggle="modal" data-target="#communities-modal">Ask to join</button>
+      <button class="btn btn-primary btn-block has-space-top" data-toggle="modal" data-target="#communities-modal">Ask to join</button>
     </div>
   </div>
 
-  <div class="group-communities--content flex-grow-1 flex flex-column gap-2">
+  <div class="community-groups--content flex-grow-1 flex flex-column gap-2">
     <!-- PENDING INVITATIONS -->
     <div v-if="isAdmin && pending.length">
       <h4 class="heading">Pending Group Membership Requests</h4>
-      <div v-for="group of pending" class="group-community-card panel panel-default">
+      <div v-for="request of pending" class="group-community-card panel panel-default">
         <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
           <div class="group-image-wrapper group-image-wrapper-medium">
               <div class="group-image group-preview-image-default"
                   style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
           </div>
           <div class="community-card--info flex-grow-1">
-            <a class="community-card--heading" href="#">${ group.name }</a>
-            <p>${ group.description }</p>
+            <a class="community-card--heading" :href="'/group/' + request.group.id">${ request.group.name }</a>
+            <p>${ request.group.description }</p>
           </div>
           <div class="community-card--actions">
-            <button class="btn btn-primary" @click="approve(group.id)" :disabled="isApproving[group.id]">Approve Group</button>
+            <button class="btn btn-primary" @click="approve(request.group.id)" :disabled="isApproving[request.group.id]">Approve Group</button>
           </div>
         </div>
       </div>
@@ -39,7 +40,7 @@
                     style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
             </div>
             <div class="community-card--info flex-grow-1">
-              <a class="community-card--heading" href="#">${ group.name }</a>
+              <a class="community-card--heading" :href="'/group/' + group.id">${ group.name }</a>
               <p>${ group.description }</p>
             </div>
             <div v-if="isAdmin" class="community-card--actions">
@@ -51,14 +52,15 @@
       <p v-else>No Groups have been added to this Community yet.</p>
     </div>
   </div>
-
 </div>
+
+{% include "hs_access_control/community-invite-groups-modal.html" %}
 
 {% block extra_js %}
     <script type="text/javascript">
       // Constants here
-      const GROUPS = {{ members|safe }}
-      const PENDING = {{ pending|safe }}
+      const GROUPS = {{ groups|safe }}
       const MEMBERS = {{ members|safe }}
+      const PENDING = {{ pending|safe }}
     </script>
 {% endblock %}

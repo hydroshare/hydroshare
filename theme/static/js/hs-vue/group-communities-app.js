@@ -24,10 +24,10 @@ let groupCommunitiesApp = new Vue({
       const url = '/access/_internal/groupjson/' + this.groupId + '/leave/' + id + '/';
       try {
         const  response = await $.get(url)
-        console.log(response)
         this.joined = response.joined
         this.availableToJoin = response.available_to_join
         delete this.isLeaving[id]
+        customAlert("Leave Community", response.message, "success", 6000);
       }
       catch(e) {
         console.log(e)
@@ -45,6 +45,7 @@ let groupCommunitiesApp = new Vue({
         this.joined = response.joined
         this.availableToJoin = response.available_to_join
         delete this.isJoining[id]
+        customAlert("Join Community", response.message, "success", 6000);
       }
       catch(e) {
         console.log(e)

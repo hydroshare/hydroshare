@@ -5,92 +5,12 @@ from django.http import HttpResponse
 import json
 
 from hs_access_control.models import Community, GroupCommunityRequest
+from hs_communities.views.communities import group_json, community_json, gcr_json, user_json
 
 import logging
 
+
 logger = logging.getLogger(__name__)
-
-
-def user_json(user):
-    """ JSON format for user data suitable for UI """
-    if user is not None:
-        return {
-            'type': 'User',
-            'username': user.username,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email': user.email
-        }
-    else:
-        return {}
-
-
-def group_json(group):
-    """ JSON format for group data suitable for UI """
-    if group is not None:
-        try:
-            url = group.gaccess.picture.url
-        except ValueError:
-            url = ""
-        return {
-            'type': 'Group',
-            'name': group.name,
-            'active': group.gaccess.active,
-            'discoverable': group.gaccess.discoverable,
-            'public': group.gaccess.public,
-            'shareable': group.gaccess.shareable,
-            'auto_approve': group.gaccess.auto_approve,
-            'requires_explanation': group.gaccess.requires_explanation,
-            'purpose': group.gaccess.purpose,
-            'email': group.gaccess.email,
-            'date_created': group.gaccess.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
-            'picture': url,
-            'owners': [user_json(u) for u in group.gaccess.owners]
-        }
-    else:
-        return {}
-
-
-def community_json(community):
-    """ JSON format for community data suitable for UI """
-    if community is not None:
-        try:
-            url = community.picture.url
-        except ValueError:
-            url = ""
-        return {
-            'id': community.id,
-            'type': 'Community',
-            'name': community.name,
-            'description': community.description,
-            'purpose': community.purpose,
-            'auto_approve': community.auto_approve,
-            'date_created': community.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
-            'picture': url,
-            'closed': community.closed,
-            'owners': [user_json(u) for u in community.owners]
-        }
-    else:
-        return {}
-
-
-def gcr_json(request):
-    """ JSON format for request data suitable for UI """
-    return {
-        'type': 'GroupCommunityRequest',
-        'group': group_json(request.group),
-        'community': community_json(request.community),
-        'group_owner': user_json(request.group_owner),
-        'community_owner': user_json(request.community_owner),
-        'when_community': (request.when_community.strftime("%m/%d/%Y, %H:%M:%S")
-                           if request.when_community is not None
-                           else ""),
-        'when_group': (request.when_group.strftime("%m/%d/%Y, %H:%M:%S")
-                       if request.when_group is not None
-                       else ""),
-        'privilege': request.privilege,
-        'redeemed': request.redeemed
-    }
 
 
 class GroupView(TemplateView):
@@ -471,13 +391,17 @@ class CommunityView(TemplateView):
             context['community'] = community
 
             # groups that can be invited are those that are not already invited or members.
-            context['groups'] = Group.objects.filter(gaccess__active=True)\
-                .exclude(invite_g2gcr__community=community)\
-                .exclude(g2gcp__community=community).order_by('name')
+            context['groups'] = []
+            for g in Group.objects.filter(gaccess__active=True)\
+                                  .exclude(invite_g2gcr__community=community)\
+                                  .exclude(g2gcp__community=community)\
+                                  .order_by('name'):
+                context['groups'].append(group_json(g))
 
-            context['pending'] = GroupCommunityRequest.objects.filter(
-                community=community, redeemed=False, group_owner__isnull=True)\
-                .order_by('group__name')
+            context['pending'] = []
+            for r in GroupCommunityRequest.objects.filter(
+                    community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
+                context['pending'].append(gcr_json(r))
 
             # requests that were declined by us
             context['we_declined'] = GroupCommunityRequest.objects.filter(
@@ -498,7 +422,9 @@ class CommunityView(TemplateView):
                 .order_by('group__name')
 
             # group members of community
-            context['members'] = Group.objects.filter(g2gcp__community=community).order_by('name')
+            context['members'] = []
+            for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
+                context['members'].append(group_json(g))
 
             return context
 

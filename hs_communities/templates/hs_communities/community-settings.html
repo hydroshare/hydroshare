@@ -1,1 +1,69 @@
-SETTINGS HERE
+<form action="/hsapi/_internal/update-user-community/{{ community.id }}" method="POST" enctype="multipart/form-data" class="col-xs-12 col-sm-7">
+    <legend>Owner Settings</legend>
+    {% csrf_token %}
+    <div class="row">
+        {# Community Name #}
+        <fieldset class="col-sm-12">
+            <label>Community Name *</label>
+            <input type="text" value="{{ community.name }}" class="form-control" required="required" name="name" maxlength="79">
+            <small class="text-muted">Community name may be 79 characters or less.</small>
+        </fieldset>
+
+        <br>
+        {# Community Contact Email #}
+        <fieldset class="col-sm-12">
+            <label>Community Contact Email</label>
+            <input class="form-control" type="email" name="email" value="{{ community.email }}"></input>
+            <small class="text-muted">An email address for someone in charge of the group.</small>
+        </fieldset>
+        
+        <br>
+        {# Community Url #}
+        <fieldset class="col-sm-12">
+            <label>Community URL</label>
+            <input class="form-control" value="{{ community.url }}" type="url" name="url"></input>
+            <small class="text-muted">A URL for a web page that describes the group in more detail.</small>
+        </fieldset>
+
+        <br>
+        {# Purpose #}
+        <fieldset class="col-sm-12">
+            <label>Purpose</label>
+            <textarea class="form-control" name="purpose" maxlength="300">{{ community.purpose }}</textarea>
+            <small class="text-muted">A brief description of the purpose for which the group was created.</small><br>
+            <small class="text-muted">300 characters or less.</small>
+        </fieldset>
+
+        <br>
+        {# Community Description #}
+        <fieldset class="col-sm-12">
+            <label>About this community *</label>
+            <textarea class="form-control" required="required" name="description">{{ community.description }}</textarea>
+            <small class="text-muted">A longer text description for the group.</small>
+        </fieldset>
+
+        <br>
+        {# auto approve membership #}
+        <fieldset class="col-sm-12">
+            <input id="auto-approve" type="checkbox" {% if community.auto_approve %}checked{% endif %} name="auto_approve">
+            <label class="checkbox-label" for="auto-approve">Auto approve membership</label><br>
+            <small class="text-muted">Choose this option if you want Community membership requests to be automatically approved. If you check this box, any HydroShare group that requests membership in the Community will be automatically added.</small>
+        </fieldset>
+
+        <br>
+        {# auto approve resource display #}
+        <fieldset class="col-sm-12">
+            <input id="auto-approve-r" type="checkbox" {% if community.auto_approve %}checked{% endif %} name="auto_approve">
+            <label class="checkbox-label" for="auto-approve">Auto approve resource display</label><br>
+            <small class="text-muted">Choose this option if you want resources shared with the Community to be automatically approved for display on the Community landing page. If you leave this box unchecked, you will have to approve any resources shared with the Community before those resources will appear on the Community's landing page.</small>
+        </fieldset>
+
+        <br>
+        <fieldset class="col-sm-12">
+            <small class="text-muted">( * ) Required fields</small>
+        </fieldset>
+        <br>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update Community Profile</button>
+</form>

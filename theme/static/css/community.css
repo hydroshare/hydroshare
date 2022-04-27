@@ -1,17 +1,17 @@
-.group-header {
+.community-header {
   display: flex;
   column-gap: 30px;
   align-items: center;
 }
 
-.group-title-container {
+.community-title-container {
   display: flex;
   column-gap: 20px;
   justify-content: space-between;
   align-items: baseline;
 }
 
-.group-info {
+.community-info {
   margin-top: 20px;
   word-break: break-all;
   display: flex;
@@ -20,33 +20,21 @@
   flex-wrap: wrap;
 }
 
-.group-info > div {
+.community-info > div {
   display: flex;
   align-items: center;
   margin-bottom: 10px;
 }
 
-.group-info > div > i {
+.community-info > div > i {
   margin-right: 6px;
 }
 
-.group-communities--sidebar {
+.community-groups--sidebar {
   width: 210px;
 }
 
-.group-communities--content .heading {
+.community-groups--content .heading {
   margin: 0;
   margin-bottom: 2rem;
-}
-
-.group-community-card {
-  border-radius: 4px;
-}
-
-.community-card--heading {
-  font-size: 20px;
-}
-
-.group-actions {
-  gap: 1rem;
 }

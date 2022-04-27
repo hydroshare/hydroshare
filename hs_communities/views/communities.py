@@ -55,7 +55,7 @@ def group_json(group):
             'requires_explanation': 1 if group.gaccess.requires_explanation == True else 0,
             'purpose': group.gaccess.purpose or '',
             'description': group.gaccess.description or '',
-            'email': group.gaccess.email,
+            'email': group.gaccess.email or '',
             'date_created': group.gaccess.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
             'picture': url or '',
             'owners': [user_json(u) for u in group.gaccess.owners]
@@ -75,6 +75,8 @@ def community_json(community):
             'id': community.id,
             'type': 'Community',
             'name': community.name,
+            'url': community.url,
+            'email': community.email,
             'description': community.description or '',
             'purpose': community.purpose or '',
             'auto_approve': 1 if community.auto_approve == True else 0,
@@ -102,7 +104,7 @@ def gcr_json(request):
                        if request.when_group is not None
                        else ""),
         'privilege': request.privilege,
-        'redeemed': request.redeemed
+        'redeemed': 1 if request.redeemed == True else 0,
     }
 
 class CollaborateView(TemplateView):

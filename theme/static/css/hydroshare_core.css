@@ -3731,11 +3731,14 @@ div.group-thumbnails {
 	background-repeat: no-repeat;
 }
 
-.group-image-wrapper > .group-image-small, .group-preview-image-default {
+.group-image-wrapper > .group-image-small,
+.community-image-wrapper > .community-image-small,
+.group-preview-image-default-preview-image-default,
+.group-preview-image-default {
 	background-color: #093E54;
 }
 
-.group-image {
+.group-image, .community-image {
     height: 120px;
     text-align: center;
     width: 120px;
@@ -3951,9 +3954,10 @@ div.group-add-photo {
     border: 1px solid #DDD;
     padding: 10px;
     border-radius: 4px;
-	word-wrap: anywhere;
+	  word-wrap: anywhere;
 }
-.request-block .explanation{
+
+.request-block .explanation {
 	max-height: 100px;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -3963,26 +3967,6 @@ div.group-add-photo {
 	padding: 2px;
 }
 
-.group-communities--sidebar {
-  width: 210px;
-}
-
-.group-communities--content .heading {
-  margin: 0;
-  margin-bottom: 2rem;
-}
-
-.group-community-card {
-  border-radius: 4px;
-}
-
-.community-card--heading {
-  font-size: 20px;
-}
-
-.group-actions {
-  gap: 1rem;
-}
 /* --------------------------------------------------------- */
 
 /* FLEX HELPERS */
@@ -4029,6 +4013,15 @@ div.group-add-photo {
 .has-space-top {
   margin-top: 2rem;
 }
+
+.has-space-bottom {
+  margin-bottom: 2rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
 
 /* --------------------------------------------------------- */
 

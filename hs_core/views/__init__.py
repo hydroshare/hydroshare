@@ -1288,6 +1288,7 @@ class GroupUpdateForm(GroupForm):
         self._set_privacy_level(group_to_update, privacy_level)
 
 
+
 @processor_for(GenericResource)
 def add_generic_context(request, page):
     user = request.user
@@ -1409,6 +1410,33 @@ def create_user_group(request, *args, **kwargs):
                 messages.error(request, "Group creation errors:{}.".format(str(ex)))
     else:
         messages.error(request, "Group creation errors:{}.".format(group_form.errors.as_json))
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+@login_required
+def update_user_community(request, community_id, *args, **kwargs):
+    user = request.user
+    community_to_update = utils.community_from_id(community_id)
+
+    # TODO: need community equivalent of can_change_group_flags
+    # if user.uaccess.can_change_group_flags(community_to_update):
+    if True:
+        community_form = CommunityUpdateForm(request.POST, request.FILES)
+        if community_form.is_valid():
+            try:
+                community_form.update(community_to_update, request)
+                messages.success(request, "Community update was successful.")
+            except IntegrityError as ex:
+                if community_form.cleaned_data['name'] in str(ex):
+                    message = "Community name '{}' already exists".format(community_form.cleaned_data['name'])
+                    messages.error(request, "Community update errors: {}.".format(message))
+                else:
+                    messages.error(request, "Community update errors:{}.".format(str(ex)))
+        else:
+            messages.error(request, "Community update errors:{}.".format(community_form.errors.as_json))
+    else:
+        messages.error(request, "Community update errors: You don't have permission to update this community")
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -2013,6 +2041,24 @@ class RequestNewCommunityForm(CommunityForm):
         # if 'picture' in request.FILES:
         #     new_community.gaccess.picture = request.FILES['picture']
         return new_community
+
+
+class CommunityUpdateForm(CommunityForm):
+
+    def update(self, community_to_update, request):
+        frm_data = self.cleaned_data
+        community_to_update.name = frm_data['name']
+        community_to_update.save()
+        community_to_update.description = frm_data['description']
+        community_to_update.purpose = frm_data['purpose']
+        community_to_update.email = frm_data['email']
+        community_to_update.url = frm_data['url']
+        community_to_update.auto_approve = frm_data['auto_approve']
+        # if 'picture' in request.FILES:
+        #     community_to_update.gaccess.picture = request.FILES['picture']
+
+        # privacy_level = frm_data['privacy_level']
+        # self._set_privacy_level(community_to_update, privacy_level)
 
 
 @login_required

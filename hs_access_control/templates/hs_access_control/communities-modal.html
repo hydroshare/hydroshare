@@ -2,14 +2,30 @@
 <div class="modal fade" id="communities-modal" tabindex="-1" role="dialog" aria-labelledby="Join Community">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div v-for="community of availableToJoin" class="community-card">
-        <div>${ community.id }</div>
-        <div>${ community.name }</div>
-        <div>${ community.description }</div>
-        <div>${ community.purpose }</div>
-        <button class="btn btn-primary" @click="join(community.id)" :disabled="isJoining[community.id]">
-          ${ isJoining[community.id] ? 'Requesting to join...' : 'Join Community' }
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"
+                aria-label="Close"><span aria-hidden="true">&times;</span>
         </button>
+        <h4 class="modal-title" id="myModalLabel">Ask to join a Community</h4>
+      </div>
+      <div class="modal-body">
+        <div v-for="community of availableToJoin" class="group-community-card panel panel-default">
+          <div class="panel-body flex gap-1 align-center">
+            <div class="group-image-wrapper group-image-wrapper-medium">
+                <div class="group-image group-preview-image-default"
+                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+            </div>
+            <div class="community-card--info flex-grow-1">
+              <a class="community-card--heading" :href="'/group/' + community.id">${ community.name }</a>
+              <p>${ community.purpose }</p>
+            </div>
+            <div class="community-card--actions">
+              <button class="btn btn-primary" @click="join(community.id)" :disabled="isJoining[community.id]">
+                ${ isJoining[community.id] ? 'Requesting to join...' : 'Join Community' }
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
