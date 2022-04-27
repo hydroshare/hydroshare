@@ -11,7 +11,7 @@
     <div v-if="isGroupOwner && pending.length">
       <h4 class="heading">Pending Community Membership Requests</h4>
       <div v-for="community of pending" class="group-community-card panel panel-default">
-        <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
+        <div class="panel-body flex gap-1 align-center">
           <div class="group-image-wrapper group-image-wrapper-medium">
               <div class="group-image group-preview-image-default"
                   style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
@@ -50,13 +50,42 @@
               </label>
             </div>
             <div class="community-card--actions">
-              <button class="btn btn-default" @click="leave(community.id)" :disabled="isLeaving[community.id]">Leave Community</button>
+              <!-- <button class="btn btn-default" @click="leave(community.id)" :disabled="isLeaving[community.id]">Leave Community</button> -->
+              <button class="btn btn-default" @click="targetCommunity = community" :disabled="isLeaving[community.id]" 
+                data-toggle="modal" data-target="#leave-community-modal">Leave Community</button>
             </div>
           </div>
         </div>
       </template>
       <p v-else>This Group is not a member of any Communities yet.</p>
     </div>
+  </div>
+
+  <!-- Leave Community Modal -->
+  <div class="modal fade" id="leave-community-modal" tabindex="-1" role="dialog"
+        aria-labelledby="leaveCommunityLabel">
+      <div class="modal-dialog" role="document">
+          <div class="modal-content" v-if="targetCommunity">
+              <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal"
+                          aria-label="Close"><span aria-hidden="true">&times;</span>
+                  </button>
+                  <h4 class="modal-title" id="leaveCommunityLabel">Leave Community</h4>
+              </div>
+              <div class="modal-body">
+                  Are you sure you want the group to leave this community?
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">
+                      Close
+                  </button>
+                  <button class="btn btn-danger"
+                          @click="leave(targetCommunity.id)" :disabled="isLeaving[targetCommunity.id]"
+                          value="clear">Leave Community
+                  </button>
+              </div>
+          </div>
+      </div>
   </div>
 
   {% include "hs_access_control/communities-modal.html" %}

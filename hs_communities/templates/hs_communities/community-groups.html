@@ -1,4 +1,4 @@
-<div class="flex gap-2 flex-wrap-wrap">
+<div class="flex gap-2">
   <div class="community-groups--sidebar">
     <button v-if="isAdmin" class="btn btn-primary has-space-bottom btn-block"
       data-toggle="modal" data-target="#invite-groups-modal">Invite Groups</button>
@@ -13,7 +13,7 @@
     <div v-if="isAdmin && pending.length">
       <h4 class="heading">Pending Group Membership Requests</h4>
       <div v-for="request of pending" class="group-community-card panel panel-default">
-        <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
+        <div class="panel-body flex gap-1 align-center">
           <div class="group-image-wrapper group-image-wrapper-medium">
               <div class="group-image group-preview-image-default"
                   style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
@@ -34,7 +34,7 @@
       <h4 class="heading">Groups that are Members of this Community</h4>
       <template v-if="members.length">
         <div v-for="group of members" class="group-community-card panel panel-default">
-          <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
+          <div class="panel-body flex gap-1 align-center">
             <div class="group-image-wrapper group-image-wrapper-medium">
                 <div class="group-image group-preview-image-default"
                     style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
@@ -44,12 +44,40 @@
               <p>${ group.description }</p>
             </div>
             <div v-if="isAdmin" class="community-card--actions">
-              <button class="btn btn-danger" @click="remove(group.id)" :disabled="isRemoving[group.id]">Remove Group</button>
+              <button class="btn btn-danger" @click="targetGroup = group" :disabled="isRemoving[group.id]"
+                data-toggle="modal" data-target="#remove-group-modal">Remove Group</button>
             </div>
           </div>
         </div>
       </template>
       <p v-else>No Groups have been added to this Community yet.</p>
+    </div>
+  </div>
+
+    <!-- Remove Group Modal -->
+    <div class="modal fade" id="remove-group-modal" tabindex="-1" role="dialog"
+      aria-labelledby="removeGroupLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" v-if="targetGroup">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="removeGroupLabel">Remove Group</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want remove the group from this community?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    Close
+                </button>
+                <button class="btn btn-danger"
+                        @click="remove(targetGroup.id)" :disabled="isRemoving[targetGroup.id]"
+                        value="clear">Remove Group
+                </button>
+            </div>
+        </div>
     </div>
   </div>
 </div>

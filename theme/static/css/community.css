@@ -32,6 +32,7 @@
 
 .community-groups--sidebar {
   width: 210px;
+  flex-shrink: 0;
 }
 
 .community-groups--content .heading {

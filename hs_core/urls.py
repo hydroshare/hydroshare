@@ -58,6 +58,8 @@ urlpatterns = [
         name='update_user_group'),
     url(r'^_internal/delete-user-group/(?P<group_id>[0-9]+)$', views.delete_user_group,
         name='delete_user_group'),
+    url(r'^_internal/delete-user-community/(?P<group_id>[0-9]+)$', views.delete_user_community,
+        name='delete_user_community'),
     url(r'^_internal/restore-user-group/(?P<group_id>[0-9]+)$', views.restore_user_group,
         name='restore_user_group'),
     url(r'^_internal/share-group-with-user/(?P<group_id>[0-9]+)/(?P<user_id>[0-9]+)/(?P<privilege>[a-z]+)/$',

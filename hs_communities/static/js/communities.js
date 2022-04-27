@@ -10,6 +10,7 @@ $(document).ready(function () {
       community: COMMUNITY,
       isAdmin: IS_ADMIN,
       pending: PENDING,
+      targetGroup: null,
       isRemoving: {},
       isApproving: {},
       isInviting: {},
@@ -54,6 +55,7 @@ $(document).ready(function () {
           this.availableToInvite = response.groups
           this.members = response.members
           delete this.isRemoving[id]
+          $("#remove-group-modal").modal('hide')
           customAlert("Remove Group", response.message, "success", 6000);
         }
         catch(e) {
@@ -97,6 +99,9 @@ $(document).ready(function () {
           this.$set(this.isApproving, id, false)
         }
       },
+      removeOwner: async function(owner) {
+        
+      }
     }
   });
 });

@@ -9,7 +9,8 @@ let groupCommunitiesApp = new Vue({
       isGroupOwner: IS_GROUP_OWNER,
       isLeaving: { },
       isJoining: { },
-      test: 'TEST'
+      test: 'TEST',
+      targetCommunity: null
   },
   watch: {
       
@@ -23,10 +24,11 @@ let groupCommunitiesApp = new Vue({
       // TODO: handle leaving
       const url = '/access/_internal/groupjson/' + this.groupId + '/leave/' + id + '/';
       try {
-        const  response = await $.get(url)
+        const response = await $.get(url)
         this.joined = response.joined
         this.availableToJoin = response.available_to_join
         delete this.isLeaving[id]
+        $("#leave-community-modal").modal('hide')
         customAlert("Leave Community", response.message, "success", 6000);
       }
       catch(e) {

@@ -353,6 +353,7 @@ class MyCommunitiesView(TemplateView):
         grps_member_of = []
         u = User.objects.get(pk=self.request.user.id)
         groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+        communities = Community.objects.all()
         # for each group set group dynamic attributes
         for g in groups:
             g.is_user_member = u in g.gaccess.members
@@ -366,6 +367,12 @@ class MyCommunitiesView(TemplateView):
                                  g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
         comms_member_of = [self.group_to_community(g, Community.objects.all()) for g in grps_member_of]
+        
+        # Also list communities that the user owns
+        for c in communities:
+            is_owner = u in c.owners
+            if is_owner and c not in comms_member_of:
+                comms_member_of.append(c)
         return {
             'communities_list': [c for c in comms_member_of if c is not None]
         }

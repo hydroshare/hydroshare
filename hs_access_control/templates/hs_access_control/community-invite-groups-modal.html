@@ -10,14 +10,14 @@
       </div>
       <div class="modal-body">
         <div v-for="group of availableToInvite" class="group-community-card panel panel-default">
-          <div class="panel-body flex flex-wrap-wrap gap-1 align-center">
+          <div class="panel-body flex gap-1 align-center">
             <div class="group-image-wrapper group-image-wrapper-medium">
                 <div class="group-image group-preview-image-default"
                     style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
             </div>
             <div class="community-card--info flex-grow-1">
               <a class="community-card--heading" href="#">${ group.name }</a>
-              <p>${ group.description }</p>
+              <p>${ group.purpose }</p>
             </div>
             <div class="community-card--actions">
               <button class="btn btn-primary" @click="invite(group.id)" :disabled="isInviting[group.id]">
