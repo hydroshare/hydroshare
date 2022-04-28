@@ -767,7 +767,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         return copy_of_logical_file
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets a resource file that has extension .sqlite or .csv from the list of files
         *resource_files*
         """
@@ -1341,7 +1341,8 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
 
     # save some data from the csv file
     # get the csv file from iRODS to a temp directory
-    temp_csv_file = utils.get_file_from_irods(csv_res_file)
+    resource = csv_res_file.resource
+    temp_csv_file = utils.get_file_from_irods(resource=resource, file_path=csv_res_file.storage_path)
     with open(temp_csv_file, 'r') as fl_obj:
         csv_reader = csv.reader(fl_obj, delimiter=',')
         # read the first row - header
@@ -1893,8 +1894,9 @@ def sqlite_file_update(instance, sqlite_res_file, user):
     log = logging.getLogger()
 
     sqlite_file_to_update = sqlite_res_file
+    resource = sqlite_res_file.resource
     # retrieve the sqlite file from iRODS and save it to temp directory
-    temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
+    temp_sqlite_file = utils.get_file_from_irods(resource=resource, file_path=sqlite_file_to_update.storage_path)
 
     if instance.has_csv_file and instance.metadata.series_names:
         instance.metadata.populate_blank_sqlite_file(temp_sqlite_file, user)

@@ -43,12 +43,12 @@
             </div>
         </div>
 
-        <div class="row group-thumbnails">
+        <div class="group-thumbnails">
             {% if not communities_list %}
                 <div class="col-sm-12"><i>No communities have been created yet.</i></div>
             {% endif %}
                 {% for c in communities_list %}
-                        <div class="col-sm-6 col-md-4 group-container">
+                        <div class="group-container">
                             <div class="group-thumbnail contribution">
                                 {% if group.gaccess.picture and group.gaccess.picture.url %}
                                     <div class="group-preview-image"

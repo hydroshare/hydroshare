@@ -1719,7 +1719,7 @@ class TimeSeriesMetaDataMixin(models.Model):
                     csv_file = f
 
         # retrieve the csv file from iRODS and save it to temp directory
-        temp_csv_file = utils.get_file_from_irods(csv_file)
+        temp_csv_file = utils.get_file_from_irods(resource=self.resource, file_path=csv_file.storage_path)
         try:
             con = sqlite3.connect(temp_sqlite_file)
             with con:

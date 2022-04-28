@@ -266,7 +266,7 @@ class GenericLogicalFile(AbstractLogicalFile):
             return logical_file
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets any resource file as the primary file  from the list of files *resource_files* """
 
         return resource_files[0] if resource_files else None
