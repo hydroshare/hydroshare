@@ -66,17 +66,17 @@
                         {% endif %}
                     </div>
                         {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY.png' %}" alt="CC-BY"/>
                         {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY-SA.png' %}" alt="CC-BY-SA"/>
                         {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY-ND.png' %}" alt="CC-BY-ND"/>
                         {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY-NC-SA.png' %}" alt="CC-BY-NC-SA"/>
                         {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY-NC.png' %}" alt="CC-BY-NC"/>
                         {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY-NC-ND.png' %}" alt="CC-BY-NC-ND"/>
                         {% endif %}
                 {% endif %}
             {% else %}
@@ -101,17 +101,17 @@
                                 </select>
                                 <img id="img-badge" class="cc-image"
                                         {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
+                                     src="{% static 'img/cc-badges/CC-BY.png' %}" alt="CC-BY"
                                         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
+                                     src="{% static 'img/cc-badges/CC-BY-SA.png' %}" alt="CC-BY-SA"
                                         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
+                                     src="{% static 'img/cc-badges/CC-BY-ND.png' %}" alt="CC-BY-ND"
                                         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
+                                     src="{% static 'img/cc-badges/CC-BY-NC-SA.png' %}" alt="CC-BY-NC-SA"
                                         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
+                                     src="{% static 'img/cc-badges/CC-BY-NC.png' %}" alt="CC-BY-NC"
                                         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
+                                     src="{% static 'img/cc-badges/CC-BY-NC-ND.png' %}" alt="CC-BY-NC-ND"
                                         {% endif %}/>
                             </div>
                             <div class="col-md-6">
