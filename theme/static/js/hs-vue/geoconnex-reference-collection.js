@@ -17,13 +17,23 @@ let geoconnexApp = new Vue({
             cacheName: "geoconnexCache",
             debounceMilliseconds: 250,
             geoCache: null,
+            resShortId: SHORT_ID,
             cacheDuration: 1000 * 60 * 60 * 24 * 7 // one week in milliseconds
         }
     },
     watch: {
       values(newValue, oldValue){
-        console.log(oldValue);
-        console.log(newValue);
+        if (newValue.length > oldValue.length){
+          console.log("Adding element to metadata...");
+          let added = newValue.pop();
+          console.log(added);
+          this.addMetadata(added.uri);
+        }else if (newValue.length < oldValue.length){
+          console.log("TODO remove element from metadata...");
+          let remove = oldValue.pop();
+          console.log(remove);
+          this.removeMetadata(remove);
+        }
       }
     },
     methods: {
@@ -73,7 +83,7 @@ let geoconnexApp = new Vue({
           data = await fetch_resp.json();
         }else{
           let cache_resp = await vue.geoCache.match(url);
-          if(vue.isValid(cache_resp)){
+          if(vue.isCacheValid(cache_resp)){
             console.log("Geoconnex data used from cache for:\n" + url);
             data = await cache_resp.json();
           }else{
@@ -104,7 +114,7 @@ let geoconnexApp = new Vue({
         }
         return data;
       },
-      isValid(response) {
+      isCacheValid(response) {
         let vue = this;
         if (!response) return false;
         var fetched = response.headers.get('fetched-on');
@@ -114,10 +124,39 @@ let geoconnexApp = new Vue({
       },
       loadRelations(){
         for (relation of this.relations){
-          if ('relation' in relation){
-            this.values.push(relation['relation']);
+          if (relation.type === "relation"){
+            this.values.push(relation.value);
           }
         }
+      },
+      addMetadata(value){ 
+        console.log(`Creating metadata for value: ${value}`);
+        let url = `/hsapi/_internal/${this.resShortId}/relation/add-metadata/`;
+        let data = {
+          "type": 'relation',
+          "value": value
+        }
+        $.ajax({
+          type: "POST",
+          url: url,
+          data: data,
+          success: function (result) {
+            console.log(result);
+            // TODO: we should add this element_id to the items so that we can remove it later
+            console.log(result.element_id);
+          }
+        });
+      },
+      removeMetadata(relation){
+        let url = `/hsapi/_internal/${this.resShortId}/relation/${relation.id}/delete-metadata/`;
+        console.log(`Removing metadata for id:${relation.id} via ${url}`);
+        $.ajax({
+          type: "POST",
+          url: url,
+          success: function (result) {
+            console.log(result);
+          }
+        });
       }
     },
     async mounted() {
