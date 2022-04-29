@@ -15,6 +15,7 @@ Add the issues included in the release and update this document as release tasks
   * scripts/templates/docker-compose.template
 - [ ] Changes in hydroshare/local_settings.py need to be coordinated for manual update
 - [ ] Smoke test active worker before swap, note whether maintenance will be needed
+- [ ] Add any management commands necessary for the deploy to the notes section
 - [ ] Deployed to Beta
 - [ ] check_resource beta results match current www results
 - [ ] Review the search and discovery pages
