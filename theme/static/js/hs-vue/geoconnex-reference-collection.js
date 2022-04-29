@@ -5,6 +5,7 @@ let geoconnexApp = new Vue({
     vuetify: new Vuetify(),
     data() {
         return{
+            relations: RELATIONS,
             debug: true,
             items: null,
             collections: null,
@@ -18,6 +19,12 @@ let geoconnexApp = new Vue({
             geoCache: null,
             cacheDuration: 1000 * 60 * 60 * 24 * 7 // one week in milliseconds
         }
+    },
+    watch: {
+      values(newValue, oldValue){
+        console.log(oldValue);
+        console.log(newValue);
+      }
     },
     methods: {
       async getCollections(){
@@ -104,9 +111,17 @@ let geoconnexApp = new Vue({
         if (fetched && (parseFloat(fetched) + vue.cacheDuration) > new Date().getTime()) return true;
         console.log("Cached data not valid.");
         return false;
+      },
+      loadRelations(){
+        for (relation of this.relations){
+          if ('relation' in relation){
+            this.values.push(relation['relation']);
+          }
+        }
       }
     },
     async mounted() {
+      this.loadRelations();
         let vue = this;
         vue.geoCache = await caches.open(vue.cacheName);
         let items = await vue.getAllItems();

@@ -1025,6 +1025,13 @@
               },
           {% endfor %}
       ];
+      const RELATIONS = [
+        {% for relation in relations %}
+            {
+                "{{ relation.type }}": "{{ relation.value| escapejs}}"
+            },
+        {% endfor %}
+      ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
       {% if show_manage_access %}
