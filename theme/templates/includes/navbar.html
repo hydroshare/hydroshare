@@ -242,7 +242,11 @@
                                         <small v-else>${taskMessages[task.name].status[task.status]}.
                                             <span v-if="task.payload && (task.status === 'delivered' || task.status === 'completed')">
                                             Click <a :href="task.payload">here</a> to refresh user interface.
-                                            </span></small>
+                                            </span>
+                                            <span v-if="task.payload && task.status === 'failed'">
+                                                ${task.payload}. <b>You may need to refresh the page.</b>
+                                            </span>
+                                            </small>
                                     </div>
                                 </div>
                             </div>
