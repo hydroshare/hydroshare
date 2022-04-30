@@ -3,57 +3,57 @@
     <h3>Related Geospatial Features</h3>
     <div class="row">
         <div class="col-xs-12 col-sm-6">
-            {% if resource_edit_mode %}
-                {% csrf_token %}
-            {% endif %}
-
             <div>
                 {% if resource_edit_mode %}
-                    <section v-if="errored">
-                        <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
-                    </section>
-                    
-                    <section v-else>
-                        <div v-if="loading">Loading...</div>
-                    
-                        <div v-else>
-                            <v-app>
-                                <v-combobox
-                                  v-model="values"
-                                  :items="items"
-                                  chips
-                                  deletable-chips
-                                  multiple
-                                  outlined
-                                  filled
-                                  label="Type custom or select from Geoconnex"
-                                  :disabled="loading"
-                                  color="blue-grey"
-                                  item-text="text"
-                                  item-value="uri"
-                                >
-                                  <template v-slot:item="data">
-                                      <template v-if="typeof data.item !== 'object'">
-                                      <v-list-tile-content v-text="data.item"></v-list-tile-content>
-                                      </template>
-                                      <template v-else>
-                                        <v-list-item-content>
-                                            <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
-                                            <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
-                                        </v-list-item-content>
-                                      </template>
-                                  </template>
-                                </v-combobox>
-                                <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
-                                
-                                <div style="border: thin solid red" v-if="debug && values.length > 0">
-                                    <ul>
-                                        <li v-for="value in values">${value}<hr><a :href="value.uri">${value.uri}</a></li>
-                                    </ul>
-                                </div>
-                            </v-app>
-                        </div>
-                    </section>
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/relation/add-metadata/"
+                        method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <section v-if="errored">
+                            <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
+                        </section>
+                        
+                        <section v-else>
+                            <div v-if="loading">Loading...</div>
+                        
+                            <div v-else>
+                                <v-app>
+                                    <v-combobox
+                                    v-model="values"
+                                    :items="items"
+                                    chips
+                                    deletable-chips
+                                    multiple
+                                    outlined
+                                    filled
+                                    label="Type custom or select from Geoconnex"
+                                    :disabled="loading"
+                                    color="blue-grey"
+                                    item-text="text"
+                                    item-value="uri"
+                                    >
+                                    <template v-slot:item="data">
+                                        <template v-if="typeof data.item !== 'object'">
+                                        <v-list-tile-content v-text="data.item"></v-list-tile-content>
+                                        </template>
+                                        <template v-else>
+                                            <v-list-item-content>
+                                                <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
+                                                <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
+                                            </v-list-item-content>
+                                        </template>
+                                    </template>
+                                    </v-combobox>
+                                    <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
+                                    
+                                    <div style="border: thin solid red" v-if="debug && values.length > 0">
+                                        <ul>
+                                            <li v-for="value in values">${value}<hr><a :href="value.uri">${value.uri}</a></li>
+                                        </ul>
+                                    </div>
+                                </v-app>
+                            </div>
+                        </section>
+                    </form>
                 {% endif %}
             </div>
         </div>

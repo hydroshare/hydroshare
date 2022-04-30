@@ -160,12 +160,12 @@ let geoconnexApp = new Vue({
       }
     },
     async mounted() {
-      this.loadRelations();
-        let vue = this;
-        vue.geoCache = await caches.open(vue.cacheName);
-        let items = await vue.getAllItems();
-        vue.items = items;
-        vue.loading = false;
+      let vue = this;
+      vue.loadRelations();
+      vue.geoCache = await caches.open(vue.cacheName);
+      let items = await vue.getAllItems();
+      vue.items = items;
+      vue.loading = false;
       }
 
 })
