@@ -24,12 +24,11 @@ let geoconnexApp = new Vue({
     watch: {
       values(newValue, oldValue){
         if (newValue.length > oldValue.length){
-          console.log("Adding element to metadata...");
-          let added = newValue.pop();
-          console.log(added);
-          this.addMetadata(added.uri);
+          console.log("Adding selected element to metadata...");
+          let selected = newValue.pop();
+          this.addMetadata(selected);
         }else if (newValue.length < oldValue.length){
-          console.log("TODO remove element from metadata...");
+          console.log("Removing element from metadata...");
           let remove = oldValue.pop();
           console.log(remove);
           this.removeMetadata(remove);
@@ -125,25 +124,41 @@ let geoconnexApp = new Vue({
       loadRelations(){
         for (relation of this.relations){
           if (relation.type === "relation"){
-            this.values.push(relation.value);
+            console.log(relation);
+            // this.values.push(relation.value);
+            // TODO: use the geoconnex uri to look up the correct text for this item
+            console.log(vue.items);
+            // vue.items is a huge array of objects with uri and text
+            var match = vue.items.find(obj => {
+              return obj.uri === relation.value
+            });
+            let data = {
+              "id": relation.id,
+              "text": match.text,
+              "value": relation.value
+            };
+            vue.values.push(data);
           }
         }
       },
-      addMetadata(value){ 
-        console.log(`Creating metadata for value: ${value}`);
+      addMetadata(selected){ 
+        let vue = this;
+        console.log(`Creating metadata for value: ${selected.text}`);
         let url = `/hsapi/_internal/${this.resShortId}/relation/add-metadata/`;
         let data = {
           "type": 'relation',
-          "value": value
+          "value": selected.uri
         }
         $.ajax({
           type: "POST",
           url: url,
           data: data,
           success: function (result) {
-            console.log(result);
-            // TODO: we should add this element_id to the items so that we can remove it later
-            console.log(result.element_id);
+            vue.values.push({
+              "id":result.element_id,
+              "value": selected.uri,
+              "text": selected.text
+            });
           }
         });
       },
@@ -161,10 +176,10 @@ let geoconnexApp = new Vue({
     },
     async mounted() {
       let vue = this;
-      vue.loadRelations();
       vue.geoCache = await caches.open(vue.cacheName);
       let items = await vue.getAllItems();
       vue.items = items;
+      vue.loadRelations();
       vue.loading = false;
       }
 

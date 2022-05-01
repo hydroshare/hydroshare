@@ -47,7 +47,7 @@
                                     
                                     <div style="border: thin solid red" v-if="debug && values.length > 0">
                                         <ul>
-                                            <li v-for="value in values">${value}<hr><a :href="value.uri">${value.uri}</a></li>
+                                            <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
                                         </ul>
                                     </div>
                                 </v-app>
