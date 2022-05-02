@@ -34,7 +34,6 @@ let geoconnexApp = new Vue({
         }else if (newValue.length < oldValue.length){
           console.log("Removing element from metadata");
           let remove = oldValue.pop();
-          console.log(remove);
           this.removeMetadata(remove);
         }
       }
@@ -161,8 +160,8 @@ let geoconnexApp = new Vue({
           success: function (result) {
             vue.values.push({
               "id":result.element_id,
-              "value": selected.uri,
-              "text": selected.text
+              "value": selected.uri ? selected.uri : selected,
+              "text": selected.text ? selected.text : selected
             });
           },
           error: function (request, status, error) {
