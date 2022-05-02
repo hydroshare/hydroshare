@@ -492,7 +492,10 @@ class Party(AbstractMetaDataElement):
             for _, p, o in graph.triples((party, None, None)):
                 # TODO: remove this once we are no longer concerned with backwards compatibility
                 if p == HSTERMS.description:
-                    continue
+                    # parse the description into a hydroshare_user_id
+                    p = HSTERMS.hydroshare_user_id
+                    o = o.split('user/')[-1]
+                    o = o.replace("/", "")
                 if p not in fields_by_term:
                     identifiers[p.rsplit("/", 1)[1]] = str(o)
                 else:
