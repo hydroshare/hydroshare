@@ -129,7 +129,6 @@ let geoconnexApp = new Vue({
         for (relation of this.relations){
           if (relation.type === "relation"){
             let text;
-            console.log(relation);
             try {
               new URL(relation.value);
               text = vue.items.find(obj => {
