@@ -5,6 +5,7 @@ let geoconnexApp = new Vue({
     vuetify: new Vuetify(),
     data() {
         return{
+            relations: RELATIONS,
             debug: true,
             items: null,
             collections: null,
@@ -16,8 +17,23 @@ let geoconnexApp = new Vue({
             cacheName: "geoconnexCache",
             debounceMilliseconds: 250,
             geoCache: null,
+            resShortId: SHORT_ID,
             cacheDuration: 1000 * 60 * 60 * 24 * 7 // one week in milliseconds
         }
+    },
+    watch: {
+      values(newValue, oldValue){
+        if (newValue.length > oldValue.length){
+          console.log("Adding selected element to metadata...");
+          let selected = newValue.pop();
+          this.addMetadata(selected);
+        }else if (newValue.length < oldValue.length){
+          console.log("Removing element from metadata...");
+          let remove = oldValue.pop();
+          console.log(remove);
+          this.removeMetadata(remove);
+        }
+      }
     },
     methods: {
       async getCollections(){
@@ -66,7 +82,7 @@ let geoconnexApp = new Vue({
           data = await fetch_resp.json();
         }else{
           let cache_resp = await vue.geoCache.match(url);
-          if(vue.isValid(cache_resp)){
+          if(vue.isCacheValid(cache_resp)){
             console.log("Geoconnex data used from cache for:\n" + url);
             data = await cache_resp.json();
           }else{
@@ -97,21 +113,74 @@ let geoconnexApp = new Vue({
         }
         return data;
       },
-      isValid(response) {
+      isCacheValid(response) {
         let vue = this;
         if (!response) return false;
         var fetched = response.headers.get('fetched-on');
         if (fetched && (parseFloat(fetched) + vue.cacheDuration) > new Date().getTime()) return true;
         console.log("Cached data not valid.");
         return false;
+      },
+      loadRelations(){
+        for (relation of this.relations){
+          if (relation.type === "relation"){
+            console.log(relation);
+            // this.values.push(relation.value);
+            // TODO: use the geoconnex uri to look up the correct text for this item
+            console.log(vue.items);
+            // vue.items is a huge array of objects with uri and text
+            var match = vue.items.find(obj => {
+              return obj.uri === relation.value
+            });
+            let data = {
+              "id": relation.id,
+              "text": match.text,
+              "value": relation.value
+            };
+            vue.values.push(data);
+          }
+        }
+      },
+      addMetadata(selected){ 
+        let vue = this;
+        console.log(`Creating metadata for value: ${selected.text}`);
+        let url = `/hsapi/_internal/${this.resShortId}/relation/add-metadata/`;
+        let data = {
+          "type": 'relation',
+          "value": selected.uri
+        }
+        $.ajax({
+          type: "POST",
+          url: url,
+          data: data,
+          success: function (result) {
+            vue.values.push({
+              "id":result.element_id,
+              "value": selected.uri,
+              "text": selected.text
+            });
+          }
+        });
+      },
+      removeMetadata(relation){
+        let url = `/hsapi/_internal/${this.resShortId}/relation/${relation.id}/delete-metadata/`;
+        console.log(`Removing metadata for id:${relation.id} via ${url}`);
+        $.ajax({
+          type: "POST",
+          url: url,
+          success: function (result) {
+            console.log(result);
+          }
+        });
       }
     },
     async mounted() {
-        let vue = this;
-        vue.geoCache = await caches.open(vue.cacheName);
-        let items = await vue.getAllItems();
-        vue.items = items;
-        vue.loading = false;
+      let vue = this;
+      vue.geoCache = await caches.open(vue.cacheName);
+      let items = await vue.getAllItems();
+      vue.items = items;
+      vue.loadRelations();
+      vue.loading = false;
       }
 
 })

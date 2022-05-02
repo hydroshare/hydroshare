@@ -222,9 +222,6 @@
             {% include "resource-landing-page/coverage.html" %}
         {% endif %}
 
-        {# ======= Geoconnex ======= #}
-        {% include "resource-landing-page/geoconnex-ref-collection.html" %}
-
         {% block content_block %}
         {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
         {% if cm.resource_type != "ToolResource" %}
@@ -956,6 +953,9 @@
         {# ======= Additional Metadata ======= #}
         {% include "resource-landing-page/additional-metadata.html" %}
 
+        {# ======= Geoconnex ======= #}
+        {% include "resource-landing-page/geoconnex-ref-collection.html" %}
+
         {# ======= References ======= #}
         {% include "resource-landing-page/references.html" %}
 
@@ -1024,6 +1024,13 @@
                   "order": "{{ author.order }}"
               },
           {% endfor %}
+      ];
+      const RELATIONS = [
+        {% for relation in relations %}
+            {
+                "{{ relation.type }}": "{{ relation.value| escapejs}}"
+            },
+        {% endfor %}
       ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
