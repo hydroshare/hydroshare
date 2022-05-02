@@ -48,17 +48,17 @@ let geoconnexApp = new Vue({
           }
         },
       async getAllItems(){
-        vue = this;
+        let vue = this;
         let collections = await vue.getCollections();
         let massive = [];
-        for (col of collections.collections){
+        for (let col of collections.collections){
           let header = { 
             header: `${col.description} (${col.id})`,
             text: `${col.description} (${col.id})`
           }
           massive.push(header);
           let resp = await vue.getItemsIn(col.id);
-          for (feature of resp.features){
+          for (let feature of resp.features){
             let properties = feature.properties;
             properties.relative_id = properties.uri.split('ref/').pop();
             properties.text = `${properties.NAME} [${properties.relative_id}]`;
@@ -122,6 +122,7 @@ let geoconnexApp = new Vue({
         return false;
       },
       loadRelations(){
+        let vue = this;
         for (relation of this.relations){
           if (relation.type === "relation"){
             console.log(relation);
