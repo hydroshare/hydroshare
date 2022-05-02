@@ -20,7 +20,8 @@ let geoconnexApp = new Vue({
             debounceMilliseconds: 250,
             geoCache: null,
             resShortId: SHORT_ID,
-            cacheDuration: 1000 * 60 * 60 * 24 * 7 // one week in milliseconds
+            cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
+            search: null,
         }
     },
     watch: {
@@ -127,12 +128,20 @@ let geoconnexApp = new Vue({
         let vue = this;
         for (relation of this.relations){
           if (relation.type === "relation"){
-            var match = vue.items.find(obj => {
-              return obj.uri === relation.value
-            });
+            let text;
+            console.log(relation);
+            try {
+              new URL(relation.value);
+              text = vue.items.find(obj => {
+                return obj.uri === relation.value;
+              }).text;
+            } catch (_) {
+              // if the relation value isn't a url, just load the custom text
+              text = relation.value;
+            }
             let data = {
               "id": relation.id,
-              "text": match.text,
+              "text": text,
               "value": relation.value
             };
             vue.values.push(data);
@@ -141,11 +150,10 @@ let geoconnexApp = new Vue({
       },
       addMetadata(selected){ 
         let vue = this;
-        console.log(`Creating metadata for value: ${selected.text}`);
         let url = `/hsapi/_internal/${this.resShortId}/relation/add-metadata/`;
         let data = {
           "type": 'relation',
-          "value": selected.uri
+          "value": selected.uri ? selected.uri : selected
         }
         $.ajax({
           type: "POST",

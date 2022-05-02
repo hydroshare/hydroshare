@@ -31,6 +31,7 @@
                                         color="blue-grey"
                                         item-text="text"
                                         item-value="uri"
+                                        :search-input.sync="search"
                                         >
                                         <template v-slot:item="data">
                                             <template v-if="typeof data.item !== 'object'">
@@ -43,6 +44,15 @@
                                                 </v-list-item-content>
                                             </template>
                                         </template>
+                                        <template v-slot:no-data>
+                                            <v-list-item>
+                                              <v-list-item-content>
+                                                <v-list-item-title>
+                                                  No results matching "<strong>${ search }</strong>". Press <kbd>enter</kbd> to create a new one
+                                                </v-list-item-title>
+                                              </v-list-item-content>
+                                            </v-list-item>
+                                          </template>
                                         </v-combobox>
                                         <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
                                         
