@@ -1028,7 +1028,9 @@
       const RELATIONS = [
         {% for relation in relations %}
             {
-                "{{ relation.type }}": "{{ relation.value| escapejs}}"
+                "value": "{{ relation.value| escapejs}}",
+                "type": "{{ relation.type }}",
+                "id": "{{ relation.id }}"
             },
         {% endfor %}
       ];
