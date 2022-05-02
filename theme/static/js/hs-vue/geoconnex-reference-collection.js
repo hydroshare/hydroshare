@@ -12,6 +12,7 @@ let geoconnexApp = new Vue({
             values: [],
             loading: true,
             currentLoading: "",
+            errorMsg: "",
             errored: false,
             geoconnexUrl: "https://reference.geoconnex.us/collections",
             apiQueryAppend: "items?f=json&lang=en-US&skipGeometry=true",
@@ -24,6 +25,7 @@ let geoconnexApp = new Vue({
     },
     watch: {
       values(newValue, oldValue){
+        this.errorMsg = "";
         if (newValue.length > oldValue.length){
           console.log("Adding selected element to metadata");
           let selected = newValue.pop();
@@ -155,24 +157,31 @@ let geoconnexApp = new Vue({
               "value": selected.uri,
               "text": selected.text
             });
+          },
+          error: function (request, status, error) {
+            vue.errorMsg = `${error} while attempting to add related feature.`;
+            console.log(request.responseText);
           }
         });
       },
       removeMetadata(relation){
+        let vue = this;
         let url = `/hsapi/_internal/${this.resShortId}/relation/${relation.id}/delete-metadata/`;
         console.log(`Removing metadata for id:${relation.id} via ${url}`);
         $.ajax({
           type: "POST",
           url: url,
-          success: function (result) {
-            console.log(result);
+          success: function () {
+          },
+          error: function (request, status, error) {
+            vue.errorMsg = `${error} while attempting to remove related feature.`;
+            console.log(request.responseText);
           }
         });
       }
     },
     async mounted() {
       let vue = this;
-      vue.loading = true;
       vue.geoCache = await caches.open(vue.cacheName);
       await vue.getAllItems();
       vue.loadRelations();

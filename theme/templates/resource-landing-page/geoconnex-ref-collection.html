@@ -25,7 +25,8 @@
                                         multiple
                                         outlined
                                         filled
-                                        label="Type custom or select from Geoconnex"
+                                        full-width="true"
+                                        label="Type URI or select from Geoconnex"
                                         :disabled="loading"
                                         color="blue-grey"
                                         item-text="text"
@@ -52,7 +53,14 @@
                                         </div>
                                     </v-app>
                                 </div>
-                                <div v-if="loading">Loading Geoconnex collection: ${currentLoading}</div>
+                                <div v-if="loading">
+                                    <p>Loading Geoconnex collection: ${currentLoading}</p>
+                                </div>
+                                <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                        aria-hidden="true">&times;</span></button>
+                                    <p>${errorMsg}</p>
+                                </div>
                             </section>
                         </form>
                     {% endif %}
