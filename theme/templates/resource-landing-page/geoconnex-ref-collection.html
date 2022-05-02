@@ -1,3 +1,4 @@
+{% load hydroshare_tags crispy_forms_tags %}
 {% if resource_edit_mode %}
     {% load staticfiles %}
     <div class="col-xs-12 content-block" id="app-geoconnex">
@@ -74,4 +75,26 @@
             <script type="text/javascript" src="{% static 'js/hs-vue/geoconnex-reference-collection.js' %}"></script>
         {% endif %}
     {% endblock %}
+{% else %}
+    {% if show_relations_section or belongs_to_collections %}
+        <div class="col-xs-12 content-block" id="app-geoconnex">
+            <h3>Related Geospatial Features</h3>
+        </div>
+    {% endif %}
+    {% if show_relations_section %}
+        <div class="col-xs-12 content-block">
+            <table class="table hs-table info-table">
+                {% for relation in relations %}
+                    {% if relation.type|lower == "relation" %}
+                        <tr style="padding-bottom: 20px">
+                            <td class="dataset-label" style="min-width: 100px;">
+                                {{ relation.type_description }}
+                            </td>
+                            <td class="dataset-details">{{ relation.value|urlize }}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+    {% endif %}
 {% endif %}
