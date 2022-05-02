@@ -15,9 +15,7 @@
                             </section>
                             
                             <section v-else>
-                                <div v-if="loading">Loading...</div>
-                            
-                                <div v-else>
+                                <div>
                                     <v-app>
                                         <v-combobox
                                         v-model="values"
@@ -54,6 +52,7 @@
                                         </div>
                                     </v-app>
                                 </div>
+                                <div v-if="loading">Loading Geoconnex collection: ${currentLoading}</div>
                             </section>
                         </form>
                     {% endif %}

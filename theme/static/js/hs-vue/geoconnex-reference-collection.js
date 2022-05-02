@@ -6,11 +6,12 @@ let geoconnexApp = new Vue({
     data() {
         return{
             relations: RELATIONS,
-            debug: true,
-            items: null,
+            debug: false,
+            items: [],
             collections: null,
             values: [],
             loading: true,
+            currentLoading: "",
             errored: false,
             geoconnexUrl: "https://reference.geoconnex.us/collections",
             apiQueryAppend: "items?f=json&lang=en-US&skipGeometry=true",
@@ -24,11 +25,11 @@ let geoconnexApp = new Vue({
     watch: {
       values(newValue, oldValue){
         if (newValue.length > oldValue.length){
-          console.log("Adding selected element to metadata...");
+          console.log("Adding selected element to metadata");
           let selected = newValue.pop();
           this.addMetadata(selected);
         }else if (newValue.length < oldValue.length){
-          console.log("Removing element from metadata...");
+          console.log("Removing element from metadata");
           let remove = oldValue.pop();
           console.log(remove);
           this.removeMetadata(remove);
@@ -50,22 +51,21 @@ let geoconnexApp = new Vue({
       async getAllItems(){
         let vue = this;
         let collections = await vue.getCollections();
-        let massive = [];
         for (let col of collections.collections){
+          vue.currentLoading = col.description;
           let header = { 
             header: `${col.description} (${col.id})`,
             text: `${col.description} (${col.id})`
           }
-          massive.push(header);
+          vue.items.push(header);
           let resp = await vue.getItemsIn(col.id);
           for (let feature of resp.features){
             let properties = feature.properties;
             properties.relative_id = properties.uri.split('ref/').pop();
             properties.text = `${properties.NAME} [${properties.relative_id}]`;
-            massive.push(properties);
+            vue.items.push(properties);
           }
         }
-        return massive;
       },
       async getItemsIn(collectionId){
         let vue = this;
@@ -125,11 +125,6 @@ let geoconnexApp = new Vue({
         let vue = this;
         for (relation of this.relations){
           if (relation.type === "relation"){
-            console.log(relation);
-            // this.values.push(relation.value);
-            // TODO: use the geoconnex uri to look up the correct text for this item
-            console.log(vue.items);
-            // vue.items is a huge array of objects with uri and text
             var match = vue.items.find(obj => {
               return obj.uri === relation.value
             });
@@ -177,9 +172,9 @@ let geoconnexApp = new Vue({
     },
     async mounted() {
       let vue = this;
+      vue.loading = true;
       vue.geoCache = await caches.open(vue.cacheName);
-      let items = await vue.getAllItems();
-      vue.items = items;
+      await vue.getAllItems();
       vue.loadRelations();
       vue.loading = false;
       }
