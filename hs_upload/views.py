@@ -121,8 +121,8 @@ class UploadContextView(TemplateView):
         return context
 
 
-class UploaderView(UploadContextView):
-    template_name = 'uploader.html'
+class UppyView(UploadContextView):
+    template_name = 'uppy.html'
 
 
 def start(request, path, *args, **kwargs):
@@ -145,7 +145,7 @@ def start(request, path, *args, **kwargs):
     # file path should start with data/contents
     if stuff[1] != 'data' or stuff[2] != 'contents':
         response = HttpResponse(status=401)
-        content_msg = "path must include data/contents/!".format(path)
+        content_msg = "path must start with 'data/contents/'!".format(path)
         response.content = content_msg
         logger.error(content_msg)
         return response
@@ -155,7 +155,7 @@ def start(request, path, *args, **kwargs):
     irods_path = resource.get_irods_path(path)
     if not istorage.exists(irods_path):
         response = HttpResponse(status=401)
-        content_msg = "target folder {} does not exist!".format(irods_path)
+        content_msg = "target folder '{}' does not exist!".format(irods_path)
         response.content = content_msg
         logger.error(content_msg)
         return response
@@ -165,7 +165,7 @@ def start(request, path, *args, **kwargs):
     irods_path = resource.get_irods_path(path)
     if istorage.exists(irods_path):
         response = HttpResponse(status=401)
-        content_msg = "file {} already exists!".format(irods_path)
+        content_msg = "file '{}' already exists!".format(irods_path)
         response.content = content_msg
         logger.error(content_msg)
         return response
@@ -194,10 +194,12 @@ def start(request, path, *args, **kwargs):
 
 def cleanup(resource, path, tmpfile):
     """ clean up after a failed upload """
-    try:
-        Upload.delete(resource, path)
-    except Upload.DoesNotExist:  # not an error for lockfile not to exist
-        pass
+    # delete lock record
+    if resource is not None:
+        try:
+            Upload.delete(resource, path)
+        except Upload.DoesNotExist:  # not an error for lockfile not to exist
+            pass
     try:
         os.remove(tmpfile)
     except Exception as e:
@@ -206,6 +208,38 @@ def cleanup(resource, path, tmpfile):
         os.remove(tmpfile + '.info')
     except Exception as e:
         logger.debug("can't remove file {}: {}".format(tmpfile, str(e)))
+
+
+def abort(request, path, *args, **kwargs):
+
+    """ abort processing of an upload """
+    # user = request.user
+    filename = request.GET.get('filename')
+    # filesize = request.GET.get('filesize')
+    url = request.GET.get('url')
+    tusd_root = url.split('/')[-1]
+    tusd_path = os.path.join('/tusd_tmp', tusd_root)
+
+    path = path.split('/')
+    rid = path[0]
+    response = None
+    try:
+        resource = get_resource_by_shortkey(rid, or_404=False)
+    except BaseResource.DoesNotExist:
+        response = HttpResponse(status=403)
+        content_msg = "resource {} does not exist!".format(rid)
+        response.content = content_msg
+        logger.error(content_msg)
+
+    path = '/'.join(path[1:])  # without resource ID
+
+    logger.debug("tusd upload abort:  rid = {}, path = {}, filename = {}, url = {}"
+                 .format(rid, path, filename, url))
+    cleanup(resource, path, tusd_path)
+    if response is not None:
+        return response
+    else:
+        return HttpResponse(status=200)  # no content body needed
 
 
 def finish(request, path, *args, **kwargs):

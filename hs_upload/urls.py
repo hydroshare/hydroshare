@@ -1,16 +1,19 @@
 from django.conf.urls import url
 
-from hs_upload.views import UploadContextView, UploaderView, start, finish
+from hs_upload.views import UploadContextView, UppyView, start, finish, abort
 
 urlpatterns = [
-    # Set up a separate upload page that manages an upload.
+    # using tus.io
     url(r'^context/(?P<path>.*)$', UploadContextView.as_view(), name='upload_context'),
 
-    # Set up a subpage that uploads a specific file; file is passed via window.object
-    url(r'^_uploader/(?P<path>.*)$', UploaderView.as_view(), name='uploader'),
+    # using uppy
+    url(r'^uppy/(?P<path>.*)$', UppyView.as_view(), name='uppy_context'),
 
     # Start and authorize an upload
     url(r'^start/(?P<path>.*)$', start, name='upload_start'),
+
+    # clean up and abort
+    url(r'^abort/(?P<path>.*)$', abort, name='upload_abort'),
 
     # Finish and commit an upload
     url(r'^finish/(?P<path>.*)$', finish, name='upload_finish'),

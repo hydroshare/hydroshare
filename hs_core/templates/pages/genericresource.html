@@ -20,8 +20,8 @@
             var url = target.join('/'); 
             url = url + '/'  // trailing slash needed 
             // console.log(url); 
-            window.open(url, '_blank'); 
-            return false;
+            uploadWindow = window.open(url, '_blank', 'popup'); 
+            return false;  // prevent default response
         } 
     </script> 
 

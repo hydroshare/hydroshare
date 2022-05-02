@@ -1,0 +1,101 @@
+<html>
+<head>
+<link href="https://releases.transloadit.com/uppy/v2.9.4/uppy.min.css" rel="stylesheet">
+</head>
+<body>
+<div id='drag-drop-area'></div> 
+</body>
+<script type="text/javascript" src="/static/mezzanine/js/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="/static/js/jquery-ui.js"></script>
+<script type="text/javascript" src="/static/js/bootstrap.3.0.2.min.js"></script>
+<script type="text/javascript" src="/static/js/bootstrap-extras.js"></script>
+<script type="text/javascript" src="/static/js/tus.min.js"></script>
+<script src="https://releases.transloadit.com/uppy/v2.9.4/uppy.min.js"></script>
+<script>
+</script>
+<script>
+  var uppy = new Uppy.Core({
+    onBeforeFileAdded: (file, rest_of_files) => { 
+     // test that the user has permission to upload the file.
+     // once the file is in the list of uploads, it's locked.
+     console.log("testing file "+file+" for inclusion");
+     var ok = false;
+     $.ajax({
+        url: "/hs_upload/start/{{ path }}",
+        async: false,
+        data: { 
+            filename: file.name, 
+            filetype: file.type, 
+            filesize: file.size 
+        },
+        onError: function(error) {
+           console.log("Failed because: " + error);
+        }
+     }).done(function(data, textStatus, jqXHR) {
+        if (textStatus == 'OK') {
+           console.log("file "+file+" approved");
+           ok = true;  // go on with uploading the file
+        } else {
+           console.log("file "+file+" not approved");
+           ok = false;  // prohibit uploading the file
+        }
+     });
+  }}); 
+  uppy.use(Uppy.Dashboard, { 
+     id: 'Dashboard', 
+     target: 'body', 
+     inline: true, 
+     showProgressDetails: true
+  }); 
+  uppy.use(Uppy.Tus, { endpoint: '/upload/' }); 
+  uppy.on('file-removed', (file, reason) => {
+     var ok = false; 
+     $.ajax({ 
+        url: "/hs_upload/abort/{{ path }}", 
+        async: false, 
+        data: { 
+            filename: file.name, 
+            filetype: file.type 
+        }, 
+        onError: function(error) { 
+            console.log("Failed because: " + error); 
+        }
+     }).done(function(data, textStatus, jqXHR) { 
+        if (textStatus == 'OK') { 
+           console.log("file "+file+" removed"); 
+           ok = true; 
+        } else { 
+           console.log("file "+file+" removal error"); 
+           ok = false; 
+        } 
+     }); 
+     return ok; 
+  }); 
+  uppy.on('upload-success', (file, response) => { 
+    console.log(file.name, response.uploadURL)
+     var ok = false; 
+     $.ajax({ 
+        url: "/hs_upload/finish/{{ path }}", 
+        async: false, 
+        data: { 
+            filename: file.name, 
+            filetype: file.type, 
+            filesize: file.size, 
+            url: response.uploadURL 
+        }, 
+        onError: function(error) { 
+            console.log("Failed because: " + error); 
+        }
+     }).done(function(data, textStatus, jqXHR) { 
+        if (textStatus == 'OK') { 
+           console.log("file "+file+" added to resource"); 
+           ok = true; 
+        } else { 
+           console.log("file "+file+" resource copy error"); 
+           ok = false; 
+        } 
+     }); 
+     return ok; 
+}); 
+</script>
+</html> 
