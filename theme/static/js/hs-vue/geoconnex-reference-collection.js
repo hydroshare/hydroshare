@@ -6,11 +6,13 @@ let geoconnexApp = new Vue({
     data() {
         return{
             relations: RELATIONS,
-            debug: true,
-            items: null,
+            debug: false,
+            items: [],
             collections: null,
             values: [],
             loading: true,
+            currentLoading: "",
+            errorMsg: "",
             errored: false,
             geoconnexUrl: "https://reference.geoconnex.us/collections",
             apiQueryAppend: "items?f=json&lang=en-US&skipGeometry=true",
@@ -18,24 +20,49 @@ let geoconnexApp = new Vue({
             debounceMilliseconds: 250,
             geoCache: null,
             resShortId: SHORT_ID,
-            cacheDuration: 1000 * 60 * 60 * 24 * 7 // one week in milliseconds
+            cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
+            search: null,
+            rules: null
         }
     },
     watch: {
       values(newValue, oldValue){
+        this.errorMsg = "";
         if (newValue.length > oldValue.length){
-          console.log("Adding selected element to metadata...");
           let selected = newValue.pop();
           this.addMetadata(selected);
         }else if (newValue.length < oldValue.length){
-          console.log("Removing element from metadata...");
           let remove = oldValue.pop();
-          console.log(remove);
           this.removeMetadata(remove);
         }
       }
     },
     methods: {
+      setRules(){
+        let vue = this;
+        vue.rules = [
+          function(v){
+            let invalid = [];
+            for (let item of v){
+              try {
+                url = new URL(item.value);
+              } catch (_) {
+                invalid.push(item.text);  
+              }
+            }
+            if(invalid.length === 1){
+              return `"${invalid}" is not a valid URI. We recommend that your custom feature be linkable`;
+            }
+            if (invalid.length === 2){
+              return `"${invalid.join('" and "')}" are not a valid URIs. We recommend that custom features be linkable`;
+            }
+            if (invalid.length > 2){
+              return `"${invalid.join('", "').replace(/, ([^,]*)$/, ' and $1')}" are not a valid URIs. We recommend that custom features be linkable`;
+            }
+            return true;
+          }
+        ];
+      },
       async getCollections(){
           let vue = this;
           const collectionsUrl=`${this.geoconnexUrl}?f=json&lang=en-US`;
@@ -48,24 +75,23 @@ let geoconnexApp = new Vue({
           }
         },
       async getAllItems(){
-        vue = this;
+        let vue = this;
         let collections = await vue.getCollections();
-        let massive = [];
-        for (col of collections.collections){
+        for (let col of collections.collections){
+          vue.currentLoading = col.description;
           let header = { 
             header: `${col.description} (${col.id})`,
             text: `${col.description} (${col.id})`
           }
-          massive.push(header);
+          vue.items.push(header);
           let resp = await vue.getItemsIn(col.id);
-          for (feature of resp.features){
+          for (let feature of resp.features){
             let properties = feature.properties;
             properties.relative_id = properties.uri.split('ref/').pop();
             properties.text = `${properties.NAME} [${properties.relative_id}]`;
-            massive.push(properties);
+            vue.items.push(properties);
           }
         }
-        return massive;
       },
       async getItemsIn(collectionId){
         let vue = this;
@@ -122,19 +148,22 @@ let geoconnexApp = new Vue({
         return false;
       },
       loadRelations(){
+        let vue = this;
         for (relation of this.relations){
           if (relation.type === "relation"){
-            console.log(relation);
-            // this.values.push(relation.value);
-            // TODO: use the geoconnex uri to look up the correct text for this item
-            console.log(vue.items);
-            // vue.items is a huge array of objects with uri and text
-            var match = vue.items.find(obj => {
-              return obj.uri === relation.value
-            });
+            let text;
+            try {
+              new URL(relation.value);
+              text = vue.items.find(obj => {
+                return obj.uri === relation.value;
+              }).text;
+            } catch (_) {
+              // if the relation value isn't a url, just load the custom text
+              text = relation.value;
+            }
             let data = {
               "id": relation.id,
-              "text": match.text,
+              "text": text,
               "value": relation.value
             };
             vue.values.push(data);
@@ -143,42 +172,52 @@ let geoconnexApp = new Vue({
       },
       addMetadata(selected){ 
         let vue = this;
-        console.log(`Creating metadata for value: ${selected.text}`);
         let url = `/hsapi/_internal/${this.resShortId}/relation/add-metadata/`;
         let data = {
           "type": 'relation',
-          "value": selected.uri
+          "value": selected.uri ? selected.uri : selected
         }
         $.ajax({
           type: "POST",
           url: url,
           data: data,
           success: function (result) {
+            console.log(`Added ${selected.text ? selected.text : selected} to resource metadata`)
             vue.values.push({
               "id":result.element_id,
-              "value": selected.uri,
-              "text": selected.text
+              "value": selected.uri ? selected.uri : selected,
+              "text": selected.text ? selected.text : selected
             });
+          },
+          error: function (request, status, error) {
+            vue.errorMsg = `${error} while attempting to add related feature.`;
+            console.log(request.responseText);
           }
         });
       },
       removeMetadata(relation){
+        let vue = this;
         let url = `/hsapi/_internal/${this.resShortId}/relation/${relation.id}/delete-metadata/`;
-        console.log(`Removing metadata for id:${relation.id} via ${url}`);
+        console.log(`Removing resource metadata for ${relation.value}`);
         $.ajax({
           type: "POST",
           url: url,
-          success: function (result) {
-            console.log(result);
+          success: function () {
+          },
+          error: function (request, status, error) {
+            vue.errorMsg = `${error} while attempting to remove related feature.`;
+            console.log(request.responseText);
           }
         });
       }
     },
+    beforeMount(){
+      this.setRules();
+    },
     async mounted() {
       let vue = this;
       vue.geoCache = await caches.open(vue.cacheName);
-      let items = await vue.getAllItems();
-      vue.items = items;
+      await vue.getAllItems();
       vue.loadRelations();
       vue.loading = false;
       }

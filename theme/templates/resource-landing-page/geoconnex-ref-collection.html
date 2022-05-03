@@ -15,23 +15,25 @@
                             </section>
                             
                             <section v-else>
-                                <div v-if="loading">Loading...</div>
-                            
-                                <div v-else>
+                                <div>
                                     <v-app>
                                         <v-combobox
                                         v-model="values"
                                         :items="items"
+                                        hide-no-data
+                                        allow-overflow="false"
                                         chips
                                         deletable-chips
                                         multiple
                                         outlined
-                                        filled
-                                        label="Type custom or select from Geoconnex"
+                                        label="Type URI or select from Geoconnex"
                                         :disabled="loading"
                                         color="blue-grey"
                                         item-text="text"
                                         item-value="uri"
+                                        :search-input.sync="search"
+                                        :loading="loading"
+                                        :rules="rules"
                                         >
                                         <template v-slot:item="data">
                                             <template v-if="typeof data.item !== 'object'">
@@ -44,6 +46,15 @@
                                                 </v-list-item-content>
                                             </template>
                                         </template>
+                                        <template v-slot:no-data>
+                                            <v-list-item>
+                                              <v-list-item-content>
+                                                <v-list-item-title>
+                                                  No results matching "<strong>${ search }</strong>". Press <kbd>enter</kbd> to create a new one
+                                                </v-list-item-title>
+                                              </v-list-item-content>
+                                            </v-list-item>
+                                          </template>
                                         </v-combobox>
                                         <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
                                         
@@ -53,6 +64,14 @@
                                             </ul>
                                         </div>
                                     </v-app>
+                                </div>
+                                <div v-if="loading">
+                                    <p>Loading Geoconnex collection: ${currentLoading}</p>
+                                </div>
+                                <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                        aria-hidden="true">&times;</span></button>
+                                    <p>${errorMsg}</p>
                                 </div>
                             </section>
                         </form>
