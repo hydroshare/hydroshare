@@ -20,12 +20,12 @@
                                         <v-combobox
                                         v-model="values"
                                         :items="items"
+                                        hide-no-data
+                                        allow-overflow="false"
                                         chips
                                         deletable-chips
                                         multiple
                                         outlined
-                                        filled
-                                        full-width="true"
                                         label="Type URI or select from Geoconnex"
                                         :disabled="loading"
                                         color="blue-grey"

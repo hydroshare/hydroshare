@@ -29,11 +29,9 @@ let geoconnexApp = new Vue({
       values(newValue, oldValue){
         this.errorMsg = "";
         if (newValue.length > oldValue.length){
-          console.log("Adding selected element to metadata");
           let selected = newValue.pop();
           this.addMetadata(selected);
         }else if (newValue.length < oldValue.length){
-          console.log("Removing element from metadata");
           let remove = oldValue.pop();
           this.removeMetadata(remove);
         }
@@ -184,6 +182,7 @@ let geoconnexApp = new Vue({
           url: url,
           data: data,
           success: function (result) {
+            console.log(`Added ${selected.text ? selected.text : selected} to resource metadata`)
             vue.values.push({
               "id":result.element_id,
               "value": selected.uri ? selected.uri : selected,
@@ -199,7 +198,7 @@ let geoconnexApp = new Vue({
       removeMetadata(relation){
         let vue = this;
         let url = `/hsapi/_internal/${this.resShortId}/relation/${relation.id}/delete-metadata/`;
-        console.log(`Removing metadata for id:${relation.id} via ${url}`);
+        console.log(`Removing resource metadata for ${relation.value}`);
         $.ajax({
           type: "POST",
           url: url,
