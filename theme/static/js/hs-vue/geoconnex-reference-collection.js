@@ -44,13 +44,19 @@ let geoconnexApp = new Vue({
         let vue = this;
         vue.rules = [
           function(v){
+            let invalid = [];
             for (let item of v){
               try {
                 url = new URL(item.value);
               } catch (_) {
-                // Todo: format the individual chip that is invalid
-                return "We recommend that custom features be added as a valid URI";
+                invalid.push(item.text);  
               }
+            }
+            if(invalid.length === 1){
+              return `${invalid} is not a valid URI. We recommend that your custom feature be linkable`;
+            }
+            if (invalid.length > 1){
+              return `"${invalid.join('", "')}" are not a valid URIs. We recommend that custom features be linkable`;
             }
             return true;
           }
