@@ -22,6 +22,7 @@ let geoconnexApp = new Vue({
             resShortId: SHORT_ID,
             cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
             search: null,
+            rules: null
         }
     },
     watch: {
@@ -39,6 +40,22 @@ let geoconnexApp = new Vue({
       }
     },
     methods: {
+      setRules(){
+        let vue = this;
+        vue.rules = [
+          function(v){
+            for (let item of v){
+              try {
+                url = new URL(item.value);
+              } catch (_) {
+                // Todo: format the individual chip that is invalid
+                return "We recommend that custom features be added as a valid URI";
+              }
+            }
+            return true;
+          }
+        ];
+      },
       async getCollections(){
           let vue = this;
           const collectionsUrl=`${this.geoconnexUrl}?f=json&lang=en-US`;
@@ -185,6 +202,9 @@ let geoconnexApp = new Vue({
           }
         });
       }
+    },
+    beforeMount(){
+      this.setRules();
     },
     async mounted() {
       let vue = this;

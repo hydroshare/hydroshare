@@ -32,6 +32,8 @@
                                         item-text="text"
                                         item-value="uri"
                                         :search-input.sync="search"
+                                        :loading="loading"
+                                        :rules="rules"
                                         >
                                         <template v-slot:item="data">
                                             <template v-if="typeof data.item !== 'object'">
