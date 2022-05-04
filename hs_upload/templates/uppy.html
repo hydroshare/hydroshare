@@ -3,16 +3,19 @@
 <link href="https://releases.transloadit.com/uppy/v2.9.4/uppy.min.css" rel="stylesheet">
 </head>
 <body>
-<div id='drag-drop-area'></div> 
-</body>
+<h3>Resource title: {{ resource.title }} <br>
+Uploading to folder '{{ path }}'</h3> 
+<div id='upload-donut-close'><h3><em>Please do not close this window until uploads complete.</em></h3></div> 
+<div id='uppy-dashboard'></div>
+<h3>Actions taken</h3> 
+<div id='upload-actions'></div> 
+
 <script type="text/javascript" src="/static/mezzanine/js/jquery-1.8.3.min.js"></script>
 <script type="text/javascript" src="/static/js/jquery-ui.js"></script>
 <script type="text/javascript" src="/static/js/bootstrap.3.0.2.min.js"></script>
 <script type="text/javascript" src="/static/js/bootstrap-extras.js"></script>
 <script type="text/javascript" src="/static/js/tus.min.js"></script>
 <script src="https://releases.transloadit.com/uppy/v2.9.4/uppy.min.js"></script>
-<script>
-</script>
 <script>
   var uppy = new Uppy.Core({
     onBeforeFileAdded: (file, rest_of_files) => { 
@@ -31,20 +34,27 @@
      }).then(
         // success 
         function(data, textStatus, jqXHR) {
-           console.log("file "+file+" approved");
-           ok = true;  // go on with uploading the file
+            var message = "file '" + file.name + "'added to upload list.";
+            console.log(message); 
+            document.getElementById('upload-actions').innerHTML
+               += "<p>" + message + "</p>"; 
+            ok = true;  // go on with uploading the file
         }, 
         // failure 
         function(jqXHR, textStatus, errorThrown) { 
-           console.log("file "+file.name+" not approved"); 
-           ok = false;  // prohibit uploading the file
+            var message = "file '" + file.name + "' NOT added to upload list:" 
+                + jqXHR.responseText + "."; 
+            console.log(message); 
+            document.getElementById('upload-actions').innerHTML
+               += "<p>" + message + "</p>";
+            ok = false; 
         }
      );
      return ok; 
   }}); 
   uppy.use(Uppy.Dashboard, { 
      id: 'Dashboard', 
-     target: 'body', 
+     target: '#uppy-dashboard', 
      inline: true, 
      showProgressDetails: true
   }); 
@@ -62,13 +72,20 @@
      }).then(
         // success 
         function(data, textStatus, jqXHR) { 
-           console.log("file "+file+" removed"); 
-           ok = true; 
+            var message = "file '" + file.name + "'removed from upload list";
+            console.log(message); 
+            document.getElementById('upload-actions').innerHTML
+               += "<p>" + message + "</p>"; 
+            ok = true; 
         },
         // failure 
         function (jqXHR, textStatus, errorThrown) { 
-           console.log("file "+file+" error: "+textStatus); 
-           ok = false; 
+            var message = "file '" + file.name + "' NOT removed from upload list:" 
+                + jqXHR.responseText; 
+            console.log(message); 
+            document.getElementById('upload-actions').innerHTML
+               += "<p>" + message + "</p>";
+            ok = false; 
         } 
      ); 
      return ok; 
@@ -89,13 +106,21 @@
      }).then(
         // success 
         function(data, textStatus, jqXHR) { 
-           console.log("file "+file.name+" added to resource"); 
+            var message = "file '" + file.name + "'finished uploading to resource.";
+            console.log(message); 
+            document.getElementById('upload-actions').innerHTML
+               += "<p>" + message + "</p>"; 
         }, 
         // failure
         function(jqXHR, textStatus, errorThrown) { 
-            console.log("file "+file.name+" failed: "+textStatus); 
+            var message = "file '" + file.name + "' failed to upload:" 
+                + jqXHR.responseText; 
+            console.log(message); 
+            document.getElementById('upload-actions').innerHTML
+               += "<p>" + message + "</p>";
         } 
      ); 
 }); 
 </script>
+</body>
 </html> 

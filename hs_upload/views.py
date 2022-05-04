@@ -172,8 +172,6 @@ def start(request, path, *args, **kwargs):
 
     # upload in progress should not exist
     # TODO: fold this code into Upload.create under an atomic transaction
-    path = os.path.join(path, filename)
-
     if Upload.exists(resource, path):
         response = HttpResponse(status=401)
         content_msg = "upload to resource {} path {} already in progress!".format(rid, path)
@@ -332,3 +330,20 @@ def finish(request, path, *args, **kwargs):
     # istorage.saveFile(tusd_path, irods_path)
     cleanup(resource, path, tusd_path)
     return HttpResponse(status=200)  # no content body needed
+
+
+def print_all(): 
+    """ print all uploads in progress """
+    for o in Upload.objects.all(): 
+        print("file {} to {} user {}".format(o.filename, o.path, o.user.username))
+    for file in os.listdir("/tusd_tmp"): 
+        if file != "tusd.sock": 
+             print("{} in progress".format(file))
+
+        
+def clear_all(): 
+    """ clear the queue of uploads """
+    Upload.objects.all().delete()
+    for file in os.listdir("/tusd_tmp"): 
+        if file != "tusd.sock": 
+            os.remove(os.path.join("/tusd_tmp", file))
