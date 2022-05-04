@@ -13,14 +13,14 @@
         function callLargeFileUpload() { 
             var path = getCurrentPath().path;
             // url prefix  get concatenated to the access URL in order to construct a path. 
-            var prefix = '/hs_upload/context/' + '{{ cm.short_id }}' + '/data/contents';  
+            var prefix = '/hs_upload/uppy/' + '{{ cm.short_id }}' + '/data/contents';  
             var target = Array(prefix);
             target = target.concat(path); 
             // console.log(target);
             var url = target.join('/'); 
             url = url + '/'  // trailing slash needed 
             // console.log(url); 
-            uploadWindow = window.open(url, '_blank', 'popup'); 
+            uploadWindow = window.open(url, 'uploadWindow', 'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=750,height=800,left=100,top=100'); 
             return false;  // prevent default response
         } 
     </script> 
@@ -657,9 +657,10 @@
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
-                                                    <b><a 
+                                                    <b><a type='button' 
+                                                          class="btn btn-success btn-xs dz-clickable upload-toggle"
                                                           onclick="callLargeFileUpload()">
-                                                          TEST UPLOAD</a></b> 
+                                                          <i class="fa fa-plus"></i> Add files via UPPY</a></b> 
 
                                                     <div id="irods-group" class="btn-group">
                                                         <button type="button"

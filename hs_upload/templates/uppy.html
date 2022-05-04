@@ -43,7 +43,7 @@ Uploading to folder '{{ path }}'</h3>
         // failure 
         function(jqXHR, textStatus, errorThrown) { 
             var message = "file '" + file.name + "' NOT added to upload list:" 
-                + jqXHR.responseText + "."; 
+                + jqXHR.responseText; 
             console.log(message); 
             document.getElementById('upload-actions').innerHTML
                += "<p>" + message + "</p>";
@@ -79,7 +79,7 @@ Uploading to folder '{{ path }}'</h3>
             ok = true; 
         },
         // failure 
-        function (jqXHR, textStatus, errorThrown) { 
+        function(jqXHR, textStatus, errorThrown) { 
             var message = "file '" + file.name + "' NOT removed from upload list:" 
                 + jqXHR.responseText; 
             console.log(message); 

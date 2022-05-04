@@ -198,14 +198,15 @@ def cleanup(resource, path, tmpfile):
             Upload.delete(resource, path)
         except Upload.DoesNotExist:  # not an error for lockfile not to exist
             pass
-    try:
-        os.remove(tmpfile)
-    except Exception as e:
-        logger.debug("can't remove file {}: {}".format(tmpfile, str(e)))
-    try:
-        os.remove(tmpfile + '.info')
-    except Exception as e:
-        logger.debug("can't remove file {}: {}".format(tmpfile, str(e)))
+    if tmpfile is not None: 
+        try:
+            os.remove(tmpfile)
+        except Exception as e:
+            logger.debug("can't remove file {}: {}".format(tmpfile, str(e)))
+        try:
+            os.remove(tmpfile + '.info')
+        except Exception as e:
+            logger.debug("can't remove file {}: {}".format(tmpfile, str(e)))
 
 
 def abort(request, path, *args, **kwargs):
@@ -215,9 +216,12 @@ def abort(request, path, *args, **kwargs):
     filename = request.GET.get('filename')
     # filesize = request.GET.get('filesize')
     url = request.GET.get('url')
-    tusd_root = url.split('/')[-1]
-    tusd_path = os.path.join('/tusd_tmp', tusd_root)
-
+    if url is not None: 
+        tusd_root = url.split('/')[-1]
+        tusd_path = os.path.join('/tusd_tmp', tusd_root)
+    else: 
+        tusd_root = None
+        tusd_path = None
     path = path.split('/')
     rid = path[0]
     response = None
