@@ -130,7 +130,7 @@ def start(request, path, *args, **kwargs):
 
     user = request.user
     filename = request.GET.get('filename')
-    size = request.GET.get('size')
+    filesize = request.GET.get('filesize')
     stuff = path.split('/')
     rid = stuff[0]
     try:
@@ -182,7 +182,7 @@ def start(request, path, *args, **kwargs):
         return response
 
     try:
-        Upload.create(user, resource, path, size)
+        Upload.create(user, resource, path, filesize)
         return HttpResponse(status=200)  # ok to proceed
     except Exception as e:
         response = HttpResponse(status=401)
@@ -246,7 +246,7 @@ def finish(request, path, *args, **kwargs):
     """ finish processing an upload """
     # user = request.user
     filename = request.GET.get('filename')
-    # size = request.GET.get('size')
+    # filesize = request.GET.get('filesize')
     url = request.GET.get('url')
     tusd_root = url.split('/')[-1]
     tusd_path = os.path.join('/tusd_tmp', tusd_root)
