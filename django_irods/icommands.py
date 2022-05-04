@@ -12,9 +12,7 @@ from collections import namedtuple
 class SessionException(Exception):
     def __init__(self, exitcode, stdout, stderr):
         super(SessionException, self).__init__(self,
-                                               "Error processing IRODS request: {exitcode}. "
-                                               "stderr follows:\n\n{stderr}".format(
-                                                   exitcode=exitcode, stderr=stderr))
+                                               "Error processing IRODS request: {stderr}".format(stderr=stderr))
         self.stdout = str(stdout)
         self.stderr = str(stderr)
         self.exitcode = exitcode

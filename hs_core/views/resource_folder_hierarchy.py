@@ -726,9 +726,6 @@ def data_store_move_to_folder(request, pk=None):
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    # whether to treat request as atomic: skip overwrites for valid request
-    atomic = request.POST.get('atomic', 'false') == 'true'  # False by default
-
     pk = str(pk).strip()
     try:
         resource, _, user = authorize(request, pk,
@@ -765,7 +762,7 @@ def data_store_move_to_folder(request, pk=None):
             return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     valid_src_paths = []
-    skipped_tgt_paths = []
+    override_tgt_paths = []
 
     for src_path in src_paths:
         src_storage_path = os.path.join(resource.root_path, src_path)
@@ -792,17 +789,14 @@ def data_store_move_to_folder(request, pk=None):
         tgt_overwrite = os.path.join(tgt_storage_path, base)
         if not istorage.exists(tgt_overwrite):
             valid_src_paths.append(src_path)  # partly qualified path for operation
-        else:  # skip pre-existing objects
-            skipped_tgt_paths.append(os.path.join(tgt_short_path, base))
+        else:
+            override_tgt_paths.append(os.path.join(tgt_short_path, base))
 
-    if skipped_tgt_paths:
-        if atomic:
-            message = 'move would overwrite {}'.format(', '.join(skipped_tgt_paths))
-            return HttpResponse(message, status=status.HTTP_400_BAD_REQUEST)
+    if override_tgt_paths:
+        message = 'move would overwrite {}'.format(', '.join(override_tgt_paths))
+        return HttpResponse(message, status=status.HTTP_400_BAD_REQUEST)
 
-    # if not atomic, then try to move the files that don't have conflicts
-    # stop immediately on error.
-
+    # move the files that don't have conflicts and stop immediately on error.
     try:
         move_to_folder(user, pk, valid_src_paths, tgt_path)
     except SessionException as ex:
@@ -811,10 +805,6 @@ def data_store_move_to_folder(request, pk=None):
         return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
-
-    if skipped_tgt_paths:  # add information on skipped steps
-        message = '[Warn] skipped move to existing {}'.format(', '.join(skipped_tgt_paths))
-        return_object['additional_status'] = message
 
     return HttpResponse(
         json.dumps(return_object),

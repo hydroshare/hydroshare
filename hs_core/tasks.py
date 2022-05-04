@@ -701,23 +701,27 @@ def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwri
 
 @shared_task
 def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
-
     from hs_core.views.utils import rename_irods_file_or_folder_in_django
-
-    res = utils.get_resource_by_shortkey(res_id)
-    istorage = res.get_irods_storage()
-    res_files = []
-    file_type_obj = FILE_TYPE_MAP[file_type]
-    aggregation = file_type_obj.objects.get(id=file_type_id)
-    res_files.extend(aggregation.files.all())
-    orig_aggregation_name = aggregation.aggregation_name
-    for file in res_files:
-        tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
-        istorage.moveFile(file.storage_path, tgt_full_path)
-        rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
-    new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
-    res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
-                                                    new_path=new_aggregation_name)
+    try:
+        res = utils.get_resource_by_shortkey(res_id)
+        istorage = res.get_irods_storage()
+        res_files = []
+        file_type_obj = FILE_TYPE_MAP[file_type]
+        aggregation = file_type_obj.objects.get(id=file_type_id)
+        res_files.extend(aggregation.files.all())
+        orig_aggregation_name = aggregation.aggregation_name
+        for file in res_files:
+            tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
+            istorage.moveFile(file.storage_path, tgt_full_path)
+            rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
+        new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
+        res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
+                                                        new_path=new_aggregation_name)
+    except SessionException as ex:
+        if 'CAT_NAME_EXISTS_AS_DATAOBJ' in ex.stderr:
+            raise SessionException(-1, '', 'aggregation already exists in destination')
+        else:
+            raise SessionException(-1, '', ex.stderr)
     return res.get_absolute_url()
 
 
