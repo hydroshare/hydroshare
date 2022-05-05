@@ -36,10 +36,6 @@ class TestResourceTypeFileTypes(TestCase):
         resp_json = self._make_request("GenericResource")
         self.assertEqual(resp_json['file_types'], '".*"')
 
-        # test for TimeSeriesResource
-        resp_json = self._make_request("TimeSeriesResource")
-        self.assertEqual(resp_json['file_types'], '[".sqlite", ".csv"]')
-
         # test for CollectionResource
         resp_json = self._make_request("CollectionResource")
         self.assertEqual(resp_json['file_types'], '[]')

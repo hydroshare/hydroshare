@@ -123,13 +123,6 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
                                              supported_res_types=['CompositeResource'])
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
 
-        # update existing meta
-        resource.update_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                         element_id=SupportedResTypes.objects.first().id,
-                                         supported_res_types=['TimeSeriesResource'])
-        self.assertEqual(SupportedResTypes.objects.first().supported_res_types.all()[0].description,
-                         'TimeSeriesResource')
-
         # try to delete 1st SupportedResTypes obj
         with self.assertRaises(Exception):
             resource.delete_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
