@@ -125,14 +125,17 @@ class UppyView(UploadContextView):
     template_name = 'uppy.html'
 
 
-def start(request, path, *args, **kwargs):
+def start(request, path_of_folder, *args, **kwargs):
     """ check whether upload file name is acceptable """
 
     user = request.user
+    logger.debug("start request user {} path {}".format(user.username, path_of_folder))
     filename = request.GET.get('filename')
     filesize = request.GET.get('filesize')
-    stuff = path.split('/')
+    stuff = path_of_folder.split('/')
     rid = stuff[0]
+    logger.debug("tusd upload start:  rid = {}, path_of_folder = {}, filename = {}"
+                 .format(rid, path_of_folder, filename))
     try:
         resource = get_resource_by_shortkey(rid, or_404=False)
     except BaseResource.DoesNotExist:
@@ -142,45 +145,47 @@ def start(request, path, *args, **kwargs):
         logger.error(content_msg)
         return response
 
-    # file path should start with data/contents
+    # file path_of_folder should start with data/contents
     if stuff[1] != 'data' or stuff[2] != 'contents':
         response = HttpResponse(status=401)
-        content_msg = "path must start with 'data/contents/'!".format(path)
+        content_msg = "path {} must start with 'data/contents/'!".format(path_of_folder)
         response.content = content_msg
         logger.error(content_msg)
         return response
 
-    # file path should exist
+    # file path_of_folder should exist
     istorage = resource.get_irods_storage()
-    irods_path = resource.get_irods_path(path)
-    if not istorage.exists(irods_path):
+    irods_path_of_folder = resource.get_irods_path(path_of_folder)
+    if not istorage.exists(irods_path_of_folder):
         response = HttpResponse(status=401)
-        content_msg = "target folder '{}' does not exist!".format(irods_path)
+        content_msg = "target folder '{}' does not exist!".format(path_of_folder)
         response.content = content_msg
         logger.error(content_msg)
         return response
 
     # file name should not exist
-    path = os.path.join(path, filename)
-    irods_path = resource.get_irods_path(path)
-    if istorage.exists(irods_path):
+    path_of_file = os.path.join(path_of_folder, filename)
+    irods_path_of_file = resource.get_irods_path(path_of_file)
+    if istorage.exists(irods_path_of_file):
         response = HttpResponse(status=401)
-        content_msg = "file '{}' already exists!".format(irods_path)
+        content_msg = "file '{}' already exists!".format(path_of_file)
         response.content = content_msg
         logger.error(content_msg)
         return response
 
     # upload in progress should not exist
     # TODO: fold this code into Upload.create under an atomic transaction
-    if Upload.exists(resource, path):
+    if Upload.exists(resource, path_of_file):
         response = HttpResponse(status=401)
-        content_msg = "upload to resource {} path {} already in progress!".format(rid, path)
+        content_msg = "upload to resource {} path {} already in progress!".format(rid, path_of_file)
         response.content = content_msg
         logger.error(content_msg)
         return response
 
     try:
-        Upload.create(user, resource, path, filesize)
+        logger.debug("creating upload user={} resource={} path={}"
+                     .format(user.username, resource.short_id, path_of_file))
+        Upload.create(user, resource, path_of_file, filesize)
         return HttpResponse(status=200)  # ok to proceed
     except Exception as e:
         response = HttpResponse(status=401)
@@ -190,15 +195,18 @@ def start(request, path, *args, **kwargs):
         return response
 
 
+# TODO: need to link the tmpfile and Upload record for in-progress uploads.
+# TODO: this needs to only be done once. This requires using the Progress response.
 def cleanup(resource, path, tmpfile):
     """ clean up after a failed upload """
     # delete lock record
     if resource is not None:
         try:
-            Upload.delete(resource, path)
+            Upload.remove(resource, path)
+            logger.debug("deleted resource {}/path {}".format(resource.short_id, path))
         except Upload.DoesNotExist:  # not an error for lockfile not to exist
-            pass
-    if tmpfile is not None: 
+            logger.debug("resource {} or path {} does not exist".format(resource.short_id, path))
+    if tmpfile is not None:
         try:
             os.remove(tmpfile)
         except Exception as e:
@@ -209,22 +217,24 @@ def cleanup(resource, path, tmpfile):
             logger.debug("can't remove file {}: {}".format(tmpfile, str(e)))
 
 
-def abort(request, path, *args, **kwargs):
-
+def abort(request, path_of_folder, *args, **kwargs):
     """ abort processing of an upload """
     # user = request.user
     filename = request.GET.get('filename')
     # filesize = request.GET.get('filesize')
+    # when aborting a request that is pending, there is no URL.
     url = request.GET.get('url')
-    if url is not None: 
+    if url is not None:
         tusd_root = url.split('/')[-1]
-        tusd_path = os.path.join('/tusd_tmp', tusd_root)
-    else: 
+        tusd_path_of_file = os.path.join('/tusd_tmp', tusd_root)
+    else:
         tusd_root = None
-        tusd_path = None
-    path = path.split('/')
-    rid = path[0]
-    response = None
+        tusd_path_of_file = None
+    path_split = path_of_folder.split('/')
+    rid = path_split[0]
+    path_of_file = os.path.join(path_of_folder, filename)
+    response = None  # so far, no errors
+    resource = None  # unknown whether resource has been deleted.
     try:
         resource = get_resource_by_shortkey(rid, or_404=False)
     except BaseResource.DoesNotExist:
@@ -233,28 +243,35 @@ def abort(request, path, *args, **kwargs):
         response.content = content_msg
         logger.error(content_msg)
 
-    path = '/'.join(path[1:])  # without resource ID
-
-    logger.debug("tusd upload abort:  rid = {}, path = {}, filename = {}, url = {}"
-                 .format(rid, path, filename, url))
-    cleanup(resource, path, tusd_path)
+    # TODO: make sure that Upload has cascade delete enabled, so that deleting a
+    # TODO: resource causes deletion of the Upload record for the resource.
+    logger.debug("tusd upload abort:  rid = {}, path = {}"
+                 .format(rid, path_of_file))
+    cleanup(resource, path_of_file, tusd_path_of_file)
     if response is not None:
         return response
     else:
         return HttpResponse(status=200)  # no content body needed
 
 
-def finish(request, path, *args, **kwargs):
+def finish(request, path_of_folder, *args, **kwargs):
     """ finish processing an upload """
-    # user = request.user
+    user = request.user
     filename = request.GET.get('filename')
     # filesize = request.GET.get('filesize')
-    url = request.GET.get('url')
-    tusd_root = url.split('/')[-1]
-    tusd_path = os.path.join('/tusd_tmp', tusd_root)
+    path_of_file = os.path.join(path_of_folder, filename)
 
-    path = path.split('/')
-    rid = path[0]
+    # recover tusd filename from URL
+    tusd_url = request.GET.get('url')
+    tusd_filename = tusd_url.split('/')[-1]
+    tusd_path_of_file = os.path.join('/tusd_tmp', tusd_filename)
+
+    path_split = path_of_folder.split('/')
+    rid = path_split[0]
+    logger.debug("finish request user {} path {} tusd {}".format(user.username, path_of_file, tusd_path_of_file))
+
+    # begin request validation.
+    # first, does the resource exist?
     try:
         resource = get_resource_by_shortkey(rid, or_404=False)
     except BaseResource.DoesNotExist:
@@ -262,22 +279,22 @@ def finish(request, path, *args, **kwargs):
         content_msg = "resource {} does not exist!".format(rid)
         response.content = content_msg
         logger.error(content_msg)
-        cleanup(resource, path, tusd_path)
+        cleanup(resource, path_of_file, tusd_path_of_file)
         return response
 
-    short_path = '/'.join(path[3:])  # without data/contents/
-    path = '/'.join(path[1:])  # without resource ID
+    # needed for irods copy.
+    relative_path_of_folder = '/'.join(path_split[3:])  # without data/contents/
 
-    logger.debug("tusd upload start:  rid = {}, path = {}, filename = {}, url = {}"
-                 .format(rid, path, filename, url))
+    logger.debug("tusd upload finish:  rid = {}, path = {}, filename = {}, tusd_file = {}"
+                 .format(rid, path_of_folder, filename, tusd_path_of_file))
 
     # uploaded file must still exist as a source
-    if not os.path.exists(tusd_path):
+    if not os.path.exists(tusd_path_of_file):
         response = HttpResponse(status=401)
-        content_msg = "uploaded file {} does not exist!".format(tusd_path)
+        content_msg = "uploaded file {} does not exist!".format(tusd_path_of_file)
         response.content = content_msg
         logger.error(content_msg)
-        cleanup(resource, path, tusd_path)
+        cleanup(resource, path_of_file, tusd_path_of_file)
         return response
 
     # now we have the resource Id and can authorize the request
@@ -290,64 +307,69 @@ def finish(request, path, *args, **kwargs):
         content_msg = "You do not have permission to upload files to resource {}!".format(rid)
         response.content = content_msg
         logger.error(content_msg)
-        cleanup(resource, path, tusd_path)
+        cleanup(resource, path_of_file, tusd_path_of_file)
         return response
 
     istorage = resource.get_irods_storage()  # deal with federated storage
-    irods_path = resource.get_irods_path(path)
+    irods_path_of_folder = resource.get_irods_path(path_of_folder)
 
     # folder should exist in resource
-    if not istorage.exists(irods_path):
+    if not istorage.exists(irods_path_of_folder):
         response = HttpResponse(status=401)
-        content_msg = "Folder {} must already exist!".format(irods_path)
+        content_msg = "Folder {} must already exist!".format(irods_path_of_folder)
         response.content = content_msg
         logger.error(content_msg)
-        cleanup(resource, path, tusd_path)
+        cleanup(resource, path_of_file, tusd_path_of_file)
         return response
 
     # folder name should correspond to a folder
     try:
-        istorage.listdir(irods_path)  # is this a folder?
+        istorage.listdir(irods_path_of_folder)  # is this a folder?
     except icommands.SessionException:
         response = HttpResponse(status=401)
-        content_msg = "Path {} is not a folder!".format(path)
+        content_msg = "Path {} is not a folder!".format(path_of_folder)
         response.content = content_msg
         logger.debug(content_msg)
+        cleanup(resource, path_of_file, tusd_path_of_file)
         return response
 
     # file should not exist in resource
-    irods_path = os.path.join(irods_path, filename)
-    logger.debug("irods_path including file is {}".format(irods_path))
-    if istorage.exists(irods_path):
+    irods_path_of_file = os.path.join(irods_path_of_folder, filename)
+    logger.debug("irods_path including file is {}".format(irods_path_of_file))
+    if istorage.exists(irods_path_of_file):
         response = HttpResponse(status=401)
-        content_msg = "Path {} already exists!".format(irods_path)
+        content_msg = "Path {} already exists!".format(path_of_file)
         response.content = content_msg
         logger.error(content_msg)
-        cleanup(resource, path, tusd_path)
+        cleanup(resource, path_of_file, tusd_path_of_file)
         return response
 
     # all tests pass: move into appropriate location
-    logger.debug("copy uploaded file {} to {}{}".format(tusd_path, path, filename))
-    upload_object = UploadedFile(file=open(tusd_path, mode="rb"), name=filename)
-    add_file_to_resource(resource, upload_object, folder=short_path)
+    logger.debug("copy uploaded file {} to {}".format(tusd_path_of_file, path_of_file))
+    upload_object = UploadedFile(file=open(tusd_path_of_file, mode="rb"), name=filename)
+    add_file_to_resource(resource, upload_object, folder=relative_path_of_folder)
 
-    # istorage.saveFile(tusd_path, irods_path)
-    cleanup(resource, path, tusd_path)
+    # delete intermediary file and lock.
+    cleanup(resource, path_of_file, tusd_path_of_file)
     return HttpResponse(status=200)  # no content body needed
 
 
-def print_all(): 
+def print_all():
     """ print all uploads in progress """
-    for o in Upload.objects.all(): 
-        print("file {} to {} user {}".format(o.filename, o.path, o.user.username))
-    for file in os.listdir("/tusd_tmp"): 
-        if file != "tusd.sock": 
-             print("{} in progress".format(file))
+    print("existing lockfiles")
+    for o in Upload.objects.all():
+        print("resource {} path {} user {}".format(o.resource.short_id, o.path, o.user.username))
+    print("tusd uploads in progress")
+    for file in os.listdir("/tusd_tmp"):
+        if file != "tusd.sock":
+            print("{}".format(file))
 
-        
-def clear_all(): 
+
+def clear_all():
     """ clear the queue of uploads """
+    # remove all locks
     Upload.objects.all().delete()
-    for file in os.listdir("/tusd_tmp"): 
-        if file != "tusd.sock": 
+    # remove all uploads in progress
+    for file in os.listdir("/tusd_tmp"):
+        if file != "tusd.sock":
             os.remove(os.path.join("/tusd_tmp", file))

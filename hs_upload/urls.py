@@ -10,11 +10,11 @@ urlpatterns = [
     url(r'^uppy/(?P<path>.*)$', UppyView.as_view(), name='uppy_context'),
 
     # Start and authorize an upload
-    url(r'^start/(?P<path>.*)$', start, name='upload_start'),
+    url(r'^start/(?P<path_of_folder>.*)$', start, name='upload_start'),
 
     # clean up and abort
-    url(r'^abort/(?P<path>.*)$', abort, name='upload_abort'),
+    url(r'^abort/(?P<path_of_folder>.*)$', abort, name='upload_abort'),
 
     # Finish and commit an upload
-    url(r'^finish/(?P<path>.*)$', finish, name='upload_finish'),
+    url(r'^finish/(?P<path_of_folder>.*)$', finish, name='upload_finish'),
 ]

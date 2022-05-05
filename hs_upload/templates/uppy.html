@@ -34,7 +34,7 @@ Uploading to folder '{{ path }}'</h3>
      }).then(
         // success 
         function(data, textStatus, jqXHR) {
-            var message = "file '" + file.name + "'added to upload list.";
+            var message = "file '" + file.name + "' added to upload list.";
             console.log(message); 
             document.getElementById('upload-actions').innerHTML
                += "<p>" + message + "</p>"; 
@@ -72,7 +72,7 @@ Uploading to folder '{{ path }}'</h3>
      }).then(
         // success 
         function(data, textStatus, jqXHR) { 
-            var message = "file '" + file.name + "'removed from upload list";
+            var message = "file '" + file.name + "' removed from upload list";
             console.log(message); 
             document.getElementById('upload-actions').innerHTML
                += "<p>" + message + "</p>"; 
@@ -106,7 +106,7 @@ Uploading to folder '{{ path }}'</h3>
      }).then(
         // success 
         function(data, textStatus, jqXHR) { 
-            var message = "file '" + file.name + "'finished uploading to resource.";
+            var message = "file '" + file.name + "' uploaded to resource.";
             console.log(message); 
             document.getElementById('upload-actions').innerHTML
                += "<p>" + message + "</p>"; 

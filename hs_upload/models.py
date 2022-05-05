@@ -35,7 +35,7 @@ class Upload(models.Model):
         return cls.objects.filter(resource=resource, path=path).exists()
 
     @classmethod
-    def delete(cls, resource, path):
+    def remove(cls, resource, path):
         """ terminate an upload """
         object = cls.objects.get(resource=resource, path=path)
         logger.debug("terminating upload for {}: {}/{}"
