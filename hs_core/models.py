@@ -758,7 +758,6 @@ class Title(AbstractMetaDataElement):
 
         unique_together = ("content_type", "object_id")
 
-
     @classmethod
     def remove(cls, element_id):
         """Define custom remove function for Title class."""
