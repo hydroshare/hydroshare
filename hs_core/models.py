@@ -700,17 +700,6 @@ class Description(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
-    def update(cls, element_id, **kwargs):
-        """Create custom update method for Description model."""
-        element = Description.objects.get(id=element_id)
-        resource = element.metadata.resource
-        if resource.resource_type == "TimeSeriesResource":
-            element.metadata.is_dirty = True
-            element.metadata.save()
-
-        super(Description, cls).update(element_id, **kwargs)
-
-    @classmethod
     def remove(cls, element_id):
         """Create custom remove method for Description model."""
         raise ValidationError("Description element of a resource can't be deleted.")
@@ -769,16 +758,6 @@ class Title(AbstractMetaDataElement):
 
         unique_together = ("content_type", "object_id")
 
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        """Define custom update function for Title class."""
-        element = Title.objects.get(id=element_id)
-        resource = element.metadata.resource
-        if resource.resource_type == "TimeSeriesResource":
-            element.metadata.is_dirty = True
-            element.metadata.save()
-
-        super(Title, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
@@ -4226,11 +4205,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                             subjects.append(dict_item['subject']['value'])
                             continue
                         if element_name == 'coverage':
-                            # coverage metadata is not allowed for update for time series resource
-                            if self.resource.resource_type == "TimeSeriesResource":
-                                err_msg = "Coverage metadata can't be updated for {} resource"
-                                err_msg = err_msg.format(self.resource.resource_type)
-                                raise ValidationError(err_msg)
                             coverage_data = dict_item[element_name]
                             if 'type' not in coverage_data:
                                 raise ValidationError("Coverage type data is missing")

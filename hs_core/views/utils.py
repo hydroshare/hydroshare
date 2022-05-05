@@ -447,7 +447,7 @@ def validate_metadata(metadata, resource_type):
      and the other one for "Coverage' element.
     [{'description':{'abstract': 'This is a great resource'}},
     {'coverage': {'value':{'type': 'period', 'start': 01/01/2010', 'end': '12/12/2015'}}}]
-    :param resource_type: resource type name (e.g., "GenericResource" or "TimeSeriesResource")
+    :param resource_type: resource type name (e.g., "GenericResource" or "CollectionResource")
     :return:
 
     """
