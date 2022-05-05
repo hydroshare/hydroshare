@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block meta_title %}Home{% endblock %}
-{% load mezzanine_tags static blog_tags accounts_tags dashboard_tags i18n hydroshare_tags %}
+{% load mezzanine_tags blog_tags accounts_tags dashboard_tags i18n hydroshare_tags %}
 
 {% comment %}
 
@@ -150,12 +150,12 @@ timestamp should go with a template tags to convert to a human readble day.
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/dashboard.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/dashboard.css' %}">
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/dashboard.js"></script>
+    <script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}

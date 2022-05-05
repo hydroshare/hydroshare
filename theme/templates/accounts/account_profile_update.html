@@ -50,6 +50,6 @@
 
 {% block extra_js %}
 {{ block.super }}
-<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/password_reset.js"></script>
+<script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/password_reset.js' %}"></script>
 {% endblock %}

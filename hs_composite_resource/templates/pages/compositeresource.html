@@ -7,7 +7,7 @@
 {% block extra_js %}
     {{ block.super }}
     {# resource specific js can go here #}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/composite-resource.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/time-series-filetype.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jsoneditor.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/composite-resource.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/time-series-filetype.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/jsoneditor.min.js' %}"></script>
 {% endblock %}

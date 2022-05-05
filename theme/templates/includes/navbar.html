@@ -1,5 +1,5 @@
 {% load pages_tags mezzanine_tags theme_tags hydroshare_tags %}
-<link rel="stylesheet" type="text/css" href="/static/css/notifications-app.css">
+<link rel="stylesheet" type="text/css" href="{% static 'css/notifications-app.css' %}">
 
 <style>
     /* Navbar */
@@ -160,7 +160,7 @@
                 <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" href="/landingPage">
-                <img id="img-brand-logo" src="/static/img/logo-lg.png" alt="{{ settings.SITE_TITLE }}"/>
+                <img id="img-brand-logo" src="{% static 'img/logo-lg.png' %}" alt="{{ settings.SITE_TITLE }}"/>
             </a>
         </div>
         <div class="collapse navbar-collapse">
@@ -309,7 +309,7 @@
                                        data-modal-title="Create a Resource"
                                        data-modal-input-title="Enter the title for the new resource."
                                        data-value="CompositeResource">
-                                        <img src="/static/img/resource-icons/composite48x48.png"
+                                        <img src="{% static 'img/resource-icons/composite48x48.png' %}"
                                              alt="Composite Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;Resource</div>
                                     </a>
@@ -320,7 +320,7 @@
                                        data-modal-title="Create a Collection"
                                        data-modal-input-title="Enter the title for the new collection of HydroShare resources."
                                        data-value="CollectionResource">
-                                        <img src="/static/img/resource-icons/collection48x48.png"
+                                        <img src="{% static 'img/resource-icons/collection48x48.png' %}"
                                              alt="Collection Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;Collection</div>
                                     </a>
@@ -331,7 +331,7 @@
                                        data-modal-title="Create a Web App Connector"
                                        data-modal-input-title="Enter the name for the new Web App Connector."
                                        data-value="ToolResource">
-                                        <img src="/static/img/resource-icons/webapp48x48.png"
+                                        <img src="{% static 'img/resource-icons/webapp48x48.png' %}"
                                              alt="Web App Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;Web App Connector</div>
                                     </a>
@@ -391,7 +391,7 @@
     </div>
 </div>
 {# ======= Modal window ends =======#}
-<script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
+
 
 <script>
     $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
