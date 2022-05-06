@@ -1,16 +1,16 @@
-import os
-import tempfile
 import csv
-import shutil
 import logging
+import os
+import shutil
+import tempfile
 
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q
 
-from hs_core.hydroshare.utils import resource_modified, current_site_url
-from hs_core.hydroshare.resource import delete_resource_file_only, add_resource_files
-from hs_core.views.utils import get_my_resources_list
 from hs_access_control.models import PrivilegeCodes
+from hs_core.hydroshare.resource import add_resource_files, delete_resource_file_only
+from hs_core.hydroshare.utils import current_site_url, resource_modified
+from hs_core.views.utils import get_my_resources_list
 
 logger = logging.getLogger(__name__)
 RES_LANDING_PAGE_URL_TEMPLATE = current_site_url() + "/resource/{0}/"
@@ -124,7 +124,7 @@ def update_collection_list_csv(collection_obj):
         return csv_content_list
 
 
-def get_collectable_resources(user, coll_resource, annotate=True):
+def get_collectable_resources(user, coll_resource):
     # resource is collectable if
     # 1) shareable=True and resource is public in my resources, --or--
     # 2) shareable=True and resource is accessible with view privilege, --or--
@@ -132,12 +132,18 @@ def get_collectable_resources(user, coll_resource, annotate=True):
     # Also exclude this resource as well as resources already in the collection
     # Start with both my resources and favorited public resources; so no need to
     # check that user can view resources.
-    return get_my_resources_list(user, annotate) \
+
+    collectable_resources = get_my_resources_list(user, annotate=False)
+    collectable_resources = collectable_resources \
         .filter(Q(raccess__shareable=True) |  # shareable and viewable, --or--
                 Q(raccess__discoverable=True) |  # discoverable, public, and/or published --or--
                 Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER)) \
         .exclude(short_id=coll_resource.short_id) \
         .exclude(id__in=coll_resource.resources.values_list("id", flat=True))  # no duplicates!
+
+    collectable_resources = collectable_resources.only('short_id', 'title', 'resource_type', 'created')
+    collectable_resources = collectable_resources.select_related('raccess')
+    return collectable_resources
 
 
 def _get_owners_string(owners_list):

@@ -131,7 +131,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                 # to "exists" and exactly matches the intent of the UI.  It is much
                 # more efficient than it looks.
 
-                if not get_collectable_resources(user, collection_res_obj, annotate=False)\
+                if not get_collectable_resources(user, collection_res_obj) \
                         .filter(short_id=res_to_add.short_id).exists():
                     raise Exception('Only resource owner can add a non-shareable private'
                                     'resource to a collection ')
