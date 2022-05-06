@@ -8,6 +8,10 @@
   gap: 1rem;
 }
 
+.apps-container::before, .apps-container::after { 
+  display: none !important;
+}
+
 .webapp-listing {
     min-height: 250px;
     position: relative;
