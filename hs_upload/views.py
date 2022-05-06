@@ -55,11 +55,11 @@ class UploadContextView(TemplateView):
             response = HttpResponse(status=401)
             content_msg = "No upload path specified!"
             response.content = content_msg
-            logger.debug(content_msg)
+            logger.error(content_msg)
             return response
 
         path = kwargs['path']
-        logger.debug("request path is '{}'".format(path))
+        # logger.debug("request path is '{}'".format(path))
 
         # remove trailing /'s
         split_path_strs = path.split('/')
@@ -67,7 +67,7 @@ class UploadContextView(TemplateView):
             split_path_strs.pop()
         path = '/'.join(split_path_strs)
 
-        logger.debug("request path is now '{}'".format(path))
+        # logger.debug("request path is now '{}'".format(path))
 
         # TODO: verify that this is a valid file path at time of request.
         # TODO: perhaps create intermediate directories before upload.
@@ -75,7 +75,7 @@ class UploadContextView(TemplateView):
         # first path element is resource short_path
         res_id = split_path_strs[0]
 
-        logger.debug("resource id is {}".format(res_id))
+        # logger.debug("resource id is {}".format(res_id))
 
         # now we have the resource Id and can authorize the request
         # if the resource does not exist in django, authorized will be false
@@ -192,18 +192,19 @@ def cleanup(resource, path, tmpfile):
     if resource is not None:
         try:
             Upload.remove(resource, path)
-            logger.debug("deleted resource {}/path {}".format(resource.short_id, path))
+            # logger.debug("deleted resource {}/path {}".format(resource.short_id, path))
         except Upload.DoesNotExist:  # not an error for lockfile not to exist
-            logger.debug("resource {} or path {} does not exist".format(resource.short_id, path))
+            pass
+            # logger.debug("resource {} or path {} does not exist".format(resource.short_id, path))
     if tmpfile is not None:
         try:
             os.remove(tmpfile)
         except Exception as e:
-            logger.debug("can't remove file {}: {}".format(tmpfile, str(e)))
+            logger.error("can't remove file {}: {}".format(tmpfile, str(e)))
         try:
             os.remove(tmpfile + '.info')
         except Exception as e:
-            logger.debug("can't remove file {}: {}".format(tmpfile, str(e)))
+            logger.error("can't remove file {}: {}".format(tmpfile, str(e)))
 
 
 def print_all():
@@ -242,9 +243,10 @@ def start(request, path_of_folder, *args, **kwargs):
     """ check whether upload file name is acceptable """
 
     user = request.user
-    logger.debug("start request user {} path {}".format(user.username, path_of_folder))
     filename = request.GET.get('filename')
     filesize = request.GET.get('filesize')
+    logger.debug("upload start user={} path={} filename={}"
+                 .format(user.username, path_of_folder, filename))
 
     # if the upload isn't valid, return a response object with an error.
     response = upload_valid(user, path_of_folder, filename)
@@ -277,8 +279,8 @@ def start(request, path_of_folder, *args, **kwargs):
 
     # create an upload lock
     try:
-        logger.debug("creating upload lock user={} resource={} path={}"
-                     .format(user.username, resource.short_id, path_of_file))
+        # logger.debug("creating upload lock user={} resource={} path={}"
+        #              .format(user.username, resource.short_id, path_of_file))
         Upload.create(user, resource, path_of_file, filesize)
         return HttpResponse(status=200)  # ok to proceed
     except Exception as e:
@@ -296,6 +298,7 @@ def abort(request, path_of_folder, *args, **kwargs):
     # user = request.user
     filename = request.GET.get('filename')
     # filesize = request.GET.get('filesize')
+
     # when aborting a request that is pending, there is no URL.
     url = request.GET.get('url')
     if url is not None:
@@ -307,6 +310,10 @@ def abort(request, path_of_folder, *args, **kwargs):
     path_split = path_of_folder.split('/')
     rid = path_split[0]
     path_of_file = os.path.join(path_of_folder, filename)
+
+    logger.debug("upload abort: resource={}, folder={} file={}"
+                 .format(rid, path_of_folder, filename))
+
     response = None  # so far, no errors
     resource = None  # unknown whether resource has been deleted.
     try:
@@ -319,8 +326,6 @@ def abort(request, path_of_folder, *args, **kwargs):
 
     # TODO: make sure that Upload has cascade delete enabled, so that deleting a
     # TODO: resource causes deletion of the Upload record for the resource.
-    logger.debug("tusd upload abort:  rid = {}, path = {}"
-                 .format(rid, path_of_file))
     cleanup(resource, path_of_file, tusd_path_of_file)
     if response is not None:
         return response
@@ -336,6 +341,8 @@ def finish(request, path_of_folder, *args, **kwargs):
     path_of_file = os.path.join(path_of_folder, filename)
     path_split = path_of_folder.split('/')
     rid = path_split[0]
+    logger.debug("upload finish user={} resource={} folder={} file={}"
+                 .format(user.username, path_of_folder, filename))
 
     response = None  # no error so far
 
@@ -379,17 +386,19 @@ def finish(request, path_of_folder, *args, **kwargs):
         cleanup(resource, path_of_file, tusd_path_of_file)
         return response
 
-    # now we are sure the request is valid in all ways
-    logger.debug("finish request user {} path {} tusd {}".format(user.username, path_of_file, tusd_path_of_file))
+    # now we are sure the request is valid in all ways; perform the request
 
     # needed for irods copy.
     relative_path_of_folder = '/'.join(path_split[3:])  # without data/contents/
 
     # all tests pass: move into appropriate location
-    logger.debug("copy uploaded file {} to {}".format(tusd_path_of_file, path_of_file))
+    logger.debug("upload copy uploaded file {} to {}".format(tusd_path_of_file, path_of_file))
+    # use standard HydroShare file ingestion.
     upload_object = UploadedFile(file=open(tusd_path_of_file, mode="rb"), name=filename)
     add_file_to_resource(resource, upload_object, folder=relative_path_of_folder)
 
     # delete intermediary file and lock.
     cleanup(resource, path_of_file, tusd_path_of_file)
+
+    # return OK status
     return HttpResponse(status=200)  # no content body needed
