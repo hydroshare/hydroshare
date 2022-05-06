@@ -54,7 +54,7 @@ let geoconnexApp = new Vue({
               return `"${invalid}" is not a valid URI. We recommend that your custom feature be linkable`;
             }
             if (invalid.length === 2){
-              return `"${invalid.join('" and "')}" are not a valid URIs. We recommend that custom features be linkable`;
+              return `"${invalid.join('" and "')}" are not a valid URIs. We recommend that custom features be linkable.`;
             }
             if (invalid.length > 2){
               return `"${invalid.join('", "').replace(/, ([^,]*)$/, ' and $1')}" are not a valid URIs. We recommend that custom features be linkable`;
@@ -88,6 +88,15 @@ let geoconnexApp = new Vue({
           for (let feature of resp.features){
             let properties = feature.properties;
             properties.relative_id = properties.uri.split('ref/').pop();
+            if(properties.AQ_NAME){
+              properties.NAME = properties.AQ_NAME;
+            }
+            if(properties.name){
+              properties.NAME = properties.name;
+            }
+            if(properties.name_at_outlet){
+              properties.NAME = properties.name_at_outlet;
+            }
             properties.text = `${properties.NAME} [${properties.relative_id}]`;
             vue.items.push(properties);
           }
