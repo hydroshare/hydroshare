@@ -9,6 +9,8 @@ RUN pip install deepdiff==1.7.0
 RUN pip install pytest-cov hsmodels
 RUN pip install --upgrade rdflib==5.0.0
 
+RUN pip install sorl-thumbnail
+
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8

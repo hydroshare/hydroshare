@@ -281,6 +281,7 @@ INSTALLED_APPS = (
     "haystack",
     "rest_framework",
     "robots",
+    "sorl.thumbnail",
     "hs_core",
     "hs_access_control",
     "hs_labels",

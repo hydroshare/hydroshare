@@ -1,6 +1,6 @@
 {% extends "pages/page.html" %}
 
-{% load hydroshare_tags %}
+{% load hydroshare_tags thumbnail %}
 
 {% block main %}
 
@@ -132,9 +132,9 @@
                                         <td>
                                             {% if group.gaccess.picture and group.gaccess.picture.url %}
                                                 <div class="group-image-wrapper">
-                                                    <div class="group-image-small"
-                                                         style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                                                </div>
+                                                    {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
+                                                        <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                                                    {% endthumbnail %}
                                             {% else %}
                                                 <div class="group-image-wrapper">
                                                     <div class="group-image-small"
@@ -170,8 +170,9 @@
                                         <td>
                                             {% if group.gaccess.picture and group.gaccess.picture.url %}
                                                 <div class="group-image-wrapper">
-                                                    <div class="group-image-small"
-                                                         style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                                                    {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
+                                                        <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                                                    {% endthumbnail %}
                                                 </div>
                                             {% else %}
                                                 <div class="group-image-wrapper">
