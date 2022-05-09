@@ -1,7 +1,6 @@
 from django.http import HttpResponse
 # from rest_framework.decorators import api_view
 from django.views.generic.base import TemplateView
-from django.conf import settings
 from django_irods import icommands
 from hs_core.models import BaseResource
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
@@ -116,8 +115,9 @@ class UploadContextView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['path'] = kwargs['path']  # guaranteed to succeed and exist
         context['resource'] = kwargs['resource']
-        context['FQDN_OR_IP'] = getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org')
-        logger.debug("FQDN_OR_IP is '{}'".format(context['FQDN_OR_IP']))
+        stuff = kwargs['path'].split('/')
+        logger.debug(stuff)
+        context['folder'] = '/'.join(stuff[2:])
         return context
 
 

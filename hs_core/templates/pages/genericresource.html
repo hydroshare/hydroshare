@@ -10,17 +10,26 @@
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
     <!-- test large file download --> 
     <script language='JavaScript'> 
-        function callLargeFileUpload() { 
-            var path = getCurrentPath().path;
-            // url prefix  get concatenated to the access URL in order to construct a path. 
+        function callLargeFileUpload(e) { 
+            if (e.stopPropogation) { 
+                e.stopPropogation(); 
+            } else { 
+                e.cancelBubble = true; 
+            } 
+            var path = getCurrentPath().path; // without full context prefix
             var prefix = '/hs_upload/uppy/' + '{{ cm.short_id }}' + '/data/contents';  
             var target = Array(prefix);
             target = target.concat(path); 
-            // console.log(target);
-            var url = target.join('/'); 
-            url = url + '/'  // trailing slash needed 
-            // console.log(url); 
-            uploadWindow = window.open(url, 'uploadWindow', 'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=750,height=800,left=100,top=100'); 
+            var url = target.join('/') + '/'; // trailing slash needed 
+            if (typeof window.uploadWindow == "undefined") { 
+                window.uploadWindow = window.open(
+                    url, 
+                    '_blank', 
+                    'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=750,height=800,left=100,top=100'
+                ); 
+            } else { 
+                window.uploadWindow.focus(); 
+            } 
             return false;  // prevent default response
         } 
     </script> 
@@ -658,9 +667,9 @@
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
                                                     <b><a type='button' 
-                                                          class="btn btn-success btn-xs dz-clickable upload-toggle"
-                                                          onclick="callLargeFileUpload()">
-                                                          <i class="fa fa-plus"></i> Add files via UPPY</a></b> 
+                                                          class="btn btn-success btn-xs"
+                                                          onclick="callLargeFileUpload(event || window.event);">
+                                                          <i class="fa fa-plus"></i>Add large files</a></b> 
 
                                                     <div id="irods-group" class="btn-group">
                                                         <button type="button"
