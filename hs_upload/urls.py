@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from hs_upload.views import UploadContextView, UppyView, start, finish, abort
+from hs_upload.views import UploadContextView, UppyView, start, finish, stop
 
 urlpatterns = [
     # using tus.io
@@ -12,8 +12,8 @@ urlpatterns = [
     # Start and authorize an upload
     url(r'^start/(?P<path_of_folder>.*)$', start, name='upload_start'),
 
-    # clean up and abort
-    url(r'^abort/(?P<path_of_folder>.*)$', abort, name='upload_abort'),
+    # clean up and stop
+    url(r'^stop/(?P<path_of_folder>.*)$', stop, name='upload_stop'),
 
     # Finish and commit an upload
     url(r'^finish/(?P<path_of_folder>.*)$', finish, name='upload_finish'),

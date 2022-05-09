@@ -63,7 +63,7 @@ uppy.use(Uppy.Tus, { endpoint: '/upload/' });
 uppy.on('file-removed', (file, reason) => {
    var ok = false; 
    $.ajax({ 
-      url: "/hs_upload/abort/{{ path }}", 
+      url: "/hs_upload/stop/{{ path }}", 
       async: false, 
       data: { 
           filename: file.name, 

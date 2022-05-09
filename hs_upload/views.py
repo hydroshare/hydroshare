@@ -240,7 +240,17 @@ def clear_all():
 
 
 def start(request, path_of_folder, *args, **kwargs):
-    """ check whether upload file name is acceptable """
+    """
+    check whether an upload file name is acceptable
+    This checks every aspect of the upload, including user permissions,
+    whether the file already exists in the target directory, etc.
+
+    This has the side-effect of registering the upload as in-progress
+    if the upload is allowed.
+
+    This can be used for both uppy and non-uppy
+    uploads, as it has no dependence upon uppy to be useful.
+    """
 
     user = request.user
     filename = request.GET.get('filename')
@@ -291,9 +301,21 @@ def start(request, path_of_folder, *args, **kwargs):
         return response
 
 
-def abort(request, path_of_folder, *args, **kwargs):
-    """ abort processing of an upload """
-    # We do not fully validate aborts because we always want to abort if someone asks
+def stop(request, path_of_folder, *args, **kwargs):
+    """
+    Stop processing of an upload.
+
+    This is used to inform Django that an upload is no longer pending. It
+    marks an upload is not in progress, either by completing it elsewhere
+    or by uppy marking it as aborted.
+
+    We do not validate aborts because we always want to abort if someone asks to.
+
+    This does not copy a uppy file into its resource.  If you use this on a completed
+    uppy upload, the upload will be aborted and deleted.
+
+    For uppy uploads, use finish instead.
+    """
 
     # user = request.user
     filename = request.GET.get('filename')
@@ -334,7 +356,12 @@ def abort(request, path_of_folder, *args, **kwargs):
 
 
 def finish(request, path_of_folder, *args, **kwargs):
-    """ finish processing an upload """
+    """
+    finish processing an upload
+    This includes copying the file from a designated holding location into iRODS
+    and into the resource in question.  If this is accomplished by other means,
+    use stop instead.
+    """
     user = request.user
     filename = request.GET.get('filename')
     # filesize = request.GET.get('filesize')
