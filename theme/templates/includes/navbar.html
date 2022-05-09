@@ -1,4 +1,4 @@
-{% load pages_tags mezzanine_tags theme_tags hydroshare_tags %}
+{% load pages_tags mezzanine_tags theme_tags hydroshare_tags thumbnail %}
 <link rel="stylesheet" type="text/css" href="/static/css/notifications-app.css">
 
 <style>
@@ -169,11 +169,13 @@
                     {% if request.user.is_authenticated %}
                         <li id="profile-menu" class="display-block">
                             {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                         class="round-image profile-pic-thumbnail pull-left">
-                                    </div>
-                                </a>
+                                {% thumbnail request.user.userprofile.picture "x40" crop="center" quality=75 as im %}
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                        <div style="background-image: url('{{ im.url }}');"
+                                            class="round-image profile-pic-thumbnail pull-left">
+                                        </div>
+                                    </a>
+                                {% endthumbnail %}
                             {% else %}
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <div class="profile-pic-thumbnail-small round-image pull-left"></div>
@@ -184,9 +186,11 @@
                                     <div class="row">
                                         <div class="col-sm-4">
                                             {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                                     class="round-image dropdown-profile-pic-thumbnail pull-left">
-                                                </div>
+                                                {% thumbnail request.user.userprofile.picture "x80" crop="center" quality=75 as im %}
+                                                    <div style="background-image: url('{{ im.url }}');"
+                                                        class="round-image dropdown-profile-pic-thumbnail pull-left">
+                                                    </div>
+                                                {% endthumbnail %}
                                             {% else %}
                                                 <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
                                             {% endif %}

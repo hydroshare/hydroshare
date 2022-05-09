@@ -1,6 +1,6 @@
 {% extends "pages/page.html" %}
 
-{% load hydroshare_tags %}
+{% load hydroshare_tags thumbnail %}
 
 {% block meta_title %}My Communities {% endblock %}
 
@@ -32,8 +32,9 @@
                                         <td>
                                             {% if group.gaccess.picture and group.gaccess.picture.url %}
                                                 <div class="group-image-wrapper">
-                                                    <div class="group-image-small"
-                                                         style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                                                    {% thumbnail group.gaccess.picture "x80" crop="center" quality=75 as im %}
+                                                        <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                                                    {% endthumbnail %}
                                                 </div>
                                             {% else %}
                                                 <div class="group-image-wrapper">
