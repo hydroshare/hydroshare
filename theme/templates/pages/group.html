@@ -196,7 +196,7 @@
                                     <tr data-filter-by="edit-user">
                                         <td>
                                             {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
-                                                {% thumbnail owner.userprofile.picture "x40" crop="center" quality=75 as im %}
+                                                {% thumbnail owner.userprofile.picture "x40" crop="center" quality=95 as im %}
                                                     <div style="background-image: url('{{ im.url }}');"
                                                         class="profile-pic-thumbnail round-image pull-left">
                                                     </div>
@@ -295,7 +295,7 @@
                                     <tr data-filter-by="view-user">
                                         <td>
                                             {% if member.userprofile.picture and member.userprofile.picture.url %}
-                                                {% thumbnail member.userprofile.picture "x40" crop="center" quality=75 as im %}
+                                                {% thumbnail member.userprofile.picture "x40" crop="center" quality=95 as im %}
                                                     <div style="background-image: url('{{ im.url }}');"
                                                         class="profile-pic-thumbnail round-image pull-left">
                                                     </div>
@@ -359,7 +359,7 @@
                                             <tr>
                                                 <td data-id="picture">
                                                     {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
-                                                        {% thumbnail pendingrequest.request_from.userprofile.picture "x40" crop="center" quality=75 as im %}
+                                                        {% thumbnail pendingrequest.request_from.userprofile.picture "x40" crop="center" quality=95 as im %}
                                                             <div style="background-image: url('{{ im.url }}');"
                                                                 class="profile-pic-thumbnail round-image pull-left">
                                                             </div>
@@ -412,7 +412,7 @@
                                             <tr>
                                                 <td data-id="picture">
                                                     {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
-                                                        {% thumbnail pendingrequest.invitation_to.userprofile.picture "x40" crop="center" quality=75 as im %}
+                                                        {% thumbnail pendingrequest.invitation_to.userprofile.picture "x40" crop="center" quality=95 as im %}
                                                             <div style="background-image: url('{{ im.url }}');"
                                                                 class="profile-pic-thumbnail round-image pull-left">
                                                             </div>
