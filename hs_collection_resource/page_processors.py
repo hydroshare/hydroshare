@@ -25,7 +25,6 @@ def landing_page(request, page):
         if not user.is_authenticated():
             return HttpResponseForbidden()
 
-        context['collection_candidate'] = get_collectable_resources(user, content_model)
         context['collection_res_id'] = content_model.short_id
     elif isinstance(context, HttpResponseRedirect):
         # resource view mode
