@@ -1908,6 +1908,16 @@ a.tag:hover {
     width: 360px;
   }
 }
+@media (min-width: 1440px) {
+  /* override bootstrap default container width for large screens */
+  .container{
+	width: 1440px;
+  }
+  .owl-stage {
+	  justify-content: space-around;
+	  margin:auto;
+  }
+}
 
 .resource-search {
 	position: relative;
@@ -2755,16 +2765,13 @@ span.you-flag {
     display: none;
 }
 
-#items-discovered, #item-selectors {
-	width: calc(100% - 2px) !important;		/* Makes up for border width */
-}
-
 .resource-custom-table {
 	font-size: 14px;
 	border: 1px solid #ddd !important;
 	margin-bottom: 10px !important;
 	border-top-right-radius: 4px;
 	border-top-left-radius: 4px;
+	width: calc(100% - 2px) !important;     /* Makes up for border width */
 }
 
 #collected-by-table {
@@ -3346,7 +3353,7 @@ span.you-flag {
 
 /* =================================== */
 .steps-container {
-  display: grid;
+  display: flex;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
 }
