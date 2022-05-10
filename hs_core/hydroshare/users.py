@@ -1,19 +1,19 @@
 import json
 import logging
 
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, ValidationError
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import Polygon, Point
+from django.core import exceptions
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, ValidationError
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
-from django.core import exceptions
 from django.db.models import Q
 
 from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title, \
     Coverage, Relation
-from .utils import user_from_id, group_from_id, get_profile
-from theme.models import UserQuota, UserProfile
 from hs_dictionary.models import University, UncategorizedTerm
+from theme.models import UserQuota
+from .utils import user_from_id, group_from_id, get_profile
 
 DO_NOT_DISTRIBUTE = 'donotdistribute'
 EDIT = 'edit'
@@ -362,7 +362,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
             raise ValueError("coverage queries must have north, west, south, and east params")
 
         coverages = set()
-        search_polygon = Polygon.from_bbox((east,south,west,north))
+        search_polygon = Polygon.from_bbox((east, south, west, north))
 
         for coverage in Coverage.objects.filter(type="box"):
             coverage_polygon = Polygon.from_bbox((
@@ -388,7 +388,10 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
                 log.error("Coverage value invalid for coverage id %d" % coverage.id)
 
         coverage_hits = (Coverage.objects.filter(id__in=coverages))
-        q.append(Q(object_id__in=coverage_hits.values_list('object_id', flat=True)))
+        coverage_filters = Q()
+        for cov in coverage_hits:
+            coverage_filters = coverage_filters | Q(object_id=cov.object_id) & Q(content_type_id=cov.content_type_id)
+        q.append(coverage_filters)
 
     if contributor:
         contributor_parties = (
@@ -435,7 +438,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         flt = flt.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))
     if full_text_search:
-        description_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+        description_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id',
+                                                                                                       flat=True)
         title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
         # Full text search must match within the title or abstract
         flt = flt.filter(object_id__in=description_ids.union(title_ids))

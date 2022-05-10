@@ -146,7 +146,7 @@ def post_create_resource_handler(sender, **kwargs):
 def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
                                delete_existing_metadata=True):
     # get the csv file from iRODS to a temp directory
-    fl_obj_name = utils.get_file_from_irods(res_file)
+    fl_obj_name = utils.get_file_from_irods(resource=resource, file_path=res_file.storage_path)
     validate_err_message = validate_csv_file(fl_obj_name)
     if not validate_err_message:
         # first delete relevant existing metadata elements
@@ -183,7 +183,7 @@ def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
 
     if fl_ext == '.sqlite':
         # get the file from iRODS to a temp directory
-        fl_obj_name = utils.get_file_from_irods(res_file)
+        fl_obj_name = utils.get_file_from_irods(resource=resource, file_path=res_file.storage_path)
         validate_err_message = validate_odm2_db_file(fl_obj_name)
         if not validate_err_message:
             # first delete relevant existing metadata elements

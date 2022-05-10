@@ -2,7 +2,7 @@
 {% load comment_tags %}
 {% block meta_title %}{{ community.name }}{% endblock %}
 {% block extra_css %}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
 {% block main %}
@@ -24,7 +24,7 @@
                 {% if czo_community %}
                 <div class="col-sm-3">
                     <div><a href="http://criticalzone.org">
-                         <img src="{{ STATIC_URL }}img/czo-logo-wide.png"
+                         <img src="{% static 'img/czo-logo-wide.png' %}"
                               alt="CZO National"></a></div>
                 </div>
                 {% else %}
@@ -233,8 +233,8 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/communities.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table_community.js"></script>
+    <script type="text/javascript" src="{% static 'js/vue-2.6.10-dev.js' %}"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/communities.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs_resource_table_community.js' %}"></script>
 {% endblock %}

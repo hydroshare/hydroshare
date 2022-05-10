@@ -13,7 +13,7 @@
                     <td>
                         <div style="float: left; margin-bottom: 3em; margin-right: 2em">
                             <a style="text-decoration: none" href="{% url 'groups' %}"><img
-                                    src="{{ STATIC_URL }}/img/groups.png"><h4 style="text-align: center">GROUPS</h4></a>
+                                    src="{% static '/img/groups.png' %}"><h4 style="text-align: center">GROUPS</h4></a>
                         </div>
                     </td>
                     <td>
@@ -27,7 +27,7 @@
                     <td>
                         <div style="float: left; margin-right: 2em;">
                             <a style="text-decoration: none" href="{% url 'communities' %}"><img
-                                    src="{{ STATIC_URL }}img/communities.png"><h4 style="text-align: center">
+                                    src="{% static 'img/communities.png' %}"><h4 style="text-align: center">
                                 COMMUNITIES</h4></a></div>
                     </td>
                     <td>
