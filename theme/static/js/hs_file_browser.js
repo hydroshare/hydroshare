@@ -2389,7 +2389,8 @@ $(document).ready(function () {
         var filesToDelete = "";
 
         if (deleteList.length) {
-            $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+            deleteList.prepend('<i class="fa fa-spinner fa-pulse fa-2 icon-blue fb-cust-spinner" style="z-index: 1; position: absolute;"></i>');
+            $("#fb-files-container li.ui-selected").css("cursor", "wait");
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
                 let item = $(deleteList[i]);
@@ -2420,36 +2421,52 @@ $(document).ready(function () {
             $.when.apply($, calls).done(function () {
                 if (filesToDelete !== "") {
                     $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
-                    $("#fb-delete-files-form").submit();
+                    // $("#fb-delete-files-form").submit();
+                    $.ajax({
+                        type: "POST",
+                        url: `/hsapi/_internal/${SHORT_ID}/delete-multiple-files/`,
+                        data: $("#fb-delete-files-form").serialize(), // serializes the form's elements.
+                        success: function()
+                        {
+                            // refreshFileBrowser();
+                            $("#fb-files-container li.ui-selected").css("cursor", "auto");
+                            $(".fb-cust-spinner").remove();
+                        }
+                      });
                 }
                 else {
-                    refreshFileBrowser();
+                    // refreshFileBrowser();
                 }
                 if (removeCitationIntent) {
                     $.ajax({
                       type: "POST",
                       url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
                     }).complete(function() {
-                        document.body.style.cursor = 'default';
-                        if (window.location.href.includes('?resource-mode=edit')) {
-                            location.reload();
-                        } else {
-                            window.location.href = window.location.href + '?resource-mode=edit';
-                        }
+                        // refreshFileBrowser();
+                        $("#fb-files-container li.ui-selected").css("cursor", "auto");
+                        $(".fb-cust-spinner").remove();
                     });
                 }
-                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
 
             $.when.apply($, calls).fail(function () {
                 if (filesToDelete !== "") {
                     $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
-                    $("#fb-delete-files-form").submit();
+                    $.ajax({
+                        type: "POST",
+                        url: `/hsapi/_internal/${SHORT_ID}/delete-multiple-files/`,
+                        data: $("#fb-delete-files-form").serialize(),
+                        success: function()
+                        {
+                            // refreshFileBrowser();
+                            $("#fb-files-container li.ui-selected").css("cursor", "auto");
+                            $(".fb-cust-spinner").remove();
+                        }
+                      });
                 }
                 else {
-                    refreshFileBrowser();
+                    // refreshFileBrowser();
                 }
-                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
         }
     });
