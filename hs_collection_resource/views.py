@@ -3,14 +3,55 @@ import logging
 from dateutil import parser
 from django.db import transaction
 from django.http import JsonResponse
+from django.template.loader import render_to_string
+from rest_framework import status as http_status
 
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from .utils import add_or_remove_relation_metadata, update_collection_list_csv, get_collectable_resources
 from hs_core.enums import RelationTypes
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
+from .utils import add_or_remove_relation_metadata, get_collectable_resources, update_collection_list_csv
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
+
+
+def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
+    status = "success"
+    msg = ""
+    collectable_resources_modal_html = ''
+    status_code = http_status.HTTP_200_OK
+    try:
+        collection_res, is_authorized, user = authorize(request, shortkey,
+                                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+        if collection_res.resource_type.lower() != "collectionresource":
+            raise Exception(f"Resource {shortkey} is not a collection resource.")
+
+        if collection_res.raccess.published:
+            raise Exception(f"Resource {shortkey} of a published collection resource and can't be changed")
+        page_no = request.POST.get('page', 1)
+        try:
+            page_no = int(page_no)
+        except ValueError:
+            raise Exception(f"Page number must be an integer")
+
+        page_obj = get_collectable_resources(user, collection_res, page_no=page_no, paging=True)
+        context = {'page_obj': page_obj}
+        template_name = 'pages/collectable_resources_modal.html'
+        collectable_resources_modal_html = render_to_string(template_name, context, request)
+    except Exception as ex:
+        err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
+        logger.error(err_msg.format(str(ex),
+                     request.user.username if request.user.is_authenticated() else "anonymous",
+                     shortkey))
+        status = "error"
+        msg = str(ex)
+        status_code = http_status.HTTP_400_BAD_REQUEST
+    finally:
+        ajax_response_data = {'status': status, 'msg': msg,
+                              'collectable_resources_modal': collectable_resources_modal_html
+                              }
+        return JsonResponse(ajax_response_data, status=status_code)
 
 
 # update collection
