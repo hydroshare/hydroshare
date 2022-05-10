@@ -227,6 +227,8 @@ STATIC_URL = "/static/"
 # Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 
+STATICFILES_STORAGE = "hydroshare.storage.ForgivingManifestStaticFilesStorage"
+
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
@@ -371,7 +373,10 @@ TEMPLATES = [
                 "mezzanine.template.loaders.host_themes.Loader",
                 "django.template.loaders.filesystem.Loader",
                 "django.template.loaders.app_directories.Loader",
-            ]
+            ],
+            'builtins': [
+                'django.templatetags.static',
+            ],
         },
     },
 ]
@@ -725,7 +730,8 @@ TASK_NAME_LIST = [
     'hs_core.tasks.copy_resource_task',
     'hs_core.tasks.replicate_resource_bag_to_user_zone_task',
     'hs_core.tasks.create_new_version_resource_task',
-    'hs_core.tasks.delete_resource_task'
+    'hs_core.tasks.delete_resource_task',
+    'hs_core.tasks.move_aggregation_task'
 ]
 
 ####################################
