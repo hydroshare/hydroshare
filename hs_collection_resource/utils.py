@@ -4,7 +4,9 @@ import os
 import shutil
 import tempfile
 
+from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
+from django.core.paginator import Paginator
 from django.db.models import Q
 
 from hs_access_control.models import PrivilegeCodes
@@ -124,7 +126,7 @@ def update_collection_list_csv(collection_obj):
         return csv_content_list
 
 
-def get_collectable_resources(user, coll_resource):
+def get_collectable_resources(user, coll_resource, page_no=1, paging=False):
     # resource is collectable if
     # 1) shareable=True and resource is public in my resources, --or--
     # 2) shareable=True and resource is accessible with view privilege, --or--
@@ -143,7 +145,12 @@ def get_collectable_resources(user, coll_resource):
 
     collectable_resources = collectable_resources.only('short_id', 'title', 'resource_type', 'created')
     collectable_resources = collectable_resources.select_related('raccess')
-    return collectable_resources
+    if paging:
+        p = Paginator(collectable_resources, settings.COLLECTABLE_RESOURCES_PAGE_SIZE)
+        page_obj = p.page(page_no)
+        return page_obj
+    else:
+        return collectable_resources
 
 
 def _get_owners_string(owners_list):
