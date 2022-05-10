@@ -45,7 +45,7 @@
                                         </td>
                                         <td>
                                             <h4><a href="/community/{{ c.id }}">{{ c.name }}</a></h4>
-                                            <img src="{{ STATIC_URL }}img/public.png" alt="Public Community"
+                                            <img src="{% static 'img/public.png' %}" alt="Public Community"
                                                  title="Public Community">
                                             <small class="text-muted"> Public Community</small>
                                         </td>
@@ -67,5 +67,5 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
 {% endblock %}

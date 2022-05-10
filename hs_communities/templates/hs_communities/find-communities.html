@@ -177,6 +177,6 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-toolkit.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/collaborate.js"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-toolkit.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/collaborate.js' %}"></script>
 {% endblock %}

@@ -116,5 +116,5 @@
 {% block extra_js %}
     {{ block.super }}
     {# put resource specific js below #}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/geographic-feature-resource.js"></script>
+    <script type="text/javascript" src="{% static 'js/geographic-feature-resource.js' %}"></script>
 {% endblock %}

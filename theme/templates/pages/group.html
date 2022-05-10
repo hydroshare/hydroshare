@@ -2,7 +2,7 @@
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags thumbnail %}
 
 {% block extra_css %}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
 {% block main %}
@@ -890,7 +890,7 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/group.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs_resource_table.js' %}"></script>
 {% endblock %}
