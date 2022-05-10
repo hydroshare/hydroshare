@@ -2383,12 +2383,19 @@ $(document).ready(function () {
         $("#fb-cut").toggleClass("disabled", true);
     }
 
+    function resetFbDelete() {
+        refreshFileBrowser();
+        $("#fb-files-container li.ui-selected").css("cursor", "auto");
+        $(".fb-cust-spinner").remove();
+    }
+
     // File(s) delete method
     $("#btn-confirm-delete").click(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
         var filesToDelete = "";
 
         if (deleteList.length) {
+            // add spinners
             deleteList.prepend('<i class="fa fa-spinner fa-pulse fa-2 icon-blue fb-cust-spinner" style="z-index: 1; position: absolute;"></i>');
             $("#fb-files-container li.ui-selected").css("cursor", "wait");
             var calls = [];
@@ -2421,30 +2428,25 @@ $(document).ready(function () {
             $.when.apply($, calls).done(function () {
                 if (filesToDelete !== "") {
                     $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
-                    // $("#fb-delete-files-form").submit();
                     $.ajax({
                         type: "POST",
                         url: `/hsapi/_internal/${SHORT_ID}/delete-multiple-files/`,
-                        data: $("#fb-delete-files-form").serialize(), // serializes the form's elements.
+                        data: $("#fb-delete-files-form").serialize(),
                         success: function()
                         {
-                            // refreshFileBrowser();
-                            $("#fb-files-container li.ui-selected").css("cursor", "auto");
-                            $(".fb-cust-spinner").remove();
+                            resetFbDelete();
                         }
                       });
                 }
                 else {
-                    // refreshFileBrowser();
+                    resetFbDelete();
                 }
                 if (removeCitationIntent) {
                     $.ajax({
                       type: "POST",
                       url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
                     }).complete(function() {
-                        // refreshFileBrowser();
-                        $("#fb-files-container li.ui-selected").css("cursor", "auto");
-                        $(".fb-cust-spinner").remove();
+                        resetFbDelete();
                     });
                 }
             });
@@ -2458,14 +2460,12 @@ $(document).ready(function () {
                         data: $("#fb-delete-files-form").serialize(),
                         success: function()
                         {
-                            // refreshFileBrowser();
-                            $("#fb-files-container li.ui-selected").css("cursor", "auto");
-                            $(".fb-cust-spinner").remove();
+                            resetFbDelete();
                         }
                       });
                 }
                 else {
-                    // refreshFileBrowser();
+                    resetFbDelete();
                 }
             });
         }
