@@ -41,9 +41,11 @@
             <div class="col-sm-3">
                 {#  Group Picture #}
                 {% if group.gaccess.picture and group.gaccess.picture.url %}
-                    <div class="group-image-wrapper group-image-wrapper-medium">
-                        <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                    </div>
+                    {% thumbnail group.gaccess.picture "x130" crop="center" quality=95 as im %}
+                        <div class="group-image-wrapper group-image-wrapper-medium">
+                            <div class="group-image" style="background-image: url({{ im.url }})"></div>
+                        </div>
+                    {% endthumbnail %}
 
                 {% else %}
                     <div class="group-image-wrapper group-image-wrapper-medium">
