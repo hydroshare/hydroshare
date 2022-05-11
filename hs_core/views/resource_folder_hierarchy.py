@@ -11,6 +11,7 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
 from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
+from hs_core.hydroshare import delete_resource_file
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
@@ -737,7 +738,9 @@ def data_store_move_to_folder(request, pk=None):
 
     tgt_path = resolve_request(request).get('target_path', None)
     src_paths = resolve_request(request).get('source_paths', None)
-
+    file_override = resolve_request(request).get('file_override', False)
+    if not isinstance(file_override, bool):
+        file_override = True if str(file_override).lower() == 'true' else False
     try:
         tgt_path = _validate_path(tgt_path, 'tgt_path', check_path_empty=False)
     except ValidationError as ex:
@@ -791,10 +794,16 @@ def data_store_move_to_folder(request, pk=None):
             valid_src_paths.append(src_path)  # partly qualified path for operation
         else:
             override_tgt_paths.append(os.path.join(tgt_short_path, base))
+            if file_override:
+                valid_src_paths.append(src_path)
 
     if override_tgt_paths:
-        message = 'move would overwrite {}'.format(', '.join(override_tgt_paths))
-        return HttpResponse(message, status=status.HTTP_400_BAD_REQUEST)
+        if not file_override:
+            message = 'move would overwrite {}'.format(', '.join(override_tgt_paths))
+            return HttpResponse(message, status=status.HTTP_300_MULTIPLE_CHOICES)
+        # delete conflicting files so that move can succeed
+        for override_tgt_path in override_tgt_paths:
+            delete_resource_file(pk, override_tgt_path, user)
 
     # move the files that don't have conflicts and stop immediately on error.
     try:
