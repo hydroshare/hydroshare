@@ -350,6 +350,14 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     # flag to track when the .nc file of the aggregation needs to be updated.
     is_update_file = models.BooleanField(default=False)
 
+    def update_element(self, element_model_name, element_id, **kwargs):
+        if element_model_name.lower() == 'coverage':
+            logical_file = self.logical_file
+            if logical_file.metadata.originalCoverage:
+                raise ValidationError("Coverage can't be updated which has been computed from spatial reference")
+
+        super(NetCDFFileMetaData, self).update_element(element_model_name, element_id, **kwargs)
+
     def get_metadata_elements(self):
         elements = super(NetCDFFileMetaData, self).get_metadata_elements()
         elements += [self.originalCoverage]
@@ -476,20 +484,15 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         temp_cov_form.action = temp_action
 
         orig_cov_form = self.get_original_coverage_form()
-        if self.originalCoverage:
-            temp_action = update_action.format(self.logical_file.id, "originalcoverage",
-                                               self.originalCoverage.id)
-        else:
-            temp_action = create_action.format(self.logical_file.id, "originalcoverage")
 
-        orig_cov_form.action = temp_action
-
-        spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
-        if self.spatial_coverage:
-            temp_action = update_action.format(self.logical_file.id, "coverage",
-                                               self.spatial_coverage.id)
-        else:
-            temp_action = create_action.format(self.logical_file.id, "coverage")
+        allow_coverage_edit = not self.originalCoverage
+        spatial_cov_form = self.get_spatial_coverage_form(allow_edit=allow_coverage_edit)
+        if allow_coverage_edit:
+            if self.spatial_coverage:
+                temp_action = update_action.format(self.logical_file.id, "coverage",
+                                                   self.spatial_coverage.id)
+            else:
+                temp_action = create_action.format(self.logical_file.id, "coverage")
 
         spatial_cov_form.action = temp_action
         context_dict = dict()
