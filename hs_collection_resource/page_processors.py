@@ -1,10 +1,9 @@
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseRedirect
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 from .models import CollectionResource
-from .utils import get_collectable_resources
 
 
 @processor_for(CollectionResource)
