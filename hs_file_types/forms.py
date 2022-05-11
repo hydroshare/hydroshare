@@ -350,16 +350,15 @@ class OriginalCoverageForm(forms.Form):
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
+        self.fields['units'].widget.attrs['readonly'] = True
         self.fields['projection'].widget.attrs['readonly'] = True
         self.fields['datum'].widget.attrs['readonly'] = True
         self.fields['projection_string_type'].widget.attrs['readonly'] = True
         self.fields['projection_string_text'].widget.attrs['readonly'] = True
-        # add the 'data-map-item' attribute so that map interface can be used for
-        # editing these fields
-        self.fields['northlimit'].widget.attrs['data-map-item'] = 'northlimit'
-        self.fields['eastlimit'].widget.attrs['data-map-item'] = 'eastlimit'
-        self.fields['southlimit'].widget.attrs['data-map-item'] = 'southlimit'
-        self.fields['westlimit'].widget.attrs['data-map-item'] = 'westlimit'
+        self.fields['northlimit'].widget.attrs['readonly'] = True
+        self.fields['eastlimit'].widget.attrs['readonly'] = True
+        self.fields['southlimit'].widget.attrs['readonly'] = True
+        self.fields['westlimit'].widget.attrs['readonly'] = True
 
     @property
     def form_id(self):
