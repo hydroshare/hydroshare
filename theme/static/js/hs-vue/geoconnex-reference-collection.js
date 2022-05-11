@@ -97,6 +97,9 @@ let geoconnexApp = new Vue({
             if(properties.name_at_outlet){
               properties.NAME = properties.name_at_outlet;
             }
+            if(properties.SHR){
+              properties.NAME = properties.SHR;
+            }
             properties.text = `${properties.NAME} [${properties.relative_id}]`;
             vue.items.push(properties);
           }
