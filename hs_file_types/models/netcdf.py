@@ -137,6 +137,16 @@ class OriginalCoverage(AbstractMetaDataElement):
             raise ValidationError('Coverage value is missing.')
 
     @classmethod
+    def update(cls, element_id, **kwargs):
+        """Define custom update method for spatial reference (OriginalCoverage) model."""
+        raise ValidationError("Spatial reference  can't be updated.")
+
+    @classmethod
+    def remove(cls, element_id):
+        """Define custom remove method for spatial reference (OriginalCoverage) model."""
+        raise ValidationError("Spatial reference can't be deleted.")
+
+    @classmethod
     def _validate_bounding_box(cls, box_dict):
         for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
             try:
