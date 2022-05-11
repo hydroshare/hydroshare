@@ -683,13 +683,14 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
-        rf_ts_metadata = RefTimeseriesFileMetaData.objects.create(json_file_content="No data")
+        rf_ts_metadata = RefTimeseriesFileMetaData.objects.create(json_file_content="No data", keywords=[],
+                                                                  extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=rf_ts_metadata, resource=resource)
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets the resource file that has extension '.json as the primary file
         from the list of files *resource_files* """
 

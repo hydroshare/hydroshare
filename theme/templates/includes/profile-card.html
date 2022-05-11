@@ -11,7 +11,7 @@
 
                     <div>
                         <small>Contributions</small>
-                        <div class="label label-default space-top">${user.contributions}</div>
+                        <div class="label label-default space-top">${user.viewable_contributions}</div>
                     </div>
 
                     <div class="space-top">
@@ -62,7 +62,7 @@
                                    data-toggle="tooltip" data-placement="top">
 
                                     <img v-if="key === 'ResearcherID'" class="hover-shadow"
-                                         src="{{ STATIC_URL }}img/researcherID.png"
+                                         src="{% static 'img/researcherID.png' %}"
                                          alt="ResearcherID icon"/>
 
                                     <i v-else :class="identifierAttributes[key].classes"></i>
@@ -82,7 +82,7 @@
     </ul>
 </script>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/profile-link-cmp.js"></script>
+<script type="text/javascript" src="{% static 'js/hs-vue/profile-link-cmp.js' %}"></script>
 
 <script id="profile-link-template" type="text/x-template">
     <a v-on:click="$emit('load-card', {user: user, event: $event})"

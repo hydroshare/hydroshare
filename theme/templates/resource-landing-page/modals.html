@@ -1776,6 +1776,38 @@
 
             <div class="modal-body">
                 <div class="row">
+                    <div id="warnTxtFileURL" class="col-sm-12" style="display:none">
+                        <span class="alert alert-warning group-title" role="alert">
+                            <div class="flex">
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                <em style="padding-right:20px;">
+                                    <p class="discoverable_sharing">
+                                        You have requested the URL for a file that is within a Discoverable resource.
+                                        This resource has Private Link Sharing enabled.
+                                        This means that anyone with the link will be able to access the file,
+                                        but users without the link will not be permitted unless they have "view" permission on this resource.
+                                    </p>
+                                    <p class="discoverable">
+                                        You have requested the URL for a file that is within a Discoverable resource.
+                                        Only you and other HydroShare users who have been granted at least "view" permission will be able to access this URL.
+                                        If you want this URL to be publicly available, 
+                                        change the sharing status of your resource to "public" or enable Private Link Sharing.
+                                    </p>
+                                    <p class="private_sharing">
+                                        You have requested the URL for a file that is within a Private resource.
+                                        This resource has Private Link Sharing enabled.
+                                        This means that anyone with the link will be able to access the file,
+                                        but users without the link will not be permitted unless they have "view" permission on this resource.
+                                    </p>
+                                    <p class="private">
+                                        You have requested the URL for a file that is within a Private resource.
+                                        Only you and other HydroShare users who have been granted at least "view" permission will be able to access this URL.
+                                        If you want this URL to be publicly available, change the sharing status of your resource to "public" or enable Private Link Sharing.
+                                    </p>
+                                </em>
+                            </div>
+                        </span>
+                    </div>
                     <fieldset class="col-sm-12">
                         <div class="input-group">
                             <input readonly id="txtFileURL" type="text" class="form-control click-select-all">
@@ -1798,6 +1830,6 @@
 </div>
 
 {% block extra_js %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/modals.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/identifiers-form.js"></script>
+    <script type="text/javascript" src="{% static 'js/modals.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/identifiers-form.js' %}"></script>
 {% endblock %}

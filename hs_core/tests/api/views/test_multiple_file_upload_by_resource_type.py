@@ -36,10 +36,6 @@ class TestResourceTypeFileTypes(TestCase):
         resp_json = self._make_request("GenericResource")
         self.assertEqual(resp_json['allow_multiple_file'], True)
 
-        # test for NetcdfResource
-        resp_json = self._make_request("NetcdfResource")
-        self.assertEqual(resp_json['allow_multiple_file'], False)
-
         # test for TimeSeriesResource
         resp_json = self._make_request("TimeSeriesResource")
         self.assertEqual(resp_json['allow_multiple_file'], False)
@@ -50,14 +46,6 @@ class TestResourceTypeFileTypes(TestCase):
 
         # test for CompositeResource
         resp_json = self._make_request("CompositeResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for RasterResource
-        resp_json = self._make_request("RasterResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for GeographicFeatureResource
-        resp_json = self._make_request("GeographicFeatureResource")
         self.assertEqual(resp_json['allow_multiple_file'], True)
 
         # test for ModelProgramResource

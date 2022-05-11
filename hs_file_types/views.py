@@ -16,31 +16,10 @@ from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUF
     ResourceFile, utils
 from hs_core.hydroshare.utils import resource_modified
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
-from hs_core.views.utils import rename_irods_file_or_folder_in_django
+from hs_core.task_utils import get_or_create_task_notification
+from hs_core.tasks import move_aggregation_task, FILE_TYPE_MAP
 from .forms import ModelProgramMetadataValidationForm, ModelInstanceMetadataValidationForm
-from .models import (
-    FileSetLogicalFile,
-    GenericLogicalFile,
-    GeoFeatureLogicalFile,
-    GeoRasterLogicalFile,
-    ModelProgramLogicalFile,
-    ModelInstanceLogicalFile,
-    NetCDFLogicalFile,
-    RefTimeseriesLogicalFile,
-    TimeSeriesLogicalFile
-)
 from .utils import set_logical_file_type
-
-FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
-                 "FileSetLogicalFile": FileSetLogicalFile,
-                 "GeoRasterLogicalFile": GeoRasterLogicalFile,
-                 "NetCDFLogicalFile": NetCDFLogicalFile,
-                 "GeoFeatureLogicalFile": GeoFeatureLogicalFile,
-                 "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
-                 "TimeSeriesLogicalFile": TimeSeriesLogicalFile,
-                 "ModelProgramLogicalFile": ModelProgramLogicalFile,
-                 "ModelInstanceLogicalFile": ModelInstanceLogicalFile
-                 }
 
 
 def authorise_for_aggregation_edit(f=None, file_type=None):
@@ -323,8 +302,11 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
 
 @authorise_for_aggregation_edit
 @login_required
-def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path="", **kwargs):
-    """moves all files associated with an aggregation and all the associated metadata.
+def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path="", run_async=True, **kwargs):
+    """
+    moves all files associated with an aggregation and all the associated metadata.
+    Note that test parameter is added for testing this view function which will not do async move. By default,
+    it is set to False, which will do async aggregation move
     """
     response_data = {'status': 'error'}
     # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
@@ -366,22 +348,20 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
                 response_data['message'] = err_msg
                 return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    istorage = res.get_irods_storage()
-    res_files = []
-    res_files.extend(aggregation.files.all())
-    orig_aggregation_name = aggregation.aggregation_name
-    for file in res_files:
-        tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
-        istorage.moveFile(file.storage_path, tgt_full_path)
-        rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
-    new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
-    res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
-                                                    new_path=new_aggregation_name)
-    resource_modified(res, request.user, overwrite_bag=False)
-    msg = "Aggregation was successfully moved to {}.".format(tgt_path)
-    response_data['status'] = 'success'
-    response_data['message'] = msg
-    return JsonResponse(response_data, status=status.HTTP_200_OK)
+    if run_async:
+        task = move_aggregation_task.apply_async((resource_id, file_type_id, hs_file_type, tgt_path))
+        task_id = task.task_id
+        task_dict = get_or_create_task_notification(task_id, name='aggregation move', payload=resource_id,
+                                                    username=request.user.username)
+        resource_modified(res, request.user, overwrite_bag=False)
+        return JsonResponse(task_dict)
+    else:
+        move_aggregation_task(resource_id, file_type_id, hs_file_type, tgt_path)
+        resource_modified(res, request.user, overwrite_bag=False)
+        msg = "Aggregation was successfully moved to {}.".format(tgt_path)
+        response_data['status'] = 'success'
+        response_data['message'] = msg
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
 @authorise_for_aggregation_edit(file_type='NestedLogicalFile')
@@ -466,9 +446,15 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                               'metadata_status': metadata_status,
                               'logical_file_type': logical_file.type_name()
                               }
+
+        if logical_file.type_name() in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+            logical_file.metadata.is_update_file = True
+            logical_file.metadata.save()
+            ajax_response_data['is_update_file'] = logical_file.metadata.is_update_file
+
         if logical_file.type_name() == "TimeSeriesLogicalFile":
-            ajax_response_data['is_dirty'] = logical_file.metadata.is_dirty
             ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
+
             if element_name.lower() == 'site':
                 # get the updated spatial coverage of the resource
                 spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -538,9 +524,14 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
                               'element_id': element.id,
                               'metadata_status': metadata_status}
 
+        if logical_file.type_name() in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+            logical_file.metadata.is_update_file = True
+            logical_file.metadata.save()
+            ajax_response_data['is_update_file'] = logical_file.metadata.is_update_file
+
         if logical_file.type_name() == "TimeSeriesLogicalFile":
-            ajax_response_data['is_dirty'] = logical_file.metadata.is_dirty
             ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
+
             if element_name.lower() == 'site':
                 # get the updated spatial coverage of the resource
                 spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -665,6 +656,8 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
 
     logical_file.metadata.extra_metadata[key] = value
     logical_file.metadata.is_dirty = True
+    if logical_file.type_name() == "NetCDFLogicalFile":
+        logical_file.metadata.is_update_file = True
     logical_file.metadata.save()
     resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
@@ -701,6 +694,8 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     if key in list(logical_file.metadata.extra_metadata.keys()):
         del logical_file.metadata.extra_metadata[key]
         logical_file.metadata.is_dirty = True
+        if logical_file.type_name() == "NetCDFLogicalFile":
+            logical_file.metadata.is_update_file = True
         logical_file.metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
 
@@ -757,6 +752,8 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
         metadata.keywords += keywords
         if hs_file_type != "TimeSeriesLogicalFile":
             metadata.is_dirty = True
+        if hs_file_type == "NetCDFLogicalFile":
+            metadata.is_update_file = True
         metadata.save()
         # add keywords to resource
         resource_keywords = [subject.value.lower() for subject in resource.metadata.subjects.all()]
@@ -812,6 +809,8 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
         if hs_file_type != "TimeSeriesLogicalFile":
             metadata = logical_file.metadata
             metadata.is_dirty = True
+            if hs_file_type == "NetCDFLogicalFile":
+                metadata.is_update_file = True
             metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
@@ -856,6 +855,8 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     logical_file.save()
     metadata = logical_file.metadata
     metadata.is_dirty = True
+    if hs_file_type in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+        metadata.is_update_file = True
     metadata.save()
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
@@ -863,6 +864,10 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
                           'message': "Update was successful"}
     if logical_file.type_name() == "TimeSeriesLogicalFile":
         ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
+
+    ajax_response_data['is_update_file'] = False
+    if hs_file_type in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+        ajax_response_data['is_update_file'] = metadata.is_update_file
 
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
@@ -936,11 +941,13 @@ def update_timeseries_abstract(request, file_type_id, **kwargs):
         metadata = logical_file.metadata
         metadata.abstract = abstract
         metadata.is_dirty = True
+        metadata.is_update_file = True
         metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'abstract', "is_dirty": metadata.is_dirty,
                               'can_update_sqlite': logical_file.can_update_sqlite_file,
+                              'is_update_file': metadata.is_update_file,
                               'message': "Update was successful"}
     else:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
@@ -1198,15 +1205,7 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-
-    from hs_core.views.utils import authorize
-    from rest_framework.exceptions import PermissionDenied
-    if not logical_file.resource.raccess.public:
-        if request.user.is_authenticated:
-            authorize(request, logical_file.resource.short_id,
-                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        else:
-            raise PermissionDenied()
+    authorize(request, logical_file.resource.short_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
     if json_response is not None:
         return json_response
@@ -1223,7 +1222,6 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@login_required
 def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
     """
     Gets metadata html for the aggregation type (logical file type)
@@ -1243,6 +1241,8 @@ def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
     logical_file, json_response = _get_logical_file("TimeSeriesLogicalFile", file_type_id)
     if json_response is not None:
         return json_response
+
+    authorize(request, logical_file.resource.short_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
     series_ids = logical_file.metadata.series_ids_with_labels
     if series_id not in list(series_ids.keys()):

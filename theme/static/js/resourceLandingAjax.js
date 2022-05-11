@@ -131,7 +131,7 @@ function handleIsDirty(json_response) {
     }
     // show update sqlite file update option for TimeSeriesLogicalFile
     if (json_response.logical_file_type === "TimeSeriesLogicalFile" &&
-        json_response.is_dirty && json_response.can_update_sqlite) {
+        json_response.is_update_file && json_response.can_update_sqlite) {
         $("#div-sqlite-file-update").show();
     }
     // show update netcdf resource
@@ -338,7 +338,8 @@ function showCompletedMessage(json_response) {
                 showMetaStatus = json_response.show_meta_status;
             }
             if (showMetaStatus) {
-                if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                let sufficient = json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1;
+                if (sufficient && manageAccessApp.canChangeResourceFlags) {
                     manageAccessApp.$data.canBePublicDiscoverable = true;
                     let resourceType = RES_TYPE;
                     let promptMessage = "";
@@ -886,6 +887,27 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
     });
 }
 
+function zip_by_aggregation_file_ajax_submit(res_id, aggregationPath, zipFileName) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/zip-by-aggregation-file/',
+        async: true,
+        data: {
+            res_id: res_id,
+            aggregation_path: aggregationPath,
+            output_zip_file_name: zipFileName
+        },
+        success: function (result) {
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
+        },
+        error: function (xhr, errmsg, err) {
+            display_error_message('Zipping of Aggregation Failed', xhr.responseText);
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
+        }
+    });
+}
+
 function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
@@ -1033,11 +1055,14 @@ function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath)
         type: "POST",
         url: '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/move-aggregation/' + targetPath,
         async: true,
-        success: function (result) {
-
+        success: function (task) {
+            notificationsApp.registerTask(task);
+            notificationsApp.show();
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
             display_error_message('File/Folder Moving Failed', xhr.responseText);
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
 }
@@ -1299,13 +1324,25 @@ function BindKeyValueFileTypeClickHandlers(){
     keyvalue_add_modal_form.find("button.btn-primary").click(function () {
         addFileTypeExtraMetadata();
     });
+    
+    // clear the form on cancel
+    keyvalue_add_modal_form.find("button.btn-default:contains('Cancel')").click(function () {
+        keyvalue_add_modal_form.find("input[type=text], textarea").val("");
+    });
 
     // bind all key value edit modal forms OK button click event
     $("#fileTypeMetaData").find('[id^=edit-keyvalue-filetype-metadata]').each(function(){
         var formId = $(this).attr('id');
         $(this).find("button.btn-primary").click(function (){
             updateFileTypeExtraMetadata(formId);
-        })
+        });
+
+        // reset the form on cancel
+        $(this).find("button.btn-default:contains('Cancel')").click(function() {
+            $(this).closest('form').find("input[type=text], textarea").each(function(){
+                $(this).val($(this).prop("defaultValue"));
+            });
+        });
     });
 
     // bind all key value delete modal forms Delete button click event
@@ -1358,6 +1395,44 @@ function initializeDatePickers(){
         if(pickerDate != null){
             $(this).datepicker("setDate", pickerDate);
         }
+    });
+
+    // Temporal coverage: only allow submit if both dates are completed
+    let temporal_button = $("#coverage-temporal button");
+    let temporal_warn = $('#temporal-warn');
+    if (temporal_warn.length === 0) {
+        temporal_warn = $("<em>", {
+            id: "temporal-warn",
+            text: "Both a Start Date and End Date are required when providing temporal information",
+            css: {
+                "font-style": "italic",
+                "color": "red"
+            }
+        });
+        temporal_button.closest('div').before(temporal_warn);
+    }
+    temporal_warn.hide();
+
+    $("#coverage-temporal .dateinput").each(function () {
+        $(this).on('change', function (e) {
+            let this_date = $(this)
+            let other_date = $(this).closest("form").find(".form-control").not(this).first();
+            if (this_date.val() && other_date.val()) {
+                temporal_button.removeClass("disabled");
+                temporal_warn.hide();
+            }else if (this_date.val()) {
+                temporal_button.addClass("disabled");
+                other_date.after(temporal_warn);
+                temporal_warn.show();
+            }else if (other_date.val()) {
+                temporal_button.addClass("disabled");
+                this_date.after(temporal_warn);
+                temporal_warn.show();
+            }else{
+                temporal_button.hide()
+                temporal_warn.hide()
+            }
+        });
     });
 }
 

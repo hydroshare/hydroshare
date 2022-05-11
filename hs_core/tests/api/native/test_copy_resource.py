@@ -1,19 +1,16 @@
 import os
-import tempfile
 import shutil
+import tempfile
 from datetime import date
 
 from django.contrib.auth.models import Group
-from django.test import TestCase
 from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import UploadedFile
+from django.test import TestCase
 
+from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.models import GenericResource
-from hs_core.hydroshare import utils
-from hs_access_control.models import PrivilegeCodes
-from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, CellInformation, \
-    BandInformation
 from hs_file_types.models import GeoRasterLogicalFile
 
 
@@ -86,30 +83,15 @@ class TestCopyResource(TestCase):
             metadata=metadata
         )
 
-        # create a raster resource that represents a specific resource type
         raster_file = 'hs_core/tests/data/cea.tif'
         temp_dir = tempfile.mkdtemp()
         self.temp_raster_file = os.path.join(temp_dir, 'cea.tif')
         shutil.copy(raster_file, self.temp_raster_file)
-        self.raster_obj = open(self.temp_raster_file, 'rb')
-        files = [UploadedFile(file=self.raster_obj, name='cea.tif')]
-        self.res_raster = hydroshare.create_resource(
-            resource_type='RasterResource',
-            owner=self.owner,
-            title='Test Raster Resource',
-            files=files,
-            metadata=[]
-        )
-        # call the post creation process here for the metadata to be
-        # extracted
-        utils.resource_post_create_actions(resource=self.res_raster, user=self.owner, metadata=[])
 
     def tearDown(self):
         super(TestCopyResource, self).tearDown()
         if self.res_generic:
             self.res_generic.delete()
-        if self.res_raster:
-            self.res_raster.delete()
         if self.res_generic_lic_nd:
             self.res_generic_lic_nd.delete()
         if self.res_generic_lic_nc_nd:
@@ -203,97 +185,6 @@ class TestCopyResource(TestCase):
         # make sure to clean up resource so that irods storage can be cleaned up
         if new_res_generic:
             new_res_generic.delete()
-
-    def test_copy_raster_resource(self):
-        # ensure a nonowner who does not have permission to view a resource cannot copy it
-        with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_raster.short_id,
-                                             self.nonowner,
-                                             action='copy')
-        # give nonowner view privilege so nonowner can create a new copy of this resource
-        self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner,
-                                                    PrivilegeCodes.VIEW)
-
-        new_res_raster = hydroshare.create_empty_resource(self.res_raster.short_id,
-                                                          self.nonowner,
-                                                          action='copy')
-        new_res_raster = hydroshare.copy_resource(self.res_raster, new_res_raster)
-
-        # test the new copied resource has the same resource type as the original resource
-        self.assertTrue(isinstance(new_res_raster, RasterResource))
-
-        # test science metadata elements are copied from the original resource to the new copied
-        # resource
-        self.assertTrue(new_res_raster.metadata.title.value == self.res_raster.metadata.title.value)
-        self.assertTrue(new_res_raster.creator == self.nonowner)
-
-        # test extended metadata elements are copied from the original resource to the new
-        # copied resource
-        self.assertTrue(OriginalCoverage.objects.filter(
-            object_id=new_res_raster.metadata.id).exists())
-        self.assertEqual(new_res_raster.metadata.originalCoverage.value,
-                         self.res_raster.metadata.originalCoverage.value,
-                         msg="OriginalCoverage of new copied resource is not equal to "
-                             "that of the original resource")
-
-        self.assertTrue(CellInformation.objects.filter(
-            object_id=new_res_raster.metadata.id).exists())
-        newcell = new_res_raster.metadata.cellInformation
-        oldcell = self.res_raster.metadata.cellInformation
-        self.assertEqual(newcell.rows, oldcell.rows,
-                         msg="Rows of new copied resource is not equal to that of "
-                             "the original resource")
-        self.assertEqual(newcell.columns, oldcell.columns,
-                         msg="Columns of new copied resource is not equal to that of the "
-                             "original resource")
-        self.assertEqual(newcell.cellSizeXValue, oldcell.cellSizeXValue,
-                         msg="CellSizeXValue of new copied resource is not equal to "
-                             "that of the original resource")
-        self.assertEqual(newcell.cellSizeYValue, oldcell.cellSizeYValue,
-                         msg="CellSizeYValue of new copied resource is not equal to "
-                             "that of the original resource")
-        self.assertEqual(newcell.cellDataType, oldcell.cellDataType,
-                         msg="CellDataType of new copied resource is not equal to "
-                             "that of the original resource")
-
-        self.assertTrue(BandInformation.objects.filter(
-            object_id=new_res_raster.metadata.id).exists())
-        newband = new_res_raster.metadata.bandInformations.first()
-        oldband = self.res_raster.metadata.bandInformations.first()
-        self.assertEqual(newband.name, oldband.name,
-                         msg="Band name of new copied resource is not equal to that of "
-                             "the original resource")
-
-        # test to make sure a new unique identifier has been created for the new copied resource
-        self.assertIsNotNone(new_res_raster.short_id, msg='Unique identifier has not been '
-                                                          'created for new copied resource.')
-        self.assertNotEqual(new_res_raster.short_id, self.res_raster.short_id)
-
-        # test to make sure the new copied resource has 2 content file
-        # since an additional vrt file is created
-        self.assertEqual(new_res_raster.files.all().count(), 2)
-
-        # test to make sure the new copied resource has the correct identifier
-        self.assertEqual(new_res_raster.metadata.identifiers.all().count(), 1,
-                         msg="Number of identifier elements not equal to 1.")
-        self.assertIn('hydroShareIdentifier',
-                      [id.name for id in new_res_raster.metadata.identifiers.all()],
-                      msg="hydroShareIdentifier name was not found for new copied resource.")
-        id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
-                                         new_res_raster.short_id)
-        self.assertIn(id_url, [id.url for id in new_res_raster.metadata.identifiers.all()],
-                      msg="Identifier url was not found for new copied resource.")
-
-        # test to make sure the new copied resource is linked with the original resource via
-        # 'source' type relation metadata element and contains the citation of the resource from which the resource
-        #  was copied from
-        relation_meta = new_res_raster.metadata.relations.filter(type='source').first()
-        derived_from = _get_relation_meta_derived_from(self.res_raster)
-        self.assertEqual(relation_meta.value, derived_from)
-
-        # make sure to clean up resource so that irods storage can be cleaned up
-        if new_res_raster:
-            new_res_raster.delete()
 
     def test_copy_composite_resource(self):
         """Test that logical file type objects gets copied along with the metadata that each

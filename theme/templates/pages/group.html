@@ -2,7 +2,7 @@
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 
 {% block extra_css %}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
 {% block main %}
@@ -94,7 +94,13 @@
                                 <form id="join-{{ group.id }}" method="post"
                                       action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-primary" role="button">Ask to join
+                                    <button
+                                        type="button"
+                                        class="btn btn-primary btn-ask-join" 
+                                        role="button"
+                                        data-form-id="join-{{ group.id }}"
+                                        requires_explanation="{{ group.gaccess.requires_explanation }}"
+                                        >Ask to join
                                     </button>
                                 </form>
                             {% endif %}
@@ -183,7 +189,7 @@
                             {#  All members #}
                             <table data-edit-count="{{ edit_users|length }}"
                                    data-view-count="{{ view_users|length }}"
-                                   data-pending-count="{{ group.gaccess.group_membership_requests|length }}"
+                                   data-pending-count="{{ group.gaccess.active_group_membership_requests|length }}"
                                    id="all-members-table" class="table-members-list active">
 
                                 {% for owner in group.gaccess.owners %}
@@ -343,8 +349,8 @@
 
                             {#  Pending invitation requests #}
                             <table data-filter-by="pending" class="table-members-list">
-                                {% if group.gaccess.group_membership_requests %}
-                                    {% for pendingrequest in group.gaccess.group_membership_requests %}
+                                {% if group.gaccess.active_group_membership_requests %}
+                                    {% for pendingrequest in group.gaccess.active_group_membership_requests %}
                                         {% if not pendingrequest.invitation_to %}
                                             <tr>
                                                 <td data-id="picture">
@@ -388,6 +394,13 @@
                                                         </form>
                                                     {% endif %}
                                                 </td>
+                                                {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                                    {% if pendingrequest.explanation %}
+                                                    <td class="text-muted explanation" title="{{ pendingrequest.explanation }}">Explanation: {{ pendingrequest.explanation }} </td>
+                                                    {% else %}
+                                                    <td class="text-muted explanation" title="">Explanation not required. You can modify this setting by editing the group.</td>
+                                                    {% endif %}
+                                                {% endif %}
                                             </tr>
                                         {% else %}
                                             <tr>
@@ -788,6 +801,13 @@
                                     <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
                                 </fieldset>
 
+                                {# explanation #}
+                                <fieldset class="col-sm-12">
+                                    <input id="requires_explanation" type="checkbox"  name="requires_explanation"
+                                            {% if group.gaccess.requires_explanation %}checked{% endif %}>
+                                    <label class="checkbox-label" for="requires_explanation">Require members to provide explanation when requesting membership</label>
+                                </fieldset>
+
                                 {# Picture #}
                                 <div class="col-sm-12">
                                     <fieldset>
@@ -855,12 +875,12 @@
             </div>
         </div>
     {% endif %}
-
+    {% include "includes/group_explanation_modal.html" %}
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/group.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs_resource_table.js' %}"></script>
 {% endblock %}

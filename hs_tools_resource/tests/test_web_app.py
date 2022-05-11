@@ -227,7 +227,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(data["is_valid"])
 
         # SupportedResTypes
-        request.POST = {'supportedResTypes': ['NetCDF Resource']}
+        request.POST = {'supportedResTypes': ['Composite Resource']}
         data = metadata_element_pre_create_handler(sender=ToolResource,
                                                    element_name="SupportedResTypes",
                                                    request=request)
@@ -271,7 +271,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create SupportedResTypes obj with required params
         metadata.append({'supportedrestypes': {
-            'supported_res_types': ["CompositeResource", "CollectionResource"]}})
+            'supported_res_types': ['CollectionResource', 'CompositeResource']}})
 
         # update tool version
         metadata.append({'toolversion': {'value': '2.0'}})
@@ -280,7 +280,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
         supported_res_type = SupportedResTypes.objects.first()
         for res_type in supported_res_type.supported_res_types.all():
-            self.assertIn(res_type.description, ['CompositeResource', 'CollectionResource'])
+            self.assertIn(res_type.description, ['CollectionResource', 'CompositeResource'])
         self.assertEqual(supported_res_type.supported_res_types.count(), 2)
         self.assertEqual(ToolVersion.objects.first().value, '2.0')
 

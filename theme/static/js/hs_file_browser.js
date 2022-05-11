@@ -316,7 +316,6 @@ function updateSelectionMenuContext() {
             }
             else {
                 //  ------------- Folder is a logical file type -------------
-                uiActionStates.zip.disabled = true;
                 uiActionStates.paste.disabled = true;
                 uiActionStates.subMenuSetContentType.disabled = true;
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
@@ -530,14 +529,18 @@ function updateSelectionMenuContext() {
 
     //  ------------- A file is included in the selection -------------
     if (selected.hasClass("fb-file")) {
+        const logicalFileType = $(selected).find(".fb-logical-file-type").attr("data-logical-file-type").trim();
         uiActionStates.open.disabled = true;
         uiActionStates.open.fileMenu.hidden = true;
 
         uiActionStates.paste.disabled = true;
         uiActionStates.paste.fileMenu.hidden = true;
 
-        uiActionStates.zip.disabled = true;
-        uiActionStates.zip.fileMenu.hidden = true;
+        if (logicalFileType !=="GenericLogicalFile") {
+            // we allow generic logical file (single aggregation file) to be zipped
+            uiActionStates.zip.disabled = true;
+            uiActionStates.zip.fileMenu.hidden = true;
+        }
     }
 
     if (!sourcePaths.selected.length) {
@@ -595,6 +598,7 @@ function onPaste() {
 function paste(destPath) {
     let calls = [];
     let localSources = [];
+    let is_async_celery_task = false;
 
     // var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
     sourcePaths.selected.each(function () {
@@ -603,6 +607,7 @@ function paste(destPath) {
             const hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
             const file_type_id = item.attr("data-logical-file-id");
             calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, destPath.join('/')));
+            is_async_celery_task = true;
         }
         else {
             const itemName = $(this).find(".fb-file-name").text();
@@ -615,10 +620,19 @@ function paste(destPath) {
         calls.push(move_to_folder_ajax_submit(localSources, destPath.join('/')));
     }
 
-    // Wait for the asynchronous call to finish to get new folder structure
+    // Wait for the calls to finish to get new folder structure if the task in the call is not done
+    // asyncronously on the server backend since JSON response return of success indicates the task
+    // is done if the task is NOT run asyncronously in which case the browser needs to be refreshed
+    // for the new folder structure; otherwise, if the task is run asyncronously as a celery task on
+    // the server backend, the task will run in the background after the server returns JSON response
+    // indicating the task is queued to be executed in the celery task queue, in which case, refreshing
+    // file browser is not needed and is actually problematic while the task is running in the background
+    // and has not yet finished
     $.when.apply($, calls).done(function () {
-        refreshFileBrowser();
-        clearSourcePaths();
+        if (!is_async_celery_task) {
+            refreshFileBrowser();
+            clearSourcePaths();
+        }
     });
 
     $.when.apply($, calls).fail(function () {
@@ -753,11 +767,6 @@ function bindFileBrowserItemEvents() {
             $("#fb-files-container li").removeClass("ui-last-selected");
             $("#fb-files-container li.ui-selected").first().addClass("ui-last-selected");
         }
-    });
-
-    // Dismiss right click menu when mouse down outside of it
-    $("#fb-files-container, #fb-files-container li, #hsDropzone").mousedown(function () {
-        $(".selection-menu").hide();
     });
 
     var timer = 0;
@@ -939,6 +948,21 @@ function bindFileBrowserItemEvents() {
         }
 
         $(".selection-menu").hide();    // Hide other menus
+
+        // register a listener for clicks outside of the context menus
+        $(document).on('click.menu', function(event) {
+            var $target = $(event.target);
+            if(!$target.closest('#right-click-menu').length && 
+                $('#right-click-menu').css("display") !== "none") {
+                $('#right-click-menu').hide();
+            }
+            if(!$target.closest('#right-click-container-menu').length && 
+                $('#right-click-container-menu').css("display") !== "none") {
+                $('#right-click-container-menu').hide();
+            }
+            // de-register listener to allow bubbling
+            $(document).off('click.menu');
+        });
 
         var top = event.pageY;
         var left = event.pageX;
@@ -1235,9 +1259,10 @@ function setupModelInstanceTypeUI() {
             disable_edit_json: true,
             disable_array_add: false,
             disable_array_delete: false,
-            // optional fields are not displayed by default in JSONEditor form for editing
+            // only required fields are displayed by default in JSONEditor form for editing
             // user needs to select any optional properties to make it available for editing
-            display_required_only: false,
+            display_required_only: true,
+            // only fields that are specified as required in the schema should be required by the JSONEditor form
             required_by_default: false,
             object_layout: "table"
         });
@@ -1438,6 +1463,11 @@ function isVirtualFolder(item) {
     let isModelProgramFolder = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "ModelProgramLogicalFile";
     let isModelInstanceFolder = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "ModelInstanceLogicalFile";
     return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet && !isModelProgramFolder && !isModelInstanceFolder;
+}
+
+function isSingleFileAggregation(item) {
+    item = $(item);
+    return item.find(".fb-logical-file-type").attr("data-logical-file-type") === "GenericLogicalFile";
 }
 
 function previewData() {
@@ -2038,8 +2068,24 @@ $(document).ready(function () {
     });
 
     $("[data-fb-action='zip']").click(function() {
-         var folderName =$("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        $("#txtZipName").val(folderName);
+        let selected = $("#fb-files-container li.ui-selected");
+        let zipFileName = '';
+        if (isVirtualFolder(selected)) {
+            const aggregationPath = selected.attr('data-url').split('/data/contents/').pop();
+            let aggregationMainFileName = '';
+            if (aggregationPath.indexOf('/') > -1) {
+                aggregationMainFileName = aggregationPath.split('/').pop();
+            }
+            else {
+                aggregationMainFileName = aggregationPath;
+            }
+            zipFileName = aggregationMainFileName.split('.')[0];
+        }
+        else {
+            zipFileName =$("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        }
+
+        $("#txtZipName").val(zipFileName);
     });
 
     $('#zip-folder-dialog').on('shown.bs.modal', function () {
@@ -2341,9 +2387,9 @@ $(document).ready(function () {
     $("#btn-confirm-delete").click(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
         var filesToDelete = "";
-        $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
         if (deleteList.length) {
+            $(".file-browser-container, #fb-files-container").css("cursor", "progress");
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
                 let item = $(deleteList[i]);
@@ -2392,6 +2438,7 @@ $(document).ready(function () {
                         }
                     });
                 }
+                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
 
             $.when.apply($, calls).fail(function () {
@@ -2402,6 +2449,7 @@ $(document).ready(function () {
                 else {
                     refreshFileBrowser();
                 }
+                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
         }
     });
@@ -2513,6 +2561,25 @@ $(document).ready(function () {
         }
 
         $("#txtFileURL").val(basePath + url);
+
+        // update message for URL sharing depending on raccess
+        $('#warnTxtFileURL p').hide();
+        if(!RESOURCE_ACCESS.isPublic){
+            if (RESOURCE_ACCESS.isDiscoverable){
+                if (RESOURCE_ACCESS.isPrivateLinkSharing){
+                    $('#warnTxtFileURL p.discoverable_sharing').show();
+                }else{
+                    $('#warnTxtFileURL p.discoverable').show();
+                }
+            }else if (RESOURCE_ACCESS.isPrivateLinkSharing){
+                $('#warnTxtFileURL p.private_sharing').show();
+            }else{
+                $('#warnTxtFileURL p.private').show();
+            }
+            $("#warnTxtFileURL").show();
+        }else{
+            $("#warnTxtFileURL").hide();
+        }
     });
 
     // set generic file type method
@@ -2566,10 +2633,17 @@ $(document).ready(function () {
     // Zip method
     $("#btn-confirm-zip").click(async function () {
         if ($("#txtZipName").val().trim() !== "") {
-            const folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+            let selected = $("#fb-files-container li.ui-selected");
             const fileName = $("#txtZipName").val() + ".zip";
-            const path = getCurrentPath().path.concat(folderName);
-            await zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
+            if (isVirtualFolder(selected) || isSingleFileAggregation(selected)) {
+                const aggregationPath = selected.attr('data-url').split('/data/contents/').pop();
+                await zip_by_aggregation_file_ajax_submit(SHORT_ID, aggregationPath, fileName)
+            }
+            else {
+                const folderName = selected.children(".fb-file-name").text();
+                const path = getCurrentPath().path.concat(folderName);
+                await zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
+            }
             refreshFileBrowser();
         }
     });
