@@ -137,30 +137,6 @@ class OriginalCoverage(AbstractMetaDataElement):
             raise ValidationError('Coverage value is missing.')
 
     @classmethod
-    def update(cls, element_id, **kwargs):
-        """
-        The '_value' subelement needs special processing. (Convert 'value' dict as Json string
-        to be the '_value' subelement value) and the base class update() can't do it.
-
-        :param kwargs: the 'value' in kwargs should be a dictionary
-        """
-
-        ori_cov = OriginalCoverage.objects.get(id=element_id)
-        if 'value' in kwargs:
-            value_dict = ori_cov.value
-
-            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit',
-                              'westlimit', 'projection'):
-                if item_name in kwargs['value']:
-                    value_dict[item_name] = kwargs['value'][item_name]
-
-            cls._validate_bounding_box(value_dict)
-            value_json = json.dumps(value_dict)
-            del kwargs['value']
-            kwargs['_value'] = value_json
-            super(OriginalCoverage, cls).update(element_id, **kwargs)
-
-    @classmethod
     def _validate_bounding_box(cls, box_dict):
         for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
             try:
