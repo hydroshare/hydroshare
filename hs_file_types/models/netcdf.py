@@ -1204,21 +1204,6 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             nc_dataset.time_coverage_start = temporal_coverage.value['start']
             nc_dataset.time_coverage_end = temporal_coverage.value['end']
 
-        # update spatial coverage
-        spatial_coverage = instance.metadata.spatial_coverage if file_type \
-            else instance.metadata.coverages.all().filter(type='box').first()
-
-        for attr_name in ['geospatial_lat_min', 'geospatial_lat_max', 'geospatial_lon_min',
-                          'geospatial_lon_max']:
-            if hasattr(nc_dataset, attr_name):
-                delattr(nc_dataset, attr_name)
-
-        if spatial_coverage:
-            nc_dataset.geospatial_lat_min = spatial_coverage.value['southlimit']
-            nc_dataset.geospatial_lat_max = spatial_coverage.value['northlimit']
-            nc_dataset.geospatial_lon_min = spatial_coverage.value['westlimit']
-            nc_dataset.geospatial_lon_max = spatial_coverage.value['eastlimit']
-
         # update variables
         if instance.metadata.variables.all():
             dataset_variables = nc_dataset.variables
