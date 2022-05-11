@@ -11,7 +11,7 @@ from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionFor
                                     SupportedFileExtensionsValidationForm, \
                                     AppAggregationLevelUrlValidationForm, \
                                     AppResourceLevelUrlValidationForm, \
-                                    AppFileLevelUrlValidationForm
+                                    AppFileLevelUrlValidationForm, ToolIconValidationForm
 
 from .default_icon import default_icon_data_url
 
@@ -56,7 +56,7 @@ def validate_form(request, element_name):
     elif element_name == 'supportedaggtypes':
         element_form = SupportedAggTypesValidationForm(data=request.POST)
     elif element_name == 'toolicon':
-        element_form = UrlValidationForm(data=request.POST)
+        element_form = ToolIconValidationForm(data=request.POST)
     elif element_name == 'supportedsharingstatus':
         element_form = SupportedSharingStatusValidationForm(data=request.POST)
     elif element_name == 'supportedfileextensions':

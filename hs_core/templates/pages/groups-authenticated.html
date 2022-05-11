@@ -31,11 +31,11 @@
             </div>
         </div>
 
-        <div class="row group-thumbnails">
+        <div class="group-thumbnails">
             {% if groups %}
             {% for group in groups %}
                 {% if group.gaccess.public or group.gaccess.discoverable or group.is_user_member %}
-                    <div class="col-sm-6 col-md-4 group-container">
+                    <div class="group-container">
                         <div class="group-thumbnail contribution">
                             {% if group.gaccess.picture and group.gaccess.picture.url %}
                                 <div class="group-preview-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
@@ -164,6 +164,7 @@
                                             {% csrf_token %}
                                             <a href="#"
                                                data-form-id="join-{{ group.id }}"
+                                               requires_explanation="{{ group.gaccess.requires_explanation }}"
                                                class="btn btn-primary btn-ask-to-join"
                                                role="button">Ask to join</a>
                                         </form>
@@ -221,6 +222,12 @@
                                <input id="auto-approve" type="checkbox"  name="auto_approve">
                                <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
                             </fieldset>
+
+                            {# explanation #}
+                            <fieldset class="col-sm-12">
+                                <input id="requires_explanation" type="checkbox"  name="requires_explanation">
+                                <label class="checkbox-label" for="requires_explanation">Require members to provide explanation when requesting membership</label>
+                             </fieldset>
 
                             {# Picture #}
                             <div class="col-sm-12">
@@ -281,6 +288,8 @@
             </div>
         </div>
     </div>
+
+    {% include "includes/group_explanation_modal.html" %}
 
 {% endblock %}
 
