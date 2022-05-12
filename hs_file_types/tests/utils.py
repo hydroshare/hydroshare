@@ -235,7 +235,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(len(logical_file.metadata.keywords), 1)
     self.assertIn('Snow water equivalent', logical_file.metadata.keywords)
 
-    # test dataset_name attribute of the logical file which shoould have the extracted value
+    # test dataset_name attribute of the logical file which should have the extracted value
     dataset_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
     self.assertEqual(logical_file.dataset_name, dataset_title)
 
@@ -251,6 +251,17 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(float(ori_coverage.value['westlimit']), 457560.0)
     self.assertEqual(ori_coverage.value['units'], 'Meter')
     self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
+
+    # testing extended metadata element: spatial coverage (computed from original coverage as part of
+    # metadata extraction)
+    spatial_coverage = logical_file.metadata.coverages.filter(type='box').first()
+    self.assertNotEqual(spatial_coverage, None)
+    self.assertEqual(float(spatial_coverage.value['northlimit']), 41.86712640899591)
+    self.assertEqual(float(spatial_coverage.value['southlimit']), 41.8639080745171)
+    self.assertEqual(float(spatial_coverage.value['eastlimit']), -111.50594036845686)
+    self.assertEqual(float(spatial_coverage.value['westlimit']), -111.51138807956221)
+    self.assertEqual(spatial_coverage.value['units'], "Decimal degrees")
+    self.assertEqual(spatial_coverage.value['projection'], "WGS 84 EPSG:4326")
 
     # testing extended metadata element: variables
     self.assertEqual(logical_file.metadata.variables.all().count(), 5)
