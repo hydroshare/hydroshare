@@ -2399,7 +2399,7 @@ $(document).ready(function () {
                 data: csrf,
             })
             .done(() => {
-                // $(`#fb-files-container li[data-pk=${file}]`).hide();
+                $(`#fb-files-container li[data-pk=${file}]`).hide();
             })
             .fail(function(e){
                 $(`#fb-files-container li[data-pk=${file}] .fb-cust-spinner`).hide();
