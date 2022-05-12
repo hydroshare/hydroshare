@@ -2385,28 +2385,49 @@ $(document).ready(function () {
 
     function resetFbDelete() {
         refreshFileBrowser();
-        $("#fb-files-container li.ui-selected").css("cursor", "auto");
+        $("#fb-files-container li.ui-selected").css("cursor", "auto").removeClass("disabled");
         $(".fb-cust-spinner").remove();
+    }
+
+    async function deleteRemainingFiles(filesToDelete) {
+        let csrf = $("#fb-delete-files-form").serialize();
+        let calls = [];
+        for (let file of filesToDelete){
+            const result = await $.ajax({
+                type: "POST",
+                url: `/hsapi/_internal/${SHORT_ID}/delete-resource-file/${file}/`,
+                data: csrf,
+            })
+            .done(() => {
+                // $(`#fb-files-container li[data-pk=${file}]`).hide();
+            })
+            .fail(function(e){
+                $(`#fb-files-container li[data-pk=${file}] .fb-cust-spinner`).hide();
+                console.log(e.responseText);
+            });
+            calls.push(result);
+        }
+
+        // once all calls are done
+        $.when.apply($, calls).done( () => resetFbDelete() );
     }
 
     // File(s) delete method
     $("#btn-confirm-delete").click(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
-        var filesToDelete = "";
+        var filesToDelete = [];
 
         if (deleteList.length) {
-            // add spinners
-            deleteList.prepend('<i class="fa fa-spinner fa-pulse fa-2 icon-blue fb-cust-spinner" style="z-index: 1; position: absolute;"></i>');
-            $("#fb-files-container li.ui-selected").css("cursor", "wait");
+            // add spinners to files that will be deleted
+            deleteList.prepend('<i class="fa fa-spinner fa-pulse fa-lg icon-blue fb-cust-spinner" style="z-index: 1; position: absolute;"></i>');
+            deleteList.css("cursor", "wait").addClass("disabled");
+
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
                 let item = $(deleteList[i]);
                 var pk = item.attr("data-pk");
                 if (pk) {
-                    if (filesToDelete !== "") {
-                        filesToDelete += ",";
-                    }
-                    filesToDelete += pk;
+                    filesToDelete.push(pk);
                 }
                 else {
                     if (isVirtualFolder(item.first())) {
@@ -2423,20 +2444,10 @@ $(document).ready(function () {
                     }
                 }
             }
-
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
                 if (filesToDelete !== "") {
-                    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
-                    $.ajax({
-                        type: "POST",
-                        url: `/hsapi/_internal/${SHORT_ID}/delete-multiple-files/`,
-                        data: $("#fb-delete-files-form").serialize(),
-                        success: function()
-                        {
-                            resetFbDelete();
-                        }
-                      });
+                    deleteRemainingFiles(filesToDelete);
                 }
                 else {
                     resetFbDelete();
@@ -2453,16 +2464,7 @@ $(document).ready(function () {
 
             $.when.apply($, calls).fail(function () {
                 if (filesToDelete !== "") {
-                    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
-                    $.ajax({
-                        type: "POST",
-                        url: `/hsapi/_internal/${SHORT_ID}/delete-multiple-files/`,
-                        data: $("#fb-delete-files-form").serialize(),
-                        success: function()
-                        {
-                            resetFbDelete();
-                        }
-                      });
+                    deleteRemainingFiles(filesToDelete);
                 }
                 else {
                     resetFbDelete();

@@ -877,11 +877,8 @@
 
                             {% if page.perms.change and resource_edit_mode %}
                                 {% if not cm.raccess.published or current_user.is_superuser %}
-                                    <form id="fb-delete-files-form" class="hidden"
-                                          action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
-                                          method="POST" enctype="multipart/form-data">
+                                    <form id="fb-delete-files-form" class="hidden" enctype="multipart/form-data">
                                         {% csrf_token %}
-                                        <input type="hidden" name="file_ids" value=""/>
                                     </form>
                                 {% endif %}
                             {% endif %}
