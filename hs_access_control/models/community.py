@@ -21,6 +21,7 @@ class Community(models.Model):
     picture = models.ImageField(upload_to='community', null=True, blank=True)
     # whether community is available to be joined
     closed = models.BooleanField(null=False, default=True, blank=False, editable=False)
+    active = models.BooleanField(null=False, default=True, blank=False, editable=False)
 
     def __str__(self):
         return self.name
@@ -28,16 +29,22 @@ class Community(models.Model):
     @property
     def member_groups(self):
         """ This returns all member groups """
+        if not self.active:
+            return Group.objects.none()
         return Group.objects.filter(gaccess__active=True,
                                     g2gcp__community=self)
 
     @property
     def member_users(self):
+        if not self.active:
+            return User.objects.none()
         return User.objects.filter(is_active=True, u2ucp__community=self)
 
     @property
     def owners(self):
         from hs_access_control.models.privilege import PrivilegeCodes
+        if not self.active:
+            return User.objects.none()
         return User.objects.filter(is_active=True,
                                    u2ucp__community=self,
                                    u2ucp__privilege=PrivilegeCodes.OWNER)
@@ -58,6 +65,8 @@ class Community(models.Model):
            subquery. This is a Django 1.11 extension.
         """
         from hs_access_control.models import PrivilegeCodes
+        if not self.active:
+            return Group.objects.none()
         return self.member_groups\
             .annotate(
                 has_public_resources=Exists(
@@ -83,6 +92,8 @@ class Community(models.Model):
 
         # TODO: propagated resources should be owned by a member of the publishing group,
         # and not just any group in the community!
+        if not self.active:
+            return BaseResource.objects.none()
         res = BaseResource\
             .objects\
             .filter(Q(r2grp__group__g2gcp__community=self,
@@ -139,17 +150,23 @@ class Community(models.Model):
 
     # TODO: this currently contains OWNER privilege only
     def get_effective_user_privilege(self, this_user):
-        from hs_access_control.models.privilege import UserCommunityPrivilege
+        from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
+        if not self.active:
+            return PrivilegeCodes.NONE
         return UserCommunityPrivilege.get_privilege(user=this_user, community=self)
 
     # TODO: this is never > VIEW.
     def get_effective_group_privilege(self, this_group):
-        from hs_access_control.models.privilege import GroupCommunityPrivilege
+        from hs_access_control.models.privilege import PrivilegeCodes, GroupCommunityPrivilege
+        if not self.active:
+            return PrivilegeCodes.NONE
         return GroupCommunityPrivilege.get_privilege(group=this_group, community=self)
 
     # TODO: this is never > VIEW.
     def get_effective_resource_privilege(self, this_resource):
-        from hs_access_control.models.privilege import CommunityResourcePrivilege
+        from hs_access_control.models.privilege import PrivilegeCodes, CommunityResourcePrivilege
+        if not self.active:
+            return PrivilegeCodes.NONE
         return CommunityResourcePrivilege.get_privilege(resource=this_resource, community=self)
 
     def get_groups_with_explicit_access(self, privilege, user=None):
@@ -161,6 +178,8 @@ class Community(models.Model):
         already a member of the groups without community access.
 
         """
+        if not self.active:
+            return Group.objects.none()
         if user is None:
             return Group.objects.filter(g2gcp__community=self, g2gcp__privilege=privilege)
         else:
@@ -173,6 +192,8 @@ class Community(models.Model):
         """
         # prevent import loops
         from hs_access_control.models.privilege import GroupCommunityPrivilege, PrivilegeCodes
+        if not self.active:
+            return False
         return GroupCommunityPrivilege.objects.filter(community=self, group__g2ugp__user=user,
                                                       privilege=PrivilegeCodes.CHANGE).exists()
 
@@ -186,7 +207,8 @@ class Community(models.Model):
         corrupting existing group views of resources, which have different protections than this.
         """
         from hs_access_control.models.privilege import PrivilegeCodes
-
+        if not self.active:
+            return BaseResource.objects.none()
         if group is None:
             # At this level, CHANGE is never allowed
             if privilege != PrivilegeCodes.VIEW:
@@ -216,6 +238,8 @@ class Community(models.Model):
     @property
     def first_owner(self):
         from hs_access_control.models.privilege import UserCommunityPrivilege, PrivilegeCodes
+        if not self.active:
+            return User.objects.none()
         opriv = UserCommunityPrivilege.objects.filter(community=self, privilege=PrivilegeCodes.OWNER)\
             .order_by('start')
         opriv = list(opriv)

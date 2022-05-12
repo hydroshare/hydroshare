@@ -231,7 +231,8 @@ class UserAccess(models.Model):
                                                      Q(invitation_to=self.user)) \
             .filter(group_to_join__gaccess__active=True).filter(redeemed=False)
 
-    def create_group(self, title, description, auto_approve=False, requires_explanation=False, purpose=None, email=None, url=None):
+    def create_group(self, title, description, auto_approve=False, requires_explanation=False,
+                     purpose=None, email=None, url=None):
         """
         Create a group.
 
@@ -418,9 +419,6 @@ class UserAccess(models.Model):
         Inactive groups will be included only if self owns those groups.
 
         :return: QuerySet evaluating to held groups.
-
-        This returns all groups that are viewable, including owned groups and groups
-        in communities to which the user has view access.
         """
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -505,9 +503,6 @@ class UserAccess(models.Model):
                 # do something that requires viewing g.
 
         See can_view_metadata below for the special case of discoverable resources.
-
-        Note that inferred viewers -- as determined by communities -- affect view privilege,
-        and these can view groups of which they are a community.
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_group, Group)
@@ -673,6 +668,9 @@ class UserAccess(models.Model):
         if user is not None:
             if not user.is_active:
                 raise PermissionDenied("Grantee user is not active")
+        if community is not None:
+            if not community.active:
+                raise PermissionDenied("Community is not active")
 
         try:
             self.__check_share_group(this_group, this_privilege, user=user)
@@ -1031,7 +1029,6 @@ class UserAccess(models.Model):
     # get groups with specific access for a user
     ####################################
 
-    # TODO: couch: check usage of this and expand to include community groups if possible
     def get_groups_with_explicit_access(self, this_privilege):
         """
         Get a QuerySet of groups for which the user has the specified privilege
@@ -1073,9 +1070,6 @@ class UserAccess(models.Model):
         QuerySet of resources held by user.
 
         :return: QuerySet of resource objects accessible (in any form) to user.
-
-        Held implies viewable. This includes group-community-group relationships,
-        unlike GroupAccess.view_groups and GroupAccess.edit_groups.
 
         This can be subqueried in returns, because it is lazily evaluated.
         e.g., user.uaccess.view_resources.filter(id=resource.id).exists()
@@ -1142,7 +1136,7 @@ class UserAccess(models.Model):
               r2grp__privilege=PrivilegeCodes.CHANGE)).distinct()
 
     def get_resources_with_explicit_access(self, this_privilege,
-                                           via_user=True, via_group=False, via_community=False):
+                                           via_user=True, via_group=False):
 
         """
         Get a list of resources over which the user has the specified privilege
@@ -1150,7 +1144,6 @@ class UserAccess(models.Model):
         :param this_privilege: A privilege code 1-3
         :param via_user: True to incorporate user privilege
         :param via_group: True to incorporate group privilege
-        :param via_community: True to incorporate member group privileges (disabled)
 
         Returns: list of resource objects (QuerySet)
 
@@ -1158,17 +1151,16 @@ class UserAccess(models.Model):
 
         Note that in this computation,
 
-        * Setting all of via_user, via_group, via_community to False is not an error, and
+        * Setting all of via_user, via_group to False is not an error, and
           always returns an empty QuerySet.
-        * Via_group and via_community are meaningless for OWNER privilege and are ignored.
+        * Via_group is meaningless for OWNER privilege and is ignored.
         * Exclusion clauses are meaningless for via_user as a user can have only one privilege.
-        * The default is via_user=True, via_group=False, via_community=False, which is the original
+        * The default is via_user=True, via_group=False, which is the original
           behavior of the routine before this revision.
         * Immutable resources are listed as VIEW even if the user or group has CHANGE
-        * Via_community privilege only grants VIEW.
         * In the case of multiple privileges, the lowest privilege number (highest privilege) wins.
 
-        However, please note that when via_user=True, via_group=True, via_community are True
+        However, please note that when via_user=True, via_group=True
         together, this applies to the **total combined privilege** rather than individual
         privileges. A detailed example:
 
@@ -2485,7 +2477,7 @@ class UserAccess(models.Model):
         :param title: Community title/name.
         :param description: a description of the community
         :param purpose: what's the purpose of the community (optional)
-        :param auto_approve: whether to bypass Community-like request/approve process for requests
+        :param auto_approve: whether to bypass Group-like request/approve process for requests
         :return: Community object
 
         Anyone can create a community. The creator is also the first owner.
@@ -2542,6 +2534,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
+
         return UserCommunityPrivilege.objects.filter(community=this_community,
                                                      privilege=PrivilegeCodes.OWNER,
                                                      user=self.user).exists()
@@ -2560,8 +2555,8 @@ class UserAccess(models.Model):
         Usage:
         ------
 
-            if my_user.can_change_community(g):
-                # do something that requires change privilege with g.
+            if my_user.can_change_community(c):
+                # do something that requires change privilege with c.
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_community, Community)
@@ -2569,10 +2564,13 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
+
         if self.user.is_superuser:
             return True
 
-        return self.edit_communities.filter(id=this_community.id).exists()
+        return self.communities.filter(id=this_community.id).exists()
 
     def can_view_community(self, this_community):
         """
@@ -2588,9 +2586,6 @@ class UserAccess(models.Model):
                 # do something that requires viewing g.
 
         See can_view_metadata below for the special case of discoverable resources.
-
-        Note that inferred viewers -- as determined by communities -- affect view privilege,
-        and these can view communities of which they are a community.
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_community, Community)
@@ -2598,11 +2593,14 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
+
         if self.user.is_superuser:
             return True
 
         return self.user.is_superuser or \
-                self.view_communities.filter(id=this_community.id).exists()
+                self.communities.filter(id=this_community.id).exists()
 
     def can_view_community_metadata(self, this_community):
         """
@@ -2628,6 +2626,9 @@ class UserAccess(models.Model):
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
+
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
 
         return self.can_view_community(this_community)
 
@@ -2665,6 +2666,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
+
         return self.user.is_superuser or self.owns_community(this_community)
 
     def can_delete_community(self, this_community):
@@ -2695,6 +2699,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
+
         return self.user.is_superuser or self.owns_community(this_community)
 
     @property
@@ -2704,7 +2711,7 @@ class UserAccess(models.Model):
 
         A user is a member of a community if the user is a member of one group in the community.
         """
-        return Community.objects.filter(c2gcp__group__g2ugp__user=self.user)
+        return Community.objects.filter(active=True, c2gcp__group__g2ugp__user=self.user)
 
     ####################################
     # (can_)share_community_with_user: check for and implement share
@@ -2767,6 +2774,8 @@ class UserAccess(models.Model):
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
         if not this_user.is_active:
             raise PermissionDenied("Grantee user is not active")
         if not self.owns_community(this_community):
@@ -2856,6 +2865,8 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active:
             raise PermissionDenied("Grantee user is not active")
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
 
         self.__check_unshare_community_with_user(this_community, this_user)
         UserCommunityPrivilege.unshare(community=this_community, user=this_user, grantor=self.user)
@@ -2918,6 +2929,8 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active:
             raise PermissionDenied("Grantee user is not active")
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
 
         # Check for sufficient privilege
         if not self.user.is_superuser \
@@ -2965,6 +2978,8 @@ class UserAccess(models.Model):
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
 
         access_community = this_community
 
@@ -3060,6 +3075,9 @@ class UserAccess(models.Model):
         if not this_group.gaccess.active:
             raise PermissionDenied("Group is not active")
 
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
+
         if not self.owns_community(this_community):
             raise PermissionDenied("User must own the community to be modified")
 
@@ -3105,6 +3123,8 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active:
             raise PermissionDenied("Group to be shared is not active")
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
 
         # raise a PermissionDenied exception if user self is not allowed to do this.
         self.__check_share_community_with_group(this_community, this_group, this_privilege)
@@ -3168,6 +3188,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
+
         # Check for sufficient privilege
         if self.user.is_superuser:
             return True
@@ -3213,6 +3236,8 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active:
             raise PermissionDenied("Affected Group is not active")
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
 
         self.__check_unshare_community_with_group(this_community, this_group)
         GroupCommunityPrivilege.unshare(community=this_community, group=this_group,
@@ -3244,6 +3269,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
+
         if self.user.is_superuser or self.owns_community(this_community):
             return this_community.member_groups
         else:
@@ -3271,6 +3299,9 @@ class UserAccess(models.Model):
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
+
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
 
         candidates = UserCommunityPrivilege.get_undo_users(community=this_community,
                                                            grantor=self.user)
@@ -3317,6 +3348,8 @@ class UserAccess(models.Model):
             # This causes problems with display of resources
             # raise PermissionDenied("Grantee user is not active")
             return False
+        if not this_community.active:
+            return False
 
         return self.__get_community_undo_users(this_community).filter(id=this_user.id).exists()
 
@@ -3352,6 +3385,8 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active:
             raise PermissionDenied("Grantee user is not active")
+        if not this_community.active:
+            raise PermissionDenied("Community is not active")
 
         qual_undo = self.__get_community_undo_users(this_community)
         if qual_undo.filter(id=this_user.id).exists():
