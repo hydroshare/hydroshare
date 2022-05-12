@@ -317,15 +317,15 @@ class NetCDFMetaDataMixin(models.Model):
         if not super(NetCDFMetaDataMixin, self).has_all_required_elements():
             return False
         if not self.variables.all():
-            return False        
+            return False
         return True
 
     def get_required_missing_elements(self):
         # get a list of missing required metadata element names
-        missing_required_elements = super(NetCDFMetaDataMixin, self).get_required_missing_elements()       
+        missing_required_elements = super(NetCDFMetaDataMixin, self).get_required_missing_elements()
         if not self.variables.all().first():
             missing_required_elements.append('Variable')
-        
+
         return missing_required_elements
 
     def delete_all_elements(self):
