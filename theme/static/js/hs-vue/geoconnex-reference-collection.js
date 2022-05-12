@@ -65,7 +65,7 @@ let geoconnexApp = new Vue({
       },
       async getCollections(){
           let vue = this;
-          const collectionsUrl=`${this.geoconnexUrl}?f=json&lang=en-US`;
+          const collectionsUrl=`${vue.geoconnexUrl}?f=json&lang=en-US`;
           try{
             let response = await vue.getFromCacheOrFetch(collectionsUrl);
             return response;
@@ -107,7 +107,7 @@ let geoconnexApp = new Vue({
       },
       async getItemsIn(collectionId){
         let vue = this;
-        const url = `${this.geoconnexUrl}/${collectionId}/${this.apiQueryAppend}`;
+        const url = `${vue.geoconnexUrl}/${collectionId}/${vue.apiQueryAppend}`;
         let response = await vue.getFromCacheOrFetch(url);
         return response;
       },
@@ -159,9 +159,18 @@ let geoconnexApp = new Vue({
         console.log("Cached data not valid.");
         return false;
       },
+      isUrl(stringToTest){
+        try {
+          new URL(stringToTest);
+        } catch (_) {
+          console.log("bad");
+          return false;
+        }
+        return true;
+      },
       loadRelations(){
         let vue = this;
-        for (relation of this.relations){
+        for (relation of vue.relations){
           if (relation.type === "relation"){
             let text;
             try {
@@ -184,7 +193,7 @@ let geoconnexApp = new Vue({
       },
       addMetadata(selected){ 
         let vue = this;
-        let url = `/hsapi/_internal/${this.resShortId}/relation/add-metadata/`;
+        let url = `/hsapi/_internal/${vue.resShortId}/relation/add-metadata/`;
         let data = {
           "type": 'relation',
           "value": selected.uri ? selected.uri : selected
@@ -209,7 +218,7 @@ let geoconnexApp = new Vue({
       },
       removeMetadata(relation){
         let vue = this;
-        let url = `/hsapi/_internal/${this.resShortId}/relation/${relation.id}/delete-metadata/`;
+        let url = `/hsapi/_internal/${vue.resShortId}/relation/${relation.id}/delete-metadata/`;
         console.log(`Removing resource metadata for ${relation.value}`);
         $.ajax({
           type: "POST",
