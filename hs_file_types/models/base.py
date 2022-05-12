@@ -484,7 +484,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         if not self._is_valid_element(element_model_name):
             raise ValidationError("Metadata element type:%s is not one of the "
                                   "supported metadata elements for %s."
-                                  % element_model_name, type(self))
+                                  % (element_model_name, type(self)))
 
         unsupported_element_error = "Metadata element type:%s is not supported." \
                                     % element_model_name
@@ -1191,7 +1191,7 @@ class AbstractLogicalFile(models.Model):
             element_args.pop('content_type')
             element_args.pop('id')
             element_args.pop('object_id')
-            copy_of_logical_file.metadata.create_element(element.term, **element_args)
+            copy_of_logical_file.metadata.create_element(element.__class__.__name__, **element_args)
 
         return copy_of_logical_file
 

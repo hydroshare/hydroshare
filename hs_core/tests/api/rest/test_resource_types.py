@@ -13,14 +13,12 @@ class TestResourceTypes(APITestCase):
         # Use a static list so that this test breaks when a resource type is
         # added or removed (so that the test can be updated)
         self.resource_types = {'GenericResource',
-                               'RasterResource',
                                'RefTimeSeriesResource',
                                'TimeSeriesResource',
                                'ModelProgramResource',
                                'ModelInstanceResource',
                                'ToolResource',
                                'SWATModelInstanceResource',
-                               'GeographicFeatureResource',
                                'ScriptResource',
                                'CollectionResource',
                                'MODFLOWModelInstanceResource',

@@ -48,16 +48,6 @@ class TestResourceTypeFileTypes(TestCase):
         resp_json = self._make_request("CompositeResource")
         self.assertEqual(resp_json['file_types'], '".*"')
 
-        # test for RasterResource
-        resp_json = self._make_request("RasterResource")
-        self.assertEqual(resp_json['file_types'], '[".tiff", ".tif", ".vrt", ".zip"]')
-
-        # test for GeographicFeatureResource
-        resp_json = self._make_request("GeographicFeatureResource")
-        self.assertEqual(resp_json['file_types'],
-                         '[".zip", ".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg", '
-                         '".xml", ".fbn", ".fbx", ".ain", ".aih", ".atx", ".ixs", ".mxs"]')
-
         # test for ModelProgramResource
         resp_json = self._make_request("ModelProgramResource")
         self.assertEqual(resp_json['file_types'], '".*"')
