@@ -1,16 +1,14 @@
 import os
 
-from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
-
+from django.test import TransactionTestCase
 from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
-
 from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData, OriginalCoverage, Variable
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from .utils import assert_netcdf_file_type_metadata, CompositeResourceTestMixin, \
@@ -37,6 +35,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.netcdf_file = 'hs_file_types/tests/{}'.format(self.netcdf_file_name)
         self.netcdf_invalid_file_name = 'netcdf_invalid.nc'
         self.netcdf_invalid_file = 'hs_file_types/tests/{}'.format(self.netcdf_invalid_file_name)
+        self.netcdf_no_coverage_file_name = 'nc_no_spatial_ref.nc'
+        self.netcdf_no_coverage_file = 'hs_file_types/tests/data/{}'.format(self.netcdf_no_coverage_file_name)
 
     def test_create_aggregation_from_nc_file_1(self):
         # here we are using a valid nc file for setting it
@@ -69,6 +69,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertFalse(logical_file.metadata.is_update_file)
         self.assertEqual(len(logical_file.metadata.keywords), 1)
         self.assertEqual(logical_file.metadata.keywords[0], 'Snow water equivalent')
+        # check that there are no required missing metadata for the netcdf aggregation
+        self.assertEqual(len(logical_file.metadata.get_required_missing_elements()), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 

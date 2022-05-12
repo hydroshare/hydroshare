@@ -87,6 +87,9 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
         self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
+
+        # check that there are no required missing metadata for the raster aggregation
+        self.assertEqual(len(logical_file.metadata.get_required_missing_elements()), 0)
         # check that the vrt file was generated
         self.assertEqual(logical_file.extra_data['vrt_created'], "True")
         # there should not be any file level keywords at this point

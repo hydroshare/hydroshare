@@ -1,17 +1,15 @@
 import os
 
-from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
-
+from django.test import TransactionTestCase
 from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_app_timeseries.models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
-from hs_app_timeseries.models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
-
 from hs_file_types.models import TimeSeriesLogicalFile, TimeSeriesFileMetaData
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from hs_file_types.models.timeseries import CVVariableType, CVVariableName, CVSpeciation, \
@@ -73,6 +71,9 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
         assert_time_series_file_type_metadata(self, expected_file_folder='')
+        ts_aggr = TimeSeriesLogicalFile.objects.first()
+        # check that there are no required missing metadata for the timeseries aggregation
+        self.assertEqual(len(ts_aggr.metadata.get_required_missing_elements()), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
