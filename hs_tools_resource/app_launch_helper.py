@@ -81,7 +81,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     tool_icon_url = tool_metadata.app_icon.data_url \
         if tool_metadata.app_icon else "raise-img-error"
 
-    url_key_values = get_app_dict(request_obj.user, resource_obj, tool_res_obj.extra_metadata)
+    url_key_values = get_app_dict(request_obj.user, resource_obj, tool_res_obj)
 
     tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
     tool_url_agg_new = parse_app_url_template(tool_url_aggregation, url_key_values)
@@ -90,10 +90,11 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     agg_types = ""
     file_extensions = ""
     tool_appkey = ""
-    if tool_metadata.supported_agg_types.first():
-        agg_types = tool_metadata.supported_agg_types.first() \
-            .get_supported_agg_types_str()
+    supported_aggr_types = tool_metadata.supported_aggregation_types
+    if supported_aggr_types is not None:
+        agg_types = supported_aggr_types.get_supported_agg_types_str()
         tool_appkey = tool_res_obj.extra_metadata.get(tool_app_key, '')
+
     if tool_metadata.supported_file_extensions:
         file_extensions = tool_metadata.supported_file_extensions.value
 
