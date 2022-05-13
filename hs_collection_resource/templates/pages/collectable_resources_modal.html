@@ -1,102 +1,12 @@
-{% load pages_tags mezzanine_tags crispy_forms_tags hydroshare_tags%}
-
 <div class="modal fade" id="collection-candidate" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog" style="width:65%">
-            <div class="modal-content">
+        <div class="modal-dialog" style="width:65%;">
+            <div class="modal-content" style="height: 90vh; overflow: scroll;">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title">Collectable Resources</h4>
                 </div>
-                <div class="modal-body">
-                    <table id="collection-table-candidate" class="table-hover table-striped resource-custom-table" width="100%">
-                        <thead>
-                        <tr>
-                            <th>Add</th>
-                            <th>Title</th>
-                            <th>Type</th>
-                            <th>Owners</th>
-                            <th>Sharing Status</th>
-                            <th>My Permission</th>
-                            <th>Remove</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-{#                            {% for res in collection_candidate %}#}
-                            {% for res in page_obj.object_list %}
-                                <tr id="{{ res.short_id }}">
-                                    <td>
-                                        <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
-                                    </td>
-                                    <td>
-                                        <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.title }}</a></strong></td>
-                                    <td>
-                                        {{ res.resource_type }}
-                                    </td>
-                                    {% with res.raccess as raccess %}
-                                        <td>
-                                            {% with raccess.owners.all|first as owner %}
-
-                                                {% if owner.first_name %}
-                                                    <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
-                                                {% else %}
-                                                    <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
-                                                {% endif %}
-                                            {% endwith %}
-                                        </td>
-                                        <td>
-                                            {% if raccess.published %}
-                                                Published
-                                            {% elif raccess.public %}
-                                                Public
-                                            {% elif raccess.discoverable %}
-                                                Discoverable
-                                            {% else %}
-                                                Private
-                                            {% endif %}
-
-                                            {% if raccess.shareable %}
-                                                & Shareable
-                                            {% endif %}
-                                        </td>
-                                    {% endwith %}
-                                    <td>
-                                        {% with res|user_permission:request.user.pk as upermission %}
-                                            {% if upermission|lower == "none" %}
-                                                <strong class="label-private">{{ upermission }}</strong>
-                                            {% elif upermission|lower == "open access" %}
-                                                <strong class="label-public">{{ upermission }}</strong>
-                                            {% else %}
-                                                {{ upermission }}
-                                            {% endif %}
-                                        {% endwith %}
-                                    </td>
-                                    <td>
-                                        <span data-res-id="{{ res.short_id }}"
-                                              data-form-id="form-favorite-{{ res.short_id }}"
-                                              data-form-type="toggle-favorite"
-                                              class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-collection-item"></span>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div id="save-collection-btn-warning" class="collection-div-popup-warning">Updating collection...Please wait...</div>
+                {% include "pages/collectable_resources_modal_body.html" %}
                 <div class="modal-footer">
-                    <div style="display: flex; justify-content: center">
-                        {%if page_obj.has_previous %} {# whether the previous page exists #}
-                            <button style="margin-right: 5px" class="btn btn-primary" data-page="{{page_obj.previous_page_number}}" id="collection_prev_page">Prev</button> {# link to the prev page #}
-                        {% else %}
-                            <button style="margin-right: 5px" class="btn btn-primary" disabled = "disabled">Prev</button>
-                        {% endif %}
-                        <span style="font-weight: bold">Page {{page_obj.number}} of {{ page_obj.paginator.num_pages }}</span> {# the current page number of total number of pages#}
-
-                        {%if page_obj.has_next %} {# whether the next page exists #}
-                            <button style="margin-left: 5px" class="btn btn-primary" data-page="{{page_obj.next_page_number}}" id="collection_next_page">Next</button> {# link to the next page #}
-                        {% else %}
-                            <button style="margin-left: 5px" class="btn btn-primary" disabled = "disabled">Next</button>
-                        {% endif %}
-                    </div>
                     <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
                        Cancel
                     </button>
