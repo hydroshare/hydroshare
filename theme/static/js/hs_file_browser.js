@@ -2383,51 +2383,25 @@ $(document).ready(function () {
         $("#fb-cut").toggleClass("disabled", true);
     }
 
-    function resetFbDelete() {
-        refreshFileBrowser();
-        $("#fb-files-container li.ui-selected").css("cursor", "auto").removeClass("disabled");
-        $(".fb-cust-spinner").remove();
-    }
-
-    async function deleteRemainingFiles(filesToDelete) {
-        let csrf = $("#fb-delete-files-form").serialize();
-        let calls = [];
-        for (let file of filesToDelete){
-            const result = await $.ajax({
-                type: "POST",
-                url: `/hsapi/_internal/${SHORT_ID}/delete-resource-file/${file}/`,
-                data: csrf,
-            })
-            .done(() => {
-                $(`#fb-files-container li[data-pk=${file}]`).hide();
-            })
-            .fail(function(e){
-                $(`#fb-files-container li[data-pk=${file}] .fb-cust-spinner`).hide();
-                console.log(e.responseText);
-            });
-            calls.push(result);
-        }
-
-        // once all calls are done
-        $.when.apply($, calls).done( () => resetFbDelete() );
-    }
-
     // File(s) delete method
     $("#btn-confirm-delete").click(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
-        var filesToDelete = [];
+        var filesToDelete = "";
 
         if (deleteList.length) {
             // add spinners to files that will be deleted
             deleteList.prepend('<i class="fa fa-spinner fa-pulse fa-lg icon-blue fb-cust-spinner" style="z-index: 1; position: absolute;"></i>');
-            deleteList.css("cursor", "wait").addClass("disabled");
+            deleteList.css("cursor", "wait").addClass("deleting");
 
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
                 let item = $(deleteList[i]);
                 var pk = item.attr("data-pk");
                 if (pk) {
-                    filesToDelete.push(pk);
+                    if (filesToDelete !== "") {
+                        filesToDelete += ",";
+                    }
+                    filesToDelete += pk;
                 }
                 else {
                     if (isVirtualFolder(item.first())) {
@@ -2450,14 +2424,14 @@ $(document).ready(function () {
                     deleteRemainingFiles(filesToDelete);
                 }
                 else {
-                    resetFbDelete();
+                    resetAfterFBDelete();
                 }
                 if (removeCitationIntent) {
                     $.ajax({
                       type: "POST",
                       url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
                     }).complete(function() {
-                        resetFbDelete();
+                        resetAfterFBDelete();
                     });
                 }
             });
@@ -2467,7 +2441,7 @@ $(document).ready(function () {
                     deleteRemainingFiles(filesToDelete);
                 }
                 else {
-                    resetFbDelete();
+                    resetAfterFBDelete();
                 }
             });
         }

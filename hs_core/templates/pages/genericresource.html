@@ -879,6 +879,7 @@
                                 {% if not cm.raccess.published or current_user.is_superuser %}
                                     <form id="fb-delete-files-form" class="hidden" enctype="multipart/form-data">
                                         {% csrf_token %}
+                                        <input type="hidden" name="file_ids" value=""/>
                                     </form>
                                 {% endif %}
                             {% endif %}
