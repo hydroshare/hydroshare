@@ -35,9 +35,15 @@ def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
         except ValueError:
             raise Exception(f"Page number must be an integer")
 
+        paging = request.POST.get('paging', 'false') == 'true'
+
         page_obj = get_collectable_resources(user, collection_res, page_no=page_no, paging=True)
         context = {'page_obj': page_obj}
-        template_name = 'pages/collectable_resources_modal.html'
+        if not paging:
+            template_name = 'pages/collectable_resources_modal.html'
+        else:
+            template_name = 'pages/collectable_resources_modal_body.html'
+
         collectable_resources_modal_html = render_to_string(template_name, context, request)
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
