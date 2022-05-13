@@ -108,7 +108,7 @@ $(document).ready(function() {
 
     $("#btn-add-collection-resources").click(function () {
         if (!$("#collectable-resources-modal-container").find("#collection-candidate").length) {
-            getCollectableResources(1);
+            getCollectableResources(1, false);
         }
         $('#collection-candidate').modal('show');
     });
@@ -523,7 +523,7 @@ function changeMetadataFormAction2Add(form_id) {
     $('#'+form_id).attr('action', url_new);
 }
 
-function getCollectableResources(pageNo) {
+function getCollectableResources(pageNo, paging) {
     let res_id = $("#collection-res-id").val();
     let url = "/hsapi/_internal/" + res_id + "/get-collectable-resources/";
 
@@ -531,20 +531,26 @@ function getCollectableResources(pageNo) {
         type: "POST",
         url: url,
         dataType: 'html',
-        data: {"page": pageNo},
+        data: {"page": pageNo, "paging": paging},
         async: false,
         success: function (result) {
             let json_response = JSON.parse(result);
-            $("#collectable-resources-modal-container").html(json_response.collectable_resources_modal);
+            if (!paging) { // user clicked the "Add resources" button for the first time to list the resources in modal window - html for the modal is expected from the backend
+                $("#collectable-resources-modal-container").html(json_response.collectable_resources_modal);
+                $("#save-collection-btn-ok").click(add_collection_item_ajax);
+            }
+            else { //user is paging through the list of resources in the modal - we replacing html only for the body part of the modal
+                $("#collectable-modal-body").html(json_response.collectable_resources_modal);
+            }
+
             setUpCollectableResourcesDataTable();
             $('#collection-table-candidate').DataTable().draw();
             $("#collection-table-candidate_length").hide();
             $('#collection-candidate').modal('show');
-            $("#save-collection-btn-ok").click(add_collection_item_ajax);
             $("#collection_next_page, #collection_prev_page").click(function () {
-                $('#collection-candidate').modal('hide');
                 let pageNo = $(this).attr('data-page')
-                getCollectableResources(pageNo);
+                let paging = true;
+                getCollectableResources(pageNo, paging);
             });
 
         },
