@@ -721,6 +721,30 @@ function delete_virtual_folder_ajax_submit(hs_file_type, file_type_id) {
     });
 }
 
+function resetAfterFBDelete() {
+    refreshFileBrowser();
+    $("#fb-files-container li.ui-selected").css("cursor", "auto").removeClass("deleting");
+    $(".fb-cust-spinner").remove();
+}
+
+function deleteRemainingFiles(filesToDelete) {
+    // Add the data into the form and then serialize it because we need the csrf token
+    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
+    let data = $("#fb-delete-files-form").serialize();
+    
+    $.ajax({
+        type: "POST",
+        url: `/hsapi/_internal/${SHORT_ID}/delete-multiple-files/`,
+        data: data,
+    })
+    .fail(function(e){
+        console.log(e.responseText);
+    })
+    .always(function(){
+        resetAfterFBDelete();
+    });
+}
+
 function get_aggregation_folder_struct(aggregation) {
     let files = aggregation.files;
     $('#fb-files-container').empty();

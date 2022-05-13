@@ -2389,7 +2389,10 @@ $(document).ready(function () {
         var filesToDelete = "";
 
         if (deleteList.length) {
-            $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+            // add spinners to files that will be deleted
+            deleteList.prepend('<i class="fa fa-spinner fa-pulse fa-lg icon-blue fb-cust-spinner" style="z-index: 1; position: absolute;"></i>');
+            deleteList.css("cursor", "wait").addClass("deleting");
+
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
                 let item = $(deleteList[i]);
@@ -2415,41 +2418,31 @@ $(document).ready(function () {
                     }
                 }
             }
-
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
                 if (filesToDelete !== "") {
-                    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
-                    $("#fb-delete-files-form").submit();
+                    deleteRemainingFiles(filesToDelete);
                 }
                 else {
-                    refreshFileBrowser();
+                    resetAfterFBDelete();
                 }
                 if (removeCitationIntent) {
                     $.ajax({
                       type: "POST",
                       url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
                     }).complete(function() {
-                        document.body.style.cursor = 'default';
-                        if (window.location.href.includes('?resource-mode=edit')) {
-                            location.reload();
-                        } else {
-                            window.location.href = window.location.href + '?resource-mode=edit';
-                        }
+                        resetAfterFBDelete();
                     });
                 }
-                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
 
             $.when.apply($, calls).fail(function () {
                 if (filesToDelete !== "") {
-                    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
-                    $("#fb-delete-files-form").submit();
+                    deleteRemainingFiles(filesToDelete);
                 }
                 else {
-                    refreshFileBrowser();
+                    resetAfterFBDelete();
                 }
-                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
         }
     });

@@ -4296,6 +4296,11 @@ ul#fb-files-container .hs-upload-indicator {
 	pointer-events:none;
 }
 
+#fb-files-container li.deleting {
+	background: rgba(252, 161, 161, 0.14);
+	pointer-events:none;
+}
+
 .selection-menu li.disabled span, .selection-menu li.disabled i {
 	color: #999;
 	text-shadow: initial;
