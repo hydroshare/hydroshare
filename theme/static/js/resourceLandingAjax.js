@@ -738,7 +738,6 @@ function deleteRemainingFiles(filesToDelete) {
         data: data,
     })
     .fail(function(e){
-        $(`#fb-files-container li[data-pk=${file}] .fb-cust-spinner`).hide();
         console.log(e.responseText);
     })
     .always(function(){
