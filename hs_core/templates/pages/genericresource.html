@@ -9,7 +9,7 @@
     <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 
-{% if not page|is_debug %}
+{% if True %}
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
 {
@@ -56,6 +56,19 @@
     "identifier": [
       "https://www.hydroshare.org/resource/{{ cm.short_id }}"
     ],
+    {% if generic_relations %}
+    "about": [
+    {% for generic_relation in generic_relations %}
+      {% if generic_relation.value|is_url %}
+        {
+          "@id": "{{ generic_relation.value | escapejs }}",
+          "@type": "Place",
+          "url": "{{ generic_relation.value | escapejs }}"
+        }{%if not forloop.last%},{%endif%}
+      {% endif %}
+    {% endfor %}
+    ],
+    {% endif %}
     {% endif %}
     "creator": {{ creators | creator_json_ld_element | safe }},
     {% if temporal_coverage %}
@@ -1026,11 +1039,11 @@
           {% endfor %}
       ];
       const RELATIONS = [
-        {% for relation in relations %}
+        {% for generic_relation in generic_relations %}
             {
-                "value": "{{ relation.value| escapejs}}",
-                "type": "{{ relation.type }}",
-                "id": "{{ relation.id }}"
+                "value": "{{ generic_relation.value| escapejs}}",
+                "type": "{{ generic_relation.type }}",
+                "id": "{{ generic_relation.id }}"
             },
         {% endfor %}
       ];

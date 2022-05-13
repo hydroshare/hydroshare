@@ -163,7 +163,6 @@ let geoconnexApp = new Vue({
         try {
           new URL(stringToTest);
         } catch (_) {
-          console.log("bad");
           return false;
         }
         return true;
