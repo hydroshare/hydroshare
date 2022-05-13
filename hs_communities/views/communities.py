@@ -185,7 +185,7 @@ class CommunityView(TemplateView):
             context['community_resources'] = community_resources
             context['grpfilter'] = grpfilter
             context['is_admin'] = is_admin
-            # context['czo_community'] = "CZO National" in community.name #wtf
+            context['czo_community'] = "CZO National" in community.name
                                                       
             if action is not None:
                 group = Group.objects.get(id=int(gid))
