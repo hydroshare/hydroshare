@@ -352,9 +352,13 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
     def update_element(self, element_model_name, element_id, **kwargs):
         if element_model_name.lower() == 'coverage':
-            logical_file = self.logical_file
-            if logical_file.metadata.originalCoverage:
-                raise ValidationError("Coverage can't be updated which has been computed from spatial reference")
+            model_type = self._get_metadata_element_model_type(element_model_name)
+            element = model_type.model_class().objects.get(id=element_id)
+            if element.type in ('box', 'point'):
+                logical_file = self.logical_file
+                if logical_file.metadata.originalCoverage:
+                    raise ValidationError("Spatial coverage can't be updated which has been computed "
+                                          "from spatial reference")
 
         super(NetCDFFileMetaData, self).update_element(element_model_name, element_id, **kwargs)
 
