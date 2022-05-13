@@ -118,8 +118,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                     raise Exception("Can not contain collection itself.")
 
             # current contained res
-            res_id_list_current_collection = \
-                [res.short_id for res in collection_res_obj.resources.all()]
+            res_id_list_current_collection = [res.short_id for res in collection_res_obj.resources.all()]
 
             # res to remove
             res_id_list_remove = []
@@ -184,18 +183,17 @@ def update_collection(request, shortkey, *args, **kwargs):
                                     'resource to a collection ')
 
                 # add this new res to collection
-                res_obj_add = get_resource_by_shortkey(res_id_add)
-                collection_res_obj.resources.add(res_obj_add)
+                collection_res_obj.resources.add(res_to_add)
 
                 # add relation meta element of type 'hasPart' to the collection resource
                 add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
-                                                relation_type=hasPart, relation_value=res_obj_add.get_citation(),
+                                                relation_type=hasPart, relation_value=res_to_add.get_citation(),
                                                 set_res_modified=False)
 
                 # add relation meta element of type 'isPartOf' to the resource added to the collection
-                res_obj_add.metadata.create_element('relation', type='isPartOf',
-                                                    value=collection_res_obj.get_citation())
-                set_dirty_bag_flag(res_obj_add)
+                res_to_add.metadata.create_element('relation', type='isPartOf',
+                                                   value=collection_res_obj.get_citation())
+                set_dirty_bag_flag(res_to_add)
 
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
