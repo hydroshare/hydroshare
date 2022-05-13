@@ -199,7 +199,9 @@ def update_collection(request, shortkey, *args, **kwargs):
                 metadata_status = "Sufficient to make public"
 
             new_coverage_list = _update_collection_coverages(collection_res_obj)
-            update_collection_list_csv(collection_res_obj)
+
+            # set flag to update csv collection resource file to be generated at the time of bag download
+            collection_res_obj.set_update_text_file(flag='True')
             resource_modified(collection_res_obj, user, overwrite_bag=False)
 
     except Exception as ex:
@@ -240,7 +242,9 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
 
             # remove all logged deleted resources for the collection
             collection_res.deleted_resources.all().delete()
-            update_collection_list_csv(collection_res)
+
+            # set flag to update csv collection resource file to be generated at the time of bag download
+            collection_res.set_update_text_file(flag='True')
             resource_modified(collection_res, user, overwrite_bag=False)
 
     except Exception as ex:
