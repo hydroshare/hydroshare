@@ -266,7 +266,6 @@ class GroupJsonView(View):
             for c in Community.objects.filter().exclude(invite_c2gcr__group=group)\
                                                .exclude(c2gcp__group=group)\
                                                .order_by('name'):
-                                              #  .exclude(closed=True)\
                 context['available_to_join'].append(community_json(c))
 
             # requests that were declined by others
@@ -380,6 +379,11 @@ class CommunityView(TemplateView):
                     message, worked = GroupCommunityRequest.retract(
                          requester=user, group=group, community=community)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                elif action == 'deactivate':  # deactivate a community
+                    community.active = False
+                    community.save()
+                    return {}  # community is gone now!
 
                 else:
                     message = "unknown action '{}'".format(action)
@@ -528,6 +532,11 @@ class CommunityJsonView(View):
                     message, worked = GroupCommunityRequest.retract(
                          requester=user, group=group, community=community)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                elif action == 'deactivate':  # deactivate a community
+                    community.active = False
+                    community.save()
+                    return {}  # community is gone now!
 
                 else:
                     message = "unknown action '{}'".format(action)
