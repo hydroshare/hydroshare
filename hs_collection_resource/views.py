@@ -9,7 +9,7 @@ from rest_framework import status as http_status
 from hs_core.enums import RelationTypes
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
-from .utils import add_or_remove_relation_metadata, get_collectable_resources, update_collection_list_csv
+from .utils import add_or_remove_relation_metadata, get_collectable_resources
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
