@@ -257,7 +257,8 @@ class CommunityRequest(models.Model):
     url = models.TextField(null=True, blank=True)
     purpose = models.TextField(null=True, blank=True)
     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
-    date_created = models.DateTimeField(editable=False, auto_now_add=True)
+    date_requested = models.DateTimeField(editable=False, auto_now_add=True)
+    date_created = models.DateTimeField(editable=False)
     picture = models.ImageField(upload_to='community', null=True, blank=True)
     # whether community is available to be joined
     closed = models.BooleanField(null=False, default=True, blank=False, editable=False)
@@ -268,4 +269,3 @@ class CommunityRequest(models.Model):
 
     def __str__(self):
         return self.name
-
