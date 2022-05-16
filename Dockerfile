@@ -7,7 +7,7 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
 # TODO: these installs need to be part of the hs_docker_base image
 RUN pip install deepdiff==1.7.0
 RUN pip install pytest-cov hsmodels
-RUN pip install --upgrade rdflib==5.0.0 urllib3==1.26.9
+RUN pip install --upgrade rdflib==5.0.0 requests==2.27.1 urllib3==1.26.9
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
