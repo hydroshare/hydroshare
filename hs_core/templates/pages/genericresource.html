@@ -1002,22 +1002,24 @@
       const LAST_CHANGED_BY = {{ last_changed_by|safe }};
       const AUTHORS = [
           {% for author in creators %}
-              {
-                  "id": "{{ author.id }}",
-                  "name": "{{ author.name|default:""|escapejs }}",
-                  "email": "{{ author.email|default:"" }}",
-                  "organization": "{{ author.organization|default:""|escapejs }}",
-                  "identifiers": {
-                      {% for name, link in author.identifiers.items %}
-                          "{{ name }}": "{{ link }}",
-                      {% endfor %}
-                  },
-                  "address": "{{ author.address|default:""|escapejs }}",
-                  "phone": "{{ author.phone|default:"" }}",
-                  "homepage": "{{ author.homepage|default:"" }}",
-                  "profileUrl": "{{ author.description|default:"" }}",
-                  "order": "{{ author.order }}"
-              },
+            {% if author.is_active %}
+                {
+                    "id": "{{ author.id }}",
+                    "name": "{{ author.name|default:""|escapejs }}",
+                    "email": "{{ author.email|default:"" }}",
+                    "organization": "{{ author.organization|default:""|escapejs }}",
+                    "identifiers": {
+                        {% for name, link in author.identifiers.items %}
+                            "{{ name }}": "{{ link }}",
+                        {% endfor %}
+                    },
+                    "address": "{{ author.address|default:""|escapejs }}",
+                    "phone": "{{ author.phone|default:"" }}",
+                    "homepage": "{{ author.homepage|default:"" }}",
+                    "profileUrl": "{{ author.relative_uri|default:'' }}",
+                    "order": "{{ author.order }}"
+                },
+            {% endif %}
           {% endfor %}
       ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";

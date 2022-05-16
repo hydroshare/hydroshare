@@ -1195,11 +1195,11 @@
                                                value="{% if contributor.name %}{{ contributor.name }}{% endif %}">
                                     </div>
                                 </div>
-                                {% if contributor.description %}
+                                {% if contributor.relative_uri %}
                                     <div id="div_id_description" class="control-group">
                                         <label class="control-label">HydroShare Profile</label>
                                         <div class="space-bottom">
-                                            <a href="{{ contributor.description }}">View Profile</a>
+                                            <a href="/user/{{ contributor.relative_uri }}/">View Profile</a>
                                         </div>
 
                                         <div class="controls hidden">
@@ -1208,7 +1208,7 @@
                                                    maxlength="200"
                                                    name="creator-{{ contributor.order|add:"-1" }}-description"
                                                    type="url"
-                                                   value="{{ contributor.description }}"
+                                                   value="{{ contributor.relative_uri }}"
                                                    readonly>
                                         </div>
                                     </div>

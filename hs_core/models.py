@@ -119,6 +119,18 @@ def get_user(request):
         return request.user
 
 
+def validate_hydroshare_user_id(value):
+    """Validate that a hydroshare_user_id is valid for a hydroshare user."""
+    err_message = '%s is not a valid id for hydroshare user' % value
+    if value:
+        if not isinstance(value, int):
+            raise ValidationError(err_message)
+
+        # check the user exists for the provided user id
+        if not User.objects.filter(pk=value).exists():
+            raise ValidationError(err_message)
+
+
 def validate_user_url(value):
     """Validate that a URL is a valid URL for a hydroshare user."""
     err_message = '%s is not a valid url for hydroshare user' % value
@@ -211,13 +223,14 @@ def get_access_object(user, user_type, user_access):
             "email": user.email,
             "organization": user.userprofile.organization,
             "title": user.userprofile.title,
-            "contributions": len(user.uaccess.owned_resources),
-            "viewable_contributions": user.viewable_contributions,
+            "contributions": len(user.uaccess.owned_resources) if user.is_active else None,
+            "viewable_contributions": user.viewable_contributions if user.is_active else None,
             "subject_areas": user.userprofile.subject_areas,
             "identifiers": user.userprofile.identifiers,
             "state": user.userprofile.state,
             "country": user.userprofile.country,
             "joined": user.date_joined.strftime("%d %b, %Y"),
+            "is_active": user.is_active
         }
     elif user_type == "group":
         if user.gaccess.picture:
@@ -284,8 +297,8 @@ def page_permissions_page_processor(request, page):
         for edit_grp in edit_groups:
             edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
                                                                                         edit_grp)
-
-        last_changed_by.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(last_changed_by)
+        if last_changed_by.is_active:
+            last_changed_by.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(last_changed_by)
 
     else:
         for owner in owners:
@@ -317,13 +330,16 @@ def page_permissions_page_processor(request, page):
     for usr in view_groups:
         users_json.append(get_access_object(usr, "group", "view"))
 
-    lcb_access_level = cm.raccess.get_effective_user_privilege(last_changed_by)
-    if lcb_access_level == PrivilegeCodes.OWNER:
-        lcb_access_level = 'owner'
-    elif lcb_access_level == PrivilegeCodes.CHANGE:
-        lcb_access_level = 'edit'
-    elif lcb_access_level == PrivilegeCodes.VIEW:
-        lcb_access_level = 'view'
+    if last_changed_by.is_active:
+        lcb_access_level = cm.raccess.get_effective_user_privilege(last_changed_by)
+        if lcb_access_level == PrivilegeCodes.OWNER:
+            lcb_access_level = 'owner'
+        elif lcb_access_level == PrivilegeCodes.CHANGE:
+            lcb_access_level = 'edit'
+        elif lcb_access_level == PrivilegeCodes.VIEW:
+            lcb_access_level = 'view'
+    else:
+        lcb_access_level = 'none'
 
     # last_changed_by.can_undo = False
     last_changed_by = json.dumps(get_access_object(last_changed_by, "user", lcb_access_level))
@@ -427,8 +443,7 @@ class HSAdaptorEditInline(object):
 class Party(AbstractMetaDataElement):
     """Define party model to define a person."""
 
-    description = models.CharField(null=True, blank=True, max_length=50,
-                                   validators=[validate_user_url])
+    hydroshare_user_id = models.IntegerField(null=True, blank=True, validators=[validate_hydroshare_user_id])
     name = models.CharField(max_length=100, null=True, blank=True)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
@@ -459,6 +474,9 @@ class Party(AbstractMetaDataElement):
         party = BNode()
         graph.add((subject, party_type, party))
         for field_term, field_value in self.get_field_terms_and_values(['identifiers']):
+            # TODO: remove this once we are no longer concerned with backwards compatibility
+            if field_term == HSTERMS.hydroshare_user_id:
+                graph.add((party, HSTERMS.description, field_value))
             graph.add((party, field_term, field_value))
         for k, v in self.identifiers.items():
             graph.add((party, getattr(HSTERMS, k), URIRef(v)))
@@ -472,6 +490,12 @@ class Party(AbstractMetaDataElement):
             identifiers = {}
             fields_by_term = {cls.get_field_term(field.name): field for field in cls._meta.fields}
             for _, p, o in graph.triples((party, None, None)):
+                # TODO: remove this once we are no longer concerned with backwards compatibility
+                if p == HSTERMS.description:
+                    # parse the description into a hydroshare_user_id
+                    p = HSTERMS.hydroshare_user_id
+                    o = o.split('user/')[-1]
+                    o = o.replace("/", "")
                 if p not in fields_by_term:
                     identifiers[p.rsplit("/", 1)[1]] = str(o)
                 else:
@@ -547,12 +571,11 @@ class Party(AbstractMetaDataElement):
         """Define custom update method for Party model."""
         element_name = cls.__name__
         creator_order = None
-        if 'description' in kwargs:
+        if 'hydroshare_user_id' in kwargs:
             party = cls.objects.get(id=element_id)
-            if party.description is not None and kwargs['description'] is not None:
-                if len(party.description.strip()) > 0 and len(kwargs['description'].strip()) > 0:
-                    if party.description != kwargs['description']:
-                        raise ValidationError("HydroShare user identifier can't be changed.")
+            if party.hydroshare_user_id is not None and kwargs['hydroshare_user_id'] is not None:
+                if party.hydroshare_user_id != kwargs['hydroshare_user_id']:
+                    raise ValidationError("HydroShare user identifier can't be changed.")
 
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
@@ -587,6 +610,19 @@ class Party(AbstractMetaDataElement):
 
                 party.order = creator_order
                 party.save()
+
+    @property
+    def relative_uri(self):
+        return f"/user/{self.hydroshare_user_id}/"
+
+    @property
+    def is_active(self):
+        from hs_core.hydroshare.utils import user_from_id
+        user = user_from_id(self.hydroshare_user_id, raise404=False)
+        if user:
+            return user.is_active
+        else:
+            return False
 
     @classmethod
     def remove(cls, element_id):
@@ -4558,9 +4594,9 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
             hsterms_name.text = person.name
 
-        if person.description:
+        if person.relative_uri:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
-                                          current_site_url() + person.description)
+                                          current_site_url() + person.relative_uri)
 
         if isinstance(person, Creator):
             hsterms_creatorOrder = etree.SubElement(dc_person_rdf_Description,
