@@ -247,3 +247,25 @@ class Community(models.Model):
             return opriv[0].user
         else:
             return None
+
+
+class CommunityRequest(models.Model):
+    """ application for creating a community """
+    name = models.TextField(null=False, blank=False)
+    description = models.TextField(null=False, blank=False)
+    email = models.TextField(null=True, blank=True)
+    url = models.TextField(null=True, blank=True)
+    purpose = models.TextField(null=True, blank=True)
+    auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
+    date_created = models.DateTimeField(editable=False, auto_now_add=True)
+    picture = models.ImageField(upload_to='community', null=True, blank=True)
+    # whether community is available to be joined
+    closed = models.BooleanField(null=False, default=True, blank=False, editable=False)
+    # user requesting community
+    owner = models.ForeignKey(User, null=True, editable=False)
+    # approval information: null means undecided
+    approved = models.NullBooleanField(null=True, default=None, blank=False, editable=False)
+
+    def __str__(self):
+        return self.name
+
