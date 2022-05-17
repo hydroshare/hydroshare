@@ -32,7 +32,9 @@ let geoconnexApp = new Vue({
           let selected = newValue.pop();
           this.addMetadata(selected);
         }else if (newValue.length < oldValue.length){
-          let remove = oldValue.pop();
+          let oldIds = oldValue.map(a => a.id);
+          let newIds = newValue.map(a => a.id);
+          let remove = oldIds.filter(x => !newIds.includes(x))
           this.removeMetadata(remove);
         }
       }
@@ -215,20 +217,22 @@ let geoconnexApp = new Vue({
           }
         });
       },
-      removeMetadata(relation){
+      removeMetadata(relation_ids){
         let vue = this;
-        let url = `/hsapi/_internal/${vue.resShortId}/relation/${relation.id}/delete-metadata/`;
-        console.log(`Removing resource metadata for ${relation.value}`);
-        $.ajax({
-          type: "POST",
-          url: url,
-          success: function () {
-          },
-          error: function (request, status, error) {
-            vue.errorMsg = `${error} while attempting to remove related feature.`;
-            console.log(request.responseText);
-          }
-        });
+        for (let relation of relation_ids){
+          let url = `/hsapi/_internal/${vue.resShortId}/relation/${relation}/delete-metadata/`;
+          // console.log(`Removing resource metadata for HS Relation ID: ${relation}`);
+          $.ajax({
+            type: "POST",
+            url: url,
+            success: function () {
+            },
+            error: function (request, status, error) {
+              vue.errorMsg = `${error} while attempting to remove related feature.`;
+              console.log(request.responseText);
+            }
+          });
+        }
       }
     },
     beforeMount(){
