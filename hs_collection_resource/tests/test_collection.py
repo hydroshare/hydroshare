@@ -72,12 +72,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
             title='Gen 4'
         )
 
-        self.resTimeSeries = create_resource(
-            resource_type='TimeSeriesResource',
-            owner=self.user1,
-            title='Test Time Series Resource'
-        )
-
         self.resModelInstance = create_resource(
                     resource_type='ModelInstanceResource',
                     owner=self.user1,
@@ -116,20 +110,17 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # add res to collection.resources
         self.resCollection.resources.add(self.resGen1)
         self.resModelInstance.collections.add(self.resCollection)
-        self.resTimeSeries.collections.add(self.resCollection)
 
         # test count
-        self.assertEqual(self.resCollection.resources.count(), 3)
+        self.assertEqual(self.resCollection.resources.count(), 2)
 
         # test res in collection.resources
         self.assertIn(self.resGen1, self.resCollection.resources.all())
         self.assertIn(self.resModelInstance, self.resCollection.resources.all())
-        self.assertIn(self.resTimeSeries, self.resCollection.resources.all())
 
         # test collection in res.collections
         self.assertIn(self.resCollection, self.resGen1.collections.all())
         self.assertIn(self.resCollection, self.resModelInstance.collections.all())
-        self.assertIn(self.resCollection, self.resTimeSeries.collections.all())
 
         # test remove all res from collection.resources
         self.resCollection.resources.clear()
@@ -138,7 +129,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # test collection NOT in res.collections
         self.assertNotIn(self.resCollection, self.resGen1.collections.all())
         self.assertNotIn(self.resCollection, self.resModelInstance.collections.all())
-        self.assertNotIn(self.resCollection, self.resTimeSeries.collections.all())
 
         # test adding same resources to multiple collection resources
         self.resCollection.resources.add(self.resGen1)
@@ -680,10 +670,11 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.are_all_contained_resources_published, False)
 
         self.assertEqual(self.resGen1.raccess.published, False)
+        self.assertEqual(self.resGen2.raccess.published, False)
 
         # add 2 unpublished resources to collection
         self.resCollection.resources.add(self.resGen1)
-        self.resCollection.resources.add(self.resTimeSeries)
+        self.resCollection.resources.add(self.resGen2)
         self.assertEqual(self.resCollection.resources.count(), 2)
         # not all contained res are published
         self.assertEqual(self.resCollection.are_all_contained_resources_published, False)
@@ -695,11 +686,11 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # not all contained res are published
         self.assertEqual(self.resCollection.are_all_contained_resources_published, False)
 
-        # manually set the second contained res (self.resTimeSeries) to published as well
-        self.resTimeSeries.raccess.published = True
-        self.resTimeSeries.raccess.save()
+        # manually set the second contained res (self.resGen2) to published as well
+        self.resGen2.raccess.published = True
+        self.resGen2.raccess.save()
         self.assertEqual(self.resGen1.raccess.published, True)
-        self.assertEqual(self.resTimeSeries.raccess.published, True)
+        self.assertEqual(self.resGen2.raccess.published, True)
         # all contained res are published now
         self.assertEqual(self.resCollection.are_all_contained_resources_published, True)
 
@@ -709,7 +700,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # add 3 resources to collection
         self.resCollection.resources.add(self.resGen1)
-        self.resCollection.resources.add(self.resTimeSeries)
+        self.resCollection.resources.add(self.resGen2)
         self.resCollection.resources.add(self.resCollection_with_missing_metadata)
         self.assertEqual(self.resCollection.resources.count(), 3)
 
@@ -737,7 +728,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # add 3 resources to collection
         self.resCollection.resources.add(self.resGen1)
-        self.resCollection.resources.add(self.resTimeSeries)
+        self.resCollection.resources.add(self.resGen2)
         self.resCollection.resources.add(self.resCollection_with_missing_metadata)
         self.assertEqual(self.resCollection.resources.count(), 3)
 

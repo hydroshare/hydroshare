@@ -19,7 +19,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource, validate_user_url, clean_for_xml, Relation
+from hs_core.models import BaseResource, validate_hydroshare_user_id, clean_for_xml, Relation
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 
@@ -738,9 +738,9 @@ class GenericResourceMeta(object):
                               'researchGateID': c.researchGateID}
                     if c.rel_uri:
                         # HydroShare user URIs are stored as relative not absolute URIs
-                        kwargs['description'] = c.rel_uri
+                        kwargs['hydroshare_user_id'] = c.id
                     else:
-                        kwargs['description'] = None
+                        kwargs['hydroshare_user_id'] = None
 
                     if self.owner_is_hs_user and c.order == 1:
                         # Use metadata from bag for owner if the owner is a HydroShare user
@@ -766,7 +766,7 @@ class GenericResourceMeta(object):
                 # Add contributors
                 if isinstance(c, GenericResourceMeta.ResourceContributor):
                     kwargs = {'name': c.name, 'organization': c.organization,
-                              'description': c.uri,
+                              'hydroshare_user_id': c.id,
                               'email': c.email, 'address': c.address,
                               'phone': c.phone, 'homepage': c.homepage,
                               'researcherID': c.researcherID,
@@ -906,22 +906,21 @@ class GenericResourceMeta(object):
 
             :raise: GenericResourceMeta.ResourceMetaException if the user URI is malformed.
             """
+            # Parse URI
+            parsed_uri = urllib.parse.urlparse(uri)
+            # Separate out the user ID for HydroShare users
+            contributor_pk = os.path.basename(parsed_uri.path.strip('/'))
             # Make sure this is a HydroShare user URI
             is_hs_user_uri = False
             try:
-                validate_user_url(uri)
+                validate_hydroshare_user_id(contributor_pk)
                 is_hs_user_uri = True
             except ValidationError:
                 pass
 
             if is_hs_user_uri:
-                # Parse URI
-                parsed_uri = urllib.parse.urlparse(uri)
                 # Set rel_uri
                 self.rel_uri = parsed_uri.path
-
-                # Separate out the user ID for HydroShare users
-                contributor_pk = os.path.basename(self.rel_uri.strip('/'))
                 pk = None
                 try:
                     pk = int(contributor_pk)
