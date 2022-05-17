@@ -447,10 +447,22 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                               'logical_file_type': logical_file.type_name()
                               }
 
-        if logical_file.type_name() in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+        element = logical_file.metadata.get_element(element_name, element_id)
+        update_file = False
+        if logical_file.type_name() == "NetCDFLogicalFile":
+            # only spatial coverage update does not need update of the nc file
+            if element_name.lower() != 'coverage':
+                update_file = True
+            elif element.type == 'period':
+                update_file = True
+        elif logical_file.type_name() == "TimeSeriesLogicalFile":
+            update_file = True
+
+        if update_file:
             logical_file.metadata.is_update_file = True
             logical_file.metadata.save()
-            ajax_response_data['is_update_file'] = logical_file.metadata.is_update_file
+
+        ajax_response_data['is_update_file'] = update_file
 
         if logical_file.type_name() == "TimeSeriesLogicalFile":
             ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
@@ -524,10 +536,21 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
                               'element_id': element.id,
                               'metadata_status': metadata_status}
 
-        if logical_file.type_name() in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+        update_file = False
+        if logical_file.type_name() == "NetCDFLogicalFile":
+            # only spatial coverage creation does not need update of the nc file
+            if element_name.lower() != 'coverage':
+                update_file = True
+            elif element.type == 'period':
+                update_file = True
+        elif logical_file.type_name() == "TimeSeriesLogicalFile":
+            update_file = True
+
+        if update_file:
             logical_file.metadata.is_update_file = True
             logical_file.metadata.save()
-            ajax_response_data['is_update_file'] = logical_file.metadata.is_update_file
+
+        ajax_response_data['is_update_file'] = update_file
 
         if logical_file.type_name() == "TimeSeriesLogicalFile":
             ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
