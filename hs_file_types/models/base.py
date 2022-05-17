@@ -479,6 +479,12 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         self.is_dirty = True
         self.save()
 
+    def get_element(self, element_model_name, element_id):
+        """Gets a metadata element record based on name of the metadata element and id."""
+
+        model_type = self._get_metadata_element_model_type(element_model_name)
+        return model_type.model_class().objects.get(id=element_id)
+
     def _get_metadata_element_model_type(self, element_model_name):
         element_model_name = element_model_name.lower()
         if not self._is_valid_element(element_model_name):
