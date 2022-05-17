@@ -29,14 +29,19 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             groups=[self.group]
         )
 
+        test_file_base_path = 'hs_file_types/tests'
         self.res_title = "Testing NetCDF File Type"
 
         self.netcdf_file_name = 'netcdf_valid.nc'
-        self.netcdf_file = 'hs_file_types/tests/{}'.format(self.netcdf_file_name)
+        self.netcdf_file = f'{test_file_base_path}/{self.netcdf_file_name}'
         self.netcdf_invalid_file_name = 'netcdf_invalid.nc'
-        self.netcdf_invalid_file = 'hs_file_types/tests/{}'.format(self.netcdf_invalid_file_name)
+        self.netcdf_invalid_file = f'{test_file_base_path}/{self.netcdf_invalid_file_name}'
         self.netcdf_no_coverage_file_name = 'nc_no_spatial_ref.nc'
-        self.netcdf_no_coverage_file = 'hs_file_types/tests/data/{}'.format(self.netcdf_no_coverage_file_name)
+        self.netcdf_no_coverage_file = f'{test_file_base_path}/data/{self.netcdf_no_coverage_file_name}'
+        self.netcdf_sphere_lambert_conformal_conic_file_name = 'sample.nc'
+        self.netcdf_sphere_lambert_conformal_conic_file = \
+            f'{test_file_base_path}/data/{self.netcdf_sphere_lambert_conformal_conic_file_name}'
+
 
     def test_create_aggregation_from_nc_file_1(self):
         # here we are using a valid nc file for setting it
@@ -211,6 +216,40 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertTrue(logical_file.metadata.is_dirty)
         # test that the update file (.nc file) state is false
         self.assertFalse(logical_file.metadata.is_update_file)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
+        self.composite_resource.delete()
+
+    def test_create_aggregation_from_nc_file_5(self):
+        # here we are using a valid nc file for setting it
+        # to NetCDF file type which includes metadata extraction
+        # the nc file in this case has spatial reference with coordinate system of 'Sphere_Lambert_Conformal_Conic'
+        # and we are testing that spatial coverage is computed from spatial reference as part of the metadata extraction
+
+        self.create_composite_resource(self.netcdf_sphere_lambert_conformal_conic_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        # check that there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_res_file_folder_path = res_file.file_folder
+        # set the nc file to NetCDF file type
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        # test computed spatial coverage
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.nc file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
+        self.assertNotEqual(logical_file.metadata.originalCoverage, None)
+        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
+        # check that there are no required missing metadata for the netcdf aggregation
+        self.assertEqual(len(logical_file.metadata.get_required_missing_elements()), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
