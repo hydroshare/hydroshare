@@ -841,6 +841,23 @@ li.account p{
 	text-overflow: ellipsis;
 }
 
+#app-geoconnex .flex{
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	gap: 2rem;
+}
+
+.geo-list{
+	flex: 1 2 auto;
+	width: 34%;
+}
+
+#geo-leaflet{
+	flex: 2 1 500px;
+	width: 66%;
+}
+
 
 #relatedResourcesTab{
     overflow:hidden;

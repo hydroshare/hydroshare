@@ -317,7 +317,7 @@ let geoconnexApp = new Vue({
 })
 // https://github.com/Castronova/selfie-his/blob/master/his-app/static/provider.js
 // geoconnexApp.items
-var map = L.map('map').setView([42.423935477911236, -71.17395771137696], 4);
+var map = L.map('geo-leaflet').setView([42.423935477911236, -71.17395771137696], 4);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
