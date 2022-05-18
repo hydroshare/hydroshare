@@ -160,6 +160,9 @@ let geoconnexApp = new Vue({
             if(feature.properties.SHR){
               feature.NAME = feature.properties.SHR;
             }
+            if(feature.properties.NAME10){
+              feature.NAME = feature.properties.NAME10;
+            }
             feature.text = `${feature.NAME} [${feature.relative_id}]`;
             vue.items.push(feature);
           }
