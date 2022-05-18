@@ -17,29 +17,83 @@ let geoconnexApp = new Vue({
             geoconnexUrl: "https://reference.geoconnex.us/collections",
             apiQueryAppend: "items?f=json&lang=en-US&skipGeometry=true",
             cacheName: "geoconnexCache",
-            debounceMilliseconds: 250,
             geoCache: null,
             resShortId: SHORT_ID,
             cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
             search: null,
-            rules: null
+            rules: null,
+            showMap: false,
+            leafletLayers: {}
         }
     },
     watch: {
       values(newValue, oldValue){
-        this.errorMsg = "";
+        let vue = this;
+        vue.errorMsg = "";
         if (newValue.length > oldValue.length){
           let selected = newValue.pop();
-          this.addMetadata(selected);
+          vue.fetchGeometry(selected).then(geometry =>{
+            selected.geometry = geometry.geometry;
+            vue.addToMap(selected, true);
+          });
+          vue.addMetadata(selected);
         }else if (newValue.length < oldValue.length){
-          let oldIds = oldValue.map(a => a.id);
-          let newIds = newValue.map(a => a.id);
-          let remove = oldIds.filter(x => !newIds.includes(x))
-          this.removeMetadata(remove);
+          // TODO: zoom to fit after remove
+          let remove = oldValue.filter(obj => newValue.every(s => s.id !== obj.id));
+          featureGroup.removeLayer(vue.leafletLayers[remove[0].value]);
+          map.fitBounds(featureGroup.getBounds());
+          // map.removeLayer(vue.leafletLayers[remove[0].value]);
+          vue.removeMetadata(remove);
         }
       }
     },
     methods: {
+      async fetchGeometry(geoconnexObj){
+        let vue = this;
+        let query = `${vue.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
+        let response = await vue.getFromCacheOrFetch(query);
+        return response;
+      },
+      addToMap(geojson, zoom=false){
+        let vue = this;
+        try {
+           let leafletLayer = L.geoJSON(geojson,{
+            onEachFeature: function (feature, layer) {
+              var text = `<h4>${feature.text}</h4>`
+              for (var k in feature.properties) {
+                  text += '<b>'+k+'</b>: ';
+                  if(k==="uri"){
+                    text += `<a href=${feature.properties[k]}>${feature.properties[k]}</a></br>`
+                  }
+                  else{
+                    text += feature.properties[k]+'</br>'
+                  }
+              }
+              let hide = ['properties', 'text', 'geometry', 'relative_id'];
+              for (var k in feature) {
+                if(hide.includes(k) | k in feature.properties){
+                  continue
+                }
+                text += '<b>'+k+'</b>: ';
+                text += feature[k]+'</br>'
+            }
+              layer.bindPopup(text);
+            }}
+          );
+          vue.leafletLayers[geojson.uri] = leafletLayer;
+          featureGroup.addLayer(leafletLayer);
+          // map.addLayer(leafletLayer);
+          if(zoom){
+            map.fitBounds(leafletLayer.getBounds());
+          }else{
+            map.fitBounds(featureGroup.getBounds());
+          }
+
+        } catch (error) {
+          console.log(error.message);
+        }
+        vue.showMap = true;
+      },
       setRules(){
         let vue = this;
         vue.rules = [
@@ -88,22 +142,24 @@ let geoconnexApp = new Vue({
           vue.items.push(header);
           let resp = await vue.getItemsIn(col.id);
           for (let feature of resp.features){
-            let properties = feature.properties;
-            properties.relative_id = properties.uri.split('ref/').pop();
-            if(properties.AQ_NAME){
-              properties.NAME = properties.AQ_NAME;
+            feature.relative_id = feature.properties.uri.split('ref/').pop();
+            feature.collection = feature.relative_id.split('/')[0];
+            feature.uri = feature.properties.uri;
+            feature.NAME = feature.properties.NAME;
+            if(feature.properties.AQ_NAME){
+              feature.NAME = feature.properties.AQ_NAME;
             }
-            if(properties.name){
-              properties.NAME = properties.name;
+            if(feature.properties.name){
+              feature.NAME = feature.properties.name;
             }
-            if(properties.name_at_outlet){
-              properties.NAME = properties.name_at_outlet;
+            if(feature.properties.name_at_outlet){
+              feature.NAME = feature.properties.name_at_outlet;
             }
-            if(properties.SHR){
-              properties.NAME = properties.SHR;
+            if(feature.properties.SHR){
+              feature.NAME = feature.properties.SHR;
             }
-            properties.text = `${properties.NAME} [${properties.relative_id}]`;
-            vue.items.push(properties);
+            feature.text = `${feature.NAME} [${feature.relative_id}]`;
+            vue.items.push(feature);
           }
         }
       },
@@ -173,24 +229,28 @@ let geoconnexApp = new Vue({
         let vue = this;
         for (relation of vue.relations){
           if (relation.type === "relation"){
-            let text;
+            let item;
             try {
               new URL(relation.value);
-              text = vue.items.find(obj => {
+              item = vue.items.find(obj => {
                 return obj.uri === relation.value;
-              }).text;
+              });
             } catch (_) {
-              // if the relation value isn't a url, just load the custom text
-              text = relation.value;
+              item = null;
             }
             let data = {
               "id": relation.id,
-              "text": text,
-              "value": relation.value
+              "text": item.text ? item.text : relation.value,
+              "value": relation.value,
             };
             vue.values.push(data);
+            vue.fetchGeometry(item).then(geometry =>{
+              item.geometry = geometry.geometry;
+              vue.addToMap(item, false);
+            });
           }
         }
+        // map.fitBounds(featureGroup.getBounds());
       },
       addMetadata(selected){ 
         let vue = this;
@@ -217,21 +277,22 @@ let geoconnexApp = new Vue({
           }
         });
       },
-      removeMetadata(relation_ids){
+      removeMetadata(relations){
         let vue = this;
-        for (let relation of relation_ids){
-          let url = `/hsapi/_internal/${vue.resShortId}/relation/${relation}/delete-metadata/`;
-          // console.log(`Removing resource metadata for HS Relation ID: ${relation}`);
-          $.ajax({
-            type: "POST",
-            url: url,
-            success: function () {
-            },
-            error: function (request, status, error) {
-              vue.errorMsg = `${error} while attempting to remove related feature.`;
-              console.log(request.responseText);
-            }
-          });
+        for (let relation of relations){
+          if (relation.id){
+            let url = `/hsapi/_internal/${vue.resShortId}/relation/${relation.id}/delete-metadata/`;
+            $.ajax({
+              type: "POST",
+              url: url,
+              success: function () {
+              },
+              error: function (request, status, error) {
+                vue.errorMsg = `${error} while attempting to remove related feature.`;
+                console.log(request.responseText);
+              }
+            });
+          }
         }
       }
     },
@@ -247,3 +308,28 @@ let geoconnexApp = new Vue({
       }
 
 })
+// https://github.com/Castronova/selfie-his/blob/master/his-app/static/provider.js
+// geoconnexApp.items
+var map = L.map('map').setView([42.423935477911236, -71.17395771137696], 4);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 18,
+    // id: 'mapbox/satellite-v9',
+    // tileSize: 512,
+    // zoomOffset: -1,
+}).addTo(map);
+
+var featureGroup =  L.featureGroup();
+featureGroup.addTo(map);
+
+// var marker = L.marker([51.5, -0.09]).addTo(map);
+
+// var polygon = L.polygon([
+//   [51.509, -0.08],
+//   [51.503, -0.06],
+//   [51.51, -0.047]
+// ]).addTo(map);
+
+// marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
+// polygon.bindPopup("I am a polygon.");

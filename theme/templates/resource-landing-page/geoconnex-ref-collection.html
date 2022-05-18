@@ -3,92 +3,63 @@
     {% load staticfiles %}
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
-        <div class="row">
-            <div class="col-xs-12">
-                {% if resource_edit_mode %}
-                    <div>
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/relation/add-metadata/"
-                            method="POST" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <section v-if="errored">
-                                <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
-                            </section>
-                            
-                            <section v-else>
-                                <div>
-                                    <v-app>
-                                        <v-combobox
-                                        v-model="values"
-                                        :items="items"
-                                        hide-no-data
-                                        allow-overflow="false"
-                                        chips
-                                        deletable-chips
-                                        multiple
-                                        outlined
-                                        label="Type URI or select from Geoconnex"
-                                        :disabled="loading"
-                                        color="blue-grey"
-                                        item-text="text"
-                                        item-value="uri"
-                                        :search-input.sync="search"
-                                        :loading="loading"
-                                        :rules="rules"
-                                        >
-                                        <template v-slot:item="data">
-                                            <template v-if="typeof data.item !== 'object'">
-                                            <v-list-tile-content v-text="data.item"></v-list-tile-content>
-                                            </template>
-                                            <template v-else>
-                                                <v-list-item-content>
-                                                    <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
-                                                    <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
-                                                </v-list-item-content>
-                                            </template>
-                                        </template>
-                                        <template v-slot:no-data>
-                                            <v-list-item>
-                                                <v-list-item-content>
-                                                <v-list-item-title>
-                                                    No results matching "<strong>${ search }</strong>". Press <kbd>enter</kbd> to create a new one
-                                                </v-list-item-title>
-                                                </v-list-item-content>
-                                            </v-list-item>
-                                            </template>
-                                        </v-combobox>
-                                        <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
-                                        
-                                        <div style="border: thin solid red" v-if="debug && values.length > 0">
-                                            <ul>
-                                                <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
-                                            </ul>
-                                        </div>
-                                    </v-app>
-                                </div>
-                                <div v-if="loading">
-                                    <p>Loading Geoconnex collection: ${currentLoading}</p>
-                                </div>
-                                <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                        aria-hidden="true">&times;</span></button>
-                                    <p>${errorMsg}</p>
-                                </div>
-                            </section>
-                        </form>
-                    </div>
-                {% else %}
-                    <v-app>
+        <v-app>
+            {% if resource_edit_mode %}
+                <section>
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/relation/add-metadata/"
+                        method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
                         <section v-if="errored">
                             <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
                         </section>
+                        
                         <section v-else>
-                            <div>
-                                <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
-                                <div style="border: thin solid red" v-if="debug && values.length > 0">
-                                    <ul>
-                                        <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
-                                    </ul>
-                                </div>
+                            <v-combobox
+                            v-model="values"
+                            :items="items"
+                            hide-no-data
+                            allow-overflow="false"
+                            chips
+                            deletable-chips
+                            multiple
+                            outlined
+                            hide-selected
+                            label="Type URI or select from Geoconnex"
+                            :disabled="loading"
+                            color="blue-grey"
+                            :search-input.sync="search"
+                            :loading="loading"
+                            :rules="rules"
+                            return-object="true"
+                            style="z-index: 999"
+                            >
+                            <template v-slot:item="data">
+                                <template v-if="typeof data.item !== 'object'">
+                                <v-list-tile-content v-text="data.item"></v-list-tile-content>
+                                </template>
+                                <template v-else>
+                                    <v-list-item-content>
+                                        <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
+                                        <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
+                                    </v-list-item-content>
+                                </template>
+                            </template>
+                            <template v-slot:no-data>
+                                <v-list-item>
+                                    <v-list-item-content>
+                                    <v-list-item-title>
+                                        No results matching "<strong>${ search }</strong>". Press <kbd>enter</kbd> to create a new one
+                                    </v-list-item-title>
+                                    </v-list-item-content>
+                                </v-list-item>
+                                </template>
+                            </v-combobox>
+                            <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
+                            
+                            <div style="border: thin solid red" v-if="debug && values.length > 0">
+                                <ul>
+                                    <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
+                                </ul>
                             </div>
                             <div v-if="loading">
                                 <p>Loading Geoconnex collection: ${currentLoading}</p>
@@ -98,31 +69,63 @@
                                     aria-hidden="true">&times;</span></button>
                                 <p>${errorMsg}</p>
                             </div>
-                            <div v-else>
-                                <table class="table hs-table info-table">
-                                    <div style="border: thin solid red" v-if="debug && values.length > 0">
-                                        <ul>
-                                            <tr v-for="value in values" style="padding-bottom: 20px">
-                                                <td class="dataset-label" style="min-width: 100px;">
-                                                   The content of this resource is related to: 
-                                                </td>
-                                                <td class="dataset-details">${value.text}</td>
-                                                <td v-if="isUrl(value.value)" class="dataset-details"><a :href="value.value"> ${value.value}</a></td>
-                                            </tr>
-                                        </ul>
-                                    </div>
-                                </table>
-                            </div>
                         </section>
-                    </v-app>
-                {% endif %}
-            </div>
-        </div>
+                    </form>
+                </section>
+            {% else %}
+                <section v-if="errored">
+                    <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
+                </section>
+                <section v-else>
+                    <div>
+                        <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
+                        <div style="border: thin solid red" v-if="debug && values.length > 0">
+                            <ul>
+                                <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div v-if="loading">
+                        <p>Loading Geoconnex collection: ${currentLoading}</p>
+                    </div>
+                    <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                        <p>${errorMsg}</p>
+                    </div>
+                    <div v-else>
+                        <table class="table hs-table info-table">
+                            <div style="border: thin solid red" v-if="debug && values.length > 0">
+                                <ul>
+                                    <tr v-for="value in values" style="padding-bottom: 20px">
+                                        <td class="dataset-label" style="min-width: 100px;">
+                                        The content of this resource is related to: 
+                                        </td>
+                                        <td class="dataset-details">${value.text}</td>
+                                        <td v-if="isUrl(value.value)" class="dataset-details"><a :href="value.value"> ${value.value}</a></td>
+                                    </tr>
+                                </ul>
+                            </div>
+                        </table>
+                    </div>
+                </section>
+            {% endif %}
+            <div :v-if="showMap" id="map" style="height: 500px;"></div>
+        </v-app>
     </div>
 {% endif %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+crossorigin=""/>
+{% endblock %}
 
 {% block extra_js %}
 <script src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
 <script src="https://unpkg.com/vuetify@2.6.4/dist/vuetify.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+crossorigin=""></script>
 <script type="text/javascript" src="{% static 'js/hs-vue/geoconnex-reference-collection.js' %}"></script>
 {% endblock %}
