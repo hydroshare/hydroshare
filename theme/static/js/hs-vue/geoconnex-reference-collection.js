@@ -38,11 +38,13 @@ let geoconnexApp = new Vue({
           });
           vue.addMetadata(selected);
         }else if (newValue.length < oldValue.length){
-          // TODO: zoom to fit after remove
           let remove = oldValue.filter(obj => newValue.every(s => s.id !== obj.id));
-          featureGroup.removeLayer(vue.leafletLayers[remove[0].value]);
-          map.fitBounds(featureGroup.getBounds());
-          // map.removeLayer(vue.leafletLayers[remove[0].value]);
+          try{
+            featureGroup.removeLayer(vue.leafletLayers[remove[0].value]);
+            map.fitBounds(featureGroup.getBounds());
+          }catch(e){
+            console.log(e.message);
+          }
           vue.removeMetadata(remove);
         }
       }
@@ -240,14 +242,16 @@ let geoconnexApp = new Vue({
             }
             let data = {
               "id": relation.id,
-              "text": item.text ? item.text : relation.value,
+              "text": item ? item.text : relation.value,
               "value": relation.value,
             };
             vue.values.push(data);
-            vue.fetchGeometry(item).then(geometry =>{
-              item.geometry = geometry.geometry;
-              vue.addToMap(item, false);
-            });
+            if (item){
+              vue.fetchGeometry(item).then(geometry =>{
+                item.geometry = geometry.geometry;
+                vue.addToMap(item, false);
+              });
+            }
           }
         }
         // map.fitBounds(featureGroup.getBounds());
