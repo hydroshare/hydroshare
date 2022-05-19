@@ -42,7 +42,6 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.netcdf_sphere_lambert_conformal_conic_file = \
             f'{test_file_base_path}/data/{self.netcdf_sphere_lambert_conformal_conic_file_name}'
 
-
     def test_create_aggregation_from_nc_file_1(self):
         # here we are using a valid nc file for setting it
         # to NetCDF file type which includes metadata extraction
@@ -236,7 +235,6 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # check that there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_res_file_folder_path = res_file.file_folder
         # set the nc file to NetCDF file type
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test computed spatial coverage
