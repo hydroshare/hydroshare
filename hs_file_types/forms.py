@@ -346,8 +346,8 @@ class OriginalCoverageForm(forms.Form):
     southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput())
     westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
     units = forms.CharField(max_length=100, label='Extent Unit')
-    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES,
-                                               label='Coordinate String Type', required=False)
+    projection_string_type = forms.CharField(max_length=100, label='Coordinate String Type', required=False,
+                                             widget=forms.TextInput())
     projection_string_text = forms.CharField(max_length=1000, label='Coordinate String',
                                              required=False, widget=forms.Textarea())
     datum = forms.CharField(max_length=300, label='Datum', required=False, widget=forms.TextInput())
