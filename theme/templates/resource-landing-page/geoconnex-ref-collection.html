@@ -6,7 +6,7 @@
         <v-app>
             <div v-if="loading">
                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${currentLoading}</p>
-                <p v-else><b>Loading Geoconnex relations...
+                <p v-else>Loading Geoconnex relations...</p>
             </div>
             <div v-if="errored">
                 <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
@@ -96,11 +96,11 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/vuetify@2.6.4/dist/vuetify.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+    <script defer src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
+    <script defer src="https://unpkg.com/vuetify@2.6.4/dist/vuetify.min.js"></script>
+    <script defer src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
         integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
         crossorigin="">
     </script>
-    <script type="text/javascript" src="{% static 'js/hs-vue/geoconnex-reference-collection.js' %}"></script>
+    <script defer type="text/javascript" src="{% static 'js/hs-vue/geoconnex-reference-collection.js' %}"></script>
 {% endblock %}
