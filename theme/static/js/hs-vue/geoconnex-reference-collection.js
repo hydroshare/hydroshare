@@ -7,6 +7,7 @@ let geoconnexApp = new Vue({
         return{
             relations: RELATIONS,
             debug: false,
+            resMode: RESOURCE_MODE,
             items: [],
             collections: null,
             values: [],
@@ -23,7 +24,9 @@ let geoconnexApp = new Vue({
             search: null,
             rules: null,
             showMap: false,
-            leafletLayers: {}
+            map: null,
+            leafletLayers: {},
+            featureGroup: null,
         }
     },
     watch: {
@@ -40,8 +43,8 @@ let geoconnexApp = new Vue({
         }else if (newValue.length < oldValue.length){
           let remove = oldValue.filter(obj => newValue.every(s => s.id !== obj.id));
           try{
-            featureGroup.removeLayer(vue.leafletLayers[remove[0].value]);
-            map.fitBounds(featureGroup.getBounds());
+            vue.featureGroup.removeLayer(vue.leafletLayers[remove[0].value]);
+            vue.map.fitBounds(vue.featureGroup.getBounds());
           }catch(e){
             console.log(e.message);
           }
@@ -55,6 +58,27 @@ let geoconnexApp = new Vue({
         let query = `${vue.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
         let response = await vue.getFromCacheOrFetch(query);
         return response;
+      },
+      async fetchReferenceItem(uri){
+        let vue = this;
+        let relative_id = uri.split('ref/').pop();
+        let collection = relative_id.split('/')[0];
+        let id = relative_id.split('/')[1];
+        let query = `${vue.geoconnexUrl}/${collection}/items/${id}?f=json`;
+        let response = await vue.getFromCacheOrFetch(query);
+        return response;
+      },
+      createMap(){
+        let vue = this;
+        vue.map = L.map('geo-leaflet').setView([42.423935477911236, -71.17395771137696], 4);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 18,
+        }).addTo(vue.map);
+
+        vue.featureGroup =  L.featureGroup();
+        vue.featureGroup.addTo(vue.map);
       },
       addToMap(geojson, zoom=false){
         let vue = this;
@@ -83,12 +107,11 @@ let geoconnexApp = new Vue({
             }}
           );
           vue.leafletLayers[geojson.uri] = leafletLayer;
-          featureGroup.addLayer(leafletLayer);
-          // map.addLayer(leafletLayer);
+          vue.featureGroup.addLayer(leafletLayer);
           if(zoom){
-            map.fitBounds(leafletLayer.getBounds());
+            vue.map.fitBounds(leafletLayer.getBounds());
           }else{
-            map.fitBounds(featureGroup.getBounds());
+            vue.map.fitBounds(vue.featureGroup.getBounds());
           }
 
         } catch (error) {
@@ -144,28 +167,38 @@ let geoconnexApp = new Vue({
           vue.items.push(header);
           let resp = await vue.getItemsIn(col.id);
           for (let feature of resp.features){
-            feature.relative_id = feature.properties.uri.split('ref/').pop();
-            feature.collection = feature.relative_id.split('/')[0];
-            feature.uri = feature.properties.uri;
-            feature.NAME = feature.properties.NAME;
-            if(feature.properties.AQ_NAME){
-              feature.NAME = feature.properties.AQ_NAME;
-            }
-            if(feature.properties.name){
-              feature.NAME = feature.properties.name;
-            }
-            if(feature.properties.name_at_outlet){
-              feature.NAME = feature.properties.name_at_outlet;
-            }
-            if(feature.properties.SHR){
-              feature.NAME = feature.properties.SHR;
-            }
-            if(feature.properties.NAME10){
-              feature.NAME = feature.properties.NAME10;
-            }
-            feature.text = `${feature.NAME} [${feature.relative_id}]`;
-            vue.items.push(feature);
+            vue.items.push(vue.getFeatureProperties(feature));
           }
+        }
+      },
+      getFeatureProperties(feature){
+        feature.relative_id = feature.properties.uri.split('ref/').pop();
+        feature.collection = feature.relative_id.split('/')[0];
+        feature.uri = feature.properties.uri;
+        feature.NAME = feature.properties.NAME;
+        if(feature.properties.AQ_NAME){
+          feature.NAME = feature.properties.AQ_NAME;
+        }
+        if(feature.properties.name){
+          feature.NAME = feature.properties.name;
+        }
+        if(feature.properties.name_at_outlet){
+          feature.NAME = feature.properties.name_at_outlet;
+        }
+        if(feature.properties.SHR){
+          feature.NAME = feature.properties.SHR;
+        }
+        if(feature.properties.NAME10){
+          feature.NAME = feature.properties.NAME10;
+        }
+        feature.text = `${feature.NAME} [${feature.relative_id}]`;
+        return feature;
+      },
+      async getOnlyRelationItems(){
+        let vue = this;
+        for (let relation of vue.relations){
+          let feature = await vue.fetchReferenceItem(relation.value);
+          vue.items.push(vue.getFeatureProperties(feature));
         }
       },
       async getItemsIn(collectionId){
@@ -257,7 +290,6 @@ let geoconnexApp = new Vue({
             }
           }
         }
-        // map.fitBounds(featureGroup.getBounds());
       },
       addMetadata(selected){ 
         let vue = this;
@@ -308,35 +340,19 @@ let geoconnexApp = new Vue({
     },
     async mounted() {
       let vue = this;
-      vue.geoCache = await caches.open(vue.cacheName);
-      await vue.getAllItems();
-      vue.loadRelations();
-      vue.loading = false;
+      if(vue.resMode == "Edit"){
+        vue.geoCache = await caches.open(vue.cacheName);
+        await vue.getAllItems();
+        vue.createMap();
+        vue.loadRelations();
+        vue.loading = false;
+      }else if(vue.resMode == "View" && vue.relations.length > 0){
+        vue.geoCache = await caches.open(vue.cacheName);
+        await vue.getOnlyRelationItems();
+        vue.createMap();
+        vue.loadRelations();
+        vue.loading = false;
       }
+    }
 
 })
-// https://github.com/Castronova/selfie-his/blob/master/his-app/static/provider.js
-// geoconnexApp.items
-var map = L.map('geo-leaflet').setView([42.423935477911236, -71.17395771137696], 4);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 18,
-    // id: 'mapbox/satellite-v9',
-    // tileSize: 512,
-    // zoomOffset: -1,
-}).addTo(map);
-
-var featureGroup =  L.featureGroup();
-featureGroup.addTo(map);
-
-// var marker = L.marker([51.5, -0.09]).addTo(map);
-
-// var polygon = L.polygon([
-//   [51.509, -0.08],
-//   [51.503, -0.06],
-//   [51.51, -0.047]
-// ]).addTo(map);
-
-// marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
-// polygon.bindPopup("I am a polygon.");

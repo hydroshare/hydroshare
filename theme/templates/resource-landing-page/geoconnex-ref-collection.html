@@ -1,20 +1,28 @@
 {% load hydroshare_tags crispy_forms_tags staticfiles %}
-{% if resource_edit_mode or show_relations_section %}
+{% if resource_edit_mode or generic_relations %}
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
+        <h4>This HydroShare resource is related to the following geospatial features:</h4>
         <v-app>
+            <div v-if="loading">
+                <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${currentLoading}</p>
+                <p v-else><b>Loading Geoconnex relations...
+            </div>
+            <div v-if="errored">
+                <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
+            </div>
+            <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
+                <p>${errorMsg}</p>
+            </div>
             <div class="flex">
                 {% if resource_edit_mode %}
                     <div class="geo-list">
                         <form action="/hsapi/_internal/{{ cm.short_id }}/relation/add-metadata/"
                             method="POST" enctype="multipart/form-data">
                             {% csrf_token %}
-                            <div v-if="errored">
-                                <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
-                            </div>
-                            
-                            <div v-else>
-                                <v-combobox
+                            <v-combobox
                                 v-model="values"
                                 :items="items"
                                 hide-no-data
@@ -31,102 +39,68 @@
                                 :loading="loading"
                                 :rules="rules"
                                 return-object="true"
-                                style="z-index: 999"
-                                >
-                                    <template v-slot:item="data">
-                                        <template v-if="typeof data.item !== 'object'">
-                                        <v-list-tile-content v-text="data.item"></v-list-tile-content>
-                                        </template>
-                                        <template v-else>
-                                            <v-list-item-content>
-                                                <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
-                                                <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
-                                            </v-list-item-content>
-                                        </template>
+                                style="z-index: 999">
+                                <template v-slot:item="data">
+                                    <template v-if="typeof data.item !== 'object'">
+                                    <v-list-tile-content v-text="data.item"></v-list-tile-content>
                                     </template>
-                                    <template v-slot:no-data>
-                                        <v-list-item>
-                                            <v-list-item-content>
-                                                <v-list-item-title>
-                                                    No results matching "<strong>${ search }</strong>". Press <kbd>enter</kbd> to create a new one
-                                                </v-list-item-title>
-                                            </v-list-item-content>
-                                        </v-list-item>
+                                    <template v-else>
+                                        <v-list-item-content>
+                                            <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
+                                            <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
+                                        </v-list-item-content>
                                     </template>
-                                </v-combobox>
-                                <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
-                                
-                                <div style="border: thin solid red" v-if="debug && values.length > 0">
-                                    <ul>
-                                        <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
-                                    </ul>
-                                </div>
-                                <div v-if="loading">
-                                    <p>Loading Geoconnex collection: ${currentLoading}</p>
-                                </div>
-                                <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                        aria-hidden="true">&times;</span></button>
-                                    <p>${errorMsg}</p>
-                                </div>
+                                </template>
+                                <template v-slot:no-data>
+                                    <v-list-item>
+                                        <v-list-item-content>
+                                            <v-list-item-title>
+                                                No results matching "<strong>${ search }</strong>". Press <kbd>enter</kbd> to create a new one
+                                            </v-list-item-title>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                </template>
+                            </v-combobox>
+                            <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
+                            <div style="border: thin solid red" v-if="debug && values.length > 0">
+                                <ul>
+                                    <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
+                                </ul>
                             </div>
                         </form>
                     </div>
                 {% else %}
                     <div class="geo-list">
-                        <div v-if="errored">
-                            <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
-                        </div>
-                        <div v-else>
-                            <div>
-                                <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
-                                <div style="border: thin solid red" v-if="debug && values.length > 0">
-                                    <ul>
-                                        <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div v-if="loading">
-                                <p>Loading Geoconnex collection: ${currentLoading}</p>
-                            </div>
-                            <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                    aria-hidden="true">&times;</span></button>
-                                <p>${errorMsg}</p>
-                            </div>
-                            <div v-else>
-                                <h4>This HydroShare resource is related to the following geospatial features</h4>
-                                <table class="table hs-table info-table">
-                                    <div style="border: thin solid red" v-if="debug && values.length > 0">
-                                        <ul>
-                                            <tr v-for="value in values" style="padding-bottom: 20px">
-                                                <td v-if="isUrl(value.value)" class="dataset-details"><a v-if="isUrl(value.value)" :href="value.value"> ${value.text}</a></td>
-                                                <td v-else class="dataset-details">${value.text}</td>
-                                            </tr>
-                                        </ul>
-                                    </div>
-                                </table>
-                            </div>
+                        <div v-if="!loading && values.length > 0">
+                            <table class="table hs-table info-table">
+                                <ul>
+                                    <tr v-for="value in values" style="padding-bottom: 20px">
+                                        <td v-if="isUrl(value.value)" class="dataset-details"><a v-if="isUrl(value.value)" :href="value.value"> ${value.text}</a></td>
+                                        <td v-else class="dataset-details">${value.text}</td>
+                                    </tr>
+                                </ul>
+                            </table>
                         </div>
                     </div>
                 {% endif %}
-                <div id="geo-leaflet" class="column" :v-if="showMap" style="height: 500px;"></div>
+                <div id="geo-leaflet" class="column"></div>
             </div>
         </v-app>
     </div>
 {% endif %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
-integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
-crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+        integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+        crossorigin=""/>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
-<script src="https://unpkg.com/vuetify@2.6.4/dist/vuetify.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
-integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
-crossorigin=""></script>
-<script type="text/javascript" src="{% static 'js/hs-vue/geoconnex-reference-collection.js' %}"></script>
+    <script src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/vuetify@2.6.4/dist/vuetify.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+        integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+        crossorigin="">
+    </script>
+    <script type="text/javascript" src="{% static 'js/hs-vue/geoconnex-reference-collection.js' %}"></script>
 {% endblock %}

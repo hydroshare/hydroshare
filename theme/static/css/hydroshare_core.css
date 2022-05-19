@@ -850,12 +850,13 @@ li.account p{
 
 .geo-list{
 	flex: 1 2 auto;
-	width: 34%;
+	width: 25%;
 }
 
 #geo-leaflet{
 	flex: 2 1 500px;
-	width: 66%;
+	width: 75%;
+	height: 400px;
 }
 
 
