@@ -80,7 +80,7 @@ let geoconnexApp = new Vue({
         vue.featureGroup =  L.featureGroup();
         vue.featureGroup.addTo(vue.map);
       },
-      addToMap(geojson, zoom=false){
+      addToMap(geojson, zoom=false, color='blue'){
         let vue = this;
         try {
            let leafletLayer = L.geoJSON(geojson,{
@@ -103,9 +103,13 @@ let geoconnexApp = new Vue({
                 text += '<b>'+k+'</b>: ';
                 text += feature[k]+'</br>'
             }
+            text += `<a href="">TODO: Add clickable to add this item to the input field</a></br>`
               layer.bindPopup(text);
             }}
           );
+          leafletLayer.setStyle({
+            color: color
+          });
           vue.leafletLayers[geojson.uri] = leafletLayer;
           vue.featureGroup.addLayer(leafletLayer);
           if(zoom){
@@ -333,6 +337,45 @@ let geoconnexApp = new Vue({
             });
           }
         }
+      },
+      getGeoItemsInRange(point, radius=1e6, maxArea=1e10){
+        // https://turfjs.org/docs/#intersects
+        // https://turfjs.org/docs/#booleanIntersects
+        let vue=this;
+        let center = turf.point(point)
+        var options = {
+          steps: 10, 
+          units: 'meters', 
+          properties: {
+            Center: point,
+            Radius: `${radius} meters`,
+            MaxArea: `${maxArea} sq meters`
+          }
+        };
+        var circle = turf.circle(center, radius, options);
+        circle.text = "Search area";
+        vue.addToMap(circle, true, 'red');
+
+        for (let item of vue.items){
+          vue.fetchGeometry(item).then(geometry =>{
+            item.geometry = geometry.geometry;
+            try{
+              if (turf.area(item) < maxArea){
+                if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(circle, item)){
+                  vue.addToMap(item, false);
+                }
+                if(item.geometry.type.includes("Point") && turf.booleanPointInPolygon(item, circle)){
+                  vue.addToMap(item, false);
+                }
+                if(item.geometry.type.includes("Line") && turf.booleanIntersects(circle, item)){
+                  vue.addToMap(item, false);
+                }
+              }
+            }catch(e){
+              console.log(e);
+            }
+          });
+        }
       }
     },
     beforeMount(){
@@ -353,6 +396,22 @@ let geoconnexApp = new Vue({
         vue.loadRelations();
         vue.loading = false;
       }
+      // CUAHSI
+      // vue.getGeoItemsInRange([-72.56428830847662, 42.85084818160041])
+
+      // SALT LAKE
+      // vue.getGeoItemsInRange([-112.551445, 41.149411])
+
+      // Glen Canyon
+      vue.getGeoItemsInRange([-111.48381550548234, 36.9378850872748]);
+      
+
+      // FL
+      // vue.getGeoItemsInRange([-80.7839365138525, 26.932581283846268])
+
+      // Salton sea
+      // vue.getGeoItemsInRange([-115.827709, 33.317246]);
+      
     }
 
 })
