@@ -107,11 +107,11 @@ $(document).ready(function() {
     $("#btn-calc-coverage").click(collection_coverages_calculate_ajax);
 
     $("#btn-add-collection-resources").click(function () {
-        if (!$("#collectable-resources-modal-container").find("#collection-candidate").length) {
-            getCollectableResources(1, false);
-        }
         $('#collection-candidate').modal('show');
     });
+
+    // load collectable resources asynchronously
+    getCollectableResources();
 
     $("#save-collection-btn-ok").click(add_collection_item_ajax);
 
@@ -523,35 +523,27 @@ function changeMetadataFormAction2Add(form_id) {
     $('#'+form_id).attr('action', url_new);
 }
 
-function getCollectableResources(pageNo, paging) {
+function getCollectableResources() {
     let res_id = $("#collection-res-id").val();
     let url = "/hsapi/_internal/" + res_id + "/get-collectable-resources/";
-
+    let $btnAddCollectionResources = $("#btn-add-collection-resources")
+    let btnDefaultText =  $btnAddCollectionResources.text();
+    $btnAddCollectionResources.text("Loading...");
+    $btnAddCollectionResources.addClass('disabled');
     return $.ajax({
         type: "POST",
         url: url,
         dataType: 'html',
-        data: {"page": pageNo, "paging": paging},
-        async: false,
+        data: {},
+        async: true,
         success: function (result) {
             let json_response = JSON.parse(result);
-            if (!paging) { // user clicked the "Add resources" button for the first time to list the resources in modal window - html for the modal is expected from the backend
-                $("#collectable-resources-modal-container").html(json_response.collectable_resources_modal);
-                $("#save-collection-btn-ok").click(add_collection_item_ajax);
-            }
-            else { //user is paging through the list of resources in the modal - we replacing html only for the body part of the modal
-                $("#collectable-modal-body").html(json_response.collectable_resources_modal);
-            }
-
+            $("#collectable-resources-modal-container").html(json_response.collectable_resources_modal);
+            $("#save-collection-btn-ok").click(add_collection_item_ajax);
             setUpCollectableResourcesDataTable();
             $('#collection-table-candidate').DataTable().draw();
-            $("#collection-table-candidate_length").hide();
-            $('#collection-candidate').modal('show');
-            $("#collection_next_page, #collection_prev_page").click(function () {
-                let pageNo = $(this).attr('data-page')
-                let paging = true;
-                getCollectableResources(pageNo, paging);
-            });
+            $btnAddCollectionResources.text(btnDefaultText);
+            $btnAddCollectionResources.removeClass('disabled');
 
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
