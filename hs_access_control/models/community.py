@@ -5,6 +5,8 @@ from django.contrib.contenttypes.models import ContentType
 
 from hs_core.models import BaseResource
 
+import datetime
+
 
 ###################################
 # Communities of groups
@@ -20,7 +22,7 @@ class Community(models.Model):
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = models.ImageField(upload_to='community', null=True, blank=True)
     # whether community is available to be joined
-    closed = models.BooleanField(null=False, default=True, blank=False, editable=False)
+    closed = models.BooleanField(null=False, default=False, blank=False, editable=False)
     active = models.BooleanField(null=False, default=True, blank=False, editable=False)
 
     def __str__(self):
@@ -258,7 +260,7 @@ class CommunityRequest(models.Model):
     purpose = models.TextField(null=True, blank=True)
     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
-    date_created = models.DateTimeField(editable=False)
+    date_processed = models.DateTimeField(editable=False, null=True)
     picture = models.ImageField(upload_to='community', null=True, blank=True)
     # whether community is available to be joined
     closed = models.BooleanField(null=False, default=True, blank=False, editable=False)
@@ -269,3 +271,22 @@ class CommunityRequest(models.Model):
 
     def __str__(self):
         return self.name
+
+    def approve(self):
+        c = Community.objects.create(
+           name=self.name,
+           description=self.description,
+           email=self.email,
+           url=self.url,
+           purpose=self.purpose,
+           closed=self.closed)
+
+        self.owner.share_community_with_user(c, self.owner, PrivilegeCodes.OWNER)
+        self.approved = True
+        self.date_processed = datetime.now()
+        self.save()
+    
+    def decline(self): 
+        self.approved = False
+        self.date_processed = datetime.now()
+        self.save()

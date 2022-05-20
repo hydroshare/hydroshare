@@ -113,7 +113,12 @@ def cr_json(cr):
             'description': cr.description or '',
             'purpose': cr.purpose or '',
             'auto_approve': 1 if cr.auto_approve is True else 0,
-            'date_created': cr.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
+            'date_requested': (cr.date_requested.strftime("%m/%d/%Y, %H:%M:%S")
+                               if cr.date_requested is not None
+                               else ""),
+            'date_processed': (cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S")
+                               if cr.date_processed is not None
+                               else ""),
             'picture_url': picture_url,
             'closed': 1 if cr.closed is True else 0,
             'owner': user_json(cr.owner)
@@ -451,30 +456,10 @@ class CommunityRequestView(View):
         logger.debug("crid={} action={}".format(crid, action))
 
         message = ""
-        denied = ""
-
-        if action is not None:  # has to have a record to process
-            name = self.request.POST['name']
-            description = self.request.POST['description']
-            email = self.request.POST['email']
-            url = self.request.POST['url']
-            purpose = self.request.POST['purpose']
-            # picture = self.request.POST['picture']
-            closed = self.request.POST['closed']
-            owner = self.request.POST['owner']
-        else:
-            name = None
-            description = None
-            email = None
-            url = None
-            purpose = None
-            # picture = None
-            closed = None
-            owner = None
 
         denied = self.hydroshare_denied()
 
-        if denied == "":
+        if denied == "":  # no error; permission granted
             user = self.request.user
             if action is not None:
                 if crid is not None:  # request
@@ -485,7 +470,16 @@ class CommunityRequestView(View):
                     except CommunityRequest.DoesNotExist:
                         denied = "No request matching that id found"
                 if denied == "":
-                    if action == 'request':  # request a new community
+                    if action == 'request' or action == 'approve' or action == "decline":
+                        # update the community description from POST data.
+                        name = self.request.POST['name']
+                        description = self.request.POST['description']
+                        email = self.request.POST['email']
+                        url = self.request.POST['url']
+                        purpose = self.request.POST['purpose']
+                        # picture = self.request.POST['picture']
+                        closed = self.request.POST['closed']
+                        owner = self.request.POST['owner']
                         if cr is not None:
                             cr.name = name
                             cr.description = description
