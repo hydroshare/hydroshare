@@ -61,6 +61,15 @@
                                     </v-list-item>
                                 </template>
                             </v-combobox>
+                            <input v-model="lat" type="text" class="form-control"
+                                   placeholder="Lat">
+                            <input v-model="long" type="text" class="form-control"
+                                   placeholder="Long">       
+                            <input v-model="radius" type="text" class="form-control"
+                                   placeholder="Radius (meters)">
+                            <button type="button" @click="getGeoItemsInRange" class="btn btn-primary">
+                                Find based on spatial extent
+                            </button>
                             <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
                             <div style="border: thin solid red" v-if="debug && values.length > 0">
                                 <ul>

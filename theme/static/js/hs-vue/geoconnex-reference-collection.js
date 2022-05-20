@@ -27,6 +27,9 @@ let geoconnexApp = new Vue({
             map: null,
             leafletLayers: {},
             featureGroup: null,
+            radius: 1e6,
+            lat: -111.48381550548234,
+            long: 36.9378850872748
         }
     },
     watch: {
@@ -342,7 +345,7 @@ let geoconnexApp = new Vue({
         // https://turfjs.org/docs/#intersects
         // https://turfjs.org/docs/#booleanIntersects
         let vue=this;
-        let center = turf.point(point)
+        let center = turf.point([vue.lat, vue.long])
         var options = {
           steps: 10, 
           units: 'meters', 
@@ -352,7 +355,7 @@ let geoconnexApp = new Vue({
             MaxArea: `${maxArea} sq meters`
           }
         };
-        var circle = turf.circle(center, radius, options);
+        var circle = turf.circle(center, vue.radius, options);
         circle.text = "Search area";
         vue.addToMap(circle, true, 'red');
 
@@ -376,6 +379,28 @@ let geoconnexApp = new Vue({
             }
           });
         }
+      },
+      runGeoExample(){
+        try{
+          let vue=this;
+          // CUAHSI
+        // vue.getGeoItemsInRange([-72.56428830847662, 42.85084818160041])
+  
+        // SALT LAKE
+        // vue.getGeoItemsInRange([-112.551445, 41.149411])
+  
+        // Glen Canyon
+        // vue.getGeoItemsInRange([-111.48381550548234, 36.9378850872748]);
+        
+  
+        // FL
+        // vue.getGeoItemsInRange([-80.7839365138525, 26.932581283846268])
+  
+        // Salton sea
+        // vue.getGeoItemsInRange([-115.827709, 33.317246]);
+        }catch(e){
+          console.log(e);
+        }
       }
     },
     beforeMount(){
@@ -396,22 +421,5 @@ let geoconnexApp = new Vue({
         vue.loadRelations();
         vue.loading = false;
       }
-      // CUAHSI
-      // vue.getGeoItemsInRange([-72.56428830847662, 42.85084818160041])
-
-      // SALT LAKE
-      // vue.getGeoItemsInRange([-112.551445, 41.149411])
-
-      // Glen Canyon
-      vue.getGeoItemsInRange([-111.48381550548234, 36.9378850872748]);
-      
-
-      // FL
-      // vue.getGeoItemsInRange([-80.7839365138525, 26.932581283846268])
-
-      // Salton sea
-      // vue.getGeoItemsInRange([-115.827709, 33.317246]);
-      
     }
-
 })
