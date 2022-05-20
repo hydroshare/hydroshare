@@ -491,19 +491,21 @@ $(document).ready(function () {
     $("#select_license").on('change', function () {
         var value = this.value;
         if (value === "other") {
-            $(this).closest("form").find("#id_statement").first().text("");
+            $(this).closest("form").find("#id_statement").first().val("");
             $(this).closest("form").find("#id_url").first().attr('value', "");
             $(this).closest("form").find("#id_statement").first().attr('readonly', false);
             $(this).closest("form").find("#id_url").first().attr('readonly', false);
+            $(this).closest("form").find("#div_id_statement").find("span").first().text("Statement*");
             $("#img-badge").first().hide();
         }
         else {
             var text = $(this).find('option:selected').text();
             text = "This resource is shared under the " + text + ".";
-            $(this).closest("form").find("#id_statement").first().text(text);
+            $(this).closest("form").find("#id_statement").first().val(text);
             $(this).closest("form").find("#id_url").first().attr('value', value);
             $(this).closest("form").find("#id_statement").first().attr('readonly', true);
             $(this).closest("form").find("#id_url").first().attr('readonly', true);
+            $(this).closest("form").find("#div_id_statement").find("span").first().text("Statement");
             $("#img-badge").first().show();
             if (text == "This resource is shared under the Creative Commons Attribution CC BY.") {
                 $(this).closest("form").find("#img-badge").first().attr('src', STATIC_URL + "img/cc-badges/CC-BY.png");
@@ -522,7 +524,7 @@ $(document).ready(function () {
                 $(this).closest("form").find("#img-badge").first().attr('alt', "CC-BY-NC-SA");
             }
             else if (text == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.") {
-                $(this).closest("form").find("#img-badge").first().attr('src', staticURL + "img/cc-badges/CC-BY-NC.png");
+                $(this).closest("form").find("#img-badge").first().attr('src', STATIC_URL + "img/cc-badges/CC-BY-NC.png");
                 $(this).closest("form").find("#img-badge").first().attr('alt', "CC-BY-NC");
             }
             else if (text == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.") {
@@ -556,7 +558,15 @@ $(document).ready(function () {
             $("#select_license").closest("form").find("#id_url").first().attr('readonly', true);
         }
     }
-
+    if (RESOURCE_MODE.toLowerCase() === 'edit') {
+        let selectedLicense = $("#select_license option:selected").val();
+        if (selectedLicense === "other") {
+            $("#select_license").closest("form").find("#div_id_statement").find("span").first().text("Statement*");
+        }
+        else {
+            $("#select_license").closest("form").find("#div_id_statement").find("span").first().text("Statement");
+        }
+    }
     // show "Save changes" button when form editing starts
     showMetadataFormSaveChangesButton();
 
