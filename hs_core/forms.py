@@ -732,19 +732,8 @@ class AbstractValidationForm(forms.Form):
 class RightsValidationForm(forms.Form):
     """Validate Rights form with statement and URL field."""
 
-    statement = forms.CharField(required=False)
+    statement = forms.CharField()
     url = forms.URLField(required=False, max_length=500)
-
-    def clean(self):
-        """Clean data and render proper error messages."""
-        cleaned_data = super(RightsValidationForm, self).clean()
-        statement = cleaned_data.get('statement', None)
-        url = cleaned_data.get('url', None)
-        if not statement and not url:
-            self._errors['statement'] = ["A value for statement is missing"]
-            self._errors['url'] = ["A value for Url is missing"]
-
-        return self.cleaned_data
 
 
 class CoverageTemporalFormHelper(BaseFormHelper):
