@@ -390,6 +390,7 @@ let leftHeaderApp = new Vue({
         resShortId: SHORT_ID,
         can_change: CAN_CHANGE,
         authors: AUTHORS,
+        has_active_creators: HAS_ACTIVE_CREATORS,
         selectedAuthor: {
             author: {
                 "id": null,
