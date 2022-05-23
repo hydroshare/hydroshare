@@ -83,7 +83,7 @@ let geoconnexApp = new Vue({
         vue.featureGroup =  L.featureGroup();
         vue.featureGroup.addTo(vue.map);
       },
-      addToMap(geojson, zoom=false, color='blue'){
+      addToMap(geojson, zoom=false, style={color: 'blue', radius: 5}){
         let vue = this;
         try {
            let leafletLayer = L.geoJSON(geojson,{
@@ -105,14 +105,16 @@ let geoconnexApp = new Vue({
                 }
                 text += '<b>'+k+'</b>: ';
                 text += feature[k]+'</br>'
-            }
-            text += `<a href="">TODO: Add clickable to add this item to the input field</a></br>`
+              }
+              text += `<a href="">TODO: Add clickable to add this item to the input field</a></br>`
               layer.bindPopup(text);
-            }}
+            },
+            pointToLayer: function (feature, latlng) {
+              return L.circleMarker(latlng, style);
+            }
+          }
           );
-          leafletLayer.setStyle({
-            color: color
-          });
+          leafletLayer.setStyle(style);
           vue.leafletLayers[geojson.uri] = leafletLayer;
           vue.featureGroup.addLayer(leafletLayer);
           if(zoom){
@@ -357,7 +359,7 @@ let geoconnexApp = new Vue({
         };
         var circle = turf.circle(center, vue.radius, options);
         circle.text = "Search area";
-        vue.addToMap(circle, true, 'red');
+        vue.addToMap(circle, true, {color:'red', fillColor: 'red', fillOpacity: 0.1});
 
         for (let item of vue.items){
           vue.fetchGeometry(item).then(geometry =>{
@@ -365,13 +367,13 @@ let geoconnexApp = new Vue({
             try{
               if (turf.area(item) < maxArea){
                 if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(circle, item)){
-                  vue.addToMap(item, false);
+                  vue.addToMap(item, false, {color:'green'});
                 }
                 if(item.geometry.type.includes("Point") && turf.booleanPointInPolygon(item, circle)){
-                  vue.addToMap(item, false);
+                  vue.addToMap(item, false, {color:'green', radius: 5, fillColor: 'yellow', fillOpacity: 0.8});
                 }
                 if(item.geometry.type.includes("Line") && turf.booleanIntersects(circle, item)){
-                  vue.addToMap(item, false);
+                  vue.addToMap(item, false, {color:'green'});
                 }
               }
             }catch(e){
@@ -379,6 +381,11 @@ let geoconnexApp = new Vue({
             }
           });
         }
+      },
+      fillFromExtent(){
+        let vue = this;
+        vue.lat = -72.56428830847662;
+        vue.long = 42.85084818160041;
       },
       runGeoExample(){
         try{
