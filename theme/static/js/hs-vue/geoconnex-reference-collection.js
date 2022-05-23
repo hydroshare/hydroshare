@@ -92,8 +92,8 @@ let geoconnexApp = new Vue({
         vue.searchGroup =  L.featureGroup();
 
         var overlayMaps = {
-          "Selected": vue.featureGroup,
-          "Search": vue.searchGroup
+          "Selected Collection Items": vue.featureGroup,
+          "Search (all items)": vue.searchGroup
         };
 
         vue.layerControl = L.control.layers(baseMaps, overlayMaps);
@@ -102,6 +102,7 @@ let geoconnexApp = new Vue({
         // show the default layers at start
         vue.map.addLayer(streets);
         vue.map.addLayer(vue.featureGroup);
+        vue.map.addLayer(vue.searchGroup);
       },
       addToMap(geojson, zoom=false, style={color: 'blue', radius: 5}, group=null){
         let vue = this;
@@ -142,18 +143,21 @@ let geoconnexApp = new Vue({
           }
           if(group){
             group.addLayer(leafletLayer);
-            // TODO: fix this
-            vue.map.addLayer(vue.searchGroup);
           }else{
             vue.featureGroup.addLayer(leafletLayer);
           }
-          // check if layergroup exists...
-          if(vue.collectionGroups && vue.collectionGroups[geojson.collection]){
-            vue.collectionGroups[geojson.collection].addLayer(leafletLayer);
-            vue.map.addLayer(vue.collectionGroups[geojson.collection]);
-          }else{
-            vue.collectionGroups[geojson.collection] = L.layerGroup(leafletLayer);
-            vue.layerControl.addOverlay(vue.collectionGroups[geojson.collection], geojson.collection)
+          if(group===vue.searchGroup){
+            if(!geojson.collection){
+              geojson.collection = "Search Bounds"
+            }
+            // check if layergroup exists...
+            if(vue.collectionGroups && vue.collectionGroups[geojson.collection]){
+              vue.collectionGroups[geojson.collection].addLayer(leafletLayer);
+              vue.map.addLayer(vue.collectionGroups[geojson.collection]);
+            }else{
+              vue.collectionGroups[geojson.collection] = L.layerGroup(leafletLayer);
+              vue.layerControl.addOverlay(vue.collectionGroups[geojson.collection], geojson.collection)
+            }
           }
 
           // handle zooming
@@ -401,7 +405,7 @@ let geoconnexApp = new Vue({
           }
         };
         var circle = turf.circle(center, vue.radius * 1000, options);
-        circle.text = "Search area";
+        circle.text = "Search bounds";
         center.text = "Center point";
         // TODO: add these in a different group so that we can clear them?
         vue.addToMap(center, true, {color:'red', radius: 3, fillColor: 'black', fillOpacity: .8}, group=vue.searchGroup);
