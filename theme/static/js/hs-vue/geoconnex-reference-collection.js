@@ -29,6 +29,7 @@ let geoconnexApp = new Vue({
             featureGroup: null,
             searchGroup: null,
             layerControl: null,
+            collectionGroups: {},
             radius: 1e3,
             maxArea: 1e4,
             lat: -111.48381550548234,
@@ -117,7 +118,7 @@ let geoconnexApp = new Vue({
                     text += feature.properties[k]+'</br>'
                   }
               }
-              let hide = ['properties', 'text', 'geometry', 'relative_id'];
+              let hide = ['properties', 'text', 'geometry', 'relative_id', 'type'];
               for (var k in feature) {
                 if(hide.includes(k) | k in feature.properties){
                   continue
@@ -141,10 +142,21 @@ let geoconnexApp = new Vue({
           }
           if(group){
             group.addLayer(leafletLayer);
+            // TODO: fix this
             vue.map.addLayer(vue.searchGroup);
           }else{
             vue.featureGroup.addLayer(leafletLayer);
           }
+          // check if layergroup exists...
+          if(vue.collectionGroups && vue.collectionGroups[geojson.collection]){
+            vue.collectionGroups[geojson.collection].addLayer(leafletLayer);
+            vue.map.addLayer(vue.collectionGroups[geojson.collection]);
+          }else{
+            vue.collectionGroups[geojson.collection] = L.layerGroup(leafletLayer);
+            vue.layerControl.addOverlay(vue.collectionGroups[geojson.collection], geojson.collection)
+          }
+
+          // handle zooming
           if(zoom){
             vue.map.fitBounds(leafletLayer.getBounds());
           }else{
