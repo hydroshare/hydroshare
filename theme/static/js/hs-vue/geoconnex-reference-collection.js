@@ -27,7 +27,7 @@ let geoconnexApp = new Vue({
             map: null,
             leafletLayers: {},
             featureGroup: null,
-            radius: 1e6,
+            radius: 1e3,
             lat: -111.48381550548234,
             long: 36.9378850872748
         }
@@ -357,7 +357,7 @@ let geoconnexApp = new Vue({
             MaxArea: `${maxArea} sq meters`
           }
         };
-        var circle = turf.circle(center, vue.radius, options);
+        var circle = turf.circle(center, vue.radius * 1000, options);
         circle.text = "Search area";
         vue.addToMap(circle, true, {color:'red', fillColor: 'red', fillOpacity: 0.1});
 

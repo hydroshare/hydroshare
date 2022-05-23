@@ -61,12 +61,36 @@
                                     </v-list-item>
                                 </template>
                             </v-combobox>
-                            <input v-model="lat" type="text" class="form-control"
-                                   placeholder="Lat">
-                            <input v-model="long" type="text" class="form-control"
-                                   placeholder="Long">       
-                            <input v-model="radius" type="text" class="form-control"
-                                   placeholder="Radius (meters)">
+                            <div class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon">Latitude</span>
+                                    <input type="number" class="form-control" v-model="lat" type="text" class="form-control"
+                                        placeholder="Lat"
+                                    >
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                          class="input-group-addon">°</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon">Longitude</span>
+                                    <input type="number" class="form-control" v-model="long" type="text" class="form-control"
+                                        placeholder="Long"
+                                    >
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                          class="input-group-addon">°</span>
+                                </div>
+                            </div>  
+                            <div class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon">Radius</span>
+                                    <input type="number" class="form-control" v-model="radius" type="number" class="form-control"
+                                        placeholder="Radius"
+                                    >
+                                    <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
+                                          class="input-group-addon">km</span>
+                                </div>
+                            </div> 
                             <button type="button" @click="fillFromExtent" class="btn btn-primary">
                                 Populate from Spatial Extent
                             </button>
