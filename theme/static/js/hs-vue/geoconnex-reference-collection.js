@@ -28,6 +28,7 @@ let geoconnexApp = new Vue({
             leafletLayers: {},
             featureGroup: null,
             radius: 1e3,
+            maxArea: 1e4,
             lat: -111.48381550548234,
             long: 36.9378850872748
         }
@@ -343,29 +344,30 @@ let geoconnexApp = new Vue({
           }
         }
       },
-      getGeoItemsInRange(point, radius=1e6, maxArea=1e10){
+      getGeoItemsInRange(){
         // https://turfjs.org/docs/#intersects
         // https://turfjs.org/docs/#booleanIntersects
         let vue=this;
         let center = turf.point([vue.lat, vue.long])
         var options = {
           steps: 10, 
-          units: 'meters', 
+          units: 'kilometers', 
           properties: {
-            Center: point,
-            Radius: `${radius} meters`,
-            MaxArea: `${maxArea} sq meters`
+            Radius: `${vue.radius} kilometers`,
+            MaxArea: `${vue.maxArea} sq km`
           }
         };
         var circle = turf.circle(center, vue.radius * 1000, options);
         circle.text = "Search area";
+        center.text = "Center point";
+        vue.addToMap(center, true, {color:'red', radius: 3, fillColor: 'black', fillOpacity: .8});
         vue.addToMap(circle, true, {color:'red', fillColor: 'red', fillOpacity: 0.1});
 
         for (let item of vue.items){
           vue.fetchGeometry(item).then(geometry =>{
             item.geometry = geometry.geometry;
             try{
-              if (turf.area(item) < maxArea){
+              if (turf.area(item) < vue.maxArea*1e6){
                 if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(circle, item)){
                   vue.addToMap(item, false, {color:'green'});
                 }
