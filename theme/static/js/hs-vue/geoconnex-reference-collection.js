@@ -137,7 +137,8 @@ let geoconnexApp = new Vue({
           );
           leafletLayer.setStyle(style);
           if(!geojson.uri){
-            vue.leafletLayers[leafletLayer._leaflet_id] = leafletLayer;
+            // pass
+            // vue.leafletLayers[leafletLayer._leaflet_id] = leafletLayer;
           }else{
             vue.leafletLayers[geojson.uri] = leafletLayer;
           }
@@ -404,7 +405,7 @@ let geoconnexApp = new Vue({
             MaxArea: `${vue.maxArea} sq km`
           }
         };
-        var circle = turf.circle(center, vue.radius * 1000, options);
+        var circle = turf.circle(center, vue.radius, options);
         circle.text = "Search bounds";
         center.text = "Center point";
         // TODO: add these in a different group so that we can clear them?
@@ -433,7 +434,13 @@ let geoconnexApp = new Vue({
         }
       },
       clearSearches(){
-
+        let vue = this;
+        vue.searchGroup.clearLayers();
+        for (let group in vue.collectionGroups){
+          group.clearLayers();
+          vue.layerControl.removeLayer(group);
+        }
+        vue.layerControl.removeLayer(vue.searchGroup);
       },
       fillFromExtent(){
         let vue = this;
