@@ -613,15 +613,15 @@ class Party(AbstractMetaDataElement):
 
     @property
     def relative_uri(self):
-        return f"/user/{self.hydroshare_user_id}/"
+        return f"/user/{self.hydroshare_user_id}/" if self.hydroshare_user_id else None
 
     @property
     def is_active(self):
         from hs_core.hydroshare.utils import user_from_id
-        user = user_from_id(self.hydroshare_user_id, raise404=False)
-        if user:
+        try:
+            user = user_from_id(self.hydroshare_user_id, raise404=False)
             return user.is_active
-        else:
+        except ObjectDoesNotExist:
             return False
 
     @classmethod

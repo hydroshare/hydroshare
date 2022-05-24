@@ -134,7 +134,7 @@ def user_from_id(user, raise404=True):
         if raise404:
             raise Http404('User not found')
         else:
-            raise
+            raise ObjectDoesNotExist('User not found')
 
     return tgt
 
