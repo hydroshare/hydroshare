@@ -3,11 +3,11 @@
 {% load ratings_tags pages_tags keyword_tags hydroshare_tags crispy_forms_tags %}
 
 {% block extra_head %}
-    <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
-    <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
-    <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
-    <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
+    <link href="{% static 'css/site_base_irods.css' %}" rel="stylesheet"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
+    <link href="{% static 'css/toolresource.css' %}" rel="stylesheet"/>
+    <link href="{% static 'css/modal-vue.css' %}" rel="stylesheet"/>
+    <link href="{% static 'css/hs-file-icons.css' %}" rel="stylesheet"/>
 
 {% if True %}
 {# ======= JSON-LD Structure ======= #}
@@ -259,7 +259,7 @@
                         </li>
                     {% endif %}
 
-                    {% if cm.resource_type == "TimeSeriesResource" or cm.resource_type == "CompositeResource" %}
+                    {% if cm.resource_type == "CompositeResource" %}
                         <li data-menu-name="rename" data-toggle="modal" data-fb-action="rename" data-target="#rename-dialog">
                             <span class="glyphicon glyphicon-pencil icon-blue"></span>
                             <span>Rename</span>
@@ -342,49 +342,49 @@
                             <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype"
                                 data-toggle="tooltip" data-placement="right" data-fb-action="setGeoRasterFileType"
                                 title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">
-                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                <img src="{% static 'img/resource-icons/geographicraster48x48.png' %}"
                                  alt="Geographic Raster Resource Icon" class="resource-type-icon"/>
                                 <span>Geographic Raster</span>
                             </li>
                             <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype"
                                 data-toggle="tooltip" data-placement="right" data-fb-action="setNetCDFFileType"
                                 title="Convert NetCDF files to a multidimensional dataset to which you can add metadata">
-                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                <img src="{% static 'img/resource-icons/multidimensional48x48.png' %}"
                                  alt="Multidimensional Resource Icon" class="resource-type-icon"/>
                                 <span>Multidimensional</span>
                             </li>
                             <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype"
                                 data-toggle="tooltip" data-placement="right" data-fb-action="setGeoFeatureFileType"
                                 title="Convert a shapefile to a geographic feature dataset to which you can add metadata">
-                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                <img src="{% static 'img/resource-icons/geographicfeature48x48.png' %}"
                                  alt="Geographic Feature Resource Icon" class="resource-type-icon"/>
                                 <span>Geographic Feature</span>
                             </li>
                             <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype" data-toggle="tooltip"
                                 data-placement="right" data-fb-action="setRefTimeseriesFileType"
                                 title="Convert to a referenced time series dataset with metadata">
-                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                <img src="{% static 'img/resource-icons/timeseries48x48.png' %}"
                                  alt="Time Series Resource Icon" class="resource-type-icon"/>
                                 <span>Referenced Time Series</span>
                             </li>
                             <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype"
                                 data-toggle="tooltip" data-placement="right" data-fb-action="setTimeseriesFileType"
                                 title="Convert to a time series dataset to which you can add metadata">
-                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                <img src="{% static 'img/resource-icons/timeseries48x48.png' %}"
                                  alt="Time Series Resource Icon" class="resource-type-icon"/>
                                 <span>Time Series</span>
                             </li>
                             <li id="btn-set-model-program-file-type" data-menu-name="setmodelprogramfiletype"
                                 data-toggle="tooltip" data-placement="right" data-fb-action="setModelProgramFileType"
                                 title="Convert to a model program dataset to which you can add metadata">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                <img src="{% static 'img/resource-icons/modelprogram48x48.png' %}"
                                  alt="Model Program Aggregation Icon" class="resource-type-icon"/>
                                 <span>Model Program</span>
                             </li>
                             <li id="btn-set-model-instance-file-type" data-menu-name="setmodelinstancefiletype"
                                 data-toggle="tooltip" data-placement="right" data-fb-action="setModelInstanceFileType"
                                 title="Convert to a model instance dataset to which you can add metadata">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                <img src="{% static 'img/resource-icons/modelinstance48x48.png' %}"
                                  alt="Model Instance Aggregation Icon" class="resource-type-icon"/>
                                 <span>Model Instance</span>
                             </li>
@@ -721,7 +721,7 @@
                                                     </button>
                                                 {% endif %}
 
-                                                {% if cm.resource_type != "ToolResource" and cm.resource_type != "RasterResource"  and cm.resource_type != "RefTimeSeriesResource"  and cm.resource_type != "GeographicFeatureResource" %}
+                                                {% if cm.resource_type != "ToolResource" and cm.resource_type != "RefTimeSeriesResource"  and cm.resource_type != "GeographicFeatureResource" %}
                                                     <button id="fb-rename" data-fb-action="rename"
                                                             class="disabled fb-space-right"
                                                             title="Rename" data-toggle="modal"
@@ -888,9 +888,7 @@
 
                             {% if page.perms.change and resource_edit_mode %}
                                 {% if not cm.raccess.published or current_user.is_superuser %}
-                                    <form id="fb-delete-files-form" class="hidden"
-                                          action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
-                                          method="POST" enctype="multipart/form-data">
+                                    <form id="fb-delete-files-form" class="hidden" enctype="multipart/form-data">
                                         {% csrf_token %}
                                         <input type="hidden" name="file_ids" value=""/>
                                     </form>
@@ -1018,22 +1016,24 @@
       const LAST_CHANGED_BY = {{ last_changed_by|safe }};
       const AUTHORS = [
           {% for author in creators %}
-              {
-                  "id": "{{ author.id }}",
-                  "name": "{{ author.name|default:""|escapejs }}",
-                  "email": "{{ author.email|default:"" }}",
-                  "organization": "{{ author.organization|default:""|escapejs }}",
-                  "identifiers": {
-                      {% for name, link in author.identifiers.items %}
-                          "{{ name }}": "{{ link }}",
-                      {% endfor %}
-                  },
-                  "address": "{{ author.address|default:""|escapejs }}",
-                  "phone": "{{ author.phone|default:"" }}",
-                  "homepage": "{{ author.homepage|default:"" }}",
-                  "profileUrl": "{{ author.description|default:"" }}",
-                  "order": "{{ author.order }}"
-              },
+            {% if author.is_active %}
+                {
+                    "id": "{{ author.id }}",
+                    "name": "{{ author.name|default:""|escapejs }}",
+                    "email": "{{ author.email|default:"" }}",
+                    "organization": "{{ author.organization|default:""|escapejs }}",
+                    "identifiers": {
+                        {% for name, link in author.identifiers.items %}
+                            "{{ name }}": "{{ link }}",
+                        {% endfor %}
+                    },
+                    "address": "{{ author.address|default:""|escapejs }}",
+                    "phone": "{{ author.phone|default:"" }}",
+                    "homepage": "{{ author.homepage|default:"" }}",
+                    "profileUrl": "{{ author.relative_uri|default:'' }}",
+                    "order": "{{ author.order }}"
+                },
+            {% endif %}
           {% endfor %}
       ];
       const RELATIONS = [
@@ -1049,7 +1049,7 @@
 
       {% if show_manage_access %}
           const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
-          const GROUP_IMAGE_DEFAULT_URL = "{{ STATIC_URL }}" + "img/home-page/step4.png";
+          const GROUP_IMAGE_DEFAULT_URL = "{% static 'img/home-page/step4.png' %}";
           const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
           const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
           const RESOURCE_ACCESS = {
@@ -1063,15 +1063,15 @@
 
     </script>
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
+    <script type="text/javascript" src="{% static 'js/coverageMap.js' %}"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/copyToClipboard.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
+    <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs-file-icons.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs_file_browser.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/resourceLandingAjax.js' %}"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/copyToClipboard.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/generic-resource.js' %}"></script>
 
 {% endblock %}
 

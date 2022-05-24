@@ -1,9 +1,9 @@
 {% extends "pages/genericresource.html" %}
-{% load pages_tags staticfiles mezzanine_tags crispy_forms_tags hydroshare_tags%}
+{% load pages_tags mezzanine_tags crispy_forms_tags hydroshare_tags%}
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static "css/collection.css" %}" />
 {% endblock %}
 
@@ -342,10 +342,10 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
 
     {# put resource specific js below #}
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/collection-resource.js"></script>
+    <script type="text/javascript" src="{% static 'js/collection-resource.js' %}"></script>
 
 {% endblock %}

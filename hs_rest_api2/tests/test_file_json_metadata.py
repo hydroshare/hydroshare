@@ -75,7 +75,7 @@ class TestFileBasedJSON(HSRESTTestCase):
                 # overwrite system metadata fields for comparison
                 result_json['modified'] = expected_json['modified']
                 result_json['created'] = expected_json['created']
-                result_json['creators'][0]['description'] = expected_json['creators'][0]['description']
+                result_json['creators'][0]['hydroshare_user_id'] = expected_json['creators'][0]['hydroshare_user_id']
 
             self.assertEqual(sorting(result_json), sorting(expected_json))
 

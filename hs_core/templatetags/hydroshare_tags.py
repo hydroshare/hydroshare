@@ -86,9 +86,9 @@ def resource_type(content):
 def resource_first_author(content):
     if not content:
         return ''
-    if content.first_creator.name and content.first_creator.description:
+    if content.first_creator.name and content.first_creator.relative_uri:
         return format_html('<a href="{desc}">{name}</a>',
-                           desc=content.first_creator.description,
+                           desc=content.first_creator.relative_uri,
                            name=content.first_creator.name)
     elif content.first_creator.name:
         return format_html('<span>{name}</span>', name=content.first_creator.name)
@@ -303,13 +303,13 @@ def creator_json_ld_element(crs):
             cr_dict["@type"] = "Organization"
             cr_dict["name"] = cr.organization
 
-        if cr.description:
+        if cr.relative_uri:
             if cr.name:
                 # append www.hydroshare.org since schema.org script is only embedded in production
-                urls.append("https://www.hydroshare.org" + cr.description)
+                urls.append("https://www.hydroshare.org" + cr.relative_uri)
             else:
                 # organization
-                urls.append(cr.description)
+                urls.append(cr.relative_uri)
         if cr.homepage:
             urls.append(cr.homepage)
         if cr.identifiers:
