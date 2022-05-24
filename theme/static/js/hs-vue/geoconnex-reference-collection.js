@@ -8,6 +8,7 @@ let geoconnexApp = new Vue({
             relations: RELATIONS,
             debug: false,
             resMode: RESOURCE_MODE,
+            resHasSpatial: false,
             items: [],
             collections: null,
             values: [],
@@ -27,6 +28,7 @@ let geoconnexApp = new Vue({
             map: null,
             leafletLayers: {},
             featureGroup: null,
+            hasSearches: false,
             searchGroup: null,
             layerControl: null,
             collectionGroups: {},
@@ -77,7 +79,7 @@ let geoconnexApp = new Vue({
       },
       createMap(){
         let vue = this;
-        vue.map = L.map('geo-leaflet').setView([42.423935477911236, -71.17395771137696], 4);
+        vue.map = L.map('geo-leaflet').fitWorld();
 
         let streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -396,6 +398,7 @@ let geoconnexApp = new Vue({
         // https://turfjs.org/docs/#intersects
         // https://turfjs.org/docs/#booleanIntersects
         let vue=this;
+        vue.loading = true;
         let center = turf.point([vue.lat, vue.long])
         var options = {
           steps: 10, 
@@ -430,6 +433,9 @@ let geoconnexApp = new Vue({
             }catch(e){
               console.log(e);
             }
+          }).then(()=>{
+            vue.loading = false;
+            vue.hasSearches = true;
           });
         }
       },
@@ -441,6 +447,7 @@ let geoconnexApp = new Vue({
           vue.layerControl.removeLayer(group);
         }
         vue.layerControl.removeLayer(vue.searchGroup);
+        vue.hasSearches = false;
       },
       fillFromExtent(){
         let vue = this;

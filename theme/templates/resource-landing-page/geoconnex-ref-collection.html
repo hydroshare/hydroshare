@@ -4,6 +4,10 @@
         <h3>Related Geospatial Features</h3>
         <h4>This HydroShare resource is related to the following geospatial features:</h4>
         <v-app>
+            <v-progress-linear
+                :active="loading"
+                :indeterminate="loading"
+            ></v-progress-linear>
             <div v-if="loading">
                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${currentLoading}</p>
                 <p v-else>Loading Geoconnex relations...</p>
@@ -36,7 +40,6 @@
                                 :disabled="loading"
                                 color="blue-grey"
                                 :search-input.sync="search"
-                                :loading="loading"
                                 :rules="rules"
                                 return-object="true"
                                 style="z-index: 999">
@@ -101,21 +104,24 @@
                                           class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
                                 </div>
                             </div>
-                            <!-- TODO: hide this if there is no spatial extent -->
-                            <button type="button" @click="fillFromExtent" class="btn btn-primary">
-                                Populate from Spatial Extent
-                            </button>
-                            <button type="button" @click="getGeoItemsInRange" class="btn btn-primary">
-                                Find nearby collection items
-                            </button>
-                            <button type="button" @click="clearSearches" class="btn btn-primary">
-                                Clear searches from the map
-                            </button>
-                            <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
-                            <div style="border: thin solid red" v-if="debug && values.length > 0">
-                                <ul>
-                                    <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
-                                </ul>
+                            <div>
+                                <!-- TODO: hide this if there is no spatial extent -->
+                                <button v-if="resHasSpatial" type="button" @click="fillFromExtent" class="btn btn-success btn-xs">
+                                    Populate from Spatial Extent
+                                </button>
+                                <button type="button" @click="getGeoItemsInRange" class="btn btn-success btn-xs">
+                                    Map nearby collection items
+                                </button>
+                                <!-- TODO: hide this when searches aren't available -->
+                                <button v-if="hasSearches" type="button" @click="clearSearches" class="btn btn-success btn-xs">
+                                    Clear searches from the map
+                                </button>
+                                <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
+                                <div style="border: thin solid red" v-if="debug && values.length > 0">
+                                    <ul>
+                                        <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
+                                    </ul>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -133,7 +139,7 @@
                         </div>
                     </div>
                 {% endif %}
-                <div id="geo-leaflet" class="column"></div>
+                <div id="geo-leaflet"></div>
             </div>
         </v-app>
     </div>
