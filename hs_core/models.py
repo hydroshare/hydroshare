@@ -621,7 +621,7 @@ class Party(AbstractMetaDataElement):
         try:
             user = user_from_id(self.hydroshare_user_id, raise404=False)
             return user.is_active
-        except:
+        except ObjectDoesNotExist:
             return False
 
     @classmethod
