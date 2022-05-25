@@ -651,7 +651,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
     rest_url = str(services_url) + "/" + str(res_id) + "/"
 
     try:
-        response = session.post(rest_url, timeout=timeout,  verify=False)
+        response = session.post(rest_url, timeout=timeout)
 
         if publish_urls and response.status_code == status.HTTP_201_CREATED:
             try:
