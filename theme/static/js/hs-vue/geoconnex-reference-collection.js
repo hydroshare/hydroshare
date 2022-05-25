@@ -105,6 +105,7 @@ let geoconnexApp = new Vue({
         vue.map.addLayer(streets);
         vue.map.addLayer(vue.featureGroup);
         vue.map.addLayer(vue.searchGroup);
+        vue.setMapClickEvents();
       },
       addToMap(geojson, zoom=false, style={color: 'blue', radius: 5}, group=null){
         let vue = this;
@@ -399,9 +400,10 @@ let geoconnexApp = new Vue({
         // https://turfjs.org/docs/#booleanIntersects
         let vue=this;
         vue.loading = true;
-        let center = turf.point([vue.lat, vue.long])
+        let center = turf.point([vue.lat, vue.long]);
+        let sides = vue.radius / 100;
         var options = {
-          steps: 10, 
+          steps: sides < 25 ? 25 : sides,
           units: 'kilometers', 
           properties: {
             Radius: `${vue.radius} kilometers`,
@@ -411,7 +413,9 @@ let geoconnexApp = new Vue({
         var circle = turf.circle(center, vue.radius, options);
         circle.text = "Search bounds";
         center.text = "Center point";
-        // TODO: add these in a different group so that we can clear them?
+        
+        vue.map.closePopup();
+
         vue.addToMap(center, true, {color:'red', radius: 3, fillColor: 'black', fillOpacity: .8}, group=vue.searchGroup);
         vue.addToMap(circle, true, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchGroup);
 
@@ -449,10 +453,40 @@ let geoconnexApp = new Vue({
         vue.layerControl.removeLayer(vue.searchGroup);
         vue.hasSearches = false;
       },
-      fillFromExtent(){
+      fillFromPointExtent(){
         let vue = this;
-        vue.lat = -72.56428830847662;
-        vue.long = 42.85084818160041;
+        vue.fillFromCoords(
+          $('#id_north').val(),
+          $('#id_east').val()
+          );
+      },
+      fillFromCoords(lat, long){
+        let vue = this;
+        // TODO: why is this reversed?
+        vue.long = lat;
+        vue.lat = long;
+      },
+      setMapClickEvents(){
+        let vue = this;
+        var popup = L.popup();
+
+        function onMapClick(e) {
+          let loc = {lat: e.latlng.lat, long: e.latlng.lng};
+          console.log(JSON.stringify(loc))
+          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data='${JSON.stringify(loc)}'>Use this point as center for search</button>`
+            popup
+                .setLatLng(e.latlng)
+                .setContent(content)
+                .openOn(vue.map);
+        }
+
+        vue.map.on('click', onMapClick);
+        
+        $("div").on("click", 'button.leaflet-point-search', function (e) {
+          e.stopPropagation();
+          var loc = JSON.parse($(this).attr("data"));
+          vue.fillFromCoords(loc.lat, loc.long);
+        });
       },
       runGeoExample(){
         try{

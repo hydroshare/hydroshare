@@ -106,7 +106,7 @@
                             </div>
                             <div>
                                 <!-- TODO: hide this if there is no spatial extent -->
-                                <button v-if="resHasSpatial" type="button" @click="fillFromExtent" class="btn btn-success btn-xs">
+                                <button type="button" @click="fillFromPointExtent" class="btn btn-success btn-xs">
                                     Populate from Spatial Extent
                                 </button>
                                 <button type="button" @click="getGeoItemsInRange" class="btn btn-success btn-xs">
