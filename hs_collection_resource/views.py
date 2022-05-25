@@ -28,7 +28,7 @@ def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
             raise Exception(f"Resource {shortkey} is not a collection resource.")
 
         if collection_res.raccess.published:
-            raise Exception(f"Resource {shortkey} of a published collection resource and can't be changed")
+            raise Exception(f"Resource {shortkey} is a published collection resource and can't be changed")
 
         collectable_resources = get_collectable_resources(user, collection_res)
         context = {'collectable_resources': collectable_resources}

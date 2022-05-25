@@ -774,5 +774,3 @@ else:
 #sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
 MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = "/hydroshare/hs_file_types/model_meta_schema_templates"
-# Number of resources to list when adding resources to a collection resource
-COLLECTABLE_RESOURCES_PAGE_SIZE = 50

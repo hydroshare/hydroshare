@@ -21,7 +21,7 @@ def pre_check_bag_flag_handler(sender, **kwargs):
     if collection_res_obj.update_text_file.lower() == 'true':
         update_collection_list_csv(collection_res_obj)
         set_dirty_bag_flag(collection_res_obj)
-        collection_res_obj.set_update_text_file(flag='True')
+        collection_res_obj.set_update_text_file(flag='False')
 
 
 @receiver(pre_download_file, sender=CollectionResource)
