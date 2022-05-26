@@ -6,7 +6,7 @@ let geoconnexApp = new Vue({
     data() {
         return{
             relations: RELATIONS,
-            debug: true,
+            debug: false,
             resMode: RESOURCE_MODE,
             resHasSpatial: false,
             items: [],
@@ -476,7 +476,7 @@ let geoconnexApp = new Vue({
 
         function onMapClick(e) {
           let loc = {lat: e.latlng.lat, long: e.latlng.lng};
-          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items around this point</button>`
+          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
             popup
                 .setLatLng(e.latlng)
                 .setContent(content)
