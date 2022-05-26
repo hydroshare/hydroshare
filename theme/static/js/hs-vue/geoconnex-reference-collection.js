@@ -151,9 +151,7 @@ let geoconnexApp = new Vue({
           }else{
             vue.selectedItemLayers[geojson.uri] = leafletLayer;
           }
-          // 
           if(group){
-            // try not adding them to a search layer
             group.addLayer(leafletLayer);
           }else{
             vue.selectedFeatureGroup.addLayer(leafletLayer);
@@ -162,11 +160,11 @@ let geoconnexApp = new Vue({
             if(!geojson.collection){
               geojson.collection = "Search Bounds"
             }
-            // check if layergroup exists...
+            // check if layergroup exists in the "dictionary"
             if(!vue.layerGroupDictionary || !vue.layerGroupDictionary[geojson.collection]){
               vue.layerGroupDictionary[geojson.collection] = L.layerGroup();
-              vue.layerControl.addOverlay(vue.layerGroupDictionary[geojson.collection], geojson.collection)
             }
+            vue.layerControl.addOverlay(vue.layerGroupDictionary[geojson.collection], geojson.collection)
             vue.layerGroupDictionary[geojson.collection].addLayer(leafletLayer);
             vue.map.addLayer(vue.layerGroupDictionary[geojson.collection]);
           }
@@ -455,11 +453,11 @@ let geoconnexApp = new Vue({
       clearMappedSearches(){
         let vue = this;
         vue.searchFeatureGroup.clearLayers();
-        for (let group in vue.layerGroupDictionary){
-          group.clearLayers();
-          vue.layerControl.removeLayer(group);
+        for (let key in vue.layerGroupDictionary){
+          vue.layerControl.removeLayer(vue.layerGroupDictionary[key]);
         }
-        vue.layerControl.removeLayer(vue.searchFeatureGroup);
+        // vue.layerControl.removeLayer(vue.searchFeatureGroup);
+        // vue.map.removeLayer(vue.searchFeatureGroup);
         vue.hasSearches = false;
       },
       fillFromPointExtent(){
