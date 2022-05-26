@@ -18,7 +18,7 @@ register = template.Library()
 def user_permission(content, arg):
     user_pk = arg
     permission = "None"
-    res_obj = content.get_content_model()
+    res_obj = content
     if res_obj.raccess.owners.filter(pk=user_pk).exists():
         permission = "Owner"
     elif res_obj.raccess.edit_users.filter(pk=user_pk).exists():
