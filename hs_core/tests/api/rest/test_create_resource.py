@@ -1,9 +1,8 @@
 import json
-import requests
-from dateutil import parser
 import time
 from unittest import skip
 
+from dateutil import parser
 from django.test import override_settings
 from rest_framework import status
 
@@ -368,4 +367,3 @@ class TestCreateResource(HSRESTTestCase):
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
