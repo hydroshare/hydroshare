@@ -6,7 +6,7 @@ let geoconnexApp = new Vue({
     data() {
         return{
             relations: RELATIONS,
-            debug: false,
+            debug: true,
             resMode: RESOURCE_MODE,
             resHasSpatial: false,
             items: [],
@@ -34,6 +34,8 @@ let geoconnexApp = new Vue({
             collectionGroups: {},
             searchRadius: 1,
             maxAreaToReturn: 1e12,
+            manualLat: 0,
+            manualLong: 0
         }
     },
     watch: {
@@ -393,8 +395,11 @@ let geoconnexApp = new Vue({
           }
         }
       },
-      getGeoItemsContainingPoint(lat, long){
+      getGeoItemsContainingPoint(lat=null, long=null){
         let vue=this;
+        long = typeof(long) == 'number' ? long : vue.manualLong;
+        lat = typeof(lat) == 'number' ? lat : vue.manualLat;
+        console.log(lat);
         let center = turf.point([long, lat]);
         let sides = vue.searchRadius / 100;
         var options = {
@@ -453,10 +458,13 @@ let geoconnexApp = new Vue({
       },
       fillFromPointExtent(){
         let vue = this;
-        vue.getGeoItemsContainingPoint(
-          $('#id_north').val(),
-          $('#id_east').val()
-          );
+          vue.manualLat = $('#id_north').val();
+          vue.manualLong = $('#id_east').val();
+      },
+      fillFromCoords(lat, long){
+        let vue = this;
+          vue.manualLat = lat;
+          vue.manualLong = long;
       },
       setMapClickEvents(){
         let vue = this;
@@ -477,7 +485,7 @@ let geoconnexApp = new Vue({
         $("div").on("click", 'button.leaflet-point-search', function (e) {
           e.stopPropagation();
           var loc = JSON.parse($(this).attr("data"));
-          // vue.fillFromCoords(loc.lat, loc.long);
+          vue.fillFromCoords(loc.lat, loc.long);
           vue.getGeoItemsContainingPoint(loc.lat, loc.long);
         });
       },
