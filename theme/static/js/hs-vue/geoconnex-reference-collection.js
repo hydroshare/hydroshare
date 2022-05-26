@@ -27,7 +27,7 @@ let geoconnexApp = new Vue({
             showMap: false,
             map: null,
             leafletLayers: {},
-            featureGroup: null,
+            selectedCollectionItems: null,
             hasSearches: false,
             searchGroup: null,
             layerControl: null,
@@ -52,8 +52,8 @@ let geoconnexApp = new Vue({
         }else if (newValue.length < oldValue.length){
           let remove = oldValue.filter(obj => newValue.every(s => s.id !== obj.id));
           try{
-            vue.featureGroup.removeLayer(vue.leafletLayers[remove[0].value]);
-            vue.map.fitBounds(vue.featureGroup.getBounds());
+            vue.selectedCollectionItems.removeLayer(vue.leafletLayers[remove[0].value]);
+            vue.map.fitBounds(vue.selectedCollectionItems.getBounds());
           }catch(e){
             console.log(e.message);
           }
@@ -90,11 +90,11 @@ let geoconnexApp = new Vue({
           "Streets": streets
         };
 
-        vue.featureGroup =  L.featureGroup();
-        vue.searchGroup =  L.featureGroup();
+        vue.selectedCollectionItems =  L.selectedCollectionItems();
+        vue.searchGroup =  L.selectedCollectionItems();
 
         var overlayMaps = {
-          "Selected Collection Items": vue.featureGroup,
+          "Selected Collection Items": vue.selectedCollectionItems,
           "Search (all items)": vue.searchGroup
         };
 
@@ -103,7 +103,7 @@ let geoconnexApp = new Vue({
 
         // show the default layers at start
         vue.map.addLayer(streets);
-        vue.map.addLayer(vue.featureGroup);
+        vue.map.addLayer(vue.selectedCollectionItems);
         vue.map.addLayer(vue.searchGroup);
         vue.setMapClickEvents();
       },
@@ -148,7 +148,7 @@ let geoconnexApp = new Vue({
           if(group){
             group.addLayer(leafletLayer);
           }else{
-            vue.featureGroup.addLayer(leafletLayer);
+            vue.selectedCollectionItems.addLayer(leafletLayer);
           }
           if(group===vue.searchGroup){
             if(!geojson.collection){
@@ -171,7 +171,7 @@ let geoconnexApp = new Vue({
             if(group){
               vue.map.fitBounds(group.getBounds());
             }else{
-              vue.map.fitBounds(vue.featureGroup.getBounds());
+              vue.map.fitBounds(vue.selectedCollectionItems.getBounds());
             }
           }
 
