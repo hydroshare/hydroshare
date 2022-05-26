@@ -26,12 +26,12 @@ let geoconnexApp = new Vue({
             rules: null,
             showMap: false,
             map: null,
-            leafletLayers: {},
-            selectedCollectionItems: null,
-            hasSearches: false,
-            searchGroup: null,
             layerControl: null,
-            collectionGroups: {},
+            selectedItemLayers: {},
+            selectedFeatureGroup: null,
+            hasSearches: false,
+            searchFeatureGroup: null,
+            layerGroupDictionary: {},
             searchRadius: 1,
             maxAreaToReturn: 1e12,
             manualLat: 0,
@@ -47,8 +47,8 @@ let geoconnexApp = new Vue({
         }else if (newValue.length < oldValue.length){
           let remove = oldValue.filter(obj => newValue.every(s => s.id !== obj.id));
           try{
-            vue.selectedCollectionItems.removeLayer(vue.leafletLayers[remove[0].value]);
-            vue.map.fitBounds(vue.selectedCollectionItems.getBounds());
+            vue.selectedFeatureGroup.removeLayer(vue.selectedItemLayers[remove[0].value]);
+            vue.map.fitBounds(vue.selectedFeatureGroup.getBounds());
           }catch(e){
             console.log(e.message);
           }
@@ -93,12 +93,12 @@ let geoconnexApp = new Vue({
           "Streets": streets
         };
 
-        vue.selectedCollectionItems =  L.featureGroup();
-        vue.searchGroup =  L.featureGroup();
+        vue.selectedFeatureGroup =  L.featureGroup();
+        vue.searchFeatureGroup =  L.featureGroup();
 
         var overlayMaps = {
-          "Selected Collection Items": vue.selectedCollectionItems,
-          "Search (all items)": vue.searchGroup
+          "Selected Collection Items": vue.selectedFeatureGroup,
+          "Search (all items)": vue.searchFeatureGroup
         };
 
         vue.layerControl = L.control.layers(baseMaps, overlayMaps);
@@ -106,8 +106,8 @@ let geoconnexApp = new Vue({
 
         // show the default layers at start
         vue.map.addLayer(streets);
-        vue.map.addLayer(vue.selectedCollectionItems);
-        vue.map.addLayer(vue.searchGroup);
+        vue.map.addLayer(vue.selectedFeatureGroup);
+        vue.map.addLayer(vue.searchFeatureGroup);
         vue.map.setView([30, 0], 1);
         vue.setMapClickEvents();
       },
@@ -147,26 +147,26 @@ let geoconnexApp = new Vue({
           leafletLayer.setStyle(style);
           if(!geojson.uri){
             // pass
-            // vue.leafletLayers[leafletLayer._leaflet_id] = leafletLayer;
+            // vue.selectedItemLayers[leafletLayer._leaflet_id] = leafletLayer;
           }else{
-            vue.leafletLayers[geojson.uri] = leafletLayer;
+            vue.selectedItemLayers[geojson.uri] = leafletLayer;
           }
           if(group){
             group.addLayer(leafletLayer);
           }else{
-            vue.selectedCollectionItems.addLayer(leafletLayer);
+            vue.selectedFeatureGroup.addLayer(leafletLayer);
           }
-          if(group===vue.searchGroup){
+          if(group===vue.searchFeatureGroup){
             if(!geojson.collection){
               geojson.collection = "Search Bounds"
             }
             // check if layergroup exists...
-            if(vue.collectionGroups && vue.collectionGroups[geojson.collection]){
-              vue.collectionGroups[geojson.collection].addLayer(leafletLayer);
-              vue.map.addLayer(vue.collectionGroups[geojson.collection]);
+            if(vue.layerGroupDictionary && vue.layerGroupDictionary[geojson.collection]){
+              vue.layerGroupDictionary[geojson.collection].addLayer(leafletLayer);
+              vue.map.addLayer(vue.layerGroupDictionary[geojson.collection]);
             }else{
-              vue.collectionGroups[geojson.collection] = L.layerGroup(leafletLayer);
-              vue.layerControl.addOverlay(vue.collectionGroups[geojson.collection], geojson.collection)
+              vue.layerGroupDictionary[geojson.collection] = L.layerGroup(leafletLayer);
+              vue.layerControl.addOverlay(vue.layerGroupDictionary[geojson.collection], geojson.collection)
             }
           }
 
@@ -177,7 +177,7 @@ let geoconnexApp = new Vue({
             if(group){
               vue.map.fitBounds(group.getBounds());
             }else{
-              vue.map.fitBounds(vue.selectedCollectionItems.getBounds());
+              vue.map.fitBounds(vue.selectedFeatureGroup.getBounds());
             }
           }
 
@@ -405,7 +405,6 @@ let geoconnexApp = new Vue({
         let vue=this;
         long = typeof(long) == 'number' ? long : vue.manualLong;
         lat = typeof(lat) == 'number' ? lat : vue.manualLat;
-        console.log(lat);
         let center = turf.point([long, lat]);
         let sides = vue.searchRadius / 100;
         var options = {
@@ -426,7 +425,7 @@ let geoconnexApp = new Vue({
         vue.loading = true;
         vue.map.closePopup();
 
-        vue.addToMap(polygon, false, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchGroup);
+        vue.addToMap(polygon, false, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchFeatureGroup);
 
         for (let item of vue.items){
           vue.fetchGeometry(item).then(geometry =>{
@@ -434,13 +433,13 @@ let geoconnexApp = new Vue({
             try{
               if (turf.area(item) < vue.maxAreaToReturn*1e6){
                 if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(polygon, item)){
-                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchGroup);
+                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchFeatureGroup);
                 }
                 if(item.geometry.type.includes("Point") && turf.booleanPointInPolygon(item, polygon)){
-                  vue.addToMap(item, false, {color:'orange', radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchGroup);
+                  vue.addToMap(item, false, {color:'orange', radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
                 }
                 if(item.geometry.type.includes("Line") && turf.booleanIntersects(polygon, item)){
-                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchGroup);
+                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchFeatureGroup);
                 }
               }
             }catch(e){
@@ -452,14 +451,14 @@ let geoconnexApp = new Vue({
           });
         }
       },
-      clearSearches(){
+      clearMappedSearches(){
         let vue = this;
-        vue.searchGroup.clearLayers();
-        for (let group in vue.collectionGroups){
+        vue.searchFeatureGroup.clearLayers();
+        for (let group in vue.layerGroupDictionary){
           group.clearLayers();
           vue.layerControl.removeLayer(group);
         }
-        vue.layerControl.removeLayer(vue.searchGroup);
+        vue.layerControl.removeLayer(vue.searchFeatureGroup);
         vue.hasSearches = false;
       },
       fillFromPointExtent(){
@@ -478,7 +477,7 @@ let geoconnexApp = new Vue({
 
         function onMapClick(e) {
           let loc = {lat: e.latlng.lat, long: e.latlng.lng};
-          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data="${JSON.stringify(loc)}">Search for Geoconnex items around this point</button>`
+          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items around this point</button>`
             popup
                 .setLatLng(e.latlng)
                 .setContent(content)
@@ -497,33 +496,8 @@ let geoconnexApp = new Vue({
         $("div").on("click", 'button.add-queried-geoconnex', function (e) {
           e.stopPropagation();
           let data = JSON.parse($(this).attr("data"));
-          console.log(data);
-          // vue.addMetadata(data);
-          // vue.values.push(data);
           vue.addSelectedItem(data);
         });
-      },
-      runGeoExample(){
-        try{
-          let vue=this;
-          // CUAHSI
-        // vue.getGeoItemsContainingPoint([-72.56428830847662, 42.85084818160041])
-  
-        // SALT LAKE
-        // vue.getGeoItemsContainingPoint([-112.551445, 41.149411])
-  
-        // Glen Canyon
-        // vue.getGeoItemsContainingPoint([-111.48381550548234, 36.9378850872748]);
-        
-  
-        // FL
-        // vue.getGeoItemsContainingPoint([-80.7839365138525, 26.932581283846268])
-  
-        // Salton sea
-        // vue.getGeoItemsContainingPoint([-115.827709, 33.317246]);
-        }catch(e){
-          console.log(e);
-        }
       }
     },
     beforeMount(){
