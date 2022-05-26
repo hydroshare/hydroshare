@@ -6,7 +6,7 @@ let geoconnexApp = new Vue({
     data() {
         return{
             relations: RELATIONS,
-            debug: false,
+            debug: true,
             resMode: RESOURCE_MODE,
             resHasSpatial: false,
             items: [],
@@ -133,7 +133,9 @@ let geoconnexApp = new Vue({
                 popupText += '<b>'+k+'</b>: ';
                 popupText += feature[k]+'</br>'
               }
-              popupText += `<button type="button" class="btn btn-primary add-queried-geoconnex" data='${JSON.stringify(feature)}'>Add this item to your resource metadata</button>`
+              if(vue.resMode == "Edit"){
+                popupText += `<button type="button" class="btn btn-primary add-queried-geoconnex" data='${JSON.stringify(feature)}'>Add this item to your resource metadata</button>`
+              }
               layer.bindPopup(popupText);
             },
             pointToLayer: function (feature, latlng) {
@@ -169,7 +171,7 @@ let geoconnexApp = new Vue({
 
           // handle zooming
           if(zoom){
-            vue.map.fitBounds(leafletLayer.getBounds());
+            vue.map.flyToBounds(leafletLayer.getBounds());
           }else{
             if(group){
               vue.map.fitBounds(group.getBounds());
@@ -423,7 +425,7 @@ let geoconnexApp = new Vue({
         vue.loading = true;
         vue.map.closePopup();
 
-        vue.addToMap(polygon, true, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchGroup);
+        vue.addToMap(polygon, false, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchGroup);
 
         for (let item of vue.items){
           vue.fetchGeometry(item).then(geometry =>{
@@ -544,3 +546,15 @@ let geoconnexApp = new Vue({
       }
     }
 })
+
+/*
+TODO: 
+- fix clear results button
+- if coverage, click button to search
+- box coverage
+- add topo layer
+- help section
+- default to show a list instead of a map
+- expandable map
+- combine the spatial coverage map with the leaflet map?
+*/
