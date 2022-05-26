@@ -64,55 +64,55 @@
                                     </v-list-item>
                                 </template>
                             </v-combobox>
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">Latitude</span>
-                                    <input type="number" class="form-control" v-model="lat" type="text" class="form-control"
-                                        placeholder="Lat"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                          class="input-group-addon" style="width: 50px;">°</span>
+                            <div v-if="debug">
+                                <div class="control-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon coordinates-label-addon" style="width: 127px">Latitude</span>
+                                        <input type="number" class="form-control" v-model="lat" type="text" class="form-control"
+                                            placeholder="Lat"
+                                        >
+                                        <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                            class="input-group-addon" style="width: 50px;">°</span>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon coordinates-label-addon" style="width: 127px">Longitude</span>
+                                        <input type="number" class="form-control" v-model="long" type="text" class="form-control"
+                                            placeholder="Long"
+                                        >
+                                        <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                            class="input-group-addon" style="width: 50px;">°</span>
+                                    </div>
+                                </div>  
+                                <div class="control-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon coordinates-label-addon" style="width: 127px">Radius</span>
+                                        <input type="number" class="form-control" v-model="radius" type="number" class="form-control"
+                                            placeholder="Radius"
+                                        >
+                                        <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
+                                            class="input-group-addon" style="width: 50px;">km</span>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon coordinates-label-addon" style="width: 127px">Max Area</span>
+                                        <input type="number" class="form-control" v-model="maxArea" type="number" class="form-control"
+                                            placeholder="Max Area"
+                                        >
+                                        <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
+                                            class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">Longitude</span>
-                                    <input type="number" class="form-control" v-model="long" type="text" class="form-control"
-                                        placeholder="Long"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                          class="input-group-addon" style="width: 50px;">°</span>
-                                </div>
-                            </div>  
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">Radius</span>
-                                    <input type="number" class="form-control" v-model="radius" type="number" class="form-control"
-                                        placeholder="Radius"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
-                                          class="input-group-addon" style="width: 50px;">km</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">Max Area</span>
-                                    <input type="number" class="form-control" v-model="maxArea" type="number" class="form-control"
-                                        placeholder="Max Area"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
-                                          class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
-                                </div>
-                            </div>
-                            <div>
-                                <!-- TODO: hide this if there is no spatial extent -->
+                            <div v-if="debug">
                                 <button type="button" @click="fillFromPointExtent" class="btn btn-success btn-xs">
                                     Populate from Spatial Extent
                                 </button>
                                 <button type="button" @click="getGeoItemsInRange" class="btn btn-success btn-xs">
                                     Map nearby collection items
                                 </button>
-                                <!-- TODO: hide this when searches aren't available -->
                                 <button v-if="hasSearches" type="button" @click="clearSearches" class="btn btn-success btn-xs">
                                     Clear searches from the map
                                 </button>
