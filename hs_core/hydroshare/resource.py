@@ -999,7 +999,8 @@ def deposit_res_metadata_with_crossref(res):
     # exceptions will be raised if POST request fails
     main_url = get_crossref_url()
     post_url = '{MAIN_URL}servlet/deposit'.format(MAIN_URL=main_url)
-    response = requests.post(post_url, data=post_data, files=files)
+    # TODO turning off verify for crossref until our ssl dependencies are updated
+    response = requests.post(post_url, data=post_data, files=files, verify=False)
     return response
 
 

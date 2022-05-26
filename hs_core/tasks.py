@@ -140,7 +140,8 @@ def manage_task_nightly():
                                                    USERNAME=settings.CROSSREF_LOGIN_ID,
                                                    PASSWORD=settings.CROSSREF_LOGIN_PWD,
                                                    DOI_BATCH_ID=res.short_id,
-                                                   TYPE='result'))
+                                                   TYPE='result'),
+                                    verify=False)
             root = ElementTree.fromstring(response.content)
             rec_cnt_elem = root.find('.//record_count')
             failure_cnt_elem = root.find('.//failure_count')
