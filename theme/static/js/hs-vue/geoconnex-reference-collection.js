@@ -135,7 +135,9 @@ let geoconnexApp = new Vue({
                 popupText += feature[k]+'</br>'
               }
               if(vue.resMode == "Edit" && style.color != 'blue'){
-                popupText += `<button type="button" class="btn btn-primary add-queried-geoconnex" data='${JSON.stringify(feature)}'>Add this item to your resource metadata</button>`
+                popupText += `<button type="button" class="btn btn-primary map-add-geoconnex" data='${JSON.stringify(feature)}'>Add this feature to your resource metadata</button>`
+              }else if(vue.resMode == "Edit" && style.color == 'blue'){
+                popupText += `<button type="button" class="btn btn-primary map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
               }
               layer.bindPopup(popupText);
             },
@@ -492,10 +494,17 @@ let geoconnexApp = new Vue({
           vue.getGeoItemsContainingPoint(loc.lat, loc.long);
         });
 
-        $("div").on("click", 'button.add-queried-geoconnex', function (e) {
+        $("div").on("click", 'button.map-add-geoconnex', function (e) {
           e.stopPropagation();
           let data = JSON.parse($(this).attr("data"));
           vue.addSelectedItem(data);
+          vue.map.closePopup();
+        });
+
+        $("div").on("click", 'button.map-remove-geoconnex', function (e) {
+          e.stopPropagation();
+          let data = JSON.parse($(this).attr("data"));
+          vue.values = vue.values.filter(s => s.value !== data.uri);
           vue.map.closePopup();
         });
       }
