@@ -532,7 +532,6 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
-- fix clear results button
 - if coverage, click button to search
 - box coverage
 - add topo layer
