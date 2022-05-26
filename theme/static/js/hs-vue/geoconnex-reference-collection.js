@@ -82,7 +82,7 @@ let geoconnexApp = new Vue({
       },
       createMap(){
         let vue = this;
-        vue.map = L.map('geo-leaflet').fitWorld();
+        vue.map = L.map('geo-leaflet');
 
         let streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -108,6 +108,7 @@ let geoconnexApp = new Vue({
         vue.map.addLayer(streets);
         vue.map.addLayer(vue.selectedCollectionItems);
         vue.map.addLayer(vue.searchGroup);
+        vue.map.setView([30, 0], 1);
         vue.setMapClickEvents();
       },
       addToMap(geojson, zoom=false, style={color: 'blue', radius: 5}, group=null){
@@ -554,6 +555,7 @@ TODO:
 - box coverage
 - add topo layer
 - help section
+- prevent duplicates
 - default to show a list instead of a map
 - expandable map
 - combine the spatial coverage map with the leaflet map?
