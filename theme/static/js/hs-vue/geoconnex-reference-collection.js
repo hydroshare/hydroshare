@@ -32,8 +32,8 @@ let geoconnexApp = new Vue({
             searchGroup: null,
             layerControl: null,
             collectionGroups: {},
-            radius: 1e3,
-            maxArea: 1e4,
+            radius: 1,
+            maxArea: 1e12,
             lat: -111.48381550548234,
             long: 36.9378850872748
         }
@@ -395,43 +395,42 @@ let geoconnexApp = new Vue({
           }
         }
       },
-      getGeoItemsInRange(){
+      getGeoItemsInPoly(polygon=null){
         // https://turfjs.org/docs/#intersects
         // https://turfjs.org/docs/#booleanIntersects
         let vue=this;
         vue.loading = true;
-        let center = turf.point([vue.lat, vue.long]);
-        let sides = vue.radius / 100;
-        var options = {
-          steps: sides < 25 ? 25 : sides,
-          units: 'kilometers', 
-          properties: {
-            Radius: `${vue.radius} kilometers`,
-            MaxArea: `${vue.maxArea} sq km`
-          }
-        };
-        var circle = turf.circle(center, vue.radius, options);
-        circle.text = "Search bounds";
-        center.text = "Center point";
-        
         vue.map.closePopup();
+        if (!polygon){
+          let center = turf.point([vue.long, vue.lat]);
+          let sides = vue.radius / 100;
+          var options = {
+            steps: sides < 25 ? 25 : sides,
+            units: 'kilometers', 
+            properties: {
+              Radius: `${vue.radius} kilometers`,
+              MaxArea: `${vue.maxArea} sq km`
+            }
+          };
+          var polygon = turf.circle(center, vue.radius, options);
+          polygon.text = "Search bounds";
+        }
 
-        vue.addToMap(center, true, {color:'red', radius: 3, fillColor: 'black', fillOpacity: .8}, group=vue.searchGroup);
-        vue.addToMap(circle, true, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchGroup);
+        vue.addToMap(polygon, true, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchGroup);
 
         for (let item of vue.items){
           vue.fetchGeometry(item).then(geometry =>{
             item.geometry = geometry.geometry;
             try{
               if (turf.area(item) < vue.maxArea*1e6){
-                if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(circle, item)){
-                  vue.addToMap(item, false, {color:'green'}, group=vue.searchGroup);
+                if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(polygon, item)){
+                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchGroup);
                 }
-                if(item.geometry.type.includes("Point") && turf.booleanPointInPolygon(item, circle)){
-                  vue.addToMap(item, false, {color:'green', radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchGroup);
+                if(item.geometry.type.includes("Point") && turf.booleanPointInPolygon(item, polygon)){
+                  vue.addToMap(item, false, {color:'orange', radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchGroup);
                 }
-                if(item.geometry.type.includes("Line") && turf.booleanIntersects(circle, item)){
-                  vue.addToMap(item, false, {color:'green'}, group=vue.searchGroup);
+                if(item.geometry.type.includes("Line") && turf.booleanIntersects(polygon, item)){
+                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchGroup);
                 }
               }
             }catch(e){
@@ -462,9 +461,8 @@ let geoconnexApp = new Vue({
       },
       fillFromCoords(lat, long){
         let vue = this;
-        // TODO: why is this reversed?
-        vue.long = lat;
-        vue.lat = long;
+        vue.long = long;
+        vue.lat = lat;
       },
       setMapClickEvents(){
         let vue = this;
@@ -473,7 +471,7 @@ let geoconnexApp = new Vue({
         function onMapClick(e) {
           let loc = {lat: e.latlng.lat, long: e.latlng.lng};
           console.log(JSON.stringify(loc))
-          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data='${JSON.stringify(loc)}'>Use this point as center for search</button>`
+          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items around this point</button>`
             popup
                 .setLatLng(e.latlng)
                 .setContent(content)
@@ -486,26 +484,27 @@ let geoconnexApp = new Vue({
           e.stopPropagation();
           var loc = JSON.parse($(this).attr("data"));
           vue.fillFromCoords(loc.lat, loc.long);
+          vue.getGeoItemsInPoly()
         });
       },
       runGeoExample(){
         try{
           let vue=this;
           // CUAHSI
-        // vue.getGeoItemsInRange([-72.56428830847662, 42.85084818160041])
+        // vue.getGeoItemsInPoly([-72.56428830847662, 42.85084818160041])
   
         // SALT LAKE
-        // vue.getGeoItemsInRange([-112.551445, 41.149411])
+        // vue.getGeoItemsInPoly([-112.551445, 41.149411])
   
         // Glen Canyon
-        // vue.getGeoItemsInRange([-111.48381550548234, 36.9378850872748]);
+        // vue.getGeoItemsInPoly([-111.48381550548234, 36.9378850872748]);
         
   
         // FL
-        // vue.getGeoItemsInRange([-80.7839365138525, 26.932581283846268])
+        // vue.getGeoItemsInPoly([-80.7839365138525, 26.932581283846268])
   
         // Salton sea
-        // vue.getGeoItemsInRange([-115.827709, 33.317246]);
+        // vue.getGeoItemsInPoly([-115.827709, 33.317246]);
         }catch(e){
           console.log(e);
         }

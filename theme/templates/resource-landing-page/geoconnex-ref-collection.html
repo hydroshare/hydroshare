@@ -110,11 +110,8 @@
                                 <button type="button" @click="fillFromPointExtent" class="btn btn-success btn-xs">
                                     Populate from Spatial Extent
                                 </button>
-                                <button type="button" @click="getGeoItemsInRange" class="btn btn-success btn-xs">
+                                <button type="button" @click="getGeoItemsInPoly" class="btn btn-success btn-xs">
                                     Map nearby collection items
-                                </button>
-                                <button v-if="hasSearches" type="button" @click="clearSearches" class="btn btn-success btn-xs">
-                                    Clear searches from the map
                                 </button>
                                 <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
                                 <div style="border: thin solid red" v-if="debug && values.length > 0">
@@ -123,6 +120,9 @@
                                     </ul>
                                 </div>
                             </div>
+                            <button v-if="hasSearches" type="button" @click="clearSearches" class="btn btn-success btn-xs">
+                                Clear searches from the map
+                            </button>
                         </form>
                     </div>
                 {% else %}
