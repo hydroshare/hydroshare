@@ -478,8 +478,7 @@ let geoconnexApp = new Vue({
 
         function onMapClick(e) {
           let loc = {lat: e.latlng.lat, long: e.latlng.lng};
-          console.log(JSON.stringify(loc))
-          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items around this point</button>`
+          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data="${JSON.stringify(loc)}">Search for Geoconnex items around this point</button>`
             popup
                 .setLatLng(e.latlng)
                 .setContent(content)
