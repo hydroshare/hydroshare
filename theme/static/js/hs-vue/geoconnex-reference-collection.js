@@ -134,7 +134,7 @@ let geoconnexApp = new Vue({
                 popupText += '<b>'+k+'</b>: ';
                 popupText += feature[k]+'</br>'
               }
-              if(vue.resMode == "Edit"){
+              if(vue.resMode == "Edit" && style.color != 'blue'){
                 popupText += `<button type="button" class="btn btn-primary add-queried-geoconnex" data='${JSON.stringify(feature)}'>Add this item to your resource metadata</button>`
               }
               layer.bindPopup(popupText);
@@ -496,6 +496,7 @@ let geoconnexApp = new Vue({
           e.stopPropagation();
           let data = JSON.parse($(this).attr("data"));
           vue.addSelectedItem(data);
+          vue.map.closePopup();
         });
       }
     },
