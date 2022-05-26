@@ -6,7 +6,7 @@ let geoconnexApp = new Vue({
     data() {
         return{
             relations: RELATIONS,
-            debug: true,
+            debug: false,
             resMode: RESOURCE_MODE,
             resHasSpatial: false,
             items: [],
@@ -43,12 +43,7 @@ let geoconnexApp = new Vue({
         let vue = this;
         vue.errorMsg = "";
         if (newValue.length > oldValue.length){
-          let selected = newValue.pop();
-          vue.fetchGeometry(selected).then(geometry =>{
-            selected.geometry = geometry.geometry;
-            vue.addToMap(selected, true);
-          });
-          vue.addMetadata(selected);
+          vue.addSelectedItem(newValue.pop());
         }else if (newValue.length < oldValue.length){
           let remove = oldValue.filter(obj => newValue.every(s => s.id !== obj.id));
           try{
@@ -62,6 +57,14 @@ let geoconnexApp = new Vue({
       }
     },
     methods: {
+      addSelectedItem(selected){
+        let vue = this;
+        vue.fetchGeometry(selected).then(geometry =>{
+          selected.geometry = geometry.geometry;
+          vue.addToMap(selected, true);
+        });
+        vue.addMetadata(selected);
+      },
       async fetchGeometry(geoconnexObj){
         let vue = this;
         let query = `${vue.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
@@ -112,14 +115,14 @@ let geoconnexApp = new Vue({
         try {
            let leafletLayer = L.geoJSON(geojson,{
             onEachFeature: function (feature, layer) {
-              var text = `<h4>${feature.text}</h4>`
+              var popupText = `<h4>${feature.text}</h4>`
               for (var k in feature.properties) {
-                  text += '<b>'+k+'</b>: ';
+                  popupText += '<b>'+k+'</b>: ';
                   if(k==="uri"){
-                    text += `<a href=${feature.properties[k]}>${feature.properties[k]}</a></br>`
+                    popupText += `<a href=${feature.properties[k]}>${feature.properties[k]}</a></br>`
                   }
                   else{
-                    text += feature.properties[k]+'</br>'
+                    popupText += feature.properties[k]+'</br>'
                   }
               }
               let hide = ['properties', 'text', 'geometry', 'relative_id', 'type'];
@@ -127,11 +130,11 @@ let geoconnexApp = new Vue({
                 if(hide.includes(k) | k in feature.properties){
                   continue
                 }
-                text += '<b>'+k+'</b>: ';
-                text += feature[k]+'</br>'
+                popupText += '<b>'+k+'</b>: ';
+                popupText += feature[k]+'</br>'
               }
-              text += `<a href="">TODO: Add clickable to add this item to the input field</a></br>`
-              layer.bindPopup(text);
+              popupText += `<button type="button" class="btn btn-primary add-queried-geoconnex" data='${JSON.stringify(feature)}'>Add this item to your resource metadata</button>`
+              layer.bindPopup(popupText);
             },
             pointToLayer: function (feature, latlng) {
               return L.circleMarker(latlng, style);
@@ -352,7 +355,7 @@ let geoconnexApp = new Vue({
           }
         }
       },
-      addMetadata(selected){ 
+      addMetadata(selected){
         let vue = this;
         let url = `/hsapi/_internal/${vue.resShortId}/relation/add-metadata/`;
         let data = {
@@ -487,6 +490,15 @@ let geoconnexApp = new Vue({
           var loc = JSON.parse($(this).attr("data"));
           vue.fillFromCoords(loc.lat, loc.long);
           vue.getGeoItemsContainingPoint(loc.lat, loc.long);
+        });
+
+        $("div").on("click", 'button.add-queried-geoconnex', function (e) {
+          e.stopPropagation();
+          let data = JSON.parse($(this).attr("data"));
+          console.log(data);
+          // vue.addMetadata(data);
+          // vue.values.push(data);
+          vue.addSelectedItem(data);
         });
       },
       runGeoExample(){
