@@ -164,7 +164,7 @@ Vue.component('add-author-modal', {
                     formData.append("resource-mode", RESOURCE_MODE.toLowerCase());
                     formData.append("organization", author.organization !== null ? author.organization : "");
                     formData.append("email", author.email !== null ? author.email : "");
-                    formData.append("description", "/user/" + userId + "/");    // TODO: clean up url field to match this
+                    formData.append("hydroshare_user_id", userId);
                     formData.append("address", author.address !== null ? author.address : "");
                     formData.append("phone", author.phone !== null ? author.phone : "");
                     formData.append("homepage", author.website !== null ? author.website : "");
@@ -390,6 +390,7 @@ let leftHeaderApp = new Vue({
         resShortId: SHORT_ID,
         can_change: CAN_CHANGE,
         authors: AUTHORS,
+        has_active_creators: HAS_ACTIVE_CREATORS,
         selectedAuthor: {
             author: {
                 "id": null,

@@ -640,7 +640,7 @@ function get_user_info_ajax_submit(url, obj) {
             var json_response = JSON.parse(result);
             var user_id = "/user/" + json_response.url.split("/")[4] + "/";
             formContainer.find("input[name='name']").val(json_response.name);
-            formContainer.find("input[name='description']").val(user_id);
+            formContainer.find("input[name='hydroshare_user_id']").val(user_id);
             formContainer.find("input[name='organization']").val(json_response.organization);
             formContainer.find("input[name='email']").val(json_response.email);
             formContainer.find("input[name='address']").val(json_response.address);
@@ -718,6 +718,30 @@ function delete_virtual_folder_ajax_submit(hs_file_type, file_type_id) {
         error: function (xhr, errmsg, err) {
             display_error_message('Folder Deletion Failed', xhr.responseText);
         }
+    });
+}
+
+function resetAfterFBDelete() {
+    refreshFileBrowser();
+    $("#fb-files-container li.ui-selected").css("cursor", "auto").removeClass("deleting");
+    $(".fb-cust-spinner").remove();
+}
+
+function deleteRemainingFiles(filesToDelete) {
+    // Add the data into the form and then serialize it because we need the csrf token
+    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
+    let data = $("#fb-delete-files-form").serialize();
+    
+    $.ajax({
+        type: "POST",
+        url: `/hsapi/_internal/${SHORT_ID}/delete-multiple-files/`,
+        data: data,
+    })
+    .fail(function(e){
+        console.log(e.responseText);
+    })
+    .always(function(){
+        resetAfterFBDelete();
     });
 }
 
@@ -1055,11 +1079,14 @@ function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath)
         type: "POST",
         url: '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/move-aggregation/' + targetPath,
         async: true,
-        success: function (result) {
-
+        success: function (task) {
+            notificationsApp.registerTask(task);
+            notificationsApp.show();
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
             display_error_message('File/Folder Moving Failed', xhr.responseText);
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
 }
@@ -1783,7 +1810,7 @@ function updateResourceAuthors(authors) {
             order: author.order.toString(),
             organization: author.organization,
             phone: author.phone,
-            profileUrl: author.description,
+            profileUrl: author.relative_uri,
             homepage: author.homepage,
         };
     })

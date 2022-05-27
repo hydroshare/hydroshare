@@ -7,7 +7,7 @@
                 <tr>
                     <th>Authors:</th>
 
-                    <td class="authors-wrapper" v-if="res_mode === 'View'">
+                    <td v-if="has_active_creators && res_mode === 'View'" class="authors-wrapper">
                         <a v-for="(author, index) in authors" data-toggle="modal"
                            @click="selectAuthor(author, index)"
                            data-target="#view-author-modal">
@@ -15,6 +15,15 @@
                             <template v-else-if="author.organization">${ author.organization }</template>
                             <template v-else>${ author.email }</template>
                         </a>
+                    </td>
+                    <td v-if="!has_active_creators && res_mode === 'View'" class="authors-wrapper">
+                        This resource does not have an author who is an active HydroShare user.
+                        Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
+                        {% if cm.raccess.public %}
+                            for information on this resource.
+                        {% else %}
+                            to determine if accessing this resource is possible.
+                        {% endif %}
                     </td>
 
                     <td v-if="res_mode === 'Edit'">
@@ -54,7 +63,7 @@
                 </tr>
                 <tr>
                     <th>Owners:</th>
-                    <td class="owners-wrapper">
+                    <td v-if="owners.length" class="owners-wrapper">
                         <template v-for="owner in owners">
                             <profile-link
                                 :user="owner" :key="owner.id" @load-card="onLoadOwnerCard($event)">
@@ -62,6 +71,15 @@
                         </template>
 
                         <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
+                    </td>
+                    <td v-else class="owners-wrapper">
+                        This resource does not have an owner who is an active HydroShare user.
+                        Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
+                        {% if cm.raccess.public %}
+                            for information on this resource.
+                        {% else %}
+                            to determine if accessing this resource is possible.
+                        {% endif %}
                     </td>
                 </tr>
                 <tr>
@@ -79,8 +97,8 @@
                 <tr>
                     <th>Last updated:</th>
                     <td> {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }}
-                        <profile-link v-on:load-card="onLoadOwnerCard($event)" :user="lastChanagedBy"></profile-link>
-                        <profile-card :user="lastChanagedBy" :position="cardPosition"></profile-card>
+                        <profile-link v-if="lastChanagedBy.is_active" v-on:load-card="onLoadOwnerCard($event)" :user="lastChanagedBy"></profile-link>
+                        <profile-card v-if="lastChanagedBy.is_active" :user="lastChanagedBy" :position="cardPosition"></profile-card>
                     </td>
                 </tr>
                 {% if cm.raccess.published %}
@@ -129,4 +147,4 @@
     </div>
 </div>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/left-header-app.js"></script>
+<script type="text/javascript" src="{% static 'js/hs-vue/left-header-app.js' %}"></script>
