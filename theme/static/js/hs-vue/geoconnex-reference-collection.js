@@ -6,9 +6,9 @@ let geoconnexApp = new Vue({
     data() {
         return{
             relations: RELATIONS,
-            debug: false,
+            debug: true,
             resMode: RESOURCE_MODE,
-            resHasSpatial: false,
+            resSpatialType: null,
             items: [],
             collections: null,
             values: [],
@@ -34,8 +34,12 @@ let geoconnexApp = new Vue({
             layerGroupDictionary: {},
             searchRadius: 1,
             maxAreaToReturn: 1e12,
-            manualLat: 0,
-            manualLong: 0,
+            pointLat: 0,
+            pointLong: 0,
+            northLat: null,
+            eastLong: null,
+            southLat: null,
+            westLong: null,
             searchColor: 'orange',
             selectColor: 'blue'
         }
@@ -55,6 +59,12 @@ let geoconnexApp = new Vue({
             console.log(e.message);
           }
           vue.removeMetadata(remove);
+        }
+      },
+      resSpatialType(newSpatialType, oldSpatialType){
+        let vue = this;
+        if(newSpatialType == 'point'){
+          console.log("point");
         }
       }
     },
@@ -111,7 +121,7 @@ let geoconnexApp = new Vue({
         vue.map.addLayer(vue.selectedFeatureGroup);
         vue.map.addLayer(vue.searchFeatureGroup);
         vue.map.setView([30, 0], 1);
-        vue.setMapClickEvents();
+        vue.setMapEvents();
       },
       addToMap(geojson, zoom=false, style={color: this.selectColor, radius: 5}, group=null){
         let vue = this;
@@ -406,8 +416,8 @@ let geoconnexApp = new Vue({
       },
       getGeoItemsContainingPoint(lat=null, long=null){
         let vue=this;
-        long = typeof(long) == 'number' ? long : vue.manualLong;
-        lat = typeof(lat) == 'number' ? lat : vue.manualLat;
+        long = typeof(long) == 'number' ? long : vue.pointLong;
+        lat = typeof(lat) == 'number' ? lat : vue.pointLat;
         let center = turf.point([long, lat]);
         let sides = vue.searchRadius / 100;
         var options = {
@@ -463,17 +473,33 @@ let geoconnexApp = new Vue({
         // vue.map.removeLayer(vue.searchFeatureGroup);
         vue.hasSearches = false;
       },
+      searchUsingSpatialExtent(){
+        // TODO: search using spatial extent
+        // check for spatial extent
+        let checked = $("#div_id_type input:checked").val();
+        if(checked == 'point'){
+
+        }else if(checked == 'box'){
+
+        }else{
+          // button should've been hidden
+        }
+      
+        // fill debug inputs
+        // map the extent
+        // search using point/poly
+      },
       fillFromPointExtent(){
         let vue = this;
-          vue.manualLat = $('#id_north').val();
-          vue.manualLong = $('#id_east').val();
+          vue.pointLat = $('#id_north').val();
+          vue.pointLong = $('#id_east').val();
       },
       fillFromCoords(lat, long){
         let vue = this;
-          vue.manualLat = lat;
-          vue.manualLong = long;
+          vue.pointLat = lat;
+          vue.pointLong = long;
       },
-      setMapClickEvents(){
+      setMapEvents(){
         let vue = this;
         var popup = L.popup();
 
@@ -507,6 +533,11 @@ let geoconnexApp = new Vue({
           let data = JSON.parse($(this).attr("data"));
           vue.values = vue.values.filter(s => s.value !== data.uri);
           vue.map.closePopup();
+        });
+
+        // listen for spatial coverage  type change
+        $("#div_id_type input[type=radio]").change((e)=>{
+          vue.resSpatialType = e.target.value;
         });
       }
     },
