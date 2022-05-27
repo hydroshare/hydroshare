@@ -59,6 +59,13 @@ let geoconnexApp = new Vue({
             console.log(e.message);
           }
           vue.removeMetadata(remove);
+
+          // re-enable the item for selection
+          vue.items.forEach(it =>{
+            if(remove[0].value === it.uri){
+              it.disabled = false;
+            }
+          });
         }
       },
       resSpatialType(newSpatialType, oldSpatialType){
@@ -76,6 +83,13 @@ let geoconnexApp = new Vue({
           vue.addToMap(selected, true);
         });
         vue.addMetadata(selected);
+        
+        // disable so that it can't be duplicated
+        vue.items.forEach(it =>{
+          if(selected.uri === it.uri){
+            it.disabled = true;
+          }
+        });
       },
       async fetchGeometry(geoconnexObj){
         let vue = this;
@@ -374,6 +388,13 @@ let geoconnexApp = new Vue({
               "value": relation.value,
             };
             vue.values.push(data);
+
+            // disable already selected items
+            vue.items.forEach(it =>{
+              if(item.uri === it.uri){
+                it.disabled = true;
+              }
+            });
             if (item){
               vue.fetchGeometry(item).then(geometry =>{
                 item.geometry = geometry.geometry;
@@ -576,7 +597,6 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
-- prevent duplicates
 - if coverage, click button to search
 
 - default to show a list instead of a map
