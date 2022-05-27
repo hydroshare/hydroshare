@@ -165,7 +165,7 @@ let geoconnexApp = new Vue({
                     popupText += feature.properties[k]+'</br>'
                   }
               }
-              let hide = ['properties', 'text', 'geometry', 'relative_id', 'type', 'links'];
+              let hide = ['properties', 'text', 'geometry', 'relative_id', 'type', 'links', 'disabled'];
               for (var k in feature) {
                 if(hide.includes(k) | k in feature.properties){
                   continue
