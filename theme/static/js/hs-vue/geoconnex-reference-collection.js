@@ -391,10 +391,11 @@ let geoconnexApp = new Vue({
 
             // disable already selected items
             vue.items.forEach(it =>{
-              if(item.uri === it.uri){
+              if(item && item.uri === it.uri){
                 it.disabled = true;
               }
             });
+
             if (item){
               vue.fetchGeometry(item).then(geometry =>{
                 item.geometry = geometry.geometry;
@@ -597,6 +598,7 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
+- hide "search all items" layercontrol when not edit mode
 - if coverage, click button to search
 
 - default to show a list instead of a map
