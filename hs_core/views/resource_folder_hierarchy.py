@@ -805,7 +805,6 @@ def data_store_move_to_folder(request, pk=None):
         for override_tgt_path in override_tgt_paths:
             delete_resource_file(pk, override_tgt_path, user)
 
-    # move the files that don't have conflicts and stop immediately on error.
     try:
         move_to_folder(user, pk, valid_src_paths, tgt_path)
     except SessionException as ex:

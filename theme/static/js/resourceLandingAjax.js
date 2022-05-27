@@ -1058,11 +1058,14 @@ function move_to_folder_ajax_submit(source_paths, target_path, file_override) {
     });
 }
 
-function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath) {
+function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath, file_override) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/move-aggregation/' + targetPath,
+        data: {
+            file_override: file_override
+        },
         async: true,
         success: function (task) {
             notificationsApp.registerTask(task);
@@ -1070,7 +1073,16 @@ function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath)
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
-            display_error_message('File/Folder Moving Failed', xhr.responseText);
+            if (xhr.status == 300) {
+                $('#aggr-move-resp-message').text(xhr.responseText);
+                $("#file_type").val(hs_file_type);
+                $("#file_type_id").val(file_type_id);
+                $("#target_path").val(targetPath);
+                $('#move-aggr-override-confirm-dialog').modal('show');
+            }
+            else {
+                display_error_message('File/Folder Moving Failed', xhr.responseText);
+            }
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
