@@ -35,7 +35,9 @@ let geoconnexApp = new Vue({
             searchRadius: 1,
             maxAreaToReturn: 1e12,
             manualLat: 0,
-            manualLong: 0
+            manualLong: 0,
+            searchColor: 'orange',
+            selectColor: 'blue'
         }
     },
     watch: {
@@ -111,7 +113,7 @@ let geoconnexApp = new Vue({
         vue.map.setView([30, 0], 1);
         vue.setMapClickEvents();
       },
-      addToMap(geojson, zoom=false, style={color: 'blue', radius: 5}, group=null){
+      addToMap(geojson, zoom=false, style={color: this.selectColor, radius: 5}, group=null){
         let vue = this;
         try {
            let leafletLayer = L.geoJSON(geojson,{
@@ -134,9 +136,9 @@ let geoconnexApp = new Vue({
                 popupText += '<b>'+k+'</b>: ';
                 popupText += feature[k]+'</br>'
               }
-              if(vue.resMode == "Edit" && style.color != 'blue'){
+              if(vue.resMode == "Edit" && style.color == vue.searchColor){
                 popupText += `<button type="button" class="btn btn-primary map-add-geoconnex" data='${JSON.stringify(feature)}'>Add this feature to your resource metadata</button>`
-              }else if(vue.resMode == "Edit" && style.color == 'blue'){
+              }else if(vue.resMode == "Edit" && style.color == vue.selectColor){
                 popupText += `<button type="button" class="btn btn-primary map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
               }
               layer.bindPopup(popupText);
@@ -434,13 +436,13 @@ let geoconnexApp = new Vue({
             try{
               if (turf.area(item) < vue.maxAreaToReturn*1e6){
                 if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(polygon, item)){
-                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchFeatureGroup);
+                  vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
                 }
                 if(item.geometry.type.includes("Point") && turf.booleanPointInPolygon(item, polygon)){
-                  vue.addToMap(item, false, {color:'orange', radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
+                  vue.addToMap(item, false, {color: vue.searchColor, radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
                 }
                 if(item.geometry.type.includes("Line") && turf.booleanIntersects(polygon, item)){
-                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchFeatureGroup);
+                  vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
                 }
               }
             }catch(e){
