@@ -424,6 +424,7 @@ let geoconnexApp = new Vue({
       getGeoItemsInPoly(polygon=null){
         // https://turfjs.org/docs/#intersects
         // https://turfjs.org/docs/#booleanIntersects
+        // https://turfjs.org/docs/#booleanContains
         let vue=this;
         vue.loading = true;
         vue.map.closePopup();
@@ -435,14 +436,12 @@ let geoconnexApp = new Vue({
             item.geometry = geometry.geometry;
             try{
               if (turf.area(item) < vue.maxAreaToReturn*1e6){
-                if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(polygon, item)){
-                  vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
-                }
-                if(item.geometry.type.includes("Point") && turf.booleanPointInPolygon(item, polygon)){
-                  vue.addToMap(item, false, {color: vue.searchColor, radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
-                }
-                if(item.geometry.type.includes("Line") && turf.booleanIntersects(polygon, item)){
-                  vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
+                if(turf.booleanIntersects(polygon, item)){
+                  if(item.geometry.type.includes("Point")){
+                    vue.addToMap(item, false, {color: vue.searchColor, radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
+                  }else{
+                    vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
+                  }
                 }
               }
             }catch(e){
