@@ -576,7 +576,6 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
-- add topo layer
 - help section
 - prevent duplicates
 - default to show a list instead of a map
