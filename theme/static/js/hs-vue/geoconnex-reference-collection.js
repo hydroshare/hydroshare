@@ -528,7 +528,10 @@ let geoconnexApp = new Vue({
       searchUsingSpatialExtent(){
         // TODO: search using spatial extent
         // check for spatial extent
-        alert("this isn't implemented yet, sorry... USE THE DEBUG FOR NOW....")
+        alert(`
+          this isn't implemented yet, sorry... USE THE DEBUG FOR NOW (you can populate it from spatial extent)... 
+          but the idea is that eventually this search button would only show if the res has spatial extent
+          `)
       
         // fill debug inputs
         // map the extent
@@ -638,6 +641,5 @@ TODO:
 - default to show a list instead of a map
 - expandable map
 
-- box coverage
 - combine the spatial coverage map with the leaflet map?
 */
