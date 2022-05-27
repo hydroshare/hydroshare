@@ -449,6 +449,23 @@ let geoconnexApp = new Vue({
           }
         }
       },
+      getGeoItemsFromDebug(){
+        let vue = this;
+        if(vue.resSpatialType == 'point'){
+          vue.getGeoItemsContainingPoint(vue.pointLat, vue.pointLong);
+        }else if(vue.resSpatialType == 'box'){
+          vue.northLat = $('#id_northlimit').val();
+          vue.eastLong = $('#id_eastlimit').val();
+          vue.southLat = $('#id_southlimit').val();
+          vue.westLong = $('#id_westlimit').val();
+
+          let bbox = [vue.eastLong, vue.southLat, vue.westLong, vue.northLat];
+          var polygon = turf.bboxPolygon(bbox);
+          vue.getGeoItemsInPoly(polygon);
+        }else{
+          alert("Spatial extent isn't set?....")
+        }
+      },
       getGeoItemsContainingPoint(lat=null, long=null){
         let vue=this;
         long = typeof(long) == 'number' ? long : vue.pointLong;
