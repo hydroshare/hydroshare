@@ -2,7 +2,12 @@
 {% if resource_edit_mode or generic_relations %}
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
-        <h4>This HydroShare resource is related to the following geospatial features:</h4>
+        <h4>This HydroShare resource is related to the following geospatial features
+            <span v-if="resMode=='Edit'" data-toggle="tooltip" data-placement="auto"
+            title='Use this section to add persistent identifiers pointing at related geospatial features.'
+            class="glyphicon glyphicon-info-sign text-muted">
+            </span>
+        </h4>
         <v-app>
             <v-progress-linear
                 :active="loading"
@@ -64,7 +69,8 @@
                                     </v-list-item>
                                 </template>
                             </v-combobox>
-                            <div v-if="debug">
+                            <div style="border: solid red" v-if="debug">
+                                <h4 style="color: red">DEBUG PANEL</h4>
                                 <div v-if="resSpatialType=='point'">
                                     <div class="control-group">
                                         <div class="input-group">
@@ -150,16 +156,14 @@
                                             class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
                                     </div>
                                 </div>
-                            </div>
-                            <div v-if="debug">
-                                <button type="button" @click="fillFromPointExtent" class="btn btn-success btn-xs">
+                                <button type="button" @click="fillFromPointExtent" class="btn btn-primary btn-xs">
                                     Populate from Spatial Extent
                                 </button>
-                                <button type="button" @click="getGeoItemsContainingPoint" class="btn btn-success btn-xs">
+                                <button type="button" @click="getGeoItemsContainingPoint" class="btn btn-primary btn-xs">
                                     Search using these parameters
                                 </button>
-                                <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
-                                <div style="border: thin solid red" v-if="debug && values.length > 0">
+                                <h4 v-if="values.length > 0">SELECTED VALUES</h4>
+                                <div style="border: thin solid black" v-if="values.length > 0">
                                     <ul>
                                         <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
                                     </ul>

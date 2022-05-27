@@ -159,9 +159,9 @@ let geoconnexApp = new Vue({
                 popupText += feature[k]+'</br>'
               }
               if(vue.resMode == "Edit" && style.color == vue.searchColor){
-                popupText += `<button type="button" class="btn btn-primary map-add-geoconnex" data='${JSON.stringify(feature)}'>Add this feature to your resource metadata</button>`
+                popupText += `<button type="button" class="btn btn-success map-add-geoconnex" data='${JSON.stringify(feature)}'>Add this feature to your resource metadata</button>`
               }else if(vue.resMode == "Edit" && style.color == vue.selectColor){
-                popupText += `<button type="button" class="btn btn-primary map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
+                popupText += `<button type="button" class="btn btn-success map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
               }
               layer.bindPopup(popupText);
             },
@@ -517,7 +517,7 @@ let geoconnexApp = new Vue({
 
         function onMapClick(e) {
           let loc = {lat: e.latlng.lat, long: e.latlng.lng};
-          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
+          let content = `<button type="button" class="btn btn-success leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
             popup
                 .setLatLng(e.latlng)
                 .setContent(content)
