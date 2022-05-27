@@ -6,9 +6,9 @@ let geoconnexApp = new Vue({
     data() {
         return{
             relations: RELATIONS,
-            debug: false,
+            debug: true,
             resMode: RESOURCE_MODE,
-            resHasSpatial: false,
+            resSpatialType: null,
             items: [],
             collections: null,
             values: [],
@@ -34,8 +34,14 @@ let geoconnexApp = new Vue({
             layerGroupDictionary: {},
             searchRadius: 1,
             maxAreaToReturn: 1e12,
-            manualLat: 0,
-            manualLong: 0
+            pointLat: 0,
+            pointLong: 0,
+            northLat: null,
+            eastLong: null,
+            southLat: null,
+            westLong: null,
+            searchColor: 'orange',
+            selectColor: 'purple'
         }
     },
     watch: {
@@ -53,6 +59,20 @@ let geoconnexApp = new Vue({
             console.log(e.message);
           }
           vue.removeMetadata(remove);
+
+          // re-enable the item for selection
+          vue.items.forEach(it =>{
+            if(remove[0].value === it.uri){
+              it.disabled = false;
+            }
+          });
+        }
+      },
+      resSpatialType(newSpatialType, oldSpatialType){
+        let vue = this;
+        // TODO: add watchers for spatial extent update
+        if(newSpatialType == 'point'){
+          console.log("point");
         }
       }
     },
@@ -64,6 +84,13 @@ let geoconnexApp = new Vue({
           vue.addToMap(selected, true);
         });
         vue.addMetadata(selected);
+        
+        // disable so that it can't be duplicated
+        vue.items.forEach(it =>{
+          if(selected.uri === it.uri){
+            it.disabled = true;
+          }
+        });
       },
       async fetchGeometry(geoconnexObj){
         let vue = this;
@@ -84,13 +111,25 @@ let geoconnexApp = new Vue({
         let vue = this;
         vue.map = L.map('geo-leaflet');
 
+        let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
+          attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+          maxZoom: 18,
+        });
+
         let streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 18,
         });
 
+        // let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
+        //   attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+        //   maxZoom: 18,
+        // });
+
         var baseMaps = {
-          "Streets": streets
+          "Terrain": terrain,
+          "Streets": streets,
+          // "Toner": toner
         };
 
         vue.selectedFeatureGroup =  L.featureGroup();
@@ -105,13 +144,13 @@ let geoconnexApp = new Vue({
         vue.layerControl.addTo(vue.map);
 
         // show the default layers at start
-        vue.map.addLayer(streets);
+        vue.map.addLayer(terrain);
         vue.map.addLayer(vue.selectedFeatureGroup);
         vue.map.addLayer(vue.searchFeatureGroup);
         vue.map.setView([30, 0], 1);
-        vue.setMapClickEvents();
+        vue.setMapEvents();
       },
-      addToMap(geojson, zoom=false, style={color: 'blue', radius: 5}, group=null){
+      addToMap(geojson, zoom=false, style={color: this.selectColor, radius: 5}, group=null){
         let vue = this;
         try {
            let leafletLayer = L.geoJSON(geojson,{
@@ -134,10 +173,10 @@ let geoconnexApp = new Vue({
                 popupText += '<b>'+k+'</b>: ';
                 popupText += feature[k]+'</br>'
               }
-              if(vue.resMode == "Edit" && style.color != 'blue'){
-                popupText += `<button type="button" class="btn btn-primary map-add-geoconnex" data='${JSON.stringify(feature)}'>Add this feature to your resource metadata</button>`
-              }else if(vue.resMode == "Edit" && style.color == 'blue'){
-                popupText += `<button type="button" class="btn btn-primary map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
+              if(vue.resMode == "Edit" && style.color == vue.searchColor){
+                popupText += `<button type="button" class="btn btn-success map-add-geoconnex" data='${JSON.stringify(feature)}'>Add this feature to your resource metadata</button>`
+              }else if(vue.resMode == "Edit" && style.color == vue.selectColor){
+                popupText += `<button type="button" class="btn btn-success map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
               }
               layer.bindPopup(popupText);
             },
@@ -350,6 +389,14 @@ let geoconnexApp = new Vue({
               "value": relation.value,
             };
             vue.values.push(data);
+
+            // disable already selected items
+            vue.items.forEach(it =>{
+              if(item && item.uri === it.uri){
+                it.disabled = true;
+              }
+            });
+
             if (item){
               vue.fetchGeometry(item).then(geometry =>{
                 item.geometry = geometry.geometry;
@@ -402,10 +449,27 @@ let geoconnexApp = new Vue({
           }
         }
       },
+      getGeoItemsFromDebug(){
+        let vue = this;
+        if(vue.resSpatialType == 'point'){
+          vue.getGeoItemsContainingPoint(vue.pointLat, vue.pointLong);
+        }else if(vue.resSpatialType == 'box'){
+          vue.northLat = $('#id_northlimit').val();
+          vue.eastLong = $('#id_eastlimit').val();
+          vue.southLat = $('#id_southlimit').val();
+          vue.westLong = $('#id_westlimit').val();
+
+          let bbox = [vue.eastLong, vue.southLat, vue.westLong, vue.northLat];
+          var polygon = turf.bboxPolygon(bbox);
+          vue.getGeoItemsInPoly(polygon);
+        }else{
+          alert("Spatial extent isn't set?....")
+        }
+      },
       getGeoItemsContainingPoint(lat=null, long=null){
         let vue=this;
-        long = typeof(long) == 'number' ? long : vue.manualLong;
-        lat = typeof(lat) == 'number' ? lat : vue.manualLat;
+        long = typeof(long) == 'number' ? long : vue.pointLong;
+        lat = typeof(lat) == 'number' ? lat : vue.pointLat;
         let center = turf.point([long, lat]);
         let sides = vue.searchRadius / 100;
         var options = {
@@ -422,6 +486,7 @@ let geoconnexApp = new Vue({
       getGeoItemsInPoly(polygon=null){
         // https://turfjs.org/docs/#intersects
         // https://turfjs.org/docs/#booleanIntersects
+        // https://turfjs.org/docs/#booleanContains
         let vue=this;
         vue.loading = true;
         vue.map.closePopup();
@@ -433,14 +498,12 @@ let geoconnexApp = new Vue({
             item.geometry = geometry.geometry;
             try{
               if (turf.area(item) < vue.maxAreaToReturn*1e6){
-                if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(polygon, item)){
-                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchFeatureGroup);
-                }
-                if(item.geometry.type.includes("Point") && turf.booleanPointInPolygon(item, polygon)){
-                  vue.addToMap(item, false, {color:'orange', radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
-                }
-                if(item.geometry.type.includes("Line") && turf.booleanIntersects(polygon, item)){
-                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchFeatureGroup);
+                if(turf.booleanIntersects(polygon, item)){
+                  if(item.geometry.type.includes("Point")){
+                    vue.addToMap(item, false, {color: vue.searchColor, radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
+                  }else{
+                    vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
+                  }
                 }
               }
             }catch(e){
@@ -462,23 +525,57 @@ let geoconnexApp = new Vue({
         // vue.map.removeLayer(vue.searchFeatureGroup);
         vue.hasSearches = false;
       },
+      searchUsingSpatialExtent(){
+        // TODO: search using spatial extent
+        // check for spatial extent
+        alert(`
+          this isn't implemented yet, sorry... USE THE DEBUG FOR NOW (you can populate it from spatial extent)... 
+          but the idea is that eventually this search button would only show if the res has spatial extent
+          `)
+      
+        // fill debug inputs
+        // map the extent
+        // search using point/poly
+      },
+      updateSpatialExtentType(){
+        let vue = this;
+        let checked = $("#div_id_type input:checked").val();
+        vue.resSpatialType = checked;
+      },
+      fillFromExtent(){
+        let vue = this;
+        if(vue.resSpatialType == 'point'){
+          vue.fillFromPointExtent();
+        }else if(vue.resSpatialType == 'box'){
+          vue.fillFromBoxExtent();
+        }else{
+          alert("Spatial extent isn't set?....")
+        }
+      },
       fillFromPointExtent(){
         let vue = this;
-          vue.manualLat = $('#id_north').val();
-          vue.manualLong = $('#id_east').val();
+          vue.pointLat = $('#id_north').val();
+          vue.pointLong = $('#id_east').val();
+      },
+      fillFromBoxExtent(){
+        let vue = this;
+          vue.northLat = $('#id_northlimit').val();
+          vue.eastLong = $('#id_eastlimit').val();
+          vue.southLat = $('#id_southlimit').val();
+          vue.westLong = $('#id_westlimit').val();
       },
       fillFromCoords(lat, long){
         let vue = this;
-          vue.manualLat = lat;
-          vue.manualLong = long;
+          vue.pointLat = lat;
+          vue.pointLong = long;
       },
-      setMapClickEvents(){
+      setMapEvents(){
         let vue = this;
         var popup = L.popup();
 
         function onMapClick(e) {
           let loc = {lat: e.latlng.lat, long: e.latlng.lng};
-          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
+          let content = `<button type="button" class="btn btn-success leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
             popup
                 .setLatLng(e.latlng)
                 .setContent(content)
@@ -507,6 +604,11 @@ let geoconnexApp = new Vue({
           vue.values = vue.values.filter(s => s.value !== data.uri);
           vue.map.closePopup();
         });
+
+        // listen for spatial coverage  type change
+        $("#div_id_type input[type=radio]").change((e)=>{
+          vue.resSpatialType = e.target.value;
+        });
       }
     },
     beforeMount(){
@@ -517,6 +619,7 @@ let geoconnexApp = new Vue({
       if(vue.resMode == "Edit"){
         vue.geoCache = await caches.open(vue.cacheName);
         await vue.getAllItems();
+        vue.updateSpatialExtentType()
         vue.createMap();
         vue.loadRelations();
         vue.loading = false;
@@ -532,12 +635,11 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
+- hide "search all items" layercontrol when not edit mode
 - if coverage, click button to search
-- box coverage
-- add topo layer
-- help section
-- prevent duplicates
+
 - default to show a list instead of a map
 - expandable map
+
 - combine the spatial coverage map with the leaflet map?
 */
