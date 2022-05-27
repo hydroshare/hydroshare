@@ -156,7 +156,7 @@
                                             class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
                                     </div>
                                 </div>
-                                <button type="button" @click="fillFromPointExtent" class="btn btn-primary btn-xs">
+                                <button type="button" @click="fillFromExtent" class="btn btn-primary btn-xs">
                                     Populate from Spatial Extent
                                 </button>
                                 <button type="button" @click="getGeoItemsContainingPoint" class="btn btn-primary btn-xs">
@@ -171,7 +171,6 @@
                             </div>
                             <button v-if="resSpatialType" type="button" @click="searchUsingSpatialExtent" class="btn btn-success btn-xs">
                                 Search map using Spatial Extent
-                                TODO: this doesn't do anything yet...
                             </button>
                             <button v-if="hasSearches" type="button" @click="clearMappedSearches" class="btn btn-success btn-xs">
                                 Clear searches from the map

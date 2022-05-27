@@ -70,6 +70,7 @@ let geoconnexApp = new Vue({
       },
       resSpatialType(newSpatialType, oldSpatialType){
         let vue = this;
+        // TODO: add watchers for spatial extent update
         if(newSpatialType == 'point'){
           console.log("point");
         }
@@ -510,23 +511,38 @@ let geoconnexApp = new Vue({
       searchUsingSpatialExtent(){
         // TODO: search using spatial extent
         // check for spatial extent
-        let checked = $("#div_id_type input:checked").val();
-        if(checked == 'point'){
-
-        }else if(checked == 'box'){
-
-        }else{
-          // button should've been hidden
-        }
+        alert("this isn't implemented yet, sorry... USE THE DEBUG FOR NOW....")
       
         // fill debug inputs
         // map the extent
         // search using point/poly
       },
+      updateSpatialExtentType(){
+        let vue = this;
+        let checked = $("#div_id_type input:checked").val();
+        vue.resSpatialType = checked;
+      },
+      fillFromExtent(){
+        let vue = this;
+        if(vue.resSpatialType == 'point'){
+          vue.fillFromPointExtent();
+        }else if(vue.resSpatialType == 'box'){
+          vue.fillFromBoxExtent();
+        }else{
+          alert("Spatial extent isn't set?....")
+        }
+      },
       fillFromPointExtent(){
         let vue = this;
           vue.pointLat = $('#id_north').val();
           vue.pointLong = $('#id_east').val();
+      },
+      fillFromBoxExtent(){
+        let vue = this;
+          vue.northLat = $('#id_northlimit').val();
+          vue.eastLong = $('#id_eastlimit').val();
+          vue.southLat = $('#id_southlimit').val();
+          vue.westLong = $('#id_westlimit').val();
       },
       fillFromCoords(lat, long){
         let vue = this;
@@ -583,6 +599,7 @@ let geoconnexApp = new Vue({
       if(vue.resMode == "Edit"){
         vue.geoCache = await caches.open(vue.cacheName);
         await vue.getAllItems();
+        vue.updateSpatialExtentType()
         vue.createMap();
         vue.loadRelations();
         vue.loading = false;
