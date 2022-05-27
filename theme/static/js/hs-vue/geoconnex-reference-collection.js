@@ -41,7 +41,7 @@ let geoconnexApp = new Vue({
             southLat: null,
             westLong: null,
             searchColor: 'orange',
-            selectColor: 'blue'
+            selectColor: 'purple'
         }
     },
     watch: {
@@ -96,13 +96,25 @@ let geoconnexApp = new Vue({
         let vue = this;
         vue.map = L.map('geo-leaflet');
 
+        let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
+          attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+          maxZoom: 18,
+        });
+
         let streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 18,
         });
 
+        let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
+          attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+          maxZoom: 18,
+      });
+
         var baseMaps = {
-          "Streets": streets
+          "Terrain": terrain,
+          "Streets": streets,
+          "Toner": toner
         };
 
         vue.selectedFeatureGroup =  L.featureGroup();
@@ -117,7 +129,7 @@ let geoconnexApp = new Vue({
         vue.layerControl.addTo(vue.map);
 
         // show the default layers at start
-        vue.map.addLayer(streets);
+        vue.map.addLayer(terrain);
         vue.map.addLayer(vue.selectedFeatureGroup);
         vue.map.addLayer(vue.searchFeatureGroup);
         vue.map.setView([30, 0], 1);
@@ -564,12 +576,13 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
-- if coverage, click button to search
-- box coverage
 - add topo layer
 - help section
 - prevent duplicates
 - default to show a list instead of a map
 - expandable map
+
+- if coverage, click button to search
+- box coverage
 - combine the spatial coverage map with the leaflet map?
 */
