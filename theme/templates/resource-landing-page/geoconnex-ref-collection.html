@@ -4,6 +4,10 @@
         <h3>Related Geospatial Features</h3>
         <h4>This HydroShare resource is related to the following geospatial features:</h4>
         <v-app>
+            <v-progress-linear
+                :active="loading"
+                :indeterminate="loading"
+            ></v-progress-linear>
             <div v-if="loading">
                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${currentLoading}</p>
                 <p v-else>Loading Geoconnex relations...</p>
@@ -36,7 +40,6 @@
                                 :disabled="loading"
                                 color="blue-grey"
                                 :search-input.sync="search"
-                                :loading="loading"
                                 :rules="rules"
                                 return-object="true"
                                 style="z-index: 999">
@@ -61,21 +64,65 @@
                                     </v-list-item>
                                 </template>
                             </v-combobox>
-                            <input v-model="lat" type="text" class="form-control"
-                                   placeholder="Lat">
-                            <input v-model="long" type="text" class="form-control"
-                                   placeholder="Long">       
-                            <input v-model="radius" type="text" class="form-control"
-                                   placeholder="Radius (meters)">
-                            <button type="button" @click="getGeoItemsInRange" class="btn btn-primary">
-                                Find based on spatial extent
-                            </button>
-                            <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
-                            <div style="border: thin solid red" v-if="debug && values.length > 0">
-                                <ul>
-                                    <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
-                                </ul>
+                            <div v-if="debug">
+                                <div class="control-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon coordinates-label-addon" style="width: 127px">Latitude</span>
+                                        <input type="number" class="form-control" v-model="manualLat" type="number" class="form-control"
+                                            placeholder="Lat"
+                                        >
+                                        <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                            class="input-group-addon" style="width: 50px;">°</span>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon coordinates-label-addon" style="width: 127px">Longitude</span>
+                                        <input type="number" class="form-control" v-model="manualLong" type="number" class="form-control"
+                                            placeholder="Long"
+                                        >
+                                        <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                            class="input-group-addon" style="width: 50px;">°</span>
+                                    </div>
+                                </div>  
+                                <div class="control-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon coordinates-label-addon" style="width: 127px">Radius</span>
+                                        <input type="number" class="form-control" v-model="searchRadius" type="number" class="form-control"
+                                            placeholder="Radius"
+                                        >
+                                        <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
+                                            class="input-group-addon" style="width: 50px;">km</span>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon coordinates-label-addon" style="width: 127px">Max Area</span>
+                                        <input type="number" class="form-control" v-model="maxAreaToReturn" type="number" class="form-control"
+                                            placeholder="Max Area"
+                                        >
+                                        <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
+                                            class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
+                                    </div>
+                                </div>
                             </div>
+                            <div v-if="debug">
+                                <button type="button" @click="fillFromPointExtent" class="btn btn-success btn-xs">
+                                    Populate from Spatial Extent
+                                </button>
+                                <button type="button" @click="getGeoItemsContainingPoint" class="btn btn-success btn-xs">
+                                    Search using these parameters
+                                </button>
+                                <h4 v-if="debug && values.length > 0">SELECTED VALUES</h4>
+                                <div style="border: thin solid red" v-if="debug && values.length > 0">
+                                    <ul>
+                                        <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <button v-if="hasSearches" type="button" @click="clearMappedSearches" class="btn btn-success btn-xs">
+                                Clear searches from the map
+                            </button>
                         </form>
                     </div>
                 {% else %}
@@ -92,7 +139,7 @@
                         </div>
                     </div>
                 {% endif %}
-                <div id="geo-leaflet" class="column"></div>
+                <div id="geo-leaflet"></div>
             </div>
         </v-app>
     </div>

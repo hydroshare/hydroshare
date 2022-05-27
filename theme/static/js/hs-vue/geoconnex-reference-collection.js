@@ -8,6 +8,7 @@ let geoconnexApp = new Vue({
             relations: RELATIONS,
             debug: false,
             resMode: RESOURCE_MODE,
+            resHasSpatial: false,
             items: [],
             collections: null,
             values: [],
@@ -25,11 +26,16 @@ let geoconnexApp = new Vue({
             rules: null,
             showMap: false,
             map: null,
-            leafletLayers: {},
-            featureGroup: null,
-            radius: 1e6,
-            lat: -111.48381550548234,
-            long: 36.9378850872748
+            layerControl: null,
+            selectedItemLayers: {},
+            selectedFeatureGroup: null,
+            hasSearches: false,
+            searchFeatureGroup: null,
+            layerGroupDictionary: {},
+            searchRadius: 1,
+            maxAreaToReturn: 1e12,
+            manualLat: 0,
+            manualLong: 0
         }
     },
     watch: {
@@ -37,17 +43,12 @@ let geoconnexApp = new Vue({
         let vue = this;
         vue.errorMsg = "";
         if (newValue.length > oldValue.length){
-          let selected = newValue.pop();
-          vue.fetchGeometry(selected).then(geometry =>{
-            selected.geometry = geometry.geometry;
-            vue.addToMap(selected, true);
-          });
-          vue.addMetadata(selected);
+          vue.addSelectedItem(newValue.pop());
         }else if (newValue.length < oldValue.length){
           let remove = oldValue.filter(obj => newValue.every(s => s.id !== obj.id));
           try{
-            vue.featureGroup.removeLayer(vue.leafletLayers[remove[0].value]);
-            vue.map.fitBounds(vue.featureGroup.getBounds());
+            vue.selectedFeatureGroup.removeLayer(vue.selectedItemLayers[remove[0].value]);
+            vue.map.fitBounds(vue.selectedFeatureGroup.getBounds());
           }catch(e){
             console.log(e.message);
           }
@@ -56,6 +57,14 @@ let geoconnexApp = new Vue({
       }
     },
     methods: {
+      addSelectedItem(selected){
+        let vue = this;
+        vue.fetchGeometry(selected).then(geometry =>{
+          selected.geometry = geometry.geometry;
+          vue.addToMap(selected, true);
+        });
+        vue.addMetadata(selected);
+      },
       async fetchGeometry(geoconnexObj){
         let vue = this;
         let query = `${vue.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
@@ -73,52 +82,104 @@ let geoconnexApp = new Vue({
       },
       createMap(){
         let vue = this;
-        vue.map = L.map('geo-leaflet').setView([42.423935477911236, -71.17395771137696], 4);
+        vue.map = L.map('geo-leaflet');
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        let streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 18,
-        }).addTo(vue.map);
+        });
 
-        vue.featureGroup =  L.featureGroup();
-        vue.featureGroup.addTo(vue.map);
+        var baseMaps = {
+          "Streets": streets
+        };
+
+        vue.selectedFeatureGroup =  L.featureGroup();
+        vue.searchFeatureGroup =  L.featureGroup();
+
+        var overlayMaps = {
+          "Selected Collection Items": vue.selectedFeatureGroup,
+          "Search (all items)": vue.searchFeatureGroup
+        };
+
+        vue.layerControl = L.control.layers(baseMaps, overlayMaps);
+        vue.layerControl.addTo(vue.map);
+
+        // show the default layers at start
+        vue.map.addLayer(streets);
+        vue.map.addLayer(vue.selectedFeatureGroup);
+        vue.map.addLayer(vue.searchFeatureGroup);
+        vue.map.setView([30, 0], 1);
+        vue.setMapClickEvents();
       },
-      addToMap(geojson, zoom=false, color='blue'){
+      addToMap(geojson, zoom=false, style={color: 'blue', radius: 5}, group=null){
         let vue = this;
         try {
            let leafletLayer = L.geoJSON(geojson,{
             onEachFeature: function (feature, layer) {
-              var text = `<h4>${feature.text}</h4>`
+              var popupText = `<h4>${feature.text}</h4>`
               for (var k in feature.properties) {
-                  text += '<b>'+k+'</b>: ';
+                  popupText += '<b>'+k+'</b>: ';
                   if(k==="uri"){
-                    text += `<a href=${feature.properties[k]}>${feature.properties[k]}</a></br>`
+                    popupText += `<a href=${feature.properties[k]}>${feature.properties[k]}</a></br>`
                   }
                   else{
-                    text += feature.properties[k]+'</br>'
+                    popupText += feature.properties[k]+'</br>'
                   }
               }
-              let hide = ['properties', 'text', 'geometry', 'relative_id'];
+              let hide = ['properties', 'text', 'geometry', 'relative_id', 'type', 'links'];
               for (var k in feature) {
                 if(hide.includes(k) | k in feature.properties){
                   continue
                 }
-                text += '<b>'+k+'</b>: ';
-                text += feature[k]+'</br>'
+                popupText += '<b>'+k+'</b>: ';
+                popupText += feature[k]+'</br>'
+              }
+              if(vue.resMode == "Edit" && style.color != 'blue'){
+                popupText += `<button type="button" class="btn btn-primary map-add-geoconnex" data='${JSON.stringify(feature)}'>Add this feature to your resource metadata</button>`
+              }else if(vue.resMode == "Edit" && style.color == 'blue'){
+                popupText += `<button type="button" class="btn btn-primary map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
+              }
+              layer.bindPopup(popupText);
+            },
+            pointToLayer: function (feature, latlng) {
+              return L.circleMarker(latlng, style);
             }
-            text += `<a href="">TODO: Add clickable to add this item to the input field</a></br>`
-              layer.bindPopup(text);
-            }}
+          }
           );
-          leafletLayer.setStyle({
-            color: color
-          });
-          vue.leafletLayers[geojson.uri] = leafletLayer;
-          vue.featureGroup.addLayer(leafletLayer);
-          if(zoom){
-            vue.map.fitBounds(leafletLayer.getBounds());
+          leafletLayer.setStyle(style);
+          if(!geojson.uri){
+            // pass
+            // vue.selectedItemLayers[leafletLayer._leaflet_id] = leafletLayer;
           }else{
-            vue.map.fitBounds(vue.featureGroup.getBounds());
+            vue.selectedItemLayers[geojson.uri] = leafletLayer;
+          }
+          if(group){
+            group.addLayer(leafletLayer);
+          }else{
+            vue.selectedFeatureGroup.addLayer(leafletLayer);
+          }
+          if(group===vue.searchFeatureGroup){
+            if(!geojson.collection){
+              geojson.collection = "Search Bounds"
+            }
+            // check if layergroup exists in the "dictionary"
+            if(!vue.layerGroupDictionary || !vue.layerGroupDictionary[geojson.collection]){
+              vue.layerGroupDictionary[geojson.collection] = L.layerGroup();
+            }
+            vue.layerControl.addOverlay(vue.layerGroupDictionary[geojson.collection], geojson.collection)
+            vue.layerGroupDictionary[geojson.collection].addLayer(leafletLayer);
+            vue.map.addLayer(vue.layerGroupDictionary[geojson.collection]);
+          }
+
+          // handle zooming
+          if(zoom){
+            vue.map.flyToBounds(leafletLayer.getBounds());
+          }else{
+            if(group){
+              vue.map.fitBounds(group.getBounds());
+            }else{
+              vue.map.fitBounds(vue.selectedFeatureGroup.getBounds());
+            }
           }
 
         } catch (error) {
@@ -298,7 +359,7 @@ let geoconnexApp = new Vue({
           }
         }
       },
-      addMetadata(selected){ 
+      addMetadata(selected){
         let vue = this;
         let url = `/hsapi/_internal/${vue.resShortId}/relation/add-metadata/`;
         let data = {
@@ -341,66 +402,111 @@ let geoconnexApp = new Vue({
           }
         }
       },
-      getGeoItemsInRange(point, radius=1e6, maxArea=1e10){
+      getGeoItemsContainingPoint(lat=null, long=null){
+        let vue=this;
+        long = typeof(long) == 'number' ? long : vue.manualLong;
+        lat = typeof(lat) == 'number' ? lat : vue.manualLat;
+        let center = turf.point([long, lat]);
+        let sides = vue.searchRadius / 100;
+        var options = {
+          steps: sides < 25 ? 25 : sides,
+          units: 'kilometers', 
+          properties: {
+            Radius: `${vue.searchRadius} kilometers`
+          }
+        };
+        var polygon = turf.circle(center, vue.searchRadius, options);
+        polygon.text = "Search bounds";
+        vue.getGeoItemsInPoly(polygon);
+      },
+      getGeoItemsInPoly(polygon=null){
         // https://turfjs.org/docs/#intersects
         // https://turfjs.org/docs/#booleanIntersects
         let vue=this;
-        let center = turf.point([vue.lat, vue.long])
-        var options = {
-          steps: 10, 
-          units: 'meters', 
-          properties: {
-            Center: point,
-            Radius: `${radius} meters`,
-            MaxArea: `${maxArea} sq meters`
-          }
-        };
-        var circle = turf.circle(center, vue.radius, options);
-        circle.text = "Search area";
-        vue.addToMap(circle, true, 'red');
+        vue.loading = true;
+        vue.map.closePopup();
+
+        vue.addToMap(polygon, false, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchFeatureGroup);
 
         for (let item of vue.items){
           vue.fetchGeometry(item).then(geometry =>{
             item.geometry = geometry.geometry;
             try{
-              if (turf.area(item) < maxArea){
-                if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(circle, item)){
-                  vue.addToMap(item, false);
+              if (turf.area(item) < vue.maxAreaToReturn*1e6){
+                if(item.geometry.type.includes("Polygon") && turf.booleanIntersects(polygon, item)){
+                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchFeatureGroup);
                 }
-                if(item.geometry.type.includes("Point") && turf.booleanPointInPolygon(item, circle)){
-                  vue.addToMap(item, false);
+                if(item.geometry.type.includes("Point") && turf.booleanPointInPolygon(item, polygon)){
+                  vue.addToMap(item, false, {color:'orange', radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
                 }
-                if(item.geometry.type.includes("Line") && turf.booleanIntersects(circle, item)){
-                  vue.addToMap(item, false);
+                if(item.geometry.type.includes("Line") && turf.booleanIntersects(polygon, item)){
+                  vue.addToMap(item, false, {color:'orange'}, group=vue.searchFeatureGroup);
                 }
               }
             }catch(e){
               console.log(e);
             }
+          }).then(()=>{
+            vue.loading = false;
+            vue.hasSearches = true;
           });
         }
       },
-      runGeoExample(){
-        try{
-          let vue=this;
-          // CUAHSI
-        // vue.getGeoItemsInRange([-72.56428830847662, 42.85084818160041])
-  
-        // SALT LAKE
-        // vue.getGeoItemsInRange([-112.551445, 41.149411])
-  
-        // Glen Canyon
-        // vue.getGeoItemsInRange([-111.48381550548234, 36.9378850872748]);
-        
-  
-        // FL
-        // vue.getGeoItemsInRange([-80.7839365138525, 26.932581283846268])
-  
-        // Salton sea
-        // vue.getGeoItemsInRange([-115.827709, 33.317246]);
-        }catch(e){
-          console.log(e);
+      clearMappedSearches(){
+        let vue = this;
+        vue.searchFeatureGroup.clearLayers();
+        for (let key in vue.layerGroupDictionary){
+          vue.layerControl.removeLayer(vue.layerGroupDictionary[key]);
         }
+        // vue.layerControl.removeLayer(vue.searchFeatureGroup);
+        // vue.map.removeLayer(vue.searchFeatureGroup);
+        vue.hasSearches = false;
+      },
+      fillFromPointExtent(){
+        let vue = this;
+          vue.manualLat = $('#id_north').val();
+          vue.manualLong = $('#id_east').val();
+      },
+      fillFromCoords(lat, long){
+        let vue = this;
+          vue.manualLat = lat;
+          vue.manualLong = long;
+      },
+      setMapClickEvents(){
+        let vue = this;
+        var popup = L.popup();
+
+        function onMapClick(e) {
+          let loc = {lat: e.latlng.lat, long: e.latlng.lng};
+          let content = `<button type="button" class="btn btn-primary leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
+            popup
+                .setLatLng(e.latlng)
+                .setContent(content)
+                .openOn(vue.map);
+        }
+
+        vue.map.on('click', onMapClick);
+        
+        $("div").on("click", 'button.leaflet-point-search', function (e) {
+          e.stopPropagation();
+          var loc = JSON.parse($(this).attr("data"));
+          vue.fillFromCoords(loc.lat, loc.long);
+          vue.getGeoItemsContainingPoint(loc.lat, loc.long);
+        });
+
+        $("div").on("click", 'button.map-add-geoconnex', function (e) {
+          e.stopPropagation();
+          let data = JSON.parse($(this).attr("data"));
+          vue.addSelectedItem(data);
+          vue.map.closePopup();
+        });
+
+        $("div").on("click", 'button.map-remove-geoconnex', function (e) {
+          e.stopPropagation();
+          let data = JSON.parse($(this).attr("data"));
+          vue.values = vue.values.filter(s => s.value !== data.uri);
+          vue.map.closePopup();
+        });
       }
     },
     beforeMount(){
@@ -423,3 +529,15 @@ let geoconnexApp = new Vue({
       }
     }
 })
+
+/*
+TODO: 
+- if coverage, click button to search
+- box coverage
+- add topo layer
+- help section
+- prevent duplicates
+- default to show a list instead of a map
+- expandable map
+- combine the spatial coverage map with the leaflet map?
+*/
