@@ -94,7 +94,7 @@
                                     </div>  
                                     <div class="control-group">
                                         <div class="input-group">
-                                            <span class="input-group-addon coordinates-label-addon" style="width: 127px">Radius</span>
+                                            <span class="input-group-addon coordinates-label-addon" style="width: 127px">Search Radius</span>
                                             <input type="number" class="form-control" v-model="searchRadius" type="number" class="form-control"
                                                 placeholder="Radius"
                                             >
@@ -169,8 +169,9 @@
                                     </ul>
                                 </div>
                             </div>
-                            <button type="button" @click="searchUsingSpatialExtent" class="btn btn-success btn-xs">
+                            <button v-if="resSpatialType" type="button" @click="searchUsingSpatialExtent" class="btn btn-success btn-xs">
                                 Search map using Spatial Extent
+                                TODO: this doesn't do anything yet...
                             </button>
                             <button v-if="hasSearches" type="button" @click="clearMappedSearches" class="btn btn-success btn-xs">
                                 Clear searches from the map
