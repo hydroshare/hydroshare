@@ -456,11 +456,19 @@ let geoconnexApp = new Vue({
         if(vue.resSpatialType == 'point'){
           vue.getGeoItemsRadius(vue.pointLat, vue.pointLong);
         }else if(vue.resSpatialType == 'box'){
-          vue.northLat = $('#id_northlimit').val();
-          vue.eastLong = $('#id_eastlimit').val();
-          vue.southLat = $('#id_southlimit').val();
-          vue.westLong = $('#id_westlimit').val();
-
+          let bbox = [vue.eastLong, vue.southLat, vue.westLong, vue.northLat];
+          var polygon = turf.bboxPolygon(bbox);
+          polygon.text = "Search bounds";
+          vue.getGeoItemsInPoly(polygon);
+        }else{
+          alert("Spatial extent isn't set?....")
+        }
+      },
+      getGeoItemsFromExtent(){
+        let vue = this;
+        if(vue.resSpatialType == 'point'){
+          vue.getGeoItemsContainingPoint(vue.pointLat, vue.pointLong);
+        }else if(vue.resSpatialType == 'box'){
           let bbox = [vue.eastLong, vue.southLat, vue.westLong, vue.northLat];
           var polygon = turf.bboxPolygon(bbox);
           polygon.text = "Search bounds";
@@ -565,7 +573,7 @@ let geoconnexApp = new Vue({
       searchUsingSpatialExtent(){
         let vue = this;
         vue.fillFromExtent();
-        vue.getGeoItemsFromDebug();
+        vue.getGeoItemsFromExtent();
       },
       updateSpatialExtentType(){
         let vue = this;
