@@ -513,7 +513,7 @@ let geoconnexApp = new Vue({
               }
             }
           }catch(e){
-            console.log(`Error while attempting to find intersecting geometries: ${e.message}`);
+            console.log(`Error while attempting to load ${item.text}: ${e.message}`);
           }
         }
         vue.loading = false;
