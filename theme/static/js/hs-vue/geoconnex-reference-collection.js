@@ -463,6 +463,7 @@ let geoconnexApp = new Vue({
 
           let bbox = [vue.eastLong, vue.southLat, vue.westLong, vue.northLat];
           var polygon = turf.bboxPolygon(bbox);
+          polygon.text = "Search bounds";
           vue.getGeoItemsInPoly(polygon);
         }else{
           alert("Spatial extent isn't set?....")
