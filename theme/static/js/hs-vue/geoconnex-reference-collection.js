@@ -139,6 +139,13 @@ let geoconnexApp = new Vue({
         vue.layerControl = L.control.layers(baseMaps, overlayMaps);
         vue.layerControl.addTo(vue.map);
 
+        L.control.fullscreen({
+          position: 'topleft',
+          title: 'Enter fullscreen',
+          titleCancel: 'Exit Fullscreen',
+          content: `<i class="fa-expand"></i>`
+        }).addTo(vue.map);
+
         // show the default layers at start
         vue.map.addLayer(terrain);
         vue.map.addLayer(vue.selectedFeatureGroup);
@@ -663,7 +670,6 @@ let geoconnexApp = new Vue({
 /*
 TODO: 
 - default to show a list instead of a map
-- expandable map
 
 - combine the spatial coverage map with the leaflet map?
 
