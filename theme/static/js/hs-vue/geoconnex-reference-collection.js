@@ -67,13 +67,6 @@ let geoconnexApp = new Vue({
             }
           });
         }
-      },
-      resSpatialType(newSpatialType, oldSpatialType){
-        let vue = this;
-        // TODO: add watchers for spatial extent update!
-        if(newSpatialType == 'point'){
-          console.log("point");
-        }
       }
     },
     methods: {
@@ -223,8 +216,8 @@ let geoconnexApp = new Vue({
             }
           }
 
-        } catch (error) {
-          console.log(error.message);
+        } catch (e) {
+          console.log(e.message);
         }
         vue.showMap = true;
       },
@@ -259,8 +252,8 @@ let geoconnexApp = new Vue({
           try{
             let response = await vue.getFromCacheOrFetch(collectionsUrl);
             return response;
-          }catch(error){
-            console.log(error)
+          }catch(e){
+            console.log(e.message)
             vue.errored = true;
           }
         },
@@ -342,13 +335,13 @@ let geoconnexApp = new Vue({
                 headers: headers
               }));
               data = await fetch_resp.json();
-            }catch(error){
-              console.log(error)
+            }catch(e){
+              console.log(e.message)
               vue.geoCache.match(url).then(function (response) {
                 console.log("Geoconnex API fetch error. Falling back to old cached version.")
                 return response.data;
-              }).catch(function (error){
-                console.log(error)
+              }).catch(function (e){
+                console.log(e.message);
                 vue.errored = true;
               })
             }
@@ -476,7 +469,6 @@ let geoconnexApp = new Vue({
         }else{
           alert("Spatial extent isn't set?....")
         }
-        alert("done");
       },
       getGeoItemsRadius(lat=null, long=null){
         let vue=this;
