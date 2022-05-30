@@ -454,7 +454,7 @@ let geoconnexApp = new Vue({
       getGeoItemsFromDebug(){
         let vue = this;
         if(vue.resSpatialType == 'point'){
-          vue.getGeoItemsPointRadius(vue.pointLat, vue.pointLong);
+          vue.getGeoItemsRadius(vue.pointLat, vue.pointLong);
         }else if(vue.resSpatialType == 'box'){
           vue.northLat = $('#id_northlimit').val();
           vue.eastLong = $('#id_eastlimit').val();
@@ -469,7 +469,7 @@ let geoconnexApp = new Vue({
           alert("Spatial extent isn't set?....")
         }
       },
-      getGeoItemsPointRadius(lat=null, long=null){
+      getGeoItemsRadius(lat=null, long=null){
         let vue=this;
         long = typeof(long) == 'number' ? long : vue.pointLong;
         lat = typeof(lat) == 'number' ? lat : vue.pointLat;
