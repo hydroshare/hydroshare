@@ -662,8 +662,6 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
-- show a spinner while loading layers
-
 - default to show a list instead of a map
 - expandable map
 
