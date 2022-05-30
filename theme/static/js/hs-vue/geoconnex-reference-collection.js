@@ -670,4 +670,6 @@ TODO:
 - expandable map
 
 - combine the spatial coverage map with the leaflet map?
+
+- improve search efficiency
 */
