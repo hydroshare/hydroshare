@@ -136,9 +136,12 @@ let geoconnexApp = new Vue({
         vue.searchFeatureGroup =  L.featureGroup();
 
         var overlayMaps = {
-          "Selected Collection Items": vue.selectedFeatureGroup,
-          "Search (all items)": vue.searchFeatureGroup
+          "Selected Collection Items": vue.selectedFeatureGroup
         };
+        if(vue.resMode == "Edit"){
+          overlayMaps["Search (all items)"] = vue.searchFeatureGroup;
+          vue.map.addLayer(vue.searchFeatureGroup);
+        }
 
         vue.layerControl = L.control.layers(baseMaps, overlayMaps);
         vue.layerControl.addTo(vue.map);
@@ -146,7 +149,6 @@ let geoconnexApp = new Vue({
         // show the default layers at start
         vue.map.addLayer(terrain);
         vue.map.addLayer(vue.selectedFeatureGroup);
-        vue.map.addLayer(vue.searchFeatureGroup);
         vue.map.setView([30, 0], 1);
         vue.setMapEvents();
       },
@@ -635,7 +637,6 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
-- hide "search all items" layercontrol when not edit mode
 - if coverage, click button to search
 
 - default to show a list instead of a map
