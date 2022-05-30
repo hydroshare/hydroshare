@@ -152,7 +152,7 @@ let geoconnexApp = new Vue({
         vue.map.setView([30, 0], 1);
         vue.setMapEvents();
       },
-      addToMap(geojson, zoom=false, style={color: this.selectColor, radius: 5}, group=null){
+      async addToMap(geojson, zoom=false, style={color: this.selectColor, radius: 5}, group=null){
         let vue = this;
         try {
            let leafletLayer = L.geoJSON(geojson,{
@@ -464,18 +464,19 @@ let geoconnexApp = new Vue({
           alert("Spatial extent isn't set?....")
         }
       },
-      getGeoItemsFromExtent(){
+      async getGeoItemsFromExtent(){
         let vue = this;
         if(vue.resSpatialType == 'point'){
-          vue.getGeoItemsContainingPoint(vue.pointLat, vue.pointLong);
+          await vue.getGeoItemsContainingPoint(vue.pointLat, vue.pointLong);
         }else if(vue.resSpatialType == 'box'){
           let bbox = [vue.eastLong, vue.southLat, vue.westLong, vue.northLat];
           var polygon = turf.bboxPolygon(bbox);
           polygon.text = "Search bounds";
-          vue.getGeoItemsInPoly(polygon);
+          await vue.getGeoItemsInPoly(polygon);
         }else{
           alert("Spatial extent isn't set?....")
         }
+        alert("done");
       },
       getGeoItemsRadius(lat=null, long=null){
         let vue=this;
@@ -494,7 +495,7 @@ let geoconnexApp = new Vue({
         polygon.text = "Search bounds";
         vue.getGeoItemsInPoly(polygon);
       },
-      getGeoItemsContainingPoint(lat=null, long=null){
+      async getGeoItemsContainingPoint(lat=null, long=null){
         // https://turfjs.org/docs/#booleanPointInPolygon
         let vue=this;
         long = typeof(long) == 'number' ? long : vue.pointLong;
@@ -507,28 +508,26 @@ let geoconnexApp = new Vue({
         vue.addToMap(center, false, {color:'red', fillColor: 'red', fillOpacity: 0.1, radius: 1}, group=vue.searchFeatureGroup);
 
         for (let item of vue.items){
-          vue.fetchGeometry(item).then(geometry =>{
+          try{
+            let geometry = await vue.fetchGeometry(item);
             item.geometry = geometry.geometry;
-            try{
-              if (turf.area(item) < vue.maxAreaToReturn*1e6){
-                if(turf.booleanPointInPolygon(center, item)){
-                  if(item.geometry.type.includes("Point")){
-                    vue.addToMap(item, false, {color: vue.searchColor, radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
-                  }else{
-                    vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
-                  }
+            if (turf.area(item) < vue.maxAreaToReturn*1e6){
+              if(turf.booleanPointInPolygon(center, item)){
+                if(item.geometry.type.includes("Point")){
+                  await vue.addToMap(item, false, {color: vue.searchColor, radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
+                }else{
+                  await vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
                 }
               }
-            }catch(e){
-              console.log(`Error while attempting to find intersecting geometries: ${e.message}`);
             }
-          }).then(()=>{
-            vue.loading = false;
-            vue.hasSearches = true;
-          });
+          }catch(e){
+            console.log(`Error while attempting to find intersecting geometries: ${e.message}`);
+          }
         }
+        vue.loading = false;
+        vue.hasSearches = true;
       },
-      getGeoItemsInPoly(polygon=null){
+      async getGeoItemsInPoly(polygon=null){
         // https://turfjs.org/docs/#intersects
         // https://turfjs.org/docs/#booleanIntersects
         // https://turfjs.org/docs/#booleanContains
@@ -539,26 +538,24 @@ let geoconnexApp = new Vue({
         vue.addToMap(polygon, false, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchFeatureGroup);
 
         for (let item of vue.items){
-          vue.fetchGeometry(item).then(geometry =>{
+          try{
+            let geometry = await vue.fetchGeometry(item);
             item.geometry = geometry.geometry;
-            try{
-              if (turf.area(item) < vue.maxAreaToReturn*1e6){
-                if(turf.booleanIntersects(polygon, item)){
-                  if(item.geometry.type.includes("Point")){
-                    vue.addToMap(item, false, {color: vue.searchColor, radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
-                  }else{
-                    vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
-                  }
+            if (turf.area(item) < vue.maxAreaToReturn*1e6){
+              if(turf.booleanIntersects(polygon, item)){
+                if(item.geometry.type.includes("Point")){
+                  await vue.addToMap(item, false, {color: vue.searchColor, radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
+                }else{
+                  await vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
                 }
               }
-            }catch(e){
-              console.log(`Error while attempting to find intersecting geometries: ${e.message}`);
             }
-          }).then(()=>{
-            vue.loading = false;
-            vue.hasSearches = true;
-          });
+          }catch(e){
+            console.log(`Error while attempting to find intersecting geometries: ${e.message}`);
+          }
         }
+        vue.loading = false;
+        vue.hasSearches = true;
       },
       clearMappedSearches(){
         let vue = this;
