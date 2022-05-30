@@ -454,7 +454,7 @@ let geoconnexApp = new Vue({
       getGeoItemsFromDebug(){
         let vue = this;
         if(vue.resSpatialType == 'point'){
-          vue.getGeoItemsContainingPoint(vue.pointLat, vue.pointLong);
+          vue.getGeoItemsPointRadius(vue.pointLat, vue.pointLong);
         }else if(vue.resSpatialType == 'box'){
           vue.northLat = $('#id_northlimit').val();
           vue.eastLong = $('#id_eastlimit').val();
@@ -468,7 +468,7 @@ let geoconnexApp = new Vue({
           alert("Spatial extent isn't set?....")
         }
       },
-      getGeoItemsContainingPoint(lat=null, long=null){
+      getGeoItemsPointRadius(lat=null, long=null){
         let vue=this;
         long = typeof(long) == 'number' ? long : vue.pointLong;
         lat = typeof(lat) == 'number' ? lat : vue.pointLat;
@@ -484,6 +484,40 @@ let geoconnexApp = new Vue({
         var polygon = turf.circle(center, vue.searchRadius, options);
         polygon.text = "Search bounds";
         vue.getGeoItemsInPoly(polygon);
+      },
+      getGeoItemsContainingPoint(lat=null, long=null){
+        // https://turfjs.org/docs/#booleanPointInPolygon
+        let vue=this;
+        long = typeof(long) == 'number' ? long : vue.pointLong;
+        lat = typeof(lat) == 'number' ? lat : vue.pointLat;
+        let center = turf.point([long, lat]);
+        center.text = "Search point";
+        vue.loading = true;
+        vue.map.closePopup();
+
+        vue.addToMap(center, false, {color:'red', fillColor: 'red', fillOpacity: 0.1, radius: 1}, group=vue.searchFeatureGroup);
+
+        for (let item of vue.items){
+          vue.fetchGeometry(item).then(geometry =>{
+            item.geometry = geometry.geometry;
+            try{
+              if (turf.area(item) < vue.maxAreaToReturn*1e6){
+                if(turf.booleanPointInPolygon(center, item)){
+                  if(item.geometry.type.includes("Point")){
+                    vue.addToMap(item, false, {color: vue.searchColor, radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=vue.searchFeatureGroup);
+                  }else{
+                    vue.addToMap(item, false, {color: vue.searchColor}, group=vue.searchFeatureGroup);
+                  }
+                }
+              }
+            }catch(e){
+              console.log(`Error while attempting to find intersecting geometries: ${e.message}`);
+            }
+          }).then(()=>{
+            vue.loading = false;
+            vue.hasSearches = true;
+          });
+        }
       },
       getGeoItemsInPoly(polygon=null){
         // https://turfjs.org/docs/#intersects
