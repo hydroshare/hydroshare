@@ -50,9 +50,12 @@
                                 style="z-index: 999">
                                 <template v-slot:item="data">
                                     <template v-if="typeof data.item !== 'object'">
-                                    <v-list-tile-content v-text="data.item"></v-list-tile-content>
+                                        <v-list-tile-content v-text="data.item"></v-list-tile-content>
                                     </template>
-                                    <template v-else>
+                                    <template v-else-if="data.item.hidden">
+                                        <v-list-item-content></v-list-item-content>
+                                    </template>
+                                    <template v-else-if="!data.item.hidden">
                                         <v-list-item-content>
                                             <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
                                             <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
@@ -174,6 +177,12 @@
                             </button>
                             <button v-if="hasSearches" type="button" @click="clearMappedSearches" class="btn btn-success btn-xs">
                                 Clear searches from the map
+                            </button>
+                            <button v-if="hasSearches && !hasFilteredItems" type="button" @click="filterItemsBySearch" class="btn btn-success btn-xs">
+                                List only collection items from map search
+                            </button>
+                            <button v-if="hasFilteredItems" type="button" @click="resetItems" class="btn btn-success btn-xs">
+                                Reset options list
                             </button>
                         </form>
                     </div>

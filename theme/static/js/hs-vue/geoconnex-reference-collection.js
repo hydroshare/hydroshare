@@ -10,6 +10,8 @@ let geoconnexApp = new Vue({
             resMode: RESOURCE_MODE,
             resSpatialType: null,
             items: [],
+            unfilteredItems: [],
+            hasFilteredItems: false,
             collections: null,
             values: [],
             loading: true,
@@ -71,6 +73,37 @@ let geoconnexApp = new Vue({
       }
     },
     methods: {
+      resetItems(){
+        let vue = this;
+        vue.items = vue.unfilteredItems;
+        vue.hasFilteredItems = false;
+      },
+      filterItemsBySearch(){
+        let vue = this;
+        vue.loading = true;
+        vue.hasFilteredItems = true;
+        // save a copy of the items
+        vue.unfilteredItems = vue.items;
+
+        // first remove any unused collections -- this has been removed because it is plenty fast just to use "filter"
+        // vue.items = vue.items.filter(s => Object.keys(vue.layerGroupDictionary).includes(s.collection));
+
+        // remove all items currently not in the map search
+        let keep = [];
+        for(const val of Object.values(vue.layerGroupDictionary)){
+          if (!val.uris.includes(undefined)){
+            keep = keep.concat(val.uris);
+          }
+        }
+        vue.items = vue.items.filter(s => keep.includes(s.uri));
+        // vue.items = vue.items.map(function(s){
+        //   if(!keep.includes(s.uri)){
+        //     s.disabled = true;
+        //   }
+        //   return s;
+        // });
+        vue.loading = false;
+      },
       addSelectedItem(selected){
         let vue = this;
         vue.fetchGeometry(selected).then(geometry =>{
@@ -204,11 +237,13 @@ let geoconnexApp = new Vue({
             // check if layergroup exists in the "dictionary"
             if(!vue.layerGroupDictionary || vue.layerGroupDictionary[geojson.collection] == undefined){
               vue.layerGroupDictionary[geojson.collection] = L.layerGroup();
+              vue.layerGroupDictionary[geojson.collection].uris = [];
               vue.layerControl.addOverlay(vue.layerGroupDictionary[geojson.collection], geojson.collection)
               vue.layerControl.expand();
             }
             vue.map.addLayer(vue.layerGroupDictionary[geojson.collection]);
             vue.layerGroupDictionary[geojson.collection].addLayer(leafletLayer);
+            vue.layerGroupDictionary[geojson.collection].uris.push(geojson.uri);
           }
 
           // handle zooming
