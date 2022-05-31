@@ -559,9 +559,11 @@ let geoconnexApp = new Vue({
         vue.searchFeatureGroup.clearLayers();
         for (let key in vue.layerGroupDictionary){
           vue.layerControl.removeLayer(vue.layerGroupDictionary[key]);
+          delete vue.layerGroupDictionary[key];
         }
         // vue.layerControl.removeLayer(vue.searchFeatureGroup);
         // vue.map.removeLayer(vue.searchFeatureGroup);
+
         vue.hasSearches = false;
       },
       searchUsingSpatialExtent(){
