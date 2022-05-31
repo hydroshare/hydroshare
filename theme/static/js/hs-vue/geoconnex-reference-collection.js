@@ -188,10 +188,7 @@ let geoconnexApp = new Vue({
           }
           );
           leafletLayer.setStyle(style);
-          if(!geojson.uri){
-            // pass
-            // vue.selectedItemLayers[leafletLayer._leaflet_id] = leafletLayer;
-          }else{
+          if(geojson.uri){
             vue.selectedItemLayers[geojson.uri] = leafletLayer;
           }
           if(group){
@@ -204,12 +201,13 @@ let geoconnexApp = new Vue({
               geojson.collection = "Search Bounds"
             }
             // check if layergroup exists in the "dictionary"
-            if(!vue.layerGroupDictionary || !vue.layerGroupDictionary[geojson.collection]){
+            if(!vue.layerGroupDictionary || vue.layerGroupDictionary[geojson.collection] == undefined){
               vue.layerGroupDictionary[geojson.collection] = L.layerGroup();
+              vue.layerControl.addOverlay(vue.layerGroupDictionary[geojson.collection], geojson.collection)
+              vue.layerControl.expand();
             }
-            vue.layerControl.addOverlay(vue.layerGroupDictionary[geojson.collection], geojson.collection)
-            vue.layerGroupDictionary[geojson.collection].addLayer(leafletLayer);
             vue.map.addLayer(vue.layerGroupDictionary[geojson.collection]);
+            vue.layerGroupDictionary[geojson.collection].addLayer(leafletLayer);
           }
 
           // handle zooming
