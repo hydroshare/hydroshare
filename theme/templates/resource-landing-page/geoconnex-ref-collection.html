@@ -69,7 +69,7 @@
                                     </v-list-item>
                                 </template>
                             </v-combobox>
-                            <button v-if="resSpatialType && !hasExtentSearch" type="button" @click="searchUsingSpatialExtent" class="btn btn-success btn-xs">
+                            <button v-if="resSpatialType && !hasExtentSearch && geometriesAreLoaded" type="button" @click="searchUsingSpatialExtent" class="btn btn-success btn-xs">
                                 Search map using Spatial Extent
                             </button>
                             <button v-if="hasSearches" type="button" @click="clearMappedSearches" class="btn btn-success btn-xs">
