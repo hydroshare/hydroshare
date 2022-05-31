@@ -543,6 +543,7 @@ let geoconnexApp = new Vue({
 
         for (let item of vue.items){
           try{
+            vue.currentLoading = item.collection;
             let geometry = await vue.fetchGeometry(item);
             item.geometry = geometry.geometry;
             if (turf.area(item) < vue.maxAreaToReturn*1e6){
@@ -573,6 +574,7 @@ let geoconnexApp = new Vue({
 
         for (let item of vue.items){
           try{
+            vue.currentLoading = item.collection;
             let geometry = await vue.fetchGeometry(item);
             item.geometry = geometry.geometry;
             if (turf.area(item) < vue.maxAreaToReturn*1e6){

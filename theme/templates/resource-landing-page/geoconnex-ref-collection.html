@@ -69,6 +69,18 @@
                                     </v-list-item>
                                 </template>
                             </v-combobox>
+                            <button v-if="resSpatialType && !hasExtentSearch" type="button" @click="searchUsingSpatialExtent" class="btn btn-success btn-xs">
+                                Search map using Spatial Extent
+                            </button>
+                            <button v-if="hasSearches" type="button" @click="clearMappedSearches" class="btn btn-success btn-xs">
+                                Clear searches from the map
+                            </button>
+                            <button v-if="hasSearches && !hasFilteredItems" type="button" @click="filterItemsBySearch" class="btn btn-success btn-xs">
+                                List only collection items from map search
+                            </button>
+                            <button v-if="hasFilteredItems" type="button" @click="resetItems" class="btn btn-success btn-xs">
+                                Reset options list
+                            </button>
                             <div style="border: solid red" v-if="debug">
                                 <h4 style="color: red">DEBUG PANEL</h4>
                                 <div v-if="resSpatialType=='point'">
@@ -169,18 +181,6 @@
                                     </ul>
                                 </div>
                             </div>
-                            <button v-if="resSpatialType && !hasExtentSearch" type="button" @click="searchUsingSpatialExtent" class="btn btn-success btn-xs">
-                                Search map using Spatial Extent
-                            </button>
-                            <button v-if="hasSearches" type="button" @click="clearMappedSearches" class="btn btn-success btn-xs">
-                                Clear searches from the map
-                            </button>
-                            <button v-if="hasSearches && !hasFilteredItems" type="button" @click="filterItemsBySearch" class="btn btn-success btn-xs">
-                                List only collection items from map search
-                            </button>
-                            <button v-if="hasFilteredItems" type="button" @click="resetItems" class="btn btn-success btn-xs">
-                                Reset options list
-                            </button>
                         </form>
                     </div>
                 {% else %}
