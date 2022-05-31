@@ -709,8 +709,6 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
-- default to show a list instead of a map (should this list be related to the combobox?)
-
 - combine the spatial coverage map with the leaflet map?
 
 - improve search efficiency
