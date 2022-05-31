@@ -30,6 +30,7 @@ let geoconnexApp = new Vue({
             selectedItemLayers: {},
             selectedFeatureGroup: null,
             hasSearches: false,
+            hasExtentSearch: false,
             searchFeatureGroup: null,
             layerGroupDictionary: {},
             searchRadius: 1,
@@ -474,6 +475,7 @@ let geoconnexApp = new Vue({
         }else{
           alert("Spatial extent isn't set?....")
         }
+        vue.hasExtentSearch = true;
       },
       getGeoItemsRadius(lat=null, long=null){
         let vue=this;
@@ -565,6 +567,7 @@ let geoconnexApp = new Vue({
         // vue.map.removeLayer(vue.searchFeatureGroup);
 
         vue.hasSearches = false;
+        vue.hasExtentSearch = false;
       },
       searchUsingSpatialExtent(){
         let vue = this;
