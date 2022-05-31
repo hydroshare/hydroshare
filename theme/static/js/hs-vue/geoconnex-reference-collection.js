@@ -616,28 +616,30 @@ let geoconnexApp = new Vue({
                 .openOn(vue.map);
         }
 
-        vue.map.on('click', onMapClick);
-        
-        $("div").on("click", 'button.leaflet-point-search', function (e) {
-          e.stopPropagation();
-          var loc = JSON.parse($(this).attr("data"));
-          vue.fillFromCoords(loc.lat, loc.long);
-          vue.getGeoItemsContainingPoint(loc.lat, loc.long);
-        });
+        if(vue.resMode === 'Edit'){
+          vue.map.on('click', onMapClick);
+          
+          $("div").on("click", 'button.leaflet-point-search', function (e) {
+            e.stopPropagation();
+            var loc = JSON.parse($(this).attr("data"));
+            vue.fillFromCoords(loc.lat, loc.long);
+            vue.getGeoItemsContainingPoint(loc.lat, loc.long);
+          });
 
-        $("div").on("click", 'button.map-add-geoconnex', function (e) {
-          e.stopPropagation();
-          let data = JSON.parse($(this).attr("data"));
-          vue.addSelectedItem(data);
-          vue.map.closePopup();
-        });
-
-        $("div").on("click", 'button.map-remove-geoconnex', function (e) {
-          e.stopPropagation();
-          let data = JSON.parse($(this).attr("data"));
-          vue.values = vue.values.filter(s => s.value !== data.uri);
-          vue.map.closePopup();
-        });
+          $("div").on("click", 'button.map-add-geoconnex', function (e) {
+            e.stopPropagation();
+            let data = JSON.parse($(this).attr("data"));
+            vue.addSelectedItem(data);
+            vue.map.closePopup();
+          });
+  
+          $("div").on("click", 'button.map-remove-geoconnex', function (e) {
+            e.stopPropagation();
+            let data = JSON.parse($(this).attr("data"));
+            vue.values = vue.values.filter(s => s.value !== data.uri);
+            vue.map.closePopup();
+          });
+        }
 
         // listen for spatial coverage  type change
         $("#div_id_type input[type=radio]").change((e)=>{
@@ -669,7 +671,7 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
-- default to show a list instead of a map
+- default to show a list instead of a map (should this list be related to the combobox?)
 
 - combine the spatial coverage map with the leaflet map?
 
