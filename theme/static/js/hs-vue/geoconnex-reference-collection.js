@@ -171,15 +171,15 @@ let geoconnexApp = new Vue({
             maxZoom: 18,
         });
 
-        // let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
-        //   attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
-        //   maxZoom: 18,
-        // });
+        let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
+          attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+          maxZoom: 18,
+        });
 
         var baseMaps = {
           "Terrain": terrain,
           "Streets": streets,
-          // "Toner": toner
+          "Toner": toner
         };
 
         vue.selectedFeatureGroup =  L.featureGroup();
