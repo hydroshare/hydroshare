@@ -13,7 +13,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
-    ResourceFile, utils, delete_resource_file
+    ResourceFile, utils, delete_resource_file_only
 from hs_core.hydroshare.utils import resource_modified
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.task_utils import get_or_create_task_notification
@@ -355,6 +355,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     # check if files already exist in the target path
     res_files = []
     override_tgt_paths = []
+    override_tgt_res_files = []
     file_type_obj = FILE_TYPE_MAP[hs_file_type]
     aggregation = file_type_obj.objects.get(id=file_type_id)
     res_files.extend(aggregation.files.all())
@@ -363,6 +364,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
         tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
         if istorage.exists(tgt_full_path):
             override_tgt_paths.append(tgt_full_path)
+            override_tgt_res_files.append(file)
 
     if override_tgt_paths:
         if not file_override:
@@ -370,9 +372,8 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
             message = f'aggregation move would overwrite {override_file_names}'
             return HttpResponse(message, status=status.HTTP_300_MULTIPLE_CHOICES)
         # delete conflicting files so that move can succeed
-        for override_tgt_path in override_tgt_paths:
-            override_short_path = override_tgt_path.split('/data/contents/')[1]
-            delete_resource_file(resource_id, override_short_path, request.user)
+        for override_file in override_tgt_res_files:
+            delete_resource_file_only(res, override_file)
 
     if run_async:
         task = move_aggregation_task.apply_async((resource_id, file_type_id, hs_file_type, tgt_path))

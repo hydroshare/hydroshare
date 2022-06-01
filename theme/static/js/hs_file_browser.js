@@ -2285,7 +2285,7 @@ $(document).ready(function () {
         // Disable the Cancel button until request has finished
         $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
         function afterRequest() {
-            $("#move-override-confirm-dialog").modal('hide');
+            $("#btn-aggr-file-override-proceed").modal('hide');
             refreshFileBrowser();
         }
 
