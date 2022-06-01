@@ -740,6 +740,5 @@ let geoconnexApp = new Vue({
 
 /*
 TODO: 
-- re-enable loading bar during search
 - combine the spatial coverage map with the leaflet map?
 */
