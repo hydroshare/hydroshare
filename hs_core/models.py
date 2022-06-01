@@ -3734,7 +3734,7 @@ class BaseResource(Page, AbstractResource):
         relation_meta_obj = self.metadata.relations.filter(type=rel_type).first()
         if relation_meta_obj is not None:
             # get the resource url from resource citation
-            version_res_url = re.search(r'(?P<url>https?://[^\s,]+)', relation_meta_obj.value).group("url")
+            version_res_url = relation_meta_obj.value.split(',')[-1]
             return version_res_url
         else:
             return ''
