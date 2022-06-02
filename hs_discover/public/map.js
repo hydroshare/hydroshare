@@ -35,8 +35,8 @@
       });
       return marker;
     });
-    markerCluster = new MarkerClusterer(exports.map, googMarkers, // eslint-disable-line
-      { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
+    const map = exports.map; // eslint-disable-line
+    markerCluster = new markerClusterer.MarkerClusterer({ map, googMarkers }); // eslint-disable-line
     document.body.style.cursor = 'default';
   };
 
