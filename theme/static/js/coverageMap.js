@@ -176,9 +176,17 @@ function initMap2() {
 
     // setup a marker group
     leafletMarkers = L.layerGroup();
-
+    // leafletMarkers.setStyle({pmIgnore: false});
+    // leafletMarkers.options.pmIgnore = false;
+    // L.PM.reInitLayer(leafletMarkers);
+    // L.PM.setOptIn(true);
     coverageMap2 = L.map('coverageMap2').setView([41.850033, -87.6500523], 3);
 
+    coverageMap2.pm.addControls({  
+        position: 'topleft',  
+        drawCircle: false,  
+    });  
+    
     let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
         attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
         maxZoom: 18,
