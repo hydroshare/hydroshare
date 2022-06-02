@@ -3,6 +3,8 @@
  */
 // Map js
 var coverageMap;
+var coverageMap2;
+var leafletMarkers;
 var allOverlays = [];
 var allShapes = []; // Keeps track of shapes added by text change events
 var drawingManager;
@@ -170,7 +172,12 @@ function drawInitialShape() {
 }
 
 function initMap2() {
-    var coverageMap2 = L.map('coverageMap2').setView([41.850033, -87.6500523], 3);
+    if (coverageMap2 != undefined) { coverageMap2.remove(); }
+
+    // setup a marker group
+    leafletMarkers = L.layerGroup();
+
+    coverageMap2 = L.map('coverageMap2').setView([41.850033, -87.6500523], 3);
 
     let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
         attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
@@ -194,7 +201,7 @@ function initMap2() {
       };
 
       var overlayMaps = {
-        // "Spatial Extent": null
+        "Spatial Extent": leafletMarkers,
       };
 
       let layerControl = L.control.layers(baseMaps, overlayMaps);
@@ -209,6 +216,7 @@ function initMap2() {
 
       // show the default layers at start
       coverageMap2.addLayer(terrain);
+      coverageMap2.addLayer(leafletMarkers);
 }
 
 function initMap() {
@@ -343,11 +351,11 @@ function drawMarkerOnTextChange(){
 }
 function drawMarkerOnTextChange2(){
     var latlng = L.latLng(parseFloat($("#id_north").val()), parseFloat($("#id_east").val()));
-    let style={color: this.selectColor, radius: 5}
     var myLatLng = {lat: parseFloat($("#id_north").val()), lng: parseFloat($("#id_east").val())};
     // Delete previous drawings
-    // deleteAllShapes();
+    leafletMarkers.clearLayers();
     // deleteAllOverlays();
+
     // Bounds validation
     var badInput = false;
     // Lat
@@ -368,16 +376,18 @@ function drawMarkerOnTextChange2(){
     if (badInput || isNaN(myLatLng.lat) || isNaN(myLatLng.lng)) {
         return;
     }
-    // Define the rectangle and set its editable property to true.
-    // let markeroo = L.marker([myLatLng.lat, myLatLng.lng]);
-    let markeroo = L.circleMarker(latlng, style);
+    // Define the marker.
+    let marker = L.marker(latlng);
+    leafletMarkers.addLayer(marker);
     
-    markeroo.addTo(coverageMap2)
-        .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
-        .openPopup();
+    marker.addTo(coverageMap2)
+        .bindPopup('TODO: add res link and lat/long');
+        // .openPopup();
 
     // Center map at new marker
-    // coverageMap.setCenter(marker.getPosition());
+    // coverageMap2.fitBounds(L.latLngBounds([latlng]));
+    coverageMap2.setView(latlng, 3)
+
     // Set onClick event for recenter button
     // $("#coverageMap").on("click", "#resetZoomBtn", function () {
     //     coverageMap.setCenter(marker.getPosition());
