@@ -10,7 +10,7 @@ from django.forms import BaseFormSet, ModelForm
 from django.forms.models import formset_factory, model_to_dict
 
 from hs_core.forms import BaseFormHelper, MetaDataElementDeleteForm, get_crispy_form_fields
-from .models.model_program import ModelProgramResourceFileType
+from .models.model_program import ModelProgramLogicalFile, ModelProgramResourceFileType
 from .models.netcdf import Variable
 from .models.raster import BandInformation, CellInformation
 from .models.timeseries import Method, ProcessingLevel, Site, TimeSeriesResult, UTCOffSet, VariableTimeseries
@@ -181,132 +181,9 @@ class ModelProgramMetadataValidationForm(forms.Form):
         :param  field_name: form field name for which the json schema input is getting validated
         :returns   a dict object containing the validated json schema
         """
-        json_schema = dict()
-        is_schema_valid = True
-        try:
-            json_schema = json.loads(schema_string)
-        except ValueError:
-            self.add_error(field_name, "Schema is not valid JSON")
-            return json_schema
-
-        if json_schema:
-            schema_version = json_schema.get("$schema", "")
-            if not schema_version:
-                is_schema_valid = False
-                err_message = "Not a valid JSON schema. {}"
-                if "$schema" not in json_schema:
-                    err_message = err_message.format("Key '$schema' is missing")
-                else:
-                    err_message = err_message.format("Key '$schema' is missing a value for schema version")
-                self.add_error(field_name, err_message)
-            else:
-                if "/draft-04/" not in schema_version:
-                    is_schema_valid = False
-                    err_message = "Not a valid JSON schema. Schema version is invalid. Supported valid version(s): " \
-                                  "draft-04"
-                    self.add_error(field_name, err_message)
-
-            if 'properties' not in json_schema:
-                is_schema_valid = False
-                self.add_error(field_name,
-                               "Not a valid metadata schema. Attribute 'properties' "
-                               "is missing")
-
-            if is_schema_valid:
-                try:
-                    jsonschema.Draft4Validator.check_schema(json_schema)
-                except jsonschema.SchemaError as ex:
-                    is_schema_valid = False
-                    schema_err_msg = "{}. Schema invalid field path:{}".format(ex.message, str(list(ex.path)))
-                    self.add_error(field_name, "Not a valid JSON schema. Error:{}".format(schema_err_msg))
-
-        if is_schema_valid:
-            # custom validation - hydroshare requirements
-            # this custom validation requiring additional attributes are needed for making the json-editor form
-            # generation at the front-end to work
-            if 'additionalProperties' not in json_schema:
-                is_schema_valid = False
-                self.add_error(field_name,
-                               "Not a valid metadata schema. Attribute 'additionalProperties' "
-                               "is missing")
-            elif json_schema['additionalProperties']:
-                is_schema_valid = False
-                self.add_error(field_name,
-                               "Not a valid metadata schema. Attribute 'additionalProperties' "
-                               "should bet set to 'false'")
-
-            def validate_schema(schema_dict):
-                for k, v in schema_dict.items():
-                    # key must not have whitespaces - required for xml encoding of metadata
-                    if k != k.strip():
-                        msg = "Not a valid metadata schema. Attribute '{}' has leading or trailing whitespaces"
-                        msg = msg.format(k)
-                        self.add_error(field_name, msg)
-                    # key must consists of alphanumeric characters only - required for xml encoding of metadata
-                    if not k.isalnum():
-                        msg = "Not a valid metadata schema. Attribute '{}' has non-alphanumeric characters"
-                        msg = msg.format(k)
-                        self.add_error(field_name, msg)
-                    # key must start with a alphabet character - required for xml encoding of metadata
-                    if not k[0].isalpha():
-                        msg = "Not a valid metadata schema. Attribute '{}' starts with a non-alphabet character"
-                        msg = msg.format(k)
-                        self.add_error(field_name, msg)
-
-                    if isinstance(v, dict):
-                        if k not in ('properties', 'items'):
-                            # we need a title to use as label for the form field
-                            if 'title' not in v:
-                                msg = "Not a valid metadata schema. Attribute 'title' is missing for {}".format(k)
-                                self.add_error(field_name, msg)
-                            elif len(v['title'].strip()) == 0:
-                                msg = "Not a valid metadata schema. Attribute 'title' has no value for {}".format(k)
-                                self.add_error(field_name, msg)
-                            if v['type'] == 'array':
-                                # we need format attribute set to 'table' in order for the jsoneditor to allow
-                                # editing array type field
-                                if 'format' not in v:
-                                    msg = "Not a valid metadata schema. Attribute 'format' is missing for {}"
-                                    msg = msg.format(k)
-                                    self.add_error(field_name, msg)
-                                elif v['format'] != 'table':
-                                    msg = "Not a valid metadata schema. Attribute 'format' should be set " \
-                                          "to table for {}"
-                                    msg = msg.format(k)
-                                    self.add_error(field_name, msg)
-                        if 'type' in v and v['type'] == 'object':
-                            # we requiring "additionalProperties": false so that we don't allow user to add new
-                            # form fields using the json-editor form
-                            if 'additionalProperties' not in v:
-                                msg = "Not a valid metadata schema. Attribute 'additionalProperties' is " \
-                                      "missing for {}"
-                                msg = msg.format(k)
-                                self.add_error(field_name, msg)
-                            elif v['additionalProperties']:
-                                msg = "Not a valid metadata schema. Attribute 'additionalProperties' must " \
-                                      "be set to false for {}"
-                                msg = msg.format(k)
-                                self.add_error(field_name, msg)
-
-                        # check for nested objects - we are not allowing nested objects to keep the form
-                        # generated from the schema by json-editor to not get complicated
-                        nested_object_found = False
-                        if 'type' in v and v['type'] == 'object':
-                            # parent type is object - check child type is not object
-                            for k_child, v_child in v.items():
-                                if isinstance(v_child, dict):
-                                    if 'type' in v_child and v_child['type'] == 'object':
-                                        msg = "Not a valid metadata schema. Nested object types are not allowed. " \
-                                              "Attribute '{}' contains nested object types"
-                                        msg = msg.format(k_child)
-                                        self.add_error(field_name, msg)
-                                        nested_object_found = True
-                        if not nested_object_found:
-                            validate_schema(v)
-
-            if is_schema_valid:
-                validate_schema(json_schema['properties'])
-
+        json_schema, validation_errors = ModelProgramLogicalFile.validate_meta_schema(schema_string)
+        for err_msg in validation_errors:
+            self.add_error(field_name, err_msg)
         return json_schema
 
 
