@@ -19,11 +19,13 @@ let geoconnexApp = new Vue({
             errorMsg: "",
             errored: false,
             geoconnexUrl: "https://reference.geoconnex.us/collections",
-            apiQueryAppend: "items?f=json&lang=en-US&skipGeometry=true",
+            apiQueryNoGeo: "items?f=json&lang=en-US&skipGeometry=true",
+            apiQueryYesGeo: "items?f=json&lang=en-US&skipGeometry=false",
             cacheName: "geoconnexCache",
             geoCache: null,
             resShortId: SHORT_ID,
             cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
+            // cacheDuration: 0, // one week in milliseconds
             search: null,
             rules: null,
             showMap: false,
@@ -33,6 +35,7 @@ let geoconnexApp = new Vue({
             selectedFeatureGroup: null,
             hasSearches: false,
             hasExtentSearch: false,
+            geometriesAreLoaded: false,
             searchFeatureGroup: null,
             layerGroupDictionary: {},
             searchRadius: 1,
@@ -106,7 +109,7 @@ let geoconnexApp = new Vue({
       },
       addSelectedItem(selected){
         let vue = this;
-        vue.fetchGeometry(selected).then(geometry =>{
+        vue.fetchSingleGeometry(selected).then(geometry =>{
           selected.geometry = geometry.geometry;
           vue.addToMap(selected, true);
         });
@@ -119,11 +122,31 @@ let geoconnexApp = new Vue({
           }
         });
       },
-      async fetchGeometry(geoconnexObj){
+      async fetchSingleGeometry(geoconnexObj, refresh=false){
         let vue = this;
-        let query = `${vue.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
-        let response = await vue.getFromCacheOrFetch(query);
+        let response = {};
+        if(refresh || !geoconnexObj.geometry){
+          let query = `${vue.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
+          response = await vue.getFromCacheOrFetch(query);
+        }else{
+          response.geometry = geoconnexObj.geometry;
+        }
         return response;
+      },
+      async fetchAllGeometries(){
+        let vue = this;
+        let itemsWithGeo = [];
+        for (let collection of vue.collections){
+          console.log(`Loading geometry for ${collection.id}`);
+          const url = `${vue.geoconnexUrl}/${collection.id}/${vue.apiQueryYesGeo}`;
+          let response = await vue.getFromCacheOrFetch(url);
+          for (let feature of response.features){
+            itemsWithGeo.push(vue.getFeatureProperties(feature));
+          }
+        }
+        // overwrite now that we have the geometries
+        vue.items = itemsWithGeo;
+        vue.geometriesAreLoaded = true;
       },
       async fetchReferenceItem(uri){
         let vue = this;
@@ -148,15 +171,15 @@ let geoconnexApp = new Vue({
             maxZoom: 18,
         });
 
-        // let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
-        //   attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
-        //   maxZoom: 18,
-        // });
+        let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
+          attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+          maxZoom: 18,
+        });
 
         var baseMaps = {
           "Terrain": terrain,
           "Streets": streets,
-          // "Toner": toner
+          "Toner": toner
         };
 
         vue.selectedFeatureGroup =  L.featureGroup();
@@ -301,7 +324,8 @@ let geoconnexApp = new Vue({
       async getAllItems(){
         let vue = this;
         let collections = await vue.getCollections();
-        for (let col of collections.collections){
+        vue.collections = collections.collections;
+        for (let col of vue.collections){
           vue.currentLoading = col.description;
           let header = { 
             header: `${col.description} (${col.id})`,
@@ -346,7 +370,7 @@ let geoconnexApp = new Vue({
       },
       async getItemsIn(collectionId){
         let vue = this;
-        const url = `${vue.geoconnexUrl}/${collectionId}/${vue.apiQueryAppend}`;
+        const url = `${vue.geoconnexUrl}/${collectionId}/${vue.apiQueryNoGeo}`;
         let response = await vue.getFromCacheOrFetch(url);
         return response;
       },
@@ -434,7 +458,7 @@ let geoconnexApp = new Vue({
             });
 
             if (item){
-              vue.fetchGeometry(item).then(geometry =>{
+              vue.fetchSingleGeometry(item).then(geometry =>{
                 item.geometry = geometry.geometry;
                 vue.addToMap(item, false);
               });
@@ -543,7 +567,8 @@ let geoconnexApp = new Vue({
 
         for (let item of vue.items){
           try{
-            let geometry = await vue.fetchGeometry(item);
+            vue.currentLoading = item.collection;
+            let geometry = await vue.fetchSingleGeometry(item);
             item.geometry = geometry.geometry;
             if (turf.area(item) < vue.maxAreaToReturn*1e6){
               if(turf.booleanPointInPolygon(center, item)){
@@ -573,7 +598,8 @@ let geoconnexApp = new Vue({
 
         for (let item of vue.items){
           try{
-            let geometry = await vue.fetchGeometry(item);
+            vue.currentLoading = item.collection;
+            let geometry = await vue.fetchSingleGeometry(item);
             item.geometry = geometry.geometry;
             if (turf.area(item) < vue.maxAreaToReturn*1e6){
               if(turf.booleanIntersects(polygon, item)){
@@ -647,11 +673,13 @@ let geoconnexApp = new Vue({
 
         function onMapClick(e) {
           let loc = {lat: e.latlng.lat, long: e.latlng.lng};
-          let content = `<button type="button" class="btn btn-success leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
+          if(vue.geometriesAreLoaded){
+            let content = `<button type="button" class="btn btn-success leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
             popup
                 .setLatLng(e.latlng)
                 .setContent(content)
                 .openOn(vue.map);
+          }
         }
 
         if(vue.resMode === 'Edit'){
@@ -697,6 +725,9 @@ let geoconnexApp = new Vue({
         vue.createMap();
         vue.loadRelations();
         vue.loading = false;
+        
+        // load geometries in the background
+        await vue.fetchAllGeometries();
       }else if(vue.resMode == "View" && vue.relations.length > 0){
         vue.geoCache = await caches.open(vue.cacheName);
         await vue.getOnlyRelationItems();
@@ -710,6 +741,4 @@ let geoconnexApp = new Vue({
 /*
 TODO: 
 - combine the spatial coverage map with the leaflet map?
-
-- improve search efficiency
 */
