@@ -169,7 +169,50 @@ function drawInitialShape() {
     }
 }
 
+function initMap2() {
+    var coverageMap2 = L.map('coverageMap2').setView([41.850033, -87.6500523], 3);
+
+    let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
+        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+        maxZoom: 18,
+    });
+
+    let streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18,
+    });
+
+    let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
+        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+        maxZoom: 18,
+    });
+
+    var baseMaps = {
+        "Terrain": terrain,
+        "Streets": streets,
+        "Toner": toner
+      };
+
+      var overlayMaps = {
+        // "Spatial Extent": null
+      };
+
+      let layerControl = L.control.layers(baseMaps, overlayMaps);
+      layerControl.addTo(coverageMap2);
+
+      L.control.fullscreen({
+        position: 'topright',
+        title: 'Toggle fullscreen view',
+        titleCancel: 'Exit Fullscreen',
+        content: `<i class="fa-expand"></i>`
+      }).addTo(coverageMap2);
+
+      // show the default layers at start
+      coverageMap2.addLayer(terrain);
+}
+
 function initMap() {
+    initMap2();
     var shapeType;
     var resourceType;
     if ($("#coverageMap")[0]) {
@@ -260,6 +303,7 @@ function initMap() {
 }
 
 function drawMarkerOnTextChange(){
+    drawMarkerOnTextChange2();
     var myLatLng = {lat: parseFloat($("#id_north").val()), lng: parseFloat($("#id_east").val())};
     // Delete previous drawings
     deleteAllShapes();
@@ -296,6 +340,49 @@ function drawMarkerOnTextChange(){
         coverageMap.setCenter(marker.getPosition());
     });
     allShapes.push(marker);
+}
+function drawMarkerOnTextChange2(){
+    var latlng = L.latLng(parseFloat($("#id_north").val()), parseFloat($("#id_east").val()));
+    let style={color: this.selectColor, radius: 5}
+    var myLatLng = {lat: parseFloat($("#id_north").val()), lng: parseFloat($("#id_east").val())};
+    // Delete previous drawings
+    // deleteAllShapes();
+    // deleteAllOverlays();
+    // Bounds validation
+    var badInput = false;
+    // Lat
+    if (myLatLng.lat > 90 || myLatLng.lat < -90) {
+        $("#id_north").addClass("invalid-input");
+        badInput = true;
+    }
+    else {
+        $("#id_north").removeClass("invalid-input");
+    }
+    if (myLatLng.lng > 180 || myLatLng.lng < -180) {
+        $("#id_east").addClass("invalid-input");
+        badInput = true;
+    }
+    else {
+        $("#id_east").removeClass("invalid-input");
+    }
+    if (badInput || isNaN(myLatLng.lat) || isNaN(myLatLng.lng)) {
+        return;
+    }
+    // Define the rectangle and set its editable property to true.
+    // let markeroo = L.marker([myLatLng.lat, myLatLng.lng]);
+    let markeroo = L.circleMarker(latlng, style);
+    
+    markeroo.addTo(coverageMap2)
+        .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
+        .openPopup();
+
+    // Center map at new marker
+    // coverageMap.setCenter(marker.getPosition());
+    // Set onClick event for recenter button
+    // $("#coverageMap").on("click", "#resetZoomBtn", function () {
+    //     coverageMap.setCenter(marker.getPosition());
+    // });
+    // allShapes.push(marker);
 }
 
 function drawRectangleOnTextChange(){
