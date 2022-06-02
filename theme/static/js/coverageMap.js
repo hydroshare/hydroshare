@@ -175,17 +175,17 @@ function initMap2() {
     if (coverageMap2 != undefined) { coverageMap2.remove(); }
 
     // setup a marker group
-    leafletMarkers = L.layerGroup();
+    leafletMarkers = L.featureGroup();
     // leafletMarkers.setStyle({pmIgnore: false});
     // leafletMarkers.options.pmIgnore = false;
     // L.PM.reInitLayer(leafletMarkers);
     // L.PM.setOptIn(true);
     coverageMap2 = L.map('coverageMap2').setView([41.850033, -87.6500523], 3);
 
-    coverageMap2.pm.addControls({  
-        position: 'topleft',  
-        drawCircle: false,  
-    });  
+    // coverageMap2.pm.addControls({  
+    //     position: 'topleft',  
+    //     drawCircle: false,  
+    // });  
     
     let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
         attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
@@ -214,6 +214,13 @@ function initMap2() {
 
       let layerControl = L.control.layers(baseMaps, overlayMaps);
       layerControl.addTo(coverageMap2);
+
+      var drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: leafletMarkers
+        }
+        });
+        coverageMap2.addControl(drawControl);
 
       L.control.fullscreen({
         position: 'topright',
