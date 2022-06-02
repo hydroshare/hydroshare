@@ -385,8 +385,7 @@ function drawMarkerOnTextChange2(){
         // .openPopup();
 
     // Center map at new marker
-    // coverageMap2.fitBounds(L.latLngBounds([latlng]));
-    coverageMap2.setView(latlng, 3)
+    coverageMap2.setView(latlng, 3);
 
     // Set onClick event for recenter button
     // $("#coverageMap").on("click", "#resetZoomBtn", function () {
@@ -395,7 +394,81 @@ function drawMarkerOnTextChange2(){
     // allShapes.push(marker);
 }
 
+function drawRectangleOnTextChange2(){
+    var bounds = {
+        north: parseFloat($("#id_northlimit").val()),
+        south: parseFloat($("#id_southlimit").val()),
+        east: parseFloat($("#id_eastlimit").val()),
+        west: parseFloat($("#id_westlimit").val())
+    };
+    // Delete previous drawings
+    leafletMarkers.clearLayers();
+    // deleteAllOverlays();
+    // Bounds validation
+    var badInput = false;
+    // North
+    if (bounds.north > 90 || bounds.north < -90) {
+        $("#id_northlimit").addClass("invalid-input");
+        badInput = true;
+    }
+    else {
+        $("#id_northlimit").removeClass("invalid-input");
+    }
+    // East
+    if (bounds.east > 180 || bounds.east < -180) {
+        badInput = true;
+        $("#id_eastlimit").addClass("invalid-input");
+    }
+    else {
+        $("#id_eastlimit").removeClass("invalid-input");
+    }
+    // South
+    if (bounds.south < -90 || bounds.south > 90) {
+        badInput = true;
+        $("#id_southlimit").addClass("invalid-input");
+    }
+    else {
+        $("#id_southlimit").removeClass("invalid-input");
+    }
+    // West
+    if (bounds.west < -180 || bounds.west > 180) {
+        badInput = true;
+        $("#id_westlimit").addClass("invalid-input");
+    }
+    else {
+        $("#id_westlimit").removeClass("invalid-input");
+    }
+    if (badInput || isNaN(bounds.north) || isNaN(bounds.south) || isNaN(bounds.east) || isNaN(bounds.west)) {
+        return;
+    }
+
+    // Define the rectangle and set its editable property to true.
+    var rectangle = L.rectangle([[bounds.north, bounds.east], [bounds.south, bounds.west]]);
+    leafletMarkers.addLayer(rectangle);
+
+    rectangle.addTo(coverageMap2)
+        .bindPopup('TODO: add res link and lat/long');
+    
+    coverageMap2.fitBounds(rectangle.getBounds());
+        
+    // var rectangle = new google.maps.Rectangle({
+    //     bounds: bounds,
+    //     editable: true,
+    //     draggable: true
+    // });
+    // rectangle.setMap(coverageMap);
+    // rectangle.addListener('bounds_changed', function () {
+    //     var coordinates = (rectangle.getBounds());
+    //     processDrawing(coordinates, "rectangle");
+    // });
+    // zoomCoverageMap(bounds);
+    // $("#coverageMap").on("click", "#resetZoomBtn", function () {
+    //     zoomCoverageMap(bounds);
+    // });
+    // allShapes.push(rectangle);
+}
 function drawRectangleOnTextChange(){
+    drawRectangleOnTextChange2();
     var bounds = {
         north: parseFloat($("#id_northlimit").val()),
         south: parseFloat($("#id_southlimit").val()),
