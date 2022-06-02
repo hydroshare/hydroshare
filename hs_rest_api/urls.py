@@ -217,21 +217,30 @@ urlpatterns = [
         name='get_update_delete_resource_access'),
 
     url(r'^resource/search$', DiscoverSearchView.as_view({'get': 'list'}), name='discover-hsapi'),
+
     # Gets a list of metadata template schema file names for model program aggregation
     url(r'^modelprogram/template/meta/schemas/$', file_type_views.list_model_program_template_metadata_schemas,
         name='list_model_program_template_meta_schemas'),
+
     # Gets JSON data for the specified template metadata schema file for model program aggregation
     url(r'^modelprogram/template/meta/schema/(?P<schema_filename>.*)$',
         file_type_views.get_model_program_template_metadata_schema,
         name='get_model_program_template_meta_schema'),
+
     # Assigns a specific metadata template schema to be used as the meta schema for a given model program aggregation
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelprogram/template/meta/schema/(?P<aggregation_path>.*)/'
         r'(?P<schema_filename>.*)$',
         file_type_views.use_template_metadata_schema_for_model_program,
         name='use_template_meta_schema_for_model_program'),
+
     # Updates metadata schema for a given model instance aggregation using the schema from the linked model program
     # aggregation
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/schema/(?P<aggregation_path>.*)$',
         file_type_views.update_metadata_schema_for_model_instance,
         name='update_meta_schema_for_model_instance'),
+
+    # Updates metadata for a given model program aggregation
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelprogram/meta/(?P<aggregation_path>.*)$',
+        file_type_views.update_metadata_for_model_program,
+        name='update_meta_for_model_program'),
 ]
