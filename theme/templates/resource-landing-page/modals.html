@@ -448,13 +448,13 @@
                                                    required="required" type="text"></div>
                                     </div>
 
-                                    <div id="{{ div_id }}_description" class="control-group">
-                                        <label for="{{ div_id }}_input_description"
-                                               class="control-label">HydroShare User Identifier (URL)</label>
+                                    <div id="{{ div_id }}_hydroshare_user_id" class="control-group">
+                                        <label for="{{ div_id }}_input_hydroshare_user_id"
+                                               class="control-label">HydroShare User Identifier</label>
                                         <div class="controls">
                                             <input class="form-control input-sm urlinput"
-                                                   id="{{ div_id }}_input_description" maxlength="200"
-                                                   name="description" type="url">
+                                                   id="{{ div_id }}_input_hydroshare_user_id" maxlength="200"
+                                                   name="hydroshare_user_id" type="number">
                                         </div>
                                     </div>
 
@@ -1196,7 +1196,7 @@
                                     </div>
                                 </div>
                                 {% if contributor.relative_uri %}
-                                    <div id="div_id_description" class="control-group">
+                                    <div id="div_id_hydroshare_user_id" class="control-group">
                                         <label class="control-label">HydroShare Profile</label>
                                         <div class="space-bottom">
                                             <a href="{{ contributor.relative_uri }}">View Profile</a>
@@ -1204,11 +1204,11 @@
 
                                         <div class="controls hidden">
                                             <input class="form-control input-sm urlinput"
-                                                   id="id_creator-{{ contributor.order|add:"-1" }}-description"
+                                                   id="id_creator-{{ contributor.order|add:"-1" }}-hydroshare_user_id"
                                                    maxlength="200"
-                                                   name="creator-{{ contributor.order|add:"-1" }}-description"
+                                                   name="creator-{{ contributor.order|add:"-1" }}-hydroshare_user_id"
                                                    type="url"
-                                                   value="{{ contributor.relative_uri }}"
+                                                   value="{{ contributor.hydroshare_user_id }}"
                                                    readonly>
                                         </div>
                                     </div>
