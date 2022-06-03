@@ -100,7 +100,7 @@ $(document).ready(function() {
     // Mark checkbox when row is clicked
     $("#collection-table-candidate td").click(onCollectionTableRowClick);
 
-    if (edit_mode.toLowerCase() == "true") {
+    if (edit_mode.toLowerCase() === "true") {
         $("#coverage-header").append($('<div><input id="btn-calc-coverage" value="Calculate Coverages" class="btn btn-info" type="button"/></div>'));
     }
 
@@ -109,6 +109,9 @@ $(document).ready(function() {
     $("#btn-add-collection-resources").click(function () {
         $('#collection-candidate').modal('show');
     });
+
+    // load collectable resources asynchronously
+    getCollectableResources();
 
     $("#save-collection-btn-ok").click(add_collection_item_ajax);
 
@@ -191,7 +194,7 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
     const successMsg = "Collection updated.";
     const errorMsg = "Collection failed to update.";
 
-    $form = $('#collector-new');
+    let $form = $('#collector-new');
     $.ajax({
         type: "POST",
         url: $form.attr('action'),
@@ -267,6 +270,14 @@ function add_collection_item_ajax() {
             var res_id = chkbox.id;
             resource_id_list.push(this.id);
     });
+
+    if(!resource_id_list.length) {
+        $("#save-collection-btn-ok").prop("disabled", false);
+        $("#save-collection-btn-cancel").prop("disabled", false);
+        $("#save-collection-btn-warning").hide();
+        document.body.style.cursor='default';
+        return;
+    }
 
     const alert_success = "Collection updated.";
     const alert_error = "Collection failed to update.";
@@ -413,7 +424,7 @@ function updateCoverageMetadataTabpage(new_coverage_list, change_coverage_metada
     for (var i=0; i<new_coverage_list.length; i++)
     {
         var coverage =  new_coverage_list[i];
-        if (coverage.type == 'point')
+        if (coverage.type === 'point')
         {
             found_spatial = true;
             cleanSpatialCoverageUI();
@@ -426,7 +437,7 @@ function updateCoverageMetadataTabpage(new_coverage_list, change_coverage_metada
             $("#id_type_2").trigger("change");
 
         }
-        else if (coverage.type == 'box')
+        else if (coverage.type === 'box')
         {
             found_spatial = true;
             cleanSpatialCoverageUI();
@@ -441,7 +452,7 @@ function updateCoverageMetadataTabpage(new_coverage_list, change_coverage_metada
             $("#id_type_1").trigger("change");
 
         }
-        else if (coverage.type == 'period')
+        else if (coverage.type === 'period')
         {
             found_temporal = true;
             document.getElementById('id_start').value = coverage.value.start;
@@ -510,4 +521,64 @@ function changeMetadataFormAction2Add(form_id) {
     var new_part = '/coverage/add-metadata/';
     var url_new = url_old.replace(/\/coverage\/.+\/update-metadata\//, new_part);
     $('#'+form_id).attr('action', url_new);
+}
+
+function getCollectableResources() {
+    let res_id = $("#collection-res-id").val();
+    let url = "/hsapi/_internal/" + res_id + "/get-collectable-resources/";
+    let $btnAddCollectionResources = $("#btn-add-collection-resources")
+    let btnDefaultText =  $btnAddCollectionResources.text();
+    $btnAddCollectionResources.text("Loading...");
+    $btnAddCollectionResources.addClass('disabled');
+    return $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        data: {},
+        async: true,
+        success: function (result) {
+            let json_response = JSON.parse(result);
+            $("#collectable-resources-modal-container").html(json_response.collectable_resources_modal);
+            $("#save-collection-btn-ok").click(add_collection_item_ajax);
+            setUpCollectableResourcesDataTable();
+            $('#collection-table-candidate').DataTable().draw();
+            $btnAddCollectionResources.text(btnDefaultText);
+            $btnAddCollectionResources.removeClass('disabled');
+
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+        }
+    });
+}
+
+function setUpCollectableResourcesDataTable(){
+    //------------------ table headers ------------
+    //                <th>Add</th>             0
+    //                <th>Title</th>           1
+    //                <th>Type</th>            2
+    //                <th>Owners</th>          3
+    //                <th>Sharing status</th>  4
+    //                <th>My Permission</th>   5
+    //                <th>Remove</th>          6
+
+    resourceTable = $("#collection-table-candidate").DataTable({
+        "order": [[2, "asc"]],
+        "paging": paging,
+        "bLengthChange": false,
+        "pagingType": page_type,
+        "pageLength": page_length,
+        "info": false,
+        "columnDefs": [
+            {
+                "targets": [6],     // <th>Remove</th>
+                "visible": false,
+            }
+        ],
+        "language": {
+            "emptyTable": "No resource available in this table"
+        }
+    });
+
+    // Mark checkbox when row is clicked
+    $("#collection-table-candidate td").click(onCollectionTableRowClick);
 }

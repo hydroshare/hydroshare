@@ -252,13 +252,15 @@
                                 </div>
 
                                 {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
-                                <button id="btn-update-resource-spatial-coverage"
-                                        type="button" class="btn btn-info space-top"
-                                        {% if not cm.resource_type == "CompositeResource" or not cm.has_logical_spatial_coverage %}
-                                        style="display: none"
-                                        {% endif %}>
-                                    <i class="fa fa-calculator" aria-hidden="true"></i> Set spatial coverage from content files
-                                </button>
+                                {% if cm.resource_type == "CompositeResource" %}
+                                    <button id="btn-update-resource-spatial-coverage"
+                                            type="button" class="btn btn-info space-top"
+                                            {% if not cm.has_logical_spatial_coverage %}
+                                            style="display: none"
+                                            {% endif %}>
+                                        <i class="fa fa-calculator" aria-hidden="true"></i> Set spatial coverage from content files
+                                    </button>
+                                {% endif %}
                             </div>
 
                             <div class="col-xs-12 col-sm-6 col-md-6 col-lg-8" id="coverage-header">
@@ -382,12 +384,14 @@
         </div>
 
         {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
-        <button id="btn-update-resource-temporal-coverage"
-                type="button" class="btn btn-info space-top"
-                {% if not cm.resource_type == "CompositeResource" or not cm.has_logical_temporal_coverage %}
-                style="display: none"
-                {% endif %}>
-            <i class="fa fa-calculator" aria-hidden="true"></i> Set temporal coverage from content files
-        </button>
+        {% if cm.resource_type == "CompositeResource" %}
+            <button id="btn-update-resource-temporal-coverage"
+                    type="button" class="btn btn-info space-top"
+                    {% if not cm.has_logical_temporal_coverage %}
+                    style="display: none"
+                    {% endif %}>
+                <i class="fa fa-calculator" aria-hidden="true"></i> Set temporal coverage from content files
+            </button>
+        {%  endif %}
     </div>
 {% endif %}
