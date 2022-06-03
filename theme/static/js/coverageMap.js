@@ -42,6 +42,113 @@ $(document).ready(function () {
     }
 });
 
+function drawInitialShape2() {
+    console.log("drawinit2");
+    // This field is populated if the page is in view mode
+    var shapeType = $("#coverageMap2")[0].getAttribute("data-shape-type");
+
+    var resourceType = $("#resource-type").val();
+    // Center the map
+    if (shapeType || resourceType === "Time Series") {
+        leafletMarkers.clearLayers();
+        if (shapeType == "point" || (resourceType === "Time Series" && spatial_coverage_type == "point")) {
+            var myLatLng;
+            if (shapeType == "point") {
+                // resource view mode
+                myLatLng = {
+                    lat: parseFloat($("#cov_north").text()),
+                    lng: parseFloat($("#cov_east").text())
+                };
+            }
+            else {
+                // time series resource in edit mode
+                myLatLng = {
+                    lat: parseFloat($("#id_north").val()),
+                    lng: parseFloat($("#id_east").val())
+                };
+                if ($('#id_north').val()) {
+                    $("#id_name").prop('readonly', false);
+                }
+            }
+
+            if (!myLatLng.lat || !myLatLng.lng) {
+                return;
+            }
+            drawMarker(L.latLng(myLatLng.lat, myLatLng.lng));
+        }
+        else if (shapeType == "box" || (resourceType === "Time Series" && spatial_coverage_type == "box")) {
+            var bounds;
+            if (shapeType == "box") {
+                //resource view mode
+                bounds = {
+                    north: parseFloat($("#cov_northlimit").text()),
+                    south: parseFloat($("#cov_southlimit").text()),
+                    east: parseFloat($("#cov_eastlimit").text()),
+                    west: parseFloat($("#cov_westlimit").text())
+                };
+            }
+            else {
+                // time series resource edit mode
+                bounds = {
+                    north: parseFloat($("#id_northlimit").val()),
+                    south: parseFloat($("#id_southlimit").val()),
+                    east: parseFloat($("#id_eastlimit").val()),
+                    west: parseFloat($("#id_westlimit").val())
+                };
+                if ($('#id_northlimit').val()) {
+                    $("#id_name").prop('readonly', false);
+                }
+            }
+
+            if (bounds.north === null || bounds.south === null || bounds.east === null || bounds.west === null) {
+                return;
+            }
+            // Define the rectangle and set its editable property to true.
+            drawRectangle(bounds);
+        }
+    }
+    else {
+        var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+        if ($radioBox.is(":checked")) {
+            drawRectangleOnTextChange2();
+        }
+        else {
+            drawMarkerOnTextChange2();
+        }
+    }
+    $("#id-coverage-spatial input:radio").change(function () {
+        if ($(this).val() == "point") {
+            $("#div_id_north").show();
+            $("#div_id_east").show();
+            $("#div_id_elevation").show();
+            $("#div_id_northlimit").hide();
+            $("#div_id_eastlimit").hide();
+            $("#div_id_southlimit").hide();
+            $("#div_id_westlimit").hide();
+            $("#div_id_uplimit").hide();
+            $("#div_id_downlimit").hide();
+            drawMarkerOnTextChange2();
+        }
+        else {
+            $("#div_id_north").hide();
+            $("#div_id_east").hide();
+            $("#div_id_elevation").hide();
+            $("#div_id_northlimit").show();
+            $("#div_id_eastlimit").show();
+            $("#div_id_southlimit").show();
+            $("#div_id_westlimit").show();
+            $("#div_id_uplimit").show();
+            $("#div_id_downlimit").show();
+            drawRectangleOnTextChange2();
+        }
+        // Show save changes button
+        $("#coverage-spatial").find(".btn-primary").show();
+    });
+    if (sessionStorage.signininfo) {
+        $("#sign-in-info").text(sessionStorage.signininfo);
+        $("#btn-select-irods-file").show();
+    }
+}
 function drawInitialShape() {
     // This field is populated if the page is in view mode
     var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
@@ -221,8 +328,9 @@ function initMap2() {
             remove: false
         }
       });
+      if(RESOURCE_MODE === 'Edit'){
         coverageMap2.addControl(drawControl);
-
+      }
         coverageMap2.on(L.Draw.Event.CREATED, function (e) {
             let coordinates;
             var type = e.layerType,
@@ -255,6 +363,8 @@ function initMap2() {
       // show the default layers at start
       coverageMap2.addLayer(terrain);
       coverageMap2.addLayer(leafletMarkers);
+      console.log("initmap2");
+      drawInitialShape2();
 }
 
 function initMap() {
@@ -415,7 +525,17 @@ function drawMarkerOnTextChange2(){
         return;
     }
     // Define the marker.
-    let marker = L.marker(latlng);
+    drawMarker(latlng);
+
+    // Set onClick event for recenter button
+    // $("#coverageMap").on("click", "#resetZoomBtn", function () {
+    //     coverageMap.setCenter(marker.getPosition());
+    // });
+    // allShapes.push(marker);
+}
+
+function drawMarker(latLng){
+    let marker = L.marker(latLng);
     leafletMarkers.addLayer(marker);
     
     marker.addTo(coverageMap2)
@@ -423,13 +543,7 @@ function drawMarkerOnTextChange2(){
         // .openPopup();
 
     // Center map at new marker
-    coverageMap2.setView(latlng, 3);
-
-    // Set onClick event for recenter button
-    // $("#coverageMap").on("click", "#resetZoomBtn", function () {
-    //     coverageMap.setCenter(marker.getPosition());
-    // });
-    // allShapes.push(marker);
+    coverageMap2.setView(latLng, 3);
 }
 
 function drawRectangleOnTextChange2(){
@@ -481,14 +595,7 @@ function drawRectangleOnTextChange2(){
     }
 
     // Define the rectangle and set its editable property to true.
-    var rectangle = L.rectangle([[bounds.north, bounds.east], [bounds.south, bounds.west]]);
-    leafletMarkers.addLayer(rectangle);
-
-    rectangle.addTo(coverageMap2)
-        .bindPopup('TODO: add res link and lat/long');
-    
-    coverageMap2.fitBounds(rectangle.getBounds());
-        
+    drawRectangle(bounds);
     // var rectangle = new google.maps.Rectangle({
     //     bounds: bounds,
     //     editable: true,
@@ -507,6 +614,15 @@ function drawRectangleOnTextChange2(){
     //     zoomCoverageMap(bounds);
     // });
     // allShapes.push(rectangle);
+}
+function drawRectangle(bounds){
+    var rectangle = L.rectangle([[bounds.north, bounds.east], [bounds.south, bounds.west]]);
+    leafletMarkers.addLayer(rectangle);
+
+    rectangle.addTo(coverageMap2)
+        .bindPopup('TODO: add res link and lat/long');
+    
+    coverageMap2.fitBounds(rectangle.getBounds());
 }
 function drawRectangleOnTextChange(){
     drawRectangleOnTextChange2();
