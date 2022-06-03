@@ -214,27 +214,35 @@ function initMap2() {
             polygon: false,
             circle: false,
             circlemarker: false,
-            polyline: false,
+            polyline: false
         },
         edit: {
             featureGroup: leafletMarkers,
+            remove: false
         }
       });
         coverageMap2.addControl(drawControl);
 
         coverageMap2.on(L.Draw.Event.CREATED, function (e) {
+            let coordinates;
             var type = e.layerType,
                 layer = e.layer;
-            if (type === 'marker') {
-                // Do marker specific actions
-            }
-            // Do whatever else you need to. (save to db; add to map etc)
-            // coverageMap2.addLayer(layer);
             leafletMarkers.addLayer(layer);
+
+            if(type === 'rectangle'){
+                coordinates = layer.getBounds();
+            }else{
+                coordinates = layer.getLatLng();
+            }
+            processDrawing2(coordinates, type);
         });
 
         coverageMap2.on(L.Draw.Event.DRAWSTART, function (e) {
             leafletMarkers.clearLayers();
+        });
+
+        coverageMap2.on(L.Draw.Event.EDITSTOP, function (e) {
+            $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').trigger('click');
         });
 
       L.control.fullscreen({
@@ -488,7 +496,7 @@ function drawRectangleOnTextChange2(){
     // });
     // rectangle.setMap(coverageMap);
 
-    // TODO: add an event listener that triggers processing
+    // TODO: add an event listener that triggers processing!!!
     // rectangle.addListener('bounds_changed', function () {
     //     var coordinates = (rectangle.getBounds());
     //     processDrawing(coordinates, "rectangle");
@@ -592,10 +600,10 @@ function processDrawing2 (coordinates, shape) {
         $("#div_id_uplimit").show();
         $("#div_id_downlimit").show();
         var bounds = {
-            north: parseFloat(coordinates.getNorthEast().lat()),
-            south: parseFloat(coordinates.getSouthWest().lat()),
-            east: parseFloat(coordinates.getNorthEast().lng()),
-            west: parseFloat(coordinates.getSouthWest().lng())
+            north: parseFloat(coordinates.getNorthEast().lat),
+            south: parseFloat(coordinates.getSouthWest().lat),
+            east: parseFloat(coordinates.getNorthEast().lng),
+            west: parseFloat(coordinates.getSouthWest().lng)
         };
         // Update fields
         $("#id_northlimit").val(bounds.north.toFixed(4));
@@ -623,8 +631,8 @@ function processDrawing2 (coordinates, shape) {
         $("#div_id_westlimit").hide();
         $("#div_id_uplimit").hide();
         $("#div_id_downlimit").hide();
-        $("#id_east").val(coordinates.lng().toFixed(4));
-        $("#id_north").val(coordinates.lat().toFixed(4));
+        $("#id_east").val(coordinates.lng.toFixed(4));
+        $("#id_north").val(coordinates.lat.toFixed(4));
         // Remove red borders
         $("#id_east").removeClass("invalid-input");
         $("#id_north").removeClass("invalid-input");
