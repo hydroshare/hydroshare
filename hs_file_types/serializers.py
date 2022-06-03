@@ -69,9 +69,18 @@ class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
 
     def validate_program_file_types(self, value):
         """
-        Check that the resource file exists.
+        Check that the resource file exists and no duplicates in the request for program_file_types.
         """
         mp_aggr = self.context.get('mp_aggr')
+        # check that are no duplicates
+        seen = set()
+        for ft_item_dict in value:
+            ft_item_tuple = tuple(ft_item_dict.items())
+            if ft_item_tuple in seen:
+                raise serializers.ValidationError(f"Duplicate program_file_types:{ft_item_dict}")
+            seen.add(ft_item_tuple)
+
+        # check that the specified file paths are files of the aggregation
         valid_file_paths = [res_file.short_path for res_file in mp_aggr.files.all()]
         for ft_item in value:
             if ft_item['file_path'] not in valid_file_paths:
