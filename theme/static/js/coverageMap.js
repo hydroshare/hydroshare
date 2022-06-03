@@ -209,11 +209,33 @@ function initMap2() {
       layerControl.addTo(coverageMap2);
 
       var drawControl = new L.Control.Draw({
+        draw: {
+            featureGroup: leafletMarkers,
+            polygon: false,
+            circle: false,
+            circlemarker: false,
+            polyline: false,
+        },
         edit: {
-            featureGroup: leafletMarkers
+            featureGroup: leafletMarkers,
         }
-        });
+      });
         coverageMap2.addControl(drawControl);
+
+        coverageMap2.on(L.Draw.Event.CREATED, function (e) {
+            var type = e.layerType,
+                layer = e.layer;
+            if (type === 'marker') {
+                // Do marker specific actions
+            }
+            // Do whatever else you need to. (save to db; add to map etc)
+            // coverageMap2.addLayer(layer);
+            leafletMarkers.addLayer(layer);
+        });
+
+        coverageMap2.on(L.Draw.Event.DRAWSTART, function (e) {
+            leafletMarkers.clearLayers();
+        });
 
       L.control.fullscreen({
         position: 'topright',
@@ -465,10 +487,13 @@ function drawRectangleOnTextChange2(){
     //     draggable: true
     // });
     // rectangle.setMap(coverageMap);
+
+    // TODO: add an event listener that triggers processing
     // rectangle.addListener('bounds_changed', function () {
     //     var coordinates = (rectangle.getBounds());
     //     processDrawing(coordinates, "rectangle");
     // });
+
     // zoomCoverageMap(bounds);
     // $("#coverageMap").on("click", "#resetZoomBtn", function () {
     //     zoomCoverageMap(bounds);
@@ -541,7 +566,76 @@ function drawRectangleOnTextChange(){
     allShapes.push(rectangle);
 }
 
+function processDrawing2 (coordinates, shape) {
+    // // Delete previous drawings
+    // if (allOverlays.length > 1){
+    //     for (var i = 1; i < allOverlays.length; i++){
+    //         allOverlays[i-1].overlay.setMap(null);
+    //     }
+    //     allOverlays.shift();
+    // }
+    // if (allOverlays.length > 0) {
+    //     deleteAllShapes();
+    // }
+    // Show save changes button
+    $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').show();
+    if (shape === "rectangle"){
+        var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+        $radioBox.prop("checked", true);
+        $("#div_id_north").hide();
+        $("#div_id_east").hide();
+        $("#div_id_elevation").hide();
+        $("#div_id_northlimit").show();
+        $("#div_id_eastlimit").show();
+        $("#div_id_southlimit").show();
+        $("#div_id_westlimit").show();
+        $("#div_id_uplimit").show();
+        $("#div_id_downlimit").show();
+        var bounds = {
+            north: parseFloat(coordinates.getNorthEast().lat()),
+            south: parseFloat(coordinates.getSouthWest().lat()),
+            east: parseFloat(coordinates.getNorthEast().lng()),
+            west: parseFloat(coordinates.getSouthWest().lng())
+        };
+        // Update fields
+        $("#id_northlimit").val(bounds.north.toFixed(4));
+        $("#id_eastlimit").val(bounds.east.toFixed(4));
+        $("#id_southlimit").val(bounds.south.toFixed(4));
+        $("#id_westlimit").val(bounds.west.toFixed(4));
+        // Remove red borders
+        $("#id_northlimit").removeClass("invalid-input");
+        $("#id_eastlimit").removeClass("invalid-input");
+        $("#id_southlimit").removeClass("invalid-input");
+        $("#id_westlimit").removeClass("invalid-input");
+        $("#coverageMap").on("click", "#resetZoomBtn", function () {
+            // zoomCoverageMap(bounds);
+        });
+    }
+    else {
+        var $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
+        $radioPoint.prop("checked", true);
+        $("#div_id_north").show();
+        $("#div_id_east").show();
+        $("#div_id_elevation").show();
+        $("#div_id_northlimit").hide();
+        $("#div_id_eastlimit").hide();
+        $("#div_id_southlimit").hide();
+        $("#div_id_westlimit").hide();
+        $("#div_id_uplimit").hide();
+        $("#div_id_downlimit").hide();
+        $("#id_east").val(coordinates.lng().toFixed(4));
+        $("#id_north").val(coordinates.lat().toFixed(4));
+        // Remove red borders
+        $("#id_east").removeClass("invalid-input");
+        $("#id_north").removeClass("invalid-input");
+        // $("#coverageMap").on("click", "#resetZoomBtn", function () {
+        //     coverageMap.setCenter(coordinates);
+        // });
+    }
+}
+
 function processDrawing (coordinates, shape) {
+    processDrawing2(coordinates, shape);
     // Delete previous drawings
     if (allOverlays.length > 1){
         for (var i = 1; i < allOverlays.length; i++){
