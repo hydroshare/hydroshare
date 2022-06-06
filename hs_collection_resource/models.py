@@ -61,6 +61,13 @@ class CollectionResource(BaseResource):
     def update_text_file(self):
         return self.extra_data.get('update_text_file', 'True')
 
+    def set_update_text_file(self, flag):
+        """Sets the flag to indicate if the text file needs to be updated or not.
+        :param  flag:   value must be either 'True' or 'False'
+        """
+        self.extra_data = {'update_text_file': flag}
+        self.save()
+
 
 processor_for(CollectionResource)(resource_processor)
 
