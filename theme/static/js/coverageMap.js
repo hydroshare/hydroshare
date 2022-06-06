@@ -3,7 +3,6 @@
  */
 // Map js
 var coverageMap;
-var coverageMap2;
 var leafletMarkers;
 var allOverlays = [];
 var allShapes = []; // Keeps track of shapes added by text change events
@@ -42,10 +41,10 @@ $(document).ready(function () {
     }
 });
 
-function drawInitialShape2() {
+function drawInitialShape() {
     console.log("drawinit2");
     // This field is populated if the page is in view mode
-    var shapeType = $("#coverageMap2")[0].getAttribute("data-shape-type");
+    var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
 
     var resourceType = $("#resource-type").val();
     // Center the map
@@ -110,10 +109,10 @@ function drawInitialShape2() {
     else {
         var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
         if ($radioBox.is(":checked")) {
-            drawRectangleOnTextChange2();
+            drawRectangleOnTextChange();
         }
         else {
-            drawMarkerOnTextChange2();
+            drawMarkerOnTextChange();
         }
     }
     $("#id-coverage-spatial input:radio").change(function () {
@@ -127,7 +126,7 @@ function drawInitialShape2() {
             $("#div_id_westlimit").hide();
             $("#div_id_uplimit").hide();
             $("#div_id_downlimit").hide();
-            drawMarkerOnTextChange2();
+            drawMarkerOnTextChange();
         }
         else {
             $("#div_id_north").hide();
@@ -139,7 +138,7 @@ function drawInitialShape2() {
             $("#div_id_westlimit").show();
             $("#div_id_uplimit").show();
             $("#div_id_downlimit").show();
-            drawRectangleOnTextChange2();
+            drawRectangleOnTextChange();
         }
         // Show save changes button
         $("#coverage-spatial").find(".btn-primary").show();
@@ -150,12 +149,12 @@ function drawInitialShape2() {
     }
 }
 
-function initMap2() {
-    if (coverageMap2 != undefined) { coverageMap2.remove(); }
+function initMap() {
+    if (coverageMap != undefined) { coverageMap.remove(); }
 
     // setup a marker group
     leafletMarkers = L.featureGroup();
-    coverageMap2 = L.map('coverageMap2').setView([41.850033, -87.6500523], 3);
+    coverageMap = L.map('coverageMap').setView([41.850033, -87.6500523], 3);
 
     // https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html#l-draw
     
@@ -185,7 +184,7 @@ function initMap2() {
       };
 
       let layerControl = L.control.layers(baseMaps, overlayMaps);
-      layerControl.addTo(coverageMap2);
+      layerControl.addTo(coverageMap);
 
       var drawControl = new L.Control.Draw({
         draw: {
@@ -201,9 +200,9 @@ function initMap2() {
         }
       });
       if(RESOURCE_MODE === 'Edit'){
-        coverageMap2.addControl(drawControl);
+        coverageMap.addControl(drawControl);
       }
-        coverageMap2.on(L.Draw.Event.CREATED, function (e) {
+        coverageMap.on(L.Draw.Event.CREATED, function (e) {
             let coordinates;
             var type = e.layerType,
                 layer = e.layer;
@@ -214,14 +213,14 @@ function initMap2() {
             }else{
                 coordinates = layer.getLatLng();
             }
-            processDrawing2(coordinates, type);
+            processDrawing(coordinates, type);
         });
 
-        coverageMap2.on(L.Draw.Event.DRAWSTART, function (e) {
+        coverageMap.on(L.Draw.Event.DRAWSTART, function (e) {
             leafletMarkers.clearLayers();
         });
 
-        coverageMap2.on(L.Draw.Event.EDITSTOP, function (e) {
+        coverageMap.on(L.Draw.Event.EDITSTOP, function (e) {
             $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').trigger('click');
         });
 
@@ -230,23 +229,16 @@ function initMap2() {
         title: 'Toggle fullscreen view',
         titleCancel: 'Exit Fullscreen',
         content: `<i class="fa-expand"></i>`
-      }).addTo(coverageMap2);
+      }).addTo(coverageMap);
 
       // show the default layers at start
-      coverageMap2.addLayer(terrain);
-      coverageMap2.addLayer(leafletMarkers);
+      coverageMap.addLayer(terrain);
+      coverageMap.addLayer(leafletMarkers);
       console.log("initmap2");
-      drawInitialShape2();
-}
-
-function initMap() {
-    initMap2();
+      drawInitialShape();
 }
 
 function drawMarkerOnTextChange(){
-    drawMarkerOnTextChange2();
-}
-function drawMarkerOnTextChange2(){
     var latlng = L.latLng(parseFloat($("#id_north").val()), parseFloat($("#id_east").val()));
     var myLatLng = {lat: parseFloat($("#id_north").val()), lng: parseFloat($("#id_east").val())};
     // Delete previous drawings
@@ -287,15 +279,15 @@ function drawMarker(latLng){
     let marker = L.marker(latLng);
     leafletMarkers.addLayer(marker);
     
-    marker.addTo(coverageMap2)
+    marker.addTo(coverageMap)
         .bindPopup('TODO: add res link and lat/long');
         // .openPopup();
 
     // Center map at new marker
-    coverageMap2.setView(latLng, 3);
+    coverageMap.setView(latLng, 3);
 }
 
-function drawRectangleOnTextChange2(){
+function drawRectangleOnTextChange(){
     var bounds = {
         north: parseFloat($("#id_northlimit").val()),
         south: parseFloat($("#id_southlimit").val()),
@@ -368,16 +360,13 @@ function drawRectangle(bounds){
     var rectangle = L.rectangle([[bounds.north, bounds.east], [bounds.south, bounds.west]]);
     leafletMarkers.addLayer(rectangle);
 
-    rectangle.addTo(coverageMap2)
+    rectangle.addTo(coverageMap)
         .bindPopup('TODO: add res link and lat/long');
     
-    coverageMap2.fitBounds(rectangle.getBounds());
-}
-function drawRectangleOnTextChange(){
-    drawRectangleOnTextChange2();
+    coverageMap.fitBounds(rectangle.getBounds());
 }
 
-function processDrawing2 (coordinates, shape) {
+function processDrawing(coordinates, shape){
     // // Delete previous drawings
     // if (allOverlays.length > 1){
     //     for (var i = 1; i < allOverlays.length; i++){
@@ -443,8 +432,4 @@ function processDrawing2 (coordinates, shape) {
         //     coverageMap.setCenter(coordinates);
         // });
     }
-}
-
-function processDrawing (coordinates, shape) {
-    processDrawing2(coordinates, shape);
 }
