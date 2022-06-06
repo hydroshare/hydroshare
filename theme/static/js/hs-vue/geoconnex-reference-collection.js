@@ -25,7 +25,6 @@ let geoconnexApp = new Vue({
             geoCache: null,
             resShortId: SHORT_ID,
             cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
-            // cacheDuration: 0, // one week in milliseconds
             search: null,
             rules: null,
             showMap: false,
@@ -430,7 +429,7 @@ let geoconnexApp = new Vue({
         }
         return true;
       },
-      loadRelations(){
+      async loadRelations(){
         let vue = this;
         for (relation of vue.relations){
           if (relation.type === "relation"){
@@ -723,7 +722,7 @@ let geoconnexApp = new Vue({
         await vue.getAllItems();
         vue.updateSpatialExtentType()
         vue.createMap();
-        vue.loadRelations();
+        await vue.loadRelations();
         vue.loading = false;
         
         // load geometries in the background
@@ -732,7 +731,7 @@ let geoconnexApp = new Vue({
         vue.geoCache = await caches.open(vue.cacheName);
         await vue.getOnlyRelationItems();
         vue.createMap();
-        vue.loadRelations();
+        await vue.loadRelations();
         vue.loading = false;
       }
     }
