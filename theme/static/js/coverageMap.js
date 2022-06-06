@@ -357,7 +357,7 @@ function drawRectangle(bounds){
     leafletMarkers.addLayer(rectangle);
 
     rectangle.addTo(coverageMap)
-        .bindPopup('TODO: add res link and lat/long');
+        // .bindPopup('TODO: add res link and lat/long');
     
     coverageMap.fitBounds(rectangle.getBounds());
 }
