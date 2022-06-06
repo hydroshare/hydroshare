@@ -34,21 +34,24 @@ class ModelProgramResourceFileTypeSerializer(serializers.Serializer):
 class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
     name = serializers.CharField(required=False, max_length=255,
                                  help_text='The type/name of model program')
-    version = serializers.CharField(required=False, max_length=255,
+    version = serializers.CharField(required=False, max_length=255, allow_blank=True,
                                     help_text='The software version or build number of the model')
     programming_languages = serializers.ListField(required=False, child=serializers.CharField(max_length=100),
+                                                  allow_empty=True,
                                                   help_text="The programming language(s) that the model is written in")
     operating_systems = serializers.ListField(required=False, child=serializers.CharField(max_length=100),
+                                              allow_empty=True,
                                               help_text="Compatible operating systems to setup and run the model")
-    program_schema_json = serializers.JSONField(required=False,
+    program_schema_json = serializers.JSONField(required=False, allow_null=True,
                                                 help_text='Metadata schema as JSON data for model program aggregation')
-    release_date = serializers.DateField(required=False,
-                                         help_text='The date that this version of the model was released')
-    website = serializers.URLField(required=False, allow_blank=True, min_length=None, max_length=255,
+    release_date = serializers.DateField(required=False, allow_null=True, format="%m/%d/%Y", input_formats=["%m/%d/%Y"],
+                                         help_text='The date that this version of the model was released (MM/DD/YYYY')
+    website = serializers.URLField(required=False, allow_blank=True, max_length=255,
                                    help_text='A URL to the website maintained by the model developers')
-    code_repository = serializers.URLField(required=False, allow_blank=True, min_length=None, max_length=255,
+    code_repository = serializers.URLField(required=False, allow_blank=True, max_length=255,
                                            help_text='A URL to the source code repository (e.g. git, mercurial, svn)')
-    program_file_types = ModelProgramResourceFileTypeSerializer(many=True, required=False, default=None)
+    program_file_types = ModelProgramResourceFileTypeSerializer(many=True, required=False, default=None,
+                                                                allow_null=True)
 
     def validate_program_schema_json(self, value):
         """Check that the metadata schema is valid."""
@@ -57,7 +60,7 @@ class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
             try:
                 meta_schema_json = json.dumps(value)
             except Exception as ex:
-                raise serializers.ValidationError(f"Metadata schema is not valid. Error:{str(ex)}")
+                raise serializers.ValidationError(f"Metadata schema is not valid JSON. Error:{str(ex)}")
             # validate schema json here against the hs schema validator
             meta_schema_dict, validation_errors = ModelProgramLogicalFile.validate_meta_schema(meta_schema_json)
             if validation_errors:
