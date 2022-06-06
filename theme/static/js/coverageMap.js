@@ -219,7 +219,19 @@ function initMap() {
             leafletMarkers.clearLayers();
         });
 
-        coverageMap.on(L.Draw.Event.EDITSTOP, function (e) {
+        coverageMap.on(L.Draw.Event.EDITED, function (e) {
+            var layers = e.layers;
+            layers.eachLayer(function (layer) {
+                let coordinates;
+                let type = "rectangle";
+                if (layer instanceof L.Marker){
+                    coordinates = layer.getLatLng();
+                    type = "marker";
+                }else{
+                    coordinates = layer.getBounds();
+                }
+                processDrawing(coordinates, type);
+            });
             $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').trigger('click');
         });
 
