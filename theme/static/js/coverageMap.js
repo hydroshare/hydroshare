@@ -291,7 +291,7 @@ function drawMarker(latLng){
     leafletMarkers.addLayer(marker);
     
     marker.addTo(coverageMap)
-        .bindPopup('TODO: add res link and lat/long');
+        // .bindPopup('TODO: add res link and lat/long');
         // .openPopup();
 
     // Center map at new marker
