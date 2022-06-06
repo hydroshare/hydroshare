@@ -78,18 +78,6 @@ var leafletFeatureGroup;
                     };
                     if(myLatLng.lat && myLatLng.lng) {
                         drawPickerMarker(L.latLng(myLatLng.lat, myLatLng.lng));
-                        // Define the rectangle and set its editable property to true.
-                        // var marker = new google.maps.Marker({
-                        //     position: myLatLng,
-                        //     map: coordinatesPicker
-                        // });
-                        // allShapes.push(marker);
-                        // var coordinates = (marker.getPosition());
-                        // marker.setMap(coordinatesPicker);
-                        // // Set onClick event for recenter button
-                        // processDrawingFileType(coordinates, "marker");
-                        // // Center map at new market
-                        // coordinatesPicker.setCenter(marker.getPosition());
                         // $("#resetZoomBtn").click(function () {
                         //     coordinatesPicker.setCenter(marker.getPosition());
                         // });
@@ -104,18 +92,6 @@ var leafletFeatureGroup;
                     };
                     if (bounds.north && bounds.south && bounds.east && bounds.west) {
                         drawPickerRectangle(bounds);
-                        // var rectangle = new google.maps.Rectangle({
-                        //     bounds: bounds,
-                        //     editable: true,
-                        //     draggable: true
-                        // });
-                        // rectangle.setMap(coordinatesPicker);
-                        // rectangle.addListener('bounds_changed', function () {
-                        // var coordinates = (rectangle.getBounds());
-                        // processDrawingFileType(coordinates, "rectangle");
-                        // });
-                        // allShapes.push(rectangle);
-                        // zoomCoverageMap(bounds);
                         // $("#resetZoomBtn").click(function () {
                         //     zoomCoverageMap(bounds);
                         // });
@@ -264,20 +240,6 @@ function initMapFileType() {
 }
 
 function processDrawingFileType(coordinates, shape) {
-    // Delete previous drawings
-    // if (allOverlaysFileType.length > 1) {
-    //     for (var i = 1; i < allOverlaysFileType.length; i++) {
-    //         allOverlaysFileType[i - 1].overlay.setMap(null);
-    //     }
-    //     allOverlaysFileType.shift();
-    // }
-    // if (allOverlaysFileType.length > 0) {
-    //     for (var i = 0; i < allShapes.length; i++) {
-    //         allShapes[i].setMap(null);
-    //     }
-    //     allShapes = [];
-    // }
-
     if (shape === "rectangle") {
         var bounds = {
             north: parseFloat(coordinates.getNorthEast().lat),

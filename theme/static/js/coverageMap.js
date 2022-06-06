@@ -5,8 +5,6 @@
 var coverageMap;
 var leafletMarkers;
 var allOverlays = [];
-// TODO: coordinates-picker.js and allShapes push
-var allShapes = []; // Keeps track of shapes added by text change events
 var drawingManager;
 
 $(document).ready(function () {
@@ -283,7 +281,6 @@ function drawMarkerOnTextChange(){
     // $("#coverageMap").on("click", "#resetZoomBtn", function () {
     //     coverageMap.setCenter(marker.getPosition());
     // });
-    // allShapes.push(marker);
 }
 
 function drawMarker(latLng){
@@ -348,24 +345,11 @@ function drawRectangleOnTextChange(){
 
     // Define the rectangle and set its editable property to true.
     drawRectangle(bounds);
-    // var rectangle = new google.maps.Rectangle({
-    //     bounds: bounds,
-    //     editable: true,
-    //     draggable: true
-    // });
-    // rectangle.setMap(coverageMap);
-
-    // TODO: add an event listener that triggers processing!!!
-    // rectangle.addListener('bounds_changed', function () {
-    //     var coordinates = (rectangle.getBounds());
-    //     processDrawing(coordinates, "rectangle");
-    // });
 
     // zoomCoverageMap(bounds);
     // $("#coverageMap").on("click", "#resetZoomBtn", function () {
     //     zoomCoverageMap(bounds);
     // });
-    // allShapes.push(rectangle);
 }
 function drawRectangle(bounds){
     var rectangle = L.rectangle([[bounds.north, bounds.east], [bounds.south, bounds.west]]);
@@ -378,18 +362,9 @@ function drawRectangle(bounds){
 }
 
 function processDrawing(coordinates, shape){
-    // // Delete previous drawings
-    // if (allOverlays.length > 1){
-    //     for (var i = 1; i < allOverlays.length; i++){
-    //         allOverlays[i-1].overlay.setMap(null);
-    //     }
-    //     allOverlays.shift();
-    // }
-    // if (allOverlays.length > 0) {
-    //     deleteAllShapes();
-    // }
     // Show save changes button
     $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').show();
+
     if (shape === "rectangle"){
         var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
         $radioBox.prop("checked", true);
