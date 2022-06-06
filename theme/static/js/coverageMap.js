@@ -153,7 +153,7 @@ function initMap() {
 
     // setup a marker group
     leafletMarkers = L.featureGroup();
-    coverageMap = L.map('coverageMap').setView([41.850033, -87.6500523], 3);
+    coverageMap = L.map('coverageMap', {scrollWheelZoom: false}).setView([41.850033, -87.6500523], 3);
 
     // https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html#l-draw
     
