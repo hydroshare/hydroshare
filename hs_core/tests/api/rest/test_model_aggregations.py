@@ -58,7 +58,7 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
             self.assertTrue(content)
             self.assertEqual(content['type'], 'object')
 
-    def test_assign_template_meta_schema_to_model_program_aggr(self):
+    def test_assign_template_meta_schema_to_model_program(self):
         """Test that we can assign any of the template metadata schema to a model program aggregation."""
 
         mp_aggr = self._create_model_program_aggregation(expected_file_count=1, upload_folder='mp-folder')
@@ -98,7 +98,7 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         self.assertEqual(mp_aggr.metadata.version, metadata_json['version'])
         self.assertEqual(mp_aggr.metadata.programming_languages, metadata_json['programming_languages'])
         self.assertEqual(mp_aggr.metadata.operating_systems, metadata_json['operating_systems'])
-        self.assertEqual(mp_aggr.metadata.release_date.strftime("%Y-%m-%d"), metadata_json['release_date'])
+        self.assertEqual(mp_aggr.metadata.release_date.strftime("%m/%d/%Y"), metadata_json['release_date'])
         self.assertEqual(mp_aggr.metadata.website, metadata_json['website'])
         self.assertEqual(mp_aggr.metadata.code_repository, metadata_json['code_repository'])
         self.assertEqual(mp_aggr.metadata_schema_json, metadata_json['program_schema_json'])
@@ -111,11 +111,11 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
 
     def test_update_model_instance_meta_schema(self):
         """Test that we can update the metadata schema in a model instance using the schema from the linked
-        model program aggregation"""
+        model program aggregation."""
 
         mp_aggr = self._create_model_program_aggregation(expected_file_count=1, upload_folder='mp-folder')
         mi_aggr = self._create_model_instance_aggregation(expected_file_count=2)
-        # link the mip aggr to mp aggregation (executed_by)
+        # link the mi aggr to mp aggregation (executed_by)
         self.assertEqual(mi_aggr.metadata.executed_by, None)
         mi_aggr.metadata.executed_by = mp_aggr
         mi_aggr.metadata.save()
@@ -139,11 +139,62 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertTrue(mi_aggr.metadata_schema_json)
 
+    def test_update_metadata_model_instance(self):
+        """Test that we can update all metadata for a model instance aggregation."""
+
+        mp_aggr = self._create_model_program_aggregation(expected_file_count=1, upload_folder='mp-folder')
+        mi_aggr = self._create_model_instance_aggregation(expected_file_count=2)
+        # first set the schema for the mp aggregation
+        self.assertFalse(mp_aggr.metadata_schema_json)
+        mp_aggr_path = mp_aggr.aggregation_name
+        for template_schema_filename in self.schema_templates:
+            if template_schema_filename.startswith("SWAT"):
+                url = f"/hsapi/resource/{self.res.short_id}/modelprogram/template/meta/schema/{mp_aggr_path}/" \
+                      f"{template_schema_filename}"
+                response = self.client.put(url, format='json')
+                self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+                break
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertTrue(mp_aggr.metadata_schema_json)
+
+        base_file_path = 'hs_core/tests/data/{}'
+        json_file_path = base_file_path.format('model_instance_meta.json')
+        mi_aggr_path = mi_aggr.aggregation_name
+        url = f"/hsapi/resource/{self.res.short_id}/modelinstance/meta/{mi_aggr_path}"
+        # first just update the executed_by for the model instance aggregation
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.metadata.executed_by, None)
+        response = self.client.put(url, data={"executed_by": mp_aggr.aggregation_name}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertNotEqual(mi_aggr.metadata.executed_by, None)
+        # now update all metadata for the model instance aggregation including the metadata based on the schema
+        with open(json_file_path) as file_obj:
+            metadata_json = json.loads(file_obj.read())
+            metadata_json['executed_by'] = mp_aggr.aggregation_name
+        response = self.client.put(url, data=metadata_json, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        # check updated metadata
+        self.assertEqual(mi_aggr.dataset_name, metadata_json['title'])
+        self.assertEqual(mi_aggr.metadata.keywords, metadata_json['keywords'])
+        self.assertEqual(mi_aggr.metadata.extra_metadata, metadata_json['additional_metadata'])
+        self.assertEqual(mi_aggr.metadata.has_model_output, metadata_json['has_model_output'])
+        self.assertEqual(mi_aggr.metadata.executed_by.aggregation_name, metadata_json['executed_by'])
+        self.assertEqual(mi_aggr.metadata.metadata_json, metadata_json['metadata_json'])
+        temporal_coverage = mi_aggr.metadata.temporal_coverage.value
+        self.assertEqual(temporal_coverage, metadata_json['temporal_coverage'])
+        spatial_coverage = mi_aggr.metadata.spatial_coverage.value
+        spatial_coverage.pop('projection')
+        input_cove_type = metadata_json['spatial_coverage'].pop('type')
+        self.assertEqual(spatial_coverage, metadata_json['spatial_coverage'])
+        self.assertEqual(mi_aggr.metadata.spatial_coverage.type, input_cove_type)
+
     def _create_model_program_aggregation(self, expected_file_count, upload_folder=""):
         base_file_path = 'hs_core/tests/data/{}'
         file_path = base_file_path.format('test.txt')
         if upload_folder:
-            # upload_folder = 'mp-folder'
             ResourceFile.create_folder(self.res, upload_folder)
         file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
         res_file = add_file_to_resource(self.res, file_to_upload, folder=upload_folder, check_target_folder=True)
