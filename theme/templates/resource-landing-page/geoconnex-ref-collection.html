@@ -216,20 +216,9 @@
     </div>
 {% endif %}
 
-{% block extra_css %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
-        integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
-        crossorigin=""/>
-{% endblock %}
-
 {% block extra_js %}
     <script defer src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
     <script defer src="https://unpkg.com/vuetify@2.6.4/dist/vuetify.min.js"></script>
-    <script defer src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
-        integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
-        crossorigin="">
-    </script>
-    <script defer src="{% static 'js/hs-vue/Control.FullScreen.js' %}"></script>
     <script defer src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
     <script defer type="text/javascript" src="{% static 'js/hs-vue/geoconnex-reference-collection.js' %}"></script>
 {% endblock %}

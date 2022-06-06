@@ -2427,7 +2427,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             return ''
         return str(self.metadata.citation.first())
 
-    def get_citation(self):
+    def get_citation(self, includePendingMessage=True):
         """Get citation or citations from resource metadata."""
 
         citation_str_lst = []
@@ -2475,7 +2475,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
-        if isPendingActivation:
+        if isPendingActivation and includePendingMessage:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
 
         return ''.join(citation_str_lst)
