@@ -248,32 +248,33 @@ function initMap() {
 }
 
 function drawMarkerOnTextChange(){
-    var latlng = L.latLng(parseFloat($("#id_north").val()), parseFloat($("#id_east").val()));
-    var myLatLng = {lat: parseFloat($("#id_north").val()), lng: parseFloat($("#id_east").val())};
-    // Delete previous drawings
-    leafletMarkers.clearLayers();
-    // deleteAllOverlays();
+    let north = parseFloat($("#id_north").val());
+    let east = parseFloat($("#id_east").val());
+    var myLatLng = {lat: north, lng: east};
 
     // Bounds validation
     var badInput = false;
-    // Lat
+
+    if (isNaN(north) || isNaN(east)){
+        return;
+    }
     if (myLatLng.lat > 90 || myLatLng.lat < -90) {
         $("#id_north").addClass("invalid-input");
         badInput = true;
-    }
-    else {
+    }else {
         $("#id_north").removeClass("invalid-input");
     }
     if (myLatLng.lng > 180 || myLatLng.lng < -180) {
         $("#id_east").addClass("invalid-input");
         badInput = true;
-    }
-    else {
+    }else {
         $("#id_east").removeClass("invalid-input");
     }
-    if (badInput || isNaN(myLatLng.lat) || isNaN(myLatLng.lng)) {
+    if (badInput) {
         return;
     }
+    leafletMarkers.clearLayers();
+    var latlng = L.latLng(north, east);
     // Define the marker.
     drawMarker(latlng);
 
