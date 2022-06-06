@@ -1,4 +1,7 @@
 let counter = 0;
+// TODO: would it be faster to add each geoconnex collection to a geojson group and then use that to conduct a single turf.js query for each collection
+// instead of one for every item?
+// Okay, so we want to do the bulk load, but we want to give some feedback...can we do bulk by collection and provide feedback for that?
 let geoconnexApp = new Vue({
     el: '#app-geoconnex',
     delimiters: ['${', '}'],
@@ -25,6 +28,7 @@ let geoconnexApp = new Vue({
             geoCache: null,
             resShortId: SHORT_ID,
             cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
+            cacheDuration: 0,
             search: null,
             rules: null,
             showMap: false,
