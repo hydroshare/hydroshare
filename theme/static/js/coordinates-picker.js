@@ -42,33 +42,26 @@ var leafletFeatureGroup;
 
             item.toggleClass("form-control", true);
             // Delete previous drawings
-            for (var i = 0; i < allOverlaysFileType.length; i++) {
-                allOverlaysFileType[i].overlay.setMap(null);
-            }
+            // for (var i = 0; i < allOverlaysFileType.length; i++) {
+            //     allOverlaysFileType[i].overlay.setMap(null);
+            // }
 
-            allOverlaysFileType = [];
+            // allOverlaysFileType = [];
+
+            // Reset Leaflet size on modal popup
+            $('#coordinates-picker-modal').on('shown.bs.modal', function () {
+                coordinatesPicker.invalidateSize();
+            });
 
             // Map trigger event handler
             item.parent().find(".btn-choose-coordinates").click(function () {
-                var btn_choose_coordinates = $(this);
                 currentInstance = item.closest("[data-coordinates-type]");
                 var type = currentInstance.attr("data-coordinates-type");
-                // Delete previous drawings
-                // for (var i = 0; i < allShapes.length; i++) {
-                //     allShapes[i].setMap(null);
-                // }
-                // allShapes = [];
-                // for (var i = 0; i < allOverlaysFileType.length; i++) {
-                //     allOverlaysFileType[i].overlay.setMap(null);
-                // }
-                // allOverlaysFileType = [];
+
+                leafletFeatureGroup.clearLayers();
+
                 // Set the type of controls
                 if (type === "point") {
-                    // drawingManagerFileType.drawingControlOptions.drawingModes = [
-                    //     google.maps.drawing.OverlayType.MARKER
-                    // ];
-                    // drawingManagerFileType.drawingMode = null;  // Set the default hand control
-                    // drawingManagerFileType.setMap(coordinatesPicker);
                     var lat_field;
                     var lon_field;
                     if(logical_type === "TimeSeriesLogicalFile") {
@@ -103,11 +96,6 @@ var leafletFeatureGroup;
                     }
                 }
                 else if (type === "rectangle") {
-                    // drawingManagerFileType.drawingControlOptions.drawingModes = [
-                    //     google.maps.drawing.OverlayType.RECTANGLE
-                    // ];
-                    // drawingManagerFileType.drawingMode = null;  // Set the default hand control
-                    // drawingManagerFileType.setMap(coordinatesPicker);
                     var bounds = {
                         north: parseFloat(spatial_form.find("#id_northlimit_filetype").val()),
                         south: parseFloat(spatial_form.find("#id_southlimit_filetype").val()),
@@ -123,8 +111,8 @@ var leafletFeatureGroup;
                         // });
                         // rectangle.setMap(coordinatesPicker);
                         // rectangle.addListener('bounds_changed', function () {
-                        //     var coordinates = (rectangle.getBounds());
-                        //     processDrawingFileType(coordinates, "rectangle");
+                        // var coordinates = (rectangle.getBounds());
+                        // processDrawingFileType(coordinates, "rectangle");
                         // });
                         // allShapes.push(rectangle);
                         // zoomCoverageMap(bounds);
@@ -158,6 +146,7 @@ function drawPickerMarker(latLng){
 
     // Center map at new marker
     coordinatesPicker.setView(latLng, 3);
+    processDrawingFileType(marker.getLatLng(), "marker");
 }
 
 function drawPickerRectangle(bounds){
@@ -167,13 +156,11 @@ function drawPickerRectangle(bounds){
     rectangle.addTo(coordinatesPicker);
     
     coordinatesPicker.fitBounds(rectangle.getBounds());
+    processDrawingFileType(rectangle.getBounds(), "rectangle");
 }
 
 
 function initMapFileType() {
-    // $('#coordinates-picker-modal').on('shown.bs.modal', function () {
-    //     google.maps.event.trigger(coordinatesPicker, 'resize');
-    // });
 
     // Initialize Map
     leafletFeatureGroup = L.featureGroup();
@@ -254,7 +241,7 @@ function initMapFileType() {
                 }
                 processDrawingFileType(coordinates, type);
             });
-            // $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').trigger('click');
+            $("#btn-confirm-coordinates").trigger('click');
         });
 
       L.control.fullscreen({
