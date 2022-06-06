@@ -5,6 +5,7 @@
 var coverageMap;
 var leafletMarkers;
 var allOverlays = [];
+// TODO: coordinates-picker.js and allShapes push
 var allShapes = []; // Keeps track of shapes added by text change events
 var drawingManager;
 
