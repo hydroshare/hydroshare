@@ -37,12 +37,11 @@ $(document).ready(function () {
     }
 
     if ($("#coverageMap").length) {
-        google.maps.event.addDomListener(window, "load", initMap);
+        initMap();
     }
 });
 
 function drawInitialShape() {
-    console.log("drawinit2");
     // This field is populated if the page is in view mode
     var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
 
@@ -234,7 +233,6 @@ function initMap() {
       // show the default layers at start
       coverageMap.addLayer(terrain);
       coverageMap.addLayer(leafletMarkers);
-      console.log("initmap2");
       drawInitialShape();
 }
 
