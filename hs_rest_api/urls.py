@@ -243,4 +243,9 @@ urlpatterns = [
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelprogram/meta/(?P<aggregation_path>.*)$',
         file_type_views.update_metadata_for_model_program,
         name='update_meta_for_model_program'),
+
+    # Updates metadata for a given model instance aggregation
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
+        file_type_views.update_metadata_for_model_instance,
+        name='update_meta_for_model_instance'),
 ]

@@ -1,6 +1,37 @@
 import json
+
+import jsonschema
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import serializers
+
+from hs_core.models import Coverage
 from .models.model_program import ModelProgramResourceFileType, ModelProgramLogicalFile
+
+
+class TemporalCoverageSerializer((serializers.Serializer)):
+    start = serializers.DateField(required=True, format="%m/%d/%Y", input_formats=["%m/%d/%Y"],
+                                  help_text="Temporal coverage start date (MM/DD/YYYY)")
+    end = serializers.DateField(required=True, format="%m/%d/%Y", input_formats=["%m/%d/%Y"],
+                                help_text="Temporal coverage end date (MM/DD/YYYY)")
+
+
+class SpatialCoverageSerializer((serializers.Serializer)):
+    type = serializers.ChoiceField(choices=["point", "box"])
+    units = serializers.CharField(max_length=100, help_text="Units of measurement for bounding box co-ordinates")
+    name = serializers.CharField(required=False, max_length=100, help_text="Name of the place")
+    north = serializers.FloatField(help_text="North co-ordinate")
+    east = serializers.FloatField(help_text="East co-ordinate")
+    west = serializers.FloatField(required=False, help_text="West co-ordinate (required if the coverage type is box)")
+    south = serializers.FloatField(required=False, help_text="South co-ordinate (required if the coverage type is box)")
+
+    def validate(self, data):
+        if data:
+            try:
+                Coverage.validate_coverage_type_value_attributes(coverage_type=data['type'], value_dict=data,
+                                                                 use_limit_postfix=False)
+            except ValidationError as ex:
+                raise serializers.ValidationError(str(ex))
+        return data
 
 
 class BaseAggregationMetaSerializer(serializers.Serializer):
@@ -143,4 +174,135 @@ class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
             mp_file_type_name = ModelProgramResourceFileType.type_name_from_type(mp_file.file_type)
             mp_file_types.append({'file_type': mp_file_type_name, 'file_path': mp_file.res_file.short_path})
         data['program_file_types'] = mp_file_types
+        return data
+
+
+class ModelInstanceMetaSerializer(BaseAggregationMetaSerializer):
+    temporal_coverage = TemporalCoverageSerializer(required=False, help_text="Temporal coverage")
+    spatial_coverage = SpatialCoverageSerializer(required=False, help_text="Spatial coverage")
+    has_model_output = serializers.BooleanField(required=False,
+                                                help_text="If the aggregation contains model output files")
+    executed_by = serializers.CharField(required=False, allow_blank=True,
+                                        help_text="Relative path of the model program aggregation "
+                                                  "used for executing this model instance aggregation")
+    metadata_json = serializers.JSONField(required=False, help_text="Schema-based metadata")
+
+    def validate_executed_by(self, value):
+        """Validate the path for the model program aggregation."""
+
+        resource = self.context.get('resource')
+        if value:
+            try:
+                aggr = resource.get_aggregation_by_name(value)
+                if not aggr.is_model_program:
+                    raise serializers.ValidationError(f"Specified aggregation:{value} is not a model "
+                                                      f"program aggregation")
+            except ObjectDoesNotExist:
+                raise serializers.ValidationError(f"No model program aggregation was found for the path:{value}")
+            return aggr
+        return value
+
+    def validate_metadata_json(self, value):
+        """Validate json data against the schema"""
+
+        if value:
+            try:
+                json.dumps(value)
+            except Exception as ex:
+                raise serializers.ValidationError(f"Metadata is not valid JSON. Error:{str(ex)}")
+            # validate against the the schema
+            mi_aggr = self.context.get('mi_aggr')
+            if not mi_aggr.metadata_schema_json:
+                raise serializers.ValidationError(f"Metadata schema is missing")
+
+            meta_json = value
+            try:
+                jsonschema.Draft4Validator(mi_aggr.metadata_schema_json).validate(meta_json)
+            except jsonschema.ValidationError as ex:
+                raise serializers.ValidationError(f"Invalid metadata. Error:{str(ex)}")
+
+        return value
+
+    def update(self, mi_aggr, validated_data):
+        """Updates the metadata for a model instance aggregation."""
+
+        mi_aggr.dataset_name = validated_data.get('title', mi_aggr.dataset_name)
+        mi_aggr.metadata.keywords = validated_data.get('keywords', mi_aggr.metadata.keywords)
+        mi_aggr.metadata.extra_metadata = validated_data.get('additional_metadata', mi_aggr.metadata.extra_metadata)
+        mi_aggr.metadata.has_model_output = validated_data.get('has_model_output', mi_aggr.metadata.has_model_output)
+        executed_by = validated_data.get('executed_by', None)
+        if isinstance(executed_by, ModelProgramLogicalFile):
+            mi_aggr.metadata.executed_by = executed_by
+            if executed_by.metadata_schema_json and not mi_aggr.metadata_schema_json:
+                mi_aggr.metadata_schema_json = executed_by.metadata_schema_json
+        elif isinstance(executed_by, str):
+            mi_aggr.metadata.executed_by = None
+
+        mi_aggr.metadata.metadata_json = validated_data.get('metadata_json', mi_aggr.metadata.metadata_json)
+        spatial_coverage = validated_data.get('spatial_coverage', None)
+        if spatial_coverage is not None:
+            if spatial_coverage:
+                cove_type = spatial_coverage.pop('type')
+                if cove_type == 'point':
+                    spatial_coverage.pop('south', None)
+                    spatial_coverage.pop('west', None)
+                else:
+                    spatial_coverage['northlimit'] = spatial_coverage.pop('north')
+                    spatial_coverage['eastlimit'] = spatial_coverage.pop('east')
+                    spatial_coverage['southlimit'] = spatial_coverage.pop('south')
+                    spatial_coverage['westlimit'] = spatial_coverage.pop('west')
+                if mi_aggr.metadata.spatial_coverage:
+                    mi_aggr.metadata.update_element('coverage', mi_aggr.metadata.spatial_coverage.id, type=cove_type,
+                                                    value=spatial_coverage)
+                else:
+                    mi_aggr.metadata.create_element('coverage', type=cove_type, value=spatial_coverage)
+            elif mi_aggr.metadata.spatial_coverage:
+                mi_aggr.metadata.spatial_coverage.delete()
+
+        temporal_coverage = validated_data.get('temporal_coverage', None)
+        if temporal_coverage is not None:
+            if temporal_coverage:
+                temporal_coverage['start'] = temporal_coverage['start'].strftime("%m/%d/%Y")
+                temporal_coverage['end'] = temporal_coverage['end'].strftime("%m/%d/%Y")
+                if mi_aggr.metadata.temporal_coverage:
+                    mi_aggr.metadata.update_element('coverage', mi_aggr.metadata.temporal_coverage.id, type='period',
+                                                    value=temporal_coverage)
+                else:
+                    mi_aggr.metadata.create_element('coverage', type='period', value=temporal_coverage)
+            elif mi_aggr.metadata.temporal_coverage:
+                mi_aggr.metadata.temporal_coverage.delete()
+
+        mi_aggr.metadata.is_dirty = True
+        mi_aggr.metadata.save()
+        mi_aggr.save()
+        return mi_aggr
+
+    @staticmethod
+    def serialize(mi_aggr):
+        """Helper to serialize the metadata for a model instance aggregation."""
+
+        data = dict()
+        data['title'] = mi_aggr.dataset_name
+        data['keywords'] = mi_aggr.metadata.keywords
+        data['additional_metadata'] = mi_aggr.metadata.extra_metadata
+        if mi_aggr.metadata.executed_by:
+            data['executed_by'] = mi_aggr.metadata.executed_by.aggregation_name
+        else:
+            data['executed_by'] = ""
+        data['has_model_output'] = mi_aggr.metadata.has_model_output
+        data['metadata_json'] = mi_aggr.metadata.metadata_json
+        data['metadata_schema'] = mi_aggr.metadata_schema_json
+        temporal_coverage = mi_aggr.metadata.temporal_coverage
+        if temporal_coverage is not None:
+            data['temporal_coverage'] = temporal_coverage.value
+        else:
+            data['temporal_coverage'] = {}
+        spatial_coverage = mi_aggr.metadata.spatial_coverage
+        if spatial_coverage is not None:
+            coverage_data = spatial_coverage.value
+            coverage_data['type'] = spatial_coverage.type
+            data['spatial_coverage'] = coverage_data
+        else:
+            data['spatial_coverage'] = {}
+
         return data

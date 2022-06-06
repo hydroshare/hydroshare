@@ -381,6 +381,34 @@ def update_metadata_for_model_program(request, resource_id, aggregation_path, **
     return JsonResponse(data=meta_serializer.serialize(mp_aggr=aggr), status=status.HTTP_200_OK)
 
 
+@swagger_auto_schema(method='put', request_body=serializers.ModelInstanceMetaSerializer,
+                     responses={200: serializers.ModelInstanceMetaSerializer, 400: "Invalid/bad request message",
+                                403: "You don't have permission to edit this resource"},)
+@api_view(['PUT'])
+def update_metadata_for_model_instance(request, resource_id, aggregation_path, **kwargs):
+    """Updates metadata for a model instance aggregation."""
+
+    try:
+        resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
+                                                                 aggregation_path=aggregation_path,
+                                                                 model_type='model-instance')
+    except BadRequestException as ex:
+        return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
+
+    meta_serializer = serializers.ModelInstanceMetaSerializer(data=request.data,
+                                                              context={'mi_aggr': aggr, 'resource': resource},
+                                                              partial=True)
+    if not meta_serializer.is_valid():
+        raise RF_ValidationError(detail=meta_serializer.errors)
+
+    # update model program instance aggregation metadata
+    meta_serializer.update(mi_aggr=aggr, validated_data=meta_serializer.validated_data)
+
+    resource_modified(resource, request.user, overwrite_bag=False)
+    # return the metadata for the model instance aggregation
+    return JsonResponse(data=meta_serializer.serialize(mi_aggr=aggr), status=status.HTTP_200_OK)
+
+
 @authorise_for_aggregation_edit
 @login_required
 def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwargs):
