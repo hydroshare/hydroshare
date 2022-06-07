@@ -1,5 +1,6 @@
 let counter = 0;
 // Okay, so we want to do the bulk load, but we want to give some feedback...can we do bulk by collection and provide feedback for that?
+// also if select a ref item then search, then try to remove it, it stays on the map
 let geoconnexApp = new Vue({
     el: '#app-geoconnex',
     delimiters: ['${', '}'],
@@ -61,7 +62,7 @@ let geoconnexApp = new Vue({
           let remove = oldValue.filter(obj => newValue.every(s => s.id !== obj.id));
           try{
             vue.selectedFeatureGroup.removeLayer(vue.selectedItemLayers[remove[0].value]);
-            vue.map.fitBounds(vue.selectedFeatureGroup.getBounds());
+            vue.fitMap();
           }catch(e){
             console.log(e.message);
           }
@@ -112,7 +113,9 @@ let geoconnexApp = new Vue({
         let vue = this;
         vue.fetchSingleGeometry(selected).then(geometry =>{
           selected.geometry = geometry.geometry;
-          vue.addToMap(selected, true);
+          let shouldZoom = selected.geometry.type.includes("Poly");
+          vue.addToMap(selected, shouldZoom);
+          shouldZoom ? null : vue.fitMap();
         });
         vue.addMetadata(selected);
         
@@ -282,10 +285,19 @@ let geoconnexApp = new Vue({
       },
       fitMap(group=null){
         let vue = this;
-        if(group){
-          vue.map.fitBounds(group.getBounds());
-        }else{
-          vue.map.fitBounds(vue.selectedFeatureGroup.getBounds());
+        try{
+          if(group){
+            vue.map.fitBounds(group.getBounds());
+          }else{
+            if(vue.selectedFeatureGroup.getLayers().length == 0){
+              vue.map.fitBounds(vue.selectedFeatureGroup.getBounds());
+            }else{
+              vue.map.fitBounds(vue.searchFeatureGroup.getBounds());
+            }
+          }
+        }catch(e){
+          console.warn(e);
+          vue.map.setView([30, 0], 1);
         }
       },
       setRules(){
@@ -569,7 +581,7 @@ let geoconnexApp = new Vue({
         vue.addToMap(center, false, {color:'red', fillColor: 'red', fillOpacity: 0.1, radius: 1}, group=vue.searchFeatureGroup);
 
         for (let item of vue.items){
-          console.log(`Searching for overlap with ${item.text}`);
+          // console.log(`Searching for overlap with ${item.text}`);s
           try{
             vue.currentLoading = item.collection;
             let geometry = await vue.fetchSingleGeometry(item);
@@ -602,7 +614,7 @@ let geoconnexApp = new Vue({
         vue.addToMap(polygon, false, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchFeatureGroup);
 
         for (let item of vue.items){
-          console.log(`Searching for overlap with ${item.text}`);
+          // console.log(`Searching for overlap with ${item.text}`);
           try{
             vue.currentLoading = item.collection;
             let geometry = await vue.fetchSingleGeometry(item);
