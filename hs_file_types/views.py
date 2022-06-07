@@ -356,8 +356,8 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     res_files = []
     override_tgt_paths = []
     override_tgt_res_files = []
-    file_type_obj = FILE_TYPE_MAP[hs_file_type]
-    aggregation = file_type_obj.objects.get(id=file_type_id)
+    file_type_class = FILE_TYPE_MAP[hs_file_type]
+    aggregation = file_type_class.objects.get(id=file_type_id)
     res_files.extend(aggregation.files.all())
     istorage = res.get_irods_storage()
     for file in res_files:

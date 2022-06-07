@@ -803,7 +803,13 @@ def data_store_move_to_folder(request, pk=None):
             return HttpResponse(message, status=status.HTTP_300_MULTIPLE_CHOICES)
         # delete conflicting files so that move can succeed
         for override_tgt_path in override_tgt_paths:
-            delete_resource_file(pk, override_tgt_path, user)
+            override_storage_tgt_path = os.path.join(resource.root_path, 'data', 'contents', override_tgt_path)
+            if irods_path_is_directory(istorage, override_storage_tgt_path):
+                # folder rather than a data object, just delete the folder
+                istorage.delete(override_storage_tgt_path)
+            else:
+                # data object or file
+                delete_resource_file(pk, override_tgt_path, user)
 
     try:
         move_to_folder(user, pk, valid_src_paths, tgt_path)

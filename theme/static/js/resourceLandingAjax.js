@@ -1053,6 +1053,7 @@ function move_to_folder_ajax_submit(source_paths, target_path, file_override) {
             }
             else {
                 display_error_message('File/Folder Moving Failed', xhr.responseText);
+                $('#move-override-confirm-dialog').modal('hide');
             }
         }
     });
@@ -1082,6 +1083,7 @@ function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath,
             }
             else {
                 display_error_message('File/Folder Moving Failed', xhr.responseText);
+                $('#move-aggr-override-confirm-dialog').modal('hide');
             }
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
