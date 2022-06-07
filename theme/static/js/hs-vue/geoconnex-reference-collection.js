@@ -289,15 +289,16 @@ let geoconnexApp = new Vue({
           if(group){
             vue.map.fitBounds(group.getBounds());
           }else{
-            if(vue.selectedFeatureGroup.getLayers().length == 0){
+            if(vue.selectedFeatureGroup.getLayers().length !== 0){
               vue.map.fitBounds(vue.selectedFeatureGroup.getBounds());
-            }else{
+            }else if(vue.searchFeatureGroup.getLayers().length !== 0) {
               vue.map.fitBounds(vue.searchFeatureGroup.getBounds());
+            }else{
+              vue.map.setView([30, 0], 1);
             }
           }
         }catch(e){
-          console.warn(e);
-          vue.map.setView([30, 0], 1);
+          console.warn(e.message);
         }
       },
       setRules(){
