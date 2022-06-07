@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from hs_core.models import BaseResource
 from theme.utils import get_upload_path_community
-from sorl.thumbnail import ImageField as SolrImageField
+from sorl.thumbnail import ImageField as TumbnailImageField
 
 
 ###################################
@@ -18,7 +18,7 @@ class Community(models.Model):
     purpose = models.TextField(null=True, blank=True)
     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
-    picture = SolrImageField(upload_to=get_upload_path_community, null=True, blank=True)
+    picture = TumbnailImageField(upload_to=get_upload_path_community, null=True, blank=True)
 
     def __str__(self):
         return self.name
