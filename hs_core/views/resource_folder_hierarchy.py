@@ -810,6 +810,7 @@ def data_store_move_to_folder(request, pk=None):
             else:
                 # data object or file
                 delete_resource_file(pk, override_tgt_path, user)
+        resource.cleanup_aggregations()
 
     try:
         move_to_folder(user, pk, valid_src_paths, tgt_path)

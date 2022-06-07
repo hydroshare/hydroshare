@@ -375,6 +375,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
         # delete conflicting files so that move can succeed
         for override_file in override_tgt_res_files:
             delete_resource_file_only(res, override_file)
+        res.cleanup_aggregations()
 
     if run_async:
         task = move_aggregation_task.apply_async((resource_id, file_type_id, hs_file_type, tgt_path))
