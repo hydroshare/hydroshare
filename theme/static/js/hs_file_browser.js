@@ -2266,6 +2266,7 @@ $(document).ready(function () {
         // Disable the Cancel button until request has finished
         $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
         function afterRequest() {
+            $('#btn-file-override-proceed').parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
             $("#move-override-confirm-dialog").modal('hide');
             refreshFileBrowser();
         }
@@ -2285,6 +2286,7 @@ $(document).ready(function () {
         // Disable the Cancel button until request has finished
         $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
         function afterRequest() {
+            $('#btn-aggr-file-override-proceed').parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
             $("#move-aggr-override-confirm-dialog").modal('hide');
             refreshFileBrowser();
         }
