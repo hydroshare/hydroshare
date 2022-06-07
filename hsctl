@@ -371,7 +371,6 @@ rebuild_hs() {
     migrate_hs
     sleep 3s
     thumbnail_cleanup
-    sleep 3s
     solr_schema_hs
     sleep 2s
     solr_reload_hs
@@ -387,7 +386,6 @@ reloaddb_hs() {
     migrate_hs
     sleep 3s
     thumbnail_cleanup
-    sleep 3s
     solr_schema_hs
     sleep 2s
     rebuild_solr_index
