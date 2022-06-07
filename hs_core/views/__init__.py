@@ -406,6 +406,15 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
 @api_view(['POST', 'GET'])
 def update_key_value_metadata_public(request, pk):
+    '''
+    Update resource key/value metadata pair
+
+    Metadata to be updated should be included as key/value pairs in the REST request
+    
+    :param request:
+    :param pk: id of the resource to be updated
+    :return: HttpResponse with status code
+    '''
     if request.method == 'GET':
         res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
@@ -842,6 +851,12 @@ def copy_resource(request, shortkey, *args, **kwargs):
 
 @api_view(['POST'])
 def copy_resource_public(request, pk):
+    '''
+    Copy a resouce
+
+    :param request:
+    :param pk: id of the resource to be copied
+    '''
     response = copy_resource(request, pk)
     return HttpResponse(response.url.split('/')[2], status=202)
 
@@ -879,6 +894,13 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
 
 @api_view(['POST'])
 def create_new_version_resource_public(request, pk):
+    '''
+    Create a new version of a resource
+
+    :param request:
+    :param pk: id of the resource to be versioned
+    :return: HttpResponse with status code
+    '''
     redirect = create_new_version_resource(request, pk)
     return HttpResponse(redirect.url.split('/')[2], status=202)
 
@@ -943,6 +965,13 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
 
 @api_view(['POST'])
 def set_resource_flag_public(request, pk):
+    '''
+    Set resource flag to "Public"
+
+    :param request:
+    :param pk: id of the resource to be modified
+    :return: HttpResponse with status code
+    '''
     http_request = request._request
     http_request.data = request.data.copy()
     js_response = set_resource_flag(http_request, pk)
@@ -1657,6 +1686,12 @@ def get_metadata_terms_page(request, *args, **kwargs):
 
 @api_view(['GET'])
 def hsapi_get_user(request, user_identifier):
+    '''
+    Get user data
+
+    :param user_identifier: id of the user for which data is needed
+    :return: JsonResponse containing user data
+    '''
     return get_user_or_group_data(request, user_identifier, "false")
 
 

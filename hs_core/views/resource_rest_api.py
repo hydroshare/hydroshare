@@ -103,6 +103,13 @@ class CheckTaskStatus(generics.RetrieveAPIView):
 
     # TODO, setup a serializer for in/out, figure out if redirect is needed...
     def get(self, request, task_id):
+        '''
+        Get the status of an asynchronous task
+
+        :param request:
+        :param task_id: Id of the task
+        :return: JSON response to return result from asynchronous task
+        '''
         url = reverse('rest_check_task_status', kwargs={'task_id': task_id})
         return HttpResponseRedirect(url)
 

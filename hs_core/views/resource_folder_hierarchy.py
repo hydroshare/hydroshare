@@ -367,11 +367,40 @@ def zip_aggregation_file(request, res_id=None):
 
 @api_view(['POST'])
 def data_store_folder_zip_public(request, pk):
+    '''
+    Zip requested files and folders into a zip file in hydroshareZone or any federated zone
+
+    Used for HydroShare resource backend store. Returns
+    json object that holds the created zip file name if it succeeds, and an empty string
+    if it fails. The request must be a POST request with input data passed in for
+    **res_id, input_coll_path, output_zip_file_name, and remove_original_after_zip** where
+    input_coll_path is the relative path under res_id/data/contents to be zipped,
+    output_zip_file_name is the file name only with no path of the generated zip file name,
+    and remove_original_after_zip has a value of "true" or "false" (default is "true") indicating
+    whether original files will be deleted after zipping.
+
+    :param request:
+    :param pk: Id of the hydroshare resource
+    :return: JsonResponse with zip file or empty string
+    '''
     return data_store_folder_zip(request, res_id=pk)
 
 
 @api_view(['POST'])
 def zip_aggregation_file_public(request, pk):
+    '''
+    Zip requested aggregation into a zip file in hydroshareZone or any federated zone
+
+    Used for HydroShare resource backend store.
+    Returns a json object that holds the created zip file name if it succeeds, and an empty string
+    if it fails. The request must be a POST request with input data passed in for
+    **res_id, aggregation_path, and output_zip_file_name** where
+    aggregation_path  is the relative path under res_id/data/contents representing an aggregation to be zipped,
+    output_zip_file_name is the file name only with no path of the generated zip file name.
+
+    :param request:
+    :return: JsonResponse with zip file or empty string
+    '''
     return zip_aggregation_file(request, res_id=pk)
 
 
@@ -456,6 +485,15 @@ def data_store_folder_unzip_public(request, pk, pathname):
 
 @api_view(['POST'])
 def ingest_metadata_files(request, pk):
+    '''
+    Ingests metadata files
+
+    The files to be ingested should be provided in the REST request
+
+    :param request:
+    :param pk: id of the hydroshare resource
+    :return: HttpResponse response with status code
+    '''
     from hs_file_types.utils import identify_and_ingest_metadata_files
     resource, _, _ = view_utils.authorize(request, pk,
                                           needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
@@ -466,6 +504,13 @@ def ingest_metadata_files(request, pk):
 
 @api_view(['POST'])
 def data_store_add_reference_public(request):
+    """
+    Create the reference url file, add the url file to resource, and add the url to
+    metadata accordingly for easy later retrieval
+    Request should include **curr_path**, **res_id**, **ref_name**, and **ref_url**
+    :param request:
+    :return: JsonResponse with status code and message
+    """
     return data_store_add_reference(request._request)
 
 
@@ -517,6 +562,13 @@ def data_store_add_reference(request):
 
 @api_view(['POST'])
 def data_store_edit_reference_url_public(request):
+    """
+    Edit the referenced url in an url file
+
+    Post request should include **res_id, curr_path, url_filename, new_ref_url**
+    :param request:
+    :return: JsonResponse on success or HttpResponse with error status code on error
+    """
     return data_store_edit_reference_url(request._request)
 
 
