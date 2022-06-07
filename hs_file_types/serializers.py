@@ -48,6 +48,13 @@ class BaseAggregationMetaSerializer(serializers.Serializer):
                 raise serializers.ValidationError("Duplicate keywords found")
         return value
 
+    def validate(self, data):
+        """Check for empty request body"""
+
+        if not data:
+            raise serializers.ValidationError("No metadata was provided to update")
+        return data
+
 
 class ModelProgramMetaTemplateSchemaSerializer(serializers.Serializer):
     meta_schema_filename = serializers.CharField(max_length=100, required=True,
