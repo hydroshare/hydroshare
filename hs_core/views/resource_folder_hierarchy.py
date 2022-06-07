@@ -700,6 +700,20 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
 
 @api_view(['POST'])
 def data_store_file_or_folder_move_or_rename_public(request, pk):
+    """
+    Move a list of files and/or folders to another folder in a resource file hierarchy.
+
+    :param request: a REST request
+    :param pk: the short_id of a resource to modify, from REST URL.
+
+    Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    resource backend store. It is invoked by an AJAX call and returns json object that has the
+    relative path of the target file or folder being moved to if succeeds, and return empty string
+    if fails. The AJAX request must be a POST request with input data passed in for **res_id**,
+    **source_path**, and **target_path** where source_path and target_path are the relative paths
+    (relative to path res_id/data/contents) for the source and target file or folder under
+    res_id collection/directory.
+    """
     return data_store_file_or_folder_move_or_rename(request, res_id=pk)
 
 
