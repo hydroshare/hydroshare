@@ -2,6 +2,7 @@ import json
 import datetime
 import pytz
 import logging
+from sorl.thumbnail import ImageField as TumbnailImageField, get_thumbnail
 
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
@@ -1206,7 +1207,7 @@ class GroupForm(forms.Form):
     name = forms.CharField(required=True)
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
-    picture = forms.ImageField(required=False)
+    picture = TumbnailImageField()
     privacy_level = forms.CharField(required=True)
     auto_approve = forms.BooleanField(required=False)
     requires_explanation = forms.BooleanField(required=False)
@@ -1241,7 +1242,10 @@ class GroupCreateForm(GroupForm):
                                                       auto_approve=frm_data['auto_approve'],
                                                       requires_explanation=frm_data['requires_explanation'])
         if 'picture' in request.FILES:
-            new_group.gaccess.picture = request.FILES['picture']
+            # resize uploaded image
+            img = request.FILES['picture']
+            img.image = get_thumbnail(img, 'x150', crop='center', quality=60)
+            new_group.gaccess.picture = img
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(new_group, privacy_level)
@@ -1259,7 +1263,10 @@ class GroupUpdateForm(GroupForm):
         group_to_update.gaccess.auto_approve = frm_data['auto_approve']
         group_to_update.gaccess.requires_explanation = frm_data['requires_explanation']
         if 'picture' in request.FILES:
-            group_to_update.gaccess.picture = request.FILES['picture']
+            # resize uploaded image
+            img = request.FILES['picture']
+            img.image = get_thumbnail(img, 'x150', crop='center', quality=60)
+            group_to_update.gaccess.picture = img
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
