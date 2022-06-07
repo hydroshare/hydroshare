@@ -28,7 +28,7 @@ let geoconnexApp = new Vue({
             geoCache: null,
             resShortId: SHORT_ID,
             cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
-            cacheDuration: 0,
+            // cacheDuration: 0,
             search: null,
             rules: null,
             showMap: false,
@@ -569,6 +569,7 @@ let geoconnexApp = new Vue({
         vue.addToMap(center, false, {color:'red', fillColor: 'red', fillOpacity: 0.1, radius: 1}, group=vue.searchFeatureGroup);
 
         for (let item of vue.items){
+          console.log(`Searching for overlap with ${item.text}`);
           try{
             vue.currentLoading = item.collection;
             let geometry = await vue.fetchSingleGeometry(item);
@@ -600,6 +601,7 @@ let geoconnexApp = new Vue({
         vue.addToMap(polygon, false, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchFeatureGroup);
 
         for (let item of vue.items){
+          console.log(`Searching for overlap with ${item.text}`);
           try{
             vue.currentLoading = item.collection;
             let geometry = await vue.fetchSingleGeometry(item);
