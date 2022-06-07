@@ -12,9 +12,10 @@ def migrate_url_to_uid(apps, schema_editor):
     Creator = apps.get_model('hs_core.Creator')
     combined_list = list(chain(Contributor.objects.all(), Creator.objects.all()))
     for party in combined_list:
-        id = re.sub("[^0-9]", "", party.description)
-        party.hydroshare_user_id = id
-        party.save()
+        if party.description:
+            id = re.sub("[^0-9]", "", party.description)
+            party.hydroshare_user_id = id
+            party.save()
 
 
 class Migration(migrations.Migration):
