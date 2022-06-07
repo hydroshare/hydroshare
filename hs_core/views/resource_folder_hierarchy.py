@@ -806,7 +806,7 @@ def data_store_move_to_folder(request, pk=None):
             override_storage_tgt_path = os.path.join(resource.root_path, 'data', 'contents', override_tgt_path)
             if irods_path_is_directory(istorage, override_storage_tgt_path):
                 # folder rather than a data object, just delete the folder
-                istorage.delete(override_storage_tgt_path)
+                remove_folder(user, pk, os.path.join('data', 'contents', override_tgt_path))
             else:
                 # data object or file
                 delete_resource_file(pk, override_tgt_path, user)
