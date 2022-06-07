@@ -276,18 +276,19 @@ let geoconnexApp = new Vue({
           if(fly){
             vue.map.flyToBounds(leafletLayer.getBounds());
           }
-          // else{
-          //   if(group){
-          //     vue.map.fitBounds(group.getBounds());
-          //   }else{
-          //     vue.map.fitBounds(vue.selectedFeatureGroup.getBounds());
-          //   }
-          // }
 
         } catch (e) {
           console.log(e.message);
         }
         vue.showMap = true;
+      },
+      fitMap(group=null){
+        let vue = this;
+        if(group){
+          vue.map.fitBounds(group.getBounds());
+        }else{
+          vue.map.fitBounds(vue.selectedFeatureGroup.getBounds());
+        }
       },
       setRules(){
         let vue = this;
@@ -462,13 +463,13 @@ let geoconnexApp = new Vue({
             });
 
             if (item){
-              vue.fetchSingleGeometry(item).then(geometry =>{
-                item.geometry = geometry.geometry;
-                vue.addToMap(item, false);
-              });
+              let geometry = await vue.fetchSingleGeometry(item);
+              item.geometry = geometry.geometry;
+              vue.addToMap(item, false);
             }
           }
         }
+        vue.fitMap();
       },
       addMetadata(selected){
         let vue = this;
@@ -588,6 +589,7 @@ let geoconnexApp = new Vue({
             console.log(`Error while attempting to load ${item.text}: ${e.message}`);
           }
         }
+        vue.fitMap(vue.searchFeatureGroup);
         vue.loading = false;
         vue.hasSearches = true;
       },
@@ -620,6 +622,7 @@ let geoconnexApp = new Vue({
             console.log(`Error while attempting to find intersecting geometries: ${e.message}`);
           }
         }
+        vue.fitMap(vue.searchFeatureGroup);
         vue.loading = false;
         vue.hasSearches = true;
       },
@@ -635,6 +638,8 @@ let geoconnexApp = new Vue({
 
         vue.hasSearches = false;
         vue.hasExtentSearch = false;
+        vue.fitMap();
+        vue.layerControl.collapse();
       },
       searchUsingSpatialExtent(){
         let vue = this;
