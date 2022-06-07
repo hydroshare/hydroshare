@@ -361,10 +361,11 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     res_files.extend(aggregation.files.all())
     istorage = res.get_irods_storage()
     for file in res_files:
-        tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
+        file_name = os.path.basename(file.storage_path)
+        tgt_full_path = os.path.join(res.file_path, tgt_path, file_name)
         if istorage.exists(tgt_full_path):
             override_tgt_paths.append(tgt_full_path)
-            override_tgt_res_files.append(file)
+            override_tgt_res_files.append(ResourceFile.get(res, file=file_name, folder=tgt_path))
 
     if override_tgt_paths:
         if not file_override:
