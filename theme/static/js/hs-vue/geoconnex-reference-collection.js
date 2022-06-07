@@ -18,6 +18,7 @@ let geoconnexApp = new Vue({
             values: [],
             loading: true,
             currentLoading: "",
+            geometriesMessage: "",
             errorMsg: "",
             errored: false,
             geoconnexUrl: "https://reference.geoconnex.us/collections",
@@ -141,7 +142,7 @@ let geoconnexApp = new Vue({
         let vue = this;
         let itemsWithGeo = [];
         for (let collection of vue.collections){
-          console.log(`Loading geometry for ${collection.id}`);
+          vue.geometriesMessage = `Loading geometries from collection: ${collection.id}`;
           const url = `${vue.geoconnexUrl}/${collection.id}/${vue.apiQueryYesGeo}`;
           let response = await vue.getFromCacheOrFetch(url);
           for (let feature of response.features){

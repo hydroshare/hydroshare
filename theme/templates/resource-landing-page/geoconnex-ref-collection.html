@@ -72,7 +72,7 @@
                             <button v-if="resSpatialType && !hasExtentSearch" :disabled="!geometriesAreLoaded" type="button" @click="searchUsingSpatialExtent" class="btn btn-success btn-xs">
                                 Search map using Spatial Extent
                             </button>
-                            <div v-if="!geometriesAreLoaded">Mapping geometries are still loading...</div>
+                            <div v-if="!geometriesAreLoaded">${geometriesMessage}</div>
                             <button v-if="hasSearches" type="button" @click="clearMappedSearches" class="btn btn-success btn-xs">
                                 Clear searches from the map
                             </button>
