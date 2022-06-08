@@ -702,9 +702,7 @@ def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwri
 
 @shared_task
 def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
-
     from hs_core.views.utils import rename_irods_file_or_folder_in_django
-
     res = utils.get_resource_by_shortkey(res_id)
     istorage = res.get_irods_storage()
     res_files = []
