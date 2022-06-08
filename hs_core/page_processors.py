@@ -4,7 +4,6 @@ import json
 
 from dateutil import parser
 from django.conf import settings
-from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
@@ -53,12 +52,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session["file_type_error"]
 
     content_model = page.get_content_model()
-    # whether the user has permission to view this resource
+
+    show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
+    if not show_content_files and user.is_authenticated():
+        show_content_files = user.uaccess.can_view_resource(content_model)
+
     can_view = content_model.can_view(request)
-    if not can_view:
-        if user.is_authenticated():
-            raise PermissionDenied()
-        return redirect_to_login(request.path)
+    if not can_view and not show_content_files:
+        raise PermissionDenied()
 
     discoverable = content_model.raccess.discoverable
     validation_error = None
@@ -103,13 +104,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     bag_url = content_model.bag_url
 
-    if user.is_authenticated():
-        show_content_files = user.uaccess.can_view_resource(content_model)
-    else:
-        # if anonymous user getting access to a private resource (since resource is discoverable),
-        # then don't show content files unless private link sharing is enabled
-        show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
-
     rights_allow_copy = rights_allows_copy(content_model, user)
 
     qholder = content_model.get_quota_holder()
@@ -123,6 +117,12 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
     topics = list(topics)  # force QuerySet evaluation
     content_model.update_relation_meta()
+    creators = content_model.metadata.creators.all()
+    has_active_creators = False
+    for creator in creators:
+        if creator.is_active:
+            has_active_creators = True
+            break
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -183,7 +183,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'title': title,
                    'readme': readme,
                    'abstract': abstract,
-                   'creators': content_model.metadata.creators.all(),
+                   'creators': creators,
+                   'has_active_creators': has_active_creators,
                    'contributors': content_model.metadata.contributors.all(),
                    'temporal_coverage': temporal_coverage_data_dict,
                    'spatial_coverage': spatial_coverage_data_dict,
@@ -277,7 +278,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'cm': content_model,
                'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
-               'creators': content_model.metadata.creators.all(),
+               'creators': creators,
+               'has_active_creators': has_active_creators,
                'title': content_model.metadata.title,
                'readme': readme,
                'contributors': content_model.metadata.contributors.all(),

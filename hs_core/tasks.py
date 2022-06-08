@@ -35,7 +35,28 @@ from hs_core.models import BaseResource, TaskNotification
 from hs_core.enums import RelationTypes
 from theme.utils import get_quota_message
 from hs_collection_resource.models import CollectionDeletedResource
+from hs_file_types.models import (
+    FileSetLogicalFile,
+    GenericLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
+    ModelProgramLogicalFile,
+    ModelInstanceLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile
+)
 
+FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
+                 "FileSetLogicalFile": FileSetLogicalFile,
+                 "GeoRasterLogicalFile": GeoRasterLogicalFile,
+                 "NetCDFLogicalFile": NetCDFLogicalFile,
+                 "GeoFeatureLogicalFile": GeoFeatureLogicalFile,
+                 "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
+                 "TimeSeriesLogicalFile": TimeSeriesLogicalFile,
+                 "ModelProgramLogicalFile": ModelProgramLogicalFile,
+                 "ModelInstanceLogicalFile": ModelInstanceLogicalFile
+                 }
 
 # Pass 'django' into getLogger instead of __name__
 # for celery tasks (as this seems to be the
@@ -119,7 +140,8 @@ def manage_task_nightly():
                                                    USERNAME=settings.CROSSREF_LOGIN_ID,
                                                    PASSWORD=settings.CROSSREF_LOGIN_PWD,
                                                    DOI_BATCH_ID=res.short_id,
-                                                   TYPE='result'))
+                                                   TYPE='result'),
+                                    verify=False)
             root = ElementTree.fromstring(response.content)
             rec_cnt_elem = root.find('.//record_count')
             failure_cnt_elem = root.find('.//failure_count')
@@ -307,6 +329,11 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
         head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
         out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
+        # in the case of user provided zip file name, out_with_folder path may not end with
+        # aggregation file name
+        aggr_filename = os.path.basename(input_path)
+        if not out_with_folder.endswith(aggr_filename):
+            out_with_folder = os.path.join(os.path.dirname(out_with_folder), aggr_filename)
         istorage.copyFiles(input_path, out_with_folder)
         if not aggregation:
             if '/data/contents/' in input_path:
@@ -472,8 +499,8 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
             # element is copied over to this new version resource, needs to delete this element so
             # it can be created to link to its original resource correctly
             new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
-
-        new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf, value=ori_res.get_citation())
+        new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf,
+                                        value=ori_res.get_citation(includePendingMessage=False))
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
@@ -660,9 +687,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
 def resource_debug(resource_id):
     """Update web services hosted by GeoServer and HydroServer.
     """
-    from hs_core.hydroshare.utils import get_resource_by_shortkey
-
-    resource = get_resource_by_shortkey(resource_id)
+    resource = utils.get_resource_by_shortkey(resource_id)
     from hs_core.management.utils import check_irods_files
     return check_irods_files(resource, log_errors=False, return_errors=True)
 
@@ -673,6 +698,26 @@ def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwri
     from hs_core.views.utils import unzip_file
     user = User.objects.get(pk=user_pk)
     unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata)
+
+
+@shared_task
+def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
+    from hs_core.views.utils import rename_irods_file_or_folder_in_django
+    res = utils.get_resource_by_shortkey(res_id)
+    istorage = res.get_irods_storage()
+    res_files = []
+    file_type_obj = FILE_TYPE_MAP[file_type]
+    aggregation = file_type_obj.objects.get(id=file_type_id)
+    res_files.extend(aggregation.files.all())
+    orig_aggregation_name = aggregation.aggregation_name
+    for file in res_files:
+        tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
+        istorage.moveFile(file.storage_path, tgt_full_path)
+        rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
+    new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
+    res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
+                                                    new_path=new_aggregation_name)
+    return res.get_absolute_url()
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
@@ -690,6 +735,15 @@ def monthly_group_membership_requests_cleanup():
     """
     two_months_ago = datetime.today() - timedelta(days=60)
     GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
+
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=0))
+def daily_innactive_group_requests_cleanup():
+    """
+    Redeem group membership requests for innactive users
+    """
+    GroupMembershipRequest.objects.filter(request_from__is_active=False).update(redeemed=True)
+    GroupMembershipRequest.objects.filter(invitation_to__is_active=False).update(redeemed=True)
 
 
 @task_postrun.connect

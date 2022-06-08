@@ -11,6 +11,7 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
 from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
+from hs_core.hydroshare import delete_resource_file
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
@@ -20,7 +21,7 @@ from hs_core.views import utils as view_utils
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
-    add_reference_url_to_resource, edit_reference_url_in_resource
+    add_reference_url_to_resource, edit_reference_url_in_resource, zip_by_aggregation_file
 
 from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
 
@@ -278,7 +279,7 @@ def data_store_folder_zip(request, res_id=None):
 
     remove_original = resolve_request(request).get('remove_original_after_zip', None)
     bool_remove_original = True
-    if remove_original:
+    if remove_original is not None:
         remove_original = str(remove_original).strip().lower()
         if remove_original == 'false':
             bool_remove_original = False
@@ -301,9 +302,78 @@ def data_store_folder_zip(request, res_id=None):
     )
 
 
+def zip_aggregation_file(request, res_id=None):
+    """
+    Zip requested aggregation into a zip file in hydroshareZone or any federated zone
+    used for HydroShare resource backend store. It is invoked by an AJAX call and returns
+    json object that holds the created zip file name if it succeeds, and an empty string
+    if it fails. The AJAX request must be a POST request with input data passed in for
+    res_id, aggregation_path, and output_zip_file_name where
+    aggregation_path  is the relative path under res_id/data/contents representing an aggregation to be zipped,
+    output_zip_file_name is the file name only with no path of the generated zip file name.
+    """
+    res_id = request.POST.get('res_id', res_id)
+    if res_id is None:
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
+    res_id = str(res_id).strip()
+    try:
+        resource, _, user = authorize(request, res_id,
+                                      needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+
+    if resource.resource_type != "CompositeResource":
+        return HttpResponse('Bad request - resource is not a Composite Resource type',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    aggregation_path = resolve_request(request).get('aggregation_path', None)
+
+    try:
+        aggregation_path = _validate_path(aggregation_path, 'aggregation_path')
+    except ValidationError as ex:
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
+
+    output_zip_fname = resolve_request(request).get('output_zip_file_name', None)
+    if output_zip_fname is None:
+        return HttpResponse('Bad request - output_zip_fname is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
+    output_zip_fname = str(output_zip_fname).strip()
+    if not output_zip_fname:
+        return HttpResponse('Bad request - output_zip_fname cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if output_zip_fname.find('/') >= 0:
+        return HttpResponse('Bad request - output_zip_fname cannot contain /',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        output_zip_fname, size = zip_by_aggregation_file(user, res_id, aggregation_path, output_zip_fname)
+    except SessionException as ex:
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except DRF_ValidationError as ex:
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+
+    return_object = {'name': output_zip_fname,
+                     'size': size,
+                     'type': 'zip'}
+
+    return HttpResponse(
+        json.dumps(return_object),
+        content_type="application/json"
+    )
+
+
 @api_view(['POST'])
 def data_store_folder_zip_public(request, pk):
     return data_store_folder_zip(request, res_id=pk)
+
+
+@api_view(['POST'])
+def zip_aggregation_file_public(request, pk):
+    return zip_aggregation_file(request, res_id=pk)
 
 
 def data_store_folder_unzip(request, **kwargs):
@@ -657,9 +727,6 @@ def data_store_move_to_folder(request, pk=None):
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    # whether to treat request as atomic: skip overwrites for valid request
-    atomic = request.POST.get('atomic', 'false') == 'true'  # False by default
-
     pk = str(pk).strip()
     try:
         resource, _, user = authorize(request, pk,
@@ -671,7 +738,9 @@ def data_store_move_to_folder(request, pk=None):
 
     tgt_path = resolve_request(request).get('target_path', None)
     src_paths = resolve_request(request).get('source_paths', None)
-
+    file_override = resolve_request(request).get('file_override', False)
+    if not isinstance(file_override, bool):
+        file_override = True if str(file_override).lower() == 'true' else False
     try:
         tgt_path = _validate_path(tgt_path, 'tgt_path', check_path_empty=False)
     except ValidationError as ex:
@@ -696,7 +765,7 @@ def data_store_move_to_folder(request, pk=None):
             return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     valid_src_paths = []
-    skipped_tgt_paths = []
+    override_tgt_paths = []
 
     for src_path in src_paths:
         src_storage_path = os.path.join(resource.root_path, src_path)
@@ -723,16 +792,25 @@ def data_store_move_to_folder(request, pk=None):
         tgt_overwrite = os.path.join(tgt_storage_path, base)
         if not istorage.exists(tgt_overwrite):
             valid_src_paths.append(src_path)  # partly qualified path for operation
-        else:  # skip pre-existing objects
-            skipped_tgt_paths.append(os.path.join(tgt_short_path, base))
+        else:
+            override_tgt_paths.append(os.path.join(tgt_short_path, base))
+            if file_override:
+                valid_src_paths.append(src_path)
 
-    if skipped_tgt_paths:
-        if atomic:
-            message = 'move would overwrite {}'.format(', '.join(skipped_tgt_paths))
-            return HttpResponse(message, status=status.HTTP_400_BAD_REQUEST)
-
-    # if not atomic, then try to move the files that don't have conflicts
-    # stop immediately on error.
+    if override_tgt_paths:
+        if not file_override:
+            message = 'move would overwrite {}'.format(', '.join(override_tgt_paths))
+            return HttpResponse(message, status=status.HTTP_300_MULTIPLE_CHOICES)
+        # delete conflicting files so that move can succeed
+        for override_tgt_path in override_tgt_paths:
+            override_storage_tgt_path = os.path.join(resource.root_path, 'data', 'contents', override_tgt_path)
+            if irods_path_is_directory(istorage, override_storage_tgt_path):
+                # folder rather than a data object, just delete the folder
+                remove_folder(user, pk, os.path.join('data', 'contents', override_tgt_path))
+            else:
+                # data object or file
+                delete_resource_file(pk, override_tgt_path, user)
+        resource.cleanup_aggregations()
 
     try:
         move_to_folder(user, pk, valid_src_paths, tgt_path)
@@ -742,10 +820,6 @@ def data_store_move_to_folder(request, pk=None):
         return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
-
-    if skipped_tgt_paths:  # add information on skipped steps
-        message = '[Warn] skipped move to existing {}'.format(', '.join(skipped_tgt_paths))
-        return_object['additional_status'] = message
 
     return HttpResponse(
         json.dumps(return_object),

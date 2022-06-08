@@ -1908,6 +1908,16 @@ a.tag:hover {
     width: 360px;
   }
 }
+@media (min-width: 1440px) {
+  /* override bootstrap default container width for large screens */
+  .container{
+	width: 1440px;
+  }
+  .owl-stage {
+	  justify-content: space-around;
+	  margin:auto;
+  }
+}
 
 .resource-search {
 	position: relative;
@@ -2069,6 +2079,11 @@ table.user-scope tr {
 .access-table tbody > tr {
     display: table-row !important;
 }
+
+.access-table tbody > tr.is-group {
+    background-color: #093e541f;
+}
+
 
 #templateRow {
 	display:none !important;
@@ -2750,16 +2765,13 @@ span.you-flag {
     display: none;
 }
 
-#items-discovered, #item-selectors {
-	width: calc(100% - 2px) !important;		/* Makes up for border width */
-}
-
 .resource-custom-table {
 	font-size: 14px;
 	border: 1px solid #ddd !important;
 	margin-bottom: 10px !important;
 	border-top-right-radius: 4px;
 	border-top-left-radius: 4px;
+	width: calc(100% - 2px) !important;     /* Makes up for border width */
 }
 
 #collected-by-table {
@@ -2976,6 +2988,7 @@ span.you-flag {
 	padding-bottom: 5px;
 	padding-right: 32px;
 	margin: 0;
+	word-wrap: break-word;
 }
 
 .noselect {
@@ -3340,7 +3353,7 @@ span.you-flag {
 
 /* =================================== */
 .steps-container {
-  display: grid;
+  display: flex;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
 }
@@ -3657,12 +3670,9 @@ input.no-style {
 }
 
 div.group-thumbnails {
-	display: flex;
-	flex-wrap: wrap;
-}
-
-.group-container {
-    margin-bottom: 20px;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(34rem, 100%), 1fr));
+	gap: 2rem;
 }
 
 .group-thumbnail img {
@@ -3678,7 +3688,7 @@ div.group-thumbnails {
 }
 
 .spacer {
-	flex: 1 1 auto;
+	flex: 1 2 auto;
 }
 
 .users-joined {
@@ -3687,9 +3697,13 @@ div.group-thumbnails {
 
 .group-description {
     margin-top:20px;
-	max-height:250px;
+	flex: 2 1 150px;
 	overflow-y: auto;
 	word-break: break-word;
+}
+
+.group-purpose {
+	overflow-y: auto;
 }
 
 .group-name {
@@ -3857,6 +3871,7 @@ div.group-thumbnails {
 
 .table-members-list {
     width: 100%;
+	table-layout: fixed;
 }
 
 .table-members-list button.dropdown-toggle {
@@ -3865,6 +3880,11 @@ div.group-thumbnails {
 
 .table-members-list tr > td:first-child {
     width: 40px;
+}
+
+.table-members-list .explanation{
+    overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .table-members-list tr > td {
@@ -3939,6 +3959,12 @@ div.group-add-photo {
     border: 1px solid #DDD;
     padding: 10px;
     border-radius: 4px;
+	word-wrap: anywhere;
+}
+.request-block .explanation{
+	max-height: 100px;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .request-block .activity-block {
@@ -4267,6 +4293,11 @@ ul#fb-files-container .hs-upload-indicator {
 
 .selection-menu li.disabled, #fb-inner-controls button.disabled > span {
 	color: #b3b3b3;
+	pointer-events:none;
+}
+
+#fb-files-container li.deleting {
+	background: rgba(252, 161, 161, 0.14);
 	pointer-events:none;
 }
 

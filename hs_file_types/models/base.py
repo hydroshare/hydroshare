@@ -485,7 +485,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         if not self._is_valid_element(element_model_name):
             raise ValidationError("Metadata element type:%s is not one of the "
                                   "supported metadata elements for %s."
-                                  % element_model_name, type(self))
+                                  % (element_model_name, type(self)))
 
         unsupported_element_error = "Metadata element type:%s is not supported." \
                                     % element_model_name
@@ -934,7 +934,7 @@ class AbstractLogicalFile(models.Model):
         return res_file, folder_path
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Returns one specific file as the primary file from the list of resource
         files *resource_files*. A file is a primary file which can be used for creating a
         file type (aggregation). Subclasses must implement this.
@@ -1038,8 +1038,8 @@ class AbstractLogicalFile(models.Model):
     @property
     def supports_zip(self):
         """a folder containing resource file(s) that are part of this logical file type
-        is not allowed to be zipped"""
-        return False
+        is allowed to be zipped"""
+        return True
 
     @property
     def supports_delete_folder_on_zip(self):
@@ -1055,7 +1055,7 @@ class AbstractLogicalFile(models.Model):
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
 
-        primary_file = self.get_primary_resouce_file(self.files.all())
+        primary_file = self.get_primary_resource_file(self.files.all())
         if not primary_file:
             return ""
         return primary_file.short_path
@@ -1192,7 +1192,7 @@ class AbstractLogicalFile(models.Model):
             element_args.pop('content_type')
             element_args.pop('id')
             element_args.pop('object_id')
-            copy_of_logical_file.metadata.create_element(element.term, **element_args)
+            copy_of_logical_file.metadata.create_element(element.__class__.__name__, **element_args)
 
         return copy_of_logical_file
 
@@ -1570,7 +1570,7 @@ class FileTypeContext(object):
 
         if self.is_temp_file:
             # need to get the file from irods to temp dir
-            self.temp_file = get_file_from_irods(self.res_file)
+            self.temp_file = get_file_from_irods(resource=self.resource, file_path=self.res_file.storage_path)
             self.temp_dir = os.path.dirname(self.temp_file)
         return self  # control returned to the caller
 

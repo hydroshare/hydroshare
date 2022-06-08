@@ -18,7 +18,7 @@
         <div class="alert alert-warning alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <strong>This resource has been formally published. </strong>
-            <span>You can edit some of the metadata elements for published resources, but you cannot change the followings:</span>
+            <span>You can edit some of the metadata elements for published resources, but you cannot change the following:</span>
             <ul>
                 <li>Title</li>
                 <li>Authors</li>
@@ -198,7 +198,7 @@
                      </ul>
                 </div>
             </span>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>
+            <script type="text/javascript" src="{% static 'js/hs-vue/relevant-tools.js' %}"></script>
         </div>
         <hr>
     {% else %}
@@ -259,7 +259,7 @@
             // contents here are required by topics.js
             const topics_from_page = JSON.parse("{{ topics_json }}");
         </script>
-        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
+        <script src="{% static 'js/dual-listbox.js' %}"></script>
 
 
         {% if not cm.raccess.published %}
@@ -315,15 +315,15 @@
 {% if cm.resource_type == "ToolResource" and cm.metadata.approved %}
     <div class="col-xs-12">
         <div id="app-approved" class="flex" style="align-items: center">
-            <img src="/static/img/approved_app.png">
+            <img src="{% static 'img/approved_app.png' %}">
             <span>This WebApp resource has been approved by HydroShare admin.</span>
         </div>
     </div>
 {% endif %}
 
 {% block extra_js %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/title-builder.css">
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
+    <link rel="stylesheet" href="{% static 'css/title-builder.css' %}">
+    <link rel="stylesheet" href="{% static 'css/vue-mover.css' %}">
 
     <style>
         [v-cloak] {
@@ -335,6 +335,6 @@
         }
     </style>
     {#        vue-mover uses Sortable.min.js#}
-    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
-    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
+    <script src="{% static 'js/Sortable.min.js' %}"></script>
+    <script src="{% static 'js/vue-mover.js' %}"></script>
 {% endblock %}

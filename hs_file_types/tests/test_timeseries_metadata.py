@@ -1,22 +1,35 @@
 import os
 
-from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
-
+from django.test import TransactionTestCase
 from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
-from hs_app_timeseries.models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
 
-from hs_file_types.models import TimeSeriesLogicalFile, TimeSeriesFileMetaData
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
-from hs_file_types.models.timeseries import CVVariableType, CVVariableName, CVSpeciation, \
-    CVSiteType, CVElevationDatum, CVMethodType, CVMedium, CVUnitsType, CVStatus, \
-    CVAggregationStatistic
+from hs_file_types.models.timeseries import (
+    TimeSeriesLogicalFile,
+    TimeSeriesFileMetaData,
+    Site,
+    VariableTimeseries,
+    Method,
+    ProcessingLevel,
+    TimeSeriesResult,
+    CVVariableType,
+    CVVariableName,
+    CVSpeciation,
+    CVSiteType,
+    CVElevationDatum,
+    CVMethodType,
+    CVMedium,
+    CVUnitsType,
+    CVStatus,
+    CVAggregationStatistic,
+)
 from .utils import assert_time_series_file_type_metadata, CompositeResourceTestMixin
 
 
@@ -44,7 +57,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.sqlite_invalid_file_name)
 
         self.odm2_csv_file_name = 'ODM2_Multi_Site_One_Variable_Test.csv'
-        self.odm2_csv_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_csv_file_name)
+        self.odm2_csv_file = 'hs_file_types/tests/data/{}'.format(self.odm2_csv_file_name)
 
     def test_create_aggregation_from_sqlite_file_1(self):
         # here we are using a valid sqlite file for setting it
@@ -399,7 +412,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         var_def = 'Concentration of oxygen dissolved in water.'
         variable_data = {'variable_definition': var_def}
-        logical_file.metadata.update_element('Variable', variable.id, **variable_data)
+        logical_file.metadata.update_element('Variabletimeseries', variable.id, **variable_data)
         variable = logical_file.metadata.variables.filter(variable_code='USU36').first()
         self.assertEqual(variable.variable_definition, var_def)
         self.assertEqual(variable.variable_name, 'Temperature')
@@ -508,7 +521,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be Site metadata objects
         self.assertTrue(Site.objects.count() > 0)
         # there should be Variable metadata objects
-        self.assertTrue(Variable.objects.count() > 0)
+        self.assertTrue(VariableTimeseries.objects.count() > 0)
         # there should be Method metadata objects
         self.assertTrue(Method.objects.count() > 0)
         # there should be ProcessingLevel metadata objects
@@ -548,7 +561,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no Site metadata objects
         self.assertTrue(Site.objects.count() == 0)
         # there should be no Variable metadata objects
-        self.assertTrue(Variable.objects.count() == 0)
+        self.assertTrue(VariableTimeseries.objects.count() == 0)
         # there should be no Method metadata objects
         self.assertTrue(Method.objects.count() == 0)
         # there should be no ProcessingLevel metadata objects
@@ -644,7 +657,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no Site metadata objects
         self.assertTrue(Site.objects.count() == 0)
         # there should be no Variable metadata objects
-        self.assertTrue(Variable.objects.count() == 0)
+        self.assertTrue(VariableTimeseries.objects.count() == 0)
         # there should be no Method metadata objects
         self.assertTrue(Method.objects.count() == 0)
         # there should be no ProcessingLevel metadata objects
@@ -957,6 +970,10 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.file_folder, file_folder_path)
         self.assertTrue(isinstance(logical_file, TimeSeriesLogicalFile))
         self.assertTrue(logical_file.metadata, TimeSeriesFileMetaData)
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.sqlite file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
 
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -979,6 +996,10 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(sqlite_res_file.logical_file_type_name, "TimeSeriesLogicalFile")
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
         logical_file = csv_res_file.logical_file
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.sqlite file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
 
         # test that both csv and sqlite files of the logical file are in a folder
         for res_file in logical_file.files.all():
@@ -1073,7 +1094,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no Site metadata objects
         self.assertTrue(Site.objects.count() == 0)
         # there should be no Variable metadata objects
-        self.assertTrue(Variable.objects.count() == 0)
+        self.assertTrue(VariableTimeseries.objects.count() == 0)
         # there should be no Method metadata objects
         self.assertTrue(Method.objects.count() == 0)
         # there should be no ProcessingLevel metadata objects
@@ -1146,7 +1167,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def _get_invalid_csv_file(self, invalid_csv_file_name):
-        invalid_csv_file = 'hs_app_timeseries/tests/{}'.format(invalid_csv_file_name)
+        invalid_csv_file = 'hs_file_types/tests/data/{}'.format(invalid_csv_file_name)
         return invalid_csv_file
 
     def test_main_file(self):

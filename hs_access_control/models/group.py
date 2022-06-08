@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
 from hs_access_control.models.community import Community
+from sorl.thumbnail import ImageField as TumbnailImageField
 from theme.utils import get_upload_path_group
 
 
@@ -33,6 +34,7 @@ class GroupMembershipRequest(models.Model):
     invitation_to = models.ForeignKey(User, null=True, blank=True, related_name='iu2gmrequest')
     group_to_join = models.ForeignKey(Group, related_name='g2gmrequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
+    explanation = models.TextField(null=True, blank=True, max_length=300)
     redeemed = models.BooleanField(default=False)
 
 
@@ -75,10 +77,14 @@ class GroupAccess(models.Model):
                                        editable=False,
                                        help_text='whether group membership can be auto approved')
 
+    requires_explanation = models.BooleanField(default=False,
+                                                        editable=False,
+                                                        help_text='whether membership requests include explanation')
+
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
-    picture = models.ImageField(upload_to=get_upload_path_group, null=True, blank=True)
+    picture = TumbnailImageField(upload_to=get_upload_path_group, null=True, blank=True)
 
     ####################################
     # group membership: owners, edit_users, view_users are parallel to those in resources
