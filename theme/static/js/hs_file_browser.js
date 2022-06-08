@@ -606,7 +606,7 @@ function paste(destPath) {
             let item = $(this);
             const hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
             const file_type_id = item.attr("data-logical-file-id");
-            calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, destPath.join('/')));
+            calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, destPath.join('/'), false));
             is_async_celery_task = true;
         }
         else {
@@ -617,7 +617,7 @@ function paste(destPath) {
     });
 
     if (localSources.length) {
-        calls.push(move_to_folder_ajax_submit(localSources, destPath.join('/')));
+        calls.push(move_to_folder_ajax_submit(localSources, destPath.join('/'), false));
     }
 
     // Wait for the calls to finish to get new folder structure if the task in the call is not done
@@ -2254,6 +2254,45 @@ $(document).ready(function () {
             $.when.apply($, calls).done(afterRequestSuccess);
             $.when.apply($, calls).fail(afterRequestFail);
         }
+        return false;
+    });
+
+    // User clicked Proceed button on confirm whether to override files warning dialog - need to override files
+    $("#btn-file-override-proceed").click(function () {
+        var calls = [];
+        var source = JSON.parse($("#source_paths").val());
+        var target = $("#target_path").val();
+        calls.push(move_to_folder_ajax_submit(source, target, true));
+        // Disable the Cancel button until request has finished
+        $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
+        function afterRequest() {
+            $('#btn-file-override-proceed').parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            $("#move-override-confirm-dialog").modal('hide');
+            refreshFileBrowser();
+        }
+
+        $.when.apply($, calls).done(afterRequest);
+        $.when.apply($, calls).fail(afterRequest);
+        return false;
+    });
+
+    // User clicked Proceed button on confirm whether to override files warning dialog - need to override files
+    $("#btn-aggr-file-override-proceed").click(function () {
+        var calls = [];
+        var file_type = $("#file_type").val();
+        var file_type_id = $("#file_type_id").val();
+        var target_path = $("#target_path").val();
+        calls.push(move_virtual_folder_ajax_submit(file_type, file_type_id, target_path, true));
+        // Disable the Cancel button until request has finished
+        $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
+        function afterRequest() {
+            $('#btn-aggr-file-override-proceed').parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            $("#move-aggr-override-confirm-dialog").modal('hide');
+            refreshFileBrowser();
+        }
+
+        $.when.apply($, calls).done(afterRequest);
+        $.when.apply($, calls).fail(afterRequest);
         return false;
     });
 

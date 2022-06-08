@@ -714,6 +714,61 @@
     </div>
 </div>
 
+    <div class="modal fade in" id="move-override-confirm-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="move-override-confirm" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="move-override-confirm-title">Confirm whether to override existing files</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="resp-message"></p>
+                    <p>
+                        click <strong>Proceed</strong> to confirm to override files. Otherwise, click <strong>Cancel</strong>.
+                    </p>
+                    <input type="hidden" id="source_paths" value=""/>
+                    <input type="hidden" id="target_path" value=""/>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btn-file-override-proceed" class="btn btn-default"
+                            data-dismiss="modal">Proceed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade in" id="move-aggr-override-confirm-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="move-aggr-override-confirm" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="move-override-confirm-title">Confirm whether to override existing files</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="aggr-move-resp-message"></p>
+                    <p>
+                        click <strong>Proceed</strong> to confirm to override files. Otherwise, click <strong>Cancel</strong>.
+                    </p>
+                    <input type="hidden" id="file_type" value=""/>
+                    <input type="hidden" id="file_type_id" value=""/>
+                    <input type="hidden" id="target_path" value=""/>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btn-aggr-file-override-proceed" class="btn btn-default"
+                            data-dismiss="modal">Proceed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade in" id="validate-reference-url-dialog" tabindex="-1" role="dialog"
          aria-labelledby="validate-reference-url" aria-hidden="false">
         <div class="modal-dialog">
