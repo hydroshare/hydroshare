@@ -209,8 +209,7 @@ let geoconnexApp = new Vue({
         L.control.fullscreen({
           position: 'topleft',
           title: 'Enter fullscreen',
-          titleCancel: 'Exit Fullscreen',
-          content: `<i class="fa fa-expand fa-2x" aria-hidden="true"></i>`
+          titleCancel: 'Exit Fullscreen'
         }).addTo(vue.map);
 
         // TODO: have geoconnex button actually do something
