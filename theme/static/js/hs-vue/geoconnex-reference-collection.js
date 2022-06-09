@@ -385,10 +385,13 @@ let geoconnexApp = new Vue({
         return feature;
       },
       async getOnlyRelationItems(){
+        // Used in resource VIEW mode, when no new items will be added
         let vue = this;
         for (let relation of vue.relations){
-          let feature = await vue.fetchReferenceItem(relation.value);
-          vue.items.push(vue.getFeatureProperties(feature));
+          if (this.isUrl(relation.value)){
+            let feature = await vue.fetchReferenceItem(relation.value);
+            vue.items.push(vue.getFeatureProperties(feature));
+          }
         }
       },
       async getItemsIn(collectionId){
