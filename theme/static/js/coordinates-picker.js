@@ -224,7 +224,7 @@ function initMapFileType() {
         position: 'topright',
         title: 'Toggle fullscreen view',
         titleCancel: 'Exit Fullscreen',
-        content: `<i class="fa-expand"></i>`
+        content: `<i class="fa fa-expand fa-2x" aria-hidden="true"></i>`
       }).addTo(coordinatesPicker);
 
       // show the default layers at start

@@ -210,8 +210,35 @@ let geoconnexApp = new Vue({
           position: 'topleft',
           title: 'Enter fullscreen',
           titleCancel: 'Exit Fullscreen',
-          content: `<i class="fa-expand"></i>`
+          content: `<i class="fa fa-expand fa-2x" aria-hidden="true"></i>`
         }).addTo(vue.map);
+
+        // TODO: have geoconnex button actually do something
+        L.Control.GeoconnexButton = L.Control.extend({
+          onAdd: function(map) {
+              var geoButton = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+
+              geoButton.innerHTML = `<a role="button"><i class="fa fa-connectdevelop fa-3x"></i></a>`
+
+              L.DomEvent.on(geoButton, 'click', ()=>{
+                alert("Let's do a geoconnex search...")
+               });
+      
+              return geoButton;
+          },
+      
+          onRemove: function(map) {
+            L.DomEvent.off()
+          }
+      });
+      
+      L.control.watermark = function(opts) {
+          return new L.Control.GeoconnexButton(opts);
+      }
+      
+      L.control.watermark({
+        position: 'bottomleft'
+      }).addTo(vue.map);
 
         // show the default layers at start
         vue.map.addLayer(terrain);
