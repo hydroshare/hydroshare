@@ -1,6 +1,11 @@
 let counter = 0;
 // Okay, so we want to do the bulk load, but we want to give some feedback...can we do bulk by collection and provide feedback for that?
-// also if select a ref item then search, then try to remove it, it stays on the map
+//TODO:  if select a ref item then search using a boundary that contains the selected item, then try to remove it, it stays on the map
+// if write custom in text box, it fails on view (nonedit) mode
+// Mauriel: schema-based metadata
+// additional picker integrated into current extent map?
+// popup window with progression?
+// list text select
 let geoconnexApp = new Vue({
     el: '#app-geoconnex',
     delimiters: ['${', '}'],
@@ -276,7 +281,8 @@ let geoconnexApp = new Vue({
 
           // handle zooming
           if(fly){
-            vue.map.flyToBounds(leafletLayer.getBounds());
+            vue.map.fitBounds(leafletLayer.getBounds());
+            // vue.map.flyToBounds(leafletLayer.getBounds());
           }
 
         } catch (e) {
