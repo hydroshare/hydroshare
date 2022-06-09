@@ -18,7 +18,6 @@ class TestResourceTypes(APITestCase):
                                'ModelInstanceResource',
                                'ToolResource',
                                'SWATModelInstanceResource',
-                               'ScriptResource',
                                'CollectionResource',
                                'MODFLOWModelInstanceResource',
                                'CompositeResource'}

@@ -56,10 +56,6 @@ class TestResourceTypeFileTypes(TestCase):
         resp_json = self._make_request("MODFLOWModelInstanceResource")
         self.assertEqual(resp_json['file_types'], '".*"')
 
-        # test for ScriptResource
-        resp_json = self._make_request("ScriptResource")
-        self.assertEqual(resp_json['file_types'], '[".r", ".py", ".m"]')
-
         # test for SWATModelInstanceResource
         resp_json = self._make_request("SWATModelInstanceResource")
         self.assertEqual(resp_json['file_types'], '".*"')
