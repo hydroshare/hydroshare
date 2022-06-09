@@ -4,21 +4,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
-from hs_core.hydroshare import set_dirty_bag_flag
-from hs_core.models import BaseResource
-
-
-def fix_missing_license_statement(apps, schema_editor):
-    for res in BaseResource.objects.all().iterator():
-        res = res.get_content_model()
-        if res.metadata is None:
-            continue
-        rights = res.metadata.rights
-        if len(rights.statement.strip()) == 0:
-            rights.statement = rights.url
-            rights.save()
-            set_dirty_bag_flag(res)
-
 
 class Migration(migrations.Migration):
 
@@ -32,5 +17,4 @@ class Migration(migrations.Migration):
             name='statement',
             field=models.TextField(),
         ),
-        migrations.RunPython(fix_missing_license_statement),
     ]
