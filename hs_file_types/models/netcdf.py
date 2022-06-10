@@ -428,8 +428,25 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
         root_div = html_tags.div("{% load crispy_forms_tags %}")
         with root_div:
+            if not self.originalCoverage:
+                with html_tags.div(cls="alert alert-warning alert-dismissible", role="alert"):
+                    with html_tags.div():
+                        html_tags.p("NetCDF file missing spatial coverage information:")
+                        with html_tags.span(
+                                "HydroShare uses GDAL to extract spatial coverage information from NetCDF files. "
+                                "GDAL’s NetCDF driver follows the CF-1 Convention defined by UNIDATA. More information "
+                                "about the GDAL NetCDF Driver is located"):
+                            html_tags.a("here.", target="_blank",
+                                        href="https://gdal.org/drivers/raster/netcdf.html#georeference")
+                            with html_tags.span(
+                                    "You can verify a NetCDF file’s compliance with the CF-1 and other standards using"
+                            ):
+                                html_tags.a("NASA’s Metadata Compliance checker.", target="_blank",
+                                            href="https://podaac-tools.jpl.nasa.gov/mcc/")
+
             self.get_update_netcdf_file_html_form()
             super(NetCDFFileMetaData, self).get_html_forms()
+
             with html_tags.div():
                 with html_tags.div(cls="content-block", id="original-coverage-filetype"):
                     with html_tags.form(id="id-origcoverage-file-type",
