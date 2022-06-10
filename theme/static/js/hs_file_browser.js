@@ -1776,6 +1776,25 @@ function onUploadSuccess(file, response) {
 }
 
 $(document).ready(function () {
+    // Download All method
+    $("#btn-download-all, #download-bag-btn").click(function (event) {
+        $(event.currentTarget).toggleClass("disabled", true);
+        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
+
+        if (!bagUrl) {
+            return; // If no url, it means download will be triggered from Agreement modal
+        }
+
+        $.ajax({
+            type: "GET",
+            url: bagUrl,
+            success: function (task) {
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+                $(event.currentTarget).toggleClass("disabled", false);
+            }
+        });
+    });
     if (!$("#hs-file-browser").length) {
         return;
     }
@@ -2697,26 +2716,6 @@ $(document).ready(function () {
 
         $.when.apply($, calls).fail(function () {
             refreshFileBrowser();
-        });
-    });
-
-    // Download All method
-    $("#btn-download-all, #download-bag-btn").click(function (event) {
-        $(event.currentTarget).toggleClass("disabled", true);
-        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
-
-        if (!bagUrl) {
-            return; // If no url, it means download will be triggered from Agreement modal
-        }
-
-        $.ajax({
-            type: "GET",
-            url: bagUrl,
-            success: function (task) {
-                notificationsApp.registerTask(task);
-                notificationsApp.show();
-                $(event.currentTarget).toggleClass("disabled", false);
-            }
         });
     });
 
