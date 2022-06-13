@@ -100,7 +100,7 @@ urlpatterns = [
         name='get_update_science_metadata_elements'),
 
     # Update key-value metadata
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/scimeta/custom/$',
+    url(r'^resource/(?P<id>[0-9a-f-]+)/scimeta/custom/$',
         core_views.update_key_value_metadata_public,
         name='update_custom_metadata'),
 

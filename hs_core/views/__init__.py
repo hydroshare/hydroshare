@@ -6,6 +6,7 @@ from sorl.thumbnail import ImageField as TumbnailImageField, get_thumbnail
 
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
@@ -404,23 +405,29 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource", type=openapi.TYPE_STRING)
 
+
+@swagger_auto_schema(method='get', operation_description="Gets all key/value metadata for the resource",
+                     responses={200: "key/value metadata"}, manual_parameters=[res_id])
+@swagger_auto_schema(method='post', operation_description="Updates key/value metadata for the resource",
+                     responses={200: ""}, manual_parameters=[res_id])
 @api_view(['POST', 'GET'])
-def update_key_value_metadata_public(request, pk):
+def update_key_value_metadata_public(request, id):
     '''
     Update resource key/value metadata pair
 
     Metadata to be updated should be included as key/value pairs in the REST request
     
     :param request:
-    :param pk: id of the resource to be updated
+    :param id: id of the resource to be updated
     :return: HttpResponse with status code
     '''
     if request.method == 'GET':
-        res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        res, _, _ = authorize(request, id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
 
-    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    res, _, _ = authorize(request, id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
     post_data = request.data.copy()
     res.extra_metadata = post_data
