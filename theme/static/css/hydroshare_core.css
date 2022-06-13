@@ -1930,6 +1930,7 @@ a.tag:hover {
   /* override bootstrap default container width for large screens */
   .container{
 	width: 1440px;
+	max-width: 1440px;
   }
   .owl-stage {
 	  justify-content: space-around;

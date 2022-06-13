@@ -101,7 +101,7 @@ timestamp should go with a template tags to convert to a human readble day.
         </div>
 
         <div class="container dashboard-section-container">
-            {% trans "Featured Apps" as whole_title %}
+            {% trans "Featured Apps and CUAHSI Water Data Services" as whole_title %}
             {% include "includes/apps_block_title.html" %}
             <div class="row big-app-row">
                 {% trans "CUAHSI JupyterHub" as title_name %}
@@ -117,15 +117,7 @@ timestamp should go with a template tags to convert to a human readble day.
                 {% trans "MATLAB Online App" as app_image_alt %}
                 {% trans "This app provides access to MATLAB from any standard web browser wherever you have internet access." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
-            </div>
 
-        </div>
-
-        {# CUAHSI developed apps #}
-        <div class="container dashboard-section-container">
-            {% trans "Additional CUAHSI Water Data Services" as whole_title %}
-            {% include "includes/apps_block_title.html" %}
-            <div class="row big-app-row">
                 {% trans "HydroClient" as title_name %}
                 {% trans "https://data.cuahsi.org" as title_url %}
                 {% trans "hydro_client.png" as app_image %}
@@ -140,8 +132,8 @@ timestamp should go with a template tags to convert to a human readble day.
                 {% trans "Share your time series data. Request a database and upload your formatted data to make it available in HydroClient." as app_content %}
                 {% include "includes/big_image_button_app.html" %}
             </div>
-        </div>
 
+        </div>
 
     </div>
 {% endblock %}
