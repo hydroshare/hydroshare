@@ -64,19 +64,19 @@ def published_date(res_obj):
 
 @register.filter
 def resource_type(content):
-    return content.get_content_model()._meta.verbose_name
-
+    return content._meta.verbose_name
 
 @register.filter
 def resource_first_author(content):
     if not content:
         return ''
-    if content.first_creator.name and content.first_creator.relative_uri:
+    first_creator = content.first_creator
+    if first_creator.name and first_creator.relative_uri:
         return format_html('<a href="{desc}">{name}</a>',
-                           desc=content.first_creator.relative_uri,
-                           name=content.first_creator.name)
-    elif content.first_creator.name:
-        return format_html('<span>{name}</span>', name=content.first_creator.name)
+                           desc=first_creator.relative_uri,
+                           name=first_creator.name)
+    elif first_creator.name:
+        return format_html('<span>{name}</span>', name=first_creator.name)
     else:
         first_creator = content.metadata.creators.filter(order=1).first()
         if first_creator.name:
