@@ -91,12 +91,14 @@ start_nginx() {
     # Launch nginx as docker container nginx
     HYDROSHARE_CID=`docker-compose ps | grep hydroshare | tr -s ' ' | cut -d ' ' -f 1`
     TUSD_CID=`docker-compose ps | grep tusd | tr -s ' ' | cut -d ' ' -f 1`
+    UPPY_CID=`docker-compose ps | grep uppy | tr -s ' ' | cut -d ' ' -f 1`
     CHECK_NGINX_CID=`docker ps -a | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`
     if [[ -z "${CHECK_NGINX_CID}" ]]; then
         echo "  - docker run ${NGINX_DOCKER_IMG} as ${NGINX_DOCKER_CNTR}"
         docker run -d --name ${NGINX_DOCKER_CNTR} \
             --link ${HYDROSHARE_CID}:hydroshare \
-            --link ${HYDROSHARE_CID}:tusd \
+            --link ${TUSD_CID}:tusd \
+            --link ${UPPY_CID}:uppy \
             -p 80:80 -p 443:443 \
             --volume ${HOST_SSL_DIR}:/hs-certs \
             --volume ${IRODS_LOCAL_MOUNT}:${IRODS_DOCKER_MAP} \

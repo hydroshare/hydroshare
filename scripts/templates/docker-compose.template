@@ -3,9 +3,11 @@ postgis:
   container_name: postgis
   volumes:
     - "/var/lib/postgresql/data"
+
 rabbitmq:
   image: rabbitmq:3.8.2
   container_name: rabbitmq
+
 solr:
   image: solr:6.6
   container_name: solr
@@ -15,6 +17,7 @@ solr:
   # ports:
   # - "8983"
   command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
+
 tusd: 
   build: .
   dockerfile: Dockerfile-tusd
@@ -25,6 +28,18 @@ tusd:
     - "1080:1080"
   user: root
   command: /init-tusd
+
+uppy:
+  build: .
+  dockerfile: Dockerfile-uppy
+  container_name: uppy
+  volumes_from: 
+    - tusd
+  ports:
+    - "3020:3020"
+  user: root
+  command: /init-uppy
+  
 hydroshare:
   build: .
   container_name: hydroshare
@@ -66,6 +81,7 @@ hydroshare:
     - rabbitmq:rabbitmq
     - solr:solr
   command: /bin/bash init-hydroshare
+
 defaultworker:
   build: .
   container_name: defaultworker

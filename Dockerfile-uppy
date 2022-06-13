@@ -1,0 +1,14 @@
+FROM transloadit/companion
+
+USER root:root 
+
+RUN addgroup --gid 10000 service-accounts 
+RUN adduser -u 20028 -s /bin/sh -D -H -g 'hydroshare user' hydro-service service-accounts
+
+COPY init-uppy /init-uppy
+RUN chown hydro-service:service-accounts /init-uppy
+COPY env-uppy /.env
+RUN chown hydro-service:service-accounts /.env
+
+# run daemon: disabled for now
+CMD /bin/bash

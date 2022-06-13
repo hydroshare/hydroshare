@@ -257,7 +257,11 @@ preflight_hs() {
     cp ${HS_PATH}/Dockerfile-tusd.template Dockerfile-tusd 
     sed -i $SED_EXT 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/Dockerfile-tusd
     sed -i $SED_EXT 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/Dockerfile-tusd
- 
+
+    # Generate Dockerfile-uppy: must run as hydro-service
+    cp ${HS_PATH}/Dockerfile-uppy.template Dockerfile-uppy 
+    sed -i $SED_EXT 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/Dockerfile-uppy
+    sed -i $SED_EXT 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/Dockerfile-uppy
 }
 
 loaddb_hs() {
