@@ -448,13 +448,13 @@
                                                    required="required" type="text"></div>
                                     </div>
 
-                                    <div id="{{ div_id }}_description" class="control-group">
-                                        <label for="{{ div_id }}_input_description"
-                                               class="control-label">HydroShare User Identifier (URL)</label>
+                                    <div id="{{ div_id }}_hydroshare_user_id" class="control-group">
+                                        <label for="{{ div_id }}_input_hydroshare_user_id"
+                                               class="control-label">HydroShare User Identifier</label>
                                         <div class="controls">
                                             <input class="form-control input-sm urlinput"
-                                                   id="{{ div_id }}_input_description" maxlength="200"
-                                                   name="description" type="url">
+                                                   id="{{ div_id }}_input_hydroshare_user_id" maxlength="200"
+                                                   name="hydroshare_user_id" type="number">
                                         </div>
                                     </div>
 
@@ -713,6 +713,61 @@
         </div>
     </div>
 </div>
+
+    <div class="modal fade in" id="move-override-confirm-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="move-override-confirm" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="move-override-confirm-title">Confirm whether to override existing files</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="resp-message"></p>
+                    <p>
+                        click <strong>Proceed</strong> to confirm to override files. Otherwise, click <strong>Cancel</strong>.
+                    </p>
+                    <input type="hidden" id="source_paths" value=""/>
+                    <input type="hidden" id="target_path" value=""/>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btn-file-override-proceed" class="btn btn-default"
+                            data-dismiss="modal">Proceed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade in" id="move-aggr-override-confirm-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="move-aggr-override-confirm" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="move-override-confirm-title">Confirm whether to override existing files</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="aggr-move-resp-message"></p>
+                    <p>
+                        click <strong>Proceed</strong> to confirm to override files. Otherwise, click <strong>Cancel</strong>.
+                    </p>
+                    <input type="hidden" id="file_type" value=""/>
+                    <input type="hidden" id="file_type_id" value=""/>
+                    <input type="hidden" id="target_path" value=""/>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btn-aggr-file-override-proceed" class="btn btn-default"
+                            data-dismiss="modal">Proceed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade in" id="validate-reference-url-dialog" tabindex="-1" role="dialog"
          aria-labelledby="validate-reference-url" aria-hidden="false">
@@ -1196,19 +1251,19 @@
                                     </div>
                                 </div>
                                 {% if contributor.relative_uri %}
-                                    <div id="div_id_description" class="control-group">
+                                    <div id="div_id_hydroshare_user_id" class="control-group">
                                         <label class="control-label">HydroShare Profile</label>
                                         <div class="space-bottom">
-                                            <a href="/user/{{ contributor.relative_uri }}/">View Profile</a>
+                                            <a href="{{ contributor.relative_uri }}">View Profile</a>
                                         </div>
 
                                         <div class="controls hidden">
                                             <input class="form-control input-sm urlinput"
-                                                   id="id_creator-{{ contributor.order|add:"-1" }}-description"
+                                                   id="id_creator-{{ contributor.order|add:"-1" }}-hydroshare_user_id"
                                                    maxlength="200"
-                                                   name="creator-{{ contributor.order|add:"-1" }}-description"
-                                                   type="url"
-                                                   value="{{ contributor.relative_uri }}"
+                                                   name="creator-{{ contributor.order|add:"-1" }}-hydroshare_user_id"
+                                                   type="number"
+                                                   value="{{ contributor.hydroshare_user_id }}"
                                                    readonly>
                                         </div>
                                     </div>
