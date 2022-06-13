@@ -248,7 +248,7 @@
                         </li>
                     {% endif %}
 
-                    {% if cm.resource_type == "TimeSeriesResource" or cm.resource_type == "CompositeResource" %}
+                    {% if cm.resource_type == "CompositeResource" %}
                         <li data-menu-name="rename" data-toggle="modal" data-fb-action="rename" data-target="#rename-dialog">
                             <span class="glyphicon glyphicon-pencil icon-blue"></span>
                             <span>Rename</span>
@@ -877,9 +877,7 @@
 
                             {% if page.perms.change and resource_edit_mode %}
                                 {% if not cm.raccess.published or current_user.is_superuser %}
-                                    <form id="fb-delete-files-form" class="hidden"
-                                          action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
-                                          method="POST" enctype="multipart/form-data">
+                                    <form id="fb-delete-files-form" class="hidden" enctype="multipart/form-data">
                                         {% csrf_token %}
                                         <input type="hidden" name="file_ids" value=""/>
                                     </form>
@@ -1002,24 +1000,25 @@
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
       const LAST_CHANGED_BY = {{ last_changed_by|safe }};
+      const HAS_ACTIVE_CREATORS = "{{ has_active_creators }}" === "True";
       const AUTHORS = [
           {% for author in creators %}
-              {
-                  "id": "{{ author.id }}",
-                  "name": "{{ author.name|default:""|escapejs }}",
-                  "email": "{{ author.email|default:"" }}",
-                  "organization": "{{ author.organization|default:""|escapejs }}",
-                  "identifiers": {
-                      {% for name, link in author.identifiers.items %}
-                          "{{ name }}": "{{ link }}",
-                      {% endfor %}
-                  },
-                  "address": "{{ author.address|default:""|escapejs }}",
-                  "phone": "{{ author.phone|default:"" }}",
-                  "homepage": "{{ author.homepage|default:"" }}",
-                  "profileUrl": "{{ author.description|default:"" }}",
-                  "order": "{{ author.order }}"
-              },
+                {
+                    "id": "{{ author.id }}",
+                    "name": "{{ author.name|default:""|escapejs }}",
+                    "email": "{{ author.email|default:"" }}",
+                    "organization": "{{ author.organization|default:""|escapejs }}",
+                    "identifiers": {
+                        {% for name, link in author.identifiers.items %}
+                            "{{ name }}": "{{ link }}",
+                        {% endfor %}
+                    },
+                    "address": "{{ author.address|default:""|escapejs }}",
+                    "phone": "{{ author.phone|default:"" }}",
+                    "homepage": "{{ author.homepage|default:"" }}",
+                    "profileUrl": "{{ author.relative_uri|default:'' }}",
+                    "order": "{{ author.order }}"
+                },
           {% endfor %}
       ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";

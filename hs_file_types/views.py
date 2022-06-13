@@ -6,14 +6,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import Error
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.template import Template, Context
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
-    ResourceFile, utils
+    ResourceFile, utils, delete_resource_file_only
 from hs_core.hydroshare.utils import resource_modified
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.task_utils import get_or_create_task_notification
@@ -347,6 +347,35 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
                 err_msg = "This aggregation move is not allowed by the target."
                 response_data['message'] = err_msg
                 return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    file_override = request.POST.get('file_override', False)
+    if not isinstance(file_override, bool):
+        file_override = True if str(file_override).lower() == 'true' else False
+
+    # check if files already exist in the target path
+    res_files = []
+    override_tgt_paths = []
+    override_tgt_res_files = []
+    file_type_class = FILE_TYPE_MAP[hs_file_type]
+    aggregation = file_type_class.objects.get(id=file_type_id)
+    res_files.extend(aggregation.files.all())
+    istorage = res.get_irods_storage()
+    for file in res_files:
+        file_name = os.path.basename(file.storage_path)
+        tgt_full_path = os.path.join(res.file_path, tgt_path, file_name)
+        if istorage.exists(tgt_full_path):
+            override_tgt_paths.append(tgt_full_path)
+            override_tgt_res_files.append(ResourceFile.get(res, file=file_name, folder=tgt_path))
+
+    if override_tgt_paths:
+        if not file_override:
+            override_file_names = ', '.join([os.path.basename(tgt_path) for tgt_path in override_tgt_paths])
+            message = f'aggregation move would overwrite {override_file_names}'
+            return HttpResponse(message, status=status.HTTP_300_MULTIPLE_CHOICES)
+        # delete conflicting files so that move can succeed
+        for override_file in override_tgt_res_files:
+            delete_resource_file_only(res, override_file)
+        res.cleanup_aggregations()
 
     if run_async:
         task = move_aggregation_task.apply_async((resource_id, file_type_id, hs_file_type, tgt_path))

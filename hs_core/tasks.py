@@ -140,7 +140,8 @@ def manage_task_nightly():
                                                    USERNAME=settings.CROSSREF_LOGIN_ID,
                                                    PASSWORD=settings.CROSSREF_LOGIN_PWD,
                                                    DOI_BATCH_ID=res.short_id,
-                                                   TYPE='result'))
+                                                   TYPE='result'),
+                                    verify=False)
             root = ElementTree.fromstring(response.content)
             rec_cnt_elem = root.find('.//record_count')
             failure_cnt_elem = root.find('.//failure_count')
@@ -498,8 +499,8 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
             # element is copied over to this new version resource, needs to delete this element so
             # it can be created to link to its original resource correctly
             new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
-
-        new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf, value=ori_res.get_citation())
+        new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf,
+                                        value=ori_res.get_citation(includePendingMessage=False))
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
@@ -701,9 +702,7 @@ def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwri
 
 @shared_task
 def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
-
     from hs_core.views.utils import rename_irods_file_or_folder_in_django
-
     res = utils.get_resource_by_shortkey(res_id)
     istorage = res.get_irods_storage()
     res_files = []

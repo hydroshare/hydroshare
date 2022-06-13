@@ -3671,12 +3671,8 @@ input.no-style {
 
 div.group-thumbnails {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(min(33.3rem, 100%), 1fr));
-	gap: 1rem;
-}
-
-.group-container {
-    margin-bottom: 20px;
+	grid-template-columns: repeat(auto-fill, minmax(min(34rem, 100%), 1fr));
+	gap: 2rem;
 }
 
 .group-thumbnail img {
@@ -3692,7 +3688,7 @@ div.group-thumbnails {
 }
 
 .spacer {
-	flex: 1 1 auto;
+	flex: 1 2 auto;
 }
 
 .users-joined {
@@ -3701,9 +3697,13 @@ div.group-thumbnails {
 
 .group-description {
     margin-top:20px;
-	max-height:105px;
+	flex: 2 1 150px;
 	overflow-y: auto;
 	word-break: break-word;
+}
+
+.group-purpose {
+	overflow-y: auto;
 }
 
 .group-name {
@@ -4293,6 +4293,11 @@ ul#fb-files-container .hs-upload-indicator {
 
 .selection-menu li.disabled, #fb-inner-controls button.disabled > span {
 	color: #b3b3b3;
+	pointer-events:none;
+}
+
+#fb-files-container li.deleting {
+	background: rgba(252, 161, 161, 0.14);
 	pointer-events:none;
 }
 

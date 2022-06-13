@@ -58,8 +58,8 @@
                 {% for cont in contributors %}
                     <tr>
                         <td>
-                            {% if cont.description %}
-                                <a href="{{ cont.description }}">{{ cont.name|name_without_commas }}</a>
+                            {% if cont.relative_uri %}
+                                <a href="{{ cont.relative_uri }}">{{ cont.name|name_without_commas }}</a>
                             {% else %}
                                 {{ cont.name|name_without_commas }}
                             {% endif %}
@@ -163,8 +163,8 @@
                 {% for contributor in contributors %}
                     <tr>
                         <td>
-                            {% if contributor.description %}
-                                <a href="{{ contributor.description }}">{{ contributor.name|name_without_commas }}</a>
+                            {% if contributor.relative_uri %}
+                                <a href="{{ contributor.relative_uri }}">{{ contributor.name|name_without_commas }}</a>
                             {% else %}
                                 {{ contributor.name|name_without_commas }}
                             {% endif %}

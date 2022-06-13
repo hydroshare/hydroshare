@@ -14,12 +14,10 @@ class TestResourceTypes(APITestCase):
         # added or removed (so that the test can be updated)
         self.resource_types = {'GenericResource',
                                'RefTimeSeriesResource',
-                               'TimeSeriesResource',
                                'ModelProgramResource',
                                'ModelInstanceResource',
                                'ToolResource',
                                'SWATModelInstanceResource',
-                               'GeographicFeatureResource',
                                'ScriptResource',
                                'CollectionResource',
                                'MODFLOWModelInstanceResource',
