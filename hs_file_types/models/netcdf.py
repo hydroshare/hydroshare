@@ -431,7 +431,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             if not self.originalCoverage:
                 with html_tags.div(cls="alert alert-warning alert-dismissible", role="alert"):
                     with html_tags.div():
-                        html_tags.p("NetCDF file missing spatial coverage information:")
+                        html_tags.p("NetCDF file is missing spatial coverage information:")
                         with html_tags.span(
                                 "HydroShare uses GDAL to extract spatial coverage information from NetCDF files. "
                                 "GDAL’s NetCDF driver follows the CF-1 Convention defined by UNIDATA. More information "
