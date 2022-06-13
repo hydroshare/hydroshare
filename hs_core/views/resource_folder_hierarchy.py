@@ -11,6 +11,7 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
 from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
+from hs_core.hydroshare import delete_resource_file
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
@@ -726,9 +727,6 @@ def data_store_move_to_folder(request, pk=None):
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    # whether to treat request as atomic: skip overwrites for valid request
-    atomic = request.POST.get('atomic', 'false') == 'true'  # False by default
-
     pk = str(pk).strip()
     try:
         resource, _, user = authorize(request, pk,
@@ -740,7 +738,9 @@ def data_store_move_to_folder(request, pk=None):
 
     tgt_path = resolve_request(request).get('target_path', None)
     src_paths = resolve_request(request).get('source_paths', None)
-
+    file_override = resolve_request(request).get('file_override', False)
+    if not isinstance(file_override, bool):
+        file_override = True if str(file_override).lower() == 'true' else False
     try:
         tgt_path = _validate_path(tgt_path, 'tgt_path', check_path_empty=False)
     except ValidationError as ex:
@@ -765,7 +765,7 @@ def data_store_move_to_folder(request, pk=None):
             return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     valid_src_paths = []
-    skipped_tgt_paths = []
+    override_tgt_paths = []
 
     for src_path in src_paths:
         src_storage_path = os.path.join(resource.root_path, src_path)
@@ -792,16 +792,25 @@ def data_store_move_to_folder(request, pk=None):
         tgt_overwrite = os.path.join(tgt_storage_path, base)
         if not istorage.exists(tgt_overwrite):
             valid_src_paths.append(src_path)  # partly qualified path for operation
-        else:  # skip pre-existing objects
-            skipped_tgt_paths.append(os.path.join(tgt_short_path, base))
+        else:
+            override_tgt_paths.append(os.path.join(tgt_short_path, base))
+            if file_override:
+                valid_src_paths.append(src_path)
 
-    if skipped_tgt_paths:
-        if atomic:
-            message = 'move would overwrite {}'.format(', '.join(skipped_tgt_paths))
-            return HttpResponse(message, status=status.HTTP_400_BAD_REQUEST)
-
-    # if not atomic, then try to move the files that don't have conflicts
-    # stop immediately on error.
+    if override_tgt_paths:
+        if not file_override:
+            message = 'move would overwrite {}'.format(', '.join(override_tgt_paths))
+            return HttpResponse(message, status=status.HTTP_300_MULTIPLE_CHOICES)
+        # delete conflicting files so that move can succeed
+        for override_tgt_path in override_tgt_paths:
+            override_storage_tgt_path = os.path.join(resource.root_path, 'data', 'contents', override_tgt_path)
+            if irods_path_is_directory(istorage, override_storage_tgt_path):
+                # folder rather than a data object, just delete the folder
+                remove_folder(user, pk, os.path.join('data', 'contents', override_tgt_path))
+            else:
+                # data object or file
+                delete_resource_file(pk, override_tgt_path, user)
+        resource.cleanup_aggregations()
 
     try:
         move_to_folder(user, pk, valid_src_paths, tgt_path)
@@ -811,10 +820,6 @@ def data_store_move_to_folder(request, pk=None):
         return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
-
-    if skipped_tgt_paths:  # add information on skipped steps
-        message = '[Warn] skipped move to existing {}'.format(', '.join(skipped_tgt_paths))
-        return_object['additional_status'] = message
 
     return HttpResponse(
         json.dumps(return_object),
