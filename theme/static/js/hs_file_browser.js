@@ -1778,6 +1778,11 @@ function onUploadSuccess(file, response) {
 $(document).ready(function () {
     // Download All method
     $("#btn-download-all, #download-bag-btn").click(function (event) {
+        if (event.currentTarget.id === "btn-download-all") {
+            let btnDownloadAll = $("#btn-download-all");
+            btnDownloadAll.prepend('<i class="fa fa-spinner fa-pulse fa-lg download-spinner" style="z-index: 1; position: absolute;"></i>');
+            btnDownloadAll.css("cursor", "wait");
+        }
         $(event.currentTarget).toggleClass("disabled", true);
         const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
 
@@ -1792,6 +1797,8 @@ $(document).ready(function () {
                 notificationsApp.registerTask(task);
                 notificationsApp.show();
                 $(event.currentTarget).toggleClass("disabled", false);
+                $("#btn-download-all").css("cursor", "auto");
+                $(".download-spinner").remove();
             }
         });
     });
