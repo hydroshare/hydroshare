@@ -406,8 +406,6 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource", type=openapi.TYPE_STRING)
-
-
 @swagger_auto_schema(method='get', operation_description="Gets all key/value metadata for the resource",
                      responses={200: "key/value metadata"}, manual_parameters=[res_id])
 @swagger_auto_schema(method='post', operation_description="Updates key/value metadata for the resource",
@@ -856,11 +854,13 @@ def copy_resource(request, shortkey, *args, **kwargs):
         except utils.ResourceCopyException:
             return HttpResponseRedirect(res.get_absolute_url())
 
-
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be copied", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='post', operation_description="Copy a resource",
+                     responses={202: "Returns the resource ID of the newly created resource"}, manual_parameters=[res_id])
 @api_view(['POST'])
 def copy_resource_public(request, pk):
     '''
-    Copy a resouce
+    Copy a resource
 
     :param request:
     :param pk: id of the resource to be copied
@@ -899,7 +899,9 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
                                                          'this resource: ' + str(ex)
             return HttpResponseRedirect(res.get_absolute_url())
 
-
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be versioned", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='post', operation_description="Create a new version of a resource",
+                     responses={202: "Returns the resource ID of the new version"}, manual_parameters=[res_id])
 @api_view(['POST'])
 def create_new_version_resource_public(request, pk):
     '''
@@ -971,6 +973,9 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     return JsonResponse(ajax_response_data)
 
 
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be flagged", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='post', operation_description="Set resource flag to 'Public'",
+                     responses={202: "Returns the resource ID of the new version"}, manual_parameters=[res_id])
 @api_view(['POST'])
 def set_resource_flag_public(request, pk):
     '''
