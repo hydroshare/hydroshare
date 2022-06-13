@@ -627,21 +627,18 @@ def get_my_resources_list(user, annotate=True):
             When(short_id__in=labeled_resources.values_list('short_id', flat=True),
                  then=Value(True, BooleanField()))))
 
-        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
+        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created', 'content_type')
         # we won't hit the DB for each resource to know if it's status is public/private/discoverable
         # etc
-        resource_collection = resource_collection.select_related('raccess')
+        resource_collection = resource_collection.select_related('raccess', 'rlabels')
         # prefetch metadata items - creators, keywords(subjects), dates and title
-        meta_contenttypes = get_metadata_contenttypes()
-        for ct in meta_contenttypes:
-            # get a list of resources having metadata that is an instance of a specific
-            # metadata class (e.g., CoreMetaData)
-            res_list = [res for res in resource_collection if res.content_type == ct]
-            prefetch_related_objects(res_list,
-                                     Prefetch('content_object__creators'),
-                                     Prefetch('content_object__subjects'),
-                                     Prefetch('content_object___title'),
-                                     Prefetch('content_object__dates'))
+        prefetch_related_objects(resource_collection,
+                                 Prefetch('content_object__creators'),
+                                 Prefetch('content_object__subjects'),
+                                 Prefetch('content_object___title'),
+                                 Prefetch('content_object__dates')
+                                 )
+
     return resource_collection
 
 
