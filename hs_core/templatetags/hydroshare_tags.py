@@ -22,6 +22,7 @@ RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Composite Resource",
                                      "ToolResource": "Web App Resource"
                                      }
 
+
 @register.filter
 def user_permission(content, arg):
     user_pk = arg
