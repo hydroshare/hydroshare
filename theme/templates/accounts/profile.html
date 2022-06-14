@@ -325,15 +325,16 @@
                                                     <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
                                                     <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
                                                 </div>
-
-                                                {% if res.metadata.description %}
-                                                    <div class="activity-description col-sm-12">
-                                                        <p class="description">
-                                                            <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
-                                                        </p>
-                                                    </div>
-                                                    <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                                {% endif %}
+                                                {% with abstract=res.metadata.description %}
+                                                    {% if abstract %}
+                                                        <div class="activity-description col-sm-12">
+                                                            <p class="description">
+                                                                <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
+                                                    {% endif %}
+                                                {% endwith %}
                                             </div>
                                             {% endif %}
                                         {% endfor %}
@@ -744,16 +745,16 @@
                                                     {% endfor %}
                                                 </h5>
                                             </div>
-
-                                            {% if res.metadata.description %}
-                                                <div class="activity-description col-sm-12">
-                                                    <p>
-                                                        <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
-                                                    </p>
-                                                </div>
-                                                <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                            {% endif %}
-
+                                            {%  with abstract=res.metadata.description %}
+                                                {% if abstract %}
+                                                    <div class="activity-description col-sm-12">
+                                                        <p>
+                                                            <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
+                                                {% endif %}
+                                           {% endwith %}
                                         </div>
                                     </div>
                                     {% endwith %}
