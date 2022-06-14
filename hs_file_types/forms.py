@@ -9,7 +9,7 @@ from django import forms
 from django.forms import BaseFormSet, ModelForm
 from django.forms.models import formset_factory, model_to_dict
 
-from hs_core.forms import BaseFormHelper, MetaDataElementDeleteForm, get_crispy_form_fields
+from hs_core.forms import BaseFormHelper, get_crispy_form_fields
 from .models.model_program import ModelProgramResourceFileType
 from .models.netcdf import Variable
 from .models.raster import BandInformation, CellInformation
