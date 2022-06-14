@@ -1703,6 +1703,9 @@ def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
 
+uid = openapi.Parameter('user_identifier', openapi.IN_PATH, description="id of the user for which data is needed", type=openapi.TYPE_INTEGER)
+@swagger_auto_schema(method='get', operation_description="Get user data",
+                     responses={200: "Returns JsonResponse containing user data"}, manual_parameters=[uid])
 @api_view(['GET'])
 def hsapi_get_user(request, user_identifier):
     '''

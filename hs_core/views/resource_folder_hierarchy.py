@@ -26,6 +26,7 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzi
 from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
 
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 logger = logging.getLogger(__name__)
@@ -365,7 +366,24 @@ def zip_aggregation_file(request, res_id=None):
         content_type="application/json"
     )
 
+rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
+body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'input_coll_path': openapi.Schema(type=openapi.TYPE_STRING, description='the relative path under res_id/data/ \
+            contents to be zipped'),
+        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path of \
+            the generated zip file name'),
+        'remove_original_after_zip': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='whether original files will \
+            be deleted after zipping')
+    }
+)
 
+
+@swagger_auto_schema(method='post',
+                     operation_description="Zip requested files and folders into a zip file",
+                     responses={200: "Returns JsonResponse with zip file or empty string"},
+                     manual_parameters=[rid], request_body=body)
 @api_view(['POST'])
 def data_store_folder_zip_public(request, pk):
     '''
@@ -386,7 +404,22 @@ def data_store_folder_zip_public(request, pk):
     '''
     return data_store_folder_zip(request, res_id=pk)
 
+rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
+body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'aggregation_path': openapi.Schema(type=openapi.TYPE_STRING, description='the relative path under res_id/data/ \
+            contents to be zipped'),
+        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path of \
+            the generated zip file name')
+    }
+)
 
+
+@swagger_auto_schema(method='post', operation_description="Zip requested aggregation into a zip file in hydroshareZone \
+                                                            or any federated zone",
+                     responses={200: "Returns JsonResponse with zip file or empty string"},
+                     manual_parameters=[rid], request_body=body)
 @api_view(['POST'])
 def zip_aggregation_file_public(request, pk):
     '''
@@ -484,6 +517,12 @@ def data_store_folder_unzip_public(request, pk, pathname):
     return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=pathname)
 
 
+rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
+
+
+@swagger_auto_schema(method='post', operation_description="Ingests metadata files",
+                     responses={204: "HttpResponse response with status code"},
+                     manual_parameters=[rid])
 @api_view(['POST'])
 def ingest_metadata_files(request, pk):
     '''
@@ -503,6 +542,19 @@ def ingest_metadata_files(request, pk):
     return Response(status=204)
 
 
+body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'res_id': openapi.Schema(type=openapi.TYPE_STRING, description='res_id'),
+        'curr_path': openapi.Schema(type=openapi.TYPE_STRING, description='curr_path'),
+        'ref_name': openapi.Schema(type=openapi.TYPE_STRING, description='ref_name'),
+        'ref_url': openapi.Schema(type=openapi.TYPE_STRING, description='ref_url')
+    }
+)
+
+
+@swagger_auto_schema(method='post', operation_description="Create reference URL file",
+                     responses={200: "JsonResponse with status code and message"}, request_body=body)
 @api_view(['POST'])
 def data_store_add_reference_public(request):
     """
@@ -560,11 +612,24 @@ def data_store_add_reference(request):
     else:
         return JsonResponse({'message': msg}, status=ret_status)
 
+body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'res_id': openapi.Schema(type=openapi.TYPE_STRING, description='res_id'),
+        'curr_path': openapi.Schema(type=openapi.TYPE_STRING, description='curr_path'),
+        'url_filename': openapi.Schema(type=openapi.TYPE_STRING, description='url_filename'),
+        'new_ref_url': openapi.Schema(type=openapi.TYPE_STRING, description='new_ref_url')
+    }
+)
 
+
+@swagger_auto_schema(method='post', operation_description="Edit the referenced url in a url file",
+                     responses={200: "JsonResponse on success", 400: "HttpResponse with error status code on error"},
+                     request_body=body)
 @api_view(['POST'])
 def data_store_edit_reference_url_public(request):
     """
-    Edit the referenced url in an url file
+    Edit the referenced url in a url file
 
     Post request should include **res_id, curr_path, url_filename, new_ref_url**
     :param request:
@@ -750,7 +815,21 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         content_type='application/json'
     )
 
+rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
+body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'source_path': openapi.Schema(type=openapi.TYPE_STRING, description='path (relative to path \
+            res_id/data/contents) for source file or folder under id collection'),
+        'target_path': openapi.Schema(type=openapi.TYPE_STRING, description='path (relative to path \
+            res_id/data/contents) for target file or folder under id collection')
+    }
+)
 
+
+@swagger_auto_schema(method='post',
+                     operation_description="Move a list of files and/or folders to another folder in a resource file \
+                         hierarchy.", manual_parameters=[rid], request_body=body)
 @api_view(['POST'])
 def data_store_file_or_folder_move_or_rename_public(request, pk):
     """

@@ -32,6 +32,7 @@ from hs_core.serialization import GenericResourceMeta, HsDeserializationDependen
     HsDeserializationException
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from rest_framework.parsers import MultiPartParser
 
 
@@ -101,7 +102,11 @@ class ContentTypes(generics.ListAPIView):
 
 class CheckTaskStatus(generics.RetrieveAPIView):
 
-    # TODO, setup a serializer for in/out, figure out if redirect is needed...
+    # TODO, setup a serializer for in, figure out if redirect is needed...
+    tid = openapi.Parameter('task_id', openapi.IN_PATH, description="id of the task", type=openapi.TYPE_STRING)
+
+    @swagger_auto_schema(operation_description="Get the status of an asynchronous task",
+                         responses={200: serializers.CheckStatusSerializer}, manual_parameters=[tid])
     def get(self, request, task_id):
         '''
         Get the status of an asynchronous task
