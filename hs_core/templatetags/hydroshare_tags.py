@@ -13,6 +13,14 @@ from hs_core.search_indexes import normalize_name
 
 register = template.Library()
 
+RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Composite Resource",
+                                     "CollectionResource": "Collection Resource",
+                                     "ModelProgramResource": "Model Program Resource",
+                                     "ModelInstanceResource": "Model Instance Resource",
+                                     "MODFLOWModelInstanceResource": "MODFLOW Model Instance Resource",
+                                     "SWATModelInstanceResource": "SWAT Model Instance Resource",
+                                     "ToolResource": "Web App Resource"
+                                     }
 
 @register.filter
 def user_permission(content, arg):
@@ -64,7 +72,10 @@ def published_date(res_obj):
 
 @register.filter
 def resource_type(content):
-    return content._meta.verbose_name
+    if content.resource_type in RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS:
+        return RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS[content.resource_type]
+    return content.get_content_model()._meta.verbose_name
+
 
 @register.filter
 def resource_first_author(content):
