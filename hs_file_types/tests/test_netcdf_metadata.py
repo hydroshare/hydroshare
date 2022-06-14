@@ -423,7 +423,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         to NetCDF file type which includes metadata extraction
         The nc file in this case is at the root of the folder hierarchy
         The file used here for creating a netcdf aggregation has spatial reference and spatial coverage
-        gets computed from spatial reference.
+        gets computed from spatial reference
         Here we are testing that coverage can't be updated.
         """
 

@@ -255,7 +255,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     # testing extended metadata element: spatial coverage (computed from original coverage as part of
     # metadata extraction)
     spatial_coverage = logical_file.metadata.coverages.filter(type='box').first()
-    self.assertNotEqual(spatial_coverage, None)
+    self.assertIsNotNone(spatial_coverage)
     self.assertEqual(float(spatial_coverage.value['northlimit']), 41.86712640899591)
     self.assertEqual(float(spatial_coverage.value['southlimit']), 41.8639080745171)
     self.assertEqual(float(spatial_coverage.value['eastlimit']), -111.50594036845686)
