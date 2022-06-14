@@ -448,16 +448,7 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                               }
 
         element = logical_file.metadata.get_element(element_name, element_id)
-        update_file = False
-        if logical_file.type_name() == "NetCDFLogicalFile":
-            # only spatial coverage update does not need update of the nc file
-            if element_name.lower() != 'coverage':
-                update_file = True
-            elif element.type == 'period':
-                update_file = True
-        elif logical_file.type_name() == "TimeSeriesLogicalFile":
-            update_file = True
-
+        update_file = _is_update_file(logical_file, element_name, element)
         if update_file:
             logical_file.metadata.is_update_file = True
             logical_file.metadata.save()
@@ -536,16 +527,7 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
                               'element_id': element.id,
                               'metadata_status': metadata_status}
 
-        update_file = False
-        if logical_file.type_name() == "NetCDFLogicalFile":
-            # only spatial coverage creation does not need update of the nc file
-            if element_name.lower() != 'coverage':
-                update_file = True
-            elif element.type == 'period':
-                update_file = True
-        elif logical_file.type_name() == "TimeSeriesLogicalFile":
-            update_file = True
-
+        update_file = _is_update_file(logical_file, element_name, element)
         if update_file:
             logical_file.metadata.is_update_file = True
             logical_file.metadata.save()
@@ -1301,3 +1283,16 @@ def _get_logical_file(hs_file_type, file_type_id):
         return None, JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     return logical_file, None
+
+
+def _is_update_file(logical_file, element_name, element):
+    update_file = False
+    if logical_file.type_name() == "NetCDFLogicalFile":
+        # only spatial coverage update does not need update of the nc file
+        if element_name.lower() != 'coverage':
+            update_file = True
+        elif element.type == 'period':
+            update_file = True
+    elif logical_file.type_name() == "TimeSeriesLogicalFile":
+        update_file = True
+    return update_file
