@@ -1244,7 +1244,7 @@ class GroupCreateForm(GroupForm):
         if 'picture' in request.FILES:
             # resize uploaded image
             img = request.FILES['picture']
-            img.image = get_thumbnail(img, 'x150', crop='center', quality=60)
+            img.image = get_thumbnail(img, 'x150', crop='center')
             new_group.gaccess.picture = img
 
         privacy_level = frm_data['privacy_level']
@@ -1265,7 +1265,7 @@ class GroupUpdateForm(GroupForm):
         if 'picture' in request.FILES:
             # resize uploaded image
             img = request.FILES['picture']
-            img.image = get_thumbnail(img, 'x150', crop='center', quality=60)
+            img.image = get_thumbnail(img, 'x150', crop='center')
             group_to_update.gaccess.picture = img
 
         privacy_level = frm_data['privacy_level']
