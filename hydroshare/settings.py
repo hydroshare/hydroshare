@@ -235,6 +235,10 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 MEDIA_URL = STATIC_URL + "media/"
 
+# Sorl settings for generating thumbnails
+THUMBNAIL_PRESERVE_FORMAT = True
+THUMBNAIL_QUALITY = 95
+
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
