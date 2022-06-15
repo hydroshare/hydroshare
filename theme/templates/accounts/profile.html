@@ -315,30 +315,30 @@
                                                 {% else %}
                                                     <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                 {% endif %}
-
-                                                <div class="metadata-wrapper">
-                                                    <div class="shared-resource-info">
-                                                        <strong>{{ profile_user|contact }}</strong>
-                                                        <span class="text-muted"> shared </span>
-                                                        <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                                    </div>
-                                                    <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
-                                                    <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
-                                                </div>
-                                                {% with abstract=res.metadata.description %}
-                                                    {% if abstract %}
-                                                        <div class="activity-description col-sm-12">
-                                                            <p class="description">
-                                                                <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
-                                                            </p>
+                                                {% with metadata=res.metadata %}
+                                                    <div class="metadata-wrapper">
+                                                        <div class="shared-resource-info">
+                                                            <strong>{{ profile_user|contact }}</strong>
+                                                            <span class="text-muted"> shared </span>
+                                                            <span><a href="{{ res.get_absolute_url }}">{{ metadata.title }}</a></span>
                                                         </div>
-                                                        <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                                    {% endif %}
-                                                {% endwith %}
-                                            </div>
+                                                        <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
+                                                        <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
+                                                    </div>
+                                                    {% with abstract=metadata.description %}
+                                                        {% if abstract %}
+                                                            <div class="activity-description col-sm-12">
+                                                                <p class="description">
+                                                                    <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
+                                                                </p>
+                                                            </div>
+                                                            <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                    </div>
+                                                    {% endwith %}
                                             {% endif %}
                                         {% endfor %}
-
                                         {% else %}
                                             <span class="text-muted">This user has no recent activity.</span>
                                         {% endif %}
@@ -731,30 +731,32 @@
                                         </span>
                                         </div>
                                         <div class="activity-block row">
-                                            <div class="activity-info col-sm-12">
-                                                <span class="title"><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                                <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
-                                                <h5><span class="text-muted">Authors: </span>
-                                                    {% for creator in res.metadata.creators.all %}
-                                                        {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                        {% if creator.relative_uri %}
-                                                            <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
-                                                        {% else %}
-                                                            <span>{{ creator.name }}</span>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </h5>
-                                            </div>
-                                            {%  with abstract=res.metadata.description %}
-                                                {% if abstract %}
-                                                    <div class="activity-description col-sm-12">
-                                                        <p>
-                                                            <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
-                                                        </p>
-                                                    </div>
-                                                    <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                                {% endif %}
-                                           {% endwith %}
+                                            {% with metadata=res.metadata %}
+                                                <div class="activity-info col-sm-12">
+                                                    <span class="title"><a href="{{ res.get_absolute_url }}">{{ metadata.title }}</a></span>
+                                                    <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
+                                                    <h5><span class="text-muted">Authors: </span>
+                                                        {% for creator in metadata.creators.all %}
+                                                            {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                                            {% if creator.relative_uri %}
+                                                                <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
+                                                            {% else %}
+                                                                <span>{{ creator.name }}</span>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </h5>
+                                                </div>
+                                                {%  with abstract=metadata.description %}
+                                                    {% if abstract %}
+                                                        <div class="activity-description col-sm-12">
+                                                            <p>
+                                                                <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
+                                                    {% endif %}
+                                               {% endwith %}
+                                           {%  endwith %}
                                         </div>
                                     </div>
                                     {% endwith %}
