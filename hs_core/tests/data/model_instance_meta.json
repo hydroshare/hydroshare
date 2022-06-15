@@ -8,8 +8,8 @@
      "key-2": "value-2"
   },
   "temporal_coverage": {
-    "start": "01/06/2010",
-    "end": "01/01/2022"
+    "start": "2010-06-01",
+    "end": "2022-01-01"
   },
   "spatial_coverage": {
     "type": "point",

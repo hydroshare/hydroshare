@@ -2,6 +2,7 @@ import glob
 import json
 import os
 
+from dateutil import parser
 from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
 from rest_framework import status
@@ -98,7 +99,7 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         self.assertEqual(mp_aggr.metadata.version, metadata_json['version'])
         self.assertEqual(mp_aggr.metadata.programming_languages, metadata_json['programming_languages'])
         self.assertEqual(mp_aggr.metadata.operating_systems, metadata_json['operating_systems'])
-        self.assertEqual(mp_aggr.metadata.release_date.strftime("%m/%d/%Y"), metadata_json['release_date'])
+        self.assertEqual(mp_aggr.metadata.release_date.strftime("%Y-%m-%d"), metadata_json['release_date'])
         self.assertEqual(mp_aggr.metadata.website, metadata_json['website'])
         self.assertEqual(mp_aggr.metadata.code_repository, metadata_json['code_repository'])
         self.assertEqual(mp_aggr.metadata_schema_json, metadata_json['program_schema_json'])
@@ -184,7 +185,13 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         self.assertEqual(mi_aggr.metadata.executed_by.aggregation_name, metadata_json['executed_by'])
         self.assertEqual(mi_aggr.metadata.metadata_json, metadata_json['metadata_json'])
         temporal_coverage = mi_aggr.metadata.temporal_coverage.value
-        self.assertEqual(temporal_coverage, metadata_json['temporal_coverage'])
+        start_date = parser.parse(temporal_coverage['start'])
+        end_date = parser.parse(temporal_coverage['end'])
+        start_date_in = parser.parse(metadata_json['temporal_coverage']['start'])
+        end_date_in = parser.parse(metadata_json['temporal_coverage']['end'])
+        self.assertEqual(start_date, start_date_in)
+        self.assertEqual(end_date, end_date_in)
+        # self.assertEqual(temporal_coverage, metadata_json['temporal_coverage'])
         spatial_coverage = mi_aggr.metadata.spatial_coverage.value
         spatial_coverage.pop('projection')
         input_cove_type = metadata_json['spatial_coverage'].pop('type')

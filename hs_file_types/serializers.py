@@ -7,12 +7,15 @@ from rest_framework import serializers
 from hs_core.models import Coverage
 from .models.model_program import ModelProgramResourceFileType, ModelProgramLogicalFile
 
+_IN_DATE_FORMAT = "%Y-%m-%d"  # OpenAPI uses this date format for date field in the example input JSON data
+_OUT_DATE_FORMAT = "%m/%d/%Y"
+
 
 class TemporalCoverageSerializer((serializers.Serializer)):
-    start = serializers.DateField(required=True, format="%m/%d/%Y", input_formats=["%m/%d/%Y"],
-                                  help_text="Temporal coverage start date (MM/DD/YYYY)")
-    end = serializers.DateField(required=True, format="%m/%d/%Y", input_formats=["%m/%d/%Y"],
-                                help_text="Temporal coverage end date (MM/DD/YYYY)")
+    start = serializers.DateField(required=True, format=_OUT_DATE_FORMAT, input_formats=[_IN_DATE_FORMAT],
+                                  help_text="Temporal coverage start date (YYYY-MM-DD)")
+    end = serializers.DateField(required=True, format=_OUT_DATE_FORMAT, input_formats=[_IN_DATE_FORMAT],
+                                help_text="Temporal coverage end date (YYYY-MM-DD)")
 
 
 class SpatialCoverageSerializer((serializers.Serializer)):
@@ -82,8 +85,9 @@ class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
                                               help_text="Compatible operating systems to setup and run the model")
     program_schema_json = serializers.JSONField(required=False, allow_null=True,
                                                 help_text='Metadata schema as JSON data for model program aggregation')
-    release_date = serializers.DateField(required=False, allow_null=True, format="%m/%d/%Y", input_formats=["%m/%d/%Y"],
-                                         help_text='The date that this version of the model was released (MM/DD/YYYY')
+    release_date = serializers.DateField(required=False, allow_null=True, format=_OUT_DATE_FORMAT,
+                                         input_formats=[_IN_DATE_FORMAT],
+                                         help_text='The date that this version of the model was released (YYYY-MM-DD)')
     website = serializers.URLField(required=False, allow_blank=True, max_length=255,
                                    help_text='A URL to the website maintained by the model developers')
     code_repository = serializers.URLField(required=False, allow_blank=True, max_length=255,
@@ -172,7 +176,11 @@ class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
         data['version'] = mp_aggr.metadata.version
         data['website'] = mp_aggr.metadata.website
         data['code_repository'] = mp_aggr.metadata.code_repository
-        data['release_date'] = mp_aggr.metadata.release_date
+        if mp_aggr.metadata.release_date:
+            data['release_date'] = mp_aggr.metadata.release_date.strftime(_OUT_DATE_FORMAT)
+        else:
+            data['release_date'] = mp_aggr.metadata.release_date
+
         data['operating_systems'] = mp_aggr.metadata.operating_systems
         data['programming_languages'] = mp_aggr.metadata.programming_languages
         data['metadata_schema'] = mp_aggr.metadata_schema_json
@@ -269,8 +277,8 @@ class ModelInstanceMetaSerializer(BaseAggregationMetaSerializer):
         temporal_coverage = validated_data.get('temporal_coverage', None)
         if temporal_coverage is not None:
             if temporal_coverage:
-                temporal_coverage['start'] = temporal_coverage['start'].strftime("%m/%d/%Y")
-                temporal_coverage['end'] = temporal_coverage['end'].strftime("%m/%d/%Y")
+                temporal_coverage['start'] = temporal_coverage['start'].strftime(_OUT_DATE_FORMAT)
+                temporal_coverage['end'] = temporal_coverage['end'].strftime(_OUT_DATE_FORMAT)
                 if mi_aggr.metadata.temporal_coverage:
                     mi_aggr.metadata.update_element('coverage', mi_aggr.metadata.temporal_coverage.id, type='period',
                                                     value=temporal_coverage)
