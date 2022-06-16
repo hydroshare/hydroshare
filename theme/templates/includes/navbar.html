@@ -169,7 +169,7 @@
                     {% if request.user.is_authenticated %}
                         <li id="profile-menu" class="display-block">
                             {% if request.user.userprofile.picture %}
-                                {% thumbnail request.user.userprofile.picture "x40" crop="center" as im %}
+                                {% thumbnail request.user.userprofile.picture "x80" crop="center" as im %}
                                     {% if im.exists %}
                                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                             <div style="background-image: url('{{ im.url }}');"
@@ -192,7 +192,7 @@
                                     <div class="row">
                                         <div class="col-sm-4">
                                             {% if request.user.userprofile.picture %}
-                                                {% thumbnail request.user.userprofile.picture "x80" crop="center" as im %}
+                                                {% thumbnail request.user.userprofile.picture "x150" crop="center" as im %}
                                                     {% if im.exists %}
                                                         <div style="background-image: url('{{ im.url }}');"
                                                             class="round-image dropdown-profile-pic-thumbnail pull-left">

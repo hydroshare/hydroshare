@@ -69,7 +69,7 @@
                                                     </div>
                                                     {% for member in group.gaccess.members|slice:":5" %}
                                                         {% if member.userprofile.picture %}
-                                                            {% thumbnail member.userprofile.picture "x40" crop="center" as im %}
+                                                            {% thumbnail member.userprofile.picture "x80" as im %}
                                                                 {% if im.exists %}
                                                                     <div style="background-image: url('{{ im.url }}');"
                                                                         class="round-image profile-pic-thumbnail"
@@ -119,7 +119,7 @@
                                                                             <td>
                                                                                 <div class="user-scope">
                                                                                     {% if u.userprofile.picture %}
-                                                                                        {% thumbnail u.userprofile.picture "x40" crop="center" as im %}
+                                                                                        {% thumbnail u.userprofile.picture "x80" crop="center" as im %}
                                                                                             {% if im.exists %}
                                                                                                 <div style="background-image: url('{{ im.url }}');"
                                                                                                     class="round-image profile-pic-thumbnail">

@@ -70,7 +70,7 @@
                                 <form></form>
                                 <div class="activity-block height-fix">
                                     {% if request.request_from.userprofile.picture %}
-                                        {% thumbnail request.request_from.userprofile.picture "x40" crop="center" as im %}
+                                        {% thumbnail request.request_from.userprofile.picture "x80" crop="center" as im %}
                                             {% if im.exists %}
                                                 <div style="background-image: url('{{ im.url }}');"
                                                     class="round-image profile-pic-thumbnail pull-left">
