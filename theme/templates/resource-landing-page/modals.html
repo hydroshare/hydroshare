@@ -448,13 +448,13 @@
                                                    required="required" type="text"></div>
                                     </div>
 
-                                    <div id="{{ div_id }}_description" class="control-group">
-                                        <label for="{{ div_id }}_input_description"
-                                               class="control-label">HydroShare User Identifier (URL)</label>
+                                    <div id="{{ div_id }}_hydroshare_user_id" class="control-group">
+                                        <label for="{{ div_id }}_input_hydroshare_user_id"
+                                               class="control-label">HydroShare User Identifier</label>
                                         <div class="controls">
                                             <input class="form-control input-sm urlinput"
-                                                   id="{{ div_id }}_input_description" maxlength="200"
-                                                   name="description" type="url">
+                                                   id="{{ div_id }}_input_hydroshare_user_id" maxlength="200"
+                                                   name="hydroshare_user_id" type="number">
                                         </div>
                                     </div>
 
@@ -1195,20 +1195,20 @@
                                                value="{% if contributor.name %}{{ contributor.name }}{% endif %}">
                                     </div>
                                 </div>
-                                {% if contributor.description %}
-                                    <div id="div_id_description" class="control-group">
+                                {% if contributor.relative_uri %}
+                                    <div id="div_id_hydroshare_user_id" class="control-group">
                                         <label class="control-label">HydroShare Profile</label>
                                         <div class="space-bottom">
-                                            <a href="{{ contributor.description }}">View Profile</a>
+                                            <a href="{{ contributor.relative_uri }}">View Profile</a>
                                         </div>
 
                                         <div class="controls hidden">
                                             <input class="form-control input-sm urlinput"
-                                                   id="id_creator-{{ contributor.order|add:"-1" }}-description"
+                                                   id="id_creator-{{ contributor.order|add:"-1" }}-hydroshare_user_id"
                                                    maxlength="200"
-                                                   name="creator-{{ contributor.order|add:"-1" }}-description"
-                                                   type="url"
-                                                   value="{{ contributor.description }}"
+                                                   name="creator-{{ contributor.order|add:"-1" }}-hydroshare_user_id"
+                                                   type="number"
+                                                   value="{{ contributor.hydroshare_user_id }}"
                                                    readonly>
                                         </div>
                                     </div>
@@ -1830,6 +1830,6 @@
 </div>
 
 {% block extra_js %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/modals.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/identifiers-form.js"></script>
+    <script type="text/javascript" src="{% static 'js/modals.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/identifiers-form.js' %}"></script>
 {% endblock %}

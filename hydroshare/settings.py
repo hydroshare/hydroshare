@@ -227,10 +227,17 @@ STATIC_URL = "/static/"
 # Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 
+# TODO: Manifest static file storage deactivated for now, pending further debugging
+# STATICFILES_STORAGE = "hydroshare.storage.ForgivingManifestStaticFilesStorage"
+
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 MEDIA_URL = STATIC_URL + "media/"
+
+# Sorl settings for generating thumbnails
+THUMBNAIL_PRESERVE_FORMAT = True
+THUMBNAIL_QUALITY = 95
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
@@ -281,6 +288,7 @@ INSTALLED_APPS = (
     "haystack",
     "rest_framework",
     "robots",
+    "sorl.thumbnail",
     "hs_core",
     "hs_access_control",
     "hs_labels",
@@ -371,7 +379,10 @@ TEMPLATES = [
                 "mezzanine.template.loaders.host_themes.Loader",
                 "django.template.loaders.filesystem.Loader",
                 "django.template.loaders.app_directories.Loader",
-            ]
+            ],
+            'builtins': [
+                'django.templatetags.static',
+            ],
         },
     },
 ]

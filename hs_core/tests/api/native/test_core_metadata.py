@@ -137,7 +137,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test adding a creator with all sub-elements
         cr_name = 'Mike Sundar'
-        cr_des = 'http://hydroshare.org/user/001'
+        cr_uid = 1
         cr_org = "USU"
         cr_email = 'mike.sundar@usu.edu'
         cr_address = "11 River Drive, Logan UT-84321, USA"
@@ -146,7 +146,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         resource.create_metadata_element(self.res.short_id,'creator',
                                          name=cr_name,
-                                         description=cr_des,
+                                         hydroshare_user_id=cr_uid,
                                          organization=cr_org,
                                          email=cr_email,
                                          address=cr_address,
@@ -157,7 +157,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
         self.assertNotEqual(cr_mike, None, msg='Creator Mike was not found')
         self.assertEqual(cr_mike.name, cr_name)
-        self.assertEqual(cr_mike.description, cr_des)
+        self.assertEqual(cr_mike.hydroshare_user_id, cr_uid)
         self.assertEqual(cr_mike.organization, cr_org)
         self.assertEqual(cr_mike.address, cr_address)
         self.assertEqual(cr_mike.phone, cr_phone)
@@ -180,7 +180,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # try to add a creator with no name
         resource.create_metadata_element(self.res.short_id, 'creator',
                                          organization='test org',
-                                         description='test desc',
+                                         hydroshare_user_id=2,
                                          email='test@test.com',
                                          address='test address',
                                          phone='111-111-1111',
@@ -193,7 +193,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # try to add a creator with no name or organization should raise error
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id, 'creator',
-                                             description='test desc',
+                                             hydroshare_user_id=1,
                                              email='test@test.com',
                                              address='test address',
                                              phone='111-111-1111',
@@ -210,17 +210,17 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         resource.delete_metadata_element(self.res.short_id, 'creator', cr_john.id )
         self.assertEqual(Creator.objects.filter(id=cr_john.id).first(), None)
 
-        # trying to update (description) hydroshare user identifier to a different identifier should raise exception
+        # trying to update (hydroshare_user_id) hydroshare user identifier to a different identifier should raise exception
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id,
-                                             description="http://hydroshare.org/user/002")
+                                             hydroshare_user_id=2)
 
-        # however, it should be possible to to update (description) hydroshare identifier to empty string
+        # however, it should be possible to to update (hydroshare_user_id) hydroshare identifier to empty string
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
-        self.assertEqual(cr_mike.description, 'http://hydroshare.org/user/001')
-        resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id, description='')
+        self.assertEqual(cr_mike.hydroshare_user_id, 1)
+        resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id, hydroshare_user_id=None)
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
-        self.assertEqual(cr_mike.description, '')
+        self.assertEqual(cr_mike.hydroshare_user_id, None)
 
         # delete Mike
         resource.delete_metadata_element(self.res.short_id, 'creator', cr_mike.id )
@@ -253,7 +253,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test adding a contributor with all sub_elements
         con_name = 'Mike Sundar'
-        con_des = 'http://hydroshare.org/user/001'
+        con_uid = 1
         con_org = "USU"
         con_email = 'mike.sundar@usu.edu'
         con_address = "11 River Drive, Logan UT-84321, USA"
@@ -261,7 +261,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         con_homepage = 'http://usu.edu/homepage/001'
         resource.create_metadata_element(self.res.short_id,'contributor',
                                          name=con_name,
-                                         description=con_des,
+                                         hydroshare_user_id=con_uid,
                                          organization=con_org,
                                          email=con_email,
                                          address=con_address,
@@ -275,7 +275,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         con_mike = self.res.metadata.contributors.all().filter(email=con_email).first()
         self.assertNotEqual(con_mike, None, msg='Creator Mike was not found')
         self.assertEqual(con_mike.name, con_name)
-        self.assertEqual(con_mike.description, con_des)
+        self.assertEqual(con_mike.hydroshare_user_id, con_uid)
         self.assertEqual(con_mike.organization, con_org)
         self.assertEqual(con_mike.address, con_address)
         self.assertEqual(con_mike.phone, con_phone)
@@ -292,17 +292,17 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         con_mike = self.res.metadata.contributors.all().filter(email=con_email).first()
         self.assertEqual(con_mike.homepage, None)
 
-        # trying to update (description) hydroshare user identifier to a different identifier should raise exception
+        # trying to update (hydroshare_user_id) hydroshare user identifier to a different identifier should raise exception
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id,'contributor', con_mike.id,
-                                             description="http://hydroshare.org/user/002")
+                                             hydroshare_user_id=2)
 
-        # however, it should be possible to to update (description) hydroshare identifier to empty string
+        # however, it should be possible to to update (hydroshare_user_id) hydroshare identifier to none
         con_mike = self.res.metadata.contributors.all().filter(email=con_email).first()
-        self.assertEqual(con_mike.description, 'http://hydroshare.org/user/001')
-        resource.update_metadata_element(self.res.short_id,'contributor', con_mike.id, description='')
+        self.assertEqual(con_mike.hydroshare_user_id, 1)
+        resource.update_metadata_element(self.res.short_id,'contributor', con_mike.id, hydroshare_user_id=None)
         con_mike = self.res.metadata.contributors.all().filter(email=con_email).first()
-        self.assertEqual(con_mike.description, '')
+        self.assertEqual(con_mike.hydroshare_user_id, None)
 
         # test that all resource contributors can be deleted
         # delete John
@@ -1366,7 +1366,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # add another creator with all sub_elements
         cr_name = 'Mike Sundar'
-        cr_des = 'http://hydroshare.org/user/001'
+        cr_uid = 1
         cr_org = "USU"
         cr_email = 'mike.sundar@usu.edu'
         cr_address = "11 River Drive, Logan UT-84321, USA"
@@ -1376,7 +1376,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                        'ResearchGateID': 'https://www.researchgate.net/001'}
         self.res.metadata.create_element('creator',
                                          name=cr_name,
-                                         description=cr_des,
+                                         hydroshare_user_id=cr_uid,
                                          organization=cr_org,
                                          email=cr_email,
                                          address=cr_address,
@@ -1390,7 +1390,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test adding a contributor with all sub_elements
         con_name = 'Sujan Peterson'
-        con_des = 'http://hydroshare.org/user/002'
+        con_uid = 2
         con_org = "USU"
         con_email = 'sujan.peterson@usu.edu'
         con_address = "101 Center St, Logan UT-84321, USA"
@@ -1399,7 +1399,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         self.res.metadata.create_element('contributor',
                                          name=con_name,
-                                         description=con_des,
+                                         hydroshare_user_id=con_des,
                                          organization=con_org,
                                          email=con_email,
                                          address=con_address,

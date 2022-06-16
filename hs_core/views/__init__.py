@@ -2,6 +2,7 @@ import json
 import datetime
 import pytz
 import logging
+from sorl.thumbnail import ImageField as TumbnailImageField, get_thumbnail
 
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
@@ -495,9 +496,6 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
                     if is_add_success:
                         resource_modified(res, request.user, overwrite_bag=False)
-                        if res.resource_type == "TimeSeriesResource" and element_name != "subject":
-                            res.metadata.is_dirty = True
-                            res.metadata.save()
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response['errors'])
 
@@ -516,16 +514,6 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status}
-            elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
-                ajax_response_data = {'status': 'success',
-                                      'element_name': element_name,
-                                      'spatial_coverage': get_coverage_data_dict(res),
-                                      'metadata_status': metadata_status,
-                                      'res_public_status': res_public_status,
-                                      'res_discoverable_status': res_discoverable_status
-                                      }
-                if element is not None:
-                    ajax_response_data['element_id'] = element.id
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
@@ -620,9 +608,6 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     res.update_public_and_discoverable()
                 if is_update_success:
                     resource_modified(res, request.user, overwrite_bag=False)
-                    if res.resource_type == "TimeSeriesResource" and element_name != "subject":
-                        res.metadata.is_dirty = True
-                        res.metadata.save()
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response['errors'])
 
@@ -635,8 +620,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
-            if element_name.lower() == 'site' and (res.resource_type == 'TimeSeriesResource' or
-                                                   res.resource_type == 'CompositeResource'):
+            if element_name.lower() == 'site' and res.resource_type == 'CompositeResource':
                 # get the spatial coverage element
                 spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success',
@@ -1223,7 +1207,7 @@ class GroupForm(forms.Form):
     name = forms.CharField(required=True)
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
-    picture = forms.ImageField(required=False)
+    picture = TumbnailImageField()
     privacy_level = forms.CharField(required=True)
     auto_approve = forms.BooleanField(required=False)
     requires_explanation = forms.BooleanField(required=False)
@@ -1258,7 +1242,10 @@ class GroupCreateForm(GroupForm):
                                                       auto_approve=frm_data['auto_approve'],
                                                       requires_explanation=frm_data['requires_explanation'])
         if 'picture' in request.FILES:
-            new_group.gaccess.picture = request.FILES['picture']
+            # resize uploaded image
+            img = request.FILES['picture']
+            img.image = get_thumbnail(img, 'x150', crop='center')
+            new_group.gaccess.picture = img
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(new_group, privacy_level)
@@ -1276,7 +1263,10 @@ class GroupUpdateForm(GroupForm):
         group_to_update.gaccess.auto_approve = frm_data['auto_approve']
         group_to_update.gaccess.requires_explanation = frm_data['requires_explanation']
         if 'picture' in request.FILES:
-            group_to_update.gaccess.picture = request.FILES['picture']
+            # resize uploaded image
+            img = request.FILES['picture']
+            img.image = get_thumbnail(img, 'x150', crop='center')
+            group_to_update.gaccess.picture = img
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
