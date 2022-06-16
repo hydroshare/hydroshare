@@ -1,17 +1,17 @@
 # coding=utf-8
 import os
 
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.test import TransactionTestCase
-from django.contrib.auth.models import Group
 
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
-from .utils import CompositeResourceTestMixin
 from hs_file_types.models import GenericLogicalFile, GenericFileMetaData
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+from .utils import CompositeResourceTestMixin
 
 
 class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -53,6 +53,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.file_folder, '')
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        gen_aggr = GenericLogicalFile.objects.first()
+        # check that there are no required missing metadata for the generic single file aggregation
+        self.assertEqual(len(gen_aggr.metadata.get_required_missing_elements()), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 

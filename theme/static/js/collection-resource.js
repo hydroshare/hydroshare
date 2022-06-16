@@ -102,6 +102,8 @@ $(document).ready(function() {
 
     if (edit_mode.toLowerCase() === "true") {
         $("#coverage-header").append($('<div><input id="btn-calc-coverage" value="Calculate Coverages" class="btn btn-info" type="button"/></div>'));
+        // load collectable resources asynchronously
+        getCollectableResources();
     }
 
     $("#btn-calc-coverage").click(collection_coverages_calculate_ajax);
@@ -109,10 +111,7 @@ $(document).ready(function() {
     $("#btn-add-collection-resources").click(function () {
         $('#collection-candidate').modal('show');
     });
-
-    // load collectable resources asynchronously
-    getCollectableResources();
-
+    
     $("#save-collection-btn-ok").click(add_collection_item_ajax);
 
     $(".btn-remove-collection-item").click(function() {
