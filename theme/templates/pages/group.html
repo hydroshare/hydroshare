@@ -40,18 +40,19 @@
 
             <div class="col-sm-3">
                 {#  Group Picture #}
-                {% thumbnail group.gaccess.picture "x130" crop="center" as im %}
-                    {% if im.exists %}
+                {% if group.gaccess.picture and group.gaccess.picture.url %}
+                    {% thumbnail group.gaccess.picture "x130" crop="center" as im %}
                         <div class="group-image-wrapper group-image-wrapper-medium">
                             <div class="group-image" style="background-image: url({{ im.url }})"></div>
                         </div>
-                    {% else %}
-                        <div class="group-image-wrapper group-image-wrapper-medium">
-                            <div class="group-image group-preview-image-default"
-                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                        </div>
-                    {% endif %}
-                {% endthumbnail %}
+                    {% endthumbnail %}
+
+                {% else %}
+                    <div class="group-image-wrapper group-image-wrapper-medium">
+                        <div class="group-image group-preview-image-default"
+                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                    </div>
+                {% endif %}
             </div>
 
             <div class="col-sm-7">
@@ -196,15 +197,15 @@
                                 {% for owner in group.gaccess.owners %}
                                     <tr data-filter-by="edit-user">
                                         <td>
-                                            {% thumbnail owner.userprofile.picture "x40" crop="center" as im %}
-                                                {% if im.exists %}
+                                            {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
+                                                {% thumbnail owner.userprofile.picture "x40" crop="center" as im %}
                                                     <div style="background-image: url('{{ im.url }}');"
                                                         class="profile-pic-thumbnail round-image pull-left">
                                                     </div>
-                                                {% else %}
-                                                    <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                                {% endif %}
-                                            {% endthumbnail %}
+                                                {% endthumbnail %}
+                                            {% else %}
+                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                            {% endif %}
                                         </td>
                                         <td>
                                             <h4><strong><a>{{ owner|contact }}</a></strong></h4>
@@ -295,15 +296,15 @@
                                 {% for member in view_users %}
                                     <tr data-filter-by="view-user">
                                         <td>
-                                            {% thumbnail member.userprofile.picture "x40" crop="center" as im %}
-                                                {% if im.exists %}
+                                            {% if member.userprofile.picture and member.userprofile.picture.url %}
+                                                {% thumbnail member.userprofile.picture "x40" crop="center" as im %}
                                                     <div style="background-image: url('{{ im.url }}');"
                                                         class="profile-pic-thumbnail round-image pull-left">
                                                     </div>
-                                                {% else %}
-                                                    <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                                {% endif %}
-                                            {% endthumbnail %}
+                                                {% endthumbnail %}
+                                            {% else %}
+                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                            {% endif %}
                                         </td>
                                         <td>
                                             <h4><strong><a>{{ member|contact }}</a></strong></h4>
@@ -359,15 +360,15 @@
                                         {% if not pendingrequest.invitation_to %}
                                             <tr>
                                                 <td data-id="picture">
-                                                    {% thumbnail pendingrequest.request_from.userprofile.picture "x40" crop="center" as im %}
-                                                        {% if im.exists %}
+                                                    {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
+                                                        {% thumbnail pendingrequest.request_from.userprofile.picture "x40" crop="center" as im %}
                                                             <div style="background-image: url('{{ im.url }}');"
                                                                 class="profile-pic-thumbnail round-image pull-left">
                                                             </div>
-                                                        {% else %}
-                                                            <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                                        {% endif %}
-                                                    {% endthumbnail %}
+                                                        {% endthumbnail %}
+                                                    {% else %}
+                                                        <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                                    {% endif %}
                                                 </td>
                                                 <td>
                                                     <h4>
@@ -412,15 +413,15 @@
                                         {% else %}
                                             <tr>
                                                 <td data-id="picture">
-                                                    {% thumbnail pendingrequest.invitation_to.userprofile.picture "x40" crop="center" as im %}
-                                                        {% if im.exists %}
+                                                    {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
+                                                        {% thumbnail pendingrequest.invitation_to.userprofile.picture "x40" crop="center" as im %}
                                                             <div style="background-image: url('{{ im.url }}');"
                                                                 class="profile-pic-thumbnail round-image pull-left">
                                                             </div>
-                                                        {% else %}
-                                                            <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                                        {% endif %}
-                                                    {% endthumbnail %}
+                                                        {% endthumbnail %}
+                                                    {% else %}
+                                                        <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                                    {% endif %}
                                                 </td>
                                                 <td>
                                                     <h4><strong>{{ pendingrequest.invitation_to|contact }}</strong>
