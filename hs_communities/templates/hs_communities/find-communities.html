@@ -50,13 +50,18 @@
                 {% for c in communities_list %}
                         <div class="group-container">
                             <div class="group-thumbnail contribution">
-                                {% if group.gaccess.picture and group.gaccess.picture.url %}
+                                {% if group.gaccess.picture %}
                                     {% thumbnail group.gaccess.picture "x150" crop="center" as im %}
-                                        <div class="group-preview-image" style="background-image: url({{ im.url }})"></div>
+                                        {% if im.exists %}
+                                            <div class="group-preview-image" style="background-image: url({{ im.url }})"></div>
+                                        {% else %}
+                                            <div class="group-preview-image group-preview-image-default"
+                                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                        {% endif %}
                                     {% endthumbnail %}
                                 {% else %}
                                     <div class="group-preview-image group-preview-image-default"
-                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                        style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                                 {% endif %}
                                 <div class="group-caption">
                                     <h3 class="group-name">
@@ -77,12 +82,19 @@
                                                                                 data-target="#modal-members-list-{{ group.id }}">MEMBERS</a>
                                                     </div>
                                                     {% for member in group.gaccess.members|slice:":5" %}
-                                                        {% if  member.userprofile.picture and member.userprofile.picture.url %}
+                                                        {% if member.userprofile.picture %}
                                                             {% thumbnail member.userprofile.picture "x40" crop="center" as im %}
-                                                                <div style="background-image: url('{{ im.url }}');"
-                                                                    class="round-image profile-pic-thumbnail"
-                                                                    title="{{ member|best_name }}">
-                                                                </div>
+                                                                {% if  im.exists %}
+                                                                    <div style="background-image: url('{{ im.url }}');"
+                                                                        class="round-image profile-pic-thumbnail"
+                                                                        title="{{ member|best_name }}">
+                                                                    </div>
+                                                                {% else %}
+                                                                    <div class="profile-pic-thumbnail-small round-image"
+                                                                        title="{{ member|best_name }}">
+
+                                                                    </div>
+                                                                {% endif %}
                                                             {% endthumbnail %}
                                                         {% else %}
                                                             <div class="profile-pic-thumbnail-small round-image"
@@ -126,14 +138,17 @@
                                                                                 <div class="user-scope">
                                                                                     {% if u.userprofile.picture %}
                                                                                         {% thumbnail u.userprofile.picture "x40" crop="center" as im %}
-                                                                                            <div style="background-image: url('{{ im.url }}');"
-                                                                                                class="round-image profile-pic-thumbnail">
-                                                                                            </div>
+                                                                                            {% if im.exists %}
+                                                                                                <div style="background-image: url('{{ im.url }}');"
+                                                                                                    class="round-image profile-pic-thumbnail">
+                                                                                                </div>
+                                                                                            {% else %}
+                                                                                                <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                                                            {% endif %}
                                                                                         {% endthumbnail %}
                                                                                     {% else %}
                                                                                         <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                                                     {% endif %}
-
                                                                                     <a data-col="name"
                                                                                     class="user-name">{{ u|contact }}</a>
                                                                                     {% if u.pk == current_user.pk %}

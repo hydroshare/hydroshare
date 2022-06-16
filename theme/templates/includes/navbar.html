@@ -168,13 +168,19 @@
                 {% ifinstalled mezzanine.accounts %}
                     {% if request.user.is_authenticated %}
                         <li id="profile-menu" class="display-block">
-                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                            {% if request.user.userprofile.picture %}
                                 {% thumbnail request.user.userprofile.picture "x40" crop="center" as im %}
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        <div style="background-image: url('{{ im.url }}');"
-                                            class="round-image profile-pic-thumbnail pull-left">
-                                        </div>
-                                    </a>
+                                    {% if im.exists %}
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                            <div style="background-image: url('{{ im.url }}');"
+                                                class="round-image profile-pic-thumbnail pull-left">
+                                            </div>
+                                        </a>
+                                    {% else %}
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                            <div class="profile-pic-thumbnail-small round-image pull-left"></div>
+                                        </a>
+                                    {% endif %}
                                 {% endthumbnail %}
                             {% else %}
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -185,11 +191,15 @@
                                 <li class="account">
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                                            {% if request.user.userprofile.picture %}
                                                 {% thumbnail request.user.userprofile.picture "x80" crop="center" as im %}
-                                                    <div style="background-image: url('{{ im.url }}');"
-                                                        class="round-image dropdown-profile-pic-thumbnail pull-left">
-                                                    </div>
+                                                    {% if im.exists %}
+                                                        <div style="background-image: url('{{ im.url }}');"
+                                                            class="round-image dropdown-profile-pic-thumbnail pull-left">
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
+                                                    {% endif %}
                                                 {% endthumbnail %}
                                             {% else %}
                                                 <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
