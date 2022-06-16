@@ -36,14 +36,14 @@
                     {% if group.gaccess.public or group.gaccess.discoverable %}
                         <div class="group-container">
                             <div class="group-thumbnail contribution">
-                                {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                    {% thumbnail group.gaccess.picture "x150" crop="center" as im %}
+                                {% thumbnail group.gaccess.picture "x150" crop="center" as im %}
+                                    {% if im.exists %}
                                         <div class="group-preview-image" style="background-image: url({{ im.url }})"></div>
-                                    {% endthumbnail %}
-                                {% else %}
-                                    <div class="group-preview-image group-preview-image-default"
-                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                {% endif %}
+                                    {% else %}
+                                        <div class="group-preview-image group-preview-image-default"
+                                        style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                    {% endif %}
+                                {% endthumbnail %}
                                 <div class="group-caption">
                                     <h3 class="group-name"><a href="/group/{{ group.id }}">{{ group.name }}</a></h3>
                                     <div class="group-purpose">
@@ -63,17 +63,17 @@
                                                                                 data-target="#modal-members-list-{{ group.id }}">MEMBERS</a>
                                                     </div>
                                                     {% for member in group.gaccess.members|slice:":5" %}
-                                                        {% if  member.userprofile.picture and member.userprofile.picture.url %}
-                                                            {% thumbnail member.userprofile.picture "x40" crop="center" as im %}
+                                                        {% thumbnail member.userprofile.picture "x40" crop="center" as im %}
+                                                            {% if im.exists %}
                                                                 <div style="background-image: url('{{ im.url }}');"
                                                                     class="round-image profile-pic-thumbnail"
                                                                     title="{{ member|best_name }}">
                                                                 </div>
-                                                            {% endthumbnail %}
-                                                        {% else %}
-                                                            <div class="profile-pic-thumbnail-small round-image"
+                                                            {% else %}
+                                                                <div class="profile-pic-thumbnail-small round-image"
                                                                 title="{{ member|best_name }}"></div>
-                                                        {% endif %}
+                                                            {% endif %}
+                                                        {% endthumbnail %}
                                                     {% endfor %}
                                                 </div>
                                                 {% if group.gaccess.members|length > 5 %}
@@ -108,15 +108,15 @@
                                                                             {% if owners|length == 1 or not self_access_level == 'owner' %}class="hide-actions"{% endif %}>
                                                                             <td>
                                                                                 <div class="user-scope">
-                                                                                    {% if u.userprofile.picture %}
-                                                                                        {% thumbnail u.userprofile.picture "x40" crop="center" as im %}
+                                                                                    {% thumbnail u.userprofile.picture "x40" crop="center" as im %}
+                                                                                        {% if im.exists %}
                                                                                             <div style="background-image: url('{{ im.url }}');"
                                                                                                 class="round-image profile-pic-thumbnail">
                                                                                             </div>
-                                                                                        {% endthumbnail %}
-                                                                                    {% else %}
-                                                                                        <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                                                                    {% endif %}
+                                                                                        {% else %}
+                                                                                            <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                                                        {% endif %}
+                                                                                    {% endthumbnail %}
 
                                                                                     <a data-col="name"
                                                                                     class="user-name">{{ u|contact }}</a>
