@@ -653,16 +653,18 @@
                                         {# Date Created #}
                                         <td>{{ res.created|date:"d M, Y" }} {{ res.created|time }}</td>
                                         {# Last Modified #}
-                                        <td>{{ res.last_updated|date:"d M, Y" }} {{ res.last_updated|time }}</td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td>{{ res.last_updated|date:"U" }}</td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td>{{ res.created|date:"U" }}</td>
-                                        <td>{{ res.grantor.id }}</td>
+                                        {% with last_updated=res.last_updated %}
+                                            <td>{{ last_updated|date:"d M, Y" }} {{ last_updated|time }}</td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td>{{ last_updated|date:"U" }}</td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td>{{ res.created|date:"U" }}</td>
+                                            <td>{{ res.grantor.id }}</td>
+                                        {% endwith %}
                                     </tr>
                                 {% endfor %}
                                 </tbody>
