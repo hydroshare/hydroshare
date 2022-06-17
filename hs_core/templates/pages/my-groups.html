@@ -71,15 +71,9 @@
                                 <div class="activity-block height-fix">
                                     {% if request.request_from.userprofile.picture and request.request_from.userprofile.picture.url %}
                                         {% thumbnail request.request_from.userprofile.picture "x80" crop="center" as im %}
-                                            {% if im.exists %}
-                                                <div style="background-image: url('{{ im.url }}');"
-                                                    class="round-image profile-pic-thumbnail pull-left">
-                                                </div>
-                                            {% else %}
-                                                <div style="background-image: url('{{ request.request_from.userprofile.picture.url }}');"
-                                                    class="round-image profile-pic-thumbnail pull-left">
-                                                </div>
-                                            {% endif %}
+                                            <div style="background-image: url('{{ im.url }}');"
+                                                class="round-image profile-pic-thumbnail pull-left">
+                                            </div>
                                         {% endthumbnail %}
                                     {% else %}
                                         <div class="profile-pic-thumbnail round-image user-icon"></div>

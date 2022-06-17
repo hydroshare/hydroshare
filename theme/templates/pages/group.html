@@ -202,17 +202,11 @@
                                 {% for owner in group.gaccess.owners %}
                                     <tr data-filter-by="edit-user">
                                         <td>
-                                            {% if owner.userprofile.picture and owner.userprofile.picture.url %}
+                                            {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
                                                 {% thumbnail owner.userprofile.picture "x80" crop="center" as im %}
-                                                    {% if im.exists %}
-                                                        <div style="background-image: url('{{ im.url }}');"
-                                                            class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
-                                                    {% else %}
-                                                        <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
-                                                            class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
-                                                    {% endif %}
+                                                    <div style="background-image: url('{{ im.url }}');"
+                                                        class="profile-pic-thumbnail round-image pull-left">
+                                                    </div>
                                                 {% endthumbnail %}
                                             {% else %}
                                                 <div class="profile-pic-thumbnail-small round-image user-icon"></div>
@@ -309,12 +303,7 @@
                                         <td>
                                             {% if member.userprofile.picture and member.userprofile.picture.url %}
                                                 {% thumbnail member.userprofile.picture "x80" crop="center" as im %}
-                                                    {% if im.exists %}
-                                                        <div style="background-image: url('{{ im.url }}');"
-                                                            class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
-                                                    {% else %}
-                                                    <div style="background-image: url('{{ member.userprofile.picture.url }}');"
+                                                    <div style="background-image: url('{{ im.url }}');"
                                                         class="profile-pic-thumbnail round-image pull-left">
                                                     </div>
                                                     {% endif %}
@@ -379,15 +368,9 @@
                                                 <td data-id="picture">
                                                     {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
                                                         {% thumbnail pendingrequest.request_from.userprofile.picture "x80" crop="center" as im %}
-                                                            {% if im.exists %}
-                                                                <div style="background-image: url('{{ im.url }}');"
-                                                                    class="profile-pic-thumbnail round-image pull-left">
-                                                                </div>
-                                                            {% else %}
-                                                                <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
-                                                                    class="profile-pic-thumbnail round-image pull-left">
-                                                                </div>
-                                                            {% endif %}
+                                                            <div style="background-image: url('{{ im.url }}');"
+                                                                class="profile-pic-thumbnail round-image pull-left">
+                                                            </div>
                                                         {% endthumbnail %}
                                                     {% else %}
                                                         <div class="profile-pic-thumbnail-small round-image user-icon"></div>
@@ -438,15 +421,9 @@
                                                 <td data-id="picture">
                                                     {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
                                                         {% thumbnail pendingrequest.invitation_to.userprofile.picture "x80" crop="center" as im %}
-                                                            {% if im.exists %}
-                                                                <div style="background-image: url('{{ im.url }}');"
-                                                                    class="profile-pic-thumbnail round-image pull-left">
-                                                                </div>
-                                                            {% else %}
-                                                                <div style="background-image: url('{{ pendingrequest.invitation_to.userprofile.picture.url }}');"
-                                                                    class="profile-pic-thumbnail round-image pull-left">
-                                                                </div>
-                                                            {% endif %}
+                                                            <div style="background-image: url('{{ im.url }}');"
+                                                                class="profile-pic-thumbnail round-image pull-left">
+                                                            </div>
                                                         {% endthumbnail %}
                                                     {% else %}
                                                         <div class="profile-pic-thumbnail-small round-image user-icon"></div>

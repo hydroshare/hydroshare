@@ -239,6 +239,10 @@ MEDIA_URL = STATIC_URL + "media/"
 THUMBNAIL_PRESERVE_FORMAT = True
 THUMBNAIL_QUALITY = 95
 
+# Allow PIL to ignore imgs with lots of metadata
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))

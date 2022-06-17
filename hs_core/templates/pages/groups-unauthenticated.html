@@ -68,18 +68,11 @@
                                                     </div>
                                                     {% for member in group.gaccess.members|slice:":5" %}
                                                         {% if  member.userprofile.picture and member.userprofile.picture.url %}
-                                                            {% thumbnail member.userprofile.picture "x80" as im %}
-                                                                {% if im.exists %}
-                                                                    <div style="background-image: url('{{ im.url }}');"
-                                                                        class="round-image profile-pic-thumbnail"
-                                                                        title="{{ member|best_name }}">
-                                                                    </div>
-                                                                {% else %}
-                                                                    <div style="background-image: url('{{ member.userprofile.picture.url }}');"
-                                                                        class="round-image profile-pic-thumbnail"
-                                                                        title="{{ member|best_name }}">
-                                                                    </div>
-                                                                {% endif %}
+                                                            {% thumbnail member.userprofile.picture "x80" crop="center" as im %}
+                                                                <div style="background-image: url('{{ im.url }}');"
+                                                                    class="round-image profile-pic-thumbnail"
+                                                                    title="{{ member|best_name }}">
+                                                                </div>
                                                             {% endthumbnail %}
                                                         {% else %}
                                                             <div class="profile-pic-thumbnail-small round-image"
@@ -121,15 +114,9 @@
                                                                                 <div class="user-scope">
                                                                                     {% if u.userprofile.picture %}
                                                                                         {% thumbnail u.userprofile.picture "x80" crop="center" as im %}
-                                                                                            {% if im.exists %}
-                                                                                                <div style="background-image: url('{{ im.url }}');"
-                                                                                                    class="round-image profile-pic-thumbnail">
-                                                                                                </div>
-                                                                                            {% else %}
-                                                                                                <div style="background-image: url('{{ u.userprofile.picture.url }}');"
-                                                                                                    class="round-image profile-pic-thumbnail">
-                                                                                                </div>
-                                                                                            {% endif %}
+                                                                                            <div style="background-image: url('{{ im.url }}');"
+                                                                                                class="round-image profile-pic-thumbnail">
+                                                                                            </div>
                                                                                         {% endthumbnail %}
                                                                                     {% else %}
                                                                                         <div class="profile-pic-thumbnail round-image user-icon"></div>
