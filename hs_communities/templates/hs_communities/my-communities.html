@@ -32,15 +32,9 @@
                                         <td>
                                             {% if group.gaccess.picture and group.gaccess.picture.url %}
                                                 {% thumbnail group.gaccess.picture "x80" crop="center" as im %}
-                                                    {% if im.exists %}
-                                                        <div class="group-image-wrapper">
-                                                            <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
-                                                        </div>
-                                                    {% else %}
-                                                        <div class="group-image-wrapper">
-                                                            <div class="group-image-small" style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                                                        </div>
-                                                    {% endif %}
+                                                    <div class="group-image-wrapper">
+                                                        <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                                                    </div>
                                                 {% endthumbnail %}
                                             {% else %}
                                                 <div class="group-image-wrapper">
