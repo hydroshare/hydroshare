@@ -143,13 +143,7 @@ var setMarkers = function(json_results) {
             map_items_table.draw();
         });
     });
-    markerCluster = new MarkerClusterer(map, markers, {
-        styles:[{
-            height: 55,
-            width: 56,
-            url: '/static/img/m2.png'
-        }]
-    });
+    markerCluster = new markerClusterer.MarkerClusterer({markers:markers, map:exports.map})
 };
 
 var highlightOverlapping = function(position) {

@@ -19,7 +19,6 @@ from .discovery import DiscoverSearchView
 hsapi_urlpatterns = [
     url('^hsapi/', include('hs_rest_api.urls')),
     url('^hsapi/', include('hs_core.urls')),
-    url('^hsapi/', include('ref_ts.urls')),
     url('^hsapi/', include('hs_model_program.urls')),
     url('^hsapi/', include('hs_labels.urls')),
     url('^hsapi/', include('hs_collection_resource.urls')),

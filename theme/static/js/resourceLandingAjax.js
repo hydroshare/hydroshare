@@ -126,25 +126,13 @@ function showWaitDialog(){
 
 function handleIsDirty(json_response) {
     // show update netcdf file update option for NetCDFLogicalFile
-    if (json_response.logical_file_type === "NetCDFLogicalFile") {
+    if (json_response.logical_file_type === "NetCDFLogicalFile" && json_response.is_update_file) {
         $("#div-netcdf-file-update").show();
     }
     // show update sqlite file update option for TimeSeriesLogicalFile
     if (json_response.logical_file_type === "TimeSeriesLogicalFile" &&
         json_response.is_update_file && json_response.can_update_sqlite) {
         $("#div-sqlite-file-update").show();
-    }
-    // show update netcdf resource
-    if (RES_TYPE === 'Multidimensional (NetCDF)' &&
-        json_response.is_dirty) {
-        $("#netcdf-file-update").show();
-    }
-
-    // start timeseries resource specific DOM manipulation
-    if (RES_TYPE === 'Time Series') {
-        if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
-            $("#sql-file-update").show();
-        }
     }
 }
 
