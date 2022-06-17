@@ -34,12 +34,11 @@
                                                 {% thumbnail group.gaccess.picture "x80" crop="center" as im %}
                                                     {% if im.exists %}
                                                         <div class="group-image-wrapper">
-                                                                <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                                                            <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
                                                         </div>
                                                     {% else %}
                                                         <div class="group-image-wrapper">
-                                                            <div class="group-image-small"
-                                                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                            <div class="group-image-small" style="background-image: url({{ group.gaccess.picture.url }})"></div>
                                                         </div>
                                                     {% endif %}
                                                 {% endthumbnail %}

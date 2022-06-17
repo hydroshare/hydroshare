@@ -178,7 +178,9 @@
                                         </a>
                                     {% else %}
                                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                            <div class="profile-pic-thumbnail-small round-image pull-left"></div>
+                                            <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                                class="round-image profile-pic-thumbnail pull-left">
+                                            </div>
                                         </a>
                                     {% endif %}
                                 {% endthumbnail %}
@@ -198,7 +200,9 @@
                                                             class="round-image dropdown-profile-pic-thumbnail pull-left">
                                                         </div>
                                                     {% else %}
-                                                        <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
+                                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                                            class="round-image dropdown-profile-pic-thumbnail pull-left">
+                                                        </div>
                                                     {% endif %}
                                                 {% endthumbnail %}
                                             {% else %}

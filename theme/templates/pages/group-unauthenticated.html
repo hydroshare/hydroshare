@@ -31,8 +31,7 @@
                             </div>
                         {% else %}
                             <div class="group-image-wrapper group-image-wrapper-medium">
-                                <div class="group-image group-preview-image-default"
-                                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
                             </div>
                         {% endif %}
                     {% endthumbnail %}

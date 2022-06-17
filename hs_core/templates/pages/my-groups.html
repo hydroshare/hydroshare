@@ -76,7 +76,9 @@
                                                     class="round-image profile-pic-thumbnail pull-left">
                                                 </div>
                                             {% else %}
-                                                <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                <div style="background-image: url('{{ request.request_from.userprofile.picture.url }}');"
+                                                    class="round-image profile-pic-thumbnail pull-left">
+                                                </div>
                                             {% endif %}
                                         {% endthumbnail %}
                                     {% else %}
@@ -143,8 +145,7 @@
                                                         </div>
                                                     {% else %}
                                                         <div class="group-image-wrapper">
-                                                            <div class="group-image-small"
-                                                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                            <div class="group-image-small" style="background-image: url({{ group.gaccess.picture.url }})"></div>
                                                         </div>
                                                     {% endif %}
                                                 {% endthumbnail %}
@@ -189,8 +190,7 @@
                                                         </div>
                                                     {% else %}
                                                         <div class="group-image-wrapper">
-                                                            <div class="group-image-small"
-                                                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                            <div class="group-image-small" style="background-image: url({{ group.gaccess.picture.url }})"></div>
                                                         </div>
                                                     {% endif %}
                                                 {% endthumbnail %}

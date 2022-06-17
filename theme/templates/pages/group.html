@@ -48,8 +48,7 @@
                             </div>
                         {% else %}
                             <div class="group-image-wrapper group-image-wrapper-medium">
-                                <div class="group-image group-preview-image-default"
-                                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
                             </div>
                         {% endif %}
                     {% endthumbnail %}
@@ -210,7 +209,9 @@
                                                             class="profile-pic-thumbnail round-image pull-left">
                                                         </div>
                                                     {% else %}
-                                                        <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                                        <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
+                                                            class="profile-pic-thumbnail round-image pull-left">
+                                                        </div>
                                                     {% endif %}
                                                 {% endthumbnail %}
                                             {% else %}
@@ -313,7 +314,9 @@
                                                             class="profile-pic-thumbnail round-image pull-left">
                                                         </div>
                                                     {% else %}
-                                                        <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                                    <div style="background-image: url('{{ member.userprofile.picture.url }}');"
+                                                        class="profile-pic-thumbnail round-image pull-left">
+                                                    </div>
                                                     {% endif %}
                                                 {% endthumbnail %}
                                             {% else %}
@@ -381,7 +384,9 @@
                                                                     class="profile-pic-thumbnail round-image pull-left">
                                                                 </div>
                                                             {% else %}
-                                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                                                <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
+                                                                    class="profile-pic-thumbnail round-image pull-left">
+                                                                </div>
                                                             {% endif %}
                                                         {% endthumbnail %}
                                                     {% else %}
@@ -438,7 +443,9 @@
                                                                     class="profile-pic-thumbnail round-image pull-left">
                                                                 </div>
                                                             {% else %}
-                                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                                                <div style="background-image: url('{{ pendingrequest.invitation_to.userprofile.picture.url }}');"
+                                                                    class="profile-pic-thumbnail round-image pull-left">
+                                                                </div>
                                                             {% endif %}
                                                         {% endthumbnail %}
                                                     {% else %}
