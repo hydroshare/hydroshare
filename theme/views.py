@@ -92,17 +92,11 @@ class UserProfileView(TemplateView):
 
         # get resource attributes used in profile page
         resources = resources.only('title', 'resource_type', 'created')
-        # prefetch resource metadata elements
-        meta_contenttypes = get_metadata_contenttypes()
-        for ct in meta_contenttypes:
-            # get a list of resources having metadata that is an instance of a specific
-            # metadata class (e.g., CoreMetaData)
-            res_list = [res for res in resources if res.content_type == ct]
-            prefetch_related_objects(res_list,
-                                     Prefetch('content_object__creators'),
-                                     Prefetch('content_object___description'),
-                                     Prefetch('content_object___title')
-                                     )
+        prefetch_related_objects(resources,
+                                 Prefetch('content_object__creators'),
+                                 Prefetch('content_object___description'),
+                                 Prefetch('content_object___title')
+                                 )
         return {
             'profile_user': u,
             'resources': resources,
