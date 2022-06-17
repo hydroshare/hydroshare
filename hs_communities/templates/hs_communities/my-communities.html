@@ -31,11 +31,12 @@
                                     <tr>
                                         <td>
                                             {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                                {% thumbnail group.gaccess.picture "x80" crop="center" as im %}
-                                                    <div class="group-image-wrapper">
+                                                <div class="group-image-wrapper"></div>
+                                                    {% thumbnail group.gaccess.picture "x80" crop="center" as im %}
                                                         <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
-                                                    </div>
-                                                {% endthumbnail %}
+                                                    {% endthumbnail %}
+                                                </div>
+                                                
                                             {% else %}
                                                 <div class="group-image-wrapper">
                                                     <div class="group-image-small"
