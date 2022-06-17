@@ -102,7 +102,7 @@ class GroupAccess(models.Model):
 
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
-                                   u2ugp__privilege=PrivilegeCodes.OWNER)
+                                   u2ugp__privilege=PrivilegeCodes.OWNER).select_related('userprofile')
 
     @property
     def __edit_users_of_group(self):
@@ -158,7 +158,7 @@ class GroupAccess(models.Model):
         """
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
-                                   u2ugp__privilege__lte=PrivilegeCodes.VIEW)
+                                   u2ugp__privilege__lte=PrivilegeCodes.VIEW).select_related('userprofile')
 
     @property
     def viewers(self):
@@ -216,7 +216,7 @@ class GroupAccess(models.Model):
         :return: QuerySet of resource objects held by group.
 
         """
-        return BaseResource.objects.filter(self.__view_resources_of_group)
+        return BaseResource.objects.filter(self.__view_resources_of_group).select_related('raccess')
 
     @property
     def edit_resources(self):
