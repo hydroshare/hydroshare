@@ -30,7 +30,7 @@
                                 {% for c in communities_list %}
                                     <tr>
                                         <td>
-                                            {% if group.gaccess.picture %}
+                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
                                                 {% thumbnail group.gaccess.picture "x80" crop="center" as im %}
                                                     {% if im.exists %}
                                                         <div class="group-image-wrapper">

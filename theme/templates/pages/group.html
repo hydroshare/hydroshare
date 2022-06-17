@@ -40,7 +40,7 @@
 
             <div class="col-sm-3">
                 {#  Group Picture #}
-                {% if group.gaccess.picture %}
+                {% if group.gaccess.picture and group.gaccess.picture.url %}
                     {% thumbnail group.gaccess.picture "x130" crop="center" as im %}
                         {% if im.exists %}
                             <div class="group-image-wrapper group-image-wrapper-medium">
@@ -202,7 +202,7 @@
                                 {% for owner in group.gaccess.owners %}
                                     <tr data-filter-by="edit-user">
                                         <td>
-                                            {% if owner.userprofile.picture %}
+                                            {% if owner.userprofile.picture and owner.userprofile.picture.url %}
                                                 {% thumbnail owner.userprofile.picture "x80" crop="center" as im %}
                                                     {% if im.exists %}
                                                         <div style="background-image: url('{{ im.url }}');"
@@ -307,7 +307,7 @@
                                 {% for member in view_users %}
                                     <tr data-filter-by="view-user">
                                         <td>
-                                            {% if member.userprofile.picture %}
+                                            {% if member.userprofile.picture and member.userprofile.picture.url %}
                                                 {% thumbnail member.userprofile.picture "x80" crop="center" as im %}
                                                     {% if im.exists %}
                                                         <div style="background-image: url('{{ im.url }}');"
@@ -377,7 +377,7 @@
                                         {% if not pendingrequest.invitation_to %}
                                             <tr>
                                                 <td data-id="picture">
-                                                    {% if pendingrequest.request_from.userprofile.picture %}
+                                                    {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
                                                         {% thumbnail pendingrequest.request_from.userprofile.picture "x80" crop="center" as im %}
                                                             {% if im.exists %}
                                                                 <div style="background-image: url('{{ im.url }}');"
@@ -436,7 +436,7 @@
                                         {% else %}
                                             <tr>
                                                 <td data-id="picture">
-                                                    {% if pendingrequest.invitation_to.userprofile.picture %}
+                                                    {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
                                                         {% thumbnail pendingrequest.invitation_to.userprofile.picture "x80" crop="center" as im %}
                                                             {% if im.exists %}
                                                                 <div style="background-image: url('{{ im.url }}');"

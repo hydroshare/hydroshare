@@ -69,7 +69,7 @@
                             <div class="request-block">
                                 <form></form>
                                 <div class="activity-block height-fix">
-                                    {% if request.request_from.userprofile.picture %}
+                                    {% if request.request_from.userprofile.picture and request.request_from.userprofile.picture.url %}
                                         {% thumbnail request.request_from.userprofile.picture "x80" crop="center" as im %}
                                             {% if im.exists %}
                                                 <div style="background-image: url('{{ im.url }}');"
@@ -137,7 +137,7 @@
                                 {% for group in groups %}
                                     <tr>
                                         <td>
-                                            {% if group.gaccess.picture %}
+                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
                                                 {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
                                                     {% if im.exists %}
                                                         <div class="group-image-wrapper">
@@ -182,7 +182,7 @@
                                 {% for group in inactive_groups %}
                                     <tr>
                                         <td>
-                                            {% if group.gaccess.picture %}
+                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
                                                 {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
                                                     {% if im.exists %}
                                                         <div class="group-image-wrapper">

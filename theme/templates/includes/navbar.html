@@ -168,7 +168,7 @@
                 {% ifinstalled mezzanine.accounts %}
                     {% if request.user.is_authenticated %}
                         <li id="profile-menu" class="display-block">
-                            {% if request.user.userprofile.picture %}
+                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
                                 {% thumbnail request.user.userprofile.picture "x80" crop="center" as im %}
                                     {% if im.exists %}
                                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -193,7 +193,7 @@
                                 <li class="account">
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            {% if request.user.userprofile.picture %}
+                                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
                                                 {% thumbnail request.user.userprofile.picture "x150" crop="center" as im %}
                                                     {% if im.exists %}
                                                         <div style="background-image: url('{{ im.url }}');"

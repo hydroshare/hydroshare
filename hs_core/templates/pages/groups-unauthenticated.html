@@ -36,7 +36,7 @@
                     {% if group.gaccess.public or group.gaccess.discoverable %}
                         <div class="group-container">
                             <div class="group-thumbnail contribution">
-                                {% if group.gaccess.picture %}
+                                {% if group.gaccess.picture and group.gaccess.picture.url %}
                                     {% thumbnail group.gaccess.picture "x150" crop="center" as im %}
                                         {% if im.exists %}
                                             <div class="group-preview-image" style="background-image: url({{ im.url }})"></div>
@@ -67,7 +67,7 @@
                                                                                 data-target="#modal-members-list-{{ group.id }}">MEMBERS</a>
                                                     </div>
                                                     {% for member in group.gaccess.members|slice:":5" %}
-                                                        {% if member.userprofile.picture %}
+                                                        {% if  member.userprofile.picture and member.userprofile.picture.url %}
                                                             {% thumbnail member.userprofile.picture "x80" as im %}
                                                                 {% if im.exists %}
                                                                     <div style="background-image: url('{{ im.url }}');"
