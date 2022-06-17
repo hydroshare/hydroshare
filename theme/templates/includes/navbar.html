@@ -246,7 +246,11 @@
                                         <small v-else>${taskMessages[task.name].status[task.status]}.
                                             <span v-if="task.payload && (task.status === 'delivered' || task.status === 'completed')">
                                             Click <a :href="task.payload">here</a> to refresh user interface.
-                                            </span></small>
+                                            </span>
+                                            <span v-else="task.payload && task.status === 'failed'">
+                                            ${task.payload}
+                                            </span>
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -782,6 +786,9 @@
                     case "file unzip":
                         if (task.status === "completed" && task.payload) {
                             vue.deliverTask(task);
+                        }
+                        if (task.status === "failed" && task.payload) {
+
                         }
                         break;
                     default:
