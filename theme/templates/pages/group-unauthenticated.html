@@ -23,18 +23,21 @@
         <div class="row">
             <div class="col-sm-3">
                 {#  Group Picture #}
-                {% if group.gaccess.picture and group.gaccess.picture.url %}
-                    {% thumbnail group.gaccess.picture "x130" crop="center" as im %}
-                        <div class="group-image-wrapper group-image-wrapper-medium">
-                            <div class="group-image" style="background-image: url({{ im.url }})"></div>
-                        </div>
-                    {% endthumbnail %}
-                {% else %}
-                    <div class="group-image-wrapper group-image-wrapper-medium">
-                        <div class="group-image group-preview-image-default"
-                            style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                    </div>
-                {% endif %}
+                <div class="group-image-wrapper group-image-wrapper-medium">
+                    {% if group.gaccess.picture and group.gaccess.picture.url %}
+                        {% thumbnail group.gaccess.picture "x130" crop="center" as im %}
+                            {% if im.exists %}
+                                <div class="group-image" style="background-image: url({{ im.url }})"></div>
+                            {% else %}
+                                <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                            {% endif %}
+                        {% endthumbnail %}
+                    {% else %}
+                            <div class="group-image group-preview-image-default"
+                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                            </div>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="col-sm-7">

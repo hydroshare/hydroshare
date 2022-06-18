@@ -39,7 +39,11 @@
                         <div class="group-thumbnail contribution">
                             {% if group.gaccess.picture and group.gaccess.picture.url %}
                                 {% thumbnail group.gaccess.picture "x150" crop="center" as im %}
-                                    <div class="group-preview-image" style="background-image: url({{ im.url }})"></div>
+                                    {% if im.exists %}
+                                        <div class="group-preview-image" style="background-image: url({{ im.url }})"></div>
+                                    {% else %}
+                                        <div class="group-preview-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                                    {% endif %}
                                 {% endthumbnail %}
                             {% else %}
                                 <div class="group-preview-image group-preview-image-default" style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
