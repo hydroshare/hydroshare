@@ -131,22 +131,20 @@
                                 {% for group in groups %}
                                     <tr>
                                         <td>
-                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                                <div class="group-image-wrapper">
-                                                    {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
-                                                        {% if im.exists %}
-                                                            <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
-                                                        {% else %}
-                                                            <div class="group-image-small" style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                                                        {% endif %}
-                                                    {% endthumbnail %}
-                                                </div>
-                                            {% else %}
-                                                <div class="group-image-wrapper">
-                                                    <div class="group-image-small"
-                                                        style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                                </div>
-                                            {% endif %}
+                                            <div class="group-image-wrapper">
+                                                {% if group.gaccess.picture and group.gaccess.picture.url %}
+                                                        {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
+                                                            {% if im.exists %}
+                                                                <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                                                            {% else %}
+                                                                <div class="group-image-small" style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                                                            {% endif %}
+                                                        {% endthumbnail %}
+                                                {% else %}
+                                                        <div class="group-image-small"
+                                                            style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                {% endif %}
+                                            </div>
                                         </td>
 
                                         <td>
@@ -174,22 +172,20 @@
                                 {% for group in inactive_groups %}
                                     <tr>
                                         <td>
-                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                                <div class="group-image-wrapper">
-                                                    {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
-                                                        {% if im.exists %}
-                                                            <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
-                                                        {% else %}
-                                                            <div class="group-image-small" style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                                                        {% endif %}
-                                                    {% endthumbnail %}
-                                                </div>
-                                            {% else %}
-                                                <div class="group-image-wrapper">
-                                                    <div class="group-image-small"
-                                                        style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                                </div>
-                                            {% endif %}
+                                            <div class="group-image-wrapper">
+                                                {% if group.gaccess.picture and group.gaccess.picture.url %}
+                                                        {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
+                                                            {% if im.exists %}
+                                                                <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                                                            {% else %}
+                                                                <div class="group-image-small" style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                                                            {% endif %}
+                                                        {% endthumbnail %}
+                                                {% else %}
+                                                        <div class="group-image-small"
+                                                            style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                {% endif %}
+                                            </div>
                                         </td>
 
                                         <td>
