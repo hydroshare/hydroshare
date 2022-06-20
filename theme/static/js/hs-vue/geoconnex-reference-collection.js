@@ -13,7 +13,7 @@ let geoconnexApp = new Vue({
     data() {
         return{
             relations: RELATIONS,
-            debug: false,
+            debug: true,
             resMode: RESOURCE_MODE,
             resSpatialType: null,
             items: [],
@@ -216,11 +216,15 @@ let geoconnexApp = new Vue({
         L.Control.GeoconnexButton = L.Control.extend({
           onAdd: function(map) {
               var geoButton = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+              geoButton.setAttribute("data-toggle", "tooltip");
+              geoButton.setAttribute("data-placement", "right");
+              geoButton.setAttribute("title", "Search map using Spatial Extent");
 
               geoButton.innerHTML = `<a role="button"><i class="fa fa-connectdevelop fa-3x"></i></a>`
 
-              L.DomEvent.on(geoButton, 'click', ()=>{
-                alert("Let's do a geoconnex search...")
+              L.DomEvent.on(geoButton, 'click', (e)=>{
+                e.stopPropagation();
+                vue.searchUsingSpatialExtent();
                });
       
               return geoButton;
