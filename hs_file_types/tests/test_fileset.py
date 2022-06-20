@@ -1,17 +1,17 @@
 import os
 
-from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
+from django.test import TransactionTestCase
 
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import move_or_rename_file_or_folder, remove_folder
-from .utils import CompositeResourceTestMixin
 from hs_file_types.models import FileSetLogicalFile, GenericLogicalFile, NetCDFLogicalFile, \
     GeoRasterLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile, RefTimeseriesLogicalFile, \
     ModelProgramLogicalFile
+from .utils import CompositeResourceTestMixin
 
 
 class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -78,6 +78,10 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.file_folder, new_folder)
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # check that there are no missing metadata for the fileset aggregation
+        fs_aggr = FileSetLogicalFile.objects.first()
+        self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
+
         # aggregation dataset name should be same as the folder name
         self.assertEqual(res_file.logical_file.dataset_name, new_folder)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -119,6 +123,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         fileset_aggregation = FileSetLogicalFile.objects.first()
         self.assertEqual(fileset_aggregation.files.count(), 2)
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
 
         # aggregation dataset name should be same as the folder name
         res_file = self.composite_resource.files.first()
@@ -153,6 +159,9 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
                                          folder_path=parent_folder)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # check that there are no missing required metadata for the fileset aggregation
+        fs_aggr = FileSetLogicalFile.objects.first()
+        self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -184,6 +193,9 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
                                          folder_path=parent_folder)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # check that there are no missing required metadata for the fileset aggregation
+        fs_aggr = FileSetLogicalFile.objects.first()
+        self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
         self.assertEqual(FileSetLogicalFile.objects.first().files.count(), 1)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -209,6 +221,9 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
                                          folder_path=parent_folder)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # check that there are no missing required metadata for the fileset aggregation
+        fs_aggr = FileSetLogicalFile.objects.first()
+        self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
         self.assertEqual(FileSetLogicalFile.objects.first().files.count(), 1)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -239,6 +254,9 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
                                          folder_path=parent_folder)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # check that there are no missing required metadata for the fileset aggregation
+        fs_aggr = FileSetLogicalFile.objects.first()
+        self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
         self.assertEqual(FileSetLogicalFile.objects.first().files.count(), 2)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -328,6 +346,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.assertEqual(r_file.logical_file_type_name, self.logical_file_type_name)
 
         fileset_aggregation = FileSetLogicalFile.objects.first()
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         assert fileset_aggregation.metadata.is_dirty
         self.assertEqual(fileset_aggregation.files.count(), 2)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -388,6 +408,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.assertEqual(r_file.logical_file_type_name, self.logical_file_type_name)
 
         fileset_aggregation = FileSetLogicalFile.objects.first()
+        # check that there are no missing metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         assert fileset_aggregation.metadata.is_dirty
         self.assertEqual(fileset_aggregation.files.count(), 2)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -510,6 +532,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # fileset aggregation should have only one resource file
         fileset_aggregation = FileSetLogicalFile.objects.first()
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         assert fileset_aggregation.metadata.is_dirty
         self.assertEqual(fileset_aggregation.files.count(), 1)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -543,6 +567,9 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         fs_aggr = self.composite_resource.get_aggregation_by_name(new_folder)
         self.assertEqual(fs_aggr.files.count(), 1)
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
+
         # aggregation dataset name should be same as the folder name
         self.assertEqual(res_file.logical_file.dataset_name, new_folder)
         # delete the file
@@ -597,6 +624,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # fileset aggregation should still be there
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         fileset_aggregation = FileSetLogicalFile.objects.first()
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         assert fileset_aggregation.metadata.is_dirty
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -633,6 +662,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # fileset aggregation should still be there
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         fileset_aggregation = FileSetLogicalFile.objects.first()
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         assert fileset_aggregation.metadata.is_dirty
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -651,6 +682,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 1 fileset aggregation
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         fileset_aggregation = FileSetLogicalFile.objects.first()
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         assert fileset_aggregation.metadata.is_dirty
         self.composite_resource.get_aggregation_by_name(parent_fs_folder)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -715,6 +748,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         fs_aggregation = FileSetLogicalFile.objects.first()
         assert fs_aggregation.metadata.is_dirty
         self.assertEqual(fs_aggregation.files.count(), 3)
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fs_aggregation.metadata.get_required_missing_elements()), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -741,6 +776,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         fileset_aggregation = FileSetLogicalFile.objects.first()
         assert fileset_aggregation.metadata.is_dirty
         self.composite_resource.get_aggregation_by_name(fileset_folder)
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -762,6 +799,9 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
                                          folder_path=fileset_folder)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # check that there are no missing required metadata for the fileset aggregation
+        fs_aggr = FileSetLogicalFile.objects.first()
+        self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
         # delete the folder normal_folder (contains the fileset aggregation)
         folder_path = "data/contents/{}".format(normal_folder)
         remove_folder(self.user, self.composite_resource.short_id, folder_path)
@@ -818,7 +858,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # no single file aggregation at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         res_file = self.composite_resource.files.first()
-        # test that the resoure file is part of the fileset aggregation
+        # test that the resource file is part of the fileset aggregation
         self.assertEqual(res_file.logical_file_type_name, 'FileSetLogicalFile')
         # create a single file aggregation
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
@@ -827,6 +867,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
         fileset_aggregation = FileSetLogicalFile.objects.first()
         assert fileset_aggregation.metadata.is_dirty
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         # test that the resource file is now part of the single file aggregation
         self.assertEqual(res_file.logical_file_type_name, 'GenericLogicalFile')
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -848,6 +890,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
         fileset_aggregation = FileSetLogicalFile.objects.first()
         assert fileset_aggregation.metadata.is_dirty
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         # the netcdf file added to the fileset folder should be part of a new netcdf aggregation
         nc_res_file = ResourceFile.get(resource=self.composite_resource,
                                        file=self.netcdf_file_name, folder=fs_aggr_path)
@@ -872,6 +916,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
         fileset_aggregation = FileSetLogicalFile.objects.first()
         assert fileset_aggregation.metadata.is_dirty
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         # the tif file added to the fileset folder should be part of a new raster aggregation
         raster_res_file = ResourceFile.get(resource=self.composite_resource,
                                            file=self.raster_file_name, folder=fs_aggr_path)
@@ -898,6 +944,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
         fileset_aggregation = FileSetLogicalFile.objects.first()
         assert fileset_aggregation.metadata.is_dirty
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         # the shp file added to the fileset folder should be part of a new geofeature
         # aggregation
         shp_res_file = ResourceFile.get(resource=self.composite_resource,
@@ -924,6 +972,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
         fileset_aggregation = FileSetLogicalFile.objects.first()
         assert fileset_aggregation.metadata.is_dirty
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         # the sqlite file added to the fileset folder should be part of a new timeseries aggregation
         sqlite_res_file = ResourceFile.get(resource=self.composite_resource,
                                            file=self.sqlite_file_name, folder=fs_aggr_path)
@@ -948,6 +998,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
         fileset_aggregation = FileSetLogicalFile.objects.first()
         assert fileset_aggregation.metadata.is_dirty
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
         # the json file added to the fileset folder should be part of a new ref timeseries
         # aggregation
         json_res_file = ResourceFile.get(resource=self.composite_resource,
@@ -975,6 +1027,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         fs_aggr = FileSetLogicalFile.objects.first()
         assert fs_aggr.metadata.is_dirty
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
         self.assertEqual(fs_aggr.folder, new_folder)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -1002,6 +1056,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(FileSetLogicalFile.objects.count(), 2)
         for fs_aggr in FileSetLogicalFile.objects.all():
             assert fs_aggr.metadata.is_dirty
+            # check that there are no missing required metadata for the fileset aggregation
+            self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
 
         self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_child_fs_folder).count(), 1)
         self.assertEqual(FileSetLogicalFile.objects.filter(folder=parent_fs_folder).count(), 1)
@@ -1038,6 +1094,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(FileSetLogicalFile.objects.count(), 2)
         for fs_aggr in FileSetLogicalFile.objects.all():
             assert fs_aggr.metadata.is_dirty
+            # check that there are no missing required metadata for the fileset aggregation
+            self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
 
         self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_parent_fs_folder).count(), 1)
         self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_child_fs_folder).count(), 1)
@@ -1094,6 +1152,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(FileSetLogicalFile.objects.count(), 2)
         for fs_aggr in FileSetLogicalFile.objects.all():
             assert fs_aggr.metadata.is_dirty
+            # check that there are no missing required metadata for the fileset aggregation
+            self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
 
         self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_parent_fs_folder).count(), 1)
         self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_child_fs_folder).count(), 1)
@@ -1145,6 +1205,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(FileSetLogicalFile.objects.count(), 2)
         for fs_aggr in FileSetLogicalFile.objects.all():
             assert fs_aggr.metadata.is_dirty
+            # check that there are no missing required metadata for the fileset aggregation
+            self.assertEqual(len(fs_aggr.metadata.get_required_missing_elements()), 0)
 
         self.assertEqual(FileSetLogicalFile.objects.filter(folder=fs_1_folder).count(), 1)
         self.assertEqual(FileSetLogicalFile.objects.filter(folder=new_fs2_folder).count(), 1)

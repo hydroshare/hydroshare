@@ -1,34 +1,30 @@
-import os
 import copy
-from uuid import uuid4
-import shutil
-import random
 import logging
+import os
+import random
+import shutil
+from uuid import uuid4
 
-from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
-
-from django.db import models
-from django.core.files.uploadedfile import UploadedFile
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.forms.models import model_to_dict
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import HStoreField, ArrayField
-
-from mezzanine.conf import settings
-
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.files.uploadedfile import UploadedFile
+from django.db import models
+from django.forms.models import model_to_dict
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
     span, a, form, button, label, textarea, h4, h3, _input, ul, li, p
-
-from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
-from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
-    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
-from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
-from hs_core.hydroshare.resource import delete_resource_file
-from hs_core.signals import post_remove_file_aggregation
+from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
+from mezzanine.conf import settings
 from rdflib import Literal, Namespace, BNode, URIRef, Graph
 from rdflib.namespace import DC
 
+from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
+from hs_core.hydroshare.resource import delete_resource_file
+from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
+    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
+from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
+from hs_core.signals import post_remove_file_aggregation
 
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
@@ -331,6 +327,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         return root_div
 
     def has_all_required_elements(self):
+        if self.get_required_missing_elements():
+            # required metadata is missing
+            return False
         return True
 
     @classmethod
@@ -479,6 +478,12 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         model_type.model_class().remove(element_id)
         self.is_dirty = True
         self.save()
+
+    def get_element(self, element_model_name, element_id):
+        """Gets a metadata element record based on name of the metadata element and id."""
+
+        model_type = self._get_metadata_element_model_type(element_model_name)
+        return model_type.model_class().objects.get(id=element_id)
 
     def _get_metadata_element_model_type(self, element_model_name):
         element_model_name = element_model_name.lower()

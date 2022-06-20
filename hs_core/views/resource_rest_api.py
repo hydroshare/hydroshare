@@ -118,14 +118,9 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     def get(self, request, pk):
         res, _, _ = view_utils.authorize(request, pk,
                                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        if res.resource_type.lower() == "reftimeseriesresource":
 
-            # if res is RefTimeSeriesResource
-            bag_url = reverse('rest_download_refts_resource_bag',
-                              kwargs={'shortkey': pk})
-        else:
-            bag_url = reverse('rest_download',
-                              kwargs={'path': 'bags/{}.zip'.format(pk)})
+        bag_url = reverse('rest_download',
+                          kwargs={'path': 'bags/{}.zip'.format(pk)})
         return HttpResponseRedirect(bag_url)
 
     @swagger_auto_schema(operation_description="Not Implemented")

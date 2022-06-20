@@ -81,6 +81,13 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.keywords, [])
+        geo_aggr = GeoFeatureLogicalFile.objects.first()
+        # check that there is one required missing metadata for the geographic feature aggregation
+        missing_meta_elements = geo_aggr.metadata.get_required_missing_elements()
+        self.assertEqual(len(missing_meta_elements), 1)
+        # check spatial coverage is missing
+        self.assertIn('Spatial Coverage', missing_meta_elements)
+
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
@@ -495,7 +502,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
-    def test_content_file_delete(self):
+    def _test_content_file_delete(self):
         # test that when any file in GeoFeatureLogicalFile type is deleted
         # all metadata associated with GeoFeatureLogicalFile is deleted
         # test for all 15 file extensions (this one test is kind of running 15 tests - takes a while to finish)
