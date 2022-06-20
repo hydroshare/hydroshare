@@ -991,7 +991,8 @@ class Relation(AbstractMetaDataElement):
         (RelationTypes.isReferencedBy.value, 'This resource is referenced by'),
         (RelationTypes.references.value, 'The content of this resource references'),
         (RelationTypes.replaces.value, 'This resource replaces'),
-        (RelationTypes.source.value, 'The content of this resource is derived from')
+        (RelationTypes.source.value, 'The content of this resource is derived from'),
+        (RelationTypes.isSimilarTo.value, 'The content of this resource is similar to')
     )
 
     # these are hydroshare custom terms that are not Dublin Core terms
