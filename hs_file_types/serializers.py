@@ -172,7 +172,7 @@ class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
         data['name'] = mp_aggr.model_program_type
         data['title'] = mp_aggr.dataset_name
         data['keywords'] = mp_aggr.metadata.keywords
-        data['extra_metadata'] = mp_aggr.metadata.extra_metadata
+        data['additional_metadata'] = mp_aggr.metadata.extra_metadata
         data['version'] = mp_aggr.metadata.version
         data['website'] = mp_aggr.metadata.website
         data['code_repository'] = mp_aggr.metadata.code_repository
@@ -183,7 +183,7 @@ class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
 
         data['operating_systems'] = mp_aggr.metadata.operating_systems
         data['programming_languages'] = mp_aggr.metadata.programming_languages
-        data['metadata_schema'] = mp_aggr.metadata_schema_json
+        data['program_schema_json'] = mp_aggr.metadata_schema_json
         mp_file_types = []
         for mp_file in mp_aggr.metadata.mp_file_types.all():
             mp_file_type_name = ModelProgramResourceFileType.type_name_from_type(mp_file.file_type)
