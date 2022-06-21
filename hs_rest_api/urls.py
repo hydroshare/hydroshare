@@ -238,13 +238,13 @@ urlpatterns = [
         file_type_views.update_metadata_schema_for_model_instance,
         name='update_meta_schema_for_model_instance'),
 
-    # Updates metadata for a given model program aggregation
+    # Gets/updates metadata for a given model program aggregation
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelprogram/meta/(?P<aggregation_path>.*)$',
-        file_type_views.update_metadata_for_model_program,
-        name='update_meta_for_model_program'),
+        file_type_views.model_program_metadata_in_json,
+        name='model_program_metadata_in_json'),
 
-    # Updates metadata for a given model instance aggregation
+    # Gets/updates metadata for a given model instance aggregation
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
-        file_type_views.update_metadata_for_model_instance,
-        name='update_meta_for_model_instance'),
+        file_type_views.model_instance_metadata_in_json,
+        name='model_instance_metadata_in_json'),
 ]

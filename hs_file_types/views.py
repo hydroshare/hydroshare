@@ -356,19 +356,25 @@ def update_metadata_schema_for_model_instance(request, resource_id, aggregation_
     return JsonResponse(data=msg, safe=False, status=status.HTTP_204_NO_CONTENT)
 
 
-@swagger_auto_schema(method='put', request_body=serializers.ModelProgramMetaSerializer,
+@swagger_auto_schema(method='get', operation_description="Gets metadata for a model program aggregation in json",
+                     responses={200: serializers.ModelProgramMetaSerializer, 400: "Invalid/bad request message",
+                                403: "You don't have permission to view this resource"},)
+@swagger_auto_schema(method='put', operation_description="Updates metadata for a model program aggregation",
+                     request_body=serializers.ModelProgramMetaSerializer,
                      responses={200: serializers.ModelProgramMetaSerializer, 400: "Invalid/bad request message",
                                 403: "You don't have permission to edit this resource"},)
-@api_view(['PUT'])
-def update_metadata_for_model_program(request, resource_id, aggregation_path, **kwargs):
-    """Updates metadata for a model program aggregation."""
-
+@api_view(['GET', 'PUT'])
+def model_program_metadata_in_json(request, resource_id, aggregation_path, **kwargs):
     try:
         resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
                                                                  aggregation_path=aggregation_path,
                                                                  model_type='model-program')
     except BadRequestException as ex:
         return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'GET':
+        meta_serializer = serializers.ModelProgramMetaSerializer()
+        # return the metadata for the model program aggregation
+        return JsonResponse(data=meta_serializer.serialize(mp_aggr=aggr), status=status.HTTP_200_OK)
 
     meta_serializer = serializers.ModelProgramMetaSerializer(data=request.data, context={'mp_aggr': aggr}, partial=True)
     if not meta_serializer.is_valid():
@@ -382,19 +388,26 @@ def update_metadata_for_model_program(request, resource_id, aggregation_path, **
     return JsonResponse(data=meta_serializer.serialize(mp_aggr=aggr), status=status.HTTP_200_OK)
 
 
+@swagger_auto_schema(method='get', operation_description="Gets metadata for a model instance aggregation in json",
+                     responses={200: serializers.ModelInstanceMetaSerializer, 400: "Invalid/bad request message",
+                                403: "You don't have permission to view this resource"},)
 @swagger_auto_schema(method='put', request_body=serializers.ModelInstanceMetaSerializer,
+                     operation_description="Updates metadata for a model instance aggregation",
                      responses={200: serializers.ModelInstanceMetaSerializer, 400: "Invalid/bad request message",
                                 403: "You don't have permission to edit this resource"},)
-@api_view(['PUT'])
-def update_metadata_for_model_instance(request, resource_id, aggregation_path, **kwargs):
-    """Updates metadata for a model instance aggregation."""
-
+@api_view(['GET', 'PUT'])
+def model_instance_metadata_in_json(request, resource_id, aggregation_path, **kwargs):
     try:
         resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
                                                                  aggregation_path=aggregation_path,
                                                                  model_type='model-instance')
     except BadRequestException as ex:
         return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'GET':
+        meta_serializer = serializers.ModelInstanceMetaSerializer()
+        # return the metadata for the model instance aggregation
+        return JsonResponse(data=meta_serializer.serialize(mi_aggr=aggr), status=status.HTTP_200_OK)
 
     meta_serializer = serializers.ModelInstanceMetaSerializer(data=request.data,
                                                               context={'mi_aggr': aggr, 'resource': resource},
