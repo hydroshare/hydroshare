@@ -1,7 +1,6 @@
 import copy
 import json
 
-import jsonschema
 from crispy_forms.bootstrap import Field
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Fieldset, HTML, Layout
@@ -10,7 +9,7 @@ from django.forms import BaseFormSet, ModelForm
 from django.forms.models import formset_factory, model_to_dict
 
 from hs_core.forms import BaseFormHelper, get_crispy_form_fields
-from .models.model_program import ModelProgramResourceFileType
+from .models.model_program import ModelProgramLogicalFile, ModelProgramResourceFileType
 from .models.netcdf import Variable
 from .models.raster import BandInformation, CellInformation
 from .models.timeseries import Method, ProcessingLevel, Site, TimeSeriesResult, UTCOffSet, VariableTimeseries
