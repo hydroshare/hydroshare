@@ -68,6 +68,9 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.json_file_content.encode(), res_file.resource_file.read())
 
+        # check that there are no required missing metadata for the ref-timeseries aggregation
+        self.assertEqual(len(logical_file.metadata.get_required_missing_elements()), 0)
+
         # test resource file is not in a folder
         self.assertEqual(res_file.file_folder, '')
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())

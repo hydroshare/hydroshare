@@ -1,6 +1,7 @@
 import copy
 import json
 
+import jsonschema
 from crispy_forms.bootstrap import Field
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Fieldset, HTML, Layout
@@ -8,8 +9,8 @@ from django import forms
 from django.forms import BaseFormSet, ModelForm
 from django.forms.models import formset_factory, model_to_dict
 
-from hs_core.forms import BaseFormHelper, MetaDataElementDeleteForm, get_crispy_form_fields
-from .models.model_program import ModelProgramLogicalFile, ModelProgramResourceFileType
+from hs_core.forms import BaseFormHelper, get_crispy_form_fields
+from .models.model_program import ModelProgramResourceFileType
 from .models.netcdf import Variable
 from .models.raster import BandInformation, CellInformation
 from .models.timeseries import Method, ProcessingLevel, Site, TimeSeriesResult, UTCOffSet, VariableTimeseries
@@ -209,12 +210,6 @@ class OriginalCoverageFormHelper(BaseFormHelper):
 class OriginalCoverageForm(forms.Form):
     """Form for displaying original coverage metadata of netcdf aggregation"""
 
-    PRO_STR_TYPES = (
-        ('', '---------'),
-        ('WKT String', 'WKT String'),
-        ('Proj4 String', 'Proj4 String')
-    )
-
     projection = forms.CharField(max_length=100, required=False,
                                  label='Coordinate Reference System')
     northlimit = forms.DecimalField(label='North Extent', widget=forms.TextInput())
@@ -222,9 +217,9 @@ class OriginalCoverageForm(forms.Form):
     southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput())
     westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
     units = forms.CharField(max_length=100, label='Extent Unit')
-    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES,
-                                               label='Coordinate String Type', required=False)
-    projection_string_text = forms.CharField(max_length=1000, label='Coordinate String',
+    projection_string_type = forms.CharField(max_length=20, label='Coordinate String Type', required=False,
+                                             widget=forms.TextInput())
+    projection_string_text = forms.CharField(label='Coordinate String',
                                              required=False, widget=forms.Textarea())
     datum = forms.CharField(max_length=300, label='Datum', required=False, widget=forms.TextInput())
 
@@ -237,16 +232,15 @@ class OriginalCoverageForm(forms.Form):
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
+        self.fields['units'].widget.attrs['readonly'] = True
         self.fields['projection'].widget.attrs['readonly'] = True
         self.fields['datum'].widget.attrs['readonly'] = True
         self.fields['projection_string_type'].widget.attrs['readonly'] = True
         self.fields['projection_string_text'].widget.attrs['readonly'] = True
-        # add the 'data-map-item' attribute so that map interface can be used for
-        # editing these fields
-        self.fields['northlimit'].widget.attrs['data-map-item'] = 'northlimit'
-        self.fields['eastlimit'].widget.attrs['data-map-item'] = 'eastlimit'
-        self.fields['southlimit'].widget.attrs['data-map-item'] = 'southlimit'
-        self.fields['westlimit'].widget.attrs['data-map-item'] = 'westlimit'
+        self.fields['northlimit'].widget.attrs['readonly'] = True
+        self.fields['eastlimit'].widget.attrs['readonly'] = True
+        self.fields['southlimit'].widget.attrs['readonly'] = True
+        self.fields['westlimit'].widget.attrs['readonly'] = True
 
     @property
     def form_id(self):
@@ -260,84 +254,7 @@ class OriginalCoverageForm(forms.Form):
 
     def clean(self):
         super(OriginalCoverageForm, self).clean()
-        temp_cleaned_data = copy.deepcopy(self.cleaned_data)
-        is_form_errors = False
-
-        # check required element info
-        for key in ('northlimit', 'eastlimit', 'southlimit', 'westlimit', 'units'):
-            value = temp_cleaned_data.get(key, None)
-            if not value:
-                self._errors[key] = ["Info for %s is missing" % key]
-                is_form_errors = True
-                del self.cleaned_data[key]
-
-        if is_form_errors:
-            return self.cleaned_data
-
-        # if required elements info is provided then write the bounding box info
-        # as 'value' dict and assign to self.clean_data
-        temp_cleaned_data['northlimit'] = str(temp_cleaned_data['northlimit'])
-        temp_cleaned_data['eastlimit'] = str(temp_cleaned_data['eastlimit'])
-        temp_cleaned_data['southlimit'] = str(temp_cleaned_data['southlimit'])
-        temp_cleaned_data['westlimit'] = str(temp_cleaned_data['westlimit'])
-        temp_cleaned_data['units'] = temp_cleaned_data['units']
-
-        if 'projection' in temp_cleaned_data:
-            if len(temp_cleaned_data['projection']) == 0:
-                del temp_cleaned_data['projection']
-
-        if 'projection_string_type' in temp_cleaned_data:
-            del temp_cleaned_data['projection_string_type']
-
-        if 'projection_string_text' in temp_cleaned_data:
-            del temp_cleaned_data['projection_string_text']
-
-        self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
-
-        if 'northlimit' in self.cleaned_data:
-                del self.cleaned_data['northlimit']
-        if 'eastlimit' in self.cleaned_data:
-                del self.cleaned_data['eastlimit']
-        if 'southlimit' in self.cleaned_data:
-            del self.cleaned_data['southlimit']
-        if 'westlimit' in self.cleaned_data:
-            del self.cleaned_data['westlimit']
-        if 'units' in self.cleaned_data:
-            del self.cleaned_data['units']
-        if 'projection' in self.cleaned_data:
-            del self.cleaned_data['projection']
-
-        return self.cleaned_data
-
-
-class OriginalCoverageValidationForm(forms.Form):
-    """Form for validating original coverage metadata of netcdf aggregation"""
-
-    PRO_STR_TYPES = (
-        ('', '---------'),
-        ('WKT String', 'WKT String'),
-        ('Proj4 String', 'Proj4 String')
-    )
-
-    projection = forms.CharField(max_length=100, required=False)
-    northlimit = forms.DecimalField()
-    eastlimit = forms.DecimalField()
-    southlimit = forms.DecimalField()
-    westlimit = forms.DecimalField()
-    units = forms.CharField(max_length=100)
-    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, required=False)
-    projection_string_text = forms.CharField(max_length=1000, required=False)
-    datum = forms.CharField(max_length=300, required=False)
-
-
-class OriginalCoverageMetaDelete(MetaDataElementDeleteForm):
-    def __init__(self, res_short_id, element_name, element_id, *args, **kwargs):
-        super(OriginalCoverageMetaDelete, self).__init__(res_short_id, element_name,
-                                                         element_id, *args, **kwargs)
-        self.helper.layout[0] = HTML("""
-            <div class="modal fade" id="delete-original-coverage-element-dialog"
-            tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        """)
+        raise forms.ValidationError("Original coverage can't be updated")
 
 
 # The following 3 classes need to have the "field" same as the fields defined in

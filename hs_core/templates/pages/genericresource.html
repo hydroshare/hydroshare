@@ -710,7 +710,7 @@
                                                     </button>
                                                 {% endif %}
 
-                                                {% if cm.resource_type != "ToolResource" and cm.resource_type != "RefTimeSeriesResource"  and cm.resource_type != "GeographicFeatureResource" %}
+                                                {% if cm.resource_type != "ToolResource" %}
                                                     <button id="fb-rename" data-fb-action="rename"
                                                             class="disabled fb-space-right"
                                                             title="Rename" data-toggle="modal"
@@ -927,7 +927,7 @@
 
         {% if site or extended_metadata_exists or res_add_metadata or resource_edit_mode %}
             {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
-            {% if cm.resource_type != "RefTimeSeriesResource" or not resource_edit_mode %}
+            {% if not resource_edit_mode %}
                 {% if cm.resource_type != "CompositeResource" and cm.resource_type != "CollectionResource" %}
                     <div class="col-xs-12 content-block">
                         <h3>Resource Specific</h3>
