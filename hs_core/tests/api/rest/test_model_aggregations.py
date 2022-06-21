@@ -110,6 +110,41 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
             mp_program_file_types.append({"file_type": file_type, "file_path": file_path})
         self.assertEqual(mp_program_file_types, metadata_json['program_file_types'])
 
+    def test_get_metadata_model_program(self):
+        """Test that we can retrieve all metadata for a model program aggregation."""
+
+        mp_aggr = self._create_model_program_aggregation(expected_file_count=1)
+        # ingest some metadata to the model program aggregation
+        base_file_path = 'hs_core/tests/data/{}'
+        json_file_path = base_file_path.format('model_program_meta.json')
+        mp_aggr_path = mp_aggr.aggregation_name
+        url = f"/hsapi/resource/{self.res.short_id}/modelprogram/meta/{mp_aggr_path}"
+        with open(json_file_path) as file_obj:
+            metadata_json = json.loads(file_obj.read())
+        response = self.client.put(url, data=metadata_json, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # retrieve model program metadata - this is the endpoint we are testing
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.content.decode())
+
+        # check the retrieved metadata
+        self.assertEqual(response_json['title'], metadata_json['title'])
+        self.assertEqual(response_json['name'], metadata_json['name'])
+        self.assertEqual(response_json['keywords'], metadata_json['keywords'])
+        self.assertEqual(response_json['additional_metadata'], metadata_json['additional_metadata'])
+        self.assertEqual(response_json['version'], metadata_json['version'])
+        self.assertEqual(response_json['programming_languages'], metadata_json['programming_languages'])
+        self.assertEqual(response_json['operating_systems'], metadata_json['operating_systems'])
+        release_date_out = parser.parse(response_json['release_date'])
+        release_date_in = parser.parse(metadata_json['release_date'])
+        self.assertEqual(release_date_in, release_date_out)
+        self.assertEqual(response_json['website'], metadata_json['website'])
+        self.assertEqual(response_json['code_repository'], metadata_json['code_repository'])
+        self.assertEqual(response_json['program_schema_json'], metadata_json['program_schema_json'])
+        self.assertEqual(response_json['program_file_types'], metadata_json['program_file_types'])
+
     def test_update_model_instance_meta_schema(self):
         """Test that we can update the metadata schema in a model instance using the schema from the linked
         model program aggregation."""
@@ -139,6 +174,66 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertTrue(mi_aggr.metadata_schema_json)
+
+    def test_get_metadata_model_instance(self):
+        """Test that we can retrieve all metadata for a model instance aggregation."""
+
+        mp_aggr = self._create_model_program_aggregation(expected_file_count=1, upload_folder='mp-folder')
+        mi_aggr = self._create_model_instance_aggregation(expected_file_count=2)
+        # ingest some metadata to the model instance
+
+        # first set the schema for the mp aggregation
+        self.assertFalse(mp_aggr.metadata_schema_json)
+        mp_aggr_path = mp_aggr.aggregation_name
+        for template_schema_filename in self.schema_templates:
+            if template_schema_filename.startswith("SWAT"):
+                url = f"/hsapi/resource/{self.res.short_id}/modelprogram/template/meta/schema/{mp_aggr_path}/" \
+                      f"{template_schema_filename}"
+                response = self.client.put(url, format='json')
+                self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+                break
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertTrue(mp_aggr.metadata_schema_json)
+
+        base_file_path = 'hs_core/tests/data/{}'
+        json_file_path = base_file_path.format('model_instance_meta.json')
+        mi_aggr_path = mi_aggr.aggregation_name
+        url = f"/hsapi/resource/{self.res.short_id}/modelinstance/meta/{mi_aggr_path}"
+        # first just update the executed_by for the model instance aggregation
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.metadata.executed_by, None)
+        response = self.client.put(url, data={"executed_by": mp_aggr.aggregation_name}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertNotEqual(mi_aggr.metadata.executed_by, None)
+        # now update all metadata for the model instance aggregation including the metadata based on the schema
+        with open(json_file_path) as file_obj:
+            metadata_json = json.loads(file_obj.read())
+            metadata_json['executed_by'] = mp_aggr.aggregation_name
+        response = self.client.put(url, data=metadata_json, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # retrieve metadata of the model instance aggregation - this is the endpoint we are testing
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.content.decode())
+
+        # check retrieved metadata
+        self.assertEqual(response_json['title'], metadata_json['title'])
+        self.assertEqual(response_json['keywords'], metadata_json['keywords'])
+        self.assertEqual(response_json['additional_metadata'], metadata_json['additional_metadata'])
+        self.assertEqual(response_json['has_model_output'], metadata_json['has_model_output'])
+        self.assertEqual(response_json['executed_by'], metadata_json['executed_by'])
+        self.assertEqual(response_json['metadata_json'], metadata_json['metadata_json'])
+        self.assertNotEqual(response_json['metadata_schema'], {})
+        start_date_out = parser.parse(response_json['temporal_coverage']['start'])
+        end_date_out = parser.parse(response_json['temporal_coverage']['end'])
+        start_date_in = parser.parse(metadata_json['temporal_coverage']['start'])
+        end_date_in = parser.parse(metadata_json['temporal_coverage']['end'])
+        self.assertEqual(start_date_out, start_date_in)
+        self.assertEqual(end_date_out, end_date_in)
+        response_json['spatial_coverage'].pop('projection')
+        self.assertEqual(response_json['spatial_coverage'], metadata_json['spatial_coverage'])
 
     def test_update_metadata_model_instance(self):
         """Test that we can update all metadata for a model instance aggregation."""
@@ -191,7 +286,6 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         end_date_in = parser.parse(metadata_json['temporal_coverage']['end'])
         self.assertEqual(start_date, start_date_in)
         self.assertEqual(end_date, end_date_in)
-        # self.assertEqual(temporal_coverage, metadata_json['temporal_coverage'])
         spatial_coverage = mi_aggr.metadata.spatial_coverage.value
         spatial_coverage.pop('projection')
         input_cove_type = metadata_json['spatial_coverage'].pop('type')
