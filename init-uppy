@@ -52,7 +52,9 @@ export COMPANION_DROPBOX_SECRET="7an6hhingzaqgif"
 #default# COMPANION_BOX_SECRET_FILE="PATH/TO/BOX/SECRET/FILE"
 
 # to enable Google Drive
-COMPANION_GOOGLE_KEY="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4.apps.googleusercontent.com"
+# COMPANION_GOOGLE_KEY="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4.apps.googleusercontent.com"
+COMPANION_GOOGLE_KEY="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4"
+COMPANION_GOOGLE_CLIENT_ID="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4"
 COMPANION_GOOGLE_SECRET="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"
 # specifying a secret file will override a directly set secret
 #default# COMPANION_GOOGLE_SECRET_FILE="PATH/TO/GOOGLEDRIVE/SECRET/FILE"
