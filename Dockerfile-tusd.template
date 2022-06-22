@@ -19,4 +19,5 @@ RUN chown hydro-service:service-accounts /init-tusd
 # RUN chown hydro-service:service-accounts /srv/tusd-hooks/post-finish
 
 # run daemon
-CMD /bin/bash
+ENTRYPOINT [ ]
+CMD /init-tusd

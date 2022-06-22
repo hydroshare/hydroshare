@@ -27,7 +27,7 @@ tusd:
   ports:
     - "1080:1080"
   user: root
-  command: /init-tusd
+  command: "sh -c /init-tusd"
 
 uppy:
   build: .
@@ -38,7 +38,7 @@ uppy:
   ports:
     - "3020:3020"
   user: root
-  command: /init-uppy
+  command: "sh -c /init-uppy"
   
 hydroshare:
   build: .

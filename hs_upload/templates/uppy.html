@@ -59,7 +59,19 @@ uppy.use(Uppy.Dashboard, {
    inline: true, 
    showProgressDetails: true
 }); 
+
 uppy.use(Uppy.Tus, { endpoint: '/upload/' }); 
+
+uppy.use(Uppy.Dropbox, { 
+  target: Uppy.Dashboard,
+  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/uppy'
+}); 
+
+uppy.use(Uppy.GoogleDrive, { 
+  target: Uppy.Dashboard,
+  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/uppy'
+}); 
+
 uppy.on('file-removed', (file, reason) => {
    var ok = false; 
    $.ajax({ 

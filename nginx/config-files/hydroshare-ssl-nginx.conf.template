@@ -163,7 +163,7 @@ server {
     } 
 
     location /uppy/ {
-        proxy_pass http://uppy:3020;
+        proxy_pass http://uppy:3020/;
 
         # Disable request and response buffering
         proxy_request_buffering  off;
@@ -173,8 +173,8 @@ server {
         # Add X-Forwarded-* headers
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        # proxy_set_header Upgrade $http_upgrade;
+        # proxy_set_header Connection "upgrade";
 
         client_max_body_size     0;
     }

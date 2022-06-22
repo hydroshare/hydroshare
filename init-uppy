@@ -1,20 +1,22 @@
+#! /bin/sh
+ 
 # any long set of random characters for the server session
 #default# export COMPANION_SECRET="h3h5872hgtF0374829371859ntirbeow"
 # specifying a secret file will override a directly set secret
 #default# COMPANION_SECRET_FILE="PATH/TO/COMPANION/SECRET/FILE"
 # corresponds to the server.host option
-export COMPANION_DOMAIN="hydroshare.org"
+export COMPANION_DOMAIN="cuahsi-dev-1.hydroshare.org"
 # corresponds to the filePath option
 export COMPANION_DATADIR="/tusd_tmp"
 
 ###### Optional variables ##########
 
 # corresponds to the server.protocol option, defaults to http
-export COMPANION_PROTOCOL="https"
+export COMPANION_PROTOCOL="http"
 # the port on which to start the server, defaults to 3020
 #default# COMPANION_PORT="YOUR SERVER PORT"
-# corresponds to the server.port option, defaults to ''. 
-#default# COMPANION_PATH="/SERVER/PATH/TO/WHERE/COMPANION/LIVES"
+# corresponds to the server.path option, defaults to ''. 
+# export COMPANION_PATH="/uppy"
 # disables the welcome page, defaults to false
 #default# COMPANION_HIDE_WELCOME="true"
 # disables the metrics page, defaults to false
@@ -23,7 +25,7 @@ export COMPANION_PROTOCOL="https"
 # use this in place of COMPANION_PATH if the server path should not be
 # handled by the express.js app, but maybe by an external server configuration
 # instead (e.g Nginx).
-export COMPANION_IMPLICIT_PATH="cuahsi-dev-1.hydroshare.org/uppy"
+export COMPANION_IMPLICIT_PATH="/uppy/"
 
 # corresponds to the corsOrigins option, but can contain a comma-separated list of String values.
 # if neither this or COMPANION_CLIENT_ORIGINS_REGEX specified, the server would allow any host
@@ -50,8 +52,8 @@ export COMPANION_DROPBOX_SECRET="7an6hhingzaqgif"
 #default# COMPANION_BOX_SECRET_FILE="PATH/TO/BOX/SECRET/FILE"
 
 # to enable Google Drive
-#default# COMPANION_GOOGLE_KEY="YOUR GOOGLE DRIVE KEY"
-#default# COMPANION_GOOGLE_SECRET="YOUR GOOGLE DRIVE SECRET"
+COMPANION_GOOGLE_KEY="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4.apps.googleusercontent.com"
+COMPANION_GOOGLE_SECRET="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"
 # specifying a secret file will override a directly set secret
 #default# COMPANION_GOOGLE_SECRET_FILE="PATH/TO/GOOGLEDRIVE/SECRET/FILE"
 
@@ -124,4 +126,8 @@ export COMPANION_DROPBOX_SECRET="7an6hhingzaqgif"
 # corresponds to the periodicPingStaticPayload option (JSON string)
 #default# COMPANION_PERIODIC_PING_STATIC_JSON_PAYLOAD="{\"static\":\"data\"}"
 
-node /app/bin/companion --env-file /.env
+export COMPANION_ALLOW_LOCAL_URLS=true
+
+node /app/bin/companion
+
+
