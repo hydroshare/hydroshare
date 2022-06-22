@@ -7,8 +7,8 @@ RUN adduser -u HS_SERVICE_UID -s /bin/sh -D -H -g 'hydroshare user' hydro-servic
 
 COPY init-uppy /init-uppy
 RUN chown hydro-service:service-accounts /init-uppy
-COPY env-uppy /.env
-RUN chown hydro-service:service-accounts /.env
+# COPY env-uppy /.env
+# RUN chown hydro-service:service-accounts /.env
 
 # run daemon: disabled for now
 CMD /bin/bash

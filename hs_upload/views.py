@@ -368,7 +368,7 @@ def finish(request, path_of_folder, *args, **kwargs):
     path_of_file = os.path.join(path_of_folder, filename)
     path_split = path_of_folder.split('/')
     rid = path_split[0]
-    logger.debug("upload finish user={} resource={} folder={} file={}"
+    logger.debug("upload finish user={} folder={} file={}"
                  .format(user.username, path_of_folder, filename))
 
     response = None  # no error so far

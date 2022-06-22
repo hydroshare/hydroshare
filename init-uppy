@@ -1,5 +1,5 @@
 # any long set of random characters for the server session
-export COMPANION_SECRET="h3h5872hgtF0374829371859ntirbeow"
+#default# export COMPANION_SECRET="h3h5872hgtF0374829371859ntirbeow"
 # specifying a secret file will override a directly set secret
 #default# COMPANION_SECRET_FILE="PATH/TO/COMPANION/SECRET/FILE"
 # corresponds to the server.host option
