@@ -13,7 +13,7 @@ let geoconnexApp = new Vue({
     data() {
         return{
             relations: RELATIONS,
-            debug: true,
+            debug: false,
             resMode: RESOURCE_MODE,
             resSpatialType: null,
             items: [],
@@ -692,18 +692,19 @@ let geoconnexApp = new Vue({
         vue.fitMap();
         vue.layerControl.collapse();
       },
-      searchUsingSpatialExtent(){
+      async searchUsingSpatialExtent(){
         let vue = this;
-        vue.fillFromExtent();
-        vue.getGeoItemsFromExtent();
+        await vue.fillFromExtent();
+        await vue.getGeoItemsFromExtent();
       },
       updateSpatialExtentType(){
         let vue = this;
         let checked = $("#div_id_type input:checked").val();
         vue.resSpatialType = checked;
       },
-      fillFromExtent(){
+      async fillFromExtent(){
         let vue = this;
+        vue.updateSpatialExtentType();
         if(vue.resSpatialType == 'point'){
           vue.fillFromPointExtent();
         }else if(vue.resSpatialType == 'box'){
