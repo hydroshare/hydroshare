@@ -7,6 +7,8 @@ RUN adduser -u HS_SERVICE_UID -s /bin/sh -D -H -g 'hydroshare user' hydro-servic
 
 COPY init-uppy /init-uppy
 RUN chown hydro-service:service-accounts /init-uppy
+COPY options-uppy.json /options-uppy.json
+RUN chown hydro-service:service-accounts /options-uppy.json
 
 # run daemon
 ENTRYPOINT [ ]

@@ -1,135 +1,95 @@
 #! /bin/sh
  
+# REQUIRED ENVIRONMENT VARIABLES 
 # any long set of random characters for the server session
-#default# export COMPANION_SECRET="h3h5872hgtF0374829371859ntirbeow"
+export COMPANION_SECRET="h3h5872hgtF0374829371859ntirbeow"
 # specifying a secret file will override a directly set secret
-#default# COMPANION_SECRET_FILE="PATH/TO/COMPANION/SECRET/FILE"
+### COMPANION_SECRET_FILE="PATH/TO/COMPANION/SECRET/FILE"
 # corresponds to the server.host option
 export COMPANION_DOMAIN="cuahsi-dev-1.hydroshare.org"
 # corresponds to the filePath option
 export COMPANION_DATADIR="/tusd_tmp"
 
-###### Optional variables ##########
+# ###### Optional variables ##########
 
 # corresponds to the server.protocol option, defaults to http
-export COMPANION_PROTOCOL="http"
+export COMPANION_PROTOCOL="https"
 # the port on which to start the server, defaults to 3020
-#default# COMPANION_PORT="YOUR SERVER PORT"
+export COMPANION_PORT=3020
 # corresponds to the server.path option, defaults to ''. 
-# export COMPANION_PATH="/uppy"
+# export COMPANION_PATH="/companion"
 # disables the welcome page, defaults to false
-#default# COMPANION_HIDE_WELCOME="true"
+### COMPANION_HIDE_WELCOME="true"
 # disables the metrics page, defaults to false
-#default# COMPANION_HIDE_METRICS="true"
-
+### COMPANION_HIDE_METRICS="true"
+  
 # use this in place of COMPANION_PATH if the server path should not be
 # handled by the express.js app, but maybe by an external server configuration
 # instead (e.g Nginx).
-export COMPANION_IMPLICIT_PATH="/uppy/"
-
-# corresponds to the corsOrigins option, but can contain a comma-separated list of String values.
-# if neither this or COMPANION_CLIENT_ORIGINS_REGEX specified, the server would allow any host
-#default# COMPANION_CLIENT_ORIGINS="http://localhost:3452,https://uppy.io"
-
-# Like COMPANION_CLIENT_ORIGINS, but allows a single regex instead
-# (COMPANION_CLIENT_ORIGINS will be ignored if this is used and vice versa)
-#default# COMPANION_CLIENT_ORIGINS_REGEX="https://.*\.example\.(com|eu)$"
-
-# corresponds to the redisUrl option
-# this also enables Redis session storage if set
-#default# COMPANION_REDIS_URL="REDIS URL"
-
+export COMPANION_IMPLICIT_PATH="/companion"
+# 
+# # corresponds to the corsOrigins option, but can contain a comma-separated list of String values.
+# # if neither this or COMPANION_CLIENT_ORIGINS_REGEX specified, the server would allow any host
+# ### COMPANION_CLIENT_ORIGINS="http://localhost:3452,https://uppy.io"
+# 
+# # Like COMPANION_CLIENT_ORIGINS, but allows a single regex instead
+# # (COMPANION_CLIENT_ORIGINS will be ignored if this is used and vice versa)
+# ### COMPANION_CLIENT_ORIGINS_REGEX="https://.*\.example\.(com|eu)$"
+  
 # to enable Dropbox
 export COMPANION_DROPBOX_KEY="07xw8rzny3rgkno"
 export COMPANION_DROPBOX_SECRET="7an6hhingzaqgif"
-# specifying a secret file will override a directly set secret
-#default# COMPANION_DROPBOX_SECRET_FILE="PATH/TO/DROPBOX/SECRET/FILE"
-
-# to enable Box
-#default# COMPANION_BOX_KEY="YOUR BOX KEY"
-#default# COMPANION_BOX_SECRET="YOUR BOX SECRET"
-# specifying a secret file will override a directly set secret
-#default# COMPANION_BOX_SECRET_FILE="PATH/TO/BOX/SECRET/FILE"
-
+# 
+# # to enable Box
+# ### COMPANION_BOX_KEY="YOUR BOX KEY"
+# ### COMPANION_BOX_SECRET="YOUR BOX SECRET"
+# # specifying a secret file will override a directly set secret
+# ### COMPANION_BOX_SECRET_FILE="PATH/TO/BOX/SECRET/FILE"
+# 
 # to enable Google Drive
-# COMPANION_GOOGLE_KEY="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4.apps.googleusercontent.com"
-COMPANION_GOOGLE_KEY="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4"
-COMPANION_GOOGLE_CLIENT_ID="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4"
-COMPANION_GOOGLE_SECRET="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"
-# specifying a secret file will override a directly set secret
-#default# COMPANION_GOOGLE_SECRET_FILE="PATH/TO/GOOGLEDRIVE/SECRET/FILE"
 
-# to enable Instagram
-#default# COMPANION_INSTAGRAM_KEY="YOUR INSTAGRAM KEY"
-#default# COMPANION_INSTAGRAM_SECRET="YOUR INSTAGRAM SECRET"
-# specifying a secret file will override a directly set secret
-#default# COMPANION_INSTAGRAM_SECRET_FILE="PATH/TO/INSTAGRAM/SECRET/FILE"
-
-# to enable Facebook
-#default# COMPANION_FACEBOOK_KEY="YOUR FACEBOOK KEY"
-#default# COMPANION_FACEBOOK_SECRET="YOUR FACEBOOK SECRET"
-# specifying a secret file will override a directly set secret
-#default# COMPANION_FACEBOOK_SECRET_FILE="PATH/TO/FACEBOOK/SECRET/FILE"
+export COMPANION_GOOGLE_KEY="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4.apps.googleusercontent.com"
+export COMPANION_GOOGLE_SECRET="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"
 
 # to enable Onedrive
-#default# COMPANION_ONEDRIVE_KEY="YOUR ONEDRIVE KEY"
-#default# COMPANION_ONEDRIVE_SECRET="YOUR ONEDRIVE SECRET"
+### COMPANION_ONEDRIVE_KEY="YOUR ONEDRIVE KEY"
+### COMPANION_ONEDRIVE_SECRET="YOUR ONEDRIVE SECRET"
 # specifying a secret file will override a directly set secret
-#default# COMPANION_ONEDRIVE_SECRET_FILE="PATH/TO/ONEDRIVE/SECRET/FILE"
-
-# to enable Zoom
-#default# COMPANION_ZOOM_KEY="YOUR ZOOM KEY"
-#default# COMPANION_ZOOM_SECRET="YOUR ZOOM SECRET"
-# specifying a secret file will override a directly set secret
-#default# COMPANION_ZOOM_SECRET_FILE="PATH/TO/ZOOM/SECRET/FILE"
-
+### COMPANION_ONEDRIVE_SECRET_FILE="PATH/TO/ONEDRIVE/SECRET/FILE"
+  
 # to enable S3
-#default# COMPANION_AWS_KEY="YOUR AWS KEY"
-#default# COMPANION_AWS_SECRET="YOUR AWS SECRET"
+### COMPANION_AWS_KEY="YOUR AWS KEY"
+### COMPANION_AWS_SECRET="YOUR AWS SECRET"
 # specifying a secret file will override a directly set secret
-#default# COMPANION_AWS_SECRET_FILE="PATH/TO/AWS/SECRET/FILE"
-#default# COMPANION_AWS_BUCKET="YOUR AWS S3 BUCKET"
-#default# COMPANION_AWS_REGION="AWS REGION"
+### COMPANION_AWS_SECRET_FILE="PATH/TO/AWS/SECRET/FILE"
+### COMPANION_AWS_BUCKET="YOUR AWS S3 BUCKET"
+### COMPANION_AWS_REGION="AWS REGION"
 # to enable S3 Transfer Acceleration (default: false)
-#default# COMPANION_AWS_USE_ACCELERATE_ENDPOINT="false"
+### COMPANION_AWS_USE_ACCELERATE_ENDPOINT="false"
 # to set X-Amz-Expires query param in presigned urls (in seconds, default: 300)
-#default# COMPANION_AWS_EXPIRES="300"
+### COMPANION_AWS_EXPIRES="300"
 # to set a canned ACL for uploaded objects: https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl
-#default# COMPANION_AWS_ACL="public-read"
-
+### COMPANION_AWS_ACL="public-read"
+ 
 # corresponds to the server.oauthDomain option
-#default# COMPANION_OAUTH_DOMAIN="sub.domain.com"
+### COMPANION_OAUTH_DOMAIN="sub.domain.com"
 # corresponds to the server.validHosts option
-#default# COMPANION_DOMAINS="sub1.domain.com,sub2.domain.com,sub3.domain.com"
-
+### COMPANION_DOMAINS="sub1.domain.com,sub2.domain.com,sub3.domain.com"
+  
 # corresponds to the sendSelfEndpoint option
-#default# COMPANION_SELF_ENDPOINT="THIS SHOULD BE SAME AS YOUR DOMAIN + PATH"
-
+export COMPANION_SELF_ENDPOINT="cuahsi-dev-1.hydroshare.org/companion"
+  
 # comma-separated URLs
 # corresponds to the uploadUrls option (comma-separated)
-#default# COMPANION_UPLOAD_URLS="http://tusd.tusdemo.net/files/,https://tusd.tusdemo.net/files/"
-
+### COMPANION_UPLOAD_URLS="http://tusd.tusdemo.net/files/,https://tusd.tusdemo.net/files/"
+  
 # corresponds to the streamingUpload option
-#default# COMPANION_STREAMING_UPLOAD=true
-
+export COMPANION_STREAMING_UPLOAD=true
+  
 # corresponds to the allowLocalUrls option
-#default# COMPANION_ALLOW_LOCAL_URLS=false
-
-# corresponds to the maxFileSize option
-#default# COMPANION_MAX_FILE_SIZE="100000000"
-
-# corresponds to the chunkSize option
-#default# COMPANION_CHUNK_SIZE="50000000"
-
-# corresponds to the periodicPingUrls option (CSV string converted to array)
-#default# COMPANION_PERIODIC_PING_URLS="https://example.com/ping1,https://example.com/ping2"
-# corresponds to the periodicPingInterval option
-#default# COMPANION_PERIODIC_PING_INTERVAL=60000
-# corresponds to the periodicPingStaticPayload option (JSON string)
-#default# COMPANION_PERIODIC_PING_STATIC_JSON_PAYLOAD="{\"static\":\"data\"}"
-
 export COMPANION_ALLOW_LOCAL_URLS=true
+  
+# corresponds to the maxFileSize option
+export COMPANION_MAX_FILE_SIZE="100000000"
 
-node /app/bin/companion
-
-
+node /app/bin/companion --config /options-uppy.json

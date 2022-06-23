@@ -64,12 +64,12 @@ uppy.use(Uppy.Tus, { endpoint: '/upload/' });
 
 uppy.use(Uppy.Dropbox, { 
   target: Uppy.Dashboard,
-  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/uppy/'
+  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion'
 }); 
 
 uppy.use(Uppy.GoogleDrive, { 
   target: Uppy.Dashboard,
-  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/uppy/'
+  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion'
 }); 
 
 uppy.on('file-removed', (file, reason) => {
