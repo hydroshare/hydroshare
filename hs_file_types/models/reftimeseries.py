@@ -251,8 +251,7 @@ class RefWebService(object):
 
 
 class RefTimeseriesFileMetaData(AbstractFileMetaData):
-    # the metadata element models are from the hs_core app
-    model_app_label = 'hs_core'
+    model_app_label = 'hs_file_types'
     # field to store the content of the json file (the file that is part
     # of the RefTimeseriesLogicalFile type
     json_file_content = models.TextField()
