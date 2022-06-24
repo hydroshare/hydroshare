@@ -931,6 +931,9 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
             remove_original_zip: "false"
         },
         success: function (task) {
+            $('#res_id').val(res_id);
+            $('#zip_with_rel_path').val(zip_with_rel_path);
+            $('#remove_original_zip').val('false');
             notificationsApp.registerTask(task);
             notificationsApp.show();
         },

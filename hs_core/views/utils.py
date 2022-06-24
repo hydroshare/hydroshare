@@ -43,7 +43,7 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
-from hs_core.tasks import create_temp_zip
+from hs_core.tasks import create_temp_zip, FileOverrideException
 from hs_file_types.utils import set_logical_file_type
 from theme.backends import without_login_date_token_generator
 
@@ -1069,8 +1069,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         logger.debug(f'override_tgt_paths: {override_tgt_paths}')
         if not overwrite and override_tgt_paths:
             message = 'move would overwrite {}'.format(', '.join(override_tgt_paths))
-            logger.debug(f'ValidationError message: {message}')
-            raise ValidationError(message)
+            raise FileOverrideException(message)
         # now move each file to the destination
         for file in res_files:
             destination_file = _get_destination_filename(file.name, unzipped_foldername)
