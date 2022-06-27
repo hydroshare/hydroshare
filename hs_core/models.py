@@ -996,7 +996,8 @@ class Relation(AbstractMetaDataElement):
     )
 
     # these are hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = (RelationTypes.isExecutedBy, RelationTypes.isCreatedBy, RelationTypes.isDescribedBy)
+    HS_RELATION_TERMS = (RelationTypes.isExecutedBy, RelationTypes.isCreatedBy, RelationTypes.isDescribedBy,
+                         RelationTypes.isSimilarTo)
     NOT_USER_EDITABLE = (RelationTypes.isVersionOf, RelationTypes.isReplacedBy,
                          RelationTypes.isPartOf, RelationTypes.hasPart, RelationTypes.replaces)
     term = 'Relation'
