@@ -261,7 +261,7 @@
                                     <td>
                                         {% for creator in metadata.creators.all %}
                                             {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                            {% if creator.relative_uri and creator.is_active%}
+                                            {% if creator.relative_uri and creator.is_active %}
                                                 <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
                                             {% else %}
                                                 <span>{{ creator.name }}</span>
