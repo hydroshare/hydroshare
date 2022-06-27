@@ -137,6 +137,7 @@
                                                     {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
                                                         <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
                                                     {% endthumbnail %}
+                                                </div>
                                             {% else %}
                                                 <div class="group-image-wrapper">
                                                     <div class="group-image-small"
@@ -154,7 +155,9 @@
                                             {% else %}
                                                 <img src="{% static 'img/private.png' %}" alt="Private Group" title="Private Group">
                                             {% endif %}
-                                            <small class="text-muted">{{ group.gaccess.members|length }} Member{% if group.gaccess.members|length > 1 %}s{% endif %}</small>
+                                            {% with member_count=group.gaccess.members|length %}
+                                                <small class="text-muted">{{ member_count }} Member{% if member_count > 1 %}s{% endif %}</small>
+                                            {% endwith %}
                                         </td>
 
                                         <td style="text-align: right"><span>{% if group.is_group_owner %}Owner{% else %}Member{% endif %}</span></td>
