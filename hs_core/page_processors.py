@@ -118,9 +118,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     topics = list(topics)  # force QuerySet evaluation
     content_model.update_relation_meta()
     creators = content_model.metadata.creators.all()
+
+    # check for active creators
+    # an "active creator" is either an active HS user
+    # or a Creator with no associated HS user account
     has_active_creators = False
     for creator in creators:
-        if creator.is_active:
+        if creator.is_active or creator.hydroshare_user_id is None:
             has_active_creators = True
             break
 

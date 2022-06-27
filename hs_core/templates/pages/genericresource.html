@@ -1003,6 +1003,7 @@
       const HAS_ACTIVE_CREATORS = "{{ has_active_creators }}" === "True";
       const AUTHORS = [
           {% for author in creators %}
+            {% if author.is_active or author.hydroshare_user_id is None %}
                 {
                     "id": "{{ author.id }}",
                     "name": "{{ author.name|default:""|escapejs }}",
@@ -1019,6 +1020,7 @@
                     "profileUrl": "{{ author.relative_uri|default:'' }}",
                     "order": "{{ author.order }}"
                 },
+              {% endif %}
           {% endfor %}
       ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
