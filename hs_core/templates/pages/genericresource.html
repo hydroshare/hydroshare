@@ -1000,7 +1000,6 @@
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
       const LAST_CHANGED_BY = {{ last_changed_by|safe }};
-      const HAS_ACTIVE_CREATORS = "{{ has_active_creators }}" === "True";
       const AUTHORS = [
           {% for author in creators %}
             {
