@@ -1003,24 +1003,23 @@
       const HAS_ACTIVE_CREATORS = "{{ has_active_creators }}" === "True";
       const AUTHORS = [
           {% for author in creators %}
-            {% if author.is_active or author.hydroshare_user_id is None %}
-                {
-                    "id": "{{ author.id }}",
-                    "name": "{{ author.name|default:""|escapejs }}",
-                    "email": "{{ author.email|default:"" }}",
-                    "organization": "{{ author.organization|default:""|escapejs }}",
-                    "identifiers": {
-                        {% for name, link in author.identifiers.items %}
-                            "{{ name }}": "{{ link }}",
-                        {% endfor %}
-                    },
-                    "address": "{{ author.address|default:""|escapejs }}",
-                    "phone": "{{ author.phone|default:"" }}",
-                    "homepage": "{{ author.homepage|default:"" }}",
-                    "profileUrl": "{{ author.relative_uri|default:'' }}",
-                    "order": "{{ author.order }}"
+            {
+                "id": "{{ author.id }}",
+                "name": "{{ author.name|default:""|escapejs }}",
+                "email": "{{ author.email|default:"" }}",
+                "organization": "{{ author.organization|default:""|escapejs }}",
+                "identifiers": {
+                    {% for name, link in author.identifiers.items %}
+                        "{{ name }}": "{{ link }}",
+                    {% endfor %}
                 },
-              {% endif %}
+                "address": "{{ author.address|default:""|escapejs }}",
+                "phone": "{{ author.phone|default:"" }}",
+                "homepage": "{{ author.homepage|default:"" }}",
+                "profileUrl": "{{ author.relative_uri|default:'' }}",
+                "order": "{{ author.order }}",
+                "is_active": "{{ author.is_active|default:"" }}",
+            },
           {% endfor %}
       ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
