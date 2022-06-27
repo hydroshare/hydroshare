@@ -991,11 +991,13 @@ class Relation(AbstractMetaDataElement):
         (RelationTypes.isReferencedBy.value, 'This resource is referenced by'),
         (RelationTypes.references.value, 'The content of this resource references'),
         (RelationTypes.replaces.value, 'This resource replaces'),
-        (RelationTypes.source.value, 'The content of this resource is derived from')
+        (RelationTypes.source.value, 'The content of this resource is derived from'),
+        (RelationTypes.isSimilarTo.value, 'The content of this resource is similar to')
     )
 
     # these are hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = (RelationTypes.isExecutedBy, RelationTypes.isCreatedBy, RelationTypes.isDescribedBy)
+    HS_RELATION_TERMS = (RelationTypes.isExecutedBy, RelationTypes.isCreatedBy, RelationTypes.isDescribedBy,
+                         RelationTypes.isSimilarTo)
     NOT_USER_EDITABLE = (RelationTypes.isVersionOf, RelationTypes.isReplacedBy,
                          RelationTypes.isPartOf, RelationTypes.hasPart, RelationTypes.replaces)
     term = 'Relation'
