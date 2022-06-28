@@ -1964,8 +1964,18 @@ class MyResourcesView(TemplateView):
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
 
-        resource_collection = get_my_resources_list(u)
+        page = self.request.GET.get('page', 1)
+        num_per_page = self.request.GET.get('n', 10)
+        filter=self.request.GET.getlist('filter', default=None)
+
+        # TODO http://localhost:8000/my-resources/?n=2&page=3&filter=editable&filter=owned
+        resource_collection = get_my_resources_list(u, annotate=True, filter=filter)
+
+        from django.core.paginator import Paginator
+        paginator = Paginator(resource_collection, num_per_page)
+        resource_collection = paginator.page(page)
 
         return {
-            'collection': resource_collection
+            'collection': resource_collection,
+            'filter': filter
         }

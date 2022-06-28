@@ -93,9 +93,11 @@ $(document).ready(function () {
     $(".btn-label-remove").click(label_ajax_submit);
 
     $("#filter input[type='checkbox']").on("change", function () {
+        getnewdata();
         resourceTable.draw();
         updateLabelDropdowns();
         updateLabelCount();
+        // TODO: update counts
     });
 
     $("#user-labels-left").on("change", "input[type='checkbox']", function () {
@@ -533,6 +535,11 @@ function updateLabelsList() {
     }
 }
 
+// Gets new data when filters change
+function getNewData(){
+    
+}
+
 // Updates the status of labels in the left panel
 function updateLabelDropdowns() {
     $(".inline-dropdown ul").empty();
@@ -726,6 +733,7 @@ function updateLabelCount() {
         }
     });
 
+    // TODO: 
     // Update filter badges count
     $("#filter .badge[data-facet='owned']").text(ownedCount);
     $("#filter .badge[data-facet='shared']").text(sharedCount);
@@ -839,6 +847,7 @@ function typeQueryStrings () {
 ==================================================*/
 
 /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
+// https://datatables.net/manual/plug-ins/search
 $.fn.dataTable.ext.search.push (
     function (settings, data, dataIndex) {
         var inputString = $("#resource-search-input").val().toLowerCase();
@@ -886,7 +895,7 @@ $.fn.dataTable.ext.search.push (
         }
 
         let inFilters = false;
-
+        // mapping
         if ($("#filter").find("input[type='checkbox']:checked").length) {
             //---------------- Facet filters --------------------
             // Owned by me

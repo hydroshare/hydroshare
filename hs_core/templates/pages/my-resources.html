@@ -166,6 +166,26 @@
                     </div>
                 </div>
             </div>
+            <div class="pagination">
+                {% if collection.has_previous %}
+                    <a href="?{% param_replace page=1 %}">First</a>
+                    {% if collection.previous_page_number != 1 %}
+                    <a href="?{% param_replace page=collection.previous_page_number %}">Previous</a>
+                    {% endif %}
+                {% endif %}
+
+                Page {{ collection.number }} of {{ collection.paginator.num_pages }}
+
+                {% if collection.has_next %}
+                    {% if collection.next_page_number != collection.paginator.num_pages %}
+                    <a href="?{% param_replace page=collection.next_page_number %}">Next</a>
+                    {% endif %}
+                    <a href="?{% param_replace page=collection.paginator.num_pages %}">Last</a>
+                {% endif %}
+
+                <p>Objects {{ collection.start_index }}—{{ collection.end_index }}</p>
+            </div>
+            
 
             <!-- /input-group -->
             <table id="item-selectors" class="table-hover table-striped resource-custom-table">
@@ -200,6 +220,7 @@
                                     {% csrf_token %}
                                 </form>
                                 {% if res.is_favorite %}
+                                <!--  -->
                                     <span data-form-id="form-favorite-{{ res.short_id }}"
                                           data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
@@ -253,11 +274,13 @@
                                 {# Last Modified #}
                                 {% with last_updated=res.last_updated %}
                                     <td>{{ last_updated|date:"M d, Y" }} at {{ last_updated|time }}</td>
+                                    {# Subject #}
                                     <td>
                                         {% for kw in metadata.subjects.all %}
                                            {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
                                         {% endfor %}
                                     </td>
+                                    {# Authors #}
                                     <td>
                                         {% for creator in metadata.creators.all %}
                                             {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
@@ -268,6 +291,7 @@
                                             {% endif %}
                                         {% endfor %}
                                     </td>
+                                    {# Permission Level #}
                                     {% if res.owned %}
                                         <td>Owned</td>
                                     {% elif res.discovered %}
@@ -275,19 +299,23 @@
                                     {% else %}
                                         <td></td>
                                     {% endif %}
+                                    {# Labels #}
                                     <td class="col-labels">
                                         {% for label in res|user_resource_labels:user %}
                                             {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
                                         {% endfor %}
                                     </td>
+                                    {# Favorite #}
                                     <td class="col-is-favorite">
                                         {% if res.is_favorite %}
                                             Favorite
                                         {% endif %}
                                     </td>
+                                    {# Last Modified #}
                                     <td>{{ last_updated|date:"U" }}</td>
                                {% endwith %}
                            {% endwith %}
+                           {# Sharing Status #}
                             <td>
                                 {% if res.raccess.published %}
                                     Published
@@ -299,6 +327,7 @@
                                     Private
                                 {% endif %}
                             </td>
+                            {# Date Created #}
                             <td>{{ res.created|date:"U" }}</td>
                         </tr>
                     {% endfor %}

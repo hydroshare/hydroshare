@@ -1,0 +1,11 @@
+tie filters checkboxes to the query string
+filter badge counts
+set defaults for inital filters -- or cache them on client
+test it on beta with lots of resources
+make the pagination look nicer
+
+--
+initial page load does whatever the get parameters says, or uses default and sets them in the URL
+returns HTML using the template
+then as the filters change, ajax requests (to the same view) update the data using returned JSON and also update the url without page refresh
+badge counts are either hidden for non active filters, or they are separate ajax requests
