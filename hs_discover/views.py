@@ -54,10 +54,17 @@ class SearchAPI(APIView):
 
         sqs = SearchQuerySet().all()
 
+        _FACETED_FIELDS = ['subject', 'author', 'owner', 'contributor', 'creator', 'title']
         if request.GET.get('q'):
             q = request.GET.get('q')
-            sqs = sqs.filter(content=q)
-
+            if q.startswith('"') and q.endswith('"'):
+                q = q.strip('"')
+                # do exact match on all of the faceted fields when the search term is enclosed in double quotes
+                # e;g., "model my watershed"
+                for fc_field in _FACETED_FIELDS:
+                    sqs = sqs.filter_or(**{fc_field: Exact(q)})
+            else:
+                sqs = sqs.filter(content=q)
         try:
             qs = request.query_params
             filters = json.loads(qs.get('filter'))
