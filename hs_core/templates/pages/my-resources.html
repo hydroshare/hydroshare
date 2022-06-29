@@ -166,7 +166,28 @@
                     </div>
                 </div>
             </div>
-                {% include "includes/my-resources-table.html" %}
+            {% include "includes/my-resources-pagination.html" %}
+            <table id="item-selectors" class="table-hover table-striped resource-custom-table">
+                <thead>
+                <tr>
+                    <th><input class="all-rows-selector" type="checkbox"></th>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>First Author</th>
+                    <th>Date Created</th>
+                    <th>Last Modified</th>
+                    <th>Subject</th>            {# Used in table processing #}
+                    <th>Authors</th>            {# Used in table processing #}
+                    <th>Permission Level</th>   {# Used in table processing #}
+                    <th>Labels</th>             {# Used in table processing #}
+                    <th>Favorite</th>           {# Used in table processing #}
+                    <th>Last Modified</th>      {# Used in table processing #}
+                    <th>Sharing Status</th>     {# Used in table processing #}
+                    <th>Date Created</th>       {# Used in table processing #}
+                </tr>
+                </thead>
+                {% include "includes/my-resources-tbody.html" %}
+            </table>
             <br>
             <div class="alert alert-info">
                 <strong>

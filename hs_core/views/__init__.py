@@ -2035,9 +2035,18 @@ def my_resources(request, *args, **kwargs):
                       'pages/my-resources.html',
                       context)
     else:
-        # from django.core import serializers
-        # content = serializers.serialize('json', resource_collection)
-        # return HttpResponse(content, content_type='application/json')
-        return render(request,
-                      'includes/my-resources-table.html',
-                      context)
+        from django.template.loader import render_to_string
+        tbody = render_to_string(
+                      'includes/my-resources-tbody.html',
+                      context, request)
+        pagination = render_to_string(
+                'includes/my-resources-pagination.html',
+                context, request)
+        return JsonResponse({
+            "tbody": tbody,
+            "pagination": pagination
+            # "end_pagination": True if page >= p.num_pages else False,
+            # "num_pages": resource_collection.paginator.num_pages,
+            # "end_index": resource_collection.end_index,
+            # "start_index": resource_collection.end_index
+        })

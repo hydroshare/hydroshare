@@ -20,10 +20,6 @@ var DATE_CREATED_SORT_COL = 13;
 var ACCESS_GRANTOR_COL = 14;
 
 $(document).ready(function () {
-    initial_draw();
-});
-
-function initial_draw(){
 /*==================================================
     Table columns
     0 - actions
@@ -335,7 +331,7 @@ function initial_draw(){
     updateLabelsList();
     updateLabelDropdowns();
     updateLabelCount();
-}
+});
 
 function delete_multiple_resources_ajax_submit(indexes) {
     var calls = [];
@@ -577,11 +573,8 @@ function getNewData(target){
             // }
             block_request = false;
             
-            $('#my-resources-table').replaceWith(data);
-            initial_draw();
-            // resourceTable.draw();
-            // updateLabelDropdowns();
-            // updateLabelCount();
+            $('#item-selectors tbody').replaceWith(data.tbody);
+            $('#my-res-pagination').replaceWith(data.pagination);
             // TODO: update counts!
         }
     })

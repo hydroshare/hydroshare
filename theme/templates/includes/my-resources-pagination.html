@@ -1,0 +1,20 @@
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+<div id="my-res-pagination">
+    {% if collection.has_previous %}
+        <a href="?{% param_replace page=1 %}">First</a>
+        {% if collection.previous_page_number != 1 %}
+        <a href="?{% param_replace page=collection.previous_page_number %}">Previous</a>
+        {% endif %}
+    {% endif %}
+
+    Page {{ collection.number }} of {{ collection.paginator.num_pages }}
+
+    {% if collection.has_next %}
+        {% if collection.next_page_number != collection.paginator.num_pages %}
+        <a href="?{% param_replace page=collection.next_page_number %}">Next</a>
+        {% endif %}
+        <a href="?{% param_replace page=collection.paginator.num_pages %}">Last</a>
+    {% endif %}
+
+    <p>Objects {{ collection.start_index }}—{{ collection.end_index }}</p>
+</div>
