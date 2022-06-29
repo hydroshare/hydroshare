@@ -609,15 +609,17 @@ def get_my_resources_list(user, annotate=False, filter=None, num_per_page=None, 
 
     if not filter or 'discovered' in filter:
         discovered_resources = user.ulabels.my_resources
-        discovered_resources.all().annotate(discovered=Value(True, BooleanField()))
+        if annotate:
+            discovered_resources.all().annotate(discovered=Value(True, BooleanField()))
         resource_collection = resource_collection | discovered_resources.distinct()
 
     if not filter or 'is_favorite' in filter:
         # TODO: if the resource collection is empty, favorites will be empty even if owned resources were favorites
         favorite_resources = user.ulabels.favorited_resources
-        resource_collection = resource_collection.annotate(
-            is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
-                                    then=Value(True, BooleanField()))))
+        if annotate:
+            resource_collection = resource_collection.annotate(
+                is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
+                                        then=Value(True, BooleanField()))))
 
     if annotate:
         # The annotated field 'has_labels' would allow us to query the DB for labels only if the

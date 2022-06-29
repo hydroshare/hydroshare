@@ -1,7 +1,18 @@
+tags break...this might be a deal breaker...or maybe we handle them on the backend as well
+when filter by label, ONLY want to see things with that label = exclusive (only "owned" and "label")
+conveniently, they also only contain items already selected. 
+this means we should be able to just refresh to p=1 n=infinite and apply the label query when label is selected (but keep the active filters)
+when filter by favorite, it is inclusive. "owned" or "favorite" or both
+maybe we dont paginate but we do return subset from the backend (and cache it)
+then paginate on the frontend (tho this wont give us any performance advantage)
+fix favorites
+
+Filter: ONLY those that ___ or ___ -> adding more filters increases number of results???
+Labels: ONLY those with _label_ and (_filters_)
+
 tie filters checkboxes to the query string
 filter badge counts
 set defaults for inital filters -- or cache them on client
-test it on beta with lots of resources
 make the pagination look nicer
 
 --

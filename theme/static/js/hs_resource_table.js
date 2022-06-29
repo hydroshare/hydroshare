@@ -20,6 +20,10 @@ var DATE_CREATED_SORT_COL = 13;
 var ACCESS_GRANTOR_COL = 14;
 
 $(document).ready(function () {
+    initial_draw();
+});
+
+function initial_draw(){
 /*==================================================
     Table columns
     0 - actions
@@ -92,12 +96,8 @@ $(document).ready(function () {
     $("#btn-create-label").click(label_ajax_submit);
     $(".btn-label-remove").click(label_ajax_submit);
 
-    $("#filter input[type='checkbox']").on("change", function () {
-        getnewdata();
-        resourceTable.draw();
-        updateLabelDropdowns();
-        updateLabelCount();
-        // TODO: update counts
+    $("#filter input[type='checkbox']").on("change", function (e) {
+        getNewData(e.target);
     });
 
     $("#user-labels-left").on("change", "input[type='checkbox']", function () {
@@ -335,7 +335,7 @@ $(document).ready(function () {
     updateLabelsList();
     updateLabelDropdowns();
     updateLabelCount();
-});
+}
 
 function delete_multiple_resources_ajax_submit(indexes) {
     var calls = [];
@@ -536,8 +536,83 @@ function updateLabelsList() {
 }
 
 // Gets new data when filters change
-function getNewData(){
+function getNewData(target){
+    var page = 1;
+    // var block_request = false;
+    // var end_pagination = false;
+
+    block_request = true;
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', page.toString());
     
+
+    let filter_val = target.value.toLowerCase();
+    let existing_filters = url.searchParams.getAll('filter');
+    if (existing_filters){
+        let index = existing_filters.indexOf(filter_val);
+        if(index > -1){
+            if (!target.checked){
+                existing_filters.splice(index, 1);
+                url.searchParams.delete('filter');
+                existing_filters.forEach(filter => url.searchParams.append('filter', filter));
+            }
+        }else{
+            if (target.checked){
+                url.searchParams.append('filter', filter_val);
+            }
+        }
+    }
+
+    window.history.pushState({}, '', url);
+
+
+    $.ajax({
+        type: 'GET',
+        url: url,
+        success: function (data) {
+            // if (data.end_pagination === true) {
+            //     end_pagination = true;
+            // } else {
+            //     block_request = false;
+            // }
+            block_request = false;
+            
+            $('#my-resources-table').replaceWith(data);
+            initial_draw();
+            // resourceTable.draw();
+            // updateLabelDropdowns();
+            // updateLabelCount();
+            // TODO: update counts!
+        }
+    })
+
+    // https://progerhub.com/tutorial/adding-pagination-with-infinite-scroll-in-django
+    // $(window).scroll(function () {
+    //     var margin = $(document).height() - $(window).height() - 200;
+
+    //     if ($(window).scrollTop() > margin && end_pagination === false && block_request === false) {
+    //         block_request = true;
+    //         page += 1;
+
+    //         $.ajax({
+    //             type: 'GET',
+    //             url: window.location.href,
+    //             data: {
+    //                 "page": page,
+    //                 // TODO: filter
+    //             },
+    //             success: function (data) {
+    //                 if (data.end_pagination === true) {
+    //                     end_pagination = true;
+    //                 } else {
+    //                     block_request = false;
+    //                 }
+    //                 // $('.news-list').append(data.content);
+    //                 alert(data);
+    //             }
+    //         })
+    //     }
+    // });
 }
 
 // Updates the status of labels in the left panel
@@ -895,7 +970,7 @@ $.fn.dataTable.ext.search.push (
         }
 
         let inFilters = false;
-        // mapping
+
         if ($("#filter").find("input[type='checkbox']:checked").length) {
             //---------------- Facet filters --------------------
             // Owned by me

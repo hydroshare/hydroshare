@@ -1979,3 +1979,65 @@ class MyResourcesView(TemplateView):
             'collection': resource_collection,
             'filter': filter
         }
+
+@login_required
+def my_resources(request, *args, **kwargs):
+    """
+    """
+    page = int(request.GET.get('page', 1))
+    num_per_page = int(request.GET.get('n', 10))
+    filter=request.GET.getlist('filter', default=None)
+    u = User.objects.get(pk=request.user.id)
+
+    # modify filters
+    # owned -> data[PERM_LEVEL_COL] == "Owned"
+    # shared -> data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered"
+    # discovered -> data[PERM_LEVEL_COL] == "Discovered"
+    # favorite -> data[FAVORITE_COL] == "Favorite"
+    # recent -> data[LAST_MODIF_SORT_COL] >= cutoff (5days)
+
+    # owned X
+    # editable
+    # viewable
+    # discovered X
+    # is_favorite  <- favorite
+
+    # so shared NEEDS viewable and editable
+    # favorite NEEDS is_favorite
+    # recent we should create a new filter and only get those within 5days
+
+    if 'shared' in filter: 
+        filter.remove('shared')
+        filter.append('viewable')
+        filter.append('editable')
+    
+    if 'favorite' in filter:
+        filter.remove('favorite')
+        filter.append('is_favorite')
+
+    resource_collection = get_my_resources_list(u, annotate=True, filter=filter)
+
+    from django.core import paginator
+    p = paginator.Paginator(resource_collection, num_per_page)
+    resource_collection = p.page(page)
+    
+    try:
+        resource_collection = p.page(page)
+    except paginator.EmptyPage:
+        resource_collection = paginator.Page([], page, p)
+    
+    context = {
+        'collection': resource_collection,
+    }
+
+    if not request.is_ajax():
+        return render(request,
+                      'pages/my-resources.html',
+                      context)
+    else:
+        # from django.core import serializers
+        # content = serializers.serialize('json', resource_collection)
+        # return HttpResponse(content, content_type='application/json')
+        return render(request,
+                      'includes/my-resources-table.html',
+                      context)
