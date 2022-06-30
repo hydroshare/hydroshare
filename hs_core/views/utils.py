@@ -569,9 +569,9 @@ def get_my_resources_list(user, annotate=False, filter=None, num_per_page=None, 
     resource_collection = BaseResource.objects.none()
 
     # if annotate:  # When used in the My Resources page, annotate for speed
-        # TODO: should we allow annotation without filters?
-        # if not filter:
-            # raise BadRequest("My resources list cannot be annotated without providing a filter")
+    # TODO: should we allow annotation without filters?
+    # if not filter:
+    # raise BadRequest("My resources list cannot be annotated without providing a filter")
 
     if not filter or 'owned' in filter:
         # get a list of resources with effective OWNER privilege
@@ -587,7 +587,7 @@ def get_my_resources_list(user, annotate=False, filter=None, num_per_page=None, 
         # get a list of resources with effective CHANGE privilege (should include resources that the
         # user has access to via group
         editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
-                                                                            via_group=True)
+                                                                             via_group=True)
         # remove obsoleted resources from the editable_resources
         editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))
@@ -599,7 +599,7 @@ def get_my_resources_list(user, annotate=False, filter=None, num_per_page=None, 
         # get a list of resources with effective VIEW privilege (should include resources that the
         # user has access via group
         viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
-                                                                            via_group=True)
+                                                                             via_group=True)
         # remove obsoleted resources from the viewable_resources
         viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))

@@ -7,6 +7,7 @@ when filter by favorite, it is inclusive. "owned" or "favorite" or both
 Filter: ONLY those that ___ or ___ -> adding more filters increases number of results???
 Labels: ONLY those with _label_ and (_filters_)
 
+ability to select n
 get rid of extra columns in the table
 fix favorites
 tie filters checkboxes to the query string
