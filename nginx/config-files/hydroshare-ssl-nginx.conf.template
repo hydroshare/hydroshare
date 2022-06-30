@@ -147,4 +147,9 @@ server {
     location @maintenance {
         rewrite ^(.*)$ /maintenance_on.html break;
     }
+
+    error_page 500 502 504 @server_error;
+    location @server_error {
+        rewrite ^(.*)$ /server_error_on.html break;
+    }
 }
