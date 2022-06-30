@@ -227,12 +227,10 @@ STATIC_URL = "/static/"
 # Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 
-STATICFILES_STORAGE = (
-    # using this storage class might cause issues for future tests
-    # The documentation suggests using the default storage backend when testing
-    # https://docs.djangoproject.com/en/1.11/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
-    'hydroshare.storage.ForgivingManifestStaticFilesStorage'
-)
+# using this storage class might cause issues for future tests
+# The documentation suggests using the default storage backend when testing
+# https://docs.djangoproject.com/en/1.11/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
+STATICFILES_STORAGE = 'hydroshare.storage.ForgivingManifestStaticFilesStorage'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
