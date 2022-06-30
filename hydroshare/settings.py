@@ -7,9 +7,6 @@ import os
 import sys
 # import importlib
 
-# detect test mode to turn off some features
-TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
-
 local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
 
 ######################
@@ -231,9 +228,10 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 
 STATICFILES_STORAGE = (
-    'django.contrib.staticfiles.storage.StaticFilesStorage'
-    if TESTING
-    else 'hydroshare.storage.ForgivingManifestStaticFilesStorage'
+    # using this storage class might cause issues for future tests
+    # The documentation suggests using the default storage backend when testing
+    # https://docs.djangoproject.com/en/1.11/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
+    'hydroshare.storage.ForgivingManifestStaticFilesStorage'
 )
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
