@@ -6,7 +6,6 @@ from django.core.management.base import BaseCommand
 
 from hs_model_program.models import ModelProgramResource
 from hs_modelinstance.models import ModelInstanceResource
-from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
 from hs_swat_modelinstance.models import SWATModelInstanceResource
 
 
@@ -84,7 +83,7 @@ class Command(BaseCommand):
 
         model_class_map = {'ModelProgram': ModelProgramResource, 'ModelInstance': ModelInstanceResource,
                            'SWATModelInstance': SWATModelInstanceResource,
-                           'MODFLOWModelInstance': MODFLOWModelInstanceResource}
+                           }
         resource_type = options['type']
         if resource_type not in model_class_map.keys():
             allowed_types = ", ".join(model_class_map.keys())
