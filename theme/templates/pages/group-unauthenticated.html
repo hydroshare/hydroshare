@@ -26,11 +26,7 @@
                 <div class="group-image-wrapper group-image-wrapper-medium">
                     {% if group.gaccess.picture and group.gaccess.picture.url %}
                         {% thumbnail group.gaccess.picture "x130" crop="center" as im %}
-                            {% if im.exists %}
-                                <div class="group-image" style="background-image: url({{ im.url }})"></div>
-                            {% else %}
-                                <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                            {% endif %}
+                            <div class="group-image" style="background-image: url({{ im.url }})"></div>
                         {% endthumbnail %}
                     {% else %}
                             <div class="group-image group-preview-image-default"
