@@ -227,7 +227,7 @@
         {% if cm.resource_type != "ToolResource" %}
             {# POPUP MENU - Right clicking items #}
             <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
-                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                     <li id="btn-open" data-menu-name="open" data-fb-action="open">
                         <span class="fa fa-folder-open icon-blue"></span>
                         <span>Open</span>
@@ -395,7 +395,7 @@
             {# POPUP MENU - Right clicking empty space in file browser #}
             <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
                 {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
-                    {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                    {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                         <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                             data-fb-action="createFolder"
                             data-target="#create-folder-dialog">
@@ -554,7 +554,7 @@
                                 <div id="fb-inner-buttons">
                                     <div class="flex">
                                         {# FOLDER NAVIGATION #}
-                                        {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                                        {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                             <div>
                                                 <button id="fb-move-back"
                                                         class="btn btn-default fb-control-round disabled"
@@ -682,7 +682,7 @@
                                             {% endif %}
 
                                             {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
-                                                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                                                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-create-folder" class="disabled"
                                                             data-fb-action="createFolder" data-toggle="modal"
                                                             data-target="#create-folder-dialog"
@@ -719,7 +719,7 @@
                                                     </button>
                                                 {% endif %}
 
-                                                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                                                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-zip" data-fb-action="zip"
                                                             class="disabled"
                                                             title="Zip folder" data-toggle="modal"
