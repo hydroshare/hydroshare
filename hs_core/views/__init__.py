@@ -2,7 +2,7 @@ import json
 import datetime
 import pytz
 import logging
-from sorl.thumbnail import ImageField as TumbnailImageField, get_thumbnail
+from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
@@ -1207,7 +1207,7 @@ class GroupForm(forms.Form):
     name = forms.CharField(required=True)
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
-    picture = TumbnailImageField()
+    picture = ThumbnailImageField()
     privacy_level = forms.CharField(required=True)
     auto_approve = forms.BooleanField(required=False)
     requires_explanation = forms.BooleanField(required=False)
