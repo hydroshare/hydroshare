@@ -60,7 +60,7 @@
                                                 <div class="link-members"><a class="text-muted" href="#" data-toggle="modal" data-target="#modal-members-list-{{ group.id }}">MEMBERS</a></div>
                                                 {% for member in group.members|slice:":5" %}
                                                     {% if  member.userprofile.picture and member.userprofile.picture.url %}
-                                                        {% thumbnail member.userprofile.picture "x40" crop="center" as im %}
+                                                        {% thumbnail member.userprofile.picture "x80" crop="center" as im %}
                                                             <div style="background-image: url('{{ im.url }}');"
                                                                 class="round-image profile-pic-thumbnail"
                                                                 title="{{ member|best_name }}">
@@ -100,7 +100,7 @@
                                                                         <td>
                                                                             <div class="user-scope">
                                                                                 {% if u.userprofile.picture %}
-                                                                                    {% thumbnail u.userprofile.picture "x40" crop="center" as im %}
+                                                                                    {% thumbnail u.userprofile.picture "x80" crop="center" as im %}
                                                                                         <div style="background-image: url('{{ im.url }}');"
                                                                                             class="round-image profile-pic-thumbnail">
                                                                                         </div>
@@ -245,7 +245,7 @@
                                     <div class="input-group">
                                         <span class="input-group-btn">
                                             <span id="group-image-upload" class="btn btn-default btn-file">
-                                                Browse&hellip; <input class="upload-picture" type="file" name="picture">
+                                                Browse&hellip; <input class="upload-picture" type="file" name="picture" accept=".png, .jpg, .jpeg, .gif">
                                             </span>
                                         </span>
                                         <input type="text" class="form-control" readonly>

@@ -70,7 +70,7 @@
                                 <form></form>
                                 <div class="activity-block height-fix">
                                     {% if request.request_from.userprofile.picture and request.request_from.userprofile.picture.url %}
-                                        {% thumbnail request.request_from.userprofile.picture "x40" crop="center" as im %}
+                                        {% thumbnail request.request_from.userprofile.picture "x80" crop="center" as im %}
                                             <div style="background-image: url('{{ im.url }}');"
                                                 class="round-image profile-pic-thumbnail pull-left">
                                             </div>
@@ -78,7 +78,6 @@
                                     {% else %}
                                         <div class="profile-pic-thumbnail round-image user-icon"></div>
                                     {% endif %}
-
                                     <div class="metadata-wrapper">
                                         <div class="shared-resource-info">
                                             <a>{{ request.request_from|contact }}</a>
@@ -132,18 +131,16 @@
                                 {% for group in groups %}
                                     <tr>
                                         <td>
-                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                                <div class="group-image-wrapper">
-                                                    {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
-                                                        <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
-                                                    {% endthumbnail %}
-                                                </div>
-                                            {% else %}
-                                                <div class="group-image-wrapper">
-                                                    <div class="group-image-small"
-                                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                                </div>
-                                            {% endif %}
+                                            <div class="group-image-wrapper">
+                                                {% if group.gaccess.picture and group.gaccess.picture.url %}
+                                                        {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
+                                                            <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                                                        {% endthumbnail %}
+                                                {% else %}
+                                                        <div class="group-image-small"
+                                                            style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                {% endif %}
+                                            </div>
                                         </td>
 
                                         <td>
@@ -173,18 +170,16 @@
                                 {% for group in inactive_groups %}
                                     <tr>
                                         <td>
-                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                                <div class="group-image-wrapper">
-                                                    {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
-                                                        <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
-                                                    {% endthumbnail %}
-                                                </div>
-                                            {% else %}
-                                                <div class="group-image-wrapper">
-                                                    <div class="group-image-small"
-                                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                                </div>
-                                            {% endif %}
+                                            <div class="group-image-wrapper">
+                                                {% if group.gaccess.picture and group.gaccess.picture.url %}
+                                                        {% thumbnail group.gaccess.picture "80x80" crop="center" as im %}
+                                                            <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                                                        {% endthumbnail %}
+                                                {% else %}
+                                                        <div class="group-image-small"
+                                                            style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                {% endif %}
+                                            </div>
                                         </td>
 
                                         <td>
@@ -268,7 +263,7 @@
                                     <div class="input-group">
                                         <span class="input-group-btn">
                                             <span id="cv-custom-upload" class="btn btn-default btn-file">
-                                                Browse&hellip; <input class="upload-picture" type="file" name="picture">
+                                                Browse&hellip; <input class="upload-picture" type="file" name="picture" accept=".png, .jpg, .jpeg, .gif">
                                             </span>
                                         </span>
                                         <input type="text" class="form-control" readonly>
