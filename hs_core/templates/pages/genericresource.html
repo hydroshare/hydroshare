@@ -710,7 +710,7 @@
                                                     </button>
                                                 {% endif %}
 
-                                                {% if cm.resource_type != "ToolResource" and cm.resource_type != "RefTimeSeriesResource"  and cm.resource_type != "GeographicFeatureResource" %}
+                                                {% if cm.resource_type != "ToolResource" %}
                                                     <button id="fb-rename" data-fb-action="rename"
                                                             class="disabled fb-space-right"
                                                             title="Rename" data-toggle="modal"
@@ -927,7 +927,7 @@
 
         {% if site or extended_metadata_exists or res_add_metadata or resource_edit_mode %}
             {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
-            {% if cm.resource_type != "RefTimeSeriesResource" or not resource_edit_mode %}
+            {% if not resource_edit_mode %}
                 {% if cm.resource_type != "CompositeResource" and cm.resource_type != "CollectionResource" %}
                     <div class="col-xs-12 content-block">
                         <h3>Resource Specific</h3>
@@ -1000,25 +1000,25 @@
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
       const LAST_CHANGED_BY = {{ last_changed_by|safe }};
-      const HAS_ACTIVE_CREATORS = "{{ has_active_creators }}" === "True";
       const AUTHORS = [
           {% for author in creators %}
-                {
-                    "id": "{{ author.id }}",
-                    "name": "{{ author.name|default:""|escapejs }}",
-                    "email": "{{ author.email|default:"" }}",
-                    "organization": "{{ author.organization|default:""|escapejs }}",
-                    "identifiers": {
-                        {% for name, link in author.identifiers.items %}
-                            "{{ name }}": "{{ link }}",
-                        {% endfor %}
-                    },
-                    "address": "{{ author.address|default:""|escapejs }}",
-                    "phone": "{{ author.phone|default:"" }}",
-                    "homepage": "{{ author.homepage|default:"" }}",
-                    "profileUrl": "{{ author.relative_uri|default:'' }}",
-                    "order": "{{ author.order }}"
+            {
+                "id": "{{ author.id }}",
+                "name": "{{ author.name|default:""|escapejs }}",
+                "email": "{{ author.email|default:"" }}",
+                "organization": "{{ author.organization|default:""|escapejs }}",
+                "identifiers": {
+                    {% for name, link in author.identifiers.items %}
+                        "{{ name }}": "{{ link }}",
+                    {% endfor %}
                 },
+                "address": "{{ author.address|default:""|escapejs }}",
+                "phone": "{{ author.phone|default:"" }}",
+                "homepage": "{{ author.homepage|default:"" }}",
+                "profileUrl": "{{ author.relative_uri|default:'' }}",
+                "order": "{{ author.order }}",
+                "is_active": "{{ author.is_active|default:"" }}",
+            },
           {% endfor %}
       ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";

@@ -227,8 +227,10 @@ STATIC_URL = "/static/"
 # Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 
-# TODO: Manifest static file storage deactivated for now, pending further debugging
-# STATICFILES_STORAGE = "hydroshare.storage.ForgivingManifestStaticFilesStorage"
+# using this storage class might cause issues for future tests
+# The documentation suggests using the default storage backend when testing
+# https://docs.djangoproject.com/en/1.11/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
+STATICFILES_STORAGE = 'hydroshare.storage.ForgivingManifestStaticFilesStorage'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -713,9 +715,6 @@ SECURE_HSTS_SECONDS = 31536000
 # Cookie Stuff
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
-
-# detect test mode to turn off some features
-TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files. 

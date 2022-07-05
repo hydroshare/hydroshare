@@ -282,7 +282,7 @@
                                 </div>
 
                                 {# PROFILE URL #}
-                                <div v-if="author.profileUrl" class="control-group">
+                                <div v-if="author.profileUrl && author.is_active" class="control-group">
                                     <label class="control-label space-right">HydroShare Profile</label>
                                     <div class="space-bottom"><a :href="author.profileUrl">View Profile</a></div>
                                 </div>
@@ -1250,7 +1250,7 @@
                                                value="{% if contributor.name %}{{ contributor.name }}{% endif %}">
                                     </div>
                                 </div>
-                                {% if contributor.relative_uri %}
+                                {% if contributor.relative_uri and contributor.is_active %}
                                     <div id="div_id_hydroshare_user_id" class="control-group">
                                         <label class="control-label">HydroShare Profile</label>
                                         <div class="space-bottom">

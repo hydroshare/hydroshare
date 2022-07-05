@@ -22,14 +22,6 @@
         <img src="{% static 'img/resource-icons/webapp48x48.png' %}"
              data-toggle="tooltip" data-placement="right"
              alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
-    {% elif resource.resource_type == "RefTimeSeriesResource" %}
-        <img src="{% static 'img/resource-icons/his48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
-    {% elif resource.resource_type == "ScriptResource" %}
-        <img src="{% static 'img/resource-icons/script48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
     {% elif resource.resource_type == "CollectionResource" %}
         <img src="{% static 'img/resource-icons/collection48x48.png' %}"
              data-toggle="tooltip" data-placement="right"

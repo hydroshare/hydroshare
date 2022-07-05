@@ -7,7 +7,7 @@
                 <tr>
                     <th>Authors:</th>
 
-                    <td v-if="has_active_creators && res_mode === 'View'" class="authors-wrapper">
+                    <td v-if="authors.length && res_mode === 'View'" class="authors-wrapper">
                         <a v-for="(author, index) in authors" data-toggle="modal"
                            @click="selectAuthor(author, index)"
                            data-target="#view-author-modal">
@@ -16,7 +16,7 @@
                             <template v-else>${ author.email }</template>
                         </a>
                     </td>
-                    <td v-if="!has_active_creators && res_mode === 'View'" class="authors-wrapper">
+                    <td v-if="!authors.length && res_mode === 'View'" class="authors-wrapper">
                         This resource does not have an author who is an active HydroShare user.
                         Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
                         {% if cm.raccess.public %}

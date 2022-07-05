@@ -13,6 +13,15 @@ from hs_core.search_indexes import normalize_name
 
 register = template.Library()
 
+RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Composite Resource",
+                                     "CollectionResource": "Collection Resource",
+                                     "ModelProgramResource": "Model Program Resource",
+                                     "ModelInstanceResource": "Model Instance Resource",
+                                     "MODFLOWModelInstanceResource": "MODFLOW Model Instance Resource",
+                                     "SWATModelInstanceResource": "SWAT Model Instance Resource",
+                                     "ToolResource": "Web App Resource"
+                                     }
+
 
 @register.filter
 def user_permission(content, arg):
@@ -64,6 +73,8 @@ def published_date(res_obj):
 
 @register.filter
 def resource_type(content):
+    if content.resource_type in RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS:
+        return RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS[content.resource_type]
     return content.get_content_model()._meta.verbose_name
 
 
@@ -71,12 +82,13 @@ def resource_type(content):
 def resource_first_author(content):
     if not content:
         return ''
-    if content.first_creator.name and content.first_creator.relative_uri:
+    first_creator = content.first_creator
+    if first_creator.name and first_creator.relative_uri:
         return format_html('<a href="{desc}">{name}</a>',
-                           desc=content.first_creator.relative_uri,
-                           name=content.first_creator.name)
-    elif content.first_creator.name:
-        return format_html('<span>{name}</span>', name=content.first_creator.name)
+                           desc=first_creator.relative_uri,
+                           name=first_creator.name)
+    elif first_creator.name:
+        return format_html('<span>{name}</span>', name=first_creator.name)
     else:
         first_creator = content.metadata.creators.filter(order=1).first()
         if first_creator.name:
