@@ -926,25 +926,22 @@
         {# ======= Resource Specific ======= #}
 
         {% if site or extended_metadata_exists or res_add_metadata or resource_edit_mode %}
-            {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
-            {% if not resource_edit_mode %}
-                {% if cm.resource_type != "CompositeResource" and cm.resource_type != "CollectionResource" %}
-                    <div class="col-xs-12 content-block">
-                        <h3>Resource Specific</h3>
-                        <div id="resourceSpecificTab">
-                            <div class="row">
-                                {% if not resource_edit_mode or cm.raccess.published %}
-                                    {% block extended_metadata %}{% endblock %}
-                                {% else %}
-                                    {% crispy metadata_form  %}
-                                {% endif %}
+            {% if cm.resource_type != "CompositeResource" and cm.resource_type != "CollectionResource" %}
+                <div class="col-xs-12 content-block">
+                    <h3>Resource Specific</h3>
+                    <div id="resourceSpecificTab">
+                        <div class="row">
+                            {% if not resource_edit_mode or cm.raccess.published %}
+                                {% block extended_metadata %}{% endblock %}
+                            {% else %}
+                                {% crispy metadata_form  %}
+                            {% endif %}
 
-                                {# add extra section for resource landing page #}
-                                {% block extra_section %}{% endblock %}
-                            </div>
+                            {# add extra section for resource landing page #}
+                            {% block extra_section %}{% endblock %}
                         </div>
                     </div>
-                {% endif %}
+                </div>
             {% endif %}
         {% endif %}
 
