@@ -1,7 +1,7 @@
 <html>
 <head>
 <link href="https://releases.transloadit.com/uppy/v2.9.4/uppy.min.css" rel="stylesheet">
-</head>
+</head> 
 <body>
 <h3>Resource: {{ resource.title }} <br>
 Uploading to folder '{{ folder }}'<br>
@@ -16,7 +16,7 @@ Uploading to folder '{{ folder }}'<br>
 <script type="text/javascript" src="/static/js/bootstrap.3.0.2.min.js"></script>
 <script type="text/javascript" src="/static/js/bootstrap-extras.js"></script>
 <script type="text/javascript" src="/static/js/tus.min.js"></script>
-<script src="https://releases.transloadit.com/uppy/v2.9.4/uppy.min.js"></script>
+<script src="https://releases.transloadit.com/uppy/v2.12.1/uppy.min.js"></script>
 <script>
 var uppy = new Uppy.Core({
   onBeforeFileAdded: (file, rest_of_files) => { 
@@ -60,16 +60,21 @@ uppy.use(Uppy.Dashboard, {
    showProgressDetails: true
 }); 
 
-uppy.use(Uppy.Tus, { endpoint: '/upload/' }); 
+uppy.use(Uppy.Tus, { endpoint: 'https://cuahsi-dev-1.hydroshare.org/upload/' }); 
 
 uppy.use(Uppy.Dropbox, { 
   target: Uppy.Dashboard,
-  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion'
+  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion/'
 }); 
 
 uppy.use(Uppy.GoogleDrive, { 
   target: Uppy.Dashboard,
-  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion'
+  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion/'
+}); 
+
+uppy.use(Uppy.Box, { 
+  target: Uppy.Dashboard,
+  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion/'
 }); 
 
 uppy.on('file-removed', (file, reason) => {

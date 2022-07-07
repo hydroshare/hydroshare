@@ -60,6 +60,8 @@ preflight_nginx() {
     sed -i 's!SENDFILE_IRODS_GROUP_ID!'${SENDFILE_IRODS_GROUP_ID}'!g' Dockerfile
     sed -i 's!SENDFILE_IRODS_USER!'${SENDFILE_IRODS_USER}'!g' Dockerfile
     sed -i 's!SENDFILE_IRODS_GROUP!'${SENDFILE_IRODS_GROUP}'!g' Dockerfile
+    sed -i 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' Dockerfile
+    sed -i 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' Dockerfile
 
 }
 

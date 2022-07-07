@@ -39,15 +39,14 @@ export COMPANION_IMPLICIT_PATH="/companion"
 # to enable Dropbox
 export COMPANION_DROPBOX_KEY="07xw8rzny3rgkno"
 export COMPANION_DROPBOX_SECRET="7an6hhingzaqgif"
-# 
-# # to enable Box
-# ### COMPANION_BOX_KEY="YOUR BOX KEY"
-# ### COMPANION_BOX_SECRET="YOUR BOX SECRET"
-# # specifying a secret file will override a directly set secret
-# ### COMPANION_BOX_SECRET_FILE="PATH/TO/BOX/SECRET/FILE"
-# 
+ 
+# to enable Box
+COMPANION_BOX_KEY="rv3q3tz9cq7995uaguahjvc9m524uhso"
+COMPANION_BOX_SECRET="PupcsbgEtWblcIk9TiELudGpxXB3zbvD"
+# specifying a secret file will override a directly set secret
+### COMPANION_BOX_SECRET_FILE="PATH/TO/BOX/SECRET/FILE"
+ 
 # to enable Google Drive
-
 export COMPANION_GOOGLE_KEY="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4.apps.googleusercontent.com"
 export COMPANION_GOOGLE_SECRET="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"
 
@@ -84,12 +83,12 @@ export COMPANION_SELF_ENDPOINT="cuahsi-dev-1.hydroshare.org/companion"
 ### COMPANION_UPLOAD_URLS="http://tusd.tusdemo.net/files/,https://tusd.tusdemo.net/files/"
   
 # corresponds to the streamingUpload option
-export COMPANION_STREAMING_UPLOAD=true
+export COMPANION_STREAMING_UPLOAD=false
   
 # corresponds to the allowLocalUrls option
 export COMPANION_ALLOW_LOCAL_URLS=true
   
 # corresponds to the maxFileSize option
-export COMPANION_MAX_FILE_SIZE="100000000"
+export COMPANION_MAX_FILE_SIZE="1000000"
 
-node /app/bin/companion --config /options-uppy.json
+su hydro-service -c 'node /app/bin/companion --config /options-uppy.json'

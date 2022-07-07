@@ -144,9 +144,9 @@ server {
     # everything else is a regular Django call without reverse proxy. 
     location /upload/ {
         # doesn't work for some reason involving docker networking setup: 
-        # --> proxy_pass http://tusd:1080;
+        proxy_pass http://tusd:1080;
         # use unix socket instead: 
-        proxy_pass http://unix:/tusd_tmp/tusd.sock;
+        # proxy_pass http://unix:/tusd_tmp/tusd.sock;
          
         # Disable request and response buffering
         proxy_request_buffering  off;
@@ -163,9 +163,9 @@ server {
     } 
 
     location /companion/ {
-        limit_except GET POST OPTIONS HEAD { 
-            deny all; 
-        } 
+        # limit_except GET POST OPTIONS HEAD { 
+        #     deny all; 
+        # } 
         proxy_pass http://uppy:3020/;
 
         # Disable request and response buffering
@@ -176,8 +176,9 @@ server {
         # Add X-Forwarded-* headers
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
-        # proxy_set_header Upgrade $http_upgrade;
-        # proxy_set_header Connection "upgrade";
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host; 
 
         client_max_body_size     0;
     }
