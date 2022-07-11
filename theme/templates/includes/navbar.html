@@ -248,8 +248,7 @@
                                             Click <a :href="task.payload">here</a> to refresh user interface.
                                             </span>
                                             <span v-else="task.payload.includes('FileOverrideException') && task.status === 'failed'">
-                                            $('#unzip-resp-message').text(${task.payload});
-                                            $('#unzip-override-confirm-dialog').modal('show');
+                                                Click <a :href="showHongsDialog">here</a> to see some options.
                                             </span>
                                         </small>
                                     </div>
@@ -612,6 +611,10 @@
             }
         },
         methods: {
+            showHongsDialog: function () {
+                $('#unzip-resp-message').text(${task.payload});
+                $('#unzip-override-confirm-dialog').modal('show');
+            },
             // Shows the tasks dropdown
             show: function () {
                 $('#notifications-dropdown').addClass('open');
