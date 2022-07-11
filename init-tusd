@@ -4,4 +4,4 @@ chown -R hydro-service:service-accounts /tusd_tmp
 chmod 0777 /tusd_tmp
 su hydro-service -c \
 '/usr/local/bin/tusd -base-path /upload/ -behind-proxy -upload-dir /tusd_tmp'
-# '/usr/local/bin/tusd -base-path /upload/ -behind-proxy -unix-sock /tusd_tmp/tusd.sock -upload-dir /tusd_tmp -hooks-dir /srv/tusd-hooks'
+# OLD '/usr/local/bin/tusd -base-path /upload/ -behind-proxy -unix-sock /tusd_tmp/tusd.sock -upload-dir /tusd_tmp -hooks-dir /srv/tusd-hooks'

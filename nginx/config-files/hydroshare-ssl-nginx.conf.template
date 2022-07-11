@@ -135,17 +135,15 @@ server {
     }
 
     # large file upload theory of operation: 
-    # 1. Receive connection at /hs_upload/context with file location pattern. 
+    # 1. Receive connection at /hs_upload/uppy with file location pattern. 
     # 2. Django validates the connection and access control. 
     # 3. Django redirects to /upload/, which invokes tusd. 
     # 4. Tus js client calls /hs_upload/complete/ to complete the upload. 
 
     # perform the upload by calling tusd. 
-    # everything else is a regular Django call without reverse proxy. 
     location /upload/ {
-        # doesn't work for some reason involving docker networking setup: 
         proxy_pass http://tusd:1080;
-        # use unix socket instead: 
+        # how to use unix socket instead: 
         # proxy_pass http://unix:/tusd_tmp/tusd.sock;
          
         # Disable request and response buffering
@@ -163,10 +161,7 @@ server {
     } 
 
     location /companion/ {
-        # limit_except GET POST OPTIONS HEAD { 
-        #     deny all; 
-        # } 
-        proxy_pass http://uppy:3020/;
+        proxy_pass http://uppy:3020;
 
         # Disable request and response buffering
         proxy_request_buffering  off;
@@ -179,24 +174,6 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host; 
-
-        client_max_body_size     0;
-    }
-
-    location /connect/ { 
-
-        proxy_pass http://uppy:3020/connect/;
-
-        # Disable request and response buffering
-        proxy_request_buffering  off;
-        proxy_buffering          off;
-        proxy_http_version       1.1;
-        
-        # Add X-Forwarded-* headers
-        proxy_set_header X-Forwarded-Host $host;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        # proxy_set_header Upgrade $http_upgrade;
-        # proxy_set_header Connection "upgrade";
 
         client_max_body_size     0;
     }
@@ -221,3 +198,63 @@ server {
         rewrite ^(.*)$ /maintenance_on.html break;
     }
 }
+
+### DELETED ###server {
+### DELETED ###    listen          443 ssl;
+### DELETED ###    server_name     FQDN_UPLOAD;
+### DELETED ###    root            /hydroshare/hydroshare/static/;
+### DELETED ###
+### DELETED ###    access_log      /var/log/nginx/access.log combined;
+### DELETED ###    error_log       /var/log/nginx/error.log error;
+### DELETED ###    # This clutters logs without usefulness 2021/06/21 ALC
+### DELETED ###    # error_log       /var/log/nginx/system.log notice;
+### DELETED ###    # Uncomment the following line to generate debugging log entries
+### DELETED ###    error_log       /var/log/nginx/system.log debug;
+### DELETED ###
+### DELETED ###    charset         utf-8;
+### DELETED ###    client_max_body_size 4096m;
+### DELETED ###
+### DELETED ###    ssl_certificate         /hs-certs/SSL_CERT_FILE;
+### DELETED ###    ssl_certificate_key     /hs-certs/SSL_KEY_FILE;
+### DELETED ###
+### DELETED ###    # large file upload theory of operation: 
+### DELETED ###    # 1. Receive connection at /hs_upload/uppy with file location pattern. 
+### DELETED ###    # 2. Django validates the connection and access control. 
+### DELETED ###    # 3. Django redirects to /upload/, which invokes tusd. 
+### DELETED ###    # 4. Tus js client calls /hs_upload/complete/ to complete the upload. 
+### DELETED ###
+### DELETED ###    # perform the upload by calling tusd. 
+### DELETED ###    location / {
+### DELETED ###        # CORS header
+### DELETED ###        if ($request_method = OPTIONS ) {
+### DELETED ###            add_header "Access-Control-Allow-Origin"  "https://cuahsi-dev-1.hydroshare.org";
+### DELETED ###            add_header "Access-Control-Allow-Methods" *;
+### DELETED ###            add_header "Access-Control-Allow-Headers" *;
+### DELETED ###            add_header "Access-Control-Expose-Headers" *;
+### DELETED ###            return 200;
+### DELETED ###        }
+### DELETED ###        
+### DELETED ###        if ($request_method ~* "(GET|POST|HEAD|PATCH|DELETE)") {
+### DELETED ###            add_header "Access-Control-Expose-Headers" *;
+### DELETED ###            add_header "Access-Control-Allow-Origin"  "https://cuahsi-dev-1.hydroshare.org";
+### DELETED ###        }       
+### DELETED ###
+### DELETED ###        proxy_pass http://tusd:1080;
+### DELETED ###        # use unix socket instead: 
+### DELETED ###        # proxy_pass http://unix:/tusd_tmp/tusd.sock;
+### DELETED ###         
+### DELETED ###        # Disable request and response buffering
+### DELETED ###        proxy_request_buffering  off;
+### DELETED ###        proxy_buffering          off;
+### DELETED ###        proxy_http_version       1.1;
+### DELETED ###        
+### DELETED ###        # Add X-Forwarded-* headers
+### DELETED ###        proxy_set_header X-Forwarded-Host $host;
+### DELETED ###        proxy_set_header X-Forwarded-Proto $scheme;
+### DELETED ###        proxy_set_header Upgrade $http_upgrade;
+### DELETED ###        proxy_set_header Connection "upgrade";
+### DELETED ###         
+### DELETED ###
+### DELETED ###        client_max_body_size     0;
+### DELETED ###    } 
+### DELETED ###}

@@ -6,9 +6,14 @@ RUN addgroup --gid HS_SERVICE_GID service-accounts
 RUN adduser -u HS_SERVICE_UID -s /bin/sh -D -H -g 'hydroshare user' hydro-service service-accounts
 
 COPY init-uppy /init-uppy
-RUN chown hydro-service:service-accounts /init-uppy
+RUN chown node:node /init-uppy
 COPY options-uppy.json /options-uppy.json
-RUN chown hydro-service:service-accounts /options-uppy.json
+RUN chown node:node /options-uppy.json
+RUN mkdir /uppy_tmp
+RUN chmod 777 /uppy_tmp
+RUN chown node:node /uppy_tmp
+
+RUN echo 'cuahsi-dev-1-upload.hydroshare.org 0.0.0.0' >> /etc/hosts
 
 # run daemon
 ENTRYPOINT [ ]

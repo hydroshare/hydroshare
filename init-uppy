@@ -4,11 +4,12 @@
 # any long set of random characters for the server session
 export COMPANION_SECRET="h3h5872hgtF0374829371859ntirbeow"
 # specifying a secret file will override a directly set secret
-### COMPANION_SECRET_FILE="PATH/TO/COMPANION/SECRET/FILE"
+### export COMPANION_SECRET_FILE="PATH/TO/COMPANION/SECRET/FILE"
 # corresponds to the server.host option
 export COMPANION_DOMAIN="cuahsi-dev-1.hydroshare.org"
 # corresponds to the filePath option
-export COMPANION_DATADIR="/tusd_tmp"
+# separate folder, as companion and tusd aren't designed to share files. 
+export COMPANION_DATADIR="/uppy_tmp" 
 
 # ###### Optional variables ##########
 
@@ -17,17 +18,17 @@ export COMPANION_PROTOCOL="https"
 # the port on which to start the server, defaults to 3020
 export COMPANION_PORT=3020
 # corresponds to the server.path option, defaults to ''. 
-# export COMPANION_PATH="/companion"
+export COMPANION_PATH="/companion/"
 # disables the welcome page, defaults to false
-### COMPANION_HIDE_WELCOME="true"
+### export COMPANION_HIDE_WELCOME="true"
 # disables the metrics page, defaults to false
-### COMPANION_HIDE_METRICS="true"
+### export COMPANION_HIDE_METRICS="true"
   
 # use this in place of COMPANION_PATH if the server path should not be
 # handled by the express.js app, but maybe by an external server configuration
 # instead (e.g Nginx).
-export COMPANION_IMPLICIT_PATH="/companion"
-# 
+# export COMPANION_IMPLICIT_PATH="/companion/"
+
 # # corresponds to the corsOrigins option, but can contain a comma-separated list of String values.
 # # if neither this or COMPANION_CLIENT_ORIGINS_REGEX specified, the server would allow any host
 # ### COMPANION_CLIENT_ORIGINS="http://localhost:3452,https://uppy.io"
@@ -44,43 +45,43 @@ export COMPANION_DROPBOX_SECRET="7an6hhingzaqgif"
 COMPANION_BOX_KEY="rv3q3tz9cq7995uaguahjvc9m524uhso"
 COMPANION_BOX_SECRET="PupcsbgEtWblcIk9TiELudGpxXB3zbvD"
 # specifying a secret file will override a directly set secret
-### COMPANION_BOX_SECRET_FILE="PATH/TO/BOX/SECRET/FILE"
+### export COMPANION_BOX_SECRET_FILE="PATH/TO/BOX/SECRET/FILE"
  
 # to enable Google Drive
 export COMPANION_GOOGLE_KEY="876543925663-7v2tf3dg8p9nugtjtcm37ks8ckub8cf4.apps.googleusercontent.com"
 export COMPANION_GOOGLE_SECRET="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"
 
 # to enable Onedrive
-### COMPANION_ONEDRIVE_KEY="YOUR ONEDRIVE KEY"
-### COMPANION_ONEDRIVE_SECRET="YOUR ONEDRIVE SECRET"
+### export COMPANION_ONEDRIVE_KEY="YOUR ONEDRIVE KEY"
+### export COMPANION_ONEDRIVE_SECRET="YOUR ONEDRIVE SECRET"
 # specifying a secret file will override a directly set secret
-### COMPANION_ONEDRIVE_SECRET_FILE="PATH/TO/ONEDRIVE/SECRET/FILE"
+### export COMPANION_ONEDRIVE_SECRET_FILE="PATH/TO/ONEDRIVE/SECRET/FILE"
   
 # to enable S3
-### COMPANION_AWS_KEY="YOUR AWS KEY"
-### COMPANION_AWS_SECRET="YOUR AWS SECRET"
+### export COMPANION_AWS_KEY="YOUR AWS KEY"
+### export COMPANION_AWS_SECRET="YOUR AWS SECRET"
 # specifying a secret file will override a directly set secret
-### COMPANION_AWS_SECRET_FILE="PATH/TO/AWS/SECRET/FILE"
-### COMPANION_AWS_BUCKET="YOUR AWS S3 BUCKET"
-### COMPANION_AWS_REGION="AWS REGION"
+### export COMPANION_AWS_SECRET_FILE="PATH/TO/AWS/SECRET/FILE"
+### export COMPANION_AWS_BUCKET="YOUR AWS S3 BUCKET"
+### export COMPANION_AWS_REGION="AWS REGION"
 # to enable S3 Transfer Acceleration (default: false)
-### COMPANION_AWS_USE_ACCELERATE_ENDPOINT="false"
+### export COMPANION_AWS_USE_ACCELERATE_ENDPOINT="false"
 # to set X-Amz-Expires query param in presigned urls (in seconds, default: 300)
-### COMPANION_AWS_EXPIRES="300"
+### export COMPANION_AWS_EXPIRES="300"
 # to set a canned ACL for uploaded objects: https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl
-### COMPANION_AWS_ACL="public-read"
+### export COMPANION_AWS_ACL="public-read"
  
 # corresponds to the server.oauthDomain option
-### COMPANION_OAUTH_DOMAIN="sub.domain.com"
+### export COMPANION_OAUTH_DOMAIN="sub.domain.com"
 # corresponds to the server.validHosts option
-### COMPANION_DOMAINS="sub1.domain.com,sub2.domain.com,sub3.domain.com"
+### export COMPANION_DOMAINS="sub1.domain.com,sub2.domain.com,sub3.domain.com"
   
 # corresponds to the sendSelfEndpoint option
-export COMPANION_SELF_ENDPOINT="cuahsi-dev-1.hydroshare.org/companion"
+export COMPANION_SELF_ENDPOINT="https://cuahsi-dev-1.hydroshare.org/companion/"
   
 # comma-separated URLs
 # corresponds to the uploadUrls option (comma-separated)
-### COMPANION_UPLOAD_URLS="http://tusd.tusdemo.net/files/,https://tusd.tusdemo.net/files/"
+### export COMPANION_UPLOAD_URLS="http://tusd.tusdemo.net/files/,https://tusd.tusdemo.net/files/"
   
 # corresponds to the streamingUpload option
 export COMPANION_STREAMING_UPLOAD=false
@@ -91,4 +92,4 @@ export COMPANION_ALLOW_LOCAL_URLS=true
 # corresponds to the maxFileSize option
 export COMPANION_MAX_FILE_SIZE="1000000"
 
-su hydro-service -c 'node /app/bin/companion --config /options-uppy.json'
+node /app/bin/companion --config /options-uppy.json

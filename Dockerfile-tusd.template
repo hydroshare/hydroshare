@@ -5,6 +5,8 @@ USER root:root
 RUN addgroup --gid HS_SERVICE_GID service-accounts 
 RUN adduser -u HS_SERVICE_UID -s /bin/sh -D -H -g 'hydroshare user' hydro-service service-accounts
 
+# It is important that tusd operate as hydro-service:service-accounts. 
+# Thus all should be owned by those accounts. 
 RUN chown hydro-service:service-accounts /srv/tusd-data \
  && mkdir -p /srv/tusd-hooks \
  && chown hydro-service:service-accounts /srv/tusd-hooks \
