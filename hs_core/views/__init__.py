@@ -2,7 +2,7 @@ import json
 import datetime
 import pytz
 import logging
-from sorl.thumbnail import ImageField as TumbnailImageField, get_thumbnail
+from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
@@ -1207,7 +1207,7 @@ class GroupForm(forms.Form):
     name = forms.CharField(required=True)
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
-    picture = TumbnailImageField()
+    picture = ThumbnailImageField()
     privacy_level = forms.CharField(required=True)
     auto_approve = forms.BooleanField(required=False)
     requires_explanation = forms.BooleanField(required=False)
@@ -1831,17 +1831,24 @@ class FindGroupsView(TemplateView):
         if self.request.user.is_authenticated():
             u = User.objects.get(pk=self.request.user.id)
 
-            groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+            groups = Group.objects.filter(gaccess__active=True).exclude(
+                name="Hydroshare Author").select_related('gaccess')
             for g in groups:
-                g.is_user_member = u in g.gaccess.members
-                g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
-                    request_from=u).exists()
-                g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
-                    invitation_to=u).exists()
+                g.members = g.gaccess.members
+                g.is_user_member = u in g.members
                 g.join_request = None
-                if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                    g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                     g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+                if g.is_user_member:
+                    g.join_request_waiting_owner_action = False
+                    g.join_request_waiting_user_action = False
+                else:
+                    g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
+                        request_from=u).exists()
+                    g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
+                        invitation_to=u).exists()
+
+                    if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+                        g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                                         g.gaccess.group_membership_requests.filter(invitation_to=u).first()
             return {
                 'profile_user': u,
                 'groups': groups
@@ -1852,6 +1859,8 @@ class FindGroupsView(TemplateView):
                                           (Q(gaccess__discoverable=True) |
                                           Q(gaccess__public=True))).exclude(name="Hydroshare Author")
 
+            for g in groups:
+                g.members = g.gaccess.members
             return {
                 'groups': groups
             }
@@ -1915,11 +1924,12 @@ class GroupView(TemplateView):
         group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
 
         if self.request.user.is_authenticated():
+            group_members = g.gaccess.members
             u = User.objects.get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
             u.is_group_editor = g in u.uaccess.edit_groups
             u.is_group_viewer = g in u.uaccess.view_groups or g.gaccess.public or g.gaccess.discoverable
-            u.is_group_member = u in g.gaccess.members
+            u.is_group_member = u in group_members
 
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
@@ -1932,7 +1942,7 @@ class GroupView(TemplateView):
                 Q(invitation_to=None) | Q(invitation_to__is_active=True)
             )
 
-            if u not in g.gaccess.members:
+            if u not in group_members:
                 group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 
             return {

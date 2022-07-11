@@ -58,7 +58,7 @@
                 {% for cont in contributors %}
                     <tr>
                         <td>
-                            {% if cont.relative_uri %}
+                            {% if cont.relative_uri and cont.is_active %}
                                 <a href="{{ cont.relative_uri }}">{{ cont.name|name_without_commas }}</a>
                             {% else %}
                                 {{ cont.name|name_without_commas }}
@@ -163,7 +163,7 @@
                 {% for contributor in contributors %}
                     <tr>
                         <td>
-                            {% if contributor.relative_uri %}
+                            {% if contributor.relative_uri and contributor.is_active %}
                                 <a href="{{ contributor.relative_uri }}">{{ contributor.name|name_without_commas }}</a>
                             {% else %}
                                 {{ contributor.name|name_without_commas }}

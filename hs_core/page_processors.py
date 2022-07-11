@@ -118,11 +118,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     topics = list(topics)  # force QuerySet evaluation
     content_model.update_relation_meta()
     creators = content_model.metadata.creators.all()
-    has_active_creators = False
-    for creator in creators:
-        if creator.is_active:
-            has_active_creators = True
-            break
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -184,7 +179,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'readme': readme,
                    'abstract': abstract,
                    'creators': creators,
-                   'has_active_creators': has_active_creators,
                    'contributors': content_model.metadata.contributors.all(),
                    'temporal_coverage': temporal_coverage_data_dict,
                    'spatial_coverage': spatial_coverage_data_dict,
@@ -279,7 +273,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
                'creators': creators,
-               'has_active_creators': has_active_creators,
                'title': content_model.metadata.title,
                'readme': readme,
                'contributors': content_model.metadata.contributors.all(),
