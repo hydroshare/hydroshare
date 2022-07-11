@@ -617,9 +617,8 @@ function getAuthorFormData(author, isPerson) {
 
     // Person-exclusive fields
     if (isPerson) {
-        let hydroshare_user_id = author.profileUrl.replace(/\D/g,'');
         formData.append("creator-" + (author.order - 1) + "-name", author.name);
-        formData.append("creator-" + (author.order - 1) + "-hydroshare_user_id", hydroshare_user_id !== null ? hydroshare_user_id : "");
+        formData.append("creator-" + (author.order - 1) + "-hydroshare_user_id", author.profileUrl !== null ? author.profileUrl.replace(/\D/g,'') : "");
     }
     else {
         // Empty values still needed for valid request
