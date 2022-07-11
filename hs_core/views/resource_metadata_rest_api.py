@@ -23,7 +23,7 @@ class Identifiers(serializers.DictField):
 
 class PartySerializer(serializers.Serializer):
     name = serializers.CharField()
-    description = serializers.URLField(required=False)
+    hydroshare_user_id = serializers.IntegerField(required=False)
     organization = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
     address = serializers.CharField(required=False)
@@ -33,7 +33,7 @@ class PartySerializer(serializers.Serializer):
 
     class Meta:
         model = Creator
-        fields = {'name', 'description', 'organization', 'email',
+        fields = {'name', 'hydroshare_user_id', 'organization', 'email',
                   'address', 'phone', 'homepage', 'identifiers'}
 
 

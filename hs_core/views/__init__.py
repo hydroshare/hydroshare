@@ -2,6 +2,7 @@ import json
 import datetime
 import pytz
 import logging
+from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
@@ -495,9 +496,6 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
                     if is_add_success:
                         resource_modified(res, request.user, overwrite_bag=False)
-                        if res.resource_type == "TimeSeriesResource" and element_name != "subject":
-                            res.metadata.is_dirty = True
-                            res.metadata.save()
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response['errors'])
 
@@ -516,16 +514,6 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status}
-            elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
-                ajax_response_data = {'status': 'success',
-                                      'element_name': element_name,
-                                      'spatial_coverage': get_coverage_data_dict(res),
-                                      'metadata_status': metadata_status,
-                                      'res_public_status': res_public_status,
-                                      'res_discoverable_status': res_discoverable_status
-                                      }
-                if element is not None:
-                    ajax_response_data['element_id'] = element.id
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
@@ -620,9 +608,6 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     res.update_public_and_discoverable()
                 if is_update_success:
                     resource_modified(res, request.user, overwrite_bag=False)
-                    if res.resource_type == "TimeSeriesResource" and element_name != "subject":
-                        res.metadata.is_dirty = True
-                        res.metadata.save()
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response['errors'])
 
@@ -635,8 +620,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
-            if element_name.lower() == 'site' and (res.resource_type == 'TimeSeriesResource' or
-                                                   res.resource_type == 'CompositeResource'):
+            if element_name.lower() == 'site' and res.resource_type == 'CompositeResource':
                 # get the spatial coverage element
                 spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success',
@@ -1223,7 +1207,7 @@ class GroupForm(forms.Form):
     name = forms.CharField(required=True)
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
-    picture = forms.ImageField(required=False)
+    picture = ThumbnailImageField()
     privacy_level = forms.CharField(required=True)
     auto_approve = forms.BooleanField(required=False)
     requires_explanation = forms.BooleanField(required=False)
@@ -1258,7 +1242,10 @@ class GroupCreateForm(GroupForm):
                                                       auto_approve=frm_data['auto_approve'],
                                                       requires_explanation=frm_data['requires_explanation'])
         if 'picture' in request.FILES:
-            new_group.gaccess.picture = request.FILES['picture']
+            # resize uploaded image
+            img = request.FILES['picture']
+            img.image = get_thumbnail(img, 'x150', crop='center')
+            new_group.gaccess.picture = img
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(new_group, privacy_level)
@@ -1276,7 +1263,10 @@ class GroupUpdateForm(GroupForm):
         group_to_update.gaccess.auto_approve = frm_data['auto_approve']
         group_to_update.gaccess.requires_explanation = frm_data['requires_explanation']
         if 'picture' in request.FILES:
-            group_to_update.gaccess.picture = request.FILES['picture']
+            # resize uploaded image
+            img = request.FILES['picture']
+            img.image = get_thumbnail(img, 'x150', crop='center')
+            group_to_update.gaccess.picture = img
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
@@ -1841,17 +1831,24 @@ class FindGroupsView(TemplateView):
         if self.request.user.is_authenticated():
             u = User.objects.get(pk=self.request.user.id)
 
-            groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+            groups = Group.objects.filter(gaccess__active=True).exclude(
+                name="Hydroshare Author").select_related('gaccess')
             for g in groups:
-                g.is_user_member = u in g.gaccess.members
-                g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
-                    request_from=u).exists()
-                g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
-                    invitation_to=u).exists()
+                g.members = g.gaccess.members
+                g.is_user_member = u in g.members
                 g.join_request = None
-                if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                    g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                     g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+                if g.is_user_member:
+                    g.join_request_waiting_owner_action = False
+                    g.join_request_waiting_user_action = False
+                else:
+                    g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
+                        request_from=u).exists()
+                    g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
+                        invitation_to=u).exists()
+
+                    if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+                        g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                                         g.gaccess.group_membership_requests.filter(invitation_to=u).first()
             return {
                 'profile_user': u,
                 'groups': groups
@@ -1862,6 +1859,8 @@ class FindGroupsView(TemplateView):
                                           (Q(gaccess__discoverable=True) |
                                           Q(gaccess__public=True))).exclude(name="Hydroshare Author")
 
+            for g in groups:
+                g.members = g.gaccess.members
             return {
                 'groups': groups
             }
@@ -1925,11 +1924,12 @@ class GroupView(TemplateView):
         group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
 
         if self.request.user.is_authenticated():
+            group_members = g.gaccess.members
             u = User.objects.get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
             u.is_group_editor = g in u.uaccess.edit_groups
             u.is_group_viewer = g in u.uaccess.view_groups or g.gaccess.public or g.gaccess.discoverable
-            u.is_group_member = u in g.gaccess.members
+            u.is_group_member = u in group_members
 
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
@@ -1942,7 +1942,7 @@ class GroupView(TemplateView):
                 Q(invitation_to=None) | Q(invitation_to__is_active=True)
             )
 
-            if u not in g.gaccess.members:
+            if u not in group_members:
                 group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 
             return {

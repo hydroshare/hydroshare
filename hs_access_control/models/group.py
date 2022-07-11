@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
 from hs_access_control.models.community import Community
+from sorl.thumbnail import ImageField as ThumbnailImageField
 from theme.utils import get_upload_path_group
 
 
@@ -83,7 +84,7 @@ class GroupAccess(models.Model):
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
-    picture = models.ImageField(upload_to=get_upload_path_group, null=True, blank=True)
+    picture = ThumbnailImageField(upload_to=get_upload_path_group, null=True, blank=True)
 
     ####################################
     # group membership: owners, edit_users, view_users are parallel to those in resources
@@ -101,7 +102,7 @@ class GroupAccess(models.Model):
 
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
-                                   u2ugp__privilege=PrivilegeCodes.OWNER)
+                                   u2ugp__privilege=PrivilegeCodes.OWNER).select_related('userprofile')
 
     @property
     def __edit_users_of_group(self):
@@ -157,7 +158,7 @@ class GroupAccess(models.Model):
         """
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
-                                   u2ugp__privilege__lte=PrivilegeCodes.VIEW)
+                                   u2ugp__privilege__lte=PrivilegeCodes.VIEW).select_related('userprofile')
 
     @property
     def viewers(self):
@@ -215,7 +216,7 @@ class GroupAccess(models.Model):
         :return: QuerySet of resource objects held by group.
 
         """
-        return BaseResource.objects.filter(self.__view_resources_of_group)
+        return BaseResource.objects.filter(self.__view_resources_of_group).select_related('raccess')
 
     @property
     def edit_resources(self):

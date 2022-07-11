@@ -1,27 +1,25 @@
 # coding=utf-8
-import os
 import datetime
+import os
+import shutil
 from zipfile import ZipFile
 
 import pytz
-import shutil
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
-
 from django.core.files.uploadedfile import UploadedFile
 from django.test import TransactionTestCase
-from django.contrib.auth.models import Group
-
 from rest_framework import status
 
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
-from hs_core.models import BaseResource, ResourceFile
 from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey, ResourceVersioningException, \
     add_file_to_resource, get_file_from_irods
+from hs_core.models import BaseResource, ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
     unzip_file, add_reference_url_to_resource, edit_reference_url_in_resource, delete_resource_file, \
     zip_by_aggregation_file
-from hs_composite_resource.models import CompositeResource
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData, \
     RefTimeseriesLogicalFile, FileSetLogicalFile, NetCDFLogicalFile, TimeSeriesLogicalFile, \
     GeoFeatureLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
@@ -48,12 +46,19 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.valid_url = "https://www.google.com"
         self.raster_file_name = 'small_logan.tif'
         self.raster_file = 'hs_composite_resource/tests/data/{}'.format(self.raster_file_name)
+
         self.generic_file_name = 'generic_file.txt'
         self.generic_file = 'hs_composite_resource/tests/data/{}'.format(self.generic_file_name)
+
         self.netcdf_file_name = 'netcdf_valid.nc'
         self.netcdf_file = 'hs_composite_resource/tests/data/{}'.format(self.netcdf_file_name)
+
+        self.netcdf_file_name_no_coverage = 'nc_no_spatial_ref.nc'
+        self.netcdf_file_no_coverage = 'hs_composite_resource/tests/data/{}'.format(self.netcdf_file_name_no_coverage)
+
         self.sqlite_file_name = 'ODM2.sqlite'
         self.sqlite_file = 'hs_composite_resource/tests/data/{}'.format(self.sqlite_file_name)
+
         self.watershed_dbf_file_name = 'watersheds.dbf'
         self.watershed_dbf_file = 'hs_composite_resource/tests/data/{}'.format(
             self.watershed_dbf_file_name)
@@ -63,11 +68,14 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.watershed_shx_file_name = 'watersheds.shx'
         self.watershed_shx_file = 'hs_composite_resource/tests/data/{}'.format(
             self.watershed_shx_file_name)
+
         self.json_file_name = 'multi_sites_formatted_version1.0.refts.json'
         self.json_file = 'hs_composite_resource/tests/data/{}'.format(
             self.json_file_name)
+
         self.zip_file_name = 'test.zip'
         self.zip_file = 'hs_composite_resource/tests/data/{}'.format(self.zip_file_name)
+
         self.zipped_aggregation_file_name = 'multi_sites_formatted_version1.0.refts.zip'
         self.zipped_aggregation_file = \
             'hs_composite_resource/tests/data/{}'.format(self.zipped_aggregation_file_name)
@@ -1317,6 +1325,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         gen_res_file = self.composite_resource.files.first()
         # crate a generic logical file type
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, gen_res_file.id)
+        gen_aggr = GenericLogicalFile.objects.first()
+        # check that there are no missing required metadata for the generic single file aggregation
+        self.assertEqual(len(gen_aggr.metadata.get_required_missing_elements()), 0)
 
         # at this point still resource can't be public or discoverable - as some core metadata
         # is missing
@@ -1354,12 +1365,59 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # make the tif as part of the GeoRasterLogicalFile
         tif_res_file = self.composite_resource.files.first()
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
+        raster_aggr = GeoRasterLogicalFile.objects.first()
+        # check that there are no missing required metadata for the raster aggregation
+        self.assertEqual(len(raster_aggr.metadata.get_required_missing_elements()), 0)
 
         # at this point still resource can't be public or discoverable - as some core metadata
         # is missing
         self.assertEqual(self.composite_resource.can_be_public_or_discoverable, False)
 
         # there should be 3 required core metadata elements missing at this point
+        missing_elements = self.composite_resource.metadata.get_required_missing_elements()
+        self.assertEqual(len(missing_elements), 2)
+        self.assertIn('Abstract', missing_elements)
+        self.assertIn('Keywords', missing_elements)
+
+        # add the above missing elements
+        # create abstract
+        metadata = self.composite_resource.metadata
+        # add Abstract (element name is description)
+        metadata.create_element('description', abstract='new abstract for the resource')
+        # add keywords (element name is subject)
+        metadata.create_element('subject', value='sub-1')
+        # at this point resource can be public or discoverable
+        self.assertEqual(self.composite_resource.can_be_public_or_discoverable, True)
+
+    def test_can_be_public_or_discoverable_with_netcdf_aggregation_no_spatial_coverage(self):
+        """Here we are testing the function 'can_be_public_or_discoverable()'
+        This function should return False unless we have the required metadata at the resource level
+        when the resource contains a netcdf aggregation that doesn't have spatial coverage
+        """
+
+        self.create_composite_resource()
+
+        # at this point resource can't be public or discoverable as some core metadata missing
+        self.assertEqual(self.composite_resource.can_be_public_or_discoverable, False)
+        # add the netcdf file that doesn't have spatial reference
+        self.add_file_to_resource(file_to_add=self.netcdf_file_no_coverage)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # create NetCDF aggregation using the netcdf file
+        nc_res_file = self.composite_resource.files.first()
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
+        nc_aggr = NetCDFLogicalFile.objects.first()
+
+        # check the nc aggregation doesn't have spatial coverage
+        self.assertEqual(nc_aggr.metadata.originalCoverage, None)
+        self.assertEqual(nc_aggr.metadata.coverages.exists(), False)
+        # check that there are no missing required metadata for the nc aggregation
+        self.assertEqual(len(nc_aggr.metadata.get_required_missing_elements()), 0)
+
+        # at this point still resource can't be public or discoverable - as some core metadata
+        # is missing
+        self.assertEqual(self.composite_resource.can_be_public_or_discoverable, False)
+
+        # there should be 2 required core metadata elements missing at this point
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
         self.assertIn('Abstract', missing_elements)

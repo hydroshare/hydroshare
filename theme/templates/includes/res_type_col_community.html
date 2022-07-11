@@ -6,10 +6,6 @@
              data-toggle="tooltip" data-placement="right"
              alt="{{ resource_type }}" title="{{ resource_type }}"
              class="table-res-type-icon"/>
-    {% elif resource.resource_type == "RasterResource" %}
-        <img src="{% static 'img/resource-icons/geographicraster48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
     {% elif resource.resource_type == "ModelProgramResource" %}
         <img src="{% static 'img/resource-icons/modelprogram48x48.png' %}"
              data-toggle="tooltip" data-placement="right"
@@ -22,24 +18,8 @@
         <img src="{% static 'img/resource-icons/swat48x48.png' %}"
              data-toggle="tooltip" data-placement="right"
              alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
-    {% elif resource.resource_type == "TimeSeriesResource" %}
-        <img src="{% static 'img/resource-icons/timeseries48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
-    {% elif resource.resource_type == "GeographicFeatureResouce" %}
-        <img src="{% static 'img/resource-icons/geographicfeature48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
     {% elif resource.resource_type == "ToolResource" %}
         <img src="{% static 'img/resource-icons/webapp48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
-    {% elif resource.resource_type == "RefTimeSeriesResource" %}
-        <img src="{% static 'img/resource-icons/his48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
-    {% elif resource.resource_type == "ScriptResource" %}
-        <img src="{% static 'img/resource-icons/script48x48.png' %}"
              data-toggle="tooltip" data-placement="right"
              alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
     {% elif resource.resource_type == "CollectionResource" %}

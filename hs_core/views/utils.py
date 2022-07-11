@@ -373,10 +373,13 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
     """
     authorized = False
     user = get_user(request)
-    try:
-        res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
-    except ObjectDoesNotExist:
-        raise NotFound(detail="No resource was found for resource id:%s" % res_id)
+    if isinstance(res_id, str):
+        try:
+            res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
+        except ObjectDoesNotExist:
+            raise NotFound(detail="No resource was found for resource id:%s" % res_id)
+    else:
+        res = res_id
 
     if needed_permission == ACTION_TO_AUTHORIZE.VIEW_METADATA:
         if res.raccess.discoverable or res.raccess.public or res.raccess.allow_private_sharing:
@@ -447,7 +450,7 @@ def validate_metadata(metadata, resource_type):
      and the other one for "Coverage' element.
     [{'description':{'abstract': 'This is a great resource'}},
     {'coverage': {'value':{'type': 'period', 'start': 01/01/2010', 'end': '12/12/2015'}}}]
-    :param resource_type: resource type name (e.g., "GenericResource" or "TimeSeriesResource")
+    :param resource_type: resource type name (e.g., "GenericResource" or "CollectionResource")
     :return:
 
     """
@@ -627,18 +630,15 @@ def get_my_resources_list(user, annotate=True):
         resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
         # we won't hit the DB for each resource to know if it's status is public/private/discoverable
         # etc
-        resource_collection = resource_collection.select_related('raccess')
+        resource_collection = resource_collection.select_related('raccess', 'rlabels')
         # prefetch metadata items - creators, keywords(subjects), dates and title
-        meta_contenttypes = get_metadata_contenttypes()
-        for ct in meta_contenttypes:
-            # get a list of resources having metadata that is an instance of a specific
-            # metadata class (e.g., CoreMetaData)
-            res_list = [res for res in resource_collection if res.content_type == ct]
-            prefetch_related_objects(res_list,
-                                     Prefetch('content_object__creators'),
-                                     Prefetch('content_object__subjects'),
-                                     Prefetch('content_object___title'),
-                                     Prefetch('content_object__dates'))
+        prefetch_related_objects(resource_collection,
+                                 Prefetch('content_object__creators'),
+                                 Prefetch('content_object__subjects'),
+                                 Prefetch('content_object___title'),
+                                 Prefetch('content_object__dates')
+                                 )
+
     return resource_collection
 
 

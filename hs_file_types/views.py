@@ -1,25 +1,35 @@
+import glob
 import json
 import os
 
 import jsonschema
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import Error
-from django.http import JsonResponse
-from django.template import Template, Context
+from django.http import JsonResponse, HttpResponse
+from django.template import Context, Template
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError as RF_ValidationError
 from rest_framework.response import Response
 
 from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
-    ResourceFile, utils
+    ResourceFile, utils, delete_resource_file_only
 from hs_core.hydroshare.utils import resource_modified
-from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.task_utils import get_or_create_task_notification
-from hs_core.tasks import move_aggregation_task, FILE_TYPE_MAP
-from .forms import ModelProgramMetadataValidationForm, ModelInstanceMetadataValidationForm
+from hs_core.tasks import FILE_TYPE_MAP, move_aggregation_task
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
+from . import serializers
+from .forms import ModelInstanceMetadataValidationForm, ModelProgramMetadataValidationForm
 from .utils import set_logical_file_type
+
+
+class BadRequestException(Exception):
+    pass
 
 
 def authorise_for_aggregation_edit(f=None, file_type=None):
@@ -232,6 +242,187 @@ def move_aggregation_public(request, resource_id, hs_file_type, file_path, tgt_p
     return move_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, tgt_path, **kwargs)
 
 
+@swagger_auto_schema(method="get", responses={200: serializers.ModelProgramMetaTemplateSchemaSerializer})
+@api_view(['GET'])
+def list_model_program_template_metadata_schemas(request, **kwargs):
+    """Returns a list of available template metadata schema filenames for model program aggregation."""
+
+    schema_templates = []
+    template_path = settings.MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH
+    template_path = os.path.join(template_path, "*.json")
+    for schema_template in glob.glob(template_path):
+        template_file_name = os.path.basename(schema_template)
+        schema_templates.append({"meta_schema_filename": template_file_name})
+    return JsonResponse(schema_templates, safe=False)
+
+
+@swagger_auto_schema(method='get', responses={200: "Metadata template schema as JSON",
+                                              400: "Not a valid metadata template schema filename"})
+@api_view(['GET'])
+def get_model_program_template_metadata_schema(request, schema_filename, **kwargs):
+    """Returns JSON of the specified template metadata schema for model program aggregation."""
+
+    template_path = settings.MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH
+    template_path = os.path.join(template_path, "*.json")
+    schema_template_path = ''
+    for schema_template in glob.glob(template_path):
+        template_schema_filename = os.path.basename(schema_template)
+        if template_schema_filename == schema_filename:
+            schema_template_path = schema_template
+            break
+
+    if schema_template_path:
+        with open(schema_template_path) as file_obj:
+            schema_data = file_obj.read()
+            json_schema = json.loads(schema_data)
+            return JsonResponse(json_schema, safe=False)
+
+    return JsonResponse(data=f"{schema_filename} is not a valid metadata template schema filename", safe=False,
+                        status=status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(method='put', responses={204: "Template metadata schema was assigned to model program aggregation",
+                                              400: "Invalid/bad request message",
+                                              403: "You don't have permission to edit this resource"},)
+@api_view(['PUT'])
+def use_template_metadata_schema_for_model_program(request, resource_id, aggregation_path, schema_filename, **kwargs):
+    """Assigns the specified template metadata schema as the metadata schema for a model program aggregation."""
+
+    try:
+        resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
+                                                                 aggregation_path=aggregation_path,
+                                                                 model_type='model-program')
+    except BadRequestException as ex:
+        return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
+
+    template_path = settings.MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH
+    template_path = os.path.join(template_path, "*.json")
+    schema_template_path = ''
+    for schema_template in glob.glob(template_path):
+        template_schema_filename = os.path.basename(schema_template)
+        if template_schema_filename == schema_filename:
+            schema_template_path = schema_template
+            break
+
+    if not schema_template_path:
+        return JsonResponse(data=f"{schema_filename} is not a valid metadata template schema filename", safe=False,
+                            status=status.HTTP_400_BAD_REQUEST)
+    with open(schema_template_path) as file_obj:
+        schema_data = file_obj.read()
+        json_schema = json.loads(schema_data)
+        aggr.metadata_schema_json = json_schema
+        aggr.save()
+        aggr.metadata.is_dirty = True
+        aggr.metadata.save()
+        resource_modified(resource, request.user, overwrite_bag=False)
+
+    msg = f"Template schema:{schema_filename} was set as the metadata schema for model program " \
+          f"aggregation:{aggregation_path}."
+    return JsonResponse(data=msg, safe=False, status=status.HTTP_204_NO_CONTENT)
+
+
+@swagger_auto_schema(method='put', responses={204: "Metadata schema was updated for model instance aggregation",
+                                              400: "Invalid/bad request message",
+                                              403: "You don't have permission to edit this resource"},)
+@api_view(['PUT'])
+def update_metadata_schema_for_model_instance(request, resource_id, aggregation_path, **kwargs):
+    """Updates metadata schema for a model instance aggregation using the schema from the linked
+    model program aggregation."""
+
+    try:
+        resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
+                                                                 aggregation_path=aggregation_path,
+                                                                 model_type='model-instance')
+    except BadRequestException as ex:
+        return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
+
+    if not aggr.metadata.executed_by:
+        err_msg = f"Specified model instance aggregation:{aggregation_path} is not executed by a " \
+                  f"model program aggregation"
+        return JsonResponse(data=err_msg, safe=False, status=status.HTTP_400_BAD_REQUEST)
+
+    mp_aggr = aggr.metadata.executed_by
+    if not mp_aggr.metadata_schema_json:
+        err_msg = f"Metadata schema is missing for the linked model program aggregation"
+        return JsonResponse(data=err_msg, safe=False, status=status.HTTP_400_BAD_REQUEST)
+
+    aggr.metadata_schema_json = mp_aggr.metadata_schema_json
+    aggr.save()
+    aggr.metadata.is_dirty = True
+    aggr.metadata.save()
+    resource_modified(resource, request.user, overwrite_bag=False)
+    msg = f"Metadata schema was updated for model instance aggregation:{aggregation_path} from the " \
+          f"linked model program aggregation."
+    return JsonResponse(data=msg, safe=False, status=status.HTTP_204_NO_CONTENT)
+
+
+@swagger_auto_schema(method='get', operation_description="Gets metadata for a model program aggregation in json",
+                     responses={200: serializers.ModelProgramMetaSerializer, 400: "Invalid/bad request message",
+                                403: "You don't have permission to view this resource"},)
+@swagger_auto_schema(method='put', operation_description="Updates metadata for a model program aggregation",
+                     request_body=serializers.ModelProgramMetaSerializer,
+                     responses={200: serializers.ModelProgramMetaSerializer, 400: "Invalid/bad request message",
+                                403: "You don't have permission to edit this resource"},)
+@api_view(['GET', 'PUT'])
+def model_program_metadata_in_json(request, resource_id, aggregation_path, **kwargs):
+    try:
+        resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
+                                                                 aggregation_path=aggregation_path,
+                                                                 model_type='model-program')
+    except BadRequestException as ex:
+        return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'GET':
+        meta_serializer = serializers.ModelProgramMetaSerializer()
+        # return the metadata for the model program aggregation
+        return JsonResponse(data=meta_serializer.serialize(mp_aggr=aggr), status=status.HTTP_200_OK)
+
+    meta_serializer = serializers.ModelProgramMetaSerializer(data=request.data, context={'mp_aggr': aggr}, partial=True)
+    if not meta_serializer.is_valid():
+        raise RF_ValidationError(detail=meta_serializer.errors)
+
+    # update model program aggregation metadata
+    meta_serializer.update(mp_aggr=aggr, validated_data=meta_serializer.validated_data)
+
+    resource_modified(resource, request.user, overwrite_bag=False)
+    # return the metadata for the model program aggregation
+    return JsonResponse(data=meta_serializer.serialize(mp_aggr=aggr), status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(method='get', operation_description="Gets metadata for a model instance aggregation in json",
+                     responses={200: serializers.ModelInstanceMetaSerializer, 400: "Invalid/bad request message",
+                                403: "You don't have permission to view this resource"},)
+@swagger_auto_schema(method='put', request_body=serializers.ModelInstanceMetaSerializer,
+                     operation_description="Updates metadata for a model instance aggregation",
+                     responses={200: serializers.ModelInstanceMetaSerializer, 400: "Invalid/bad request message",
+                                403: "You don't have permission to edit this resource"},)
+@api_view(['GET', 'PUT'])
+def model_instance_metadata_in_json(request, resource_id, aggregation_path, **kwargs):
+    try:
+        resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
+                                                                 aggregation_path=aggregation_path,
+                                                                 model_type='model-instance')
+    except BadRequestException as ex:
+        return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'GET':
+        meta_serializer = serializers.ModelInstanceMetaSerializer()
+        # return the metadata for the model instance aggregation
+        return JsonResponse(data=meta_serializer.serialize(mi_aggr=aggr), status=status.HTTP_200_OK)
+
+    meta_serializer = serializers.ModelInstanceMetaSerializer(data=request.data,
+                                                              context={'mi_aggr': aggr, 'resource': resource},
+                                                              partial=True)
+    if not meta_serializer.is_valid():
+        raise RF_ValidationError(detail=meta_serializer.errors)
+
+    # update model program instance aggregation metadata
+    meta_serializer.update(mi_aggr=aggr, validated_data=meta_serializer.validated_data)
+
+    resource_modified(resource, request.user, overwrite_bag=False)
+    # return the metadata for the model instance aggregation
+    return JsonResponse(data=meta_serializer.serialize(mi_aggr=aggr), status=status.HTTP_200_OK)
+
+
 @authorise_for_aggregation_edit
 @login_required
 def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwargs):
@@ -348,6 +539,35 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
                 response_data['message'] = err_msg
                 return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
+    file_override = request.POST.get('file_override', False)
+    if not isinstance(file_override, bool):
+        file_override = True if str(file_override).lower() == 'true' else False
+
+    # check if files already exist in the target path
+    res_files = []
+    override_tgt_paths = []
+    override_tgt_res_files = []
+    file_type_class = FILE_TYPE_MAP[hs_file_type]
+    aggregation = file_type_class.objects.get(id=file_type_id)
+    res_files.extend(aggregation.files.all())
+    istorage = res.get_irods_storage()
+    for file in res_files:
+        file_name = os.path.basename(file.storage_path)
+        tgt_full_path = os.path.join(res.file_path, tgt_path, file_name)
+        if istorage.exists(tgt_full_path):
+            override_tgt_paths.append(tgt_full_path)
+            override_tgt_res_files.append(ResourceFile.get(res, file=file_name, folder=tgt_path))
+
+    if override_tgt_paths:
+        if not file_override:
+            override_file_names = ', '.join([os.path.basename(tgt_path) for tgt_path in override_tgt_paths])
+            message = f'aggregation move would overwrite {override_file_names}'
+            return HttpResponse(message, status=status.HTTP_300_MULTIPLE_CHOICES)
+        # delete conflicting files so that move can succeed
+        for override_file in override_tgt_res_files:
+            delete_resource_file_only(res, override_file)
+        res.cleanup_aggregations()
+
     if run_async:
         task = move_aggregation_task.apply_async((resource_id, file_type_id, hs_file_type, tgt_path))
         task_id = task.task_id
@@ -447,10 +667,13 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                               'logical_file_type': logical_file.type_name()
                               }
 
-        if logical_file.type_name() in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+        element = logical_file.metadata.get_element(element_name, element_id)
+        update_file = _is_update_file(logical_file, element_name, element)
+        if update_file:
             logical_file.metadata.is_update_file = True
             logical_file.metadata.save()
-            ajax_response_data['is_update_file'] = logical_file.metadata.is_update_file
+
+        ajax_response_data['is_update_file'] = update_file
 
         if logical_file.type_name() == "TimeSeriesLogicalFile":
             ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
@@ -524,10 +747,12 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
                               'element_id': element.id,
                               'metadata_status': metadata_status}
 
-        if logical_file.type_name() in ("NetCDFLogicalFile", "TimeSeriesLogicalFile"):
+        update_file = _is_update_file(logical_file, element_name, element)
+        if update_file:
             logical_file.metadata.is_update_file = True
             logical_file.metadata.save()
-            ajax_response_data['is_update_file'] = logical_file.metadata.is_update_file
+
+        ajax_response_data['is_update_file'] = update_file
 
         if logical_file.type_name() == "TimeSeriesLogicalFile":
             ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
@@ -1278,3 +1503,45 @@ def _get_logical_file(hs_file_type, file_type_id):
         return None, JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     return logical_file, None
+
+
+def _is_update_file(logical_file, element_name, element):
+    update_file = False
+    if logical_file.type_name() == "NetCDFLogicalFile":
+        # only spatial coverage update does not need update of the nc file
+        if element_name.lower() != 'coverage':
+            update_file = True
+        elif element.type == 'period':
+            update_file = True
+    elif logical_file.type_name() == "TimeSeriesLogicalFile":
+        update_file = True
+    return update_file
+
+
+def _validate_model_aggregation_api_request(request, resource_id, aggregation_path, model_type):
+    resource, authorized, user = authorize(
+        request, resource_id,
+        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+        raises_exception=False)
+    if not authorized:
+        raise PermissionDenied("You don't have permission to edit this resource")
+
+    if resource.resource_type != "CompositeResource":
+        raise BadRequestException(f"Specified resource:{resource_id} is not a composite resource")
+
+    # validate aggregation_path
+    try:
+        aggr = resource.get_aggregation_by_name(aggregation_path)
+    except ObjectDoesNotExist:
+        err_msg = f"Specified aggregation:{aggregation_path} was not found in resource:{resource_id}"
+        raise BadRequestException(err_msg)
+
+    if model_type == 'model-program':
+        if not aggr.is_model_program:
+            err_msg = f"Specified aggregation:{aggregation_path} is not a model program aggregation"
+            raise BadRequestException(err_msg)
+    elif not aggr.is_model_instance:
+        err_msg = f"Specified aggregation:{aggregation_path} is not a model instance aggregation"
+        raise BadRequestException(err_msg)
+
+    return resource, aggr

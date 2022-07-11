@@ -240,50 +240,54 @@
                                 {% include "includes/res_type_col.html" with resource=res %}
                             </td>
                             {# Title #}
-                            <td>
-                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title|escape }}</a>
-                                </strong>
-                            </td>
-                            {# First Author #}
-                            <td>{{ res|resource_first_author }}</td>
+                           {% with metadata=res.metadata %}
+                                <td>
+                                    <strong><a href="{{ res.get_absolute_url }}">{{ metadata.title|escape }}</a>
+                                    </strong>
+                                </td>
+                                {# First Author #}
+                                <td>{{ res|resource_first_author }}</td>
 
-                            {# Date Created #}
-                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
-                            {# Last Modified #}
-                            <td>{{ res.last_updated|date:"M d, Y" }} at {{ res.last_updated|time }}</td>
-                            <td>
-                                {% for kw in res.metadata.subjects.all %}
-                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% for creator in res.metadata.creators.all %}
-                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                    {% if creator.description %}
-                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
+                                {# Date Created #}
+                                <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
+                                {# Last Modified #}
+                                {% with last_updated=res.last_updated %}
+                                    <td>{{ last_updated|date:"M d, Y" }} at {{ last_updated|time }}</td>
+                                    <td>
+                                        {% for kw in metadata.subjects.all %}
+                                           {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for creator in metadata.creators.all %}
+                                            {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                            {% if creator.relative_uri and creator.is_active %}
+                                                <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
+                                            {% else %}
+                                                <span>{{ creator.name }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    {% if res.owned %}
+                                        <td>Owned</td>
+                                    {% elif res.discovered %}
+                                        <td>Discovered</td>
                                     {% else %}
-                                        <span>{{ creator.name }}</span>
+                                        <td></td>
                                     {% endif %}
-                                {% endfor %}
-                            </td>
-                            {% if res.owned %}
-                                <td>Owned</td>
-                            {% elif res.discovered %}
-                                <td>Discovered</td>
-                            {% else %}
-                                <td></td>
-                            {% endif %}
-                            <td class="col-labels">
-                                {% for label in res|user_resource_labels:user %}
-                                    {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
-                                {% endfor %}
-                            </td>
-                            <td class="col-is-favorite">
-                                {% if res.is_favorite %}
-                                    Favorite
-                                {% endif %}
-                            </td>
-                            <td>{{ res.last_updated|date:"U" }}</td>
+                                    <td class="col-labels">
+                                        {% for label in res|user_resource_labels:user %}
+                                            {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
+                                        {% endfor %}
+                                    </td>
+                                    <td class="col-is-favorite">
+                                        {% if res.is_favorite %}
+                                            Favorite
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ last_updated|date:"U" }}</td>
+                               {% endwith %}
+                           {% endwith %}
                             <td>
                                 {% if res.raccess.published %}
                                     Published
