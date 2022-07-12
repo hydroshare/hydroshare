@@ -767,12 +767,6 @@ def update_task_notification(sender=None, task_id=None, task=None, state=None, r
         if state == states.SUCCESS:
             get_or_create_task_notification(task_id, status="completed", payload=retval)
         elif state in states.EXCEPTION_STATES:
-            # remove Exception text from payload for better messaging in the UI
-            message_start_pos = retval.find("'")
-            if message_start_pos >= 0:
-                message_end_pos = retval.find("'", message_start_pos+1)
-                if message_end_pos >= 0:
-                    retval = retval[message_start_pos+1:message_end_pos]
             get_or_create_task_notification(task_id, status="failed", payload=retval)
         elif state == states.REVOKED:
             get_or_create_task_notification(task_id, status="aborted", payload=retval)
