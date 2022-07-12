@@ -1027,7 +1027,6 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         raise ValidationError("Unzipping of file is not allowed for a published resource.")
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
-    logger.debug(f'zip_with_full_path: {zip_with_full_path}')
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
@@ -1038,8 +1037,6 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         # list all files to be moved into the resource
         unzipped_files = listfiles_recursively(istorage, unzip_path)
         unzipped_foldername = os.path.basename(unzip_path)
-        logger.debug(f'unzipped_files: {unzipped_files}')
-        logger.debug(f'unzipped_foldername: {unzipped_foldername}')
         override_tgt_paths = []
 
         res_files = []
@@ -1051,11 +1048,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         # walk through each unzipped file, delete aggregations if they exist
         for file in res_files:
             destination_file = _get_destination_filename(file.name, unzipped_foldername)
-            logger.debug(f'destination_file: {destination_file}')
             if (istorage.exists(destination_file)):
                 if not overwrite:
                     override_tgt_paths.append(destination_file.split('data/contents/')[1])
-                    logger.debug(f'override_tgt_paths: {override_tgt_paths}')
                 elif resource.resource_type == "CompositeResource":
                     aggregation_object = resource.get_file_aggregation_object(
                         destination_file)
@@ -1066,7 +1061,6 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                         istorage.delete(destination_file)
                 else:
                     istorage.delete(destination_file)
-        logger.debug(f'override_tgt_paths: {override_tgt_paths}')
         if not overwrite and override_tgt_paths:
             message = 'move would overwrite {}'.format(', '.join(override_tgt_paths))
             raise FileOverrideException(message)
@@ -1407,8 +1401,6 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         src_full_path = os.path.join(resource.root_path, src_path)
         src_base_name = os.path.basename(src_path)
         tgt_qual_path = os.path.join(tgt_full_path, src_base_name)
-        # logger = logging.getLogger(__name__)
-        # logger.info("moving file {} to {}".format(src_full_path, tgt_qual_path))
 
         istorage.moveFile(src_full_path, tgt_qual_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)

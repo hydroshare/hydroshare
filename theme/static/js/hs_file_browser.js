@@ -2322,6 +2322,28 @@ $(document).ready(function () {
         return false;
     });
 
+    // User clicked Proceed button on confirm whether to override files dialog when unzipping - need to override files
+    $("#btn-unzip-file-override-proceed").click(function () {
+        var calls = [];
+        var res_id = $("#res_id").val();
+        var zip_with_rel_path = $("#zip_with_rel_path").val();
+        calls.push(unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite='true'));
+        // Disable the Cancel button until request has finished
+        $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
+        function afterDoneRequest() {
+            $('#btn-unzip-file-override-proceed').parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            $("#unzip-override-confirm-dialog").modal('hide');
+        }
+        function afterFailRequest() {
+            afterDoneRequest();
+            refreshFileBrowser();
+        }
+
+        $.when.apply($, calls).done(afterDoneRequest);
+        $.when.apply($, calls).fail(afterFailRequest);
+        return false;
+    });
+
     // User clicked Proceed button on invalid URL warning dialog - need to add url without validation
     $("#btn-reference-url-without-validation").click(function () {
         var refName = $("#ref_name_passover").val();
@@ -2709,18 +2731,15 @@ $(document).ready(function () {
     // Unzip method
     $("#btn-unzip, #fb-unzip").click(function () {
         var files = $("#fb-files-container li.ui-selected");
-
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/')));
+            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/')), overwrite='false');
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure
-        $.when.apply($, calls).done(function () {
-            refreshFileBrowser();
-        });
-
+        // don't refresh browser when unzip async task is ongoing since a temporary folder is being created to check
+        // whether file override will happen
         $.when.apply($, calls).fail(function () {
             refreshFileBrowser();
         });

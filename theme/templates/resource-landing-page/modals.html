@@ -1490,6 +1490,32 @@
         </div>
     </div>
 
+    <div class="modal fade in" id="unzip-override-confirm-dialog" tabindex="-1" role="dialog"
+                         aria-labelledby="unzip-override-confirm" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="unzip-override-confirm-title">Confirm whether to override existing files</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="unzip-resp-message"></p>
+                    <p>
+                        Click <strong>Proceed</strong> to confirm to override files. Otherwise, click <strong>Cancel</strong>.
+                    </p>
+                    <input type="hidden" id="res_id" value=""/>
+                    <input type="hidden" id="zip_with_rel_path" value=""/>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btn-unzip-file-override-proceed" class="btn btn-default"
+                            data-dismiss="modal">Proceed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     {% include "irods_signin.html" %}
     {% include "irods_upload_add.html" %}
 

@@ -919,7 +919,7 @@ function zip_by_aggregation_file_ajax_submit(res_id, aggregationPath, zipFileNam
     });
 }
 
-function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
+function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -928,12 +928,12 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
         data: {
             res_id: res_id,
             zip_with_rel_path: zip_with_rel_path,
-            remove_original_zip: "false"
+            remove_original_zip: "false",
+            overwrite: overwrite
         },
         success: function (task) {
             $('#res_id').val(res_id);
             $('#zip_with_rel_path').val(zip_with_rel_path);
-            $('#remove_original_zip').val('false');
             notificationsApp.registerTask(task);
             notificationsApp.show();
         },
