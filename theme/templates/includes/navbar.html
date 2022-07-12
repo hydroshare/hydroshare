@@ -247,7 +247,7 @@
                                             <span v-if="task.payload && (task.status === 'delivered' || task.status === 'completed')">
                                             Click <a :href="task.payload">here</a> to refresh user interface.
                                             </span>
-                                            <span v-else="task.payload.includes('FileOverrideException') && task.status === 'failed'">
+                                            <span v-else-if="task.payload.includes('FileOverrideException') && task.status === 'failed'">
                                             <a id='btn-file-override' v-on:click="showFileOverrideDialog(task.payload)">Select whether to allow file override</a>
                                             </span>
                                         </small>
@@ -410,7 +410,7 @@
             <div class="modal-body">
                 <p id="unzip-resp-message"></p>
                 <p>
-                    click <strong>Proceed</strong> to confirm to override files. Otherwise, click <strong>Cancel</strong>.
+                    Click <strong>Proceed</strong> to confirm to override files. Otherwise, click <strong>Cancel</strong>.
                 </p>
                 <input type="hidden" id="res_id" value=""/>
                 <input type="hidden" id="zip_with_rel_path" value=""/>
@@ -612,6 +612,14 @@
         },
         methods: {
             showFileOverrideDialog: function (message) {
+              let msg_start_pos = message.indexOf("'");
+              if (msg_start_pos >= 0) {
+                  let msg_end_pos = message.indexOf("'", msg_start_pos+1);
+                  if (msg_end_pos > 0) {
+                      message = message.slice(msg_start_pos + 1, msg_end_pos);
+                      message = message.charAt(0).toUpperCase() + message.slice(1);
+                  }
+              }
               $('#unzip-resp-message').text(message);
               $('#unzip-override-confirm-dialog').modal('show');
             },
