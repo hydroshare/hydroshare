@@ -60,7 +60,7 @@
                                     <div class="btn-file btn-update-picture">
                                         <span class="glyphicon glyphicon-camera"></span>
                                         <span>&nbsp;&nbsp;Update profile picture</span>
-                                        <input class="upload-picture" type="file" name="picture"  accept="image/*"></div>
+                                        <input class="upload-picture" type="file" name="picture"  accept=".png, .jpg, .jpeg, .gif"></div>
                                     <button id="btn-delete-profile-pic" class="no-style icon-button btn-remove" data-toggle="modal"
                                             data-target="#delete-picture" title="Delete profile picture"><span
                                             class="glyphicon glyphicon-trash"></span>
@@ -69,7 +69,7 @@
                                     <fieldset>
                                         <div class="btn-file btn-update-picture upload-picture"><span class="glyphicon glyphicon-camera"></span>
                                             <span>&nbsp;&nbsp;Add a photo</span>
-                                            <input class="upload-picture" type="file" name="picture" accept="image/*"></div>
+                                            <input class="upload-picture" type="file" name="picture" accept=".png, .jpg, .jpeg, .gif"></div>
                                     </fieldset>
                                 {% endif %}
                                 </div>
@@ -690,10 +690,6 @@
                                                 <img src="{% static 'img/resource-icons/composite48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "ScriptResource" %}
-                                                <img src="{% static 'img/resource-icons/script48x48.png' %}"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "ModelProgramResource" %}
                                                 <img src="{% static 'img/resource-icons/modelprogram48x48.png' %}"
                                                      alt="{{ resource_type }}"
@@ -734,7 +730,7 @@
                                                     <h5><span class="text-muted">Authors: </span>
                                                         {% for creator in metadata.creators.all %}
                                                             {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                            {% if creator.relative_uri %}
+                                                            {% if creator.relative_uri and creator.is_active %}
                                                                 <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
                                                             {% else %}
                                                                 <span>{{ creator.name }}</span>

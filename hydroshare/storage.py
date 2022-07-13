@@ -4,11 +4,15 @@ import logging
 
 class ForgivingManifestStaticFilesStorage(ManifestStaticFilesStorage):
     """
-    Allow collectstatic to continue even if files are missing for 3rd party libraries
-    Later versions of django have a 'manifest_strict' parameter that would allow this:
-    https://docs.djangoproject.com/en/4.0/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
+    Allow collectstatic to continue even if files are missing
     """
-    logger = logging.getLogger()
+    logger = logging.getLogger('django.contrib.staticfiles')
+
+    # Ideally, just setting manifest_strict would solve this issue but there is a known issue:
+    # https://code.djangoproject.com/ticket/31520
+    # So overriding one of the functions
+    # stored_name calls hashed_name so we don't have to override it as well
+    manifest_strict = False
 
     def hashed_name(self, name, content=None, filename=None):
         try:
@@ -17,6 +21,6 @@ class ForgivingManifestStaticFilesStorage(ManifestStaticFilesStorage):
             # When the file is missing, let's forgive and ignore that.
             msg = f"Ignoring ValueError for missing file: {name}, during static collection. \nError: {str(ex)}"
             print(msg)
-            self.logger.error(msg)
+            self.logger.warning(msg)
             result = name
         return result
