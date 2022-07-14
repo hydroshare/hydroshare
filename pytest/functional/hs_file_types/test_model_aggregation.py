@@ -43,10 +43,6 @@ def test_create_aggregation_from_file_1(composite_resource, aggr_cls, mock_irods
     assert mod_aggregation.metadata.is_dirty
     assert mod_aggregation.files.count() == 1
     assert mod_aggregation.dataset_name == 'generic_file'
-    if isinstance(mod_aggregation, ModelProgramLogicalFile):
-        assert mod_aggregation.model_program_type == 'Unknown Model Program'
-    else:
-        assert mod_aggregation.model_instance_type == 'Unknown Model Instance'
     assert not res.dangling_aggregations_exist()
 
 
@@ -144,10 +140,6 @@ def test_create_aggregation_from_folder(composite_resource, aggr_cls, mock_irods
     assert mp_mi_aggregation.files.count() == 1
     assert mp_mi_aggregation.folder == new_folder
     assert mp_mi_aggregation.dataset_name == new_folder
-    if isinstance(mp_mi_aggregation, ModelProgramLogicalFile):
-        assert mp_mi_aggregation.model_program_type == 'Unknown Model Program'
-    else:
-        assert mp_mi_aggregation.model_instance_type == 'Unknown Model Instance'
     assert not res.dangling_aggregations_exist()
 
 
