@@ -765,7 +765,7 @@ li.account p{
 	table-layout: fixed;
 }
 
-.authors-wrapper > a:not(:first-child)::before,
+.authors-wrapper > a:not(:first-child):not(.fa-youtube-play)::before,
 .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
 .authors-wrapper > .ui-state-highlight:not(:first-child)::before,
 .owners-wrapper > a:not(:first-child)::before,
@@ -1466,6 +1466,10 @@ body > .main-container {
     color: #428BD2
 }
 
+.icon-red {
+  color: red !important;
+}
+
 .icon-green {
     color: #10ae10
 }
@@ -1561,6 +1565,14 @@ body > .main-container {
 
 .flex {
 	display: flex;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.gap-1x {
+  gap: 8px;
 }
 
 #citation-text a, .citation-description, .rights-url a {
@@ -5008,19 +5020,27 @@ a[data-toggle="modal"] {
 }
 
 .space-top {
-	margin-top: 15px;
+	margin-top: 16px;
 }
 
 .space-bottom {
-	margin-bottom: 15px;
+	margin-bottom: 16px;
 }
 
 .space-right {
-	margin-right: 15px;
+	margin-right: 16px;
 }
 
 .space-left {
-	margin-left: 15px;
+	margin-left: 16px;
+}
+
+.space-left-1x {
+  margin-right: 8px;
+}
+
+.space-right-1x {
+  margin-right: 8px;
 }
 
 .border-gray {
@@ -5029,6 +5049,10 @@ a[data-toggle="modal"] {
 
 .c-pointer {
 	cursor: pointer;
+}
+
+a.no-decoration {
+  text-decoration: none;
 }
 
 label.form-check-label {

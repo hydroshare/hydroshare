@@ -7,29 +7,32 @@
                 <tr>
                     <th>Authors:</th>
 
-                    <td v-if="authors.length && res_mode === 'View'" class="authors-wrapper">
-                        <a v-for="(author, index) in authors" data-toggle="modal"
-                           @click="selectAuthor(author, index)"
-                           data-target="#view-author-modal">
-                            <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
-                            <template v-else-if="author.organization">${ author.organization }</template>
-                            <template v-else>${ author.email }</template>
-                        </a>
-                    </td>
-                    <td v-if="!authors.length && res_mode === 'View'" class="authors-wrapper">
-                        This resource does not have an author who is an active HydroShare user.
-                        Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
-                        {% if cm.raccess.public %}
-                            for information on this resource.
-                        {% else %}
-                            to determine if accessing this resource is possible.
-                        {% endif %}
-                    </td>
+                    <td style="display:flex; align-items: flex-start;">
+                      <div v-if="res_mode === 'View'" class="authors-wrapper">
+                        <template v-if="authors.length">
+                          <a v-for="(author, index) in authors" data-toggle="modal"
+                            @click="selectAuthor(author, index)"
+                            data-target="#view-author-modal">
+                              <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
+                              <template v-else-if="author.organization">${ author.organization }</template>
+                              <template v-else>${ author.email }</template>
+                          </a>
+                        </template>
+                        <template v-else>
+                          This resource does not have an author who is an active HydroShare user.
+                          Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
+                          {% if cm.raccess.public %}
+                              for information on this resource.
+                          {% else %}
+                              to determine if accessing this resource is possible.
+                          {% endif %}
+                        </template>
+                      </div>
 
-                    <td v-if="res_mode === 'Edit'">
+                      <div v-if="res_mode === 'Edit'">
                         {% if not cm.raccess.published %}
                         <a :disabled="isUpdatingAuthor" type="button" id="btn-add-new-author"
-                           class="btn btn-success btn-xs" data-toggle="modal"
+                           class="btn btn-success btn-xs space-right-1x" data-toggle="modal"
                            data-target="#add-author-modal" title="Add Author">
                             <span class="glyphicon glyphicon-plus"></span>
                         </a>
@@ -44,10 +47,7 @@
                                 </a>
                             </span>
                         </span>
-                        <span data-toggle="tooltip" data-placement="auto"
-                              title='Drag and drop Authors to rearrange.'
-                              class="glyphicon glyphicon-info-sign text-muted">
-                        </span>
+                        
                         {% else %}
                           <span class="authors-wrapper">
                                <a v-for="(author, index) in authors" data-toggle="modal"
@@ -59,6 +59,20 @@
                                 </a>
                           </span>
                         {% endif %}
+                      </div>
+                      <div style="display:flex; align-items: center;" class="space-left gap-1x">
+                        {% if not cm.raccess.published %}
+                        <span data-toggle="tooltip" data-placement="auto"
+                              title='Drag and drop Authors to rearrange.'
+                              class="glyphicon glyphicon-info-sign text-muted">
+                        {% endif %}
+                        </span>
+                        <a data-toggle="tooltip" data-placement="auto"
+                            href="https://www.youtube.com/watch?v=5rYQjvnRXlI" target="_blank"
+                            title='How to: Authorship and Ownership'
+                            class="fa fa-youtube-play icon-red no-decoration" style="font-size: 20px;">
+                        </a>
+                      </div>
                     </td>
                 </tr>
                 <tr>
