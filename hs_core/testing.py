@@ -14,6 +14,7 @@ from hs_core.hydroshare import add_resource_files
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder
 from hs_core.views.utils import run_ssh_command
+from hs_core.tasks import FileOverrideException
 from theme.models import UserProfile
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -244,7 +245,10 @@ class TestCaseCommonUtilities(object):
                                       'data/contents/sub_test_dir/' + file_name_list[0])
         # Now resource should contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
         self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
-        unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
+
+        # should raise FileOverrideException
+        with self.assertRaises(FileOverrideException):
+            unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
 
         # Resource should still contain 5 files: file3_new.txt (2), sub_test_dir.zip,
         # and file1.txt (2)
@@ -268,9 +272,9 @@ class TestCaseCommonUtilities(object):
             updated_res_file_names.append(rf.short_path)
         self.assertNotIn('sub_test_dir.zip', updated_res_file_names,
                          msg="resource still contains the zip file after unzipping")
-        self.assertIn('sub_test_dir/sub_test_dir/' + file_name_list[0], updated_res_file_names,
+        self.assertIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain unzipped file ' + file_name_list[0])
-        self.assertIn('sub_test_dir/sub_test_dir/' + file_name_list[1], updated_res_file_names,
+        self.assertIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
                       msg='resource does not contain unzipped file ' + file_name_list[1])
         self.assertIn('new_' + file_name_list[2], updated_res_file_names,
                       msg='resource does not contain unzipped file new_' + file_name_list[2])
