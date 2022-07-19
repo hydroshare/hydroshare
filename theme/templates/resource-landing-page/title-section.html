@@ -177,13 +177,6 @@
                     <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
                 </span>
             {% endif %}
-
-            <a data-toggle="tooltip" data-placement="auto"
-                href="https://www.youtube.com/watch?v=rw4RERFchns" target="_blank"
-                title='How to: Use Open With Function'
-                class="fa fa-youtube-play icon-red space-left no-decoration" style="font-size: 20px;">
-            </a>
-
             <span id="apps-dropdown" v-if="openWithTools.length">
                 <div v-if="!isLoading" class="btn-group">
                     <button class="btn btn-primary dropdown-toggle"
@@ -203,6 +196,11 @@
                         </li>
                      </ul>
                 </div>
+                <a v-if="openWithTools.length" data-toggle="tooltip" data-placement="auto"
+                  href="https://www.youtube.com/watch?v=rw4RERFchns" target="_blank"
+                  title='How to: Use Open With Function'
+                  class="fa fa-youtube-play icon-red space-left no-decoration" style="font-size: 20px;">
+                </a>
             </span>
             <script type="text/javascript" src="{% static 'js/hs-vue/relevant-tools.js' %}"></script>
         </div>
