@@ -2680,11 +2680,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # resource should have 2 files now
         self.assertEqual(self.composite_resource.files.count(), 2)
 
-        unzipped_folder = zip_file_rel_path.replace(".zip", "")
         renamed_folder = os.path.join('data', 'contents', "renamed")
         try:
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                          unzipped_folder, renamed_folder)
+                                          zip_file_rel_path, renamed_folder)
         except:
             self.fail("Exception thrown while renaming a folder.")
 
@@ -2712,7 +2711,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                        bool_remove_original=False)
 
         # ensure files aren't overwriting name clash
-        self.assertEqual(self.composite_resource.files.count(), 3)
+        self.assertEqual(self.composite_resource.files.count(), 2)
 
     def test_unzip_folder_clash_overwrite(self):
         """Test that when a zip file gets unzipped a folder with the same

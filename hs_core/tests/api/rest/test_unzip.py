@@ -100,9 +100,9 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         # second run of unzip of the same file should raise FileOverrideException
-        unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
-        response = self.client.post(unzip_url, data={})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        with self.assertRaises(FileOverrideException):
+            unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
+            response = self.client.post(unzip_url, data={})
 
         list_url = "/hsapi/resource/%s/folders/foo/test-1/" % self.pid
         self.client.get(list_url, data={})

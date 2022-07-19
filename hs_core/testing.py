@@ -258,7 +258,6 @@ class TestCaseCommonUtilities(object):
 
         # remove all files except the zippped file
         remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
-        remove_folder(user, res.short_id, 'data/contents/sub_test_dir-1')
 
         # Now resource should contain two files: file3_new.txt sub_test_dir.zip
         file_cnt = res.files.all().count()
