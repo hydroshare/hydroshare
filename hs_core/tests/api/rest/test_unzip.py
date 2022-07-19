@@ -82,7 +82,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
 
         list_url = "/hsapi/resource/%s/folders/test/" % self.pid
         response = self.client.get(list_url, data={})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         # overwrite shouldn't write to a new folder
         list_url = "/hsapi/resource/%s/folders/test-1/" % self.pid
@@ -99,14 +99,14 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         response = self.client.get(list_url, data={})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+        # second run of unzip of the same file should raise FileOverrideException
         unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
         response = self.client.post(unzip_url, data={})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # second run of unzip of the same file should raise FileOverrideException
-        with self.assertRaises(FileOverrideException):
-            list_url = "/hsapi/resource/%s/folders/foo/test-1/" % self.pid
-            self.client.get(list_url, data={})
+        list_url = "/hsapi/resource/%s/folders/foo/test-1/" % self.pid
+        self.client.get(list_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_deep_unzip_overwrite(self):
         unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid

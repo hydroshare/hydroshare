@@ -250,11 +250,11 @@ class TestCaseCommonUtilities(object):
         with self.assertRaises(FileOverrideException):
             unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
 
-        # Resource should still contain 5 files: file3_new.txt (2), sub_test_dir.zip,
-        # and file1.txt (2)
+        # Resource should still contain 3 files: file3_new.txt, sub_test_dir.zip,
+        # and file1.txt since unzip raised an exception without really overriding files
         file_cnt = res.files.all().count()
-        self.assertEqual(file_cnt, 5, msg="resource file count didn't match - " +
-                                          str(file_cnt) + " != 5")
+        self.assertEqual(file_cnt, 3, msg="resource file count didn't match - " +
+                                          str(file_cnt) + " != 3")
 
         # remove all files except the zippped file
         remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
