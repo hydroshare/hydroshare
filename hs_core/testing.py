@@ -280,19 +280,19 @@ class TestCaseCommonUtilities(object):
 
         # rename a folder
         move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/sub_test_dir/sub_test_dir',
+                                      'data/contents/sub_test_dir',
                                       'data/contents/sub_dir')
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
             updated_res_file_names.append(rf.short_path)
 
-        self.assertNotIn('sub_test_dir/sub_test_dir/' + file_name_list[0], updated_res_file_names,
+        self.assertNotIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
                          msg='resource still contains ' + file_name_list[0] +
                              ' in the old folder after renaming')
         self.assertIn('sub_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain ' + file_name_list[0] +
                           ' in the new folder after renaming')
-        self.assertNotIn('sub_test_dir/sub_test_dir/' + file_name_list[1], updated_res_file_names,
+        self.assertNotIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
                          msg='resource still contains ' + file_name_list[1] +
                              ' in the old folder after renaming')
         self.assertIn('sub_dir/' + file_name_list[1], updated_res_file_names,
