@@ -57,7 +57,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
                            open(zip_path, 'rb'),
                            'application/zip')}
         self.client.post(url4, params)
-                
+
     def test_unzip(self):
         unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
         response = self.client.post(unzip_url, data={"remove_original_zip": "false"})
