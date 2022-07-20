@@ -53,9 +53,11 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
 
         # put the file 'test.zip' into folder 'foo'
         url4 = str.format('/hsapi/resource/{}/files/foo/', self.pid)
-        params = {'file': (payload,)}
+        params = {'file': ('test.zip',
+                           open(zip_path, 'rb'),
+                           'application/zip')}
         self.client.post(url4, params)
-
+                
     def test_unzip(self):
         unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
         response = self.client.post(unzip_url, data={"remove_original_zip": "false"})
@@ -102,7 +104,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         # second run of unzip of the same file should raise FileOverrideException
         with self.assertRaises(FileOverrideException):
             unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
-            response = self.client.post(unzip_url, data={})
+            self.client.post(unzip_url, data={})
 
         list_url = "/hsapi/resource/%s/folders/foo/test-1/" % self.pid
         self.client.get(list_url, data={})
