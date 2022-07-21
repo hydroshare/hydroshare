@@ -56,7 +56,7 @@
                                     {% endthumbnail %}
                                 {% else %}
                                     <div class="group-preview-image group-preview-image-default"
-                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                        style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                                 {% endif %}
                                 <div class="group-caption">
                                     <h3 class="group-name">
@@ -78,7 +78,7 @@
                                                     </div>
                                                     {% for member in group.gaccess.members|slice:":5" %}
                                                         {% if  member.userprofile.picture and member.userprofile.picture.url %}
-                                                            {% thumbnail member.userprofile.picture "x40" crop="center" as im %}
+                                                            {% thumbnail member.userprofile.picture "x80" crop="center" as im %}
                                                                 <div style="background-image: url('{{ im.url }}');"
                                                                     class="round-image profile-pic-thumbnail"
                                                                     title="{{ member|best_name }}">
@@ -125,7 +125,7 @@
                                                                             <td>
                                                                                 <div class="user-scope">
                                                                                     {% if u.userprofile.picture %}
-                                                                                        {% thumbnail u.userprofile.picture "x40" crop="center" as im %}
+                                                                                        {% thumbnail u.userprofile.picture "x80" crop="center" as im %}
                                                                                             <div style="background-image: url('{{ im.url }}');"
                                                                                                 class="round-image profile-pic-thumbnail">
                                                                                             </div>
@@ -133,7 +133,6 @@
                                                                                     {% else %}
                                                                                         <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                                                     {% endif %}
-
                                                                                     <a data-col="name"
                                                                                     class="user-name">{{ u|contact }}</a>
                                                                                     {% if u.pk == current_user.pk %}

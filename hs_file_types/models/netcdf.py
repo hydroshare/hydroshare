@@ -138,27 +138,13 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        """
-        The '_value' subelement needs special processing. (Convert 'value' dict as Json string
-        to be the '_value' subelement value) and the base class update() can't do it.
+        """Define custom update method for spatial reference (OriginalCoverage) model."""
+        raise ValidationError("Spatial reference  can't be updated.")
 
-        :param kwargs: the 'value' in kwargs should be a dictionary
-        """
-
-        ori_cov = OriginalCoverage.objects.get(id=element_id)
-        if 'value' in kwargs:
-            value_dict = ori_cov.value
-
-            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit',
-                              'westlimit', 'projection'):
-                if item_name in kwargs['value']:
-                    value_dict[item_name] = kwargs['value'][item_name]
-
-            cls._validate_bounding_box(value_dict)
-            value_json = json.dumps(value_dict)
-            del kwargs['value']
-            kwargs['_value'] = value_json
-            super(OriginalCoverage, cls).update(element_id, **kwargs)
+    @classmethod
+    def remove(cls, element_id):
+        """Define custom remove method for spatial reference (OriginalCoverage) model."""
+        raise ValidationError("Spatial reference can't be deleted.")
 
     @classmethod
     def _validate_bounding_box(cls, box_dict):
@@ -332,23 +318,14 @@ class NetCDFMetaDataMixin(models.Model):
             return False
         if not self.variables.all():
             return False
-        if not (self.coverages.all().filter(type='box').first() or
-                self.coverages.all().filter(type='point').first()):
-            return False
-        if not self.originalCoverage:
-            return False
         return True
 
     def get_required_missing_elements(self):
         # get a list of missing required metadata element names
         missing_required_elements = super(NetCDFMetaDataMixin, self).get_required_missing_elements()
-        if not (self.coverages.all().filter(type='box').first() or
-                self.coverages.all().filter(type='point').first()):
-            missing_required_elements.append('Spatial Coverage')
         if not self.variables.all().first():
             missing_required_elements.append('Variable')
-        if not self.originalCoverage:
-            missing_required_elements.append('Spatial Reference')
+
         return missing_required_elements
 
     def delete_all_elements(self):
@@ -373,9 +350,21 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     # flag to track when the .nc file of the aggregation needs to be updated.
     is_update_file = models.BooleanField(default=False)
 
+    def update_element(self, element_model_name, element_id, **kwargs):
+        if element_model_name.lower() == 'coverage':
+            model_type = self._get_metadata_element_model_type(element_model_name)
+            element = model_type.model_class().objects.get(id=element_id)
+            if element.type in ('box', 'point'):
+                logical_file = self.logical_file
+                if logical_file.metadata.originalCoverage:
+                    raise ValidationError("Spatial coverage can't be updated which has been computed "
+                                          "from spatial reference")
+
+        super(NetCDFFileMetaData, self).update_element(element_model_name, element_id, **kwargs)
+
     def get_metadata_elements(self):
         elements = super(NetCDFFileMetaData, self).get_metadata_elements()
-        elements += [self.original_coverage]
+        elements += [self.originalCoverage]
         elements += list(self.variables.all())
         return elements
 
@@ -390,7 +379,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     def original_coverage(self):
         # There can be at most only one instance of type OriginalCoverage associated
         # with this metadata object
-        return self.ori_coverage.all().first()
+        return self.originalCoverage
 
     def _get_opendap_html(self):
         opendap_div = html_tags.div(cls="content-block")
@@ -439,8 +428,25 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
         root_div = html_tags.div("{% load crispy_forms_tags %}")
         with root_div:
+            if not self.originalCoverage:
+                with html_tags.div(cls="alert alert-warning alert-dismissible", role="alert"):
+                    with html_tags.div():
+                        html_tags.p("NetCDF file is missing spatial coverage information:")
+                        with html_tags.span(
+                                "HydroShare uses GDAL to extract spatial coverage information from NetCDF files. "
+                                "GDAL’s NetCDF driver follows the CF-1 Convention defined by UNIDATA. More information "
+                                "about the GDAL NetCDF Driver is located"):
+                            html_tags.a("here.", target="_blank",
+                                        href="https://gdal.org/drivers/raster/netcdf.html#georeference")
+                            with html_tags.span(
+                                    "You can verify a NetCDF file’s compliance with the CF-1 and other standards using"
+                            ):
+                                html_tags.a("NASA’s Metadata Compliance checker.", target="_blank",
+                                            href="https://podaac-tools.jpl.nasa.gov/mcc/")
+
             self.get_update_netcdf_file_html_form()
             super(NetCDFFileMetaData, self).get_html_forms()
+
             with html_tags.div():
                 with html_tags.div(cls="content-block", id="original-coverage-filetype"):
                     with html_tags.form(id="id-origcoverage-file-type",
@@ -499,20 +505,15 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         temp_cov_form.action = temp_action
 
         orig_cov_form = self.get_original_coverage_form()
-        if self.originalCoverage:
-            temp_action = update_action.format(self.logical_file.id, "originalcoverage",
-                                               self.originalCoverage.id)
-        else:
-            temp_action = create_action.format(self.logical_file.id, "originalcoverage")
 
-        orig_cov_form.action = temp_action
-
-        spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
-        if self.spatial_coverage:
-            temp_action = update_action.format(self.logical_file.id, "coverage",
-                                               self.spatial_coverage.id)
-        else:
-            temp_action = create_action.format(self.logical_file.id, "coverage")
+        allow_coverage_edit = not self.originalCoverage
+        spatial_cov_form = self.get_spatial_coverage_form(allow_edit=allow_coverage_edit)
+        if allow_coverage_edit:
+            if self.spatial_coverage:
+                temp_action = update_action.format(self.logical_file.id, "coverage",
+                                                   self.spatial_coverage.id)
+            else:
+                temp_action = create_action.format(self.logical_file.id, "coverage")
 
         spatial_cov_form.action = temp_action
         context_dict = dict()
@@ -1226,21 +1227,6 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
         if temporal_coverage:
             nc_dataset.time_coverage_start = temporal_coverage.value['start']
             nc_dataset.time_coverage_end = temporal_coverage.value['end']
-
-        # update spatial coverage
-        spatial_coverage = instance.metadata.spatial_coverage if file_type \
-            else instance.metadata.coverages.all().filter(type='box').first()
-
-        for attr_name in ['geospatial_lat_min', 'geospatial_lat_max', 'geospatial_lon_min',
-                          'geospatial_lon_max']:
-            if hasattr(nc_dataset, attr_name):
-                delattr(nc_dataset, attr_name)
-
-        if spatial_coverage:
-            nc_dataset.geospatial_lat_min = spatial_coverage.value['southlimit']
-            nc_dataset.geospatial_lat_max = spatial_coverage.value['northlimit']
-            nc_dataset.geospatial_lon_min = spatial_coverage.value['westlimit']
-            nc_dataset.geospatial_lon_max = spatial_coverage.value['eastlimit']
 
         # update variables
         if instance.metadata.variables.all():

@@ -1,7 +1,6 @@
 import copy
 import json
 
-import jsonschema
 from crispy_forms.bootstrap import Field
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Fieldset, HTML, Layout
@@ -9,8 +8,8 @@ from django import forms
 from django.forms import BaseFormSet, ModelForm
 from django.forms.models import formset_factory, model_to_dict
 
-from hs_core.forms import BaseFormHelper, MetaDataElementDeleteForm, get_crispy_form_fields
-from .models.model_program import ModelProgramResourceFileType
+from hs_core.forms import BaseFormHelper, get_crispy_form_fields
+from .models.model_program import ModelProgramLogicalFile, ModelProgramResourceFileType
 from .models.netcdf import Variable
 from .models.raster import BandInformation, CellInformation
 from .models.timeseries import Method, ProcessingLevel, Site, TimeSeriesResult, UTCOffSet, VariableTimeseries
@@ -181,132 +180,9 @@ class ModelProgramMetadataValidationForm(forms.Form):
         :param  field_name: form field name for which the json schema input is getting validated
         :returns   a dict object containing the validated json schema
         """
-        json_schema = dict()
-        is_schema_valid = True
-        try:
-            json_schema = json.loads(schema_string)
-        except ValueError:
-            self.add_error(field_name, "Schema is not valid JSON")
-            return json_schema
-
-        if json_schema:
-            schema_version = json_schema.get("$schema", "")
-            if not schema_version:
-                is_schema_valid = False
-                err_message = "Not a valid JSON schema. {}"
-                if "$schema" not in json_schema:
-                    err_message = err_message.format("Key '$schema' is missing")
-                else:
-                    err_message = err_message.format("Key '$schema' is missing a value for schema version")
-                self.add_error(field_name, err_message)
-            else:
-                if "/draft-04/" not in schema_version:
-                    is_schema_valid = False
-                    err_message = "Not a valid JSON schema. Schema version is invalid. Supported valid version(s): " \
-                                  "draft-04"
-                    self.add_error(field_name, err_message)
-
-            if 'properties' not in json_schema:
-                is_schema_valid = False
-                self.add_error(field_name,
-                               "Not a valid metadata schema. Attribute 'properties' "
-                               "is missing")
-
-            if is_schema_valid:
-                try:
-                    jsonschema.Draft4Validator.check_schema(json_schema)
-                except jsonschema.SchemaError as ex:
-                    is_schema_valid = False
-                    schema_err_msg = "{}. Schema invalid field path:{}".format(ex.message, str(list(ex.path)))
-                    self.add_error(field_name, "Not a valid JSON schema. Error:{}".format(schema_err_msg))
-
-        if is_schema_valid:
-            # custom validation - hydroshare requirements
-            # this custom validation requiring additional attributes are needed for making the json-editor form
-            # generation at the front-end to work
-            if 'additionalProperties' not in json_schema:
-                is_schema_valid = False
-                self.add_error(field_name,
-                               "Not a valid metadata schema. Attribute 'additionalProperties' "
-                               "is missing")
-            elif json_schema['additionalProperties']:
-                is_schema_valid = False
-                self.add_error(field_name,
-                               "Not a valid metadata schema. Attribute 'additionalProperties' "
-                               "should bet set to 'false'")
-
-            def validate_schema(schema_dict):
-                for k, v in schema_dict.items():
-                    # key must not have whitespaces - required for xml encoding of metadata
-                    if k != k.strip():
-                        msg = "Not a valid metadata schema. Attribute '{}' has leading or trailing whitespaces"
-                        msg = msg.format(k)
-                        self.add_error(field_name, msg)
-                    # key must consists of alphanumeric characters only - required for xml encoding of metadata
-                    if not k.isalnum():
-                        msg = "Not a valid metadata schema. Attribute '{}' has non-alphanumeric characters"
-                        msg = msg.format(k)
-                        self.add_error(field_name, msg)
-                    # key must start with a alphabet character - required for xml encoding of metadata
-                    if not k[0].isalpha():
-                        msg = "Not a valid metadata schema. Attribute '{}' starts with a non-alphabet character"
-                        msg = msg.format(k)
-                        self.add_error(field_name, msg)
-
-                    if isinstance(v, dict):
-                        if k not in ('properties', 'items'):
-                            # we need a title to use as label for the form field
-                            if 'title' not in v:
-                                msg = "Not a valid metadata schema. Attribute 'title' is missing for {}".format(k)
-                                self.add_error(field_name, msg)
-                            elif len(v['title'].strip()) == 0:
-                                msg = "Not a valid metadata schema. Attribute 'title' has no value for {}".format(k)
-                                self.add_error(field_name, msg)
-                            if v['type'] == 'array':
-                                # we need format attribute set to 'table' in order for the jsoneditor to allow
-                                # editing array type field
-                                if 'format' not in v:
-                                    msg = "Not a valid metadata schema. Attribute 'format' is missing for {}"
-                                    msg = msg.format(k)
-                                    self.add_error(field_name, msg)
-                                elif v['format'] != 'table':
-                                    msg = "Not a valid metadata schema. Attribute 'format' should be set " \
-                                          "to table for {}"
-                                    msg = msg.format(k)
-                                    self.add_error(field_name, msg)
-                        if 'type' in v and v['type'] == 'object':
-                            # we requiring "additionalProperties": false so that we don't allow user to add new
-                            # form fields using the json-editor form
-                            if 'additionalProperties' not in v:
-                                msg = "Not a valid metadata schema. Attribute 'additionalProperties' is " \
-                                      "missing for {}"
-                                msg = msg.format(k)
-                                self.add_error(field_name, msg)
-                            elif v['additionalProperties']:
-                                msg = "Not a valid metadata schema. Attribute 'additionalProperties' must " \
-                                      "be set to false for {}"
-                                msg = msg.format(k)
-                                self.add_error(field_name, msg)
-
-                        # check for nested objects - we are not allowing nested objects to keep the form
-                        # generated from the schema by json-editor to not get complicated
-                        nested_object_found = False
-                        if 'type' in v and v['type'] == 'object':
-                            # parent type is object - check child type is not object
-                            for k_child, v_child in v.items():
-                                if isinstance(v_child, dict):
-                                    if 'type' in v_child and v_child['type'] == 'object':
-                                        msg = "Not a valid metadata schema. Nested object types are not allowed. " \
-                                              "Attribute '{}' contains nested object types"
-                                        msg = msg.format(k_child)
-                                        self.add_error(field_name, msg)
-                                        nested_object_found = True
-                        if not nested_object_found:
-                            validate_schema(v)
-
-            if is_schema_valid:
-                validate_schema(json_schema['properties'])
-
+        json_schema, validation_errors = ModelProgramLogicalFile.validate_meta_schema(schema_string)
+        for err_msg in validation_errors:
+            self.add_error(field_name, err_msg)
         return json_schema
 
 
@@ -333,12 +209,6 @@ class OriginalCoverageFormHelper(BaseFormHelper):
 class OriginalCoverageForm(forms.Form):
     """Form for displaying original coverage metadata of netcdf aggregation"""
 
-    PRO_STR_TYPES = (
-        ('', '---------'),
-        ('WKT String', 'WKT String'),
-        ('Proj4 String', 'Proj4 String')
-    )
-
     projection = forms.CharField(max_length=100, required=False,
                                  label='Coordinate Reference System')
     northlimit = forms.DecimalField(label='North Extent', widget=forms.TextInput())
@@ -346,9 +216,9 @@ class OriginalCoverageForm(forms.Form):
     southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput())
     westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
     units = forms.CharField(max_length=100, label='Extent Unit')
-    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES,
-                                               label='Coordinate String Type', required=False)
-    projection_string_text = forms.CharField(max_length=1000, label='Coordinate String',
+    projection_string_type = forms.CharField(max_length=20, label='Coordinate String Type', required=False,
+                                             widget=forms.TextInput())
+    projection_string_text = forms.CharField(label='Coordinate String',
                                              required=False, widget=forms.Textarea())
     datum = forms.CharField(max_length=300, label='Datum', required=False, widget=forms.TextInput())
 
@@ -361,16 +231,15 @@ class OriginalCoverageForm(forms.Form):
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
+        self.fields['units'].widget.attrs['readonly'] = True
         self.fields['projection'].widget.attrs['readonly'] = True
         self.fields['datum'].widget.attrs['readonly'] = True
         self.fields['projection_string_type'].widget.attrs['readonly'] = True
         self.fields['projection_string_text'].widget.attrs['readonly'] = True
-        # add the 'data-map-item' attribute so that map interface can be used for
-        # editing these fields
-        self.fields['northlimit'].widget.attrs['data-map-item'] = 'northlimit'
-        self.fields['eastlimit'].widget.attrs['data-map-item'] = 'eastlimit'
-        self.fields['southlimit'].widget.attrs['data-map-item'] = 'southlimit'
-        self.fields['westlimit'].widget.attrs['data-map-item'] = 'westlimit'
+        self.fields['northlimit'].widget.attrs['readonly'] = True
+        self.fields['eastlimit'].widget.attrs['readonly'] = True
+        self.fields['southlimit'].widget.attrs['readonly'] = True
+        self.fields['westlimit'].widget.attrs['readonly'] = True
 
     @property
     def form_id(self):
@@ -384,84 +253,7 @@ class OriginalCoverageForm(forms.Form):
 
     def clean(self):
         super(OriginalCoverageForm, self).clean()
-        temp_cleaned_data = copy.deepcopy(self.cleaned_data)
-        is_form_errors = False
-
-        # check required element info
-        for key in ('northlimit', 'eastlimit', 'southlimit', 'westlimit', 'units'):
-            value = temp_cleaned_data.get(key, None)
-            if not value:
-                self._errors[key] = ["Info for %s is missing" % key]
-                is_form_errors = True
-                del self.cleaned_data[key]
-
-        if is_form_errors:
-            return self.cleaned_data
-
-        # if required elements info is provided then write the bounding box info
-        # as 'value' dict and assign to self.clean_data
-        temp_cleaned_data['northlimit'] = str(temp_cleaned_data['northlimit'])
-        temp_cleaned_data['eastlimit'] = str(temp_cleaned_data['eastlimit'])
-        temp_cleaned_data['southlimit'] = str(temp_cleaned_data['southlimit'])
-        temp_cleaned_data['westlimit'] = str(temp_cleaned_data['westlimit'])
-        temp_cleaned_data['units'] = temp_cleaned_data['units']
-
-        if 'projection' in temp_cleaned_data:
-            if len(temp_cleaned_data['projection']) == 0:
-                del temp_cleaned_data['projection']
-
-        if 'projection_string_type' in temp_cleaned_data:
-            del temp_cleaned_data['projection_string_type']
-
-        if 'projection_string_text' in temp_cleaned_data:
-            del temp_cleaned_data['projection_string_text']
-
-        self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
-
-        if 'northlimit' in self.cleaned_data:
-                del self.cleaned_data['northlimit']
-        if 'eastlimit' in self.cleaned_data:
-                del self.cleaned_data['eastlimit']
-        if 'southlimit' in self.cleaned_data:
-            del self.cleaned_data['southlimit']
-        if 'westlimit' in self.cleaned_data:
-            del self.cleaned_data['westlimit']
-        if 'units' in self.cleaned_data:
-            del self.cleaned_data['units']
-        if 'projection' in self.cleaned_data:
-            del self.cleaned_data['projection']
-
-        return self.cleaned_data
-
-
-class OriginalCoverageValidationForm(forms.Form):
-    """Form for validating original coverage metadata of netcdf aggregation"""
-
-    PRO_STR_TYPES = (
-        ('', '---------'),
-        ('WKT String', 'WKT String'),
-        ('Proj4 String', 'Proj4 String')
-    )
-
-    projection = forms.CharField(max_length=100, required=False)
-    northlimit = forms.DecimalField()
-    eastlimit = forms.DecimalField()
-    southlimit = forms.DecimalField()
-    westlimit = forms.DecimalField()
-    units = forms.CharField(max_length=100)
-    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, required=False)
-    projection_string_text = forms.CharField(max_length=1000, required=False)
-    datum = forms.CharField(max_length=300, required=False)
-
-
-class OriginalCoverageMetaDelete(MetaDataElementDeleteForm):
-    def __init__(self, res_short_id, element_name, element_id, *args, **kwargs):
-        super(OriginalCoverageMetaDelete, self).__init__(res_short_id, element_name,
-                                                         element_id, *args, **kwargs)
-        self.helper.layout[0] = HTML("""
-            <div class="modal fade" id="delete-original-coverage-element-dialog"
-            tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        """)
+        raise forms.ValidationError("Original coverage can't be updated")
 
 
 # The following 3 classes need to have the "field" same as the fields defined in

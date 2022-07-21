@@ -126,25 +126,13 @@ function showWaitDialog(){
 
 function handleIsDirty(json_response) {
     // show update netcdf file update option for NetCDFLogicalFile
-    if (json_response.logical_file_type === "NetCDFLogicalFile") {
+    if (json_response.logical_file_type === "NetCDFLogicalFile" && json_response.is_update_file) {
         $("#div-netcdf-file-update").show();
     }
     // show update sqlite file update option for TimeSeriesLogicalFile
     if (json_response.logical_file_type === "TimeSeriesLogicalFile" &&
         json_response.is_update_file && json_response.can_update_sqlite) {
         $("#div-sqlite-file-update").show();
-    }
-    // show update netcdf resource
-    if (RES_TYPE === 'Multidimensional (NetCDF)' &&
-        json_response.is_dirty) {
-        $("#netcdf-file-update").show();
-    }
-
-    // start timeseries resource specific DOM manipulation
-    if (RES_TYPE === 'Time Series') {
-        if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
-            $("#sql-file-update").show();
-        }
     }
 }
 
@@ -1049,7 +1037,7 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
 }
 
 // target_path must be a folder
-function move_to_folder_ajax_submit(source_paths, target_path) {
+function move_to_folder_ajax_submit(source_paths, target_path, file_override) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -1058,7 +1046,8 @@ function move_to_folder_ajax_submit(source_paths, target_path) {
         data: {
             res_id: SHORT_ID,
             source_paths: JSON.stringify(source_paths),
-            target_path: target_path
+            target_path: target_path,
+            file_override: file_override
         },
         success: function (result) {
             var target_rel_path = result.target_rel_path;
@@ -1067,16 +1056,28 @@ function move_to_folder_ajax_submit(source_paths, target_path) {
             }
         },
         error: function(xhr, errmsg, err){
-            display_error_message('File/Folder Moving Failed', xhr.responseText);
+            if (xhr.status == 300) {
+                $('#resp-message').text(xhr.responseText);
+                $("#source_paths").val(JSON.stringify(source_paths));
+                $("#target_path").val(target_path);
+                $('#move-override-confirm-dialog').modal('show');
+            }
+            else {
+                display_error_message('File/Folder Moving Failed', xhr.responseText);
+                $('#move-override-confirm-dialog').modal('hide');
+            }
         }
     });
 }
 
-function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath) {
+function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath, file_override) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/move-aggregation/' + targetPath,
+        data: {
+            file_override: file_override
+        },
         async: true,
         success: function (task) {
             notificationsApp.registerTask(task);
@@ -1084,7 +1085,17 @@ function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath)
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
-            display_error_message('File/Folder Moving Failed', xhr.responseText);
+            if (xhr.status == 300) {
+                $('#aggr-move-resp-message').text(xhr.responseText);
+                $("#file_type").val(hs_file_type);
+                $("#file_type_id").val(file_type_id);
+                $("#target_path").val(targetPath);
+                $('#move-aggr-override-confirm-dialog').modal('show');
+            }
+            else {
+                display_error_message('File/Folder Moving Failed', xhr.responseText);
+                $('#move-aggr-override-confirm-dialog').modal('hide');
+            }
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });

@@ -434,13 +434,13 @@ def get_nc_grid_mapping_projection_import_string_dict(nc_dataset):
 
     # get the projection string and type
     projection_string = ''
-    for attribute_name in ['crs_wkt', 'spatial_ref', 'esri_pe_string']:
+    for attribute_name in ['proj4', 'crs_wkt', 'spatial_ref', 'esri_pe_string']:
         if hasattr(nc_grid_mapping_variable, attribute_name):
             projection_string = getattr(nc_grid_mapping_variable, attribute_name)
             break
 
     if projection_string:
-        projection_type = 'WKT String'
+        projection_type = 'Proj4 String' if attribute_name == 'proj4' else 'WKT String'
         try:
             spatial_ref = osr.SpatialReference()
             spatial_ref.ImportFromWkt(projection_string)

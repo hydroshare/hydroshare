@@ -16,15 +16,19 @@ coverage info by acdd:
 """
 
 import json
-
 import re
-import osr
+
 import netCDF4
+import osr
 from pyproj import Proj, transform
 
-from .nc_utils import get_nc_dataset, get_nc_grid_mapping_projection_import_string_dict,\
-    get_nc_variables_coordinate_type_mapping, get_nc_grid_mapping_crs_name, \
-    get_nc_variable_coordinate_meta
+from .nc_utils import (
+    get_nc_dataset,
+    get_nc_grid_mapping_crs_name,
+    get_nc_grid_mapping_projection_import_string_dict,
+    get_nc_variable_coordinate_meta,
+    get_nc_variables_coordinate_type_mapping
+)
 
 
 def get_nc_meta_json(nc_file_name):
@@ -58,7 +62,7 @@ def get_nc_meta_dict(nc_file_name):
     try:
         res_dublin_core_meta = nc_meta_dict['dublin_core_meta']
         res_type_specific_meta = nc_meta_dict['type_specific_meta']
-    except:
+    except Exception:
         res_dublin_core_meta = {}
         res_type_specific_meta = {}
 
@@ -126,7 +130,7 @@ def extract_nc_coverage_meta(nc_dataset):
     """
     (object)->dict
 
-    Return netCDF time start and end info
+    Return netCDF spatial reference (original coverage), spatial coverage and temporal coverage
     """
 
     projection_info = get_projection_info(nc_dataset)
@@ -223,12 +227,13 @@ def get_box_info(nc_dataset):
     """
     (object)-> dict
 
-    Return: the netCDF coverage box info as wgs84 crs
+    Return: the netCDF spatial coverage box info as wgs84 crs
     """
     box_info = {}
     original_box_info = get_original_box_info(nc_dataset)
 
     if original_box_info:
+        # derive spatial coverage from spatial reference (original coverage)
         if original_box_info.get('units', '').lower() == 'degree':  # geographic coor x, y
             box_info = original_box_info
             # check if the westlimit and eastlimit are in -180-180
@@ -272,6 +277,9 @@ def get_box_info(nc_dataset):
                 except Exception:
                     pass
 
+    if not box_info:    # spatial coverage was not computed from spatial reference
+        # get the spatial coverage as per ACDD convention
+        box_info = get_original_box_info_by_acdd_convention(nc_dataset)
     if box_info:
         # change the value as string
         for name in list(box_info.keys()):
@@ -318,9 +326,11 @@ def get_original_box_info(nc_dataset):
 
     original_box_info = get_original_box_info_by_data(nc_dataset)
 
-    if original_box_info.get('units', '') == 'degree' and \
-            get_original_box_info_by_acdd_convention(nc_dataset):
-        original_box_info = get_original_box_info_by_acdd_convention(nc_dataset)
+    if original_box_info:
+        if original_box_info.get('units', '') == 'degree':
+            original_box = get_original_box_info_by_acdd_convention(nc_dataset)
+            if original_box:
+                original_box_info = original_box
 
     return original_box_info
 
