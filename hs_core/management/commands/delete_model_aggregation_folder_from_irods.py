@@ -40,9 +40,30 @@ class Command(BaseCommand):
                 # no need to further look for folders
                 return
 
+            directory_in_irods = model_res.get_irods_path(full_folder_path_to_delete)
+            store = istorage.listdir(directory_in_irods)
+            # store[0] is a list of folders in the directory to be deleted
+            sub_folders = store[0]
+            # store[1] is a list of files in the directory to be deleted
+            files = store[1]
+
             istorage.delete(full_folder_path_to_delete)
             msg = "Deleted folder:{}".format(full_folder_path_to_delete)
             print(msg, flush=True)
+            if len(files) > 0:
+                print(f"Files in folder deleted:")
+                for fl in files:
+                    print(fl, flush=True)
+            else:
+                print(f"No files in folder: {folder_name}")
+
+            if len(sub_folders) > 0:
+                print(f"Sub-folders in folder deleted:")
+                for folder in sub_folders:
+                    print(folder, flush=True)
+            else:
+                print(f"No folders inside of folder: {folder_name}")
+
             # next folder to delete
             folder_count += 1
             folder_name = f"{base_folder_name}-{folder_count}"
