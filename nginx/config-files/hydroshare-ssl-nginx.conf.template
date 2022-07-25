@@ -123,7 +123,7 @@ server {
 
     location /django_irods/download/ {
         if (-f $document_root/maintenance_on.html) {
-            return 503;
+            return 301 /maintenance_on.html;
         }
         proxy_pass http://unix:/hs_tmp/gunicorn.sock;
         proxy_set_header X-Django-Reverse-Proxy true;
@@ -131,7 +131,7 @@ server {
 
     location / {
         if (-f $document_root/maintenance_on.html) {
-            return 503;
+            return 301 /maintenance_on.html;
         }
         # This curious directive allows admin static files to be referenced
         # as /admin/* rather than /static/admin/*, and mezzanine static files to
@@ -143,13 +143,9 @@ server {
         proxy_pass http://unix:/hs_tmp/gunicorn.sock;
     }
 
-    error_page 503 @maintenance;
-    location @maintenance {
-        rewrite ^(.*)$ /maintenance_on.html break;
-    }
-
-    error_page 500 502 504 @server_error;
-    location @server_error {
+    # return error 503 and custom error message
+    error_page 503 @503_error;
+    location @503_error {
         rewrite ^(.*)$ /server_error_on.html break;
     }
 }
