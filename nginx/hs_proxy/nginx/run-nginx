@@ -24,7 +24,6 @@ preflight_nginx() {
     sed -i 's/CURRENT_VM/'${CURRENT_VM}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
     sed -i 's/SSL_CERT_FILE/'${SSL_CERT_FILE}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
     sed -i 's/SSL_KEY_FILE/'${SSL_KEY_FILE}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf;
-    cp server_error_on.html static/server_error_on.html
 }
 
 stop_nginx() {
