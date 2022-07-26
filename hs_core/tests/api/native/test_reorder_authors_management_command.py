@@ -7,6 +7,8 @@ from hs_core.models import GenericResource, Creator
 from hs_core import hydroshare
 from hs_core.hydroshare import resource
 
+from dateutil import parser
+
 
 class TestReorderAuthorsCommand(TestCase):
 
@@ -29,8 +31,6 @@ class TestReorderAuthorsCommand(TestCase):
             title='Generic resource',
             keywords=['kw1', 'kw2']
         )
-
-        self.citation_original = self.res.get_citation()
 
         # add 4 creators element (so in total we will have 5 creators)
         resource.create_metadata_element(self.res.short_id, 'creator', name='John Smith')
@@ -135,9 +135,6 @@ class TestReorderAuthorsCommand(TestCase):
         Testing citation is maintained after author_order management command
         """
 
-        # sanity check on existing citation
-        self.assertEqual(self.res.get_citation(), self.citation_original)
-
         # Intentionally make a creator list with duplicate orders
         second_author = self.res.metadata.creators.filter(order=2).first()
         fourth_author = self.res.metadata.creators.filter(order=4).first()
@@ -151,18 +148,12 @@ class TestReorderAuthorsCommand(TestCase):
         # run  update command to fix author order
         call_command(self.update_command)
 
-        # TODO: checking citation fails, I'm not sure why
-        # altered_res = hydroshare.get_resource_by_shortkey(self.res.short_id)
-
         self.assertEqual(self.res.get_citation(), cit_original)
 
     def test_author_order_command_doesnt_touch_published(self):
         """
         Testing author_order management command does not alter published resources
         """
-
-        # sanity check on existing citation
-        self.assertEqual(self.res.get_citation(), self.citation_original)
 
         # Intentionally make a creator list with duplicate orders
         second_author = self.res.metadata.creators.filter(order=2).first()
@@ -173,17 +164,17 @@ class TestReorderAuthorsCommand(TestCase):
         fourth_author.save()
 
         self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
-        hydroshare.publish_resource(self.res.short_id)
-        pub_res = hydroshare.get_resource_by_shortkey(self.res.short_id)
-        self.assertTrue(pub_res.raccess.published)
-
-        cit_original = pub_res.get_citation()
+        # hydroshare.publish_resource(self.user, self.res.short_id)
+        self.res.raccess.published = True
+        self.res.raccess.save()
+        resource.create_metadata_element(self.res.short_id, 'date', type='published',
+                                         start_date=parser.parse("8/10/2014"))
+        cit_pub = self.res.get_citation()
 
         # run  update command to fix author order
         call_command(self.update_command)
 
-        # pub_res = hydroshare.get_resource_by_shortkey(self.res.short_id)
-        self.assertEqual(pub_res.get_citation(), cit_original)
+        self.assertEqual(self.res.get_citation(), cit_pub)
 
         third_authors = self.res.metadata.creators.filter(order=3).all()
         fifth_authors = self.res.metadata.creators.filter(order=5).all()
