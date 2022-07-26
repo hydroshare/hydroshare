@@ -2325,7 +2325,7 @@ $(document).ready(function () {
     // User clicked Proceed button on confirm whether to override files dialog when unzipping - need to override files
     $("#btn-unzip-file-override-proceed").click(function () {
         var calls = [];
-        var res_id = $("#res_id").val();
+        var res_id = $("#unzip_res_id").val();
         var zip_with_rel_path = $("#zip_with_rel_path").val();
         calls.push(unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite='true'));
         // Disable the Cancel button until request has finished

@@ -1045,25 +1045,27 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         meta_files = []
         if ingest_metadata:
             res_files, meta_files, map_files = identify_metadata_files(res_files)
-        # walk through each unzipped file, delete aggregations if they exist
+
         for file in res_files:
             destination_file = _get_destination_filename(file.name, unzipped_foldername)
-            if (istorage.exists(destination_file)):
-                if not overwrite:
-                    override_tgt_paths.append(destination_file.split('data/contents/')[1])
-                elif resource.resource_type == "CompositeResource":
-                    aggregation_object = resource.get_file_aggregation_object(
-                        destination_file)
+            if istorage.exists(destination_file):
+                override_tgt_paths.append(destination_file)
+
+        if not overwrite and override_tgt_paths:
+            override_simplified_paths = [tgt_path.split('data/contents/')[1] for tgt_path in override_tgt_paths]
+            raise FileOverrideException('move would overwrite {}'.format(', '.join(override_simplified_paths)))
+
+        for override_tgt_path in override_tgt_paths:
+            if (istorage.exists(override_tgt_path)):
+                if resource.resource_type == "CompositeResource":
+                    aggregation_object = resource.get_file_aggregation_object(override_tgt_path)
                     if aggregation_object:
                         aggregation_object.logical_delete(user)
                     else:
-                        logger.error("No aggregation object found for " + destination_file)
-                        istorage.delete(destination_file)
+                        istorage.delete(override_tgt_path)
                 else:
-                    istorage.delete(destination_file)
-        if not overwrite and override_tgt_paths:
-            message = 'move would overwrite {}'.format(', '.join(override_tgt_paths))
-            raise FileOverrideException(message)
+                    istorage.delete(override_tgt_path)
+
         # now move each file to the destination
         for file in res_files:
             destination_file = _get_destination_filename(file.name, unzipped_foldername)

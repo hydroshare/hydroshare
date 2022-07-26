@@ -932,13 +932,15 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite) {
             overwrite: overwrite
         },
         success: function (task) {
-            $('#res_id').val(res_id);
+            $('#unzip_res_id').val(res_id);
             $('#zip_with_rel_path').val(zip_with_rel_path);
             notificationsApp.registerTask(task);
             notificationsApp.show();
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
             display_error_message('File Unzipping Failed', xhr.responseText);
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
 }
