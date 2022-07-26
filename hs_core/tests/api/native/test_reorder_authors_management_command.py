@@ -106,14 +106,16 @@ class TestReorderAuthorsCommand(TestCase):
         """
 
         # Intentionally make a creator list with duplicate orders
-        first_author = self.res.metadata.creators.filter(order=1).first()
+        lisa = self.res.metadata.creators.filter(name="Lisa McWill").first()
         last_author = self.res.metadata.creators.last()
-        self.assertEqual(first_author.order, 1)
+        self.assertEqual(lisa.order, 3)
         self.assertEqual(last_author.order, 5)
-        first_author.order = 2
+        lisa.order = 2
         last_author.order = 4
-        first_author.save()
+        lisa.save()
         last_author.save()
+
+        cit_original = self.res.get_citation()
 
         # run  update command to fix author order
         call_command(self.update_command)
@@ -121,11 +123,12 @@ class TestReorderAuthorsCommand(TestCase):
         for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
             self.assertEqual(index, creator.order)
 
-        hs_author = self.res.metadata.creators.filter(username="user1").first()
-        mark = self.res.metadata.creators.filter(name="Mark Miller").first()
+        self.assertEqual(self.res.get_citation(), cit_original)
 
-        self.assertEqual(hs_author.order, 1)
-        self.assertEqual(mark.order, 5)
+        hs_author = self.res.metadata.creators.filter(email="user1@nowhere.com").first()
+        mark = self.res.metadata.creators.filter(name="Mark Miller").first()
+        self.assertIn(hs_author.order, [1, 2])
+        self.assertIn(mark.order, [4, 5])
 
     def test_command_maintains_citations(self):
         """
@@ -147,6 +150,9 @@ class TestReorderAuthorsCommand(TestCase):
 
         # run  update command to fix author order
         call_command(self.update_command)
+
+        # TODO: checking citation fails, I'm not sure why
+        # altered_res = hydroshare.get_resource_by_shortkey(self.res.short_id)
 
         self.assertEqual(self.res.get_citation(), cit_original)
 

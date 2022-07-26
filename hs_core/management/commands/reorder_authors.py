@@ -17,11 +17,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         resources = BaseResource.objects.filter(raccess__published=False).only('object_id', 'short_id')
         for res in resources:
-            creators = Creator.objects.filter(object_id=res.object_id)
+            # creators = Creator.objects.filter(object_id=res.object_id)
+            creators = res.metadata.creators.all()
             for index, creator in enumerate(creators, start=1):
                 if creator.order != index:
                     print("*" * 100)
                     print(f"Author out of order.\nR:{res.short_id}"
-                            "\nExpected: {index}, got: {creator.order}")
+                            f"\nExpected: {index}, got: {creator.order}")
                     creator.order = index
                     creator.save()
