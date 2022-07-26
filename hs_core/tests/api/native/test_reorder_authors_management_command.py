@@ -98,7 +98,7 @@ class TestReorderAuthorsCommand(TestCase):
         for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
             self.assertEqual(index, creator.order)
 
-        self.assertEqual(first_author.name, "Hydroshare Author")
+        self.assertEqual(first_author.name, "Creator_LastName, Creator_FirstName")
 
     def test_command_fixes_multiple_authors(self):
         """
@@ -121,7 +121,7 @@ class TestReorderAuthorsCommand(TestCase):
         for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
             self.assertEqual(index, creator.order)
 
-        hs_author = self.res.metadata.creators.filter(name="Hydroshare Author").first()
+        hs_author = self.res.metadata.creators.filter(username="user1").first()
         mark = self.res.metadata.creators.filter(name="Mark Miller").first()
 
         self.assertEqual(hs_author.order, 1)
@@ -143,7 +143,44 @@ class TestReorderAuthorsCommand(TestCase):
         second_author.save()
         fourth_author.save()
 
+        cit_original = self.res.get_citation()
+
         # run  update command to fix author order
         call_command(self.update_command)
 
+        self.assertEqual(self.res.get_citation(), cit_original)
+
+    def test_author_order_command_doesnt_touch_published(self):
+        """
+        Testing author_order management command does not alter published resources
+        """
+
+        # sanity check on existing citation
         self.assertEqual(self.res.get_citation(), self.citation_original)
+
+        # Intentionally make a creator list with duplicate orders
+        second_author = self.res.metadata.creators.filter(order=2).first()
+        fourth_author = self.res.metadata.creators.filter(order=4).first()
+        second_author.order = 3
+        fourth_author.order = 5
+        second_author.save()
+        fourth_author.save()
+
+        self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
+        hydroshare.publish_resource(self.res.short_id)
+        pub_res = hydroshare.get_resource_by_shortkey(self.res.short_id)
+        self.assertTrue(pub_res.raccess.published)
+
+        cit_original = pub_res.get_citation()
+
+        # run  update command to fix author order
+        call_command(self.update_command)
+
+        # pub_res = hydroshare.get_resource_by_shortkey(self.res.short_id)
+        self.assertEqual(pub_res.get_citation(), cit_original)
+
+        third_authors = self.res.metadata.creators.filter(order=3).all()
+        fifth_authors = self.res.metadata.creators.filter(order=5).all()
+
+        self.assertEqual(third_authors.count(), 2)
+        self.assertEqual(fifth_authors.count(), 2)
