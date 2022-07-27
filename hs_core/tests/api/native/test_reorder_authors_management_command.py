@@ -53,6 +53,10 @@ class TestReorderAuthorsCommand(TestCase):
         """
         citation_original = self.res.get_citation()
 
+        self.assertEqual(self.res.get_citation(), citation_original)
+        for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
+            self.assertEqual(index, creator.order)
+
         # run  update command to fix author order
         call_command(self.update_command)
 
@@ -91,6 +95,7 @@ class TestReorderAuthorsCommand(TestCase):
         first_author.order = 2
         first_author.save()
         self.assertEqual(john.order, first_author.order)
+        self.assertEqual(first_author.name, "Creator_LastName, Creator_FirstName")
 
         # run  update command to fix author order
         call_command(self.update_command)
@@ -125,10 +130,33 @@ class TestReorderAuthorsCommand(TestCase):
 
         self.assertEqual(self.res.get_citation(), cit_original)
 
-        hs_author = self.res.metadata.creators.filter(email="user1@nowhere.com").first()
-        mark = self.res.metadata.creators.filter(name="Mark Miller").first()
-        self.assertIn(hs_author.order, [1, 2])
-        self.assertIn(mark.order, [4, 5])
+    def test_command_fixes_triplicate_authors(self):
+        """
+        Testing author order is updated if there were 3 authors with the same order
+
+        This tests the case where two authors had faulty orders due to being moved,
+        resulting in a triplicate of author.order.
+        """
+
+        # Intentionally make a creator list with duplicate orders
+        lisa = self.res.metadata.creators.filter(name="Lisa McWill").first()
+        last_author = self.res.metadata.creators.last()
+        self.assertEqual(lisa.order, 3)
+        self.assertEqual(last_author.order, 5)
+        lisa.order = 4
+        last_author.order = 4
+        lisa.save()
+        last_author.save()
+
+        cit_original = self.res.get_citation()
+
+        # run  update command to fix author order
+        call_command(self.update_command)
+
+        for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
+            self.assertEqual(index, creator.order)
+
+        self.assertEqual(self.res.get_citation(), cit_original)
 
     def test_command_maintains_citations(self):
         """
@@ -164,7 +192,6 @@ class TestReorderAuthorsCommand(TestCase):
         fourth_author.save()
 
         self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
-        # hydroshare.publish_resource(self.user, self.res.short_id)
         self.res.raccess.published = True
         self.res.raccess.save()
         resource.create_metadata_element(self.res.short_id, 'date', type='published',
@@ -176,8 +203,5 @@ class TestReorderAuthorsCommand(TestCase):
 
         self.assertEqual(self.res.get_citation(), cit_pub)
 
-        third_authors = self.res.metadata.creators.filter(order=3).all()
-        fifth_authors = self.res.metadata.creators.filter(order=5).all()
-
-        self.assertEqual(third_authors.count(), 2)
-        self.assertEqual(fifth_authors.count(), 2)
+        self.assertEqual(self.res.metadata.creators.filter(order=3).count(), 2)
+        self.assertEqual(self.res.metadata.creators.filter(order=5).count(), 2)
