@@ -1056,10 +1056,13 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             raise FileOverrideException('move would overwrite {}'.format(', '.join(override_simplified_paths)))
 
         for override_tgt_path in override_tgt_paths:
-            if (istorage.exists(override_tgt_path)):
-                aggregation_object = resource.get_file_aggregation_object(override_tgt_path)
-                if aggregation_object:
-                    aggregation_object.logical_delete(user)
+            if istorage.exists(override_tgt_path):
+                if resource.resource_type == "CompositeResource":
+                    aggregation_object = resource.get_file_aggregation_object(override_tgt_path)
+                    if aggregation_object:
+                        aggregation_object.logical_delete(user)
+                    else:
+                        istorage.delete(override_tgt_path)
                 else:
                     istorage.delete(override_tgt_path)
 
