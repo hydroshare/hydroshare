@@ -8,6 +8,7 @@ Related to https://github.com/hydroshare/hydroshare/issues/4695
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
+from hs_core.models import Creator
 
 
 class Command(BaseCommand):
@@ -16,8 +17,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         resources = BaseResource.objects.filter(raccess__published=False).only('object_id', 'short_id')
         for res in resources:
-            # creators = Creator.objects.filter(object_id=res.object_id)
-            creators = res.metadata.creators.all()
+            creators = Creator.objects.filter(object_id=res.object_id)
             for index, creator in enumerate(creators, start=1):
                 if creator.order != index:
                     print("*" * 100)
