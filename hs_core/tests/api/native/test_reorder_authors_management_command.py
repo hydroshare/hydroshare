@@ -11,32 +11,39 @@ from dateutil import parser
 
 
 class TestReorderAuthorsCommand(TestCase):
-
     def setUp(self):
         super(TestReorderAuthorsCommand, self).setUp()
 
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.user = hydroshare.create_account(
-            'user1@nowhere.com',
-            username='user1',
-            first_name='Creator_FirstName',
-            last_name='Creator_LastName',
+            "user1@nowhere.com",
+            username="user1",
+            first_name="Creator_FirstName",
+            last_name="Creator_LastName",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.user,
-            title='Generic resource',
-            keywords=['kw1', 'kw2']
+            title="Generic resource",
+            keywords=["kw1", "kw2"],
         )
 
         # add 4 creators element (so in total we will have 5 creators)
-        resource.create_metadata_element(self.res.short_id, 'creator', name='John Smith')
-        resource.create_metadata_element(self.res.short_id, 'creator', name='Lisa McWill')
-        resource.create_metadata_element(self.res.short_id, 'creator', name='Kelly Anderson')
-        resource.create_metadata_element(self.res.short_id, 'creator', name='Mark Miller')
+        resource.create_metadata_element(
+            self.res.short_id, "creator", name="John Smith"
+        )
+        resource.create_metadata_element(
+            self.res.short_id, "creator", name="Lisa McWill"
+        )
+        resource.create_metadata_element(
+            self.res.short_id, "creator", name="Kelly Anderson"
+        )
+        resource.create_metadata_element(
+            self.res.short_id, "creator", name="Mark Miller"
+        )
 
         self.update_command = "reorder_authors"
 
@@ -205,11 +212,15 @@ class TestReorderAuthorsCommand(TestCase):
         second_author.save()
         fourth_author.save()
 
-        self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
+        self.assertFalse(self.res.metadata.dates.filter(type="published").exists())
         self.res.raccess.published = True
         self.res.raccess.save()
-        resource.create_metadata_element(self.res.short_id, 'date', type='published',
-                                         start_date=parser.parse("8/10/2014"))
+        resource.create_metadata_element(
+            self.res.short_id,
+            "date",
+            type="published",
+            start_date=parser.parse("8/10/2014"),
+        )
         cit_pub = self.res.get_citation()
 
         # run  update command to fix author order
