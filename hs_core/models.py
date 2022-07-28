@@ -2582,13 +2582,26 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     @property
     def logical_files(self):
-        """Get a list of logical files for resource."""
-        logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is not None:
-                if res_file.logical_file not in logical_files_list:
-                    logical_files_list.append(res_file.logical_file)
-        return logical_files_list
+        """Gets an iterator to access all logical files of the resource."""
+
+        for lf in self.filesetlogicalfile_set.all():
+            yield lf
+        for lf in self.genericlogicalfile_set.all():
+            yield lf
+        for lf in self.geofeaturelogicalfile_set.all():
+            yield lf
+        for lf in self.netcdflogicalfile_set.all():
+            yield lf
+        for lf in self.georasterlogicalfile_set.all():
+            yield lf
+        for lf in self.reftimeserieslogicalfile_set.all():
+            yield lf
+        for lf in self.timeserieslogicalfile_set.all():
+            yield lf
+        for lf in self.modelprogramlogicalfile_set.all():
+            yield lf
+        for lf in self.modelinstancelogicalfile_set.all():
+            yield lf
 
     @property
     def aggregation_types(self):
@@ -2602,33 +2615,24 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 aggr_types.append(aggr_type)
         return aggr_types
 
-    @property
-    def non_logical_files(self):
-        """Get list of non-logical files for resource."""
-        non_logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is None:
-                if res_file.logical_file not in non_logical_files_list:
-                    non_logical_files_list.append(res_file)
-        return non_logical_files_list
-
-    @property
-    def generic_logical_files(self):
-        """Get list of generic logical files for resource."""
-        generic_logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.has_generic_logical_file:
-                if res_file.logical_file not in generic_logical_files_list:
-                    generic_logical_files_list.append(res_file.logical_file)
-        return generic_logical_files_list
-
     def get_logical_files(self, logical_file_class_name):
         """Get a list of logical files (aggregations) for a specified logical file class name."""
 
-        logical_files_list = [lf for lf in self.logical_files if
-                              lf.type_name() == logical_file_class_name]
+        class_name_to_query_mappings = dict()
+        class_name_to_query_mappings["GenericLogicalFile"] = self.genericlogicalfile_set.all()
+        class_name_to_query_mappings["NetCDFLogicalFile"] = self.netcdflogicalfile_set.all()
+        class_name_to_query_mappings["GeoRasterLogicalFile"] = self.georasterlogicalfile_set.all()
+        class_name_to_query_mappings["GeoFeatureLogicalFile"] = self.geofeaturelogicalfile_set.all()
+        class_name_to_query_mappings["FileSetLogicalFile"] = self.filesetlogicalfile_set.all()
+        class_name_to_query_mappings["ModelProgramLogicalFile"] = self.modelprogramlogicalfile_set.all()
+        class_name_to_query_mappings["ModelInstanceLogicalFile"] = self.modelinstancelogicalfile_set.all()
+        class_name_to_query_mappings["TimeSeriesLogicalFile"] = self.timeserieslogicalfile_set.all()
+        class_name_to_query_mappings["RefTimeseriesLogicalFile"] = self.reftimeserieslogicalfile_set.all()
 
-        return logical_files_list
+        if logical_file_class_name in class_name_to_query_mappings:
+            return class_name_to_query_mappings[logical_file_class_name]
+
+        raise Exception(f"Invalid logical file type:{logical_file_class_name}")
 
     @property
     def has_logical_spatial_coverage(self):

@@ -36,28 +36,6 @@ class CompositeResource(BaseResource):
         return True
 
     @property
-    def logical_files(self):
-        """A generator that returns each of the logical files of this resource"""
-        for lf in self.filesetlogicalfile_set.all():
-            yield lf
-        for lf in self.genericlogicalfile_set.all():
-            yield lf
-        for lf in self.geofeaturelogicalfile_set.all():
-            yield lf
-        for lf in self.netcdflogicalfile_set.all():
-            yield lf
-        for lf in self.georasterlogicalfile_set.all():
-            yield lf
-        for lf in self.reftimeserieslogicalfile_set.all():
-            yield lf
-        for lf in self.timeserieslogicalfile_set.all():
-            yield lf
-        for lf in self.modelprogramlogicalfile_set.all():
-            yield lf
-        for lf in self.modelinstancelogicalfile_set.all():
-            yield lf
-
-    @property
     def can_be_published(self):
         # resource level metadata check
         if not super(CompositeResource, self).can_be_published:
@@ -117,18 +95,29 @@ class CompositeResource(BaseResource):
                 # already part of another aggregation (single file aggregation)
                 aggregation.add_resource_file(moved_res_file)
 
-    def get_folder_aggregation_object(self, dir_path):
+    def get_folder_aggregation_object(self, dir_path, aggregations=None):
         """Returns an aggregation (file type) object if the specified folder *dir_path* represents a
          file type aggregation (logical file), otherwise None.
 
          :param dir_path: Resource file directory path (full folder path starting with resource id)
          for which the aggregation object to be retrieved
+         :param aggregations:   list of aggregations in self (resource)
         """
+        if __debug__:
+            if aggregations is not None:
+                assert(isinstance(aggregations, list))
+                for aggr in aggregations:
+                    assert(aggr.resource == self)
+
         aggregation_path = dir_path
         if dir_path.startswith(self.file_path):
             aggregation_path = dir_path[len(self.file_path) + 1:]
+        if aggregations is None:
+            logical_files = list(self.logical_files)
+        else:
+            logical_files = aggregations
 
-        for lf in self.logical_files:
+        for lf in logical_files:
             if hasattr(lf, 'folder'):
                 if lf.folder == aggregation_path:
                     return lf
@@ -142,12 +131,13 @@ class CompositeResource(BaseResource):
         :return a folder based aggregation if found otherwise, None
         """
 
+        aggregations = self.logical_files if '/' in dir_path else None
         if dir_path.startswith(self.file_path):
             dir_path = dir_path[len(self.file_path) + 1:]
 
         def get_aggregation(path):
             try:
-                aggregation = self.get_aggregation_by_name(path)
+                aggregation = self.get_aggregation_by_name(path, aggregations=aggregations)
                 return aggregation
             except ObjectDoesNotExist:
                 return None
@@ -236,9 +226,10 @@ class CompositeResource(BaseResource):
         raise ObjectDoesNotExist("No matching aggregation was found for "
                                  "name:{}".format(aggregation_name))
 
-    def get_aggregation_by_name(self, name):
+    def get_aggregation_by_name(self, name, aggregations=None):
         """Get an aggregation that matches the aggregation name specified by *name*
         :param  name: name (aggregation path) of the aggregation to find
+        :param  aggregations:   a list of aggregations in the resource (self)
         :return an aggregation object if found
         :raises ObjectDoesNotExist if no matching aggregation is found
         """
@@ -246,7 +237,7 @@ class CompositeResource(BaseResource):
         is_aggr_path_a_folder = self.is_path_folder(path=name)
         if is_aggr_path_a_folder:
             folder_full_path = os.path.join(self.file_path, name)
-            aggregation = self.get_folder_aggregation_object(folder_full_path)
+            aggregation = self.get_folder_aggregation_object(folder_full_path, aggregations=aggregations)
             if aggregation is None:
                 raise ObjectDoesNotExist(
                     "No matching aggregation was found for name:{}".format(name))
@@ -266,9 +257,11 @@ class CompositeResource(BaseResource):
         :return a fileset aggregation object if found, otherwise None
         """
 
+        aggregations = list(self.logical_files) if '/' in path else None
+
         def get_fileset(path):
             try:
-                aggregation = self.get_aggregation_by_name(path)
+                aggregation = self.get_aggregation_by_name(path, aggregations=aggregations)
                 if aggregation.is_fileset:
                     return aggregation
             except ObjectDoesNotExist:
@@ -288,9 +281,11 @@ class CompositeResource(BaseResource):
         :return a model program or model instance aggregation object if found, otherwise None
         """
 
+        aggregations = list(self.logical_files) if '/' in path else None
+
         def get_aggregation(path):
             try:
-                aggregation = self.get_aggregation_by_name(path)
+                aggregation = self.get_aggregation_by_name(path, aggregations=aggregations)
                 return aggregation
             except ObjectDoesNotExist:
                 return None
@@ -315,12 +310,13 @@ class CompositeResource(BaseResource):
         :param  orig_path: original file/folder path prior to move/rename
         :param  new_path: new file/folder path after move/rename
         """
+        aggregations = list(self.logical_files)
 
         def set_parent_aggregation_dirty(path_to_search):
             if '/' in path_to_search:
                 path = os.path.dirname(path_to_search)
                 try:
-                    parent_aggr = self.get_aggregation_by_name(path)
+                    parent_aggr = self.get_aggregation_by_name(path, aggregations=aggregations)
                     parent_aggr.set_metadata_dirty()
                 except ObjectDoesNotExist:
                     pass
@@ -365,7 +361,7 @@ class CompositeResource(BaseResource):
 
         # set affected logical file metadata to dirty so that xml meta files will be regenerated at the time of
         # aggregation or bag download
-        for lf in self.logical_files:
+        for lf in aggregations:
             # set metadata dirty for any folder based aggregations under the orig_path
             if hasattr(lf, 'folder'):
                 if lf.folder is not None and lf.folder.startswith(orig_path):
@@ -389,7 +385,7 @@ class CompositeResource(BaseResource):
         set_parent_aggregation_dirty(new_path)
 
         try:
-            aggregation = self.get_aggregation_by_name(new_path)
+            aggregation = self.get_aggregation_by_name(new_path, aggregations=aggregations)
             aggregation.set_metadata_dirty()
         except ObjectDoesNotExist:
             # the file path *new_path* does not represent an aggregation - no more

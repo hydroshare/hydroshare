@@ -79,6 +79,9 @@ def data_store_structure(request):
     _APPKEY = 'appkey'
     # folder path relative to 'data/contents/' needed for the UI
     folder_path = store_path[len("data/contents/"):]
+    if resource.resource_type == "CompositeResource":
+        res_aggregations = list(resource.logical_files)
+
     for dname in store[0]:     # directories
         d_pk = dname
         d_store_path = os.path.join(store_path, d_pk)
@@ -92,7 +95,7 @@ def data_store_structure(request):
         if resource.resource_type == "CompositeResource":
             dir_path = resource.get_irods_path(d_store_path)
             # find if this folder *dir_path* represents (contains) an aggregation object
-            aggregation_object = resource.get_folder_aggregation_object(dir_path)
+            aggregation_object = resource.get_folder_aggregation_object(dir_path, aggregations=res_aggregations)
             # folder aggregation type is not relevant for single file aggregation types - which
             # are: GenericLogicalFile, and RefTimeseriesLogicalFile
             if aggregation_object is not None:
@@ -104,10 +107,10 @@ def data_store_structure(request):
                     main_file = aggregation_object.get_main_file.file_name
             else:
                 # check first if ModelProgram/ModelInstance aggregation type can be created from this folder
-                can_set_model_instance = ModelInstanceLogicalFile.can_set_folder_to_aggregation(resource=resource,
-                                                                                                dir_path=dir_path)
-                can_set_model_program = ModelProgramLogicalFile.can_set_folder_to_aggregation(resource=resource,
-                                                                                              dir_path=dir_path)
+                can_set_model_instance = ModelInstanceLogicalFile.can_set_folder_to_aggregation(
+                    resource=resource, dir_path=dir_path, aggregations=res_aggregations)
+                can_set_model_program = ModelProgramLogicalFile.can_set_folder_to_aggregation(
+                    resource=resource, dir_path=dir_path, aggregations=res_aggregations)
                 if can_set_model_instance and can_set_model_program:
                     folder_aggregation_type_to_set = 'ModelProgramOrInstanceLogicalFile'
                 elif can_set_model_program:
@@ -115,7 +118,8 @@ def data_store_structure(request):
                 elif can_set_model_instance:
                     folder_aggregation_type_to_set = ModelInstanceLogicalFile.__name__
                 # otherwise, check if FileSet aggregation type that can be created from this folder
-                elif FileSetLogicalFile.can_set_folder_to_aggregation(resource=resource, dir_path=dir_path):
+                elif FileSetLogicalFile.can_set_folder_to_aggregation(resource=resource, dir_path=dir_path,
+                                                                      aggregations=res_aggregations):
                     folder_aggregation_type_to_set = FileSetLogicalFile.__name__
                 else:
                     folder_aggregation_type_to_set = ""
