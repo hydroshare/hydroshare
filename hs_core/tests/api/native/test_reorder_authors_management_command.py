@@ -90,12 +90,14 @@ class TestReorderAuthorsCommand(TestCase):
 
         # Intentionally make a creator list with duplicate orders
         john = self.res.metadata.creators.filter(name="John Smith").first()
-        first_author = self.res.metadata.creators.filter(order=1).first()
-        self.assertEqual(first_author.order, 1)
-        first_author.order = 2
-        first_author.save()
-        self.assertEqual(john.order, first_author.order)
-        self.assertEqual(first_author.name, "Creator_LastName, Creator_FirstName")
+        hs_author = self.res.metadata.creators.filter(
+            name="Creator_LastName, Creator_FirstName"
+        ).first()
+        self.assertEqual(hs_author.order, 1)
+        hs_author.order = 2
+        hs_author.save()
+        self.assertEqual(john.order, hs_author.order)
+        self.assertIsNone(self.res.metadata.creators.filter(order=1).first())
 
         # run  update command to fix author order
         call_command(self.update_command)
@@ -103,7 +105,19 @@ class TestReorderAuthorsCommand(TestCase):
         for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
             self.assertEqual(index, creator.order)
 
-        self.assertEqual(first_author.name, "Creator_LastName, Creator_FirstName")
+        # query for first author no longer raises exception
+        first_author = self.res.metadata.creators.filter(order=1).first()
+        self.assertIsNotNone(first_author)
+
+        john = self.res.metadata.creators.filter(name="John Smith").first()
+        hs_author = self.res.metadata.creators.filter(
+            name="Creator_LastName, Creator_FirstName"
+        ).first()
+        self.assertNotEqual(john.order, hs_author.order)
+
+        # Demonstrate that we don't actually know which author became "first" author
+        self.assertIn(john.order, [1, 2])
+        self.assertIn(hs_author.order, [1, 2])
 
     def test_command_fixes_multiple_authors(self):
         """
