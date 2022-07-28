@@ -604,7 +604,7 @@ class Party(AbstractMetaDataElement):
                             res_cr.order += 1
                             res_cr.save()
                     else:
-                        if res_cr.order > party.order:
+                        if res_cr.order > party.order and res_cr.order <= creator_order:
                             res_cr.order -= 1
                             res_cr.save()
 
