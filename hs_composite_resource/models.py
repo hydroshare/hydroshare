@@ -131,7 +131,7 @@ class CompositeResource(BaseResource):
         :return a folder based aggregation if found otherwise, None
         """
 
-        aggregations = self.logical_files if '/' in dir_path else None
+        aggregations = list(self.logical_files) if '/' in dir_path else None
         if dir_path.startswith(self.file_path):
             dir_path = dir_path[len(self.file_path) + 1:]
 
