@@ -41,7 +41,7 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
-    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
+    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict, get_my_resources_filter_counts
 
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject, TaskNotification
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
@@ -2013,19 +2013,57 @@ class GroupView(TemplateView):
                 'add_view_user_form': AddUserForm(),
             }
 
+@login_required
+def my_resources_filter_counts(request, *args, **kwargs):
+    """
+    View for counting resources that belong to a given user.
+    """
+    filter=request.GET.getlist('filter', default=None)
+    u = User.objects.get(pk=request.user.id)
 
-class MyResourcesView(TemplateView):
-    template_name = 'pages/my-resources.html'
+    filter_counts = get_my_resources_filter_counts(u)
 
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(MyResourcesView, self).dispatch(*args, **kwargs)
+    return JsonResponse({
+        'filter_counts': filter_counts
+    })
 
-    def get_context_data(self, **kwargs):
-        u = User.objects.get(pk=self.request.user.id)
+@login_required
+def my_resources(request, *args, **kwargs):
+    """
+    View for listing resources that belong to a given user.
 
-        resource_collection = get_my_resources_list(u)
+    Renders either a full my-resources page, or just a table of new resorces
+    """
+    filter=request.GET.getlist('f', default=[])
+    u = User.objects.get(pk=request.user.id)
 
-        return {
-            'collection': resource_collection
-        }
+    if 'shared' in filter: 
+        filter.remove('shared')
+        filter.append('viewable')
+        filter.append('editable')
+    
+    if 'favorites' in filter:
+        filter.remove('favorites')
+        filter.append('is_favorite')
+
+    if not filter:
+        # default filters
+        filter = ['owned', 'discovered', 'favorites']
+    resource_collection = get_my_resources_list(u, annotate=True, filter=filter)
+
+    context = {
+        'collection': resource_collection
+    }
+
+    if not request.is_ajax():
+        return render(request,
+                      'pages/my-resources.html',
+                      context)
+    else:
+        from django.template.loader import render_to_string
+        tbody = render_to_string(
+                      'includes/my-resources-tbody.html',
+                      context, request)
+        return JsonResponse({
+            "tbody": tbody,
+        })

@@ -19,33 +19,36 @@ var SHARING_STATUS_COL = 12;
 var DATE_CREATED_SORT_COL = 13;
 var ACCESS_GRANTOR_COL = 14;
 
+var filtersUpdated = false
+var spinner = $('<i class="fa fa-spinner fa-pulse fa-lg my-res-filter-spinner" style="z-index: 1;"></i>')
+
 $(document).ready(function () {
-/*==================================================
-    Table columns
-    0 - actions
-    1 - Resource Type
-    2 - Title
-    3 - Owner
-    4 - Date Created
-    5 - Last Modified
-    6 - Subject
-    7 - Authors
-    8 - Permission Level
-    9 - Labels
-    10 - Favorite
-    11 - Last modified (sortable format)
-    12 - Sharing Status
-    13 - Date created (sortable format)
-    14 - Access Grantor
-==================================================*/
+    setInitialFilters()
+    initTable();
+    updateFilterCount();
+    updateTable();
+    setEventListeners();
+});
 
-    resourceTable = $("#item-selectors").DataTable({
-        "order": [[DATE_CREATED_COL, "desc"]],
-        "paging": false,
-        "info": false,
-        "columnDefs": colDefs
-    });
+function setInitialFilters(){
+    // filter badges spin for async
+    let filters = $("#filter li.list-group-item .badge");
+    filters.prepend(spinner);
 
+    const url = new URL(window.location.href);
+    let existing_filters = url.searchParams.getAll('f');
+    if (existing_filters.length !== 0){
+        return
+    }
+    // default filters (checked in the template) are:
+    let default_filters = ['owned', 'discovered', 'favorites'];
+    for(let filter of default_filters){
+        url.searchParams.append('f', filter);
+    }
+    window.history.pushState({}, '', url);
+}
+
+function setEventListeners(){
     $("#item-selectors").css("width", "100%");
 
     // Fix for horizontal scroll bar appearing unnecessarily on firefox.
@@ -92,10 +95,14 @@ $(document).ready(function () {
     $("#btn-create-label").click(label_ajax_submit);
     $(".btn-label-remove").click(label_ajax_submit);
 
-    $("#filter input[type='checkbox']").on("change", function () {
-        resourceTable.draw();
-        updateLabelDropdowns();
-        updateLabelCount();
+    $("#filter input[type='checkbox']").on("change", function (e) {
+        let check_val = e.target.attributes['data-facet'].value;
+        let ignore_filters = ["recent"];
+        if(ignore_filters.includes(check_val)){
+            updateTable();
+            return;
+        }
+        getNewData(e.target);
     });
 
     $("#user-labels-left").on("change", "input[type='checkbox']", function () {
@@ -329,11 +336,42 @@ $(document).ready(function () {
     $('.dropdown-menu label, .list-labels label').click(function (e) {
         e.stopPropagation();
     });
+}
 
+function initTable(){
+    /*==================================================
+        Table columns
+        0 - actions
+        1 - Resource Type
+        2 - Title
+        3 - Owner
+        4 - Date Created
+        5 - Last Modified
+        6 - Subject
+        7 - Authors
+        8 - Permission Level
+        9 - Labels
+        10 - Favorite
+        11 - Last modified (sortable format)
+        12 - Sharing Status
+        13 - Date created (sortable format)
+        14 - Access Grantor
+    ==================================================*/
+
+    resourceTable = $("#item-selectors").DataTable({
+        "order": [[DATE_CREATED_COL, "desc"]],
+        "paging": false,
+        "info": false,
+        "columnDefs": colDefs
+    });
+}
+
+function updateTable(){
+    resourceTable.draw();
     updateLabelsList();
     updateLabelDropdowns();
     updateLabelCount();
-});
+}
 
 function delete_multiple_resources_ajax_submit(indexes) {
     var calls = [];
@@ -533,6 +571,59 @@ function updateLabelsList() {
     }
 }
 
+// Gets new data when filters change
+function getNewData(target){
+    $("#filter-panel .panel-title").append(spinner);
+    $("#filter").addClass("no-interact")
+
+    block_request = true;
+    const url = new URL(window.location.href);
+
+    let filter_val = target.value.toLowerCase();
+    let existing_filters = url.searchParams.getAll('f');
+    if (existing_filters){
+        let index = existing_filters.indexOf(filter_val);
+        if(index > -1){
+            if (!target.checked){
+                existing_filters.splice(index, 1);
+                url.searchParams.delete('f');
+                existing_filters.forEach(filter => url.searchParams.append('f', filter));
+            }
+        }else{
+            if (target.checked){
+                url.searchParams.append('f', filter_val);
+            }
+        }
+    }
+
+    window.history.pushState({}, '', url);
+
+    // TODO: if there is no query, don't update?
+    // if(url.searchParams.getAll('f').length === 0){
+    //     return
+    // }
+
+    // todo: show a pending spinner
+    $('#item-selectors tbody').hide();
+    $('#item-selectors thead').hide();
+    resourceTable.destroy();
+
+    $.ajax({
+        type: 'GET',
+        url: url,
+        success: function (data) {
+            block_request = false;
+
+            $('#item-selectors thead').show();
+            $('#item-selectors tbody').replaceWith(data.tbody);
+            initTable();
+            updateTable();
+            spinner.remove();
+            $("#filter").removeClass("no-interact");
+        }
+    })
+}
+
 // Updates the status of labels in the left panel
 function updateLabelDropdowns() {
     $(".inline-dropdown ul").empty();
@@ -675,16 +766,41 @@ function createLabel () {
     }
 }
 
-function updateLabelCount() {
-    $("#labels input[data-label]").parent().parent().find(".badge").text("0");
-    $("#toolbar-labels-dropdown input[type='checkbox']").prop("checked", true);
 
-    var collection = [];
-    var favorites = 0;
-    var ownedCount = 0;
-    var addedCount = 0;
-    var sharedCount = 0;
+
+async function updateFilterCount() {
+    if( !filtersUpdated ){
+        $("#toolbar-labels-dropdown input[type='checkbox']").prop("checked", true);
+        var favorites = 0;
+        var ownedCount = 0;
+        var addedCount = 0;
+        var sharedCount = 0;
+        await getFilterCounts();
+    }
+    function getFilterCounts(){
+        return $.ajax({
+            type: 'GET',
+            url: '/my-resources-counts/',
+            success: function (data) {
+                favorites = data.filter_counts.favorites;
+                ownedCount = data.filter_counts.ownedCount;
+                addedCount = data.filter_counts.addedCount;
+                sharedCount = data.filter_counts.sharedCount;
+                $(".my-res-filter-spinner").remove();
+                    // Update filter badges count
+                $("#filter .badge[data-facet='owned']").text(ownedCount);
+                $("#filter .badge[data-facet='shared']").text(sharedCount);
+                $("#filter .badge[data-facet='discovered']").text(addedCount);
+                $("#filter .badge[data-facet='favorites']").text(favorites);
+                filtersUpdated = true;
+            }
+        })
+    }
+}
+
+function updateLabelCount() {
     var recentCount = 0;
+    var collection = [];
 
     var cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 5);
@@ -694,22 +810,6 @@ function updateLabelCount() {
     resourceTable.rows().every(function(rowIndex, tableLoop, rowLoop) {
         // List of labels already applied to the resource;
         var dataColLabels = this.data()[LABELS_COL].replace(/\s+/g, ' ').split(",");
-        var dataColFavorite = this.data()[FAVORITE_COL].trim();
-        var dataColPermissionLevel = this.data()[PERM_LEVEL_COL].trim();
-
-        if (dataColPermissionLevel == "Owned") {
-            ownedCount++;
-        }
-        else if (dataColPermissionLevel == "Discovered") {
-            addedCount++;
-        }
-        else if (dataColPermissionLevel != "Owned" && dataColPermissionLevel != "Discovered") {
-            sharedCount++;
-        }
-
-        if (dataColFavorite == "Favorite") {
-            favorites++;
-        }
 
         // Update Recent count
         if (this.data()[LAST_MODIF_SORT_COL] >= cutoff) {
@@ -726,11 +826,6 @@ function updateLabelCount() {
         }
     });
 
-    // Update filter badges count
-    $("#filter .badge[data-facet='owned']").text(ownedCount);
-    $("#filter .badge[data-facet='shared']").text(sharedCount);
-    $("#filter .badge[data-facet='discovered']").text(addedCount);
-    $("#filter .badge[data-facet='favorites']").text(favorites);
     $("#filter .badge[data-facet='recent']").text(recentCount);
 
     // Set label counts
@@ -839,6 +934,7 @@ function typeQueryStrings () {
 ==================================================*/
 
 /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
+// https://datatables.net/manual/plug-ins/search
 $.fn.dataTable.ext.search.push (
     function (settings, data, dataIndex) {
         var inputString = $("#resource-search-input").val().toLowerCase();

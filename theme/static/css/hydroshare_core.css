@@ -2762,6 +2762,12 @@ span.you-flag {
 	display: none;
 }
 
+.no-interact {
+	cursor: wait;
+	pointer-events: none;
+	color: #b3b3b3;
+}
+
 #item-selectors {
     display: none;
 }
