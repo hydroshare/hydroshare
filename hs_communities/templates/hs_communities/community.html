@@ -7,20 +7,8 @@
 {% endblock %}
 
 {% block main %}
+    {% include 'hs_communities/communities-nav.html' with active='my_communities' %}
     <div id="communities-app" class="container full-width" style="padding: 0;">
-        <div class="collaborate-header row">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="collaborate-nav">
-                            <a href="{% url "communities" %}" class="collaborate-nav-item">Find Communities</a>
-                            <a href="{% url "my_communities" %}" class="collaborate-nav-item active">My Communities</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="container">
             <div class="row">
                 {% if czo_community %}
@@ -31,7 +19,7 @@
                   </div>
                 {% else %}
                   <div class="col-sm-12">
-                    {% if community.picture.url %}
+                    {% if community.picture and community.picture.url %}
                       <div><center><img src='{{ community.picture.url }}' height=200></center></div>
                     {% else %}
                         <div class="community-image-wrapper community-image-wrapper-medium">

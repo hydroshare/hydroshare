@@ -5,20 +5,7 @@
 {% block meta_title %}Find Communities {% endblock %}
 
 {% block main %}
-
-    <div class="collaborate-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="collaborate-nav">
-                        <a href="{% url "communities" %}" class="collaborate-nav-item active">Find Communities</a>
-                        <a href="{% url "my_communities" %}" class="collaborate-nav-item">My Communities</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    {% include 'hs_communities/communities-nav.html' with active='communities' %}
     <div class="container">
         <div class="row">
             <div class="col-sm-12">

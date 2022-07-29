@@ -1,0 +1,12 @@
+<div class="collaborate-header row">
+  <div class="container">
+      <div class="row">
+          <div class="col-sm-12">
+              <div class="collaborate-nav">
+                  <a href="{% url "communities" %}" class="collaborate-nav-item{% if active == 'communities' %} active{% endif %}">Find Communities</a>
+                  <a href="{% url "my_communities" %}" class="collaborate-nav-item{% if active == 'my_communities' %} active{% endif %}">My Communities</a>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
