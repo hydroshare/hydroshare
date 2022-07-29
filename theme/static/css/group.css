@@ -47,6 +47,11 @@
   font-size: 20px;
 }
 
+.community-card--info {
+  display: flex;
+  flex-direction: column;
+}
+
 .group-actions {
   gap: 1rem;
 }

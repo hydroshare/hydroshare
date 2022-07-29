@@ -2090,7 +2090,7 @@ class CommunityForm(forms.Form):
     purpose = forms.CharField(required=False)
     email = forms.EmailField(required=False)
     url = forms.URLField(required=False)
-    picture = forms.ImageField(required=False)
+    picture = ThumbnailImageField()
     auto_approve = forms.BooleanField(required=False)
 
 class RequestNewCommunityForm(CommunityForm):
@@ -2102,8 +2102,11 @@ class RequestNewCommunityForm(CommunityForm):
                                                       purpose=form_data['purpose'],
                                                       email=form_data['email'],
                                                       url=form_data['url'])
-        # if 'picture' in request.FILES:
-        #     new_community.gaccess.picture = request.FILES['picture']
+        if 'picture' in request.FILES:
+            # resize uploaded image
+            img = request.FILES['picture']
+            img.image = get_thumbnail(img, 'x150', crop='center')
+            new_community.picture = img
         return new_community
 
 

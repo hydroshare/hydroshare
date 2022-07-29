@@ -32,11 +32,12 @@
                 {% else %}
                   <div class="col-sm-12">
                     {% if community.picture.url %}
-                    <div><center><img src='{{ community.picture.url }}' height=200></center></div>
+                      <div><center><img src='{{ community.picture.url }}' height=200></center></div>
                     {% else %}
                         <div class="community-image-wrapper community-image-wrapper-medium">
                             <div class="community-image community-preview-image-default"
-                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                            </div>
                         </div>
                     {% endif %}
                   </div>

@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
+from hs_access_control.management.utilities import community_from_name_or_id
 
 from hs_access_control.models import Community
 from hs_communities.models import Topic
@@ -29,7 +30,7 @@ class CommunityView(TemplateView):
     def get_context_data(self, **kwargs):
         grpfilter = self.request.GET.get('grp')
 
-        community = community_from_name_or_id(kwargs['community_id'])
+        community = community_from_name_or_id(kwargs['cid'])
         community_resources = community.public_resources.distinct()
         raw_groups = community.groups_with_public_resources()
         groups = []

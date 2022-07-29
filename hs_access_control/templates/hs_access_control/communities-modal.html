@@ -9,23 +9,26 @@
         <h4 class="modal-title" id="myModalLabel">Ask to join a Community</h4>
       </div>
       <div class="modal-body">
-        <div v-for="community of availableToJoin" class="group-community-card panel panel-default">
-          <div class="panel-body flex gap-1 align-center">
-            <div class="group-image-wrapper group-image-wrapper-medium">
-                <div class="group-image group-preview-image-default"
-                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-            </div>
-            <div class="community-card--info flex-grow-1">
-              <a class="community-card--heading" :href="'/group/' + community.id">${ community.name }</a>
-              <p>${ community.purpose }</p>
-            </div>
-            <div class="community-card--actions">
-              <button class="btn btn-primary" @click="join(community.id)" :disabled="isJoining[community.id]">
-                ${ isJoining[community.id] ? 'Requesting to join...' : 'Join Community' }
-              </button>
+        <template v-if="availableToJoin.length">
+          <div v-for="community of availableToJoin" class="group-community-card panel panel-default">
+            <div class="panel-body flex gap-1 align-center">
+              <div class="group-image-wrapper group-image-wrapper-medium">
+                  <div class="group-image group-preview-image-default"
+                      style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+              </div>
+              <div class="community-card--info flex-grow-1">
+                <a class="community-card--heading" :href="'/group/' + community.id">${ community.name }</a>
+                <p>${ community.purpose }</p>
+              </div>
+              <div class="community-card--actions">
+                <button class="btn btn-primary" @click="join(community.id)" :disabled="isJoining[community.id]">
+                  ${ isJoining[community.id] ? 'Requesting to join...' : 'Join Community' }
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </template>
+        <span v-else class="text-muted">There are no communities available to join right now.</span>
       </div>
     </div>
   </div>
