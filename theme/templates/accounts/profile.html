@@ -4,7 +4,7 @@
 {% block meta_title %}User profile for {{ profile_user|best_name }}{% endblock %}
 
 {% block extra_head %}
-    <link href="{{ STATIC_URL }}css/profile.css" rel="stylesheet"/>
+    <link href="{% static 'css/profile.css' %}" rel="stylesheet"/>
 {% endblock %}
 
 {% block main %}
@@ -60,7 +60,7 @@
                                     <div class="btn-file btn-update-picture">
                                         <span class="glyphicon glyphicon-camera"></span>
                                         <span>&nbsp;&nbsp;Update profile picture</span>
-                                        <input class="upload-picture" type="file" name="picture"  accept="image/*"></div>
+                                        <input class="upload-picture" type="file" name="picture"  accept=".png, .jpg, .jpeg, .gif"></div>
                                     <button id="btn-delete-profile-pic" class="no-style icon-button btn-remove" data-toggle="modal"
                                             data-target="#delete-picture" title="Delete profile picture"><span
                                             class="glyphicon glyphicon-trash"></span>
@@ -69,7 +69,7 @@
                                     <fieldset>
                                         <div class="btn-file btn-update-picture upload-picture"><span class="glyphicon glyphicon-camera"></span>
                                             <span>&nbsp;&nbsp;Add a photo</span>
-                                            <input class="upload-picture" type="file" name="picture" accept="image/*"></div>
+                                            <input class="upload-picture" type="file" name="picture" accept=".png, .jpg, .jpeg, .gif"></div>
                                     </fieldset>
                                 {% endif %}
                                 </div>
@@ -315,29 +315,30 @@
                                                 {% else %}
                                                     <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                 {% endif %}
-
-                                                <div class="metadata-wrapper">
-                                                    <div class="shared-resource-info">
-                                                        <strong>{{ profile_user|contact }}</strong>
-                                                        <span class="text-muted"> shared </span>
-                                                        <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
+                                                {% with metadata=res.metadata %}
+                                                    <div class="metadata-wrapper">
+                                                        <div class="shared-resource-info">
+                                                            <strong>{{ profile_user|contact }}</strong>
+                                                            <span class="text-muted"> shared </span>
+                                                            <span><a href="{{ res.get_absolute_url }}">{{ metadata.title }}</a></span>
+                                                        </div>
+                                                        <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
+                                                        <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
                                                     </div>
-                                                    <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
-                                                    <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
-                                                </div>
-
-                                                {% if res.metadata.description %}
-                                                    <div class="activity-description col-sm-12">
-                                                        <p class="description">
-                                                            <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
-                                                        </p>
+                                                    {% with abstract=metadata.description %}
+                                                        {% if abstract %}
+                                                            <div class="activity-description col-sm-12">
+                                                                <p class="description">
+                                                                    <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
+                                                                </p>
+                                                            </div>
+                                                            <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
+                                                        {% endif %}
+                                                    {% endwith %}
                                                     </div>
-                                                    <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                                {% endif %}
-                                            </div>
+                                                {% endwith %}
                                             {% endif %}
                                         {% endfor %}
-
                                         {% else %}
                                             <span class="text-muted">This user has no recent activity.</span>
                                         {% endif %}
@@ -576,7 +577,7 @@
                                                     <i class="identifier-icon ai ai-researchgate-square"></i>
                                                     {% elif name == "ResearcherID" %}
                                                     <img class="identifier-icon"
-                                                         src="{{ STATIC_URL }}img/researcherID.png"
+                                                         src="{% static 'img/researcherID.png' %}"
                                                          alt="ResearcherID icon"/>
                                                     {% else %}
                                                     <i class="identifier-icon fa fa-address-card"></i>
@@ -686,55 +687,35 @@
                                         <span class="icon-resource-type">
                                             <span><strong>{{ resource_type }}</strong></span>
                                             {% if res.resource_type == "CompositeResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "RasterResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "RefTimeSeriesResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "ScriptResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                                <img src="{% static 'img/resource-icons/composite48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "ModelProgramResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                                <img src="{% static 'img/resource-icons/modelprogram48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "ModelInstanceResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                                <img src="{% static 'img/resource-icons/modelinstance48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "SWATModelInstanceResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "TimeSeriesResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "GeographicFeatureResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                <img src="{% static 'img/resource-icons/swat48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "ToolResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                <img src="{% static 'img/resource-icons/webapp48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "CollectionResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                <img src="{% static 'img/resource-icons/collection48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "MODFLOWModelInstanceResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                                                <img src="{% static 'img/resource-icons/modflow48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "GenericResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                <img src="{% static 'img/resource-icons/generic48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% endif %}
@@ -742,30 +723,32 @@
                                         </span>
                                         </div>
                                         <div class="activity-block row">
-                                            <div class="activity-info col-sm-12">
-                                                <span class="title"><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                                <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
-                                                <h5><span class="text-muted">Authors: </span>
-                                                    {% for creator in res.metadata.creators.all %}
-                                                        {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                        {% if creator.description %}
-                                                            <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                                        {% else %}
-                                                            <span>{{ creator.name }}</span>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </h5>
-                                            </div>
-
-                                            {% if res.metadata.description %}
-                                                <div class="activity-description col-sm-12">
-                                                    <p>
-                                                        <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
-                                                    </p>
+                                            {% with metadata=res.metadata %}
+                                                <div class="activity-info col-sm-12">
+                                                    <span class="title"><a href="{{ res.get_absolute_url }}">{{ metadata.title }}</a></span>
+                                                    <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
+                                                    <h5><span class="text-muted">Authors: </span>
+                                                        {% for creator in metadata.creators.all %}
+                                                            {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                                            {% if creator.relative_uri and creator.is_active %}
+                                                                <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
+                                                            {% else %}
+                                                                <span>{{ creator.name }}</span>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </h5>
                                                 </div>
-                                                <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                            {% endif %}
-
+                                                {%  with abstract=metadata.description %}
+                                                    {% if abstract %}
+                                                        <div class="activity-description col-sm-12">
+                                                            <p>
+                                                                <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
+                                                    {% endif %}
+                                               {% endwith %}
+                                           {% endwith %}
                                         </div>
                                     </div>
                                     {% endwith %}
@@ -955,7 +938,7 @@
 {% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.tagsinput-revisited.min.css" />
+  <link rel="stylesheet" href="{% static 'css/jquery.tagsinput-revisited.min.css' %}" />
   <style>
     .tagsinput {
       border: 1px solid #ccc;
@@ -974,8 +957,8 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/profile.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tagsinput-revisited.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/identifiers-form.js"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/profile.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/jquery.tagsinput-revisited.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/identifiers-form.js' %}"></script>
 {% endblock %}

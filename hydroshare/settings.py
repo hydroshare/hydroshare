@@ -227,10 +227,26 @@ STATIC_URL = "/static/"
 # Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 
+# using this storage class might cause issues for future tests
+# The documentation suggests using the default storage backend when testing
+# https://docs.djangoproject.com/en/1.11/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
+STATICFILES_STORAGE = 'hydroshare.storage.ForgivingManifestStaticFilesStorage'
+
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 MEDIA_URL = STATIC_URL + "media/"
+
+# Sorl settings for generating thumbnails
+THUMBNAIL_PRESERVE_FORMAT = True
+THUMBNAIL_QUALITY = 95
+THUMBNAIL_DUMMY = True
+THUMBNAIL_DUMMY_SOURCE = STATIC_URL + 'img/home-page/step4.png'
+THUMBNAIL_DUMMY_RATIO = 1
+
+# Allow PIL to ignore imgs with lots of metadata
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
@@ -281,6 +297,7 @@ INSTALLED_APPS = (
     "haystack",
     "rest_framework",
     "robots",
+    "sorl.thumbnail",
     "hs_core",
     "hs_access_control",
     "hs_labels",
@@ -371,7 +388,10 @@ TEMPLATES = [
                 "mezzanine.template.loaders.host_themes.Loader",
                 "django.template.loaders.filesystem.Loader",
                 "django.template.loaders.app_directories.Loader",
-            ]
+            ],
+            'builtins': [
+                'django.templatetags.static',
+            ],
         },
     },
 ]
@@ -696,9 +716,6 @@ SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
-# detect test mode to turn off some features
-TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
-
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files. 
 DISCOVERY_EXTENSION_CONTENT_TYPES = { 
@@ -725,7 +742,8 @@ TASK_NAME_LIST = [
     'hs_core.tasks.copy_resource_task',
     'hs_core.tasks.replicate_resource_bag_to_user_zone_task',
     'hs_core.tasks.create_new_version_resource_task',
-    'hs_core.tasks.delete_resource_task'
+    'hs_core.tasks.delete_resource_task',
+    'hs_core.tasks.move_aggregation_task'
 ]
 
 ####################################

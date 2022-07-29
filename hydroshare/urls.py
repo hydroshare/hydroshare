@@ -1,27 +1,24 @@
 
 
+from autocomplete_light import shortcuts as autocomplete_light
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
-
-from mezzanine.core.views import direct_to_template
 from mezzanine.conf import settings
+from mezzanine.core.views import direct_to_template
 from mezzanine.pages.views import page
 
-from autocomplete_light import shortcuts as autocomplete_light
-
+import hs_communities.views.communities
+from hs_core import views as hs_core_views
 from hs_core.views.discovery_json_view import DiscoveryJsonView
 from hs_core.views.oauth2_view import GroupAuthorizationView
+from hs_discover.views import SearchAPI, SearchView
 from hs_rest_api.urls import hsapi_urlpatterns
 from hs_rest_api2.urls import hsapi2_urlpatterns
 from hs_sitemap.views import sitemap
-from theme import views as theme
 from hs_tracking import views as tracking
-from hs_core import views as hs_core_views
-from hs_app_timeseries import views as hs_ts_views
-import hs_communities.views.communities
+from theme import views as theme
 from theme.views import delete_resource_comment
-from hs_discover.views import SearchView, SearchAPI
 
 autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -86,8 +83,6 @@ urlpatterns = i18n_patterns(
     url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
     url(r'^my-communities/$', hs_communities.views.communities.MyCommunitiesView.as_view(), name='my_communities'),
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
-    url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
-        name='update_sqlite_file'),
     url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps")
 )
 

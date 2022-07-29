@@ -305,8 +305,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 obj.metadata is not None and \
                 obj.metadata.creators is not None:
             first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator is not None and first_creator.description is not None:
-                return first_creator.description
+            if first_creator is not None and first_creator.relative_uri is not None:
+                return first_creator.relative_uri
             else:
                 return None
         else:

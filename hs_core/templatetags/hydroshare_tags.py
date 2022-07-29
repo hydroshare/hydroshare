@@ -13,12 +13,21 @@ from hs_core.search_indexes import normalize_name
 
 register = template.Library()
 
+RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Composite Resource",
+                                     "CollectionResource": "Collection Resource",
+                                     "ModelProgramResource": "Model Program Resource",
+                                     "ModelInstanceResource": "Model Instance Resource",
+                                     "MODFLOWModelInstanceResource": "MODFLOW Model Instance Resource",
+                                     "SWATModelInstanceResource": "SWAT Model Instance Resource",
+                                     "ToolResource": "Web App Resource"
+                                     }
+
 
 @register.filter
 def user_permission(content, arg):
     user_pk = arg
     permission = "None"
-    res_obj = content.get_content_model()
+    res_obj = content
     if res_obj.raccess.owners.filter(pk=user_pk).exists():
         permission = "Owner"
     elif res_obj.raccess.edit_users.filter(pk=user_pk).exists():
@@ -64,6 +73,8 @@ def published_date(res_obj):
 
 @register.filter
 def resource_type(content):
+    if content.resource_type in RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS:
+        return RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS[content.resource_type]
     return content.get_content_model()._meta.verbose_name
 
 
@@ -71,12 +82,13 @@ def resource_type(content):
 def resource_first_author(content):
     if not content:
         return ''
-    if content.first_creator.name and content.first_creator.description:
+    first_creator = content.first_creator
+    if first_creator.name and first_creator.relative_uri:
         return format_html('<a href="{desc}">{name}</a>',
-                           desc=content.first_creator.description,
-                           name=content.first_creator.name)
-    elif content.first_creator.name:
-        return format_html('<span>{name}</span>', name=content.first_creator.name)
+                           desc=first_creator.relative_uri,
+                           name=first_creator.name)
+    elif first_creator.name:
+        return format_html('<span>{name}</span>', name=first_creator.name)
     else:
         first_creator = content.metadata.creators.filter(order=1).first()
         if first_creator.name:
@@ -288,13 +300,13 @@ def creator_json_ld_element(crs):
             cr_dict["@type"] = "Organization"
             cr_dict["name"] = cr.organization
 
-        if cr.description:
+        if cr.relative_uri:
             if cr.name:
                 # append www.hydroshare.org since schema.org script is only embedded in production
-                urls.append("https://www.hydroshare.org" + cr.description)
+                urls.append("https://www.hydroshare.org" + cr.relative_uri)
             else:
                 # organization
-                urls.append(cr.description)
+                urls.append(cr.relative_uri)
         if cr.homepage:
             urls.append(cr.homepage)
         if cr.identifiers:

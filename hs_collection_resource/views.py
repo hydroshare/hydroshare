@@ -3,14 +3,50 @@ import logging
 from dateutil import parser
 from django.db import transaction
 from django.http import JsonResponse
+from django.template.loader import render_to_string
+from rest_framework import status as http_status
 
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from .utils import add_or_remove_relation_metadata, update_collection_list_csv, get_collectable_resources
 from hs_core.enums import RelationTypes
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
+from .utils import add_or_remove_relation_metadata, get_collectable_resources
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
+
+
+def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
+    status = "success"
+    msg = ""
+    collectable_resources_modal_html = ''
+    status_code = http_status.HTTP_200_OK
+    try:
+        collection_res, is_authorized, user = authorize(request, shortkey,
+                                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+        if collection_res.resource_type.lower() != "collectionresource":
+            raise Exception(f"Resource {shortkey} is not a collection resource.")
+
+        if collection_res.raccess.published:
+            raise Exception(f"Resource {shortkey} is a published collection resource and can't be changed")
+
+        collectable_resources = get_collectable_resources(user, collection_res)
+        context = {'collectable_resources': collectable_resources}
+        template_name = 'pages/collectable_resources_modal.html'
+        collectable_resources_modal_html = render_to_string(template_name, context, request)
+    except Exception as ex:
+        err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
+        logger.error(err_msg.format(str(ex),
+                     request.user.username if request.user.is_authenticated() else "anonymous",
+                     shortkey))
+        status = "error"
+        msg = str(ex)
+        status_code = http_status.HTTP_400_BAD_REQUEST
+    finally:
+        ajax_response_data = {'status': status, 'msg': msg,
+                              'collectable_resources_modal': collectable_resources_modal_html
+                              }
+        return JsonResponse(ajax_response_data, status=status_code)
 
 
 # update collection
@@ -71,8 +107,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                     raise Exception("Can not contain collection itself.")
 
             # current contained res
-            res_id_list_current_collection = \
-                [res.short_id for res in collection_res_obj.resources.all()]
+            res_id_list_current_collection = [res.short_id for res in collection_res_obj.resources.all()]
 
             # res to remove
             res_id_list_remove = []
@@ -131,30 +166,31 @@ def update_collection(request, shortkey, *args, **kwargs):
                 # to "exists" and exactly matches the intent of the UI.  It is much
                 # more efficient than it looks.
 
-                if not get_collectable_resources(user, collection_res_obj, annotate=False)\
+                if not get_collectable_resources(user, collection_res_obj) \
                         .filter(short_id=res_to_add.short_id).exists():
                     raise Exception('Only resource owner can add a non-shareable private'
                                     'resource to a collection ')
 
                 # add this new res to collection
-                res_obj_add = get_resource_by_shortkey(res_id_add)
-                collection_res_obj.resources.add(res_obj_add)
+                collection_res_obj.resources.add(res_to_add)
 
                 # add relation meta element of type 'hasPart' to the collection resource
                 add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
-                                                relation_type=hasPart, relation_value=res_obj_add.get_citation(),
+                                                relation_type=hasPart, relation_value=res_to_add.get_citation(),
                                                 set_res_modified=False)
 
                 # add relation meta element of type 'isPartOf' to the resource added to the collection
-                res_obj_add.metadata.create_element('relation', type='isPartOf',
-                                                    value=collection_res_obj.get_citation())
-                set_dirty_bag_flag(res_obj_add)
+                res_to_add.metadata.create_element('relation', type='isPartOf',
+                                                   value=collection_res_obj.get_citation())
+                set_dirty_bag_flag(res_to_add)
 
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
 
             new_coverage_list = _update_collection_coverages(collection_res_obj)
-            update_collection_list_csv(collection_res_obj)
+
+            # set flag to update csv collection resource file to be generated at the time of bag download
+            collection_res_obj.set_update_text_file(flag='True')
             resource_modified(collection_res_obj, user, overwrite_bag=False)
 
     except Exception as ex:
@@ -195,7 +231,9 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
 
             # remove all logged deleted resources for the collection
             collection_res.deleted_resources.all().delete()
-            update_collection_list_csv(collection_res)
+
+            # set flag to update csv collection resource file to be generated at the time of bag download
+            collection_res.set_update_text_file(flag='True')
             resource_modified(collection_res, user, overwrite_bag=False)
 
     except Exception as ex:

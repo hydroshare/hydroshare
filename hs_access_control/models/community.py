@@ -2,11 +2,10 @@ from django.contrib.auth.models import User, Group
 from django.db import models
 from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.contenttypes.models import ContentType
-
 from hs_core.models import BaseResource
-
+from theme.utils import get_upload_path_community
+from sorl.thumbnail import ImageField as ThumbnailImageField
 import datetime
-
 
 ###################################
 # Communities of groups
@@ -20,7 +19,7 @@ class Community(models.Model):
     purpose = models.TextField(null=True, blank=True)
     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
-    picture = models.ImageField(upload_to='community', null=True, blank=True)
+    picture = ThumbnailImageField(upload_to=get_upload_path_community, null=True, blank=True)
     # whether community is available to be joined
     closed = models.BooleanField(null=False, default=False, blank=False, editable=False)
     active = models.BooleanField(null=False, default=True, blank=False, editable=False)

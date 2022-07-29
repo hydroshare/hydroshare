@@ -1,23 +1,20 @@
 import os
 
-from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
-
+from django.test import TransactionTestCase
 from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
-
-from hs_geographic_feature_resource.models import FieldInformation, GeometryInformation, \
-    OriginalCoverage
-from .utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin, \
-    get_path_with_no_file_extension
-from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GenericFileMetaData,\
+from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GenericFileMetaData, \
     GeoFeatureFileMetaData
 from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH
+from hs_file_types.models.geofeature import FieldInformation, GeometryInformation, OriginalCoverageGeofeature
+from .utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin, \
+    get_path_with_no_file_extension
 
 
 class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -84,6 +81,13 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.keywords, [])
+        geo_aggr = GeoFeatureLogicalFile.objects.first()
+        # check that there is one required missing metadata for the geographic feature aggregation
+        missing_meta_elements = geo_aggr.metadata.get_required_missing_elements()
+        self.assertEqual(len(missing_meta_elements), 1)
+        # check spatial coverage is missing
+        self.assertIn('Spatial Coverage', missing_meta_elements)
+
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
@@ -498,7 +502,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
-    def test_content_file_delete(self):
+    def _test_content_file_delete(self):
         # test that when any file in GeoFeatureLogicalFile type is deleted
         # all metadata associated with GeoFeatureLogicalFile is deleted
         # test for all 15 file extensions (this one test is kind of running 15 tests - takes a while to finish)
@@ -813,7 +817,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be no Coverage objects
         self.assertEqual(Coverage.objects.count(), 0)
         self.assertEqual(GeometryInformation.objects.count(), 1)
-        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(OriginalCoverageGeofeature.objects.count(), 1)
         self.assertEqual(FieldInformation.objects.count(), 5)
 
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -827,7 +831,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that all metadata deleted
         self.assertEqual(Coverage.objects.count(), 0)
         self.assertEqual(GeometryInformation.objects.count(), 0)
-        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverageGeofeature.objects.count(), 0)
         self.assertEqual(FieldInformation.objects.count(), 0)
 
     def _test_file_metadata_on_file_delete(self, ext):
@@ -851,7 +855,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(FieldInformation.objects.count(), 7)
         self.assertEqual(GeometryInformation.objects.count(), 1)
-        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(OriginalCoverageGeofeature.objects.count(), 1)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(len(logical_file.metadata.keywords), 2)
@@ -873,7 +877,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(Coverage.objects.count(), 1)
         self.assertEqual(FieldInformation.objects.count(), 0)
         self.assertEqual(GeometryInformation.objects.count(), 0)
-        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverageGeofeature.objects.count(), 0)
 
         # there should not be any files left
         self.assertEqual(self.composite_resource.files.count(), 0)

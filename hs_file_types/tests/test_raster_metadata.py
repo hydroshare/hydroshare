@@ -1,22 +1,20 @@
 import os
 
-from django.test import TransactionTestCase
-from django.db import IntegrityError
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
-
+from django.db import IntegrityError
+from django.test import TransactionTestCase
 from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import move_or_rename_file_or_folder
-
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+from hs_file_types.models.raster import OriginalCoverageRaster, CellInformation, BandInformation
 from .utils import assert_raster_file_type_metadata, CompositeResourceTestMixin, \
     get_path_with_no_file_extension
-from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, BandInformation
 
 
 class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -87,6 +85,9 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
         self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
+
+        # check that there are no required missing metadata for the raster aggregation
+        self.assertEqual(len(logical_file.metadata.get_required_missing_elements()), 0)
         # check that the vrt file was generated
         self.assertEqual(logical_file.extra_data['vrt_created'], "True")
         # there should not be any file level keywords at this point
@@ -718,7 +719,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 1)
         self.assertEqual(logical_file.metadata.coverages.all().count(), 1)
-        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(OriginalCoverageRaster.objects.count(), 1)
         self.assertEqual(CellInformation.objects.count(), 1)
         self.assertEqual(BandInformation.objects.count(), 1)
 
@@ -730,7 +731,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test that all metadata deleted - with resource coverage should still exist
         self.assertEqual(Coverage.objects.count(), 1)
-        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverageRaster.objects.count(), 0)
         self.assertEqual(CellInformation.objects.count(), 0)
         self.assertEqual(BandInformation.objects.count(), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -756,7 +757,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 2 Coverage objects - one at the resource level and
         # the other one at the file type level
         self.assertEqual(Coverage.objects.count(), 2)
-        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(OriginalCoverageRaster.objects.count(), 1)
         self.assertEqual(CellInformation.objects.count(), 1)
         self.assertEqual(BandInformation.objects.count(), 1)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -770,7 +771,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test that all metadata deleted
         self.assertEqual(Coverage.objects.count(), 0)
-        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverageRaster.objects.count(), 0)
         self.assertEqual(CellInformation.objects.count(), 0)
         self.assertEqual(BandInformation.objects.count(), 0)
 
@@ -1104,7 +1105,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 2 coverage objects - one at the resource level
         # and the other one at the file type level
         self.assertEqual(Coverage.objects.count(), 2)
-        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(OriginalCoverageRaster.objects.count(), 1)
         self.assertEqual(CellInformation.objects.count(), 1)
         self.assertEqual(BandInformation.objects.count(), 1)
 
@@ -1121,7 +1122,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test that all metadata deleted - with one coverage element at the resource level should
         # still exist
         self.assertEqual(Coverage.objects.count(), 1)
-        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverageRaster.objects.count(), 0)
         self.assertEqual(CellInformation.objects.count(), 0)
         self.assertEqual(BandInformation.objects.count(), 0)
 

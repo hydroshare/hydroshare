@@ -11,6 +11,7 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
 from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
+from hs_core.hydroshare import delete_resource_file
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
@@ -25,6 +26,7 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzi
 from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
 
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 logger = logging.getLogger(__name__)
@@ -364,14 +366,75 @@ def zip_aggregation_file(request, res_id=None):
         content_type="application/json"
     )
 
+rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
+body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'input_coll_path': openapi.Schema(type=openapi.TYPE_STRING, description='the relative path under res_id/data/ \
+            contents to be zipped'),
+        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path of \
+            the generated zip file name'),
+        'remove_original_after_zip': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='whether original files will \
+            be deleted after zipping')
+    }
+)
 
+
+@swagger_auto_schema(method='post',
+                     operation_description="Zip requested files and folders into a zip file",
+                     responses={200: "Returns JsonResponse with zip file or empty string"},
+                     manual_parameters=[rid], request_body=body)
 @api_view(['POST'])
 def data_store_folder_zip_public(request, pk):
+    '''
+    Zip requested files and folders into a zip file in hydroshareZone or any federated zone
+
+    Used for HydroShare resource backend store. Returns
+    json object that holds the created zip file name if it succeeds, and an empty string
+    if it fails. The request must be a POST request with input data passed in for
+    **res_id, input_coll_path, output_zip_file_name, and remove_original_after_zip** where
+    input_coll_path is the relative path under res_id/data/contents to be zipped,
+    output_zip_file_name is the file name only with no path of the generated zip file name,
+    and remove_original_after_zip has a value of "true" or "false" (default is "true") indicating
+    whether original files will be deleted after zipping.
+
+    :param request:
+    :param pk: Id of the hydroshare resource
+    :return: JsonResponse with zip file or empty string
+    '''
     return data_store_folder_zip(request, res_id=pk)
 
+rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
+body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'aggregation_path': openapi.Schema(type=openapi.TYPE_STRING, description='the relative path under res_id/data/ \
+            contents to be zipped'),
+        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path of \
+            the generated zip file name')
+    }
+)
 
+
+@swagger_auto_schema(method='post', operation_description="Zip requested aggregation into a zip file in hydroshareZone \
+                                                            or any federated zone",
+                     responses={200: "Returns JsonResponse with zip file or empty string"},
+                     manual_parameters=[rid], request_body=body)
 @api_view(['POST'])
 def zip_aggregation_file_public(request, pk):
+    '''
+    Zip requested aggregation into a zip file in hydroshareZone or any federated zone
+
+    Used for HydroShare resource backend store.
+    Returns a json object that holds the created zip file name if it succeeds, and an empty string
+    if it fails. The request must be a POST request with input data passed in for
+    **res_id, aggregation_path, and output_zip_file_name** where
+    aggregation_path  is the relative path under res_id/data/contents representing an aggregation to be zipped,
+    output_zip_file_name is the file name only with no path of the generated zip file name.
+
+    :param request:
+    :return: JsonResponse with zip file or empty string
+    '''
     return zip_aggregation_file(request, res_id=pk)
 
 
@@ -454,8 +517,23 @@ def data_store_folder_unzip_public(request, pk, pathname):
     return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=pathname)
 
 
+rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
+
+
+@swagger_auto_schema(method='post', operation_description="Ingests metadata files",
+                     responses={204: "HttpResponse response with status code"},
+                     manual_parameters=[rid])
 @api_view(['POST'])
 def ingest_metadata_files(request, pk):
+    '''
+    Ingests metadata files
+
+    The files to be ingested should be provided in the REST request
+
+    :param request:
+    :param pk: id of the hydroshare resource
+    :return: HttpResponse response with status code
+    '''
     from hs_file_types.utils import identify_and_ingest_metadata_files
     resource, _, _ = view_utils.authorize(request, pk,
                                           needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
@@ -464,8 +542,28 @@ def ingest_metadata_files(request, pk):
     return Response(status=204)
 
 
+body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'res_id': openapi.Schema(type=openapi.TYPE_STRING, description='res_id'),
+        'curr_path': openapi.Schema(type=openapi.TYPE_STRING, description='curr_path'),
+        'ref_name': openapi.Schema(type=openapi.TYPE_STRING, description='ref_name'),
+        'ref_url': openapi.Schema(type=openapi.TYPE_STRING, description='ref_url')
+    }
+)
+
+
+@swagger_auto_schema(method='post', operation_description="Create reference URL file",
+                     responses={200: "JsonResponse with status code and message"}, request_body=body)
 @api_view(['POST'])
 def data_store_add_reference_public(request):
+    """
+    Create the reference url file, add the url file to resource, and add the url to
+    metadata accordingly for easy later retrieval
+    Request should include **curr_path**, **res_id**, **ref_name**, and **ref_url**
+    :param request:
+    :return: JsonResponse with status code and message
+    """
     return data_store_add_reference(request._request)
 
 
@@ -514,9 +612,29 @@ def data_store_add_reference(request):
     else:
         return JsonResponse({'message': msg}, status=ret_status)
 
+body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'res_id': openapi.Schema(type=openapi.TYPE_STRING, description='res_id'),
+        'curr_path': openapi.Schema(type=openapi.TYPE_STRING, description='curr_path'),
+        'url_filename': openapi.Schema(type=openapi.TYPE_STRING, description='url_filename'),
+        'new_ref_url': openapi.Schema(type=openapi.TYPE_STRING, description='new_ref_url')
+    }
+)
 
+
+@swagger_auto_schema(method='post', operation_description="Edit the referenced url in a url file",
+                     responses={200: "JsonResponse on success", 400: "HttpResponse with error status code on error"},
+                     request_body=body)
 @api_view(['POST'])
 def data_store_edit_reference_url_public(request):
+    """
+    Edit the referenced url in a url file
+
+    Post request should include **res_id, curr_path, url_filename, new_ref_url**
+    :param request:
+    :return: JsonResponse on success or HttpResponse with error status code on error
+    """
     return data_store_edit_reference_url(request._request)
 
 
@@ -697,9 +815,37 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         content_type='application/json'
     )
 
+rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
+body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'source_path': openapi.Schema(type=openapi.TYPE_STRING, description='path (relative to path \
+            res_id/data/contents) for source file or folder under id collection'),
+        'target_path': openapi.Schema(type=openapi.TYPE_STRING, description='path (relative to path \
+            res_id/data/contents) for target file or folder under id collection')
+    }
+)
 
+
+@swagger_auto_schema(method='post',
+                     operation_description="Move a list of files and/or folders to another folder in a resource file \
+                         hierarchy.", manual_parameters=[rid], request_body=body)
 @api_view(['POST'])
 def data_store_file_or_folder_move_or_rename_public(request, pk):
+    """
+    Move a list of files and/or folders to another folder in a resource file hierarchy.
+
+    :param request: a REST request
+    :param pk: the short_id of a resource to modify, from REST URL.
+
+    Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    resource backend store. It is invoked by an AJAX call and returns json object that has the
+    relative path of the target file or folder being moved to if succeeds, and return empty string
+    if fails. The AJAX request must be a POST request with input data passed in for **res_id**,
+    **source_path**, and **target_path** where source_path and target_path are the relative paths
+    (relative to path res_id/data/contents) for the source and target file or folder under
+    res_id collection/directory.
+    """
     return data_store_file_or_folder_move_or_rename(request, res_id=pk)
 
 
@@ -726,9 +872,6 @@ def data_store_move_to_folder(request, pk=None):
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    # whether to treat request as atomic: skip overwrites for valid request
-    atomic = request.POST.get('atomic', 'false') == 'true'  # False by default
-
     pk = str(pk).strip()
     try:
         resource, _, user = authorize(request, pk,
@@ -740,7 +883,9 @@ def data_store_move_to_folder(request, pk=None):
 
     tgt_path = resolve_request(request).get('target_path', None)
     src_paths = resolve_request(request).get('source_paths', None)
-
+    file_override = resolve_request(request).get('file_override', False)
+    if not isinstance(file_override, bool):
+        file_override = True if str(file_override).lower() == 'true' else False
     try:
         tgt_path = _validate_path(tgt_path, 'tgt_path', check_path_empty=False)
     except ValidationError as ex:
@@ -765,7 +910,7 @@ def data_store_move_to_folder(request, pk=None):
             return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     valid_src_paths = []
-    skipped_tgt_paths = []
+    override_tgt_paths = []
 
     for src_path in src_paths:
         src_storage_path = os.path.join(resource.root_path, src_path)
@@ -792,16 +937,25 @@ def data_store_move_to_folder(request, pk=None):
         tgt_overwrite = os.path.join(tgt_storage_path, base)
         if not istorage.exists(tgt_overwrite):
             valid_src_paths.append(src_path)  # partly qualified path for operation
-        else:  # skip pre-existing objects
-            skipped_tgt_paths.append(os.path.join(tgt_short_path, base))
+        else:
+            override_tgt_paths.append(os.path.join(tgt_short_path, base))
+            if file_override:
+                valid_src_paths.append(src_path)
 
-    if skipped_tgt_paths:
-        if atomic:
-            message = 'move would overwrite {}'.format(', '.join(skipped_tgt_paths))
-            return HttpResponse(message, status=status.HTTP_400_BAD_REQUEST)
-
-    # if not atomic, then try to move the files that don't have conflicts
-    # stop immediately on error.
+    if override_tgt_paths:
+        if not file_override:
+            message = 'move would overwrite {}'.format(', '.join(override_tgt_paths))
+            return HttpResponse(message, status=status.HTTP_300_MULTIPLE_CHOICES)
+        # delete conflicting files so that move can succeed
+        for override_tgt_path in override_tgt_paths:
+            override_storage_tgt_path = os.path.join(resource.root_path, 'data', 'contents', override_tgt_path)
+            if irods_path_is_directory(istorage, override_storage_tgt_path):
+                # folder rather than a data object, just delete the folder
+                remove_folder(user, pk, os.path.join('data', 'contents', override_tgt_path))
+            else:
+                # data object or file
+                delete_resource_file(pk, override_tgt_path, user)
+        resource.cleanup_aggregations()
 
     try:
         move_to_folder(user, pk, valid_src_paths, tgt_path)
@@ -811,10 +965,6 @@ def data_store_move_to_folder(request, pk=None):
         return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
-
-    if skipped_tgt_paths:  # add information on skipped steps
-        message = '[Warn] skipped move to existing {}'.format(', '.join(skipped_tgt_paths))
-        return_object['additional_status'] = message
 
     return HttpResponse(
         json.dumps(return_object),

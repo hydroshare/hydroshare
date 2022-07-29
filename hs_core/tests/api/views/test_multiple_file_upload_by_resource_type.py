@@ -36,24 +36,12 @@ class TestResourceTypeFileTypes(TestCase):
         resp_json = self._make_request("GenericResource")
         self.assertEqual(resp_json['allow_multiple_file'], True)
 
-        # test for TimeSeriesResource
-        resp_json = self._make_request("TimeSeriesResource")
-        self.assertEqual(resp_json['allow_multiple_file'], False)
-
         # test for CollectionResource
         resp_json = self._make_request("CollectionResource")
         self.assertEqual(resp_json['allow_multiple_file'], False)
 
         # test for CompositeResource
         resp_json = self._make_request("CompositeResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for RasterResource
-        resp_json = self._make_request("RasterResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for GeographicFeatureResource
-        resp_json = self._make_request("GeographicFeatureResource")
         self.assertEqual(resp_json['allow_multiple_file'], True)
 
         # test for ModelProgramResource
@@ -66,10 +54,6 @@ class TestResourceTypeFileTypes(TestCase):
 
         # test for MODFLOWModelInstanceResource
         resp_json = self._make_request("MODFLOWModelInstanceResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for ScriptResource
-        resp_json = self._make_request("ScriptResource")
         self.assertEqual(resp_json['allow_multiple_file'], True)
 
         # test for SWATModelInstanceResource

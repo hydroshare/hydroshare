@@ -2,9 +2,11 @@ import json
 import datetime
 import pytz
 import logging
+from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
@@ -403,14 +405,27 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='get', operation_description="Gets all key/value metadata for the resource",
+                     responses={200: "key/value metadata"}, manual_parameters=[res_id])
+@swagger_auto_schema(method='post', operation_description="Updates key/value metadata for the resource",
+                     responses={200: ""}, manual_parameters=[res_id])
 @api_view(['POST', 'GET'])
-def update_key_value_metadata_public(request, pk):
+def update_key_value_metadata_public(request, id):
+    '''
+    Update resource key/value metadata pair
+
+    Metadata to be updated should be included as key/value pairs in the REST request
+    
+    :param request:
+    :param id: id of the resource to be updated
+    :return: HttpResponse with status code
+    '''
     if request.method == 'GET':
-        res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        res, _, _ = authorize(request, id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
 
-    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    res, _, _ = authorize(request, id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
     post_data = request.data.copy()
     res.extra_metadata = post_data
@@ -495,9 +510,6 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
                     if is_add_success:
                         resource_modified(res, request.user, overwrite_bag=False)
-                        if res.resource_type == "TimeSeriesResource" and element_name != "subject":
-                            res.metadata.is_dirty = True
-                            res.metadata.save()
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response['errors'])
 
@@ -516,16 +528,6 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status}
-            elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
-                ajax_response_data = {'status': 'success',
-                                      'element_name': element_name,
-                                      'spatial_coverage': get_coverage_data_dict(res),
-                                      'metadata_status': metadata_status,
-                                      'res_public_status': res_public_status,
-                                      'res_discoverable_status': res_discoverable_status
-                                      }
-                if element is not None:
-                    ajax_response_data['element_id'] = element.id
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
@@ -620,9 +622,6 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     res.update_public_and_discoverable()
                 if is_update_success:
                     resource_modified(res, request.user, overwrite_bag=False)
-                    if res.resource_type == "TimeSeriesResource" and element_name != "subject":
-                        res.metadata.is_dirty = True
-                        res.metadata.save()
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response['errors'])
 
@@ -635,8 +634,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
-            if element_name.lower() == 'site' and (res.resource_type == 'TimeSeriesResource' or
-                                                   res.resource_type == 'CompositeResource'):
+            if element_name.lower() == 'site' and res.resource_type == 'CompositeResource':
                 # get the spatial coverage element
                 spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success',
@@ -856,9 +854,17 @@ def copy_resource(request, shortkey, *args, **kwargs):
         except utils.ResourceCopyException:
             return HttpResponseRedirect(res.get_absolute_url())
 
-
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be copied", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='post', operation_description="Copy a resource",
+                     responses={202: "Returns the resource ID of the newly created resource"}, manual_parameters=[res_id])
 @api_view(['POST'])
 def copy_resource_public(request, pk):
+    '''
+    Copy a resource
+
+    :param request:
+    :param pk: id of the resource to be copied
+    '''
     response = copy_resource(request, pk)
     return HttpResponse(response.url.split('/')[2], status=202)
 
@@ -893,9 +899,18 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
                                                          'this resource: ' + str(ex)
             return HttpResponseRedirect(res.get_absolute_url())
 
-
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be versioned", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='post', operation_description="Create a new version of a resource",
+                     responses={202: "Returns the resource ID of the new version"}, manual_parameters=[res_id])
 @api_view(['POST'])
 def create_new_version_resource_public(request, pk):
+    '''
+    Create a new version of a resource
+
+    :param request:
+    :param pk: id of the resource to be versioned
+    :return: HttpResponse with status code
+    '''
     redirect = create_new_version_resource(request, pk)
     return HttpResponse(redirect.url.split('/')[2], status=202)
 
@@ -958,8 +973,18 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     return JsonResponse(ajax_response_data)
 
 
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be flagged", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='post', operation_description="Set resource flag to 'Public'",
+                     responses={202: "Returns the resource ID of the new version"}, manual_parameters=[res_id])
 @api_view(['POST'])
 def set_resource_flag_public(request, pk):
+    '''
+    Set resource flag to "Public"
+
+    :param request:
+    :param pk: id of the resource to be modified
+    :return: HttpResponse with status code
+    '''
     http_request = request._request
     http_request.data = request.data.copy()
     js_response = set_resource_flag(http_request, pk)
@@ -1225,7 +1250,7 @@ class GroupForm(forms.Form):
     purpose = forms.CharField(required=False)
     email = forms.EmailField(required=False)
     url = forms.URLField(required=False)
-    picture = forms.ImageField(required=False)
+    picture = ThumbnailImageField()
     privacy_level = forms.CharField(required=True)
     auto_approve = forms.BooleanField(required=False)
     requires_explanation = forms.BooleanField(required=False)
@@ -1262,7 +1287,10 @@ class GroupCreateForm(GroupForm):
                                                       auto_approve=frm_data['auto_approve'],
                                                       requires_explanation=frm_data['requires_explanation'])
         if 'picture' in request.FILES:
-            new_group.gaccess.picture = request.FILES['picture']
+            # resize uploaded image
+            img = request.FILES['picture']
+            img.image = get_thumbnail(img, 'x150', crop='center')
+            new_group.gaccess.picture = img
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(new_group, privacy_level)
@@ -1282,7 +1310,10 @@ class GroupUpdateForm(GroupForm):
         group_to_update.gaccess.auto_approve = frm_data['auto_approve']
         group_to_update.gaccess.requires_explanation = frm_data['requires_explanation']
         if 'picture' in request.FILES:
-            group_to_update.gaccess.picture = request.FILES['picture']
+            # resize uploaded image
+            img = request.FILES['picture']
+            img.image = get_thumbnail(img, 'x150', crop='center')
+            group_to_update.gaccess.picture = img
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
@@ -1721,8 +1752,17 @@ def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
 
+uid = openapi.Parameter('user_identifier', openapi.IN_PATH, description="id of the user for which data is needed", type=openapi.TYPE_INTEGER)
+@swagger_auto_schema(method='get', operation_description="Get user data",
+                     responses={200: "Returns JsonResponse containing user data"}, manual_parameters=[uid])
 @api_view(['GET'])
 def hsapi_get_user(request, user_identifier):
+    '''
+    Get user data
+
+    :param user_identifier: id of the user for which data is needed
+    :return: JsonResponse containing user data
+    '''
     return get_user_or_group_data(request, user_identifier, "false")
 
 
@@ -1890,17 +1930,24 @@ class FindGroupsView(TemplateView):
         if self.request.user.is_authenticated():
             u = User.objects.get(pk=self.request.user.id)
 
-            groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+            groups = Group.objects.filter(gaccess__active=True).exclude(
+                name="Hydroshare Author").select_related('gaccess')
             for g in groups:
-                g.is_user_member = u in g.gaccess.members
-                g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
-                    request_from=u).exists()
-                g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
-                    invitation_to=u).exists()
+                g.members = g.gaccess.members
+                g.is_user_member = u in g.members
                 g.join_request = None
-                if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                    g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                     g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+                if g.is_user_member:
+                    g.join_request_waiting_owner_action = False
+                    g.join_request_waiting_user_action = False
+                else:
+                    g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
+                        request_from=u).exists()
+                    g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
+                        invitation_to=u).exists()
+
+                    if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+                        g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                                         g.gaccess.group_membership_requests.filter(invitation_to=u).first()
             return {
                 'profile_user': u,
                 'groups': groups
@@ -1911,6 +1958,8 @@ class FindGroupsView(TemplateView):
                                           (Q(gaccess__discoverable=True) |
                                           Q(gaccess__public=True))).exclude(name="Hydroshare Author")
 
+            for g in groups:
+                g.members = g.gaccess.members
             return {
                 'groups': groups
             }
@@ -2260,11 +2309,12 @@ class GroupView(TemplateView):
         context['communities'] = communitiesContext
 
         if self.request.user.is_authenticated():
+            group_members = g.gaccess.members
             u = User.objects.get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
             u.is_group_editor = g in u.uaccess.edit_groups
             u.is_group_viewer = g in u.uaccess.view_groups or g.gaccess.public or g.gaccess.discoverable
-            u.is_group_member = u in g.gaccess.members
+            u.is_group_member = u in group_members
 
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
@@ -2277,7 +2327,7 @@ class GroupView(TemplateView):
                 Q(invitation_to=None) | Q(invitation_to__is_active=True)
             )
 
-            if u not in g.gaccess.members:
+            if u not in group_members:
                 group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 
             context['group_resources'] = group_resources

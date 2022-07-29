@@ -111,9 +111,9 @@ def metadata_element_pre_update_handler(sender, **kwargs):
                     return {'is_valid': False, 'element_data_dict': None,
                             "errors": {"identifiers": [str(ex)]}}
 
-                # for creator or contributor who is not a hydroshare user the 'description'
+                # for creator or contributor who is not a hydroshare user the 'hydroshare_user_id'
                 # key might be missing in the POST form data
-                if field_name == 'description':
+                if field_name == 'hydroshare_user_id':
                     matching_key = [key for key in request.POST if '-'+field_name in key]
                     if matching_key:
                         matching_key = matching_key[0]

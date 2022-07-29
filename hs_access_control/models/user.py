@@ -398,7 +398,7 @@ class UserAccess(models.Model):
                                       gaccess__active=True) |
                                     Q(g2ugp__user=self.user,
                                       gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER))\
+                                      g2ugp__privilege=PrivilegeCodes.OWNER)).select_related('gaccess')\
                             .distinct()
 
     #################################

@@ -119,6 +119,13 @@ solr_schema_hs() {
 
 }
 
+thumbnail_cleanup() {
+    # Cleanup the photo thumbnails cached in Redis
+    echo "THUMBNAIL CLEANUP:"
+    echo " - docker exec hydroshare python manage.py thumbnail cleanup"
+    docker exec hydroshare python manage.py thumbnail cleanup
+}
+
 delete_celerybeat_scheduler() {
     file1="celerybeat.pid"
     file2="celery/*"
@@ -364,6 +371,7 @@ rebuild_hs() {
     docker exec -u hydro-service hydroshare rm -f hydroshare/static/robots.txt
     migrate_hs
     sleep 3s
+    thumbnail_cleanup
     solr_schema_hs
     sleep 2s
     solr_reload_hs
@@ -382,6 +390,7 @@ reloaddb_hs() {
     loaddb_hs
     migrate_hs
     sleep 3s
+    thumbnail_cleanup
     solr_schema_hs
     sleep 2s
     solr_reload_hs

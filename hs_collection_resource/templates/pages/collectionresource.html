@@ -1,9 +1,9 @@
 {% extends "pages/genericresource.html" %}
-{% load pages_tags staticfiles mezzanine_tags crispy_forms_tags hydroshare_tags%}
+{% load pages_tags mezzanine_tags crispy_forms_tags hydroshare_tags%}
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static "css/collection.css" %}" />
 {% endblock %}
 
@@ -128,13 +128,13 @@
             {% block download_bag %}
                 <div>
                     <div>
-                        <a id="btn-download-all" type="button" class="btn btn-default row-selector space-bottom"
-                           href="{{ bag_url }}">
+                        <button id="btn-download-all" class="btn btn-default row-selector space-bottom"
+                           data-bag-url="{{ bag_url }}">
                                 <span class="glyphicon glyphicon-download-alt">
                                     <span title='Download All Content as Zipped BagIt Archive'
                                           class="button-label">Download All Content as Zipped BagIt Archive</span>
                                 </span>
-                        </a>
+                        </button>
                     </div>
                     <div>
                         <a target="_blank" href="https://help.hydroshare.org/creating-and-managing-resources/view-and-download-a-resource">Learn more about the BagIt download</a>
@@ -168,100 +168,10 @@
         </div>
     </div>
 
-    {#    modal div: collection candidate table #}
-    <div class="modal fade" id="collection-candidate" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog" style="width:65%">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Collectable Resources</h4>
-                </div>
-                <div class="modal-body">
-                    <table id="collection-table-candidate" class="table-hover table-striped resource-custom-table" width="100%">
-                        <thead>
-                        <tr>
-                            <th>Add</th>
-                            <th>Title</th>
-                            <th>Type</th>
-                            <th>Owners</th>
-                            <th>Sharing Status</th>
-                            <th>My Permission</th>
-                            <th>Remove</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                            {% for res in collection_candidate %}
-                                <tr id="{{ res.short_id }}">
-                                    <td>
-                                        <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
-                                    </td>
-                                    <td>
-                                        <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
-                                    <td>
-                                        {{ res.resource_type }}
-                                    </td>
-                                    {% with res.raccess as raccess %}
-                                        <td>
-                                            {% with raccess.owners.all|first as owner %}
-
-                                                {% if owner.first_name %}
-                                                    <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
-                                                {% else %}
-                                                    <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
-                                                {% endif %}
-                                            {% endwith %}
-                                        </td>
-                                        <td>
-                                            {% if raccess.published %}
-                                                Published
-                                            {% elif raccess.public %}
-                                                Public
-                                            {% elif raccess.discoverable %}
-                                                Discoverable
-                                            {% else %}
-                                                Private
-                                            {% endif %}
-
-                                            {% if raccess.shareable %}
-                                                & Shareable
-                                            {% endif %}
-                                        </td>
-                                    {% endwith %}
-                                    <td>
-                                        {% with res|user_permission:request.user.pk as upermission %}
-                                            {% if upermission|lower == "none" %}
-                                                <strong class="label-private">{{ upermission }}</strong>
-                                            {% elif upermission|lower == "open access" %}
-                                                <strong class="label-public">{{ upermission }}</strong>
-                                            {% else %}
-                                                {{ upermission }}
-                                            {% endif %}
-                                        {% endwith %}
-                                    </td>
-                                    <td>
-                                        <span data-res-id="{{ res.short_id }}"
-                                              data-form-id="form-favorite-{{ res.short_id }}"
-                                              data-form-type="toggle-favorite"
-                                              class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-collection-item"></span>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div id="save-collection-btn-warning" class="collection-div-popup-warning">Updating collection...Please wait...</div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
-                       Cancel
-                    </button>
-                    <button type="button" class="btn btn-success" id="save-collection-btn-ok">
-                        Add to collection
-                    </button>
-                </div>
-            </div>
-        </div>
+    {#    modal div: collection candidate table - modal to list all possible resources  that can be added to the collection #}
+    <div id="collectable-resources-modal-container">
+        {# JS code populates the modal html here dynamically at the time of page load  #}
     </div>
-
     {#    modal div: deleted-resources-modal #}
     <div class="modal fade" id="deleted-resources-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog" style="width:65%">
@@ -342,10 +252,10 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
 
     {# put resource specific js below #}
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/collection-resource.js"></script>
+    <script type="text/javascript" src="{% static 'js/collection-resource.js' %}"></script>
 
 {% endblock %}

@@ -1,9 +1,9 @@
 {% extends "pages/page.html" %}
-{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags thumbnail %}
 
 {% block extra_css %}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/group.css">
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/group.css">
+<link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
 {% block main %}
@@ -41,7 +41,9 @@
                     {#  Group Picture #}
                     {% if group.gaccess.picture and group.gaccess.picture.url %}
                         <div class="group-image-wrapper group-image-wrapper-medium">
-                            <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                          {% thumbnail group.gaccess.picture "x130" crop="center" as im %}
+                            <div class="group-image" style="background-image: url({{ im.url }})"></div>
+                          {% endthumbnail %}
                         </div>
                     {% else %}
                         <div class="group-image-wrapper group-image-wrapper-medium">
@@ -227,9 +229,11 @@
                                     <tr data-filter-by="edit-user">
                                         <td>
                                             {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
+                                                {% thumbnail owner.userprofile.picture "x80" crop="center" as im %}
+                                                    <div style="background-image: url('{{ im.url }}');"
+                                                        class="profile-pic-thumbnail round-image pull-left">
+                                                    </div>
+                                                {% endthumbnail %}
                                             {% else %}
                                                 <div class="profile-pic-thumbnail-small round-image user-icon"></div>
                                             {% endif %}
@@ -324,9 +328,11 @@
                                     <tr data-filter-by="view-user">
                                         <td>
                                             {% if member.userprofile.picture and member.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ member.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
+                                                {% thumbnail member.userprofile.picture "x80" crop="center" as im %}
+                                                    <div style="background-image: url('{{ im.url }}');"
+                                                        class="profile-pic-thumbnail round-image pull-left">
+                                                    </div>
+                                                {% endthumbnail %}
                                             {% else %}
                                                 <div class="profile-pic-thumbnail-small round-image user-icon"></div>
                                             {% endif %}
@@ -386,9 +392,11 @@
                                             <tr>
                                                 <td data-id="picture">
                                                     {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
-                                                        <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
-                                                             class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
+                                                        {% thumbnail pendingrequest.request_from.userprofile.picture "x80" crop="center" as im %}
+                                                            <div style="background-image: url('{{ im.url }}');"
+                                                                class="profile-pic-thumbnail round-image pull-left">
+                                                            </div>
+                                                        {% endthumbnail %}
                                                     {% else %}
                                                         <div class="profile-pic-thumbnail-small round-image user-icon"></div>
                                                     {% endif %}
@@ -437,9 +445,11 @@
                                             <tr>
                                                 <td data-id="picture">
                                                     {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
-                                                        <div style="background-image: url('{{ pendingrequest.invitation_to.userprofile.picture.url }}');"
-                                                             class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
+                                                        {% thumbnail pendingrequest.invitation_to.userprofile.picture "x80" crop="center" as im %}
+                                                            <div style="background-image: url('{{ im.url }}');"
+                                                                class="profile-pic-thumbnail round-image pull-left">
+                                                            </div>
+                                                        {% endthumbnail %}
                                                     {% else %}
                                                         <div class="profile-pic-thumbnail-small round-image user-icon"></div>
                                                     {% endif %}
@@ -675,16 +685,18 @@
                                         {# Date Created #}
                                         <td>{{ res.created|date:"d M, Y" }} {{ res.created|time }}</td>
                                         {# Last Modified #}
-                                        <td>{{ res.last_updated|date:"d M, Y" }} {{ res.last_updated|time }}</td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td>{{ res.last_updated|date:"U" }}</td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td>{{ res.created|date:"U" }}</td>
-                                        <td>{{ res.grantor.id }}</td>
+                                        {% with last_updated=res.last_updated %}
+                                            <td>{{ last_updated|date:"d M, Y" }} {{ last_updated|time }}</td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td>{{ last_updated|date:"U" }}</td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td>{{ res.created|date:"U" }}</td>
+                                            <td>{{ res.grantor.id }}</td>
+                                        {% endwith %}
                                     </tr>
                                 {% endfor %}
                                 </tbody>
@@ -918,6 +930,129 @@
 
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-primary">Confirm</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+        <!-- Edit Group Modal -->
+        <div class="modal fade" id="edit-group-dialog" tabindex="-1" role="dialog"
+             aria-labelledby="Invite">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST"
+                          enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-label="Close"><span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel">Edit Group Details</h4>
+                        </div>
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <div class="row">
+                                {# Group Name #}
+                                <fieldset class="col-sm-12">
+                                    <label>Group Name *</label>
+                                    <small class="text-muted">150 characters or less</small>
+                                    <input class="form-control" required="required" name="name" value="{{ group.name }}"
+                                           maxlength="150">
+
+                                </fieldset>
+
+                                {# Purpose #}
+                                <fieldset class="col-sm-12">
+                                    <label>Purpose</label>
+                                    <small class="text-muted">300 characters or less</small>
+                                    <textarea class="form-control" name="purpose"
+                                              maxlength="300">{{ group.gaccess.purpose }}</textarea>
+
+                                </fieldset>
+
+                                {# Group Description #}
+                                <fieldset class="col-sm-12">
+                                    <label>About this group *</label>
+                                    <textarea class="form-control" required="required"
+                                              name="description">{{ group.gaccess.description }}</textarea>
+                                </fieldset>
+
+                                {# auto approve #}
+                                <fieldset class="col-sm-12">
+                                    <input id="auto-approve" type="checkbox" name="auto_approve"
+                                           {% if group.gaccess.auto_approve %}checked{% endif %}>
+                                    <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
+                                </fieldset>
+
+                                {# explanation #}
+                                <fieldset class="col-sm-12">
+                                    <input id="requires_explanation" type="checkbox"  name="requires_explanation"
+                                            {% if group.gaccess.requires_explanation %}checked{% endif %}>
+                                    <label class="checkbox-label" for="requires_explanation">Require explanation when requesting membership</label>
+                                </fieldset>
+
+                                {# Picture #}
+                                <div class="col-sm-12">
+                                    <fieldset>
+                                        <label>Add a photo</label>
+
+                                        <div class="input-group">
+                                            <span class="input-group-btn">
+                                                <span id="cv-custom-upload" class="btn btn-default btn-file">
+                                                    Browse&hellip; <input class="upload-picture" type="file"
+                                                                          name="picture" accept=".png, .jpg, .jpeg, .gif">
+                                                </span>
+                                            </span>
+                                            <input type="text" class="form-control" readonly>
+                                        </div>
+                                    </fieldset>
+                                </div>
+
+                                <br>
+
+                                {# Privacy #}
+                                <fieldset class="col-sm-12">
+                                    <label>Privacy *</label>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="privacy_level" value="public"
+                                                   {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Public
+                                            <div class="text-muted">Other users can find the group and see who has
+                                                membership.
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="privacy_level" value="discoverable"
+                                                   {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Discoverable
+                                            <div class="text-muted">Other users can find this group, but membership
+                                                information is hidden.
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="privacy_level" value="private"
+                                                   {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
+                                            <div class="text-muted">Other users can not find this group.</div>
+                                        </label>
+                                    </div>
+                                </fieldset>
+
+                                <br>
+                                <fieldset class="col-sm-12">
+                                    <small class="text-muted">( * ) Required fields</small>
+                                </fieldset>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                         </div>
                     </form>
@@ -930,7 +1065,7 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/group.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs_resource_table.js' %}"></script>
 {% endblock %}
