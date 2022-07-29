@@ -7,14 +7,18 @@ RUN adduser -u HS_SERVICE_UID -s /bin/sh -D -H -g 'hydroshare user' hydro-servic
 
 COPY init-uppy /init-uppy
 RUN chown node:node /init-uppy
-COPY options-uppy.json /options-uppy.json
-RUN chown node:node /options-uppy.json
 RUN mkdir /uppy_tmp
 RUN chmod 777 /uppy_tmp
 RUN chown node:node /uppy_tmp
 
-RUN echo 'cuahsi-dev-1-upload.hydroshare.org 0.0.0.0' >> /etc/hosts
+WORKDIR /app
+
+# RUN npm init -y 
+# RUN npm install express 
+# RUN npm install @uppy/companion
+
+COPY uppy/server.js /app/server.js
 
 # run daemon
 ENTRYPOINT [ ]
-CMD "sh -c /init-uppy"
+CMD "sh -c 'node /app/server.js'"

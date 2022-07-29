@@ -53,6 +53,7 @@ var uppy = new Uppy.Core({
    );
    return ok; 
 }}); 
+
 uppy.use(Uppy.Dashboard, { 
    id: 'Dashboard', 
    target: '#uppy-dashboard', 
@@ -60,21 +61,37 @@ uppy.use(Uppy.Dashboard, {
    showProgressDetails: true
 }); 
 
-uppy.use(Uppy.Tus, { endpoint: 'https://cuahsi-dev-1.hydroshare.org/upload/' }); 
+uppy.use(Uppy.Tus, { endpoint: 'https://cuahsi-dev-1.hydroshare.org/upload' }); 
+
+// uppy.use(Uppy.Transloadit, {
+//    waitForEncoding: true,
+//    params: {
+//        auth: { key: '3297a2e81c7f4f7da6cc41ece5983c69' },
+//    }
+// })
 
 uppy.use(Uppy.Dropbox, { 
-  target: Uppy.Dashboard,
-  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion/'
+   target: Uppy.Dashboard,
+   companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion'
 }); 
 
+// uppy.use(Uppy.GoogleDrive, {
+//   companionUrl: Uppy.Transloadit.COMPANION,
+//   companionAllowedHosts: Uppy.Transloadit.COMPANION_PATTERN, 
+//   companionKeysParams: {
+//     key: '3297a2e81c7f4f7da6cc41ece5983c69',
+//     credentialsName: 'google-drive-upload',
+//   }
+// });
+
 uppy.use(Uppy.GoogleDrive, { 
-  target: Uppy.Dashboard,
-  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion/'
+   target: Uppy.Dashboard,
+   companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion'
 }); 
 
 uppy.use(Uppy.Box, { 
-  target: Uppy.Dashboard,
-  companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion/'
+   target: Uppy.Dashboard,
+   companionUrl: 'https://cuahsi-dev-1.hydroshare.org/companion'
 }); 
 
 uppy.on('file-removed', (file, reason) => {
