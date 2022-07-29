@@ -1470,6 +1470,10 @@ body > .main-container {
   color: red !important;
 }
 
+.icon-guide {
+  font-size: 20px;
+}
+
 .icon-green {
     color: #10ae10
 }
