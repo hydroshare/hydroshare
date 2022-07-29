@@ -83,12 +83,3 @@
 </div>
 
 {% include "hs_access_control/community-invite-groups-modal.html" %}
-
-{% block extra_js %}
-    <script type="text/javascript">
-      // Constants here
-      const GROUPS = {{ groups|safe }}
-      const MEMBERS = {{ members|safe }}
-      const PENDING = {{ pending|safe }}
-    </script>
-{% endblock %}

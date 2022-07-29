@@ -4022,6 +4022,14 @@ div.group-add-photo {
   margin-top: 2rem;
 }
 
+.has-space-right {
+  margin-right: 2rem;
+}
+
+.has-space-left {
+  margin-left: 2rem;
+}
+
 .has-space-bottom {
   margin-bottom: 2rem;
 }

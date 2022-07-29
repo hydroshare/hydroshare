@@ -9,8 +9,12 @@ from django.utils.decorators import method_decorator
 from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
 from hs_access_control.management.utilities import community_from_name_or_id
+from django.db.models import F
 
 from hs_access_control.models import Community
+from hs_access_control.models.privilege import UserCommunityPrivilege, PrivilegeCodes
+from hs_access_control.models import Community, GroupCommunityRequest
+from hs_access_control.views import community_json, gcr_json, group_json, user_json
 from hs_communities.models import Topic
 
 import logging
@@ -24,41 +28,208 @@ class CollaborateView(TemplateView):
 class CommunityView(TemplateView):
     template_name = 'hs_communities/community.html'
 
+    # def dispatch(self, *args, **kwargs):
+    #     return super(CommunityView, self).dispatch(*args, **kwargs)
+
     def dispatch(self, *args, **kwargs):
+        self.template_name = 'hs_communities/community.html'
         return super(CommunityView, self).dispatch(*args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        grpfilter = self.request.GET.get('grp')
-
-        community = community_from_name_or_id(kwargs['cid'])
-        community_resources = community.public_resources.distinct()
-        raw_groups = community.groups_with_public_resources()
-        groups = []
-
-        for g in raw_groups:
-            res_count = len([r for r in community_resources if r.group_name == g.name])
-            groups.append({'id': str(g.id), 'name': str(g.name), 'res_count': str(res_count)})
-
-        groups = sorted(groups, key=lambda key: key['name'])
+    def hydroshare_denied(self, cid, gid=None):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            message = "You must be logged in to access this function."
+            logger.error(message)
+            return message
 
         try:
-            u = User.objects.get(pk=self.request.user.id)
-            # user must own the community to get admin privilege
-            is_admin = UserCommunityPrivilege.objects.filter(user=u,
-                                                             community=community,
-                                                             privilege=PrivilegeCodes.OWNER)\
-                                                     .exists()
-        except:
-            is_admin = False
+            community = Community.objects.get(id=cid)
+        except Community.DoesNotExist:
+            message = "community id {} not found".format(cid)
+            logger.error(message)
+            return message
 
-        return {
-            'community': community,
-            'community_resources': community_resources,
-            'groups': groups,
-            'grpfilter': grpfilter,
-            'is_admin': is_admin,
-            'czo_community': "CZO National" in community.name
-        }
+        if user.uaccess.owns_community(community):
+            if gid is None:
+                return ""
+            else:
+                group = Group.objects.filter(id=gid)
+                if group.count() < 1:
+                    message = "group id {} not found".format(gid)
+                    logger.error(message)
+                    return message
+                else:
+                    return ""
+
+        else:
+            message = "user {} ({}) does not own community {} ({})"\
+                      .format(user.username, user.id, community.name, community.id)
+            logger.error(message)
+            return message
+
+    def get_context_data(self, *args, **kwargs):
+        message = ''
+        context = {}
+
+        if 'cid' in kwargs:
+            cid = int(kwargs['cid'])
+        else:
+            cid = None
+
+        if 'gid' in kwargs:
+            gid = int(kwargs['gid'])
+        else:
+            gid = None
+
+        if 'action' in kwargs:
+            action = kwargs['action']
+        else:
+            action = None
+
+        logger.debug("cid={} action={} gid={}".format(cid, action, gid))
+        denied = self.hydroshare_denied(cid, gid)
+        logger.debug("denied is {}".format(denied))
+        if denied == "":
+            user = self.request.user
+            community = Community.objects.get(id=int(cid))
+            community_resources = community.public_resources.distinct()
+            grpfilter = self.request.GET.get('grp')
+            is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community, privilege=PrivilegeCodes.OWNER).exists() else 0
+
+            context['community_resources'] = community_resources
+            context['grpfilter'] = grpfilter
+            context['is_admin'] = is_admin
+            context['czo_community'] = "CZO National" in community.name
+                                                      
+            if action is not None:
+                group = Group.objects.get(id=int(gid))
+                if action == 'approve':  # approve a request from a group
+                    gcr = GroupCommunityRequest.objects.get(
+                        community=community, group=group)
+                    if gcr.redeemed:  # make it possible to approve a formerly declined request.
+                        gcr.reset(responder=user)
+                    message, worked = gcr.approve(responder=user)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                elif action == 'decline':  # decline a request from a group
+                    gcr = GroupCommunityRequest.objects.get(
+                        community__id=int(cid),
+                        group__id=int(kwargs['gid']))
+                    message, worked = gcr.decline(responder=user)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                elif action == 'invite':
+                    logger.debug("action is invite")
+                    try:
+                        message, worked = GroupCommunityRequest.create_or_update(
+                            requester=user, group=group, community=community)
+                        logger.debug("message = '{}' worked='{}'".format(message, worked))
+                    except Exception as e:
+                        logger.debug(e)
+
+                elif action == 'remove':  # remove a group from this community
+                    message, worked = GroupCommunityRequest.remove(
+                        requester=user, group=group, community=community)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                elif action == 'retract':  # remove a pending request
+                    message, worked = GroupCommunityRequest.retract(
+                         requester=user, group=group, community=community)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                else:
+                    message = "unknown action '{}'".format(action)
+                    logger.error(message)
+
+            # build a JSON object that contains the results of the query
+
+            context['denied'] = denied
+            context['message'] = message
+            context['user'] = user_json(user)
+            context['community'] = community_json(community)
+
+            # groups that can be invited are those that are not already invited or members.
+            context['groups'] = []
+            for g in Group.objects.filter(gaccess__active=True)\
+                                  .exclude(invite_g2gcr__community=community)\
+                                  .exclude(g2gcp__community=community)\
+                                  .order_by('name'):
+                context['groups'].append(group_json(g))
+
+            context['pending'] = []
+            for r in GroupCommunityRequest.objects.filter(
+                    community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
+                context['pending'].append(gcr_json(r))
+
+            # requests that were declined by us
+            context['we_declined'] = []
+            for r in GroupCommunityRequest.objects.filter(
+                    community=community, redeemed=True, approved=False,
+                    when_group__lt=F('when_community')).order_by('group__name'):
+                context['we_declined'].append(gcr_json(r))
+
+            # requests that were declined by others
+            context['they_declined'] = []
+            for r in GroupCommunityRequest.objects.filter(
+                    community=community, redeemed=True, approved=False,
+                    when_group__gt=F('when_community')).order_by('group__name'):
+                context['they_declined'].append(gcr_json(r))
+
+            # group requests to be approved
+            context['approvals'] = []
+            for r in GroupCommunityRequest.objects.filter(
+                    community=Community.objects.get(id=int(cid)),
+                    group__gaccess__active=True,
+                    community_owner__isnull=True,
+                    redeemed=False).order_by('group__name'):
+                context['approvals'].append(gcr_json(r))
+
+            # group members of community
+            context['members'] = []
+            for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
+                context['members'].append(group_json(g))
+
+            return context
+
+        else:  # non-empty denied means an error.
+            context['denied'] = denied
+            logger.error(denied)
+            return context
+
+
+    # def get_context_data(self, **kwargs):
+    #     grpfilter = self.request.GET.get('grp')
+
+    #     community = community_from_name_or_id(kwargs['cid'])
+    #     community_resources = community.public_resources.distinct()
+    #     raw_groups = community.groups_with_public_resources()
+    #     groups = []
+
+    #     for g in raw_groups:
+    #         res_count = len([r for r in community_resources if r.group_name == g.name])
+    #         groups.append({'id': str(g.id), 'name': str(g.name), 'res_count': str(res_count)})
+
+    #     groups = sorted(groups, key=lambda key: key['name'])
+
+    #     try:
+    #         u = User.objects.get(pk=self.request.user.id)
+    #         # user must own the community to get admin privilege
+    #         is_admin = UserCommunityPrivilege.objects.filter(user=u,
+    #                                                          community=community,
+    #                                                          privilege=PrivilegeCodes.OWNER)\
+    #                                                  .exists()
+    #     except:
+    #         is_admin = False
+
+    #     return {
+    #         'cid': community.id,
+    #         'community': community,
+    #         'community_resources': community_resources,
+    #         'groups': groups,
+    #         'grpfilter': grpfilter,
+    #         'is_admin': is_admin,
+    #         'czo_community': "CZO National" in community.name,
+    #     }
 
 
 class FindCommunitiesView(TemplateView):

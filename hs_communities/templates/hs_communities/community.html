@@ -10,15 +10,15 @@
     {% include 'hs_communities/communities-nav.html' with active='my_communities' %}
     <div id="communities-app" class="container full-width" style="padding: 0;">
         <div class="container">
-            <div class="row">
+            <div class="flex">
                 {% if czo_community %}
-                  <div class="col-sm-3">
+                  <div class="has-space-right">
                     <div>
                       <a href="http://criticalzone.org"><img src="{% static 'img/czo-logo-wide.png' %}" alt="CZO National"></a>
                     </div>
                   </div>
                 {% else %}
-                  <div class="col-sm-12">
+                  <div class="has-space-right">
                     {% if community.picture and community.picture.url %}
                       <div><center><img src='{{ community.picture.url }}' height=200></center></div>
                     {% else %}
@@ -46,7 +46,7 @@
                         </div>
                     </div>
 
-                    {% if community.purpose %}<h4>{{ community.purpose|linebreaks }}</h4>{% endif %}
+                    {% if community.purpose %}<h4 class="text-muted">{{ community.purpose|linebreaks }}</h4>{% endif %}
 
                     <!-- Community Info -->
                     {% if community.email or community.url %}
@@ -265,13 +265,16 @@
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript">
-      // Constants here
+      // Constants heree
       const COMMUNITY = {{ community|safe }}
       const IS_ADMIN = {{ is_admin }}
+      const GROUPS = {{ groups|safe }}
+      const MEMBERS = {{ members|safe }}
+      const PENDING = {{ pending|safe }}
     </script>
     <script type="text/javascript" src="{% static 'js/vue-2.6.10-dev.js' %}"></script>
     <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/communities.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs_resource_table_community.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/communities.js' %}"></script>
 {% endblock %}
 
