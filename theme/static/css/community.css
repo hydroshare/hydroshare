@@ -39,3 +39,23 @@
   margin: 0;
   margin-bottom: 2rem;
 }
+
+#invite-groups-modal .grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(30rem, 100%), 1fr));
+  gap: 12px;
+}
+
+#invite-groups-modal .grid .group-community-card {
+  margin: 0;
+}
+
+#invite-groups-modal .modal-body {
+  max-height: 80%;
+  overflow: auto;
+}
+
+@media screen and (min-width: 768px) {
+  #invite-groups-modal .modal-dialog {
+    width: 900px;
+  }
+}
