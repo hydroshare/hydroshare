@@ -576,7 +576,6 @@ function getNewData(target){
     $("#filter-panel .panel-title").append(spinner);
     $("#filter").addClass("no-interact")
 
-    block_request = true;
     const url = new URL(window.location.href);
 
     let filter_val = target.value.toLowerCase();
@@ -611,17 +610,21 @@ function getNewData(target){
     $.ajax({
         type: 'GET',
         url: url,
-        success: function (data) {
-            block_request = false;
-
-            $('#item-selectors thead').show();
-            $('#item-selectors tbody').replaceWith(data.tbody);
-            initTable();
-            updateTable();
-            spinner.remove();
-            $("#filter").removeClass("no-interact");
-        }
     })
+    .done(function(data){
+        $('#item-selectors tbody').replaceWith(data.tbody);
+        initTable();
+        updateTable();
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+        customAlert("Error", `Failed fetch resources for your filter (${errorThrown})`, "error", 10000);
+    })
+    .always(function(){
+        $('#item-selectors thead').show();
+        $('#item-selectors tbody').show();
+        spinner.remove();
+        $("#filter").removeClass("no-interact");
+    });
 }
 
 // Updates the status of labels in the left panel
