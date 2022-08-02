@@ -28,7 +28,7 @@ class CompositeResource(BaseResource):
         if not super(CompositeResource, self).can_be_public_or_discoverable:
             return False
 
-        # filetype level metadata check
+        # logical file level metadata check
         for lf in self.logical_files:
             if not lf.metadata.has_all_required_elements():
                 return False
@@ -36,12 +36,89 @@ class CompositeResource(BaseResource):
         return True
 
     @property
+    def has_required_metadata(self):
+        """Return True only if all required metadata is present."""
+        if not super(CompositeResource, self).has_required_metadata:
+            return False
+
+        for f in self.logical_files:
+            if not f.metadata.has_all_required_elements():
+                return False
+        return True
+
+    @property
+    def logical_files(self):
+        """A generator to access each of the logical files of this resource"""
+
+        for lf in self.filesetlogicalfile_set.all():
+            yield lf
+        for lf in self.genericlogicalfile_set.all():
+            yield lf
+        for lf in self.geofeaturelogicalfile_set.all():
+            yield lf
+        for lf in self.netcdflogicalfile_set.all():
+            yield lf
+        for lf in self.georasterlogicalfile_set.all():
+            yield lf
+        for lf in self.reftimeserieslogicalfile_set.all():
+            yield lf
+        for lf in self.timeserieslogicalfile_set.all():
+            yield lf
+        for lf in self.modelprogramlogicalfile_set.all():
+            yield lf
+        for lf in self.modelinstancelogicalfile_set.all():
+            yield lf
+
+    @property
+    def aggregation_types(self):
+        """Gets a list of all aggregation types that currently exist in this resource"""
+        aggr_types = []
+        aggr_type_names = []
+        for lf in self.logical_files:
+            if lf.type_name not in aggr_type_names:
+                aggr_type_names.append(lf.type_name)
+                aggr_type = lf.get_aggregation_display_name().split(":")[0]
+                aggr_types.append(aggr_type)
+        return aggr_types
+
+    def get_logical_files(self, logical_file_class_name):
+        """Get a list of logical files (aggregations) for a specified logical file class name."""
+
+        class_name_to_query_mappings = dict()
+        class_name_to_query_mappings["GenericLogicalFile"] = self.genericlogicalfile_set.all()
+        class_name_to_query_mappings["NetCDFLogicalFile"] = self.netcdflogicalfile_set.all()
+        class_name_to_query_mappings["GeoRasterLogicalFile"] = self.georasterlogicalfile_set.all()
+        class_name_to_query_mappings["GeoFeatureLogicalFile"] = self.geofeaturelogicalfile_set.all()
+        class_name_to_query_mappings["FileSetLogicalFile"] = self.filesetlogicalfile_set.all()
+        class_name_to_query_mappings["ModelProgramLogicalFile"] = self.modelprogramlogicalfile_set.all()
+        class_name_to_query_mappings["ModelInstanceLogicalFile"] = self.modelinstancelogicalfile_set.all()
+        class_name_to_query_mappings["TimeSeriesLogicalFile"] = self.timeserieslogicalfile_set.all()
+        class_name_to_query_mappings["RefTimeseriesLogicalFile"] = self.reftimeserieslogicalfile_set.all()
+
+        if logical_file_class_name in class_name_to_query_mappings:
+            return class_name_to_query_mappings[logical_file_class_name]
+
+        raise Exception(f"Invalid logical file type:{logical_file_class_name}")
+
+    @property
+    def has_logical_spatial_coverage(self):
+        """Checks if any of the logical files has spatial coverage"""
+
+        return any(lf.metadata.spatial_coverage is not None for lf in self.logical_files)
+
+    @property
+    def has_logical_temporal_coverage(self):
+        """Checks if any of the logical files has temporal coverage"""
+
+        return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
+
+    @property
     def can_be_published(self):
         # resource level metadata check
         if not super(CompositeResource, self).can_be_published:
             return False
 
-        # filetype level metadata check
+        # logical file level metadata check
         for lf in self.logical_files:
             if not lf.metadata.has_all_required_elements():
                 return False
