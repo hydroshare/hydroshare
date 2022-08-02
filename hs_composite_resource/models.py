@@ -108,6 +108,7 @@ class CompositeResource(BaseResource):
                 assert(isinstance(aggregations, list))
                 for aggr in aggregations:
                     assert(aggr.resource == self)
+                assert(len(aggregations) == len(list(self.logical_files)))
 
         aggregation_path = dir_path
         if dir_path.startswith(self.file_path):
@@ -131,6 +132,7 @@ class CompositeResource(BaseResource):
         :return a folder based aggregation if found otherwise, None
         """
 
+        # will be using aggregations more than once if dir_path consists of multiple folders
         aggregations = list(self.logical_files) if '/' in dir_path else None
         if dir_path.startswith(self.file_path):
             dir_path = dir_path[len(self.file_path) + 1:]
@@ -257,6 +259,7 @@ class CompositeResource(BaseResource):
         :return a fileset aggregation object if found, otherwise None
         """
 
+        # will be using aggregations more than once if path consists of multiple folders
         aggregations = list(self.logical_files) if '/' in path else None
 
         def get_fileset(path):
@@ -281,6 +284,7 @@ class CompositeResource(BaseResource):
         :return a model program or model instance aggregation object if found, otherwise None
         """
 
+        # will be using aggregations more than once if path consists of multiple folders
         aggregations = list(self.logical_files) if '/' in path else None
 
         def get_aggregation(path):
