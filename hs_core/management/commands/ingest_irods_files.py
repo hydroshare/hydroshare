@@ -57,7 +57,6 @@ class Command(BaseCommand):
                 # Alva: cannot preserve file integrity constraints for other file types.
                 if r.resource_type != 'CompositeResource' and \
                    r.resource_type != 'GenericResource' and \
-                   r.resource_type != 'ModelInstanceResource' and \
                    r.resource_type != 'ModelProgramResource':
                     print(("resource {} has type {}: skipping".format(r.short_id,
                                                                       r.resource_type)))
@@ -104,7 +103,6 @@ class Command(BaseCommand):
                 # Alva: cannot preserve file integrity constraints for other file types.
                 if r.resource_type == 'CompositeResource' or \
                    r.resource_type == 'GenericResource' or \
-                   r.resource_type == 'ModelInstanceResource' or \
                    r.resource_type == 'ModelProgramResource':
                     print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
                           .format(r.short_id, str(r.files.all().count())))
