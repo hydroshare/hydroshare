@@ -9,6 +9,8 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('hs_modelinstance', '0006_auto_20151216_1511'),
+        ('hs_modflow_modelinstance', '0005_auto_20220701_1531'),
+        ('hs_swat_modelinstance', '0008_auto_20220726_1833'),
     ]
 
     operations = [
