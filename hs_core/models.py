@@ -2582,6 +2582,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Gets a generator to access each of the logical files of the resource.
         Note: Any derived class that supports logical file must override this function
         """
+
+        # empty generator
         yield from ()
 
     @property
