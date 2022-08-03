@@ -52,7 +52,6 @@ class ResourceNameDBToUIMap:
     dict = {
         'CompositeResource': 'composite',
         'ModelProgramResource': 'modelprogram',
-        'ModelInstanceResource': 'modelinstance',
         'Time Series': 'timeseries',
         'ToolResource': 'webapp',
         'CollectionResource': 'collection'
@@ -60,7 +59,6 @@ class ResourceNameDBToUIMap:
     dict_verbose_name = {
         'CompositeResource': 'Composite',
         'ModelProgramResource': 'Model Program',
-        'ModelInstanceResource': 'Model Instance',
         'Time Series': 'Time Series',
         'ToolResource': 'Web App',
         'CollectionResource': 'Collection'
