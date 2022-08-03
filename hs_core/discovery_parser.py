@@ -4,10 +4,25 @@ import re
 import operator
 from datetime import datetime, timedelta
 from haystack.query import SQ
+from haystack.inputs import Exact
 from django.conf import settings
-
+import logging
+logger = logging.getLogger(__name__)
 
 HAYSTACK_DEFAULT_OPERATOR = getattr(settings, 'HAYSTACK_DEFAULT_OPERATOR', 'AND')
+# Enable what you need here.
+
+# nested parens
+HANDLE_PARENS = False
+
+# "quoted string" means Exact match
+HANDLE_QUOTES = True
+
+# author="T. C. Mitts"
+HANDLE_FIELDS = False
+
+# AND, OR, NOT
+HANDLE_OPERATORS = False
 
 
 class MatchingBracketsNotFoundError(Exception):
@@ -236,7 +251,7 @@ class ParseSQ(object):
                 raise InequalityNotAllowedError(
                     "Inequality is not meaningful for quoted text \"{}\"."
                     .format(text_in_quotes))
-            self.sq = self.apply_operand(SQ(**{search_field+"__exact": text_in_quotes}))
+            self.sq = self.apply_operand(SQ(**{search_field: Exact(text_in_quotes)}))
             # remove quoted text from query
             self.query = re.sub(self.Pattern_Quoted_Text, '', self.query, 1)
         else:  # no quotes
@@ -310,7 +325,7 @@ class ParseSQ(object):
         # it seams that haystack exact only works if there is a space in the query.So adding a space
         # if not re.search(r'\s', text_in_quotes):
         #     text_in_quotes+=" "
-        self.sq = self.apply_operand(SQ(content__exact=text_in_quotes))
+        self.sq = self.apply_operand(SQ(content=Exact(text_in_quotes)))
         self.query, n = re.subn(self.Pattern_Quoted_Text, '', self.query, 1)
         self.current = self.Default_Operator
 
@@ -320,23 +335,22 @@ class ParseSQ(object):
 
         This can raise ValueError if the values passed are not valid.
         """
+        logger.debug("calling parse")
         self.query = query
+        logger.debug("initial query is {}".format(self.query))
         self.sq = SQ()
         self.current = self.Default_Operator
         while self.query:
             self.query = self.query.lstrip()
-            if re.search(self.Pattern_Field_Query, self.query):
+            if HANDLE_FIELDS and re.search(self.Pattern_Field_Query, self.query):
                 self.handle_field_query()
-            # # Optional control of exact keyword: disabled for now
-            # elif re.search(self.Pattern_Field_Exact_Query, self.query):
-            #     self.handle_field_exact_query()
-            elif re.search(self.Pattern_Quoted_Text, self.query):
+            elif HANDLE_QUOTES and re.search(self.Pattern_Quoted_Text, self.query):
                 self.handle_quoted_query()
-            elif re.search(self.Pattern_Operator, self.query):
+            elif HANDLE_OPERATORS and re.search(self.Pattern_Operator, self.query):
                 self.handle_operator_query()
             elif re.search(self.Pattern_Normal_Query, self.query):
                 self.handle_normal_query()
-            elif self.query and self.query[0] == "(":
+            elif HANDLE_PARENS and self.query and self.query[0] == "(":
                 self.handle_brackets()
             else:
                 self.handle_normal_query()
