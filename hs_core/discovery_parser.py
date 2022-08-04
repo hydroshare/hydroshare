@@ -12,18 +12,6 @@ logger = logging.getLogger(__name__)
 HAYSTACK_DEFAULT_OPERATOR = getattr(settings, 'HAYSTACK_DEFAULT_OPERATOR', 'AND')
 # Enable what you need here.
 
-# nested parens
-HANDLE_PARENS = False
-
-# "quoted string" means Exact match
-HANDLE_QUOTES = True
-
-# author="T. C. Mitts"
-HANDLE_FIELDS = False
-
-# AND, OR, NOT
-HANDLE_OPERATORS = False
-
 
 class MatchingBracketsNotFoundError(Exception):
     """ malformed parenthetic expression """
@@ -204,8 +192,11 @@ class ParseSQ(object):
     Pattern_Quoted_Text = re.compile(r"^\"([^\"]*)\"\s*", re.U)
     Pattern_Unquoted_Text = re.compile(r"^(\w*)\s*", re.U)
 
-    def __init__(self, use_default=HAYSTACK_DEFAULT_OPERATOR):
+    def __init__(self, use_default=HAYSTACK_DEFAULT_OPERATOR,
+                 handle_logic=False, handle_fields=False):
         self.Default_Operator = use_default
+        self.handle_logic = handle_logic
+        self.handle_fields = handle_fields
 
     @property
     def current(self):
@@ -302,7 +293,9 @@ class ParseSQ(object):
                 no_brackets += 1
             i += 1
         if not no_brackets:
-            parser = ParseSQ(self.Default_Operator)
+            parser = ParseSQ(use_default=self.Default_Operator, 
+                             handle_logic=self.handle_logic, 
+                             handle_fields=self.handle_fields)
             self.sq = self.apply_operand(parser.parse(self.query[1:i-1]))
         else:
             raise MatchingBracketsNotFoundError("Parentheses must match in '{}'."
@@ -335,22 +328,20 @@ class ParseSQ(object):
 
         This can raise ValueError if the values passed are not valid.
         """
-        logger.debug("calling parse")
         self.query = query
-        logger.debug("initial query is {}".format(self.query))
         self.sq = SQ()
         self.current = self.Default_Operator
         while self.query:
             self.query = self.query.lstrip()
-            if HANDLE_FIELDS and re.search(self.Pattern_Field_Query, self.query):
+            if self.handle_fields and re.search(self.Pattern_Field_Query, self.query):
                 self.handle_field_query()
-            elif HANDLE_QUOTES and re.search(self.Pattern_Quoted_Text, self.query):
+            elif re.search(self.Pattern_Quoted_Text, self.query):
                 self.handle_quoted_query()
-            elif HANDLE_OPERATORS and re.search(self.Pattern_Operator, self.query):
+            elif self.handle_logic and re.search(self.Pattern_Operator, self.query):
                 self.handle_operator_query()
             elif re.search(self.Pattern_Normal_Query, self.query):
                 self.handle_normal_query()
-            elif HANDLE_PARENS and self.query and self.query[0] == "(":
+            elif self.handle_logic and self.query and self.query[0] == "(":
                 self.handle_brackets()
             else:
                 self.handle_normal_query()
