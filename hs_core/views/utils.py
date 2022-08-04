@@ -559,15 +559,13 @@ def get_metadata_contenttypes():
     return meta_contenttypes
 
 
-def get_my_resources_list(user, annotate=True):
+def get_my_resources_filter_counts(user, **kwargs):
     """
-    Gets a QuerySet object for listing resources that belong to a given user.
+    Gets counts of resources that belong to a given user.
     :param user: an instance of User - user who wants to see his/her resources
-    :param annotate: whether to annotate for my resources page listing.
-    :return: an instance of QuerySet of resources
+    :return: an json object with counts for specific filter cases
     """
 
-    # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     # remove obsoleted resources from the owned_resources
     owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
@@ -575,57 +573,102 @@ def get_my_resources_list(user, annotate=True):
 
     # get a list of resources with effective CHANGE privilege (should include resources that the
     # user has access to via group
-    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
-                                                                         via_group=True)
+    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE, via_group=True)
     # remove obsoleted resources from the editable_resources
-    editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
-        type='isReplacedBy').values('object_id'))
+    editable_resources = editable_resources.exclude(
+        object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
 
     # get a list of resources with effective VIEW privilege (should include resources that the
     # user has access via group
-    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
-                                                                         via_group=True)
+    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW, via_group=True)
+
     # remove obsoleted resources from the viewable_resources
-    viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
-        type='isReplacedBy').values('object_id'))
+    viewable_resources = viewable_resources.exclude(
+        object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
 
     discovered_resources = user.ulabels.my_resources
 
-    # join all queryset objects
-    resource_collection = owned_resources.distinct() | \
-        editable_resources.distinct() | \
-        viewable_resources.distinct() | \
-        discovered_resources.distinct()
+    favorite_resources = user.ulabels.favorited_resources
 
-    if annotate:  # When used in the My Resources page, annotate for speed
-        labeled_resources = user.ulabels.labeled_resources
-        favorite_resources = user.ulabels.favorited_resources
-        resource_collection = resource_collection.annotate(
-            owned=Case(When(short_id__in=owned_resources.values_list('short_id', flat=True),
-                            then=Value(True, BooleanField()))))
+    return {
+        'favorites': favorite_resources.count(),
+        'ownedCount': owned_resources.count(),
+        'addedCount': discovered_resources.count(),
+        'sharedCount': viewable_resources.count() + editable_resources.count()
+    }
 
-        resource_collection = resource_collection.annotate(
-            editable=Case(When(short_id__in=editable_resources.values_list('short_id', flat=True),
-                          then=Value(True, BooleanField()))))
 
-        resource_collection = resource_collection.annotate(
-            viewable=Case(When(short_id__in=viewable_resources.values_list('short_id', flat=True),
-                               then=Value(True, BooleanField()))))
+def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
+    """
+    Gets a QuerySet object for listing resources that belong to a given user.
+    :param user: an instance of User - user who wants to see his/her resources
+    :param annotate: whether to annotate for my resources page listing.
+    :return: an instance of QuerySet of resources
+    """
+    resource_collection = BaseResource.objects.none()
+    owned_resources = BaseResource.objects.none()
+    editable_resources = BaseResource.objects.none()
+    viewable_resources = BaseResource.objects.none()
+    discovered_resources = BaseResource.objects.none()
 
-        resource_collection = resource_collection.annotate(
-            discovered=Case(When(short_id__in=discovered_resources.values_list('short_id', flat=True),
-                            then=Value(True, BooleanField()))))
+    # if annotate:  # When used in the My Resources page, annotate for speed
+    if not filter or 'owned' in filter:
+        # get a list of resources with effective OWNER privilege
+        owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
+        # remove obsoleted resources from the owned_resources
+        owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
+            type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
 
-        resource_collection = resource_collection.annotate(
-            is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
-                                  then=Value(True, BooleanField()))))
+    if not filter or 'editable' in filter:
+        # get a list of resources with effective CHANGE privilege (should include resources that the
+        # user has access to via group
+        editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                                             via_group=True)
+        # remove obsoleted resources from the editable_resources
+        editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
+            type='isReplacedBy').values('object_id'))
 
+    if not filter or 'viewable' in filter:
+        # get a list of resources with effective VIEW privilege (should include resources that the
+        # user has access via group
+        viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                                             via_group=True)
+        # remove obsoleted resources from the viewable_resources
+        viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
+            type='isReplacedBy').values('object_id'))
+
+    if not filter or 'discovered' in filter:
+        discovered_resources = user.ulabels.my_resources
+        if annotate:
+            discovered_resources = discovered_resources.all().annotate(discovered=Value(True, BooleanField()))
+
+    favorite_resources = user.ulabels.favorited_resources
+
+    # join all queryset objects. if/else saves one database query
+    if not filter or 'is_favorite' in filter:
+        resource_collection = owned_resources.distinct() | \
+            editable_resources.distinct() | \
+            viewable_resources.distinct() | \
+            discovered_resources.distinct() | \
+            favorite_resources.distinct()
+    else:
+        resource_collection = owned_resources.distinct() | \
+            editable_resources.distinct() | \
+            viewable_resources.distinct() | \
+            discovered_resources.distinct()
+
+    if annotate:
         # The annotated field 'has_labels' would allow us to query the DB for labels only if the
         # resource has labels - that means we won't hit the DB for each resource listed on the page
         # to get the list of labels for a resource
+        labeled_resources = user.ulabels.labeled_resources
         resource_collection = resource_collection.annotate(has_labels=Case(
             When(short_id__in=labeled_resources.values_list('short_id', flat=True),
                  then=Value(True, BooleanField()))))
+
+        resource_collection = resource_collection.annotate(
+            is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
+                                    then=Value(True, BooleanField()))))
 
         resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
         # we won't hit the DB for each resource to know if it's status is public/private/discoverable
