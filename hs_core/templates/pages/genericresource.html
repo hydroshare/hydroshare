@@ -9,13 +9,11 @@
     <link href="{% static 'css/modal-vue.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/hs-file-icons.css' %}" rel="stylesheet"/>
 
-{% if not page|is_debug %}
+{# {% if not page|is_debug %} #}
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
 {
-    "@context": {
-        "@vocab": "https://schema.org/"
-    },
+    "@context": "https://schema.org",
     {% if cm.raccess.published %}
     "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}#schemaorg",
     "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
@@ -118,12 +116,16 @@
     ],
     {% endif %}
     {% if fundingagencies %}
-    "funder": [
+    "funding": [
     {% for agency in fundingagencies %}
         {
-            "@type": "Organization",
-            "name": "{{ agency.agency_name | escapejs }}",
-            "url": "{{ agency.agency_url }}"
+            "@type": "Grant",
+            "identifier": "{{ agency.award_number }}",
+            "funder": {
+                "@type": "Organization",
+                "name": "{{ agency.agency_name | escapejs }}",
+                "identifier": "{{ agency.agency_url }}"
+            }
         }{%if not forloop.last%},{%endif%}
         {% endfor %}
     ],
@@ -167,7 +169,7 @@
     }
 }
 </script>
-{% endif %}
+{# {% endif %} #}
 {% endblock %}
 
 {% block main %}
