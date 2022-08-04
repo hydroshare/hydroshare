@@ -141,7 +141,7 @@ def get_collectable_resources(user, coll_resource):
         .exclude(short_id=coll_resource.short_id) \
         .exclude(id__in=coll_resource.resources.values_list("id", flat=True))  # no duplicates!
 
-    collectable_resources = collectable_resources.only('short_id', 'title', 'resource_type', 'created')
+    collectable_resources = collectable_resources.only('short_id', 'title', 'resource_type', 'created', 'updated')
     collectable_resources = collectable_resources.select_related('raccess')
 
     return collectable_resources
