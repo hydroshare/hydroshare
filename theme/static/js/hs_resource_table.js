@@ -20,11 +20,12 @@ var DATE_CREATED_SORT_COL = 13;
 var ACCESS_GRANTOR_COL = 14;
 
 var filtersUpdated = false
+var filtersLoaded = []
 var spinner = $('<i class="fa fa-spinner fa-pulse fa-lg my-res-filter-spinner" style="z-index: 1;"></i>')
 
 $(document).ready(function () {
     setInitialFilters()
-    initTable();
+    resourceTable = initTable("#item-selectors");
     updateFilterCount();
     updateTable();
     setEventListeners();
@@ -38,11 +39,15 @@ function setInitialFilters(){
     const url = new URL(window.location.href);
     let existing_filters = url.searchParams.getAll('f');
     if (existing_filters.length !== 0){
+        // TODO: check that initial page load with and without filters works and that checkboxes match the query params
+        // initial page load with filter (ex from bookmark)
+        // keep track of the filters globally
+        filtersLoaded = existing_filters;
         return
     }
     // default filters (checked in the template) are:
-    let default_filters = ['owned', 'discovered', 'favorites'];
-    for(let filter of default_filters){
+    filtersLoaded = ['owned', 'discovered', 'favorites'];
+    for(let filter of filtersLoaded){
         url.searchParams.append('f', filter);
     }
     window.history.pushState({}, '', url);
@@ -102,7 +107,7 @@ function setEventListeners(){
             updateTable();
             return;
         }
-        getNewData(e.target);
+        dataRefresh(e.target);
     });
 
     $("#user-labels-left").on("change", "input[type='checkbox']", function () {
@@ -338,7 +343,7 @@ function setEventListeners(){
     });
 }
 
-function initTable(){
+function initTable(selector){
     /*==================================================
         Table columns
         0 - actions
@@ -358,7 +363,7 @@ function initTable(){
         14 - Access Grantor
     ==================================================*/
 
-    resourceTable = $("#item-selectors").DataTable({
+    return $(selector).DataTable({
         "order": [[DATE_CREATED_COL, "desc"]],
         "paging": false,
         "info": false,
@@ -572,12 +577,10 @@ function updateLabelsList() {
 }
 
 // Gets new data when filters change
-function getNewData(target){
-    $("#filter-panel .panel-title").append(spinner);
-    $("#filter").addClass("no-interact")
-
-    const url = new URL(window.location.href);
-
+async function dataRefresh(target){
+    
+    // Check the url for query parameters
+    let url = new URL(window.location.href);
     let filter_val = target.value.toLowerCase();
     let existing_filters = url.searchParams.getAll('f');
     if (existing_filters){
@@ -597,24 +600,34 @@ function getNewData(target){
 
     window.history.pushState({}, '', url);
 
-    // TODO: if there is no query, don't update?
-    // if(url.searchParams.getAll('f').length === 0){
-    //     return
-    // }
+    if(target.checked && !filtersLoaded.includes(filter_val)){
+        // fetch the filter that is new
+        await ajaxFetchResources(url, filter_val);
+    }else{
+        updateTable();
+    }
+}
 
-    // todo: show a pending spinner
+function ajaxFetchResources(url, filter_val){
+    $("#filter-panel .panel-title").append(spinner);
+    $("#filter").addClass("no-interact")
     $('#item-selectors tbody').hide();
     $('#item-selectors thead').hide();
-    resourceTable.destroy();
 
     $.ajax({
         type: 'GET',
         url: url,
+        data: {
+            new_filter: filter_val
+        }
     })
     .done(function(data){
-        $('#item-selectors tbody').replaceWith(data.tbody);
-        initTable();
-        updateTable();
+        resourceTable.destroy();
+        $('#item-selectors tbody').append(data.trows);
+        resourceTable = initTable('#item-selectors');
+        resourceTable.deDupe();
+        resourceTable.draw();
+        filtersLoaded.push(filter_val);
     })
     .fail(function(jqXHR, textStatus, errorThrown) {
         customAlert("Error", `Failed fetch resources for your filter (${errorThrown})`, "error", 10000);
@@ -624,6 +637,7 @@ function getNewData(target){
         $('#item-selectors tbody').show();
         spinner.remove();
         $("#filter").removeClass("no-interact");
+        updateTable();
     });
 }
 
@@ -997,7 +1011,7 @@ $.fn.dataTable.ext.search.push (
 
             // Shared with me
             if ($('#filter input[type="checkbox"][value="Shared"]').prop("checked") == true) {
-                if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered") {
+                if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered" && data[PERM_LEVEL_COL] != "") {
                     inFilters = true;
                 }
             }
@@ -1071,3 +1085,25 @@ $.fn.dataTable.ext.search.push (
         return inLabels && inFilters && inGrantors;
     }
 );
+
+$.fn.dataTable.Api.register('deDupe', function (idColumn) {
+    idColumn = idColumn || TITLE_COL;
+
+    let regex = /resource\/([0-9a-z]*)\/">/;
+    let titles = this.columns().data()[idColumn];
+    let resIds = titles.map(x => x.match(regex)[1]);
+    let removals = [];
+
+    for(var i=0; i < resIds.length; i++) {
+        let matchedIndex = resIds.indexOf(resIds[i]);
+        if(matchedIndex !== i && !removals.includes(matchedIndex)) {
+            removals.push(matchedIndex);
+        }
+    }
+    for(let i of removals){
+        let matchedRow = $(this.rows().nodes()[i]);
+        this.row(matchedRow).remove();
+    }
+    
+    return this;
+  });

@@ -9,6 +9,7 @@ from mezzanine import template
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.search_indexes import normalize_name
+from hs_access_control.models.privilege import PrivilegeCodes
 
 
 register = template.Library()
@@ -47,6 +48,17 @@ def user_resource_labels(resource, user):
     if resource.has_labels:
         return resource.rlabels.get_labels(user)
     return []
+
+@register.filter
+def get_user_privilege(resource, user):
+    user_privilege = resource.raccess.get_effective_user_privilege(user)
+    if user_privilege == PrivilegeCodes.OWNER:
+        self_access_level = 'Owned'
+    elif user_privilege == PrivilegeCodes.CHANGE:
+        self_access_level = 'Editable'
+    elif user_privilege == PrivilegeCodes.VIEW:
+        self_access_level = 'Viewable'
+    return self_access_level
 
 
 @register.filter

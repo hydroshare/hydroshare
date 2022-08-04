@@ -610,7 +610,6 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
     editable_resources = BaseResource.objects.none()
     viewable_resources = BaseResource.objects.none()
     discovered_resources = BaseResource.objects.none()
-    favorite_resources = BaseResource.objects.none()
 
     # if annotate:  # When used in the My Resources page, annotate for speed
     if not filter or 'owned' in filter:
@@ -631,7 +630,7 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
         editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))
         if annotate:
-            editable_resources.all().annotate(editable=Value(True, BooleanField()))
+            editable_resources = editable_resources.all().annotate(editable=Value(True, BooleanField()))
 
     if not filter or 'viewable' in filter:
         # get a list of resources with effective VIEW privilege (should include resources that the
@@ -642,27 +641,29 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
         viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))
         if annotate:
-            viewable_resources.all().annotate(viewable=Value(True, BooleanField()))
+            viewable_resources = viewable_resources.all().annotate(viewable=Value(True, BooleanField()))
 
     if not filter or 'discovered' in filter:
         discovered_resources = user.ulabels.my_resources
         if annotate:
-            discovered_resources.all().annotate(discovered=Value(True, BooleanField()))
+            discovered_resources = discovered_resources.all().annotate(discovered=Value(True, BooleanField()))
 
     favorite_resources = user.ulabels.favorited_resources
+    if annotate:
+        favorite_resources = favorite_resources.all().annotate(unknown_privilege=Value(True, BooleanField()))
 
     # join all queryset objects. if/else saves one database query
     if not filter or 'is_favorite' in filter:
-        resource_collection = owned_resources.distinct() | \
-            editable_resources.distinct() | \
-            viewable_resources.distinct() | \
+        resource_collection = favorite_resources.distinct() | \
             discovered_resources.distinct() | \
-            favorite_resources.distinct()
-    else:
-        resource_collection = owned_resources.distinct() | \
-            editable_resources.distinct() | \
             viewable_resources.distinct() | \
-            discovered_resources.distinct()
+            editable_resources.distinct() | \
+            owned_resources.distinct()
+    else:
+        resource_collection = discovered_resources.distinct() | \
+            viewable_resources.distinct() | \
+            editable_resources.distinct() | \
+            owned_resources.distinct()
 
     if annotate:
         # The annotated field 'has_labels' would allow us to query the DB for labels only if the

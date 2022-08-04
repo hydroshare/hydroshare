@@ -2034,8 +2034,16 @@ def my_resources(request, *args, **kwargs):
 
     Renders either a full my-resources page, or just a table of new resorces
     """
-    filter=request.GET.getlist('f', default=[])
+
+    if not request.is_ajax():
+        filter=request.GET.getlist('f', default=[])
+    else:
+        filter = [request.GET['new_filter']]
     u = User.objects.get(pk=request.user.id)
+
+    if not filter:
+        # add default filters
+        filter = ['owned', 'discovered', 'favorites']
 
     if 'shared' in filter: 
         filter.remove('shared')
@@ -2046,9 +2054,6 @@ def my_resources(request, *args, **kwargs):
         filter.remove('favorites')
         filter.append('is_favorite')
 
-    if not filter:
-        # default filters
-        filter = ['owned', 'discovered', 'favorites']
     resource_collection = get_my_resources_list(u, annotate=True, filter=filter)
 
     context = {
@@ -2061,9 +2066,9 @@ def my_resources(request, *args, **kwargs):
                       context)
     else:
         from django.template.loader import render_to_string
-        tbody = render_to_string(
-                      'includes/my-resources-tbody.html',
+        trows = render_to_string(
+                    'includes/my-resources-trows.html',
                       context, request)
         return JsonResponse({
-            "tbody": tbody,
+            "trows": trows,
         })
