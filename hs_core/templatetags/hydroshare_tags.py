@@ -49,6 +49,7 @@ def user_resource_labels(resource, user):
         return resource.rlabels.get_labels(user)
     return []
 
+
 @register.filter
 def get_user_privilege(resource, user):
     user_privilege = resource.raccess.get_effective_user_privilege(user)
