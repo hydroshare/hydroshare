@@ -4,7 +4,7 @@ import re
 import operator
 from datetime import datetime, timedelta
 from haystack.query import SQ
-from haystack.inputs import Exact
+from haystack.inputs import Exact, Clean
 from django.conf import settings
 import logging
 logger = logging.getLogger(__name__)
@@ -304,7 +304,8 @@ class ParseSQ(object):
 
     def handle_normal_query(self):
         word = head(self.query)
-        self.sq = self.apply_operand(SQ(content=word))
+        word = word.replace('-', ' ')
+        self.sq = self.apply_operand(SQ(content=Clean(word)))
         self.current = self.Default_Operator
         self.query = tail(self.query)
 
