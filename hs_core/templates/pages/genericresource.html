@@ -9,7 +9,7 @@
     <link href="{% static 'css/modal-vue.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/hs-file-icons.css' %}" rel="stylesheet"/>
 
-{# {% if not page|is_debug %} #}
+{% if not page|is_debug %}
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
 {
@@ -169,7 +169,7 @@
     }
 }
 </script>
-{# {% endif %} #}
+{% endif %}
 {% endblock %}
 
 {% block main %}
