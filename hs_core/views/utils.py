@@ -613,13 +613,13 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
         if annotate:
             favorite_resources = favorite_resources.all().annotate(unknown_privilege=Value(True, BooleanField()))
         resource_collection = resource_collection | favorite_resources.distinct()
-    
+
     if not filter or 'discovered' in filter:
         discovered_resources = user.ulabels.my_resources
         if annotate:
             discovered_resources = discovered_resources.all().annotate(discovered=Value(True, BooleanField()))
         resource_collection = resource_collection | discovered_resources.distinct()
-    
+
     if not filter or 'viewable' in filter:
         # get a list of resources with effective VIEW privilege (should include resources that the
         # user has access via group
@@ -631,7 +631,7 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
         if annotate:
             viewable_resources = viewable_resources.all().annotate(viewable=Value(True, BooleanField()))
         resource_collection = resource_collection | viewable_resources.distinct()
-    
+
     if not filter or 'editable' in filter:
         # get a list of resources with effective CHANGE privilege (should include resources that the
         # user has access to via group
