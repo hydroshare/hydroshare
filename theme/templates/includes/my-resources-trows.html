@@ -62,8 +62,8 @@
         {# Date Created #}
         <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
         {# Last Modified #}
-        {% with last_updated=res.last_updated %}
-            <td>{{ last_updated|date:"M d, Y" }} at {{ last_updated|time }}</td>
+        {% with updated=res.updated %}
+            <td>{{ updated|date:"M d, Y" }} at {{ updated|time }}</td>
             <td>
                 {% for kw in metadata.subjects.all %}
                     {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
@@ -90,7 +90,7 @@
                     Favorite
                 {% endif %}
             </td>
-            <td>{{ last_updated|date:"U" }}</td>
+            <td>{{ updated|date:"U" }}</td>
         {% endwith %}
     {% endwith %}
     <td>

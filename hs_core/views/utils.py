@@ -670,7 +670,7 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
             is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
                                     then=Value(True, BooleanField()))))
 
-        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
+        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created', 'updated')
         # we won't hit the DB for each resource to know if it's status is public/private/discoverable
         # etc
         resource_collection = resource_collection.select_related('raccess', 'rlabels')
@@ -678,8 +678,6 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
         prefetch_related_objects(resource_collection,
                                  Prefetch('content_object__creators'),
                                  Prefetch('content_object__subjects'),
-                                 Prefetch('content_object___title'),
-                                 Prefetch('content_object__dates')
                                  )
 
     return resource_collection
