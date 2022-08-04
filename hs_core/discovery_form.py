@@ -41,7 +41,7 @@ class DiscoveryForm(FacetedSearchForm):
             # "word" indicates an exact match and the bare word indicates a stemmed match.
             cdata = self.cleaned_data.get('q')
             try:
-                parser = ParseSQ()
+                parser = ParseSQ(handle_fields=True, handle_logic=True)
                 parsed = parser.parse(cdata)
                 sqs = sqs.filter(parsed)
             except ValueError as e:
