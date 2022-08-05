@@ -1,15 +1,14 @@
-from crispy_forms.layout import Layout, HTML
+from crispy_forms.layout import HTML, Layout
 from django.http import HttpResponseRedirect
 from mezzanine.pages.page_processors import processor_for
 
-from .forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
-    SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
-    VersionForm, SupportedResTypesForm, SupportedAggTypesForm, \
-    SupportedSharingStatusForm, ToolIconForm, UrlBaseForm, SupportedFileExtensionsForm, \
-    UrlBaseAggregationForm, UrlBaseFileForm
 from hs_core import page_processors
 from hs_core.views import add_generic_context
-from hs_file_types.utils import get_SupportedAggTypes_choices
+from hs_file_types.utils import get_supported_aggregation_types
+from .forms import AppHomePageUrlForm, HelpPageUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
+    SourceCodeUrlForm, SupportedAggTypesForm, SupportedFileExtensionsForm, SupportedResTypesForm, \
+    SupportedSharingStatusForm, TestingProtocolUrlForm, ToolIconForm, UrlBaseAggregationForm, UrlBaseFileForm, \
+    UrlBaseForm, VersionForm
 from .models import ToolResource
 from .utils import get_SupportedResTypes_choices
 
@@ -46,19 +45,19 @@ def landing_page(request, page):
 
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
 
-        new_supported_agg_types_array = []
-        if content_model.metadata.supported_aggregation_types:
-            extended_metadata_exists = True
-            supported_agg_types_str = content_model.metadata. \
-                supported_aggregation_types.get_supported_agg_types_str()
-            supported_agg_types_array = supported_agg_types_str.split(',')
-            for type_name in supported_agg_types_array:
-                for class_verbose_list in get_SupportedAggTypes_choices():
-                    if type_name.lower() == class_verbose_list[0].lower():
-                        new_supported_agg_types_array += [class_verbose_list[1]]
-                        break
+        supported_agg_types_verbose_names = []
 
-            context['supported_agg_types'] = ", ".join(new_supported_agg_types_array)
+        if content_model.metadata.supported_agg_types:
+            extended_metadata_exists = True
+            aggr_type_with_verbose_names = get_supported_aggregation_types()
+            for aggr_type in content_model.metadata.supported_agg_types:
+                if aggr_type in aggr_type_with_verbose_names:
+                    supported_agg_types_verbose_names.append(aggr_type_with_verbose_names[aggr_type])
+
+            # TODO: Instead of a string, need to set this context variable
+            #  to list (content_model.metadata.supported_agg_types)
+            #  this would require changes to template to handle the list
+            context['supported_agg_types'] = ", ".join(supported_agg_types_verbose_names)
 
         if content_model.metadata.supported_sharing_status is not None:
             extended_metadata_exists = True
@@ -167,11 +166,11 @@ def landing_page(request, page):
                                                          element_id=supported_res_types_obj.id
                                                          if supported_res_types_obj else None)
 
-        supported_agg_types_obj = content_model.metadata.supported_aggregation_types
-        supported_agg_types_form = SupportedAggTypesForm(instance=supported_agg_types_obj,
+        # supported_agg_types_obj = content_model.metadata.supported_aggregation_types
+        supported_agg_types_form = SupportedAggTypesForm(instance=content_model.metadata,
                                                          res_short_id=content_model.short_id,
-                                                         element_id=supported_agg_types_obj.id
-                                                         if supported_agg_types_obj else None)
+                                                         element_id=None
+                                                         )
 
         sharing_status_obj = content_model.metadata.supported_sharing_status
         sharing_status_obj_form = \

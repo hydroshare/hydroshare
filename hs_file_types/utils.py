@@ -23,6 +23,27 @@ from .models import (
 )
 
 
+def get_supported_aggregation_types():
+    """
+    This function harvests all existing aggregation types in system,
+    and puts them in a dict with the corresponding verbose name of the aggregation type:
+    {
+        "AGGREGATION_CLASS_NAME_1": "AGGREGATION_VERBOSE_NAME_1",
+        "AGGREGATION_CLASS_NAME_2": "AGGREGATION_VERBOSE_NAME_2",
+        ...
+        "AGGREGATION_CLASS_NAME_N": "AGGREGATION_VERBOSE_NAME_N",
+    }
+    """
+
+    agg_types_with_verbose_names = {}
+    agg_types_list = get_aggregation_types()
+    for r_type in agg_types_list:
+        class_name = r_type.__name__
+        verbose_name = r_type.get_aggregation_display_name()
+        agg_types_with_verbose_names[class_name] = verbose_name
+    return agg_types_with_verbose_names
+
+
 def get_SupportedAggTypes_choices():
     """
     This function harvests all existing aggregation types in system,

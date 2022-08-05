@@ -6,7 +6,7 @@ from crispy_forms.layout import Layout, Field, HTML, Row, Column
 from .models import RequestUrlBase, AppHomePageUrl, TestingProtocolUrl, \
     HelpPageUrl, SourceCodeUrl, IssuesPageUrl, MailingListUrl, Roadmap, \
     ShowOnOpenWithList, ToolVersion, ToolIcon, SupportedResTypes, SupportedSharingStatus, \
-    SupportedAggTypes, RequestUrlBaseAggregation, RequestUrlBaseFile
+    RequestUrlBaseAggregation, RequestUrlBaseFile
 
 from hs_core.forms import BaseFormHelper
 from .utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
@@ -595,38 +595,26 @@ class SupportedAggTypeFormHelper(BaseFormHelper):
         # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('supported_agg_types'))
         kwargs['element_name_label'] = 'Supported Aggregation Types'
+        kwargs['action_url'] = "/hsapi/_internal/%s/tool-resource/%s/update-metadata/" % (res_short_id, element_name)
         super(SupportedAggTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                          element_name, layout, *args, **kwargs)
 
 
-class SupportedAggTypesForm(ModelForm):
+class SupportedAggTypesForm(forms.Form):
     supported_agg_types = forms. \
         MultipleChoiceField(choices=get_SupportedAggTypes_choices(),
                             widget=forms.CheckboxSelectMultiple(
                                 attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        model_instance = kwargs.get('instance')
+        metadata_instance = kwargs.pop('instance', None)
         super(SupportedAggTypesForm, self).__init__(*args, **kwargs)
         self.fields['supported_agg_types'].label = "Choose Aggregation Types:"
         self.helper = SupportedAggTypeFormHelper(allow_edit, res_short_id, element_id,
-                                                 element_name='SupportedAggTypes')
+                                                 element_name='supported_agg_types')
 
-        if model_instance:
-            supported_agg_types = model_instance.supported_agg_types.all()
-            if len(supported_agg_types) > 0:
-                # NOTE: The following code works for SWAT res type but does not work here!!!
-                # self.fields['supported_res_types'].initial =
-                #   [parameter.description for parameter in supported_res_types]
-
-                self.initial['supported_agg_types'] = \
-                    [parameter.description for parameter in supported_agg_types]
-            else:
-                self.initial['supported_agg_types'] = []
-
-    class Meta:
-        model = SupportedAggTypes
-        fields = ('supported_agg_types',)
+        if metadata_instance:
+            self.initial['supported_agg_types'] = metadata_instance.supported_agg_types
 
 
 class SupportedAggTypesValidationForm(forms.Form):

@@ -575,6 +575,7 @@ class BaseFormHelper(FormHelper):
         """Render non-repeatable element related forms."""
         coverage_type = kwargs.pop('coverage', None)
         element_name_label = kwargs.pop('element_name_label', None)
+        action_url = kwargs.pop('action_url', '')
 
         super(BaseFormHelper, self).__init__(*args, **kwargs)
 
@@ -589,12 +590,13 @@ class BaseFormHelper(FormHelper):
             else:
                 self.form_id = 'id-%s' % element_name.lower()
 
-            if element_id:
+            if action_url:
+                self.form_action = action_url
+            elif element_id:
                 self.form_action = "/hsapi/_internal/%s/%s/%s/update-metadata/" % \
-                                   (res_short_id, element_name.lower(), element_id)
+                                       (res_short_id, element_name.lower(), element_id)
             else:
-                self.form_action = "/hsapi/_internal/%s/%s/add-metadata/" % (res_short_id,
-                                                                             element_name)
+                self.form_action = "/hsapi/_internal/%s/%s/add-metadata/" % (res_short_id, element_name)
         else:
             self.form_tag = False
 

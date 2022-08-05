@@ -1,6 +1,9 @@
 import requests
 import base64
 import imghdr
+
+from django.contrib.postgres.fields import ArrayField
+
 from hs_core.hydroshare.utils import get_file_mime_type
 
 from django.db import models, transaction
@@ -14,7 +17,7 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
 from .utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
 
-from hs_file_types.utils import get_SupportedAggTypes_choices
+from hs_file_types.utils import get_SupportedAggTypes_choices, get_supported_aggregation_types
 
 
 class ToolResource(BaseResource):
@@ -542,7 +545,10 @@ class ToolMetaData(CoreMetaData):
     _url_base_file = GenericRelation(RequestUrlBaseFile)
     _version = GenericRelation(ToolVersion)
     _supported_res_types = GenericRelation(SupportedResTypes)
-    _supported_agg_types = GenericRelation(SupportedAggTypes)
+    _deprecated_supported_agg_types = GenericRelation(SupportedAggTypes)
+    # stores a list of aggregation/logical file class names to indicate what aggregations are supported by this app
+    supported_agg_types = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=list,
+                                     help_text="Aggregation types that are supported")
     _tool_icon = GenericRelation(ToolIcon)
     _supported_sharing_status = GenericRelation(SupportedSharingStatus)
     _supported_file_extensions = GenericRelation(SupportedFileExtensions)
@@ -556,6 +562,26 @@ class ToolMetaData(CoreMetaData):
     _mailing_list_url = GenericRelation(MailingListUrl)
     _roadmap = GenericRelation(Roadmap)
     show_on_open_with_list = GenericRelation(ShowOnOpenWithList)
+
+    def update_field(self, field_name, field_value, **kwargs):
+        """Update metadata field."""
+
+        if field_name == 'supported_agg_types':
+            aggr_types = field_value
+            if isinstance(field_value, str):
+                aggr_types = field_value.split(',')
+
+            if aggr_types:
+                # check for duplicates
+                if len(aggr_types) != len(set(aggr_types)):
+                    raise ValidationError("Duplicate aggregation type found")
+
+                system_supported_aggr_types = get_supported_aggregation_types()
+                for aggr_type_name in aggr_types:
+                    if aggr_type_name not in system_supported_aggr_types:
+                        raise ValidationError(f"{aggr_type_name} is not a valid aggregation type")
+            self.supported_agg_types = aggr_types
+            self.save()
 
     @property
     def resource(self):
@@ -583,7 +609,7 @@ class ToolMetaData(CoreMetaData):
 
     @property
     def supported_aggregation_types(self):
-        return self._supported_agg_types.first()
+        return self._deprecated_supported_agg_types.first()
 
     @property
     def supported_sharing_status(self):
@@ -765,7 +791,7 @@ class ToolMetaData(CoreMetaData):
         self._url_base_file.all().delete()
         self._version.all().delete()
         self._supported_res_types.all().delete()
-        self._supported_agg_types.all().delete()
+        self._deprecated_supported_agg_types.all().delete()
         self._tool_icon.all().delete()
         self._supported_sharing_status.all().delete()
         self._supported_file_extensions.all().delete()

@@ -24,6 +24,7 @@ hsapi_urlpatterns = [
     url('^hsapi/', include('hs_collection_resource.urls')),
     url('^hsapi/', include('hs_file_types.urls')),
     url('^hsapi/', include('hs_composite_resource.urls')),
+    url('^hsapi/', include('hs_tools_resource.urls')),
 ]
 
 schema_view_yasg = get_schema_view(
