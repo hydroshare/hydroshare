@@ -293,8 +293,8 @@ class ParseSQ(object):
                 no_brackets += 1
             i += 1
         if not no_brackets:
-            parser = ParseSQ(use_default=self.Default_Operator, 
-                             handle_logic=self.handle_logic, 
+            parser = ParseSQ(use_default=self.Default_Operator,
+                             handle_logic=self.handle_logic,
                              handle_fields=self.handle_fields)
             self.sq = self.apply_operand(parser.parse(self.query[1:i-1]))
         else:
