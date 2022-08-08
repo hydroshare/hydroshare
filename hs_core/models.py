@@ -3754,16 +3754,26 @@ class BaseResource(Page, AbstractResource):
 
         def _update_relation_meta(relation_meta_obj):
             relation_updated = False
-            if relation_meta_obj.value and '/resource/' in relation_meta_obj.value:
+            pending = ', DOI for this published resource is pending activation'
+            if (relation_meta_obj.value and '/resource/' in relation_meta_obj.value
+                or pending in relation_meta_obj.value):
                 version_citation = relation_meta_obj.value
-                version_res_id = version_citation.split('/resource/')[-1]
+                if pending in version_citation:
+                    version_res_id = version_citation.split('hs.')[-1]
+                else:
+                    version_res_id = version_citation.split('/resource/')[-1]
                 try:
                     version_res = get_resource_by_shortkey(version_res_id, or_404=False)
                 except BaseResource.DoesNotExist:
                     relation_meta_obj.delete()
                     relation_updated = True
                     return relation_updated
-                current_version_citation = version_res.get_citation()
+                current_version_citation = version_res.get_citation(includePendingMessage=True)
+                # if pending, let's include the hs resource link instead of the doi.org link
+                if pending in current_version_citation and 'https://doi.org' in current_version_citation:
+                    from hs_core.hydroshare import current_site_url
+                    res_url = "{}/resource/{}".format(current_site_url(), version_res_id)
+                    current_version_citation=current_version_citation.split('https://doi.org')[0] + res_url
                 if current_version_citation != version_citation:
                     relation_meta_obj.value = current_version_citation
                     relation_meta_obj.save()

@@ -497,7 +497,8 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         utils.copy_and_create_metadata(ori_res, new_res)
 
         # add or update Relation element to link source and target resources
-        ori_res.metadata.create_element('relation', type=RelationTypes.isReplacedBy, value=new_res.get_citation())
+        ori_res.metadata.create_element('relation', type=RelationTypes.isReplacedBy,
+                                        value=new_res.get_citation(includePendingMessage=False))
 
         if new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
             # the original resource is already a versioned resource, and its isVersionOf relation
