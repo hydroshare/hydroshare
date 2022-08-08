@@ -92,7 +92,7 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         return resource_files[0] if resource_files else None
 
     @classmethod
-    def can_set_folder_to_aggregation(cls, resource, dir_path):
+    def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """Checks if the specified folder *dir_path* can be set to Fileset aggregation
 
         :return
@@ -106,14 +106,14 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         fileset aggregation can contain any other aggregation types including fileset aggregation
         """
 
-        if resource.get_folder_aggregation_object(dir_path) is not None:
+        if resource.get_folder_aggregation_object(dir_path, aggregations=aggregations) is not None:
             # target folder is already an aggregation
             return False
 
         # checking all parent folders
         path = os.path.dirname(dir_path)
         while '/' in path:
-            parent_aggr = resource.get_folder_aggregation_object(path)
+            parent_aggr = resource.get_folder_aggregation_object(path, aggregations=aggregations)
             if parent_aggr is not None and (parent_aggr.is_model_program or parent_aggr.is_model_instance):
                 # avoid creating a fileset aggregation inside a model program/instance aggregation folder
                 return False
