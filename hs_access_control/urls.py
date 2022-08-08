@@ -9,10 +9,10 @@ urlpatterns = [
         views.CommunityView.as_view()),
 
     # Community JSON responders (deprecated)
-    # url(r'^_internal/communityjson/(?P<cid>[0-9]+)/$',
-    #     views.CommunityView.as_view()),
-    # url(r'^_internal/communityjson/(?P<cid>[0-9]+)/(?P<action>[a-z_ ]*)/(?P<gid>[0-9]+)/$',
-    #     views.CommunityView.as_view()),
+    url(r'^_internal/communityjson/(?P<cid>[0-9]+)/$',
+        views.CommunityView.as_view()),
+    url(r'^_internal/communityjson/(?P<cid>[0-9]+)/(?P<action>[a-z_ ]*)/(?P<gid>[0-9]+)/$',
+        views.CommunityView.as_view()),
 
     # Group responders return JSON
     url(r'^_internal/group/(?P<gid>[0-9]+)/$',

@@ -42,16 +42,31 @@
 
 #invite-groups-modal .grid {
   grid-template-columns: repeat(auto-fill, minmax(min(30rem, 100%), 1fr));
-  gap: 12px;
+  gap: 2rem;
 }
 
-#invite-groups-modal .grid .group-community-card {
-  margin: 0;
+#invite-groups-modal .panel-body {
+  flex: 1 1 auto;
 }
 
 #invite-groups-modal .modal-body {
   max-height: 80%;
   overflow: auto;
+}
+
+#invite-groups-modal .community-card--info {
+  flex: 1 1 auto;
+  margin-left: 2rem;
+}
+
+#invite-groups-modal .community-card--actions {
+  border-top: 1px solid #e5e5e5;
+  padding: 1rem;
+}
+
+#invite-groups-modal .community-card--heading {
+  display: block;
+  margin: 1rem 0;
 }
 
 @media screen and (min-width: 768px) {

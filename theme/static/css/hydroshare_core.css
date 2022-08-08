@@ -570,14 +570,13 @@ li.account p{
     padding: 0;
 }
 
-#profile-menu .dropdown-footer, .profile-card .dropdown-footer {
+#profile-menu .dropdown-footer {
     position: absolute;
     bottom: 20px;
     border-top: 1px solid #CCC;
     width: 100%;
     margin: -20px;
     padding: 10px;
-    background: #f8f8f8;
     -webkit-border-bottom-right-radius: 4px;
     -webkit-border-bottom-left-radius: 4px;
     -moz-border-radius-bottomright: 4px;
@@ -714,6 +713,9 @@ li.account p{
 }
 
 /* Helper Classes */
+.has-background-light-gray {
+  background: #F8F8F8;
+}
 
 .top-zero {
 	margin-top: 0;
@@ -4745,7 +4747,6 @@ span.caption-file-type {
     color: #959495;
     display: flex;
     flex-direction: column;
-    background: #f8f8f8;
     border-right: 1px solid #DDD;
 }
 

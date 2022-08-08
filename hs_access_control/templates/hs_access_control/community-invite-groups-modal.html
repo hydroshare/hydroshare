@@ -10,23 +10,27 @@
       </div>
       <div class="modal-body">
         <div class="grid">
-          <div v-for="group of availableToInvite" class="group-community-card panel panel-default">
-            <div class="panel-body flex gap-1">
-              <div class="group-image-wrapper group-image-wrapper-medium">
+          <div v-for="group of availableToInvite" class="group-community-card panel panel-default flex flex-column is-marginless">
+            <div class="panel-body flex">
+              <div class="group-image-wrapper group-image-wrapper-medium is-marginless">
                   <div class="group-image group-preview-image-default"
                       style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
               </div>
-              <div class="community-card--info flex-grow-1">
-                <div class="community-card--actions has-space-bottom text-right">
-                  <button class="btn btn-primary" @click="invite(group.id)" :disabled="isInviting[group.id]">
-                    ${ isInviting[group.id] ? 'Sending invitation...' : 'Send Invite' }
-                  </button>
-                </div>
-                <div>
-                  <a class="community-card--heading" :href="'/group/' + group.id">${ group.name }</a>
-                  <p v-if="group.purpose">${ group.purpose }</p>
-                </div>
+
+              <div class="community-card--info">
+                <a class="community-card--heading" :href="'/group/' + group.id">${ group.name }</a>
+                <p v-if="group.purpose">${ group.purpose }</p>
               </div>
+            </div>
+
+            <div class="community-card--actions text-right has-background-light-gray">
+              <button v-if="group.wasInvited" class="btn btn-default" @click="invite(group.id)" disabled>
+                Invited
+              </button>
+
+              <button v-else class="btn btn-primary" @click="invite(group.id)" :disabled="isInviting[group.id]">
+                ${ isInviting[group.id] ? 'Sending invitation...' : 'Send Invite' }
+              </button>
             </div>
           </div>
         </div>

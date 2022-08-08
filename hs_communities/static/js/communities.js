@@ -54,7 +54,7 @@ $(document).ready(function () {
           const  response = await $.get(url)
           this.availableToInvite = response.groups
           this.members = response.members
-          delete this.isRemoving[id]
+          this.$set(this.isRemoving, id, false)
           $("#remove-group-modal").modal('hide')
           customAlert("Remove Group", response.message, "success", 6000);
         }
@@ -70,9 +70,12 @@ $(document).ready(function () {
         const url = '/access/_internal/communityjson/' + this.community.id + '/invite/' + id + '/';
         try {
           const response = await $.get(url, { 'responseType': 'text' })
-          this.availableToInvite = response.groups
+          const group = this.availableToInvite.find(g => g.id === id)
+          group.wasInvited = true
+
+          // this.availableToInvite = response.groups
           this.members = response.members
-          delete this.isInviting[id]
+          this.$set(this.isInviting, id, false)
           customAlert("Invite Group", response.message, "success", 6000);
         }
         catch(e) {
@@ -89,7 +92,7 @@ $(document).ready(function () {
           const response = await $.get(url, { 'responseType': 'text' })
           // this.joined = response.joined
           // this.availableToJoin = response.available_to_join
-          delete this.isApproving[id]
+          this.$set(this.isApproving, id, false)
         }
         catch(e) {
           console.log(e)
