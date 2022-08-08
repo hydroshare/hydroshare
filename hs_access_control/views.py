@@ -512,7 +512,7 @@ class CommunityRequestView(View):
                     except CommunityRequest.DoesNotExist:
                         denied = "No request matching that id found"
                 if denied == "":
-                    if action == 'request' or action == 'approve' or action == "decline":
+                    if action == 'request':
                         # update the community description from POST data.
                         name = self.request.POST['name']
                         description = self.request.POST['description']
@@ -541,6 +541,7 @@ class CommunityRequestView(View):
                                 cr.owner = User.objects.get(username=ouser)
                                 cr.date_requested = datetime.now()
                                 cr.save()
+                                message = "Community request updated"
                             else:  # create request
                                 cr = CommunityRequest.objects.create(
                                     name=name,
@@ -551,16 +552,17 @@ class CommunityRequestView(View):
                                     # picture=picture,
                                     closed=closed,
                                     owner=ouser)
-                        if action == 'approve':
-                            if user.username == 'admin':
-                                message = cr.approve()
-                            else:
-                                denied = "You are not allowed to approve community requests."
-                        elif action == 'decline':  # decline a request to create a community
-                            if user.username == 'admin':
-                                message = cr.decline()
-                            else:
-                                denied = "You are not allowed to decline community requests"
+                                message = "Community request created"
+                    elif action == 'approve':
+                        if user.username == 'admin':
+                            message = cr.approve()
+                        else:
+                            denied = "You are not allowed to approve community requests."
+                    elif action == 'decline':  # decline a request to create a community
+                        if user.username == 'admin':
+                            message = cr.decline()
+                        else:
+                            denied = "You are not allowed to decline community requests"
                     elif action == 'remove':
                         if user == cr.owner or user.username == 'admin':
                             cr.delete()

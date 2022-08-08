@@ -68,6 +68,9 @@ class TestViews(TestCase):
         # client connection: not authenticated yet
         self.client = Client()
 
+    #######################
+    # Community management
+    #######################
     def test_community_not_authenticated(self):
         " try using the system unauthenticated "
         url = reverse('access_manage_community', kwargs={'cid': self.pets.id})
@@ -377,6 +380,9 @@ class TestViews(TestCase):
         we_declined = [x['community']['name'] for x in json_response['we_declined']]
         self.assertTrue(is_equal_to_as_set(we_declined, ['all kinds of pets']))
 
+    #######################
+    # group management
+    #######################
     def test_group_not_authenticated(self):
         " try using the system unauthenticated on a group "
         url = reverse('access_manage_group', kwargs={'gid': self.cats.id})
@@ -603,9 +609,9 @@ class TestViews(TestCase):
         joined = [x['name'] for x in json_response['joined']]
         self.assertTrue(is_equal_to_as_set(joined, []))
 
-    ########################
+    #######################
     # community creation
-    ########################
+    #######################
     def test_community_request_not_logged_in(self):
         " catch users who are not logged in "
 
@@ -682,8 +688,13 @@ class TestViews(TestCase):
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
-        self.assertTrue(is_equal_to_as_set(json_response['approved'], []))
-        self.assertTrue(is_equal_to_as_set(json_response['declined'], []))
+        pending = [x['name'] for x in json_response['pending']]
+        self.assertTrue(is_equal_to_as_set(pending, ['Fake news']))
+        approved = [x['name'] for x in json_response['approved']]
+        self.assertTrue(is_equal_to_as_set(approved, []))
+        declined = [x['name'] for x in json_response['declined']]
+        self.assertTrue(is_equal_to_as_set(declined, []))
+
         self.assertEqual(json_response['request']['name'], "Fake news")
 
         pending = [x['name'] for x in json_response['pending']]
@@ -710,6 +721,8 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(pending, ['Real news']))
         approved = [x['name'] for x in json_response['approved']]
         self.assertTrue(is_equal_to_as_set(approved, []))
+        declined = [x['name'] for x in json_response['declined']]
+        self.assertTrue(is_equal_to_as_set(declined, []))
 
     def test_community_approve_request(self):
         " approve a request for a regular user "
@@ -729,12 +742,16 @@ class TestViews(TestCase):
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
-        self.assertTrue(is_equal_to_as_set(json_response['approved'], []))
-        self.assertTrue(is_equal_to_as_set(json_response['declined'], []))
+        pending = [x['name'] for x in json_response['pending']]
+        self.assertTrue(is_equal_to_as_set(pending, ['Fake news']))
+        approved = [x['name'] for x in json_response['approved']]
+        self.assertTrue(is_equal_to_as_set(approved, []))
+        declined = [x['name'] for x in json_response['declined']]
+        self.assertTrue(is_equal_to_as_set(declined, []))
+
         self.assertEqual(json_response['request']['name'], "Fake news")
 
-        pending = [x['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ["Fake news"]))
+        # This is the request to be approved.
         crid = json_response['request']['id']
 
         # now approve the request as admin
@@ -760,3 +777,103 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(pending, []))
         approved = [x['name'] for x in json_response['approved']]
         self.assertTrue(is_equal_to_as_set(approved, ["Fake news"]))
+        declined = [x['name'] for x in json_response['declined']]
+        self.assertTrue(is_equal_to_as_set(declined, []))
+
+    def test_community_decline_request(self):
+        " decline a request for a regular user "
+        self.client.login(username='dog', password='anotherpassword')
+
+        # create a request to approve
+        url = reverse("access_manage_crequests", kwargs={"action": "request"})
+        result = self.client.post(url, {
+            "name": "Fake news",
+            "description": "News thats fit for liberals and not for conservatives.",
+            "email": "acouch@hydroshare.org",
+            "purpose": "To be the opposite of InfoWars.",
+            "url": "",
+            "closed": False,
+            "owner": "dog"
+        })
+        self.assertEqual(result.status_code, 200)
+        json_response = json.loads(result.content)
+
+        pending = [x['name'] for x in json_response['pending']]
+        self.assertTrue(is_equal_to_as_set(pending, ['Fake news']))
+        approved = [x['name'] for x in json_response['approved']]
+        self.assertTrue(is_equal_to_as_set(approved, []))
+        declined = [x['name'] for x in json_response['declined']]
+        self.assertTrue(is_equal_to_as_set(declined, []))
+
+        # To act, we need this ID.
+        crid = json_response['request']['id']
+
+        # now approve the request as admin
+        self.client.login(username='admin', password='passwordsarestupid')
+
+        url = reverse("access_manage_crequests", kwargs={"action": "decline", "crid": crid})
+        result = self.client.post(url, {
+            "name": "Fake news",
+            "description": "News thats fit for liberals and not for conservatives.",
+            "email": "acouch@hydroshare.org",
+            "purpose": "To be the opposite of InfoWars.",
+            "url": "",
+            "closed": False,
+            "owner": "dog"
+        })
+        self.assertEqual(result.status_code, 200)
+        json_response = json.loads(result.content)
+
+        # There should be a community now.
+        self.assertEqual(Community.objects.filter(name='Fake news').count(), 0)
+
+        pending = [x['name'] for x in json_response['pending']]
+        self.assertTrue(is_equal_to_as_set(pending, []))
+        approved = [x['name'] for x in json_response['approved']]
+        self.assertTrue(is_equal_to_as_set(approved, []))
+        declined = [x['name'] for x in json_response['declined']]
+        self.assertTrue(is_equal_to_as_set(declined, ['Fake news']))
+
+    def test_community_delete_request(self):
+        " remove a request from a regular user "
+        self.client.login(username='dog', password='anotherpassword')
+
+        # create a request to approve; if crid is not specified, it's new
+        url = reverse("access_manage_crequests", kwargs={"action": "request"})
+        result = self.client.post(url, {
+            "name": "Fake news",
+            "description": "News thats fit for liberals and not for conservatives.",
+            "email": "acouch@hydroshare.org",
+            "purpose": "To be the opposite of InfoWars.",
+            "url": "",
+            "closed": False,
+            "owner": "dog"
+        })
+        self.assertEqual(result.status_code, 200)
+        json_response = json.loads(result.content)
+
+        pending = [x['name'] for x in json_response['pending']]
+        self.assertTrue(is_equal_to_as_set(pending, ['Fake news']))
+        approved = [x['name'] for x in json_response['approved']]
+        self.assertTrue(is_equal_to_as_set(approved, []))
+        declined = [x['name'] for x in json_response['declined']]
+        self.assertTrue(is_equal_to_as_set(declined, []))
+
+        # To act, we need this ID.
+        crid = json_response['request']['id']
+
+        # no user switching: removing a request doesn't require admin
+        url = reverse("access_manage_crequests", kwargs={"action": "remove", "crid": crid})
+        result = self.client.post(url)
+        self.assertEqual(result.status_code, 200)
+        json_response = json.loads(result.content)
+
+        # There should be a community now.
+        self.assertEqual(Community.objects.filter(name='Fake news').count(), 0)
+
+        pending = [x['name'] for x in json_response['pending']]
+        self.assertTrue(is_equal_to_as_set(pending, []))
+        approved = [x['name'] for x in json_response['approved']]
+        self.assertTrue(is_equal_to_as_set(approved, []))
+        declined = [x['name'] for x in json_response['declined']]
+        self.assertTrue(is_equal_to_as_set(declined, []))
