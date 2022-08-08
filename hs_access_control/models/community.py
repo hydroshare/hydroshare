@@ -5,7 +5,8 @@ from django.contrib.contenttypes.models import ContentType
 from hs_core.models import BaseResource
 from theme.utils import get_upload_path_community
 from sorl.thumbnail import ImageField as ThumbnailImageField
-import datetime
+from datetime import datetime
+
 
 ###################################
 # Communities of groups
@@ -272,6 +273,7 @@ class CommunityRequest(models.Model):
         return self.name
 
     def approve(self):
+        from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
         c = Community.objects.create(
            name=self.name,
            description=self.description,
@@ -280,12 +282,24 @@ class CommunityRequest(models.Model):
            purpose=self.purpose,
            closed=self.closed)
 
-        self.owner.share_community_with_user(c, self.owner, PrivilegeCodes.OWNER)
         self.approved = True
         self.date_processed = datetime.now()
         self.save()
-    
-    def decline(self): 
+
+        # Must bootstrap access control system initially
+        # * Set the initial owner as given.
+        # * grantor is always admin.
+        admin = User.objects.get(username='admin')
+        owner = User.objects.get(username=self.owner)
+        UserCommunityPrivilege.share(community=c,
+                                     user=owner,
+                                     grantor=admin,
+                                     privilege=PrivilegeCodes.OWNER)
+
+        return "community '{}' approved and created.".format(self.name)
+
+    def decline(self):
         self.approved = False
         self.date_processed = datetime.now()
         self.save()
+        return "community '{}' declined and not created.".format(self.name)

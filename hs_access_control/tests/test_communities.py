@@ -7,10 +7,9 @@ from hs_access_control.models import PrivilegeCodes, GroupCommunityPrivilege,\
         GroupResourcePrivilege, CommunityResourcePrivilege, CommunityResourceProvenance
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestCommunities(MockIRODSTestCaseMixin, TestCase):
+class TestCommunities(TestCase):
 
     def setUp(self):
         super(TestCommunities, self).setUp()
