@@ -65,6 +65,11 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
 logger = logging.getLogger('django')
 
 
+class FileOverrideException(Exception):
+    def __init__(self, error_message):
+        super(FileOverrideException, self).__init__(self, error_message)
+
+
 # Currently there are two different cleanups scheduled.
 # One is 20 minutes after creation, the other is nightly.
 # TODO Clean up zipfiles in remote federated storage as well.

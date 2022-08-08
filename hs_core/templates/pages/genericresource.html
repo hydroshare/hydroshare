@@ -428,7 +428,16 @@
             </ul>
 
             <div class="col-xs-12 content-block">
-                <h3>Content</h3>
+                <h3>
+                  <span>Content</span> 
+                  {% if resource_edit_mode %}
+                  <a data-toggle="tooltip" data-placement="auto"
+                      href="https://www.youtube.com/watch?v=wTPGJY9-k18" target="_blank"
+                      title='How to: Upload Files to a HydroShare Resource'
+                      class="fa fa-youtube-play icon-red no-decoration space-left icon-guide">
+                  </a>
+                  {% endif %}
+                </h3>
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     {% if not cm.raccess.published or current_user.is_superuser %}
                         <div class="alert alert-info alert-dismissible" role="alert">
