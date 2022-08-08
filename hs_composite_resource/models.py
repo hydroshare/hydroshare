@@ -5,10 +5,21 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
-from hs_file_types.models import ModelProgramResourceFileType
-from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH, SCHEMA_JSON_FILE_ENDSWITH
-from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
+from hs_core.models import BaseResource, ResourceFile, ResourceManager, resource_processor
+from hs_file_types.models import (
+    FileSetLogicalFile,
+    GenericLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
+    ModelInstanceLogicalFile,
+    ModelProgramLogicalFile,
+    ModelProgramResourceFileType,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile
+)
+from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH, SCHEMA_JSON_FILE_ENDSWITH
+from hs_file_types.utils import update_target_spatial_coverage, update_target_temporal_coverage
 
 logger = logging.getLogger(__name__)
 
@@ -84,21 +95,22 @@ class CompositeResource(BaseResource):
     def get_logical_files(self, logical_file_class_name):
         """Get a list of logical files (aggregations) for a specified logical file class name."""
 
-        class_name_to_query_mappings = dict()
-        class_name_to_query_mappings["GenericLogicalFile"] = self.genericlogicalfile_set.all()
-        class_name_to_query_mappings["NetCDFLogicalFile"] = self.netcdflogicalfile_set.all()
-        class_name_to_query_mappings["GeoRasterLogicalFile"] = self.georasterlogicalfile_set.all()
-        class_name_to_query_mappings["GeoFeatureLogicalFile"] = self.geofeaturelogicalfile_set.all()
-        class_name_to_query_mappings["FileSetLogicalFile"] = self.filesetlogicalfile_set.all()
-        class_name_to_query_mappings["ModelProgramLogicalFile"] = self.modelprogramlogicalfile_set.all()
-        class_name_to_query_mappings["ModelInstanceLogicalFile"] = self.modelinstancelogicalfile_set.all()
-        class_name_to_query_mappings["TimeSeriesLogicalFile"] = self.timeserieslogicalfile_set.all()
-        class_name_to_query_mappings["RefTimeseriesLogicalFile"] = self.reftimeserieslogicalfile_set.all()
+        class_name_to_query_mappings = {
+            FileSetLogicalFile.type_name(): self.filesetlogicalfile_set.all(),
+            GenericLogicalFile.type_name(): self.genericlogicalfile_set.all(),
+            GeoFeatureLogicalFile.type_name(): self.geofeaturelogicalfile_set.all(),
+            GeoRasterLogicalFile.type_name(): self.georasterlogicalfile_set.all(),
+            ModelInstanceLogicalFile.type_name(): self.modelinstancelogicalfile_set.all(),
+            ModelProgramLogicalFile.type_name(): self.modelprogramlogicalfile_set.all(),
+            NetCDFLogicalFile.type_name(): self.netcdflogicalfile_set.all(),
+            TimeSeriesLogicalFile.type_name(): self.timeserieslogicalfile_set.all(),
+            RefTimeseriesLogicalFile.type_name(): self.reftimeserieslogicalfile_set.all()
+            }
 
         if logical_file_class_name in class_name_to_query_mappings:
             return class_name_to_query_mappings[logical_file_class_name]
 
-        raise Exception(f"Invalid logical file type:{logical_file_class_name}")
+        raise Exception(f"Invalid logical file type name:{logical_file_class_name}")
 
     @property
     def has_logical_spatial_coverage(self):
@@ -178,14 +190,8 @@ class CompositeResource(BaseResource):
 
          :param dir_path: Resource file directory path (full folder path starting with resource id)
          for which the aggregation object to be retrieved
-         :param aggregations:   list of aggregations in self (resource)
+         :param aggregations:   list of all aggregations in self (this resource)
         """
-        if __debug__:
-            if aggregations is not None:
-                assert(isinstance(aggregations, list))
-                for aggr in aggregations:
-                    assert(aggr.resource == self)
-                assert(len(aggregations) == len(list(self.logical_files)))
 
         aggregation_path = dir_path
         if dir_path.startswith(self.file_path):
