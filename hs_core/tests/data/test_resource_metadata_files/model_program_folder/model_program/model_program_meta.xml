@@ -25,7 +25,6 @@
     </hsterms:extendedMetadata>
     <dc:title>model_program</dc:title>
     <hsterms:modelProgramSchema rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/model_program/model_program_schema.json"/>
-    <hsterms:modelProgramName>Unknown Model Program</hsterms:modelProgramName>
     <dc:subject>def</dc:subject>
     <hsterms:modelDocumentation rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/model_program/model_program_file_3.txt"/>
     <dc:rights>
