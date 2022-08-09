@@ -3755,8 +3755,8 @@ class BaseResource(Page, AbstractResource):
         def _update_relation_meta(relation_meta_obj):
             relation_updated = False
             pending = ', DOI for this published resource is pending activation'
-            if (relation_meta_obj.value and '/resource/' in relation_meta_obj.value
-                or pending in relation_meta_obj.value):
+            if (relation_meta_obj.value and '/resource/' in relation_meta_obj.value or
+                pending in relation_meta_obj.value):
                 version_citation = relation_meta_obj.value
                 if pending in version_citation:
                     version_res_id = version_citation.split('hs.')[-1]
@@ -3773,7 +3773,7 @@ class BaseResource(Page, AbstractResource):
                 if pending in current_version_citation and 'https://doi.org' in current_version_citation:
                     from hs_core.hydroshare import current_site_url
                     res_url = "{}/resource/{}".format(current_site_url(), version_res_id)
-                    current_version_citation=current_version_citation.split('https://doi.org')[0] + res_url
+                    current_version_citation = current_version_citation.split('https://doi.org')[0] + res_url
                 if current_version_citation != version_citation:
                     relation_meta_obj.value = current_version_citation
                     relation_meta_obj.save()
