@@ -3756,7 +3756,7 @@ class BaseResource(Page, AbstractResource):
             relation_updated = False
             pending = ', DOI for this published resource is pending activation'
             if (relation_meta_obj.value and '/resource/' in relation_meta_obj.value or
-                pending in relation_meta_obj.value):
+                    pending in relation_meta_obj.value):
                 version_citation = relation_meta_obj.value
                 if pending in version_citation:
                     version_res_id = version_citation.split('hs.')[-1]
