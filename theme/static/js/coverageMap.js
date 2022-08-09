@@ -152,7 +152,10 @@ function initMap() {
 
     // setup a marker group
     leafletMarkers = L.featureGroup();
-    coverageMap = L.map('coverageMap', {scrollWheelZoom: false}).setView([41.850033, -87.6500523], 3);
+    coverageMap = L.map('coverageMap', {
+        scrollWheelZoom: false,
+        zoomControl: false
+    }).setView([41.850033, -87.6500523], 3);
 
     // https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html#l-draw
     
@@ -181,7 +184,11 @@ function initMap() {
         "Spatial Extent": leafletMarkers,
       };
 
-      let layerControl = L.control.layers(baseMaps, overlayMaps);
+      L.control.zoom({
+        position: 'bottomright'
+      }).addTo(coverageMap);
+
+      let layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'topright'});
       layerControl.addTo(coverageMap);
 
       var drawControl = new L.Control.Draw({
@@ -236,8 +243,10 @@ function initMap() {
 
       L.control.fullscreen({
         position: 'topright',
-        title: 'Toggle fullscreen view',
-        titleCancel: 'Exit Fullscreen',
+        title: {
+        'false': 'Toggle fullscreen view',
+        'true': 'Exit Fullscreen'
+        },
         content: `<i class="fa fa-expand fa-2x" aria-hidden="true"></i>`
       }).addTo(coverageMap);
 

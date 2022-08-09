@@ -172,7 +172,9 @@ let geoconnexApp = new Vue({
       },
       createMap(){
         let vue = this;
-        vue.map = L.map('geo-leaflet');
+        vue.map = L.map('geo-leaflet', {
+          zoomControl: false
+        });
 
         let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
           attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
@@ -205,14 +207,19 @@ let geoconnexApp = new Vue({
           overlayMaps["Search (all items)"] = vue.searchFeatureGroup;
           vue.map.addLayer(vue.searchFeatureGroup);
         }
+        L.control.zoom({
+          position: 'bottomright'
+        }).addTo(vue.map);
 
-        vue.layerControl = L.control.layers(baseMaps, overlayMaps);
+        vue.layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'topright'});
         vue.layerControl.addTo(vue.map);
 
         L.control.fullscreen({
-          position: 'topleft',
-          title: 'Enter fullscreen',
-          titleCancel: 'Exit Fullscreen'
+          position: 'topright',
+          title: {
+            'false': 'Enter fullscreen',
+            'true': 'Exit Fullscreen'
+          }
         }).addTo(vue.map);
 
         // TODO: have geoconnex button actually do something

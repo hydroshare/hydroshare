@@ -140,7 +140,10 @@ function initMapFileType() {
 
     // Initialize Map
     leafletFeatureGroup = L.featureGroup();
-    coordinatesPicker = L.map('picker-map-container', {scrollWheelZoom: false}).setView([41.850033, -87.6500523], 3);
+    coordinatesPicker = L.map('picker-map-container', {
+        scrollWheelZoom: false,
+        zoomControl: false
+    }).setView([41.850033, -87.6500523], 3);
 
     let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
         attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
@@ -166,8 +169,11 @@ function initMapFileType() {
       var overlayMaps = {
         "Extent": leafletFeatureGroup,
       };
+      L.control.zoom({
+        position: 'bottomright'
+      }).addTo(coordinatesPicker);
 
-      let layerControl = L.control.layers(baseMaps, overlayMaps);
+      let layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'topright'});
       layerControl.addTo(coordinatesPicker);
 
       let drawControl = new L.Control.Draw({
@@ -222,8 +228,10 @@ function initMapFileType() {
 
       L.control.fullscreen({
         position: 'topright',
-        title: 'Toggle fullscreen view',
-        titleCancel: 'Exit Fullscreen',
+        title: {
+        'false': 'Toggle fullscreen view',
+        'true': 'Exit Fullscreen'
+        },
         content: `<i class="fa fa-expand fa-2x" aria-hidden="true"></i>`
       }).addTo(coordinatesPicker);
 
