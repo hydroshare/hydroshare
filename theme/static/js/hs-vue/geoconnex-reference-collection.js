@@ -715,8 +715,13 @@ let geoconnexApp = new Vue({
       },
       updateSpatialExtentType(){
         let vue = this;
-        let checked = $("#div_id_type input:checked").val();
-        vue.resSpatialType = checked;
+        let spatial_coverage_drawing = $('#coverageMap .leaflet-interactive');
+        if (spatial_coverage_drawing.size() > 0){
+          let checked = $("#div_id_type input:checked").val();
+          vue.resSpatialType = checked;
+        }else{
+          vue.resSpatialType = null;
+        }
       },
       async fillFromExtent(){
         let vue = this;
