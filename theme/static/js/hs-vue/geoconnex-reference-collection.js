@@ -30,6 +30,7 @@ let geoconnexApp = new Vue({
             apiQueryNoGeo: "items?f=json&lang=en-US&skipGeometry=true",
             apiQueryYesGeo: "items?f=json&lang=en-US&skipGeometry=false",
             cacheName: "geoconnexCache",
+            collectionsDefaultHidden: ["principal_aq", "nat_aq"],
             geoCache: null,
             resShortId: SHORT_ID,
             cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
@@ -303,12 +304,17 @@ let geoconnexApp = new Vue({
             if(!vue.layerGroupDictionary || vue.layerGroupDictionary[geojson.collection] == undefined){
               vue.layerGroupDictionary[geojson.collection] = L.layerGroup();
               vue.layerGroupDictionary[geojson.collection].uris = [];
-              vue.layerControl.addOverlay(vue.layerGroupDictionary[geojson.collection], geojson.collection)
+              vue.layerControl.addOverlay(vue.layerGroupDictionary[geojson.collection], geojson.collection);
               vue.layerControl.expand();
             }
             vue.map.addLayer(vue.layerGroupDictionary[geojson.collection]);
             vue.layerGroupDictionary[geojson.collection].addLayer(leafletLayer);
             vue.layerGroupDictionary[geojson.collection].uris.push(geojson.uri);
+            
+            // we have to remove defaultHidden layers after adding them (we can't just not add them above)
+            if(vue.collectionsDefaultHidden.includes(geojson.collection)){
+              vue.map.removeLayer(vue.layerGroupDictionary[geojson.collection]);
+            }
           }
 
           // handle zooming
