@@ -314,8 +314,8 @@ def test_metadata_schema_json_invalid(invalid_schema_file, mock_irods):
     file_to_upload = UploadedFile(file=open(schema_file_path, 'rb'),
                                   name=os.path.basename(schema_file_path), size=file_size)
     files = {"mi_json_schema_file": file_to_upload}
-    metadata_validation_from = ModelProgramMetadataValidationForm(files=files)
-    assert not metadata_validation_from.is_valid()
+    metadata_validation_form = ModelProgramMetadataValidationForm(files=files)
+    assert not metadata_validation_form.is_valid()
 
 
 @pytest.mark.django_db(transaction=True)
