@@ -19,7 +19,7 @@ from hs_file_types.models import (
 
 class Command(BaseCommand):
     help = "Sets metadata dirty for all aggregations of a specific aggregation type, or all aggregations of a " \
-           "given resource"
+           "given composite resource"
 
     def add_arguments(self, parser):
 
@@ -51,6 +51,9 @@ class Command(BaseCommand):
                 res = get_resource_by_shortkey(res_id, or_404=False)
             except ObjectDoesNotExist:
                 raise CommandError(f"No Resource was found for id: {res_id}")
+            if res.resource_type != "CompositeResource":
+                raise CommandError(f"Specified resource (ID:{res_id}) is not a Composite Resource")
+
         if not options['aggr_type'] and res is None:
             raise CommandError('aggr_type argument is required when resource_id is not provided')
         if res is not None and options['aggr_type']:
