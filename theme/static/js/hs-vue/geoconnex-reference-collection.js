@@ -150,8 +150,10 @@ let geoconnexApp = new Vue({
           vue.geometriesMessage = `Loading geometries from collection: ${collection.id}`;
           const url = `${vue.geoconnexUrl}/${collection.id}/${vue.apiQueryYesGeo}`;
           let response = await vue.getFromCacheOrFetch(url);
-          for (let feature of response.features){
-            itemsWithGeo.push(vue.getFeatureProperties(feature));
+          if(!$.isEmptyObject(response)){
+            for (let feature of response.features){
+              itemsWithGeo.push(vue.getFeatureProperties(feature));
+            }
           }
         }
         // overwrite now that we have the geometries
@@ -386,8 +388,10 @@ let geoconnexApp = new Vue({
           }
           vue.items.push(header);
           let resp = await vue.getItemsIn(col.id);
-          for (let feature of resp.features){
-            vue.items.push(vue.getFeatureProperties(feature));
+          if(!jQuery.isEmptyObject(resp)){
+            for (let feature of resp.features){
+              vue.items.push(vue.getFeatureProperties(feature));
+            }
           }
         }
       },
@@ -436,26 +440,38 @@ let geoconnexApp = new Vue({
         if (!('caches' in window)){
           let fetch_resp = await fetch(url);
           console.log("Cache API not available. Fetching geoconnex data from:\n" + url);
-          data = await fetch_resp.json();
+          if (!fetch_resp.ok){
+            console.log(`Error when attempting to fetch: ${fetch_resp.statusText}`);
+          }else{
+            data = await fetch_resp.json();
+          }
         }else{
           let cache_resp = await vue.geoCache.match(url);
           if(vue.isCacheValid(cache_resp)){
-            console.log("Geoconnex data used from cache for:\n" + url);
-            data = await cache_resp.json();
+            console.log("Using Geoconnex from cache for:\n" + url);
+            if (!cache_resp.ok){
+              console.log(`Error when attempting to fetch: ${cache_resp.statusText}`);
+            }else{
+              data = await cache_resp.json();
+            }
           }else{
             console.log("Fetching + adding to cache, geoconnex data from:\n" + url);
             try{
               let fetch_resp = await fetch(url);
-              let copy = fetch_resp.clone();
-              let headers = new Headers(copy.headers);
-              headers.append('fetched-on', new Date().getTime());
-              let body = await copy.blob();
-              vue.geoCache.put(url, new Response(body, {
-                status: copy.status,
-                statusText: copy.statusText,
-                headers: headers
-              }));
-              data = await fetch_resp.json();
+              if (!fetch_resp.ok){
+                console.log(`Error when attempting to fetch: ${fetch_resp.statusText}`);
+              }else{
+                let copy = fetch_resp.clone();
+                let headers = new Headers(copy.headers);
+                headers.append('fetched-on', new Date().getTime());
+                let body = await copy.blob();
+                vue.geoCache.put(url, new Response(body, {
+                  status: copy.status,
+                  statusText: copy.statusText,
+                  headers: headers
+                }));
+                data = await fetch_resp.json(); 
+              }
             }catch(e){
               console.log(e.message)
               vue.geoCache.match(url).then(function (response) {
