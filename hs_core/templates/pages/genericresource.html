@@ -100,7 +100,7 @@
         "text": "{{ cm.metadata.rights.statement | escapejs }}",
         "url": "{{ cm.metadata.rights.url }}"
         {% elif cm.metadata.rights.statement %}
-        "text": "{{ cm.metadata.rights.statement | escapejs}}",
+        "text": "{{ cm.metadata.rights.statement | escapejs }}",
         "name": "Customized license"
         {% else %}
         "url": "{{ cm.metadata.rights.url }}"
@@ -121,7 +121,7 @@
         {
             "@type": "Grant",
             "identifier": "{{ agency.award_number }}",
-            "name": "{{ agency.award_title }}",
+            "name": "{{ agency.award_title | escapejs }}",
             "funder": {
                 "@type": "Organization",
                 "name": "{{ agency.agency_name | escapejs }}",
