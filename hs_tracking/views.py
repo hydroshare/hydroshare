@@ -2,13 +2,11 @@ import csv
 import urllib.parse
 from io import StringIO
 
-from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 
-from hs_tools_resource.utils import WebAppLaunchException, do_work_when_launching_app_as_needed
 from . import models as hs_tracking
 from .models import Session, Variable
 from .utils import authentic_redirect_url, get_std_log_fields
@@ -32,16 +30,6 @@ class AppLaunch(TemplateView):
             if placeholder in url:
                 encoded_value = urllib.parse.quote(placeholder_value)
                 url = url.replace(placeholder, encoded_value)
-
-        # do work as needed when launching web app
-        res_id = querydict.pop('res_id', [''])[0]
-        tool_res_id = querydict.pop('tool_res_id', [''])[0]
-        if res_id and tool_res_id:
-            try:
-                do_work_when_launching_app_as_needed(tool_res_id, res_id, request.user)
-            except WebAppLaunchException as ex:
-                messages.warning(request, str(ex))
-                return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
         # log app launch details if user is logged in
         if request.user.is_authenticated():
