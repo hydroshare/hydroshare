@@ -83,7 +83,7 @@ def metadata_to_json(metadata):
 def files_to_json(files):
     files_json_list = []
     for f in files:
-        files_json_list.append({"path": str(f), "size": f.size, "checksum": f.checksum, "": f.mime_type})
+        files_json_list.append({"path": str(f), "size": f.size, "checksum": f.checksum, "mime_type": f.mime_type})
     return files_json_list
 
 def to_json(agg):
