@@ -100,7 +100,7 @@ def resource_to_json(resource):
     return json_list
 
 class Command(BaseCommand):
-    help = "Ingest a zipped bag archive into a resource"
+    help = "converts all resource, aggregation and file metadata to json"
 
     def handle(self, *args, **options):
         os.mkdir("mongo_dump")
