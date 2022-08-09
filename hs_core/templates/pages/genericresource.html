@@ -13,9 +13,7 @@
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
 {
-    "@context": {
-        "@vocab": "https://schema.org/"
-    },
+    "@context": "https://schema.org",
     {% if cm.raccess.published %}
     "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}#schemaorg",
     "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
@@ -102,7 +100,7 @@
         "text": "{{ cm.metadata.rights.statement | escapejs }}",
         "url": "{{ cm.metadata.rights.url }}"
         {% elif cm.metadata.rights.statement %}
-        "text": "{{ cm.metadata.rights.statement | escapejs}}",
+        "text": "{{ cm.metadata.rights.statement | escapejs }}",
         "name": "Customized license"
         {% else %}
         "url": "{{ cm.metadata.rights.url }}"
@@ -118,12 +116,17 @@
     ],
     {% endif %}
     {% if fundingagencies %}
-    "funder": [
+    "funding": [
     {% for agency in fundingagencies %}
         {
-            "@type": "Organization",
-            "name": "{{ agency.agency_name | escapejs }}",
-            "url": "{{ agency.agency_url }}"
+            "@type": "Grant",
+            "identifier": "{{ agency.award_number }}",
+            "name": "{{ agency.award_title | escapejs }}",
+            "funder": {
+                "@type": "Organization",
+                "name": "{{ agency.agency_name | escapejs }}",
+                "identifier": "{{ agency.agency_url }}"
+            }
         }{%if not forloop.last%},{%endif%}
         {% endfor %}
     ],
