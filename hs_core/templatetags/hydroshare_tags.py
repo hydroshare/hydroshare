@@ -59,6 +59,8 @@ def get_user_privilege(resource, user):
         self_access_level = 'Editable'
     elif user_privilege == PrivilegeCodes.VIEW:
         self_access_level = 'Viewable'
+    else:
+        self_access_level = "Discovered"
     return self_access_level
 
 
