@@ -33,7 +33,10 @@ def normalize_json(value):
     if "subjects" in value:
         subjects = []
         for sub in value["subjects"]:
-            subjects.append(sub["value"])
+            if "value" in sub:
+                subjects.append(sub["value"])
+            else:
+                subjects.append(sub)
         value["subjects"] = subjects
     if "_rights" in value:
         value["rights"] = value["_rights"]
@@ -89,8 +92,20 @@ def files_to_json(files):
             print(e)
     return files_json_list
 
+def extract_aggregation_fields(agg, json_dict):
+    if hasattr(agg, "dataset_name"):
+        json_dict["title"] = agg.dataset_name
+    if hasattr(agg.metadata, "extra_metadata"):
+        json_dict["additional_metadata"] = agg.metadata.extra_metadata
+    elif hasattr(agg, "extra_metadata"):
+        json_dict["additional_metadata"] = agg.extra_metadata
+    if hasattr(agg.metadata, "keywords"):
+        json_dict["subjects"] = agg.metadata.keywords
+    return json_dict
+
 def to_json(agg):
     json_dict = metadata_to_json(agg.metadata)
+    json_dict = extract_aggregation_fields(agg, json_dict)
     json_dict = normalize_json(json_dict)
     json_dict["files"] = files_to_json(agg.files.all())
     return json_dict
