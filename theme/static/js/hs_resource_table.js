@@ -370,7 +370,8 @@ function initTable(selector){
         "order": [[DATE_CREATED_COL, "desc"]],
         "paging": false,
         "info": false,
-        "columnDefs": colDefs
+        "columnDefs": colDefs,
+        "autoWidth": false
     });
 }
 
