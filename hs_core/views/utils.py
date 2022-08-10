@@ -642,7 +642,7 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
         discovered_resources.distinct()
     if not filter or 'favorites' in filter:
         resource_collection = resource_collection | favorite_resources.distinct()
-    
+
     # remove obsoleted resources
     resource_collection = resource_collection.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
