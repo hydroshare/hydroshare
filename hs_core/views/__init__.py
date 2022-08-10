@@ -2049,10 +2049,6 @@ def my_resources(request, *args, **kwargs):
         filter.remove('shared')
         filter.append('viewable')
         filter.append('editable')
-    
-    if 'favorites' in filter:
-        filter.remove('favorites')
-        filter.append('is_favorite')
 
     resource_collection = get_my_resources_list(u, annotate=True, filter=filter)
 

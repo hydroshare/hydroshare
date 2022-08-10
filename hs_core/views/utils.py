@@ -603,15 +603,15 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
     Gets a QuerySet object for listing resources that belong to a given user.
     :param user: an instance of User - user who wants to see his/her resources
     :param annotate: whether to annotate for my resources page listing.
+    :param filter: an array containing filters that determine the type of resources fetched
     :return: an instance of QuerySet of resources
     """
-    resource_collection = BaseResource.objects.none()
+
     owned_resources = BaseResource.objects.none()
     editable_resources = BaseResource.objects.none()
     viewable_resources = BaseResource.objects.none()
     discovered_resources = BaseResource.objects.none()
 
-    # if annotate:  # When used in the My Resources page, annotate for speed
     if not filter or 'owned' in filter:
         # get a list of resources with effective OWNER privilege
         owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
@@ -644,19 +644,15 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
 
     favorite_resources = user.ulabels.favorited_resources
 
-    # join all queryset objects. if/else saves one database query
-    if not filter or 'is_favorite' in filter:
-        resource_collection = owned_resources.distinct() | \
-            editable_resources.distinct() | \
-            viewable_resources.distinct() | \
-            discovered_resources.distinct() | \
-            favorite_resources.distinct()
-    else:
-        resource_collection = owned_resources.distinct() | \
-            editable_resources.distinct() | \
-            viewable_resources.distinct() | \
-            discovered_resources.distinct()
+    # join all queryset objects.
+    resource_collection = owned_resources.distinct() | \
+        editable_resources.distinct() | \
+        viewable_resources.distinct() | \
+        discovered_resources.distinct()
+    if not filter or 'favorites' in filter:
+        resource_collection = resource_collection | favorite_resources.distinct()
 
+    # When used in the My Resources page, annotate for speed
     if annotate:
         # The annotated field 'has_labels' would allow us to query the DB for labels only if the
         # resource has labels - that means we won't hit the DB for each resource listed on the page
@@ -674,7 +670,7 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
         # we won't hit the DB for each resource to know if it's status is public/private/discoverable
         # etc
         resource_collection = resource_collection.select_related('raccess', 'rlabels')
-        # prefetch metadata items - creators, keywords(subjects), dates and title
+        # prefetch metadata items - creators, keywords(subjects)
         prefetch_related_objects(resource_collection,
                                  Prefetch('content_object__creators'),
                                  Prefetch('content_object__subjects'),
