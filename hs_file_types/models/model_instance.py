@@ -400,8 +400,6 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile):
     """ One file or more than one file in a specific folder can be part of this aggregation """
 
-    # attribute to store type of model instance (SWAT, UEB etc)
-    model_instance_type = models.CharField(max_length=255, default="Unknown Model Instance")
     metadata = models.OneToOneField(ModelInstanceFileMetaData, related_name="logical_file")
     data_type = "Model Instance"
 

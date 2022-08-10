@@ -23,7 +23,6 @@
       </rdf:Description>
     </dc:rights>
     <hsterms:modelCodeRepository rdf:resource="http://www.github.com"/>
-    <hsterms:modelProgramName>Unknown Model Program</hsterms:modelProgramName>
     <hsterms:modelProgramSchema rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/setup_schema.json"/>
     <hsterms:extendedMetadata>
       <rdf:Description>
