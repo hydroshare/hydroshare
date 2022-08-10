@@ -3,6 +3,7 @@ This command converts all resource, aggregation and file metadata to json
 """
 import os
 import json
+import hashlib
 
 from django.core.management import BaseCommand
 
@@ -86,10 +87,11 @@ def metadata_to_json(metadata):
 def files_to_json(files):
     files_json_list = []
     for f in files:
-        try:
-            files_json_list.append({"path": str(f), "size": f.size, "checksum": f.checksum, "mime_type": f.mime_type})
-        except Exception as e:
-            print(e)
+        if f.exists:
+            try:
+                files_json_list.append({"path": str(f), "size": f.size, "checksum": f.checksum, "mime_type": f.mime_type})
+            except Exception as e:
+                print(e)
     return files_json_list
 
 def extract_aggregation_fields(agg, json_dict):
@@ -111,10 +113,27 @@ def to_json(agg):
     return json_dict
 
 def resource_to_json(resource):
-    json_list = [{"https://hydroshare.org/resource/" + resource.short_id: to_json(resource)}]
+    resource_metadata = to_json(resource)
+    json_list = []
     if resource.resource_type == "CompositeResource":
+        agg_ids = []
         for agg in resource.logical_files:
-            json_list.append({agg.url: to_json(agg)})
+            agg_hash_id = hashlib.md5(bytes(agg.url, 'utf-8')).hexdigest()
+            agg_ids.append(agg_hash_id)
+            aggregation_metadata = to_json(agg)
+            if "relations" not in aggregation_metadata:
+                aggregation_metadata["relations"] = []
+            aggregation_metadata["relations"].append({"type": "isPartOf", "value": resource.short_id})
+            json_list.append({agg_hash_id: aggregation_metadata})
+        if "relations" not in resource_metadata:
+            resource_metadata["relations"] = []
+        for agg_id in agg_ids:
+            resource_metadata["relations"].append({"type": "hasPart", "value": agg_id})
+    for relation in resource_metadata.get("relations", []):
+        if relation["type"] in ["isPartOf", "hasPart"]:
+            if "hydroshare.org/resource" in relation["value"]:
+                relation["value"] = relation["value"].split("/")[-1]
+    json_list.append({resource.short_id: resource_metadata})
     return json_list
 
 class Command(BaseCommand):
