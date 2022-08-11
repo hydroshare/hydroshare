@@ -98,9 +98,9 @@ def resource_first_author(content):
     if not content:
         return ''
     first_creator = None
-    for cr in content.metadata.creators.all():
-        if cr.order == 1:
-            first_creator = cr
+    for creator in content.metadata.creators.all():
+        if creator.order == 1:
+            first_creator = creator
             break
     if first_creator.name and first_creator.relative_uri:
         return format_html('<a href="{desc}">{name}</a>',
