@@ -98,7 +98,7 @@ def resource_first_author(content):
     if not content:
         return ''
     first_creator = None
-    for cr in content.metadata.creators.all(): 
+    for cr in content.metadata.creators.all():
         if cr.order == 1:
             first_creator = cr
             break
