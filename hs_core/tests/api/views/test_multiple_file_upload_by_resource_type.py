@@ -44,10 +44,6 @@ class TestResourceTypeFileTypes(TestCase):
         resp_json = self._make_request("CompositeResource")
         self.assertEqual(resp_json['allow_multiple_file'], True)
 
-        # test for ModelProgramResource
-        resp_json = self._make_request("ModelProgramResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
         # test for ToolResource
         resp_json = self._make_request("ToolResource")
         self.assertEqual(resp_json['allow_multiple_file'], False)
