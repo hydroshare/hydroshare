@@ -97,16 +97,18 @@ def resource_type(content):
 def resource_first_author(content):
     if not content:
         return ''
+
     first_creator = None
     for creator in content.metadata.creators.all():
         if creator.order == 1:
             first_creator = creator
             break
+
     if first_creator:
         if first_creator.name and first_creator.relative_uri:
             return format_html('<a href="{desc}">{name}</a>',
-                                desc=first_creator.relative_uri,
-                                name=first_creator.name)
+                               desc=first_creator.relative_uri,
+                               name=first_creator.name)
         elif first_creator.name:
             return format_html('<span>{name}</span>', name=first_creator.name)
     else:
