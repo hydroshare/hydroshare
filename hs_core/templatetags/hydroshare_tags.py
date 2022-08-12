@@ -105,8 +105,8 @@ def resource_first_author(content):
     if first_creator:
         if first_creator.name and first_creator.relative_uri:
             return format_html('<a href="{desc}">{name}</a>',
-                            desc=first_creator.relative_uri,
-                            name=first_creator.name)
+                                desc=first_creator.relative_uri,
+                                name=first_creator.name)
         elif first_creator.name:
             return format_html('<span>{name}</span>', name=first_creator.name)
     else:
