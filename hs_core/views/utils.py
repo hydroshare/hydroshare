@@ -630,8 +630,6 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
 
     if not filter or 'discovered' in filter:
         discovered_resources = user.ulabels.my_resources
-        if annotate:
-            discovered_resources = discovered_resources.all().annotate(discovered=Value(True, BooleanField()))
 
     favorite_resources = user.ulabels.favorited_resources
 
