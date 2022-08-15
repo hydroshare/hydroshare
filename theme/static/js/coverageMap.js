@@ -185,6 +185,15 @@ function initMap() {
     coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
         color:"#DDD",
         zoom: 3,
+        restriction: {
+            latLngBounds: {
+              north: 85,
+              south: -85,
+              east: 179.99999,
+              west: -179.99999,
+            },
+          },        
+        minZoom: 1, 
         streetViewControl: false,
         scrollwheel: false,
         center: {lat: 41.850033, lng: -87.6500523}, // Default center
