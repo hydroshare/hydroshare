@@ -52,7 +52,7 @@ def user_resource_labels(resource, user):
 
 @register.filter
 def get_user_privilege(resource, user):
-    user_privilege = resource.raccess.get_effective_user_privilege(user)
+    user_privilege = resource.raccess.get_effective_privilege(user)
     if user_privilege == PrivilegeCodes.OWNER:
         self_access_level = 'Owned'
     elif user_privilege == PrivilegeCodes.CHANGE:
