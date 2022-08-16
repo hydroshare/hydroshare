@@ -2,9 +2,12 @@
   <div class="container">
       <div class="row">
           <div class="col-sm-12">
-              <div class="collaborate-nav">
+              <div class="collaborate-nav flex">
                   <a href="{% url "communities" %}" class="collaborate-nav-item{% if active == 'communities' %} active{% endif %}">Find Communities</a>
                   <a href="{% url "my_communities" %}" class="collaborate-nav-item{% if active == 'my_communities' %} active{% endif %}">My Communities</a>
+                  <div class="spacer"></div>
+                  <a href="{% url "communities" %}" class="collaborate-nav-item{% if active == 'manage_requests' %} active{% endif %}">
+                    <i class="fa fa-lock" aria-hidden="true"></i> Manage Requests <span class="badge">9</span></a>
               </div>
           </div>
       </div>

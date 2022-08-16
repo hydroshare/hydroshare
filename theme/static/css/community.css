@@ -60,13 +60,24 @@
 }
 
 #invite-groups-modal .community-card--actions {
-  border-top: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
   padding: 1rem;
+  position: relative;
+}
+
+#invite-groups-modal .group-image-wrapper {
+  margin-top: -6rem;
+  z-index: 1;
+  background: #FFF;
 }
 
 #invite-groups-modal .community-card--heading {
   display: block;
   margin: 1rem 0;
+}
+
+#invite-groups-modal .input--search {
+	padding-left: 25px;
 }
 
 @media screen and (min-width: 768px) {

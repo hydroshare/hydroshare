@@ -239,9 +239,8 @@ class FindCommunitiesView(TemplateView):
         return super(FindCommunitiesView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
-
         return {
-            'communities_list': Community.objects.all()
+            'communities_list': Community.objects.filter(active=True)
         }
 
 
