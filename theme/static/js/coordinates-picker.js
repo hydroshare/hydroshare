@@ -140,9 +140,15 @@ function initMapFileType() {
 
     // Initialize Map
     leafletFeatureGroup = L.featureGroup();
+
+    const southWest = L.latLng(-90, -180), northEast = L.latLng(90, 180);
+    const bounds = L.latLngBounds(southWest, northEast);
+
     coordinatesPicker = L.map('picker-map-container', {
         scrollWheelZoom: false,
-        zoomControl: false
+        zoomControl: false,
+        maxBounds: bounds,
+        maxBoundsViscosity: 1.0
     }).setView([41.850033, -87.6500523], 3);
 
     let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {

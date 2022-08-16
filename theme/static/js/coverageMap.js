@@ -152,9 +152,15 @@ function initMap() {
 
     // setup a marker group
     leafletMarkers = L.featureGroup();
+
+    const southWest = L.latLng(-90, -180), northEast = L.latLng(90, 180);
+    const bounds = L.latLngBounds(southWest, northEast);
+
     coverageMap = L.map('coverageMap', {
         scrollWheelZoom: false,
-        zoomControl: false
+        zoomControl: false,
+        maxBounds: bounds,
+        maxBoundsViscosity: 1.0
     }).setView([41.850033, -87.6500523], 3);
 
     // https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html#l-draw

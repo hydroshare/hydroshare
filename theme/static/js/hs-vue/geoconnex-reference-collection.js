@@ -172,8 +172,13 @@ let geoconnexApp = new Vue({
       },
       createMap(){
         let vue = this;
+        const southWest = L.latLng(-90, -180), northEast = L.latLng(90, 180);
+        const bounds = L.latLngBounds(southWest, northEast);
+
         vue.map = L.map('geo-leaflet', {
-          zoomControl: false
+          zoomControl: false,
+          maxBounds: bounds,
+          maxBoundsViscosity: 1.0
         });
 
         let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
