@@ -270,6 +270,10 @@ function processDrawingFileType(coordinates, shape) {
             currentInstance.find("input[data-map-item='westlimit']").trigger("change");
 
             $('#coordinates-picker-modal').modal('hide')
+
+            // Update the coordinate picker radio type
+            $("#id_type_filetype input[type='radio'][value='box']").prop("checked", true);
+            $("#id_type_filetype input:radio").trigger("change");
         });
     }
     else {
@@ -283,6 +287,10 @@ function processDrawingFileType(coordinates, shape) {
             currentInstance.find("input[data-map-item='latitude']").trigger("change");
 
             $('#coordinates-picker-modal').modal('hide')
+
+            // Update the coordinate picker radio type
+            $("#id_type_filetype input[type='radio'][value='point']").prop("checked", true);
+            $("#id_type_filetype input:radio").trigger("change");
         });
     }
 }
