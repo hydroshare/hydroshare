@@ -68,7 +68,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
     programming_languages = forms.CharField(required=False)
     operating_systems = forms.CharField(required=False)
     mp_file_types = forms.CharField(required=False)
-    mp_program_type = forms.CharField(max_length=255)
+
     # allow user to upload a json schema file
     mi_json_schema_file = forms.FileField(required=False)
     # allow user to select one of the existing schema templates
@@ -158,7 +158,6 @@ class ModelProgramMetadataValidationForm(forms.Form):
             # use the content from the uploaded json file to save in database
             logical_file.metadata_schema_json = self.cleaned_data['mi_json_schema_file']
 
-        logical_file.model_program_type = self.cleaned_data['mp_program_type']
         logical_file.save()
         # recreate ModelProgramResourceFileType objects
         if self.cleaned_data["mp_file_types"]:
