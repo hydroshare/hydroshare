@@ -280,8 +280,11 @@ class ParseSQ(object):
 
             # remove unquoted text from query which we processed as head
             remaining_query_string_to_process = tail(self.query)
-            # add back the search field to the query
-            self.query = f"{search_field}:{remaining_query_string_to_process}"
+            if remaining_query_string_to_process:
+                # add back the search field to the query
+                self.query = f"{search_field}:{remaining_query_string_to_process}"
+            else:
+                self.query = remaining_query_string_to_process
 
         self.current = self.Default_Operator
 
