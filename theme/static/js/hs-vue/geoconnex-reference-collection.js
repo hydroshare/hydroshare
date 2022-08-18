@@ -233,37 +233,6 @@ let geoconnexApp = new Vue({
           }
         }).addTo(vue.map);
 
-        // TODO: have geoconnex button actually do something
-        L.Control.GeoconnexButton = L.Control.extend({
-          onAdd: function(map) {
-              var geoButton = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-              geoButton.setAttribute("data-toggle", "tooltip");
-              geoButton.setAttribute("data-placement", "right");
-              geoButton.setAttribute("title", "Search map using Spatial Extent");
-
-              geoButton.innerHTML = `<a role="button"><i class="fa fa-connectdevelop fa-3x"></i></a>`
-
-              L.DomEvent.on(geoButton, 'click', (e)=>{
-                e.stopPropagation();
-                vue.searchUsingSpatialExtent();
-               });
-      
-              return geoButton;
-          },
-      
-          onRemove: function(map) {
-            L.DomEvent.off()
-          }
-      });
-      
-      L.control.watermark = function(opts) {
-          return new L.Control.GeoconnexButton(opts);
-      }
-      
-      L.control.watermark({
-        position: 'bottomleft'
-      }).addTo(vue.map);
-
         // show the default layers at start
         vue.map.addLayer(terrain);
         vue.map.addLayer(vue.selectedFeatureGroup);
