@@ -256,6 +256,42 @@ function initMap() {
         content: `<i class="fa fa-expand fa-2x" aria-hidden="true"></i>`
       }).addTo(coverageMap);
 
+      L.Control.RecenterButton = L.Control.extend({
+        onAdd: function(map) {
+            let recenterButton = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            recenterButton.setAttribute("data-toggle", "tooltip");
+            recenterButton.setAttribute("data-placement", "right");
+            recenterButton.setAttribute("title", "Recenter");
+
+            recenterButton.innerHTML = `<a role="button"><i class="fa fa-dot-circle-o fa-3x" style="padding-top:4px"></i></a>`
+
+            L.DomEvent.on(recenterButton, 'click', (e)=>{
+              e.stopPropagation();
+              try{
+                coverageMap.fitBounds(leafletMarkers.getBounds());
+              }
+              catch (error){
+                console.log(error.message);
+                coverageMap.setView([30, 0], 1);
+              }
+             });
+    
+            return recenterButton;
+        },
+    
+        onRemove: function(map) {
+        //   L.DomEvent.off();
+        }
+    });
+    
+    L.control.watermark = function(opts) {
+        return new L.Control.RecenterButton(opts);
+    }
+    
+    L.control.watermark({
+      position: 'bottomright'
+    }).addTo(coverageMap);
+
       // show the default layers at start
       coverageMap.addLayer(streets);
       coverageMap.addLayer(leafletMarkers);

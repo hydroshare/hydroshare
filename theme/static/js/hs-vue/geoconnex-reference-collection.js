@@ -233,6 +233,36 @@ let geoconnexApp = new Vue({
           }
         }).addTo(vue.map);
 
+        L.Control.GeoconnexRecenterButton = L.Control.extend({
+          onAdd: function(map) {
+              let recenterButton = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+              recenterButton.setAttribute("data-toggle", "tooltip");
+              recenterButton.setAttribute("data-placement", "right");
+              recenterButton.setAttribute("title", "Recenter");
+
+              recenterButton.innerHTML = `<a role="button"><i class="fa fa-dot-circle-o fa-3x" style="padding-top:4px"></i></a>`
+
+              L.DomEvent.on(recenterButton, 'click', (e)=>{
+                e.stopPropagation();
+                vue.fitMap();
+               });
+      
+              return recenterButton;
+          },
+      
+          onRemove: function(map) {
+            L.DomEvent.off()
+          }
+      });
+      
+      L.control.watermark = function(opts) {
+          return new L.Control.GeoconnexRecenterButton(opts);
+      }
+      
+      L.control.watermark({
+        position: 'bottomright'
+      }).addTo(vue.map);
+
         // show the default layers at start
         vue.map.addLayer(streets);
         vue.map.addLayer(vue.selectedFeatureGroup);
