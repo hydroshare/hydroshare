@@ -240,7 +240,7 @@ let geoconnexApp = new Vue({
               recenterButton.setAttribute("data-placement", "right");
               recenterButton.setAttribute("title", "Recenter");
 
-              recenterButton.innerHTML = `<a role="button"><i class="fa fa-dot-circle-o fa-3x" style="padding-top:4px"></i></a>`
+              recenterButton.innerHTML = `<a role="button"><i class="fa fa-dot-circle-o fa-2x" style="padding-top:3px"></i></a>`
 
               L.DomEvent.on(recenterButton, 'click', (e)=>{
                 e.stopPropagation();
@@ -297,7 +297,7 @@ let geoconnexApp = new Vue({
               }else if(vue.resMode == "Edit" && style.color == vue.selectColor){
                 popupText += `<button type="button" class="btn btn-success map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
               }
-              layer.bindPopup(popupText);
+              layer.bindPopup(popupText, {maxWidth : 400});
             },
             pointToLayer: function (feature, latlng) {
               return L.circleMarker(latlng, style);
@@ -776,7 +776,7 @@ let geoconnexApp = new Vue({
       },
       setMapEvents(){
         let vue = this;
-        var popup = L.popup();
+        var popup = L.popup({maxWidth : 400});
 
         function onMapClick(e) {
           let loc = {lat: e.latlng.lat, long: e.latlng.lng};

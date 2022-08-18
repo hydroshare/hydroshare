@@ -862,6 +862,10 @@ li.account p{
 	height: 400px;
 }
 
+.leaflet-control-container, .leaflet-popup{
+	font-size: 1.2rem !important;
+}
+
 #geoconnex-leaflet-info{
 	display: none;
 }

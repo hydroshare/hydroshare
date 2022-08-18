@@ -263,7 +263,7 @@ function initMap() {
             recenterButton.setAttribute("data-placement", "right");
             recenterButton.setAttribute("title", "Recenter");
 
-            recenterButton.innerHTML = `<a role="button"><i class="fa fa-dot-circle-o fa-3x" style="padding-top:4px"></i></a>`
+            recenterButton.innerHTML = `<a role="button"><i class="fa fa-dot-circle-o fa-2x" style="padding-top:3px"></i></a>`
 
             L.DomEvent.on(recenterButton, 'click', (e)=>{
               e.stopPropagation();
