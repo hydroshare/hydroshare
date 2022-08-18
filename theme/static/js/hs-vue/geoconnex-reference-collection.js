@@ -197,15 +197,15 @@ let geoconnexApp = new Vue({
             maxZoom: 18,
         });
 
-        let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
-          attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
-          maxZoom: 18,
+        let googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+          maxZoom: 20,
+          subdomains:['mt0','mt1','mt2','mt3']
         });
 
         var baseMaps = {
-          "Terrain": terrain,
           "Streets": streets,
-          "Toner": toner
+          "Terrain": terrain,
+          "Satelite": googleSat
         };
 
         vue.selectedFeatureGroup =  L.featureGroup();
@@ -234,7 +234,7 @@ let geoconnexApp = new Vue({
         }).addTo(vue.map);
 
         // show the default layers at start
-        vue.map.addLayer(terrain);
+        vue.map.addLayer(streets);
         vue.map.addLayer(vue.selectedFeatureGroup);
         vue.map.setView([30, 0], 1);
         vue.setMapEvents();

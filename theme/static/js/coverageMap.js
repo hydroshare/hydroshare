@@ -175,15 +175,15 @@ function initMap() {
         maxZoom: 18,
     });
 
-    let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
-        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
-        maxZoom: 18,
+    let googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+        maxZoom: 20,
+        subdomains:['mt0','mt1','mt2','mt3']
     });
 
-    var baseMaps = {
-        "Terrain": terrain,
+      var baseMaps = {
         "Streets": streets,
-        "Toner": toner
+        "Terrain": terrain,
+        "Satelite": googleSat
       };
 
       var overlayMaps = {
@@ -257,7 +257,7 @@ function initMap() {
       }).addTo(coverageMap);
 
       // show the default layers at start
-      coverageMap.addLayer(terrain);
+      coverageMap.addLayer(streets);
       coverageMap.addLayer(leafletMarkers);
       drawInitialShape();
 }
