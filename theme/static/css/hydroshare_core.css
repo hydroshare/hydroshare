@@ -853,12 +853,18 @@ li.account p{
 	width: 25%;
 }
 
-#geo-leaflet{
+#geoconnex-wrapper{
 	flex: 2 1 500px;
 	width: 75%;
+}
+
+#geoconnex-leaflet{
 	height: 400px;
 }
 
+#geoconnex-leaflet-info{
+	display: none;
+}
 
 #relatedResourcesTab{
     overflow:hidden;

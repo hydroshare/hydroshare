@@ -82,6 +82,12 @@ let geoconnexApp = new Vue({
             }
           });
         }
+      },
+      loading(newValue, oldValue){
+        let vue = this;
+        if ( !newValue ){
+          $('#geoconnex-leaflet-info').show();
+        }
       }
     },
     methods: {
@@ -175,7 +181,7 @@ let geoconnexApp = new Vue({
         const southWest = L.latLng(-90, -180), northEast = L.latLng(90, 180);
         const bounds = L.latLngBounds(southWest, northEast);
 
-        vue.map = L.map('geo-leaflet', {
+        vue.map = L.map('geoconnex-leaflet', {
           zoomControl: false,
           maxBounds: bounds,
           maxBoundsViscosity: 1.0
