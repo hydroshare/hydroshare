@@ -56,7 +56,7 @@ class SearchAPI(APIView):
 
         if request.GET.get('q'):
             q = request.GET.get('q')
-            parser = ParseSQ()
+            parser = ParseSQ(handle_fields=True, handle_logic=True)
             sq = parser.parse(q)
             sqs = sqs.filter(sq)
 
