@@ -996,7 +996,7 @@ class IrodsFile:
 
 
 def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
-               overwrite=False, auto_aggregate=True, ingest_metadata=False):
+               overwrite=False, auto_aggregate=True, ingest_metadata=False, unzip_to_folder=False):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
     any federated zone used for HydroShare resource backend store and keep Django DB in sync.
@@ -1009,6 +1009,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     :param bool overwrite: a bool indicating whether to overwrite files on unzip
     :param bool auto_aggregate: a bool indicating whether to check for and aggregate recognized files
     :param bool ingest_metadata: a bool indicating whether to look for and ingest resource/aggregation metadata files
+    :param bool unzip_to_folder: a bool indicating whether to unzip to a folder or not
     :return:
     """
     from hs_file_types.utils import identify_metadata_files

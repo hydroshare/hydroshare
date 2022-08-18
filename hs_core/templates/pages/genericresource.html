@@ -278,6 +278,11 @@
                         <span>Unzip here</span>
                     </li>
 
+                    <li id="btn-unzip-to-folder" data-menu-name="unzip-to-folder" data-fb-action="unzip-to-folder">
+                        <span class="fa fa-file-archive-o icon-blue"></span>
+                        <span>Unzip to folder</span>
+                    </li>
+
                     <li role="separator" class="divider"></li>
                 {% endif %}
 
@@ -694,14 +699,13 @@
                                             {% endif %}
 
                                             {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
-                                                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                                                {% if cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-create-folder" class="disabled"
                                                             data-fb-action="createFolder" data-toggle="modal"
                                                             data-target="#create-folder-dialog"
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
                                                     </button>
-                                                    {% if cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-add-reference" class="fb-space-right"
                                                             data-fb-action="createFolder"
                                                             data-toggle="modal"
@@ -709,7 +713,6 @@
                                                         title="Add content from the web">
                                                     <span class="fa fa-external-link icon-blue"></span>
                                                     </button>
-                                                    {% endif %}
                                                     <button id="fb-cut" data-fb-action="cut"
                                                             class="disabled"
                                                             title="Cut">
@@ -731,7 +734,7 @@
                                                     </button>
                                                 {% endif %}
 
-                                                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                                                {% if cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-zip" data-fb-action="zip"
                                                             class="disabled"
                                                             title="Zip folder" data-toggle="modal"
@@ -742,6 +745,11 @@
                                                     <button id="fb-unzip" data-fb-action="unzip"
                                                             class="disabled fb-space-right"
                                                             title="Unzip here">
+                                                        <span class="fa fa-file-archive-o icon-blue"></span>
+                                                    </button>
+                                                    <button id="fb-unzip-to-folder" data-fb-action="unzip-to-folder"
+                                                            class="disabled fb-space-right"
+                                                            title="Unzip to folder">
                                                         <span class="fa fa-file-archive-o icon-blue"></span>
                                                     </button>
                                                 {% endif %}

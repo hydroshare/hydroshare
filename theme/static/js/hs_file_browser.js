@@ -2327,7 +2327,7 @@ $(document).ready(function () {
         var calls = [];
         var res_id = $("#unzip_res_id").val();
         var zip_with_rel_path = $("#zip_with_rel_path").val();
-        calls.push(unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite='true'));
+        calls.push(unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite='true', unzip_to_folder='false'));
         // Disable the Cancel button until request has finished
         $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
         function afterDoneRequest() {
@@ -2734,12 +2734,27 @@ $(document).ready(function () {
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/')), overwrite='false');
+            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/')), overwrite='false', unzip_to_folder='false');
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure
         // don't refresh browser when unzip async task is ongoing since a temporary folder is being created to check
         // whether file override will happen
+        $.when.apply($, calls).fail(function () {
+            refreshFileBrowser();
+        });
+    });
+
+    // Unzip to folder method
+    $("#btn-unzip-to-folder, #fb-unzip-to-folder").click(function () {
+        var files = $("#fb-files-container li.ui-selected");
+        var calls = [];
+        for (let i = 0; i < files.length; i++) {
+            let fileName = $(files[i]).children(".fb-file-name").text();
+            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/')), overwrite='false', unzip_to_folder='true');
+        }
+
+        // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).fail(function () {
             refreshFileBrowser();
         });

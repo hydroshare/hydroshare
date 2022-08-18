@@ -700,10 +700,11 @@ def resource_debug(resource_id):
 
 @shared_task
 def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False, auto_aggregate=False,
-               ingest_metadata=False):
+               ingest_metadata=False, unzip_to_folder=False):
     from hs_core.views.utils import unzip_file
     user = User.objects.get(pk=user_pk)
-    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata)
+    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata,
+               unzip_to_folder)
 
 
 @shared_task
