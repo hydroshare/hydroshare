@@ -48,7 +48,7 @@ class SimpleTest(TestCase):
         testcase = {
             "author:admin": str(SQ(creator="admin")),
             "first_author:admin": str(SQ(author="admin")),
-            "author:admin notes": str(SQ(creator="admin") & SQ(creator="notes")),
+            "author:admin notes": str(SQ(creator="admin") & SQ(content=Clean("notes"))),
             'author:"admin notes"': str(SQ(creator=Exact("admin notes"))),
             'title:"need note"': str(SQ(title=Exact("need note"))),
             'subject:"exp>20"': str(SQ(subject=Exact("exp>20"))),
