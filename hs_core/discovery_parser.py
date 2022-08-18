@@ -245,7 +245,7 @@ class ParseSQ(object):
             self.sq = self.apply_operand(SQ(**{search_field: Exact(text_in_quotes)}))
             # remove quoted text from query
             self.query = re.sub(self.Pattern_Quoted_Text, '', self.query, 1)
-        elif self.query:  # no quotes
+        else:  # no quotes
             word = head(self.query)  # This has no field specifier
 
             # Append __lt, __lte, etc to query as needed
@@ -277,14 +277,8 @@ class ParseSQ(object):
                         SQ(**{search_field+inequality_qualifier: thisday}))
             else:
                 self.sq = self.apply_operand(SQ(**{search_field+inequality_qualifier: word}))
-
-            # remove unquoted text from query which we processed as head
-            remaining_query_string_to_process = tail(self.query)
-            if remaining_query_string_to_process:
-                # add back the search field to the query
-                self.query = f"{search_field}:{remaining_query_string_to_process}"
-            else:
-                self.query = remaining_query_string_to_process
+            # remove unquoted text from query
+            self.query = tail(self.query)
 
         self.current = self.Default_Operator
 
@@ -336,9 +330,6 @@ class ParseSQ(object):
         This can raise ValueError if the values passed are not valid.
         """
         self.query = query
-        # print(f">> query string in parse method {query}")
-        # if self.query.endswith('"'):
-        #     print("query string has quotes in parse method")
         self.sq = SQ()
         self.current = self.Default_Operator
         while self.query:
