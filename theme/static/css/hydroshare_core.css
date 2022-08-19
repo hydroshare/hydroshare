@@ -854,29 +854,12 @@ li.account p{
 	padding-top: 5px;
 }
 
-#app-geoconnex .custom-success{
-	border: thin solid;
-	background-image: linear-gradient(#74E274, #5CB85C);
-	border-color: #20833F;
-	color: #fff;
-}
-
-#app-geoconnex .custom-primary{
-	border: thin solid;
-	background-image: linear-gradient(#7AB2E2, #428BCA);
-	border-color: #428BCA;
-	color: #fff
-}
-
-#app-geoconnex .custom-danger{
-	border: thin solid;
-	background-color: #d9534f;
-	border-color: #000000;
-	color: #fff;
-}
-
 #app-geoconnex .v-btn{
 	font-size: 1.2rem;
+}
+
+#app-geoconnex .v-icon{
+	padding: 10px;
 }
 
 #app-geoconnex .v-list-item__subtitle{
