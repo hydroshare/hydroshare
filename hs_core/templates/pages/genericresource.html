@@ -13,7 +13,7 @@
     crossorigin=""/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 
-{% if True %}
+{% if not page|is_debug %}
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
 {
