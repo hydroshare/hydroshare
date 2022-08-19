@@ -411,8 +411,8 @@ let geoconnexApp = new Vue({
         }
       },
       async refreshItemsSilently(){
-        console.log("Fetching refreshing from Geoconnex API");
         let geoconnexApp = this;
+        if (geoconnexApp.debug) console.log("Refreshing from Geoconnex API");
         let collections = await geoconnexApp.getCollections(true);
         geoconnexApp.collections = collections.collections;
         let refreshedItems = [];
@@ -426,7 +426,7 @@ let geoconnexApp = new Vue({
           }
         }
         geoconnexApp.items = refreshedItems;
-        console.log("Completed background refresh from Geoconnex API");
+        if (geoconnexApp.debug) console.log("Completed background refresh from Geoconnex API");
       },
       getFeatureProperties(feature){
         // Account for some oddities in the Geoconnex API schema
@@ -456,7 +456,6 @@ let geoconnexApp = new Vue({
         // Used in resource VIEW mode, when no new items will be added
         let geoconnexApp = this;
         for (let relation of geoconnexApp.relations){
-          console.log(relation)
           if (this.isUrl(relation.value) && relation.value.indexOf("geoconnex") > -1){
             let feature = await geoconnexApp.fetchSingleReferenceItem(relation.value);
             geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
@@ -474,7 +473,7 @@ let geoconnexApp = new Vue({
         let data = {};
         if (!('caches' in window)){
           let fetch_resp = await fetch(url);
-          console.log("Cache API not available. Fetching geoconnex data from:\n" + url);
+          if (geoconnexApp.debug) console.log("Cache API not available. Fetching geoconnex data from:\n" + url);
           if (!fetch_resp.ok){
             console.log(`Error when attempting to fetch: ${fetch_resp.statusText}`);
           }else{
@@ -483,7 +482,7 @@ let geoconnexApp = new Vue({
         }else{
           let cache_resp = await geoconnexApp.geoCache.match(url);
           if(geoconnexApp.isCacheValid(cache_resp) && !forceFresh){
-            console.log("Using Geoconnex from cache for:\n" + url);
+            if (geoconnexApp.debug) console.log("Using Geoconnex from cache for:\n" + url);
             if (!cache_resp.ok){
               console.log(`Error when attempting to fetch: ${cache_resp.statusText}`);
             }else{
@@ -497,7 +496,8 @@ let geoconnexApp = new Vue({
       },
       async fetchFromGeoconnexApi(url){
         let data = {};
-        console.log("Fetching + adding to cache, geoconnex data from:\n" + url);
+        let geoconnexApp = this;
+        if (geoconnexApp.debug) console.log("Fetching + adding to cache, geoconnex data from:\n" + url);
         try{
           let fetch_resp = await fetch(url);
           if (!fetch_resp.ok){
@@ -532,7 +532,7 @@ let geoconnexApp = new Vue({
         if (geoconnexApp.enforceCacheDuration){
           var fetched = response.headers.get('fetched-on');
           if (fetched && (parseFloat(fetched) + geoconnexApp.cacheDuration) > new Date().getTime()) return true;
-          console.log("Cached data not valid.");
+          if (geoconnexApp.debug) console.log("Cached data not valid.");
           return false;
         }
         return true;
@@ -545,7 +545,7 @@ let geoconnexApp = new Vue({
         }
         return true;
       },
-      async loadRelationsIntoApp(){
+      async loadMetadataRelations(){
         let geoconnexApp = this;
         for (relation of geoconnexApp.relations){
           if (relation.type === "relation"){
@@ -593,7 +593,7 @@ let geoconnexApp = new Vue({
           url: url,
           data: data,
           success: function (result) {
-            console.log(`Added ${selected.text ? selected.text : selected} to resource metadata`)
+            if (geoconnexApp.debug) console.log(`Added ${selected.text ? selected.text : selected} to resource metadata`)
             geoconnexApp.values.push({
               "id":result.element_id,
               "value": selected.uri ? selected.uri : selected,
@@ -753,7 +753,7 @@ let geoconnexApp = new Vue({
         
         // force isSearching state to updated before running search
         setTimeout(async function () {
-          geoconnexApp.importValuesFromResExtent();
+          geoconnexApp.fillValuesFromResExtent();
           geoconnexApp.queryGeoItemsFromExtent();
           geoconnexApp.isSearching = false;
         }, 0)
@@ -861,11 +861,9 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       if(geoconnexApp.resMode == "Edit"){
         geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-        // todo: first get all items ignoring cache as long as it exists
         await geoconnexApp.getAllItems(forceFresh=false);
-        await geoconnexApp.loadRelationsIntoApp();
+        await geoconnexApp.loadMetadataRelations();
         geoconnexApp.loadingCollections = false;
-        
         // load geometries in the background
         geoconnexApp.fetchAllGeometries();
         // refresh cache in the background
@@ -875,7 +873,7 @@ let geoconnexApp = new Vue({
         geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
         await geoconnexApp.getRelationsFromMetadata();
         geoconnexApp.initLeafletMap();
-        await geoconnexApp.loadRelationsIntoApp();
+        await geoconnexApp.loadMetadataRelations();
         geoconnexApp.loadingCollections = false;
       }
     }
