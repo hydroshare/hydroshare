@@ -5,7 +5,8 @@ let geoconnexApp = new Vue({
     vuetify: new Vuetify(),
     data() {
         return{
-            relations: RELATIONS,
+            metadataRelations: RELATIONS,
+            relationObjects: [],
             debug: false,
             resMode: RESOURCE_MODE,
             resSpatialType: null,
@@ -259,6 +260,8 @@ let geoconnexApp = new Vue({
         // World: geoconnexApp.map.setView([30, 0], 1);
         geoconnexApp.map.setView([41.850033, -87.6500523], 3)
         geoconnexApp.setLeafletMapEvents();
+
+        geoconnexApp.loadAllRelationGeometries()
       },
       async addToMap(geojson, fit=false, style={color: this.selectColor, radius: 5}, group=null){
         let geoconnexApp = this;
@@ -455,7 +458,7 @@ let geoconnexApp = new Vue({
       async getRelationsFromMetadata(){
         // Used in resource VIEW mode, when no new items will be added
         let geoconnexApp = this;
-        for (let relation of geoconnexApp.relations){
+        for (let relation of geoconnexApp.metadataRelations){
           if (this.isUrl(relation.value) && relation.value.indexOf("geoconnex") > -1){
             let feature = await geoconnexApp.fetchSingleReferenceItem(relation.value);
             geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
@@ -543,7 +546,7 @@ let geoconnexApp = new Vue({
       },
       async loadMetadataRelations(){
         let geoconnexApp = this;
-        for (relation of geoconnexApp.relations){
+        for (relation of geoconnexApp.metadataRelations){
           if (relation.type === "relation"){
             let item;
             try {
@@ -568,15 +571,23 @@ let geoconnexApp = new Vue({
               }
             });
 
-            if (item){
-              let geometry = await geoconnexApp.fetchSingleGeometry(item);
-              item.geometry = geometry.geometry;
-              geoconnexApp.addToMap(item, false);
+            if(item){
+              geoconnexApp.relationObjects.push(item);
             }
           }
         }
-        geoconnexApp.fitMapToFeatures();
       },
+      async loadAllRelationGeometries(){
+        let geoconnexApp = this;
+        for (relation of geoconnexApp.relationObjects){
+            if(relation && geoconnexApp.showingMap){
+              let geometry = await geoconnexApp.fetchSingleGeometry(relation);
+              relation.geometry = geometry.geometry;
+              geoconnexApp.addToMap(relation, false);
+            }
+          }
+          geoconnexApp.fitMapToFeatures();
+        },
       ajaxSaveMetadata(selected){
         let geoconnexApp = this;
         let url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/add-metadata/`;
@@ -863,7 +874,7 @@ let geoconnexApp = new Vue({
         geoconnexApp.fetchAllGeometries();
         // refresh cache in the background
         geoconnexApp.refreshItemsSilently();
-      }else if(geoconnexApp.resMode == "View" && geoconnexApp.relations.length > 0){
+      }else if(geoconnexApp.resMode == "View" && geoconnexApp.metadataRelations.length > 0){
         geoconnexApp.showingMap = true;
         geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
         await geoconnexApp.getRelationsFromMetadata();
