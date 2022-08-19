@@ -70,10 +70,10 @@
                                 </template>
                             </v-combobox>
                             <v-btn v-if="hasSearches && !hasFilteredItems" @click="filterItemsBySearch" class="white--text" color="info">
-                                Narrow list by collection items shown in map search
+                                Limit dropdown to searches shown in map
                             </v-btn>
                             <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text" color="info">
-                                Reset list to contain all collection items
+                                Reset dropdown to all collection items
                             </v-btn>
                             <v-btn v-if="resSpatialType && !hasExtentSearch" :loading="!geometriesAreLoaded || isSearching" @click="searchUsingSpatialExtent" class="white--text" color="success">
                                 Search map using resource Spatial Extent

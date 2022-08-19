@@ -295,9 +295,9 @@ let geoconnexApp = new Vue({
                 popupText += feature[k]+'</br>'
               }
               if(vue.resMode == "Edit" && style.color == vue.searchColor){
-                popupText += `<button type="button" class="white--text custom-success v-btn v-btn--has-bg theme--light v-size--default map-add-geoconnex" data='${JSON.stringify(feature)}'>Add this feature to your resource metadata</button>`
+                popupText += `<button type="button" class="white--text v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default success map-add-geoconnex" data='${JSON.stringify(feature)}'>Add feature to resource metadata</button>`
               }else if(vue.resMode == "Edit" && style.color == vue.selectColor){
-                popupText += `<button type="button" class="white--text custom-danger v-btn v-btn--has-bg theme--light v-size--default map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
+                popupText += `<button type="button" class="white--text v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default error map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove feature from resource metadata</button>`
               }
               layer.bindPopup(popupText, {maxWidth : 400});
             },
@@ -791,7 +791,7 @@ let geoconnexApp = new Vue({
         function onMapClick(e) {
           let loc = {lat: e.latlng.lat, long: e.latlng.lng};
           if(vue.geometriesAreLoaded){
-            let content = `<button type="button" class="white--text custom-success v-btn v-btn--has-bg theme--light v-size--default leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
+            let content = `<button type="button" class="white--text v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default success leaflet-point-search" data='${JSON.stringify(loc)}'>Search for related items containing this point</button>`
             popup
                 .setLatLng(e.latlng)
                 .setContent(content)
