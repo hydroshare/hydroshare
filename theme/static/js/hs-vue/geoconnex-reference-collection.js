@@ -472,8 +472,8 @@ let geoconnexApp = new Vue({
         let geoconnexApp = this;
         let data = {};
         if (!('caches' in window)){
-          let fetch_resp = await fetch(url);
           if (geoconnexApp.debug) console.log("Cache API not available. Fetching geoconnex data from:\n" + url);
+          let fetch_resp = await fetch(url);
           if (!fetch_resp.ok){
             console.log(`Error when attempting to fetch: ${fetch_resp.statusText}`);
           }else{
@@ -483,16 +483,12 @@ let geoconnexApp = new Vue({
           let cache_resp = await geoconnexApp.geoCache.match(url);
           if(geoconnexApp.isCacheValid(cache_resp) && !forceFresh){
             if (geoconnexApp.debug) console.log("Using Geoconnex from cache for:\n" + url);
-            if (!cache_resp.ok){
-              console.log(`Error when attempting to fetch: ${cache_resp.statusText}`);
-            }else{
-              data = await cache_resp.json();
-            }
+            data = await cache_resp.json();
           }else{
             data = geoconnexApp.fetchFromGeoconnexApi(url)
           }
-          return data;
         }
+        return data;
       },
       async fetchFromGeoconnexApi(url){
         let data = {};
@@ -528,7 +524,7 @@ let geoconnexApp = new Vue({
       },
       isCacheValid(response) {
         let geoconnexApp = this;
-        if (!response) return false;
+        if (!response || !response.ok) return false;
         if (geoconnexApp.enforceCacheDuration){
           var fetched = response.headers.get('fetched-on');
           if (fetched && (parseFloat(fetched) + geoconnexApp.cacheDuration) > new Date().getTime()) return true;
