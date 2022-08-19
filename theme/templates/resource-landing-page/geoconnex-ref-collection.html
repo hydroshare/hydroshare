@@ -20,14 +20,6 @@
             <div class="flex">
                 {% if resource_edit_mode %}
                     <div class="geo-list">
-                        <v-progress-linear
-                        :active="loadingCollections || isSearching"
-                        :indeterminate="loadingCollections"
-                        ></v-progress-linear>
-                        <div v-if="loadingCollections">
-                            <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
-                            <p v-else>Loading Geoconnex relations...</p>
-                        </div>
                         <form action="/hsapi/_internal/{{ cm.short_id }}/relation/add-metadata/"
                             method="POST" enctype="multipart/form-data">
                             {% csrf_token %}
@@ -69,13 +61,27 @@
                                     </v-list-item>
                                 </template>
                             </v-combobox>
+                            <v-progress-linear
+                            :active="loadingCollections || isSearching"
+                            :indeterminate="loadingCollections"
+                            ></v-progress-linear>
+                            <div v-if="loadingCollections">
+                                <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
+                                <p v-else>Loading Geoconnex relations...</p>
+                            </div>
                             <v-btn v-if="hasSearches && !hasFilteredItems" @click="filterItemsBySearch" class="white--text" color="info">
                                 Limit dropdown to searches shown in map
                             </v-btn>
                             <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text" color="info">
                                 Reset dropdown to all collection items
                             </v-btn>
-                            <v-btn v-if="resSpatialType && !hasExtentSearch" :loading="!geometriesAreLoaded || isSearching" @click="searchUsingSpatialExtent" class="white--text" color="success">
+                            <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMap" class="white--text" color="success">
+                                Show map to find related features
+                            </v-btn>
+                            <v-btn v-if="showingMap" :loading="isSearching" @click="toggleMap" class="white--text" color="warning">
+                                Hide map
+                            </v-btn>
+                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="searchUsingSpatialExtent" class="white--text" color="success">
                                 Search map using resource Spatial Extent
                             </v-btn>
                             <div v-if="!geometriesAreLoaded">${geometriesMessage}</div>
@@ -198,7 +204,7 @@
                         </div>
                     </div>
                 {% endif %}
-                <div id="geoconnex-map-wrapper">
+                <div v-if="showingMap" id="geoconnex-map-wrapper">
                     <v-progress-linear
                         :active="loadingCollections || isSearching"
                         :indeterminate="loadingCollections"

@@ -38,7 +38,7 @@ let geoconnexApp = new Vue({
             // cacheDuration: 0,
             search: null,
             rules: null,
-            showMap: false,
+            showingMap: false,
             map: null,
             layerControl: null,
             selectedItemLayers: {},
@@ -345,7 +345,7 @@ let geoconnexApp = new Vue({
         } catch (e) {
           console.log(e.message);
         }
-        vue.showMap = true;
+        // vue.showingMap = true;
       },
       fitMap(group=null){
         let vue = this;
@@ -828,6 +828,18 @@ let geoconnexApp = new Vue({
         $("#div_id_type input[type=radio]").change((e)=>{
           vue.resSpatialType = e.target.value;
         });
+      },
+      toggleMap(){
+        let vue = this;
+        vue.showingMap = !vue.showingMap;
+        // TODO: createmap only called on first show
+        // plan for multiple hide/show
+        setTimeout(function(){
+          if (vue.showingMap && vue.map == null){
+            vue.updateSpatialExtentType()
+            vue.createMap();
+          }
+        }, 0)
       }
     },
     beforeMount(){
@@ -838,8 +850,6 @@ let geoconnexApp = new Vue({
       if(vue.resMode == "Edit"){
         vue.geoCache = await caches.open(vue.cacheName);
         await vue.getAllItems();
-        vue.updateSpatialExtentType()
-        vue.createMap();
         await vue.loadRelations();
         vue.loadingCollections = false;
         
