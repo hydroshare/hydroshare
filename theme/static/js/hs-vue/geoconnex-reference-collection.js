@@ -65,7 +65,7 @@ let geoconnexApp = new Vue({
             geoconnexApp.selectedFeatureGroup.removeLayer(geoconnexApp.selectedItemLayers[remove[0].value]);
             geoconnexApp.fitMapToFeatures();
           }catch(e){
-            console.log(e.message);
+            console.error(e.message);
           }
           geoconnexApp.ajaxRemoveMetadata(remove);
 
@@ -331,7 +331,7 @@ let geoconnexApp = new Vue({
           }
 
         } catch (e) {
-          console.log(e.message);
+          console.error(e.message);
         }
       },
       fitMapToFeatures(group=null){
@@ -385,7 +385,7 @@ let geoconnexApp = new Vue({
             let response = await geoconnexApp.fetchFromCacheOrAPI(collectionsUrl, forceFresh);
             return response;
           }catch(e){
-            console.log(e.message)
+            console.error(e.message)
             geoconnexApp.errored = true;
           }
         },
@@ -475,7 +475,7 @@ let geoconnexApp = new Vue({
           if (geoconnexApp.debug) console.log("Cache API not available. Fetching geoconnex data from:\n" + url);
           let fetch_resp = await fetch(url);
           if (!fetch_resp.ok){
-            console.log(`Error when attempting to fetch: ${fetch_resp.statusText}`);
+            console.error(`Error when attempting to fetch: ${fetch_resp.statusText}`);
           }else{
             data = await fetch_resp.json();
           }
@@ -497,7 +497,7 @@ let geoconnexApp = new Vue({
         try{
           let fetch_resp = await fetch(url);
           if (!fetch_resp.ok){
-            console.log(`Error when attempting to fetch: ${fetch_resp.statusText}`);
+            console.error(`Error when attempting to fetch: ${fetch_resp.statusText}`);
           }else{
             let copy = fetch_resp.clone();
             let headers = new Headers(copy.headers);
@@ -511,12 +511,12 @@ let geoconnexApp = new Vue({
             data = await fetch_resp.json(); 
           }
         }catch(e){
-          console.log(e.message)
+          console.error(e.message)
           geoconnexApp.geoCache.match(url).then(function (response) {
-            console.log("Geoconnex API fetch error. Falling back to old cached version.")
+            console.error("Geoconnex API fetch error. Falling back to old cached version.")
             return response.data;
           }).catch(function (e){
-            console.log(e.message);
+            console.error(e.message);
             geoconnexApp.errored = true;
           })
         }
@@ -598,7 +598,7 @@ let geoconnexApp = new Vue({
           },
           error: function (request, status, error) {
             geoconnexApp.errorMsg = `${error} while attempting to add related feature.`;
-            console.log(request.responseText);
+            console.error(request.responseText);
           }
         });
       },
@@ -614,7 +614,7 @@ let geoconnexApp = new Vue({
               },
               error: function (request, status, error) {
                 geoconnexApp.errorMsg = `${error} while attempting to remove related feature.`;
-                console.log(request.responseText);
+                console.error(request.responseText);
               }
             });
           }
@@ -690,7 +690,7 @@ let geoconnexApp = new Vue({
               }
             }
           }catch(e){
-            console.log(`Error while attempting to load ${item.text}: ${e}`);
+            console.error(`Error while attempting to load ${item.text}: ${e}`);
           }
         }
         geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
@@ -722,7 +722,7 @@ let geoconnexApp = new Vue({
               }
             }
           }catch(e){
-            console.log(`Error while attempting to find intersecting geometries: ${e.message}`);
+            console.error(`Error while attempting to find intersecting geometries: ${e.message}`);
           }
         }
         geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
@@ -772,7 +772,7 @@ let geoconnexApp = new Vue({
         }else if(geoconnexApp.resSpatialType == 'box'){
           geoconnexApp.fillValuesFromResBoxExtent();
         }else{
-          console.log("Resource spatial extent isn't set")
+          console.error("Resource spatial extent isn't set")
         }
       },
       fillValuesFromResPointExtent(){
