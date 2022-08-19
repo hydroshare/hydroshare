@@ -9,14 +9,6 @@
             </span>
         </h4>
         <v-app>
-            <v-progress-linear
-                :active="loading"
-                :indeterminate="loading"
-            ></v-progress-linear>
-            <div v-if="loading">
-                <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${currentLoading}</p>
-                <p v-else>Loading Geoconnex relations...</p>
-            </div>
             <div v-if="errored">
                 <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
             </div>
@@ -28,6 +20,14 @@
             <div class="flex">
                 {% if resource_edit_mode %}
                     <div class="geo-list">
+                        <v-progress-linear
+                        :active="loadingCollections || isSearching"
+                        :indeterminate="loadingCollections"
+                        ></v-progress-linear>
+                        <div v-if="loadingCollections">
+                            <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
+                            <p v-else>Loading Geoconnex relations...</p>
+                        </div>
                         <form action="/hsapi/_internal/{{ cm.short_id }}/relation/add-metadata/"
                             method="POST" enctype="multipart/form-data">
                             {% csrf_token %}
@@ -42,7 +42,7 @@
                                 outlined
                                 hide-selected
                                 label="Type URI or select from Geoconnex"
-                                :disabled="loading"
+                                :disabled="loadingCollections"
                                 color="blue-grey"
                                 :search-input.sync="search"
                                 :rules="rules"
@@ -69,19 +69,19 @@
                                     </v-list-item>
                                 </template>
                             </v-combobox>
-                            <button v-if="resSpatialType && !hasExtentSearch" :disabled="!geometriesAreLoaded" type="button" @click="searchUsingSpatialExtent" class="btn btn-success btn-xs">
-                                Search map using Spatial Extent
-                            </button>
+                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="filterItemsBySearch" class="white--text" color="info">
+                                Narrow list by collection items shown in map search
+                            </v-btn>
+                            <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text" color="info">
+                                Reset list to contain all collection items
+                            </v-btn>
+                            <v-btn v-if="resSpatialType && !hasExtentSearch" :loading="!geometriesAreLoaded || isSearching" @click="searchUsingSpatialExtent" class="white--text" color="success">
+                                Search map using resource Spatial Extent
+                            </v-btn>
                             <div v-if="!geometriesAreLoaded">${geometriesMessage}</div>
-                            <button v-if="hasSearches" type="button" @click="clearMappedSearches" class="btn btn-success btn-xs">
+                            <v-btn v-if="hasSearches" @click="clearMappedSearches" class="white--text" color="warning">
                                 Clear searches from the map
-                            </button>
-                            <button v-if="hasSearches && !hasFilteredItems" type="button" @click="filterItemsBySearch" class="btn btn-success btn-xs">
-                                List only collection items from map search
-                            </button>
-                            <button v-if="hasFilteredItems" type="button" @click="resetItems" class="btn btn-success btn-xs">
-                                Reset options list
-                            </button>
+                            </v-btn>
                             <div style="border: solid red" v-if="debug">
                                 <h4 style="color: red">DEBUG PANEL</h4>
                                 <div v-if="resSpatialType=='point'">
@@ -186,7 +186,7 @@
                     </div>
                 {% else %}
                     <div class="geo-list">
-                        <div v-if="!loading && values.length > 0">
+                        <div v-if="!loadingCollections && values.length > 0">
                             <table class="table hs-table info-table">
                                 <ul>
                                     <tr v-for="value in values" style="padding-bottom: 20px">
@@ -198,7 +198,11 @@
                         </div>
                     </div>
                 {% endif %}
-                <div id="geoconnex-wrapper">
+                <div id="geoconnex-map-wrapper">
+                    <v-progress-linear
+                        :active="loadingCollections || isSearching"
+                        :indeterminate="loadingCollections"
+                        ></v-progress-linear>
                     <div id="geoconnex-leaflet"></div>
                     <p id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
                 </div>

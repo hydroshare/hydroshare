@@ -248,7 +248,7 @@ function initMap() {
         });
 
       L.control.fullscreen({
-        position: 'topright',
+        position: 'bottomright',
         title: {
         'false': 'Toggle fullscreen view',
         'true': 'Exit Fullscreen'

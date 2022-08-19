@@ -848,12 +848,39 @@ li.account p{
 	gap: 2rem;
 }
 
+#app-geoconnex .v-application--wrap{
+	min-height: 100px;
+	overflow: hidden;
+	padding-top: 5px;
+}
+
+#app-geoconnex .custom-success{
+	border: thin solid;
+	background-image: linear-gradient(#74E274, #5CB85C);
+	border-color: #20833F;
+	color: #fff;
+}
+
+#app-geoconnex .custom-primary{
+	border: thin solid;
+	background-image: linear-gradient(#7AB2E2, #428BCA);
+	border-color: #428BCA;
+	color: #fff
+}
+
+#app-geoconnex .custom-danger{
+	border: thin solid;
+	background-color: #d9534f;
+	border-color: #000000;
+	color: #fff;
+}
+
 .geo-list{
 	flex: 1 2 auto;
 	width: 25%;
 }
 
-#geoconnex-wrapper{
+#geoconnex-map-wrapper{
 	flex: 2 1 500px;
 	width: 75%;
 }

@@ -21,8 +21,9 @@ let geoconnexApp = new Vue({
             hasFilteredItems: false,
             collections: null,
             values: [],
-            loading: true,
-            currentLoading: "",
+            isSearching: false,
+            loadingCollections: true,
+            loadingDescription: "",
             geometriesMessage: "",
             errorMsg: "",
             errored: false,
@@ -83,7 +84,7 @@ let geoconnexApp = new Vue({
           });
         }
       },
-      loading(newValue, oldValue){
+      loadingCollections(newValue, oldValue){
         let vue = this;
         if ( !newValue ){
           $('#geoconnex-leaflet-info').show();
@@ -98,7 +99,7 @@ let geoconnexApp = new Vue({
       },
       filterItemsBySearch(){
         let vue = this;
-        vue.loading = true;
+        vue.loadingCollections = true;
         vue.hasFilteredItems = true;
         // save a copy of the items
         vue.unfilteredItems = vue.items;
@@ -120,7 +121,7 @@ let geoconnexApp = new Vue({
         //   }
         //   return s;
         // });
-        vue.loading = false;
+        vue.loadingCollections = false;
       },
       addSelectedItem(selected){
         let vue = this;
@@ -226,7 +227,7 @@ let geoconnexApp = new Vue({
         vue.layerControl.addTo(vue.map);
 
         L.control.fullscreen({
-          position: 'topright',
+          position: 'bottomright',
           title: {
             'false': 'Enter fullscreen',
             'true': 'Exit Fullscreen'
@@ -266,7 +267,8 @@ let geoconnexApp = new Vue({
         // show the default layers at start
         vue.map.addLayer(streets);
         vue.map.addLayer(vue.selectedFeatureGroup);
-        vue.map.setView([30, 0], 1);
+        // World: vue.map.setView([30, 0], 1);
+        vue.map.setView([41.850033, -87.6500523], 3)
         vue.setMapEvents();
       },
       async addToMap(geojson, fly=false, style={color: this.selectColor, radius: 5}, group=null){
@@ -293,9 +295,9 @@ let geoconnexApp = new Vue({
                 popupText += feature[k]+'</br>'
               }
               if(vue.resMode == "Edit" && style.color == vue.searchColor){
-                popupText += `<button type="button" class="btn btn-success map-add-geoconnex" data='${JSON.stringify(feature)}'>Add this feature to your resource metadata</button>`
+                popupText += `<button type="button" class="white--text custom-success v-btn v-btn--has-bg theme--light v-size--default map-add-geoconnex" data='${JSON.stringify(feature)}'>Add this feature to your resource metadata</button>`
               }else if(vue.resMode == "Edit" && style.color == vue.selectColor){
-                popupText += `<button type="button" class="btn btn-success map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
+                popupText += `<button type="button" class="white--text custom-danger v-btn v-btn--has-bg theme--light v-size--default map-remove-geoconnex" data='${JSON.stringify(feature)}'>Remove this feature from your resource metadata</button>`
               }
               layer.bindPopup(popupText, {maxWidth : 400});
             },
@@ -356,7 +358,8 @@ let geoconnexApp = new Vue({
             }else if(vue.searchFeatureGroup.getLayers().length !== 0) {
               vue.map.fitBounds(vue.searchFeatureGroup.getBounds());
             }else{
-              vue.map.setView([30, 0], 1);
+              // World: vue.map.setView([30, 0], 1);
+              vue.map.setView([41.850033, -87.6500523], 3);
             }
           }
         }catch(e){
@@ -404,7 +407,7 @@ let geoconnexApp = new Vue({
         let collections = await vue.getCollections();
         vue.collections = collections.collections;
         for (let col of vue.collections){
-          vue.currentLoading = col.description;
+          vue.loadingDescription = col.description;
           let header = { 
             header: `${col.description} (${col.id})`,
             text: `${col.description} (${col.id})`
@@ -617,15 +620,15 @@ let geoconnexApp = new Vue({
           alert("Spatial extent isn't set?....")
         }
       },
-      async getGeoItemsFromExtent(){
+      getGeoItemsFromExtent(){
         let vue = this;
         if(vue.resSpatialType == 'point'){
-          await vue.getGeoItemsContainingPoint(vue.pointLat, vue.pointLong);
+          vue.getGeoItemsContainingPoint(vue.pointLat, vue.pointLong);
         }else if(vue.resSpatialType == 'box'){
           let bbox = [vue.eastLong, vue.southLat, vue.westLong, vue.northLat];
           var polygon = turf.bboxPolygon(bbox);
           polygon.text = "Search bounds";
-          await vue.getGeoItemsInPoly(polygon);
+          vue.getGeoItemsInPoly(polygon);
         }else{
           alert("Spatial extent isn't set?....")
         }
@@ -655,7 +658,7 @@ let geoconnexApp = new Vue({
         lat = typeof(lat) == 'number' ? lat : vue.pointLat;
         let center = turf.point([long, lat]);
         center.text = "Search point";
-        vue.loading = true;
+        vue.loadingCollections = true;
         vue.map.closePopup();
 
         vue.addToMap(center, false, {color:'red', fillColor: 'red', fillOpacity: 0.1, radius: 1}, group=vue.searchFeatureGroup);
@@ -663,7 +666,7 @@ let geoconnexApp = new Vue({
         for (let item of vue.items){
           // console.log(`Searching for overlap with ${item.text}`);s
           try{
-            vue.currentLoading = item.collection;
+            vue.loadingDescription = item.collection;
             let geometry = await vue.fetchSingleGeometry(item);
             item.geometry = geometry.geometry;
             if (turf.area(item) < vue.maxAreaToReturn*1e6){
@@ -680,7 +683,7 @@ let geoconnexApp = new Vue({
           }
         }
         vue.fitMap(vue.searchFeatureGroup);
-        vue.loading = false;
+        vue.loadingCollections = false;
         vue.hasSearches = true;
       },
       async getGeoItemsInPoly(polygon=null){
@@ -688,7 +691,7 @@ let geoconnexApp = new Vue({
         // https://turfjs.org/docs/#booleanIntersects
         // https://turfjs.org/docs/#booleanContains
         let vue=this;
-        vue.loading = true;
+        vue.loadingCollections = true;
         vue.map.closePopup();
 
         vue.addToMap(polygon, false, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=vue.searchFeatureGroup);
@@ -696,7 +699,7 @@ let geoconnexApp = new Vue({
         for (let item of vue.items){
           // console.log(`Searching for overlap with ${item.text}`);
           try{
-            vue.currentLoading = item.collection;
+            vue.loadingDescription = item.collection;
             let geometry = await vue.fetchSingleGeometry(item);
             item.geometry = geometry.geometry;
             if (turf.area(item) < vue.maxAreaToReturn*1e6){
@@ -713,7 +716,7 @@ let geoconnexApp = new Vue({
           }
         }
         vue.fitMap(vue.searchFeatureGroup);
-        vue.loading = false;
+        vue.loadingCollections = false;
         vue.hasSearches = true;
       },
       clearMappedSearches(){
@@ -731,10 +734,17 @@ let geoconnexApp = new Vue({
         vue.fitMap();
         vue.layerControl.collapse();
       },
-      async searchUsingSpatialExtent(){
+      searchUsingSpatialExtent(){
         let vue = this;
-        await vue.fillFromExtent();
-        await vue.getGeoItemsFromExtent();
+        vue.isSearching = true;
+        
+        // force isSearching state to updated before running search
+        setTimeout(async function () {
+          vue.fillFromExtent();
+          vue.getGeoItemsFromExtent();
+          vue.isSearching = false;
+        }, 0)
+        
       },
       updateSpatialExtentType(){
         let vue = this;
@@ -746,7 +756,7 @@ let geoconnexApp = new Vue({
           vue.resSpatialType = null;
         }
       },
-      async fillFromExtent(){
+      fillFromExtent(){
         let vue = this;
         vue.updateSpatialExtentType();
         if(vue.resSpatialType == 'point'){
@@ -781,7 +791,7 @@ let geoconnexApp = new Vue({
         function onMapClick(e) {
           let loc = {lat: e.latlng.lat, long: e.latlng.lng};
           if(vue.geometriesAreLoaded){
-            let content = `<button type="button" class="btn btn-success leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
+            let content = `<button type="button" class="white--text custom-success v-btn v-btn--has-bg theme--light v-size--default leaflet-point-search" data='${JSON.stringify(loc)}'>Search for Geoconnex items containing this location</button>`
             popup
                 .setLatLng(e.latlng)
                 .setContent(content)
@@ -831,7 +841,7 @@ let geoconnexApp = new Vue({
         vue.updateSpatialExtentType()
         vue.createMap();
         await vue.loadRelations();
-        vue.loading = false;
+        vue.loadingCollections = false;
         
         // load geometries in the background
         await vue.fetchAllGeometries();
@@ -840,7 +850,7 @@ let geoconnexApp = new Vue({
         await vue.getOnlyRelationItems();
         vue.createMap();
         await vue.loadRelations();
-        vue.loading = false;
+        vue.loadingCollections = false;
       }
     }
 })
