@@ -204,7 +204,7 @@
                         </div>
                     </div>
                 {% endif %}
-                <div v-if="showingMap" id="geoconnex-map-wrapper">
+                <div v-show="showingMap" id="geoconnex-map-wrapper">
                     <v-progress-linear
                         :active="loadingCollections || isSearching"
                         :indeterminate="loadingCollections"
