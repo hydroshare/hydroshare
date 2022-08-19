@@ -272,7 +272,7 @@ let geoconnexApp = new Vue({
         geoconnexApp.map.setView([41.850033, -87.6500523], 3)
         geoconnexApp.setLeafletMapEvents();
       },
-      async addToMap(geojson, fly=false, style={color: this.selectColor, radius: 5}, group=null){
+      async addToMap(geojson, fit=false, style={color: this.selectColor, radius: 5}, group=null){
         let geoconnexApp = this;
         try {
            let leafletLayer = L.geoJSON(geojson,{
@@ -338,9 +338,8 @@ let geoconnexApp = new Vue({
           }
 
           // handle zooming
-          if(fly){
+          if(fit){
             geoconnexApp.map.fitBounds(leafletLayer.getBounds());
-            // geoconnexApp.map.flyToBounds(leafletLayer.getBounds());
           }
 
         } catch (e) {
