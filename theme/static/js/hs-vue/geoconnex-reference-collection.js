@@ -1048,8 +1048,8 @@ let geoconnexApp = new Vue({
       geoconnexApp.showingMap = true;
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       await geoconnexApp.getRelationsFromMetadata();
-      geoconnexApp.initLeafletMap();
       await geoconnexApp.loadMetadataRelations();
+      geoconnexApp.initLeafletMap();
       geoconnexApp.loadingCollections = false;
     }
   },
