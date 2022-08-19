@@ -841,6 +841,60 @@ li.account p{
 	text-overflow: ellipsis;
 }
 
+#app-geoconnex .flex{
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	gap: 2rem;
+}
+
+#app-geoconnex .v-application--wrap{
+	min-height: 100px;
+	overflow: hidden;
+	padding-top: 5px;
+}
+
+#app-geoconnex .v-btn{
+	font-size: 1.2rem;
+}
+
+#app-geoconnex .v-icon{
+	padding: 10px;
+}
+
+#app-geoconnex .v-subheader{
+	font-size: 1.5rem;
+}
+
+#app-geoconnex .v-list-item__subtitle{
+	font-size: 1.2rem;
+}
+
+#app-geoconnex .v-list-item__title{
+	font-size: 1.5rem;
+}
+
+.geo-list{
+	flex: 1 2 auto;
+	width: 25%;
+}
+
+#geoconnex-map-wrapper{
+	flex: 2 1 500px;
+	width: 75%;
+}
+
+#geoconnex-leaflet{
+	height: 400px;
+}
+
+.leaflet-control-container, .leaflet-popup{
+	font-size: 1.2rem !important;
+}
+
+#geoconnex-leaflet-info{
+	display: none;
+}
 
 #relatedResourcesTab{
     overflow:hidden;

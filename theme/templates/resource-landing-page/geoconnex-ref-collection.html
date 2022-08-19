@@ -1,0 +1,259 @@
+{% load hydroshare_tags crispy_forms_tags staticfiles %}
+{% if resource_edit_mode or generic_relations %}
+    <div class="col-xs-12 content-block" id="app-geoconnex">
+        <h3>Related Geospatial Features</h3>
+        <h4>This HydroShare resource is related to the following geospatial features
+            <v-tooltip right max-width="300" z-index="999">
+                <template v-slot:activator="{ on }">
+                    <v-icon v-on="on">mdi-information</v-icon>
+                </template>
+                <span v-if="resMode=='Edit'">Use this section to add persistent identifiers pointing at related geospatial features.</span>
+            </v-tooltip>
+        </h4>
+        <v-app>
+            <div v-if="errored">
+                <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
+            </div>
+            <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
+                <p>${errorMsg}</p>
+            </div>
+            <div class="flex">
+                {% if resource_edit_mode %}
+                    <div class="geo-list">
+                        <form action="/hsapi/_internal/{{ cm.short_id }}/relation/add-metadata/"
+                            method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <v-combobox
+                                v-model="values"
+                                :items="items"
+                                hide-no-data
+                                allow-overflow="false"
+                                chips
+                                deletable-chips
+                                multiple
+                                outlined
+                                hide-selected
+                                :hide-no-data="!search"
+                                label="Type a custom URI or select from the Geoconnex list"
+                                :disabled="loadingCollections"
+                                color="blue-grey"
+                                :search-input.sync="search"
+                                :rules="rules"
+                                return-object="true"
+                                style="z-index: 999">
+                                <template v-slot:item="data">
+                                    <template v-if="typeof data.item !== 'object'">
+                                        <v-list-tile-content v-text="data.item"></v-list-tile-content>
+                                    </template>
+                                    <template v-else>
+                                        <v-list-item-content>
+                                            <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
+                                            <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
+                                        </v-list-item-content>
+                                    </template>
+                                </template>
+                                <template v-slot:no-data>
+                                    <v-list-item>
+                                        <v-list-item-content>
+                                            <v-list-item-title>
+                                                No results matching "<strong>${ search }</strong>". 
+                                                Press <kbd>enter</kbd> to add <v-chip><strong>${ search }</strong></v-chip> as a custom item.
+                                            </v-list-item-title>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                </template>
+                            </v-combobox>
+                            <v-progress-linear
+                            :active="loadingCollections || isSearching"
+                            :indeterminate="loadingCollections"
+                            ></v-progress-linear>
+                            <div v-if="loadingCollections">
+                                <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
+                                <p v-else>Loading Geoconnex relations...</p>
+                            </div>
+                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="limitOptionsToMappedFeatures" class="white--text" color="info" :block="showingMap" depressed>
+                                <v-icon>mdi-filter-check</v-icon>Limit dropdown to searches shown in map
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Filters the options in the above dropdown list so that it only contains features that have been mapped</span>
+                                </v-tooltip>
+                            </v-btn>
+                            <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text" color="info" :block="showingMap" depressed>
+                                <v-icon>mdi-filter-remove</v-icon>Reset dropdown to all collection items
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Resets the above dropdown list so that it contains all potentially related features</span>
+                                </v-tooltip>
+                            </v-btn>
+                            <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMapVisibility" class="white--text" color="success" depressed>
+                                <v-icon>mdi-map-plus</v-icon>Show map to find related features
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Shows additional map that you can use to query and view related geospatial features</span>
+                                </v-tooltip>
+                            </v-btn>
+                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="white--text" color="success" block depressed>
+                                <v-icon>mdi-map-search</v-icon>Search map using resource Spatial Extent
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Perform a query to find related features that overlap with your resource's spatial extent</span>
+                                </v-tooltip>
+                            </v-btn>
+                            <v-btn v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="white--text" color="warning" block depressed>
+                                <v-icon>mdi-map-marker-off</v-icon>Clear searches from map
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Clears unselected spatial features from the map</span>
+                                </v-tooltip>
+                            </v-btn>
+                            <v-btn v-if="showingMap" @click="toggleMapVisibility" class="white--text" color="error" block depressed>
+                                <v-icon>mdi-map-minus</v-icon>Hide map
+                            </v-btn>
+                            <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>
+                            <div style="border: solid red" v-if="debug">
+                                <h4 style="color: red">DEBUG PANEL</h4>
+                                <div v-if="resSpatialType=='point'">
+                                    <div class="control-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon coordinates-label-addon" style="width: 127px">Center Latitude</span>
+                                            <input type="number" class="form-control" v-model="pointLat" type="number" class="form-control"
+                                                placeholder="Lat"
+                                            >
+                                            <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                class="input-group-addon" style="width: 50px;">°</span>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon coordinates-label-addon" style="width: 127px">Center Longitude</span>
+                                            <input type="number" class="form-control" v-model="pointLong" type="number" class="form-control"
+                                                placeholder="Long"
+                                            >
+                                            <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                class="input-group-addon" style="width: 50px;">°</span>
+                                        </div>
+                                    </div>  
+                                    <div class="control-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon coordinates-label-addon" style="width: 127px">Search Radius</span>
+                                            <input type="number" class="form-control" v-model="searchRadius" type="number" class="form-control"
+                                                placeholder="Radius"
+                                            >
+                                            <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
+                                                class="input-group-addon" style="width: 50px;">km</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else>
+                                    <div class="control-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon coordinates-label-addon" style="width: 127px">North Latitude</span>
+                                            <input type="number" class="form-control" v-model="northLat" type="number" class="form-control"
+                                                placeholder="North Lat"
+                                            >
+                                            <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                class="input-group-addon" style="width: 50px;">°</span>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon coordinates-label-addon" style="width: 127px">East Longitude</span>
+                                            <input type="number" class="form-control" v-model="eastLong" type="number" class="form-control"
+                                                placeholder="East Long"
+                                            >
+                                            <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                class="input-group-addon" style="width: 50px;">°</span>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon coordinates-label-addon" style="width: 127px">South Latitude</span>
+                                            <input type="number" class="form-control" v-model="southLat" type="number" class="form-control"
+                                                placeholder="South Lat"
+                                            >
+                                            <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                class="input-group-addon" style="width: 50px;">°</span>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon coordinates-label-addon" style="width: 127px">West Longitude</span>
+                                            <input type="number" class="form-control" v-model="westLong" type="number" class="form-control"
+                                                placeholder="West Long"
+                                            >
+                                            <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                class="input-group-addon" style="width: 50px;">°</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="control-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon coordinates-label-addon" style="width: 127px">Max Area Returned</span>
+                                        <input type="number" class="form-control" v-model="maxAreaToReturn" type="number" class="form-control"
+                                            placeholder="Max Area"
+                                        >
+                                        <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
+                                            class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
+                                    </div>
+                                </div>
+                                <button type="button" @click="fillValuesFromResExtent" class="btn btn-primary btn-xs">
+                                    Populate from Spatial Extent
+                                </button>
+                                <button type="button" @click="getGeoItemsFromDebug" class="btn btn-primary btn-xs">
+                                    Search using these parameters
+                                </button>
+                                <h4 v-if="values.length > 0">SELECTED VALUES</h4>
+                                <div style="border: thin solid black" v-if="values.length > 0">
+                                    <ul>
+                                        <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="geo-list">
+                        <div v-if="!loadingCollections && values.length > 0">
+                            <table class="table hs-table info-table">
+                                <ul>
+                                    <tr v-for="value in values" style="padding-bottom: 20px">
+                                        <td v-if="isUrl(value.value)" class="dataset-details"><a v-if="isUrl(value.value)" :href="value.value"> ${value.text}</a></td>
+                                        <td v-else class="dataset-details">${value.text}</td>
+                                    </tr>
+                                </ul>
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
+                <div v-show="showingMap" id="geoconnex-map-wrapper">
+                    <v-progress-linear
+                        :active="loadingCollections || isSearching"
+                        :indeterminate="loadingCollections"
+                        ></v-progress-linear>
+                    <div id="geoconnex-leaflet"></div>
+                    <p id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
+                </div>
+            </div>
+        </v-app>
+    </div>
+{% endif %}
+
+{% block extra_js %}
+    <script defer src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
+    <script defer src="https://unpkg.com/vuetify@2.6.4/dist/vuetify.min.js"></script>
+    <script defer src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+    <script defer type="text/javascript" src="{% static 'js/hs-vue/geoconnex-reference-collection.js' %}"></script>
+{% endblock %}
