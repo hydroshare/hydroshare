@@ -159,6 +159,7 @@ let geoconnexApp = new Vue({
           const url = `${vue.geoconnexUrl}/${collection.id}/${vue.apiQueryYesGeo}`;
           let response = await vue.getFromCacheOrFetch(url);
           if(!$.isEmptyObject(response)){
+            itemsWithGeo.push(vue.createDropdownHeader(collection));
             for (let feature of response.features){
               itemsWithGeo.push(vue.getFeatureProperties(feature));
             }
@@ -402,17 +403,19 @@ let geoconnexApp = new Vue({
             vue.errored = true;
           }
         },
+        createDropdownHeader(collection){
+          return { 
+            header: `${collection.description} (${collection.id})`,
+            text: `${collection.description} (${collection.id})`
+          }
+        },
       async getAllItems(){
         let vue = this;
         let collections = await vue.getCollections();
         vue.collections = collections.collections;
         for (let col of vue.collections){
           vue.loadingDescription = col.description;
-          let header = { 
-            header: `${col.description} (${col.id})`,
-            text: `${col.description} (${col.id})`
-          }
-          vue.items.push(header);
+          vue.items.push(vue.createDropdownHeader(col));
           let resp = await vue.getItemsIn(col.id);
           if(!jQuery.isEmptyObject(resp)){
             for (let feature of resp.features){

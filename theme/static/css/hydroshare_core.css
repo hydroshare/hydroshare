@@ -862,6 +862,10 @@ li.account p{
 	padding: 10px;
 }
 
+#app-geoconnex .v-subheader{
+	font-size: 1.5rem;
+}
+
 #app-geoconnex .v-list-item__subtitle{
 	font-size: 1.2rem;
 }
