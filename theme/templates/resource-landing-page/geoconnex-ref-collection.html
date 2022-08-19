@@ -69,23 +69,23 @@
                                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
                             </div>
-                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="filterItemsBySearch" class="white--text" color="info" :block="showingMap">
-                                <v-icon>mdi-filter-check</v-icon> Limit dropdown to searches shown in map
+                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="filterItemsBySearch" class="white--text" color="info" :block="showingMap" depressed>
+                                <v-icon>mdi-filter-check</v-icon>Limit dropdown to searches shown in map
                             </v-btn>
-                            <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text" color="info" :block="showingMap">
-                                <v-icon>mdi-filter-remove</v-icon> Reset dropdown to all collection items
+                            <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text" color="info" :block="showingMap" depressed>
+                                <v-icon>mdi-filter-remove</v-icon>Reset dropdown to all collection items
                             </v-btn>
-                            <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMap" class="white--text" color="success">
-                                <v-icon>mdi-map-plus</v-icon> Show map to find related features
+                            <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMap" class="white--text" color="success" depressed>
+                                <v-icon>mdi-map-plus</v-icon>Show map to find related features
                             </v-btn>
-                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="searchUsingSpatialExtent" class="white--text" color="warning" block>
-                                <v-icon>mdi-map-search</v-icon> Search map using resource Spatial Extent
+                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="searchUsingSpatialExtent" class="white--text" color="success" block depressed>
+                                <v-icon>mdi-map-search</v-icon>Search map using resource Spatial Extent
                             </v-btn>
-                            <v-btn v-if="hasSearches && showingMap" @click="clearMappedSearches" class="white--text" color="warning" block>
-                                <v-icon>mdi-map-marker-off</v-icon> Clear searches from map
+                            <v-btn v-if="hasSearches && showingMap" @click="clearMappedSearches" class="white--text" color="warning" block depressed>
+                                <v-icon>mdi-map-marker-off</v-icon>Clear searches from map
                             </v-btn>
-                            <v-btn v-if="showingMap" @click="toggleMap" class="white--text" color="success" block>
-                                <v-icon>mdi-map-minus</v-icon> Hide map
+                            <v-btn v-if="showingMap" @click="toggleMap" class="white--text" color="error" block depressed>
+                                <v-icon>mdi-map-minus</v-icon>Hide map
                             </v-btn>
                             <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>
                             <div style="border: solid red" v-if="debug">
