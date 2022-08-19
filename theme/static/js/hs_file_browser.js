@@ -2734,7 +2734,7 @@ $(document).ready(function () {
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/')), overwrite='false', unzip_to_folder='false');
+            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='false'));
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure
@@ -2751,7 +2751,7 @@ $(document).ready(function () {
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/')), overwrite='false', unzip_to_folder='true');
+            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='true'));
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure

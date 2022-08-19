@@ -1033,74 +1033,86 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
     unzip_path = None
     try:
-        # unzip to a temporary folder
-        unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
-        # list all files to be moved into the resource
-        unzipped_files = listfiles_recursively(istorage, unzip_path)
-        unzipped_foldername = os.path.basename(unzip_path)
-        override_tgt_paths = []
+        if unzip_to_folder:
+            # unzip to the subfolder with zip file base name as the subfolder name. If the subfolder name already
+            # exists, a sequential number is appended to the subfolder name to make sure the subfolder name is unique
+            unzip_folder = os.path.splitext(os.path.basename(zip_with_full_path))[0].strip()
+            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder)
+            res_files = link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
+            if resource.resource_type == 'CompositeResource':
+                # make the newly added files part of an aggregation if needed
+                for res_file in res_files:
+                    resource.add_file_to_aggregation(res_file)
+        else:
+            # unzip to the current folder
+            # unzip to a temporary folder first, then move every file to the current folder
+            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+            # list all files to be moved into the resource
+            unzipped_files = listfiles_recursively(istorage, unzip_path)
+            unzipped_foldername = os.path.basename(unzip_path)
+            override_tgt_paths = []
 
-        res_files = []
-        for unzipped_file in unzipped_files:
-            res_files.append(IrodsFile(unzipped_file, istorage))
-        meta_files = []
-        if ingest_metadata:
-            res_files, meta_files, map_files = identify_metadata_files(res_files)
+            res_files = []
+            for unzipped_file in unzipped_files:
+                res_files.append(IrodsFile(unzipped_file, istorage))
+            meta_files = []
+            if ingest_metadata:
+                res_files, meta_files, map_files = identify_metadata_files(res_files)
 
-        for file in res_files:
-            destination_file = _get_destination_filename(file.name, unzipped_foldername)
-            if istorage.exists(destination_file):
-                override_tgt_paths.append(destination_file)
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                if istorage.exists(destination_file):
+                    override_tgt_paths.append(destination_file)
 
-        if not overwrite and override_tgt_paths:
-            override_simplified_paths = [tgt_path.split('data/contents/')[1] for tgt_path in override_tgt_paths]
-            raise FileOverrideException('move would overwrite {}'.format(', '.join(override_simplified_paths)))
+            if not overwrite and override_tgt_paths:
+                override_simplified_paths = [tgt_path.split('data/contents/')[1] for tgt_path in override_tgt_paths]
+                raise FileOverrideException('move would overwrite {}'.format(', '.join(override_simplified_paths)))
 
-        for override_tgt_path in override_tgt_paths:
-            if istorage.exists(override_tgt_path):
-                if resource.resource_type == "CompositeResource":
-                    aggregation_object = resource.get_file_aggregation_object(override_tgt_path)
-                    if aggregation_object:
-                        aggregation_object.logical_delete(user)
+            for override_tgt_path in override_tgt_paths:
+                if istorage.exists(override_tgt_path):
+                    if resource.resource_type == "CompositeResource":
+                        aggregation_object = resource.get_file_aggregation_object(override_tgt_path)
+                        if aggregation_object:
+                            aggregation_object.logical_delete(user)
+                        else:
+                            istorage.delete(override_tgt_path)
                     else:
                         istorage.delete(override_tgt_path)
-                else:
-                    istorage.delete(override_tgt_path)
 
-        # now move each file to the destination
-        for file in res_files:
-            destination_file = _get_destination_filename(file.name, unzipped_foldername)
-            istorage.moveFile(file.name, destination_file)
-        # and now link them to the resource
-        added_resource_files = []
-        for file in res_files:
-            destination_file = _get_destination_filename(file.name, unzipped_foldername)
-            destination_file = destination_file.replace(res_id + "/", "")
-            destination_file = resource.get_irods_path(destination_file)
-            res_file = link_irods_file_to_django(resource, destination_file)
-            added_resource_files.append(res_file)
+            # now move each file to the destination
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                istorage.moveFile(file.name, destination_file)
+            # and now link them to the resource
+            added_resource_files = []
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                destination_file = destination_file.replace(res_id + "/", "")
+                destination_file = resource.get_irods_path(destination_file)
+                res_file = link_irods_file_to_django(resource, destination_file)
+                added_resource_files.append(res_file)
 
-        if resource.resource_type == "CompositeResource":
-            # make the newly added files part of an aggregation if needed
-            for res_file in added_resource_files:
-                resource.add_file_to_aggregation(res_file)
+            if resource.resource_type == "CompositeResource":
+                # make the newly added files part of an aggregation if needed
+                for res_file in added_resource_files:
+                    resource.add_file_to_aggregation(res_file)
 
-        if auto_aggregate:
-            check_aggregations(resource, added_resource_files)
-        if ingest_metadata:
-            # delete original zip to prevent from being pulled into an aggregation
-            zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
-            delete_resource_file(res_id, zip_with_rel_path, user)
+            if auto_aggregate:
+                check_aggregations(resource, added_resource_files)
+            if ingest_metadata:
+                # delete original zip to prevent from being pulled into an aggregation
+                zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
+                delete_resource_file(res_id, zip_with_rel_path, user)
 
-            from hs_file_types.utils import ingest_metadata_files
-            ingest_metadata_files(resource, meta_files, map_files)
-        istorage.delete(unzip_path)
-
+                from hs_file_types.utils import ingest_metadata_files
+                ingest_metadata_files(resource, meta_files, map_files)
+            istorage.delete(unzip_path)
     except Exception:
         logger.exception("failed to unzip")
         if unzip_path and istorage.exists(unzip_path):
             istorage.delete(unzip_path)
         raise
+
 
     if bool_remove_original and not ingest_metadata:  # ingest_metadata deletes the zip by default
         zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
