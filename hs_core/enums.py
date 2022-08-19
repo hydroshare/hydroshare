@@ -21,3 +21,4 @@ class RelationTypes(str, enum.Enum):
     replaces = 'replaces'
     source = 'source'
     relation = 'relation'
+    isSimilarTo = 'isSimilarTo'

@@ -17,9 +17,7 @@
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
 {
-    "@context": {
-        "@vocab": "https://schema.org/"
-    },
+    "@context": "https://schema.org",
     {% if cm.raccess.published %}
     "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}#schemaorg",
     "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
@@ -117,7 +115,7 @@
         "text": "{{ cm.metadata.rights.statement | escapejs }}",
         "url": "{{ cm.metadata.rights.url }}"
         {% elif cm.metadata.rights.statement %}
-        "text": "{{ cm.metadata.rights.statement | escapejs}}",
+        "text": "{{ cm.metadata.rights.statement | escapejs }}",
         "name": "Customized license"
         {% else %}
         "url": "{{ cm.metadata.rights.url }}"
@@ -133,12 +131,17 @@
     ],
     {% endif %}
     {% if fundingagencies %}
-    "funder": [
+    "funding": [
     {% for agency in fundingagencies %}
         {
-            "@type": "Organization",
-            "name": "{{ agency.agency_name | escapejs }}",
-            "url": "{{ agency.agency_url }}"
+            "@type": "Grant",
+            "identifier": "{{ agency.award_number }}",
+            "name": "{{ agency.award_title | escapejs }}",
+            "funder": {
+                "@type": "Organization",
+                "name": "{{ agency.agency_name | escapejs }}",
+                "identifier": "{{ agency.agency_url }}"
+            }
         }{%if not forloop.last%},{%endif%}
         {% endfor %}
     ],
@@ -443,7 +446,16 @@
             </ul>
 
             <div class="col-xs-12 content-block">
-                <h3>Content</h3>
+                <h3>
+                  <span>Content</span> 
+                  {% if resource_edit_mode %}
+                  <a data-toggle="tooltip" data-placement="auto"
+                      href="https://www.youtube.com/watch?v=wTPGJY9-k18" target="_blank"
+                      title='How to: Upload Files to a HydroShare Resource'
+                      class="fa fa-youtube-play icon-red no-decoration space-left icon-guide">
+                  </a>
+                  {% endif %}
+                </h3>
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     {% if not cm.raccess.published or current_user.is_superuser %}
                         <div class="alert alert-info alert-dismissible" role="alert">
@@ -941,25 +953,22 @@
         {# ======= Resource Specific ======= #}
 
         {% if site or extended_metadata_exists or res_add_metadata or resource_edit_mode %}
-            {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
-            {% if not resource_edit_mode %}
-                {% if cm.resource_type != "CompositeResource" and cm.resource_type != "CollectionResource" %}
-                    <div class="col-xs-12 content-block">
-                        <h3>Resource Specific</h3>
-                        <div id="resourceSpecificTab">
-                            <div class="row">
-                                {% if not resource_edit_mode or cm.raccess.published %}
-                                    {% block extended_metadata %}{% endblock %}
-                                {% else %}
-                                    {% crispy metadata_form  %}
-                                {% endif %}
+            {% if cm.resource_type != "CompositeResource" and cm.resource_type != "CollectionResource" %}
+                <div class="col-xs-12 content-block">
+                    <h3>Resource Specific</h3>
+                    <div id="resourceSpecificTab">
+                        <div class="row">
+                            {% if not resource_edit_mode or cm.raccess.published %}
+                                {% block extended_metadata %}{% endblock %}
+                            {% else %}
+                                {% crispy metadata_form  %}
+                            {% endif %}
 
-                                {# add extra section for resource landing page #}
-                                {% block extra_section %}{% endblock %}
-                            </div>
+                            {# add extra section for resource landing page #}
+                            {% block extra_section %}{% endblock %}
                         </div>
                     </div>
-                {% endif %}
+                </div>
             {% endif %}
         {% endif %}
 
@@ -1018,25 +1027,25 @@
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
       const LAST_CHANGED_BY = {{ last_changed_by|safe }};
-      const HAS_ACTIVE_CREATORS = "{{ has_active_creators }}" === "True";
       const AUTHORS = [
           {% for author in creators %}
-                {
-                    "id": "{{ author.id }}",
-                    "name": "{{ author.name|default:""|escapejs }}",
-                    "email": "{{ author.email|default:"" }}",
-                    "organization": "{{ author.organization|default:""|escapejs }}",
-                    "identifiers": {
-                        {% for name, link in author.identifiers.items %}
-                            "{{ name }}": "{{ link }}",
-                        {% endfor %}
-                    },
-                    "address": "{{ author.address|default:""|escapejs }}",
-                    "phone": "{{ author.phone|default:"" }}",
-                    "homepage": "{{ author.homepage|default:"" }}",
-                    "profileUrl": "{{ author.relative_uri|default:'' }}",
-                    "order": "{{ author.order }}"
+            {
+                "id": "{{ author.id }}",
+                "name": "{{ author.name|default:""|escapejs }}",
+                "email": "{{ author.email|default:"" }}",
+                "organization": "{{ author.organization|default:""|escapejs }}",
+                "identifiers": {
+                    {% for name, link in author.identifiers.items %}
+                        "{{ name }}": "{{ link }}",
+                    {% endfor %}
                 },
+                "address": "{{ author.address|default:""|escapejs }}",
+                "phone": "{{ author.phone|default:"" }}",
+                "homepage": "{{ author.homepage|default:"" }}",
+                "profileUrl": "{{ author.relative_uri|default:'' }}",
+                "order": "{{ author.order }}",
+                "is_active": "{{ author.is_active|default:"" }}",
+            },
           {% endfor %}
       ];
       const RELATIONS = [
