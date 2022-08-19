@@ -73,7 +73,7 @@
                                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
                             </div>
-                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="filterItemsBySearch" class="white--text" color="info" :block="showingMap" depressed>
+                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="limitOptionsToMappedFeatures" class="white--text" color="info" :block="showingMap" depressed>
                                 <v-icon>mdi-filter-check</v-icon>Limit dropdown to searches shown in map
                                 <v-tooltip right max-width="300" z-index="999">
                                     <template v-slot:activator="{ on }">
@@ -91,7 +91,7 @@
                                     <span>Resets the above dropdown list so that it contains all potentially related features</span>
                                 </v-tooltip>
                             </v-btn>
-                            <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMap" class="white--text" color="success" depressed>
+                            <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMapVisibility" class="white--text" color="success" depressed>
                                 <v-icon>mdi-map-plus</v-icon>Show map to find related features
                                 <v-tooltip right max-width="300" z-index="999">
                                     <template v-slot:activator="{ on }">
@@ -100,7 +100,7 @@
                                     <span>Shows additional map that you can use to query and view related geospatial features</span>
                                 </v-tooltip>
                             </v-btn>
-                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="searchUsingSpatialExtent" class="white--text" color="success" block depressed>
+                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="white--text" color="success" block depressed>
                                 <v-icon>mdi-map-search</v-icon>Search map using resource Spatial Extent
                                 <v-tooltip right max-width="300" z-index="999">
                                     <template v-slot:activator="{ on }">
@@ -109,7 +109,7 @@
                                     <span>Perform a query to find related features that overlap with your resource's spatial extent</span>
                                 </v-tooltip>
                             </v-btn>
-                            <v-btn v-if="hasSearches && showingMap" @click="clearMappedSearches" class="white--text" color="warning" block depressed>
+                            <v-btn v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="white--text" color="warning" block depressed>
                                 <v-icon>mdi-map-marker-off</v-icon>Clear searches from map
                                 <v-tooltip right max-width="300" z-index="999">
                                     <template v-slot:activator="{ on }">
@@ -118,7 +118,7 @@
                                     <span>Clears unselected spatial features from the map</span>
                                 </v-tooltip>
                             </v-btn>
-                            <v-btn v-if="showingMap" @click="toggleMap" class="white--text" color="error" block depressed>
+                            <v-btn v-if="showingMap" @click="toggleMapVisibility" class="white--text" color="error" block depressed>
                                 <v-icon>mdi-map-minus</v-icon>Hide map
                             </v-btn>
                             <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>
@@ -209,7 +209,7 @@
                                             class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
                                     </div>
                                 </div>
-                                <button type="button" @click="fillFromExtent" class="btn btn-primary btn-xs">
+                                <button type="button" @click="importValuesFromResExtent" class="btn btn-primary btn-xs">
                                     Populate from Spatial Extent
                                 </button>
                                 <button type="button" @click="getGeoItemsFromDebug" class="btn btn-primary btn-xs">
