@@ -3,10 +3,12 @@
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
         <h4>This HydroShare resource is related to the following geospatial features
-            <span v-if="resMode=='Edit'" data-toggle="tooltip" data-placement="auto"
-            title='Use this section to add persistent identifiers pointing at related geospatial features.'
-            class="glyphicon glyphicon-info-sign text-muted">
-            </span>
+            <v-tooltip right max-width="300" z-index="999">
+                <template v-slot:activator="{ on }">
+                    <v-icon v-on="on">mdi-information</v-icon>
+                </template>
+                <span v-if="resMode=='Edit'">Use this section to add persistent identifiers pointing at related geospatial features.</span>
+            </v-tooltip>
         </h4>
         <v-app>
             <div v-if="errored">
@@ -33,7 +35,8 @@
                                 multiple
                                 outlined
                                 hide-selected
-                                label="Type URI or select from Geoconnex"
+                                :hide-no-data="!search"
+                                label="Type a custom URI or select from the Geoconnex list"
                                 :disabled="loadingCollections"
                                 color="blue-grey"
                                 :search-input.sync="search"
@@ -55,7 +58,8 @@
                                     <v-list-item>
                                         <v-list-item-content>
                                             <v-list-item-title>
-                                                No results matching "<strong>${ search }</strong>". Press <kbd>enter</kbd> to create a new one
+                                                No results matching "<strong>${ search }</strong>". 
+                                                Press <kbd>enter</kbd> to add <v-chip><strong>${ search }</strong></v-chip> as a custom item.
                                             </v-list-item-title>
                                         </v-list-item-content>
                                     </v-list-item>
@@ -71,18 +75,48 @@
                             </div>
                             <v-btn v-if="hasSearches && !hasFilteredItems" @click="filterItemsBySearch" class="white--text" color="info" :block="showingMap" depressed>
                                 <v-icon>mdi-filter-check</v-icon>Limit dropdown to searches shown in map
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Filters the options in the above dropdown list so that it only contains features that have been mapped</span>
+                                </v-tooltip>
                             </v-btn>
                             <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text" color="info" :block="showingMap" depressed>
                                 <v-icon>mdi-filter-remove</v-icon>Reset dropdown to all collection items
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Resets the above dropdown list so that it contains all potentially related features</span>
+                                </v-tooltip>
                             </v-btn>
                             <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMap" class="white--text" color="success" depressed>
                                 <v-icon>mdi-map-plus</v-icon>Show map to find related features
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Shows additional map that you can use to query and view related geospatial features</span>
+                                </v-tooltip>
                             </v-btn>
                             <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="searchUsingSpatialExtent" class="white--text" color="success" block depressed>
                                 <v-icon>mdi-map-search</v-icon>Search map using resource Spatial Extent
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Perform a query to find related features that overlap with your resource's spatial extent</span>
+                                </v-tooltip>
                             </v-btn>
                             <v-btn v-if="hasSearches && showingMap" @click="clearMappedSearches" class="white--text" color="warning" block depressed>
                                 <v-icon>mdi-map-marker-off</v-icon>Clear searches from map
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Clears unselected spatial features from the map</span>
+                                </v-tooltip>
                             </v-btn>
                             <v-btn v-if="showingMap" @click="toggleMap" class="white--text" color="error" block depressed>
                                 <v-icon>mdi-map-minus</v-icon>Hide map
