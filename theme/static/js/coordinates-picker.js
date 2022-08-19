@@ -140,9 +140,15 @@ function initMapFileType() {
 
     // Initialize Map
     leafletFeatureGroup = L.featureGroup();
+
+    const southWest = L.latLng(-90, -180), northEast = L.latLng(90, 180);
+    const bounds = L.latLngBounds(southWest, northEast);
+
     coordinatesPicker = L.map('picker-map-container', {
         scrollWheelZoom: false,
-        zoomControl: false
+        zoomControl: false,
+        maxBounds: bounds,
+        maxBoundsViscosity: 1.0
     }).setView([41.850033, -87.6500523], 3);
 
     let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
@@ -155,15 +161,15 @@ function initMapFileType() {
         maxZoom: 18,
     });
 
-    let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
-        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
-        maxZoom: 18,
-    });
+    let googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+        maxZoom: 20,
+        subdomains:['mt0','mt1','mt2','mt3']
+      });
 
-    var baseMaps = {
-        "Terrain": terrain,
+      var baseMaps = {
         "Streets": streets,
-        "Toner": toner
+        "Terrain": terrain,
+        "Satelite": googleSat
       };
 
       var overlayMaps = {
@@ -227,7 +233,7 @@ function initMapFileType() {
         });
 
       L.control.fullscreen({
-        position: 'topright',
+        position: 'bottomright',
         title: {
         'false': 'Toggle fullscreen view',
         'true': 'Exit Fullscreen'
@@ -236,7 +242,7 @@ function initMapFileType() {
       }).addTo(coordinatesPicker);
 
       // show the default layers at start
-      coordinatesPicker.addLayer(terrain);
+      coordinatesPicker.addLayer(streets);
       coordinatesPicker.addLayer(leafletFeatureGroup);
     //   drawInitialShape();
 
@@ -270,6 +276,10 @@ function processDrawingFileType(coordinates, shape) {
             currentInstance.find("input[data-map-item='westlimit']").trigger("change");
 
             $('#coordinates-picker-modal').modal('hide')
+
+            // Update the coordinate picker radio type
+            $("#id_type_filetype input[type='radio'][value='box']").prop("checked", true);
+            $("#id_type_filetype input:radio").trigger("change");
         });
     }
     else {
@@ -283,6 +293,10 @@ function processDrawingFileType(coordinates, shape) {
             currentInstance.find("input[data-map-item='latitude']").trigger("change");
 
             $('#coordinates-picker-modal').modal('hide')
+
+            // Update the coordinate picker radio type
+            $("#id_type_filetype input[type='radio'][value='point']").prop("checked", true);
+            $("#id_type_filetype input:radio").trigger("change");
         });
     }
 }

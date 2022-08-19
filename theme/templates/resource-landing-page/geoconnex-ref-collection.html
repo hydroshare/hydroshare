@@ -3,20 +3,14 @@
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
         <h4>This HydroShare resource is related to the following geospatial features
-            <span v-if="resMode=='Edit'" data-toggle="tooltip" data-placement="auto"
-            title='Use this section to add persistent identifiers pointing at related geospatial features.'
-            class="glyphicon glyphicon-info-sign text-muted">
-            </span>
+            <v-tooltip right max-width="300" z-index="999">
+                <template v-slot:activator="{ on }">
+                    <v-icon v-on="on">mdi-information</v-icon>
+                </template>
+                <span v-if="resMode=='Edit'">Use this section to add persistent identifiers pointing at related geospatial features.</span>
+            </v-tooltip>
         </h4>
         <v-app>
-            <v-progress-linear
-                :active="loading"
-                :indeterminate="loading"
-            ></v-progress-linear>
-            <div v-if="loading">
-                <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${currentLoading}</p>
-                <p v-else>Loading Geoconnex relations...</p>
-            </div>
             <div v-if="errored">
                 <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
             </div>
@@ -41,8 +35,9 @@
                                 multiple
                                 outlined
                                 hide-selected
-                                label="Type URI or select from Geoconnex"
-                                :disabled="loading"
+                                :hide-no-data="!search"
+                                label="Type a custom URI or select from the Geoconnex list"
+                                :disabled="loadingCollections"
                                 color="blue-grey"
                                 :search-input.sync="search"
                                 :rules="rules"
@@ -63,25 +58,70 @@
                                     <v-list-item>
                                         <v-list-item-content>
                                             <v-list-item-title>
-                                                No results matching "<strong>${ search }</strong>". Press <kbd>enter</kbd> to create a new one
+                                                No results matching "<strong>${ search }</strong>". 
+                                                Press <kbd>enter</kbd> to add <v-chip><strong>${ search }</strong></v-chip> as a custom item.
                                             </v-list-item-title>
                                         </v-list-item-content>
                                     </v-list-item>
                                 </template>
                             </v-combobox>
-                            <button v-if="resSpatialType && !hasExtentSearch" :disabled="!geometriesAreLoaded" type="button" @click="searchUsingSpatialExtent" class="btn btn-success btn-xs">
-                                Search map using Spatial Extent
-                            </button>
-                            <div v-if="!geometriesAreLoaded">${geometriesMessage}</div>
-                            <button v-if="hasSearches" type="button" @click="clearMappedSearches" class="btn btn-success btn-xs">
-                                Clear searches from the map
-                            </button>
-                            <button v-if="hasSearches && !hasFilteredItems" type="button" @click="filterItemsBySearch" class="btn btn-success btn-xs">
-                                List only collection items from map search
-                            </button>
-                            <button v-if="hasFilteredItems" type="button" @click="resetItems" class="btn btn-success btn-xs">
-                                Reset options list
-                            </button>
+                            <v-progress-linear
+                            :active="loadingCollections || isSearching"
+                            :indeterminate="loadingCollections"
+                            ></v-progress-linear>
+                            <div v-if="loadingCollections">
+                                <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
+                                <p v-else>Loading Geoconnex relations...</p>
+                            </div>
+                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="limitOptionsToMappedFeatures" class="white--text" color="info" :block="showingMap" depressed>
+                                <v-icon>mdi-filter-check</v-icon>Limit dropdown to searches shown in map
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Filters the options in the above dropdown list so that it only contains features that have been mapped</span>
+                                </v-tooltip>
+                            </v-btn>
+                            <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text" color="info" :block="showingMap" depressed>
+                                <v-icon>mdi-filter-remove</v-icon>Reset dropdown to all collection items
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Resets the above dropdown list so that it contains all potentially related features</span>
+                                </v-tooltip>
+                            </v-btn>
+                            <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMapVisibility" class="white--text" color="success" depressed>
+                                <v-icon>mdi-map-plus</v-icon>Show map to find related features
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Shows additional map that you can use to query and view related geospatial features</span>
+                                </v-tooltip>
+                            </v-btn>
+                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="white--text" color="success" block depressed>
+                                <v-icon>mdi-map-search</v-icon>Search map using resource Spatial Extent
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Perform a query to find related features that overlap with your resource's spatial extent</span>
+                                </v-tooltip>
+                            </v-btn>
+                            <v-btn v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="white--text" color="warning" block depressed>
+                                <v-icon>mdi-map-marker-off</v-icon>Clear searches from map
+                                <v-tooltip right max-width="300" z-index="999">
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">mdi-information-outline</v-icon>
+                                    </template>
+                                    <span>Clears unselected spatial features from the map</span>
+                                </v-tooltip>
+                            </v-btn>
+                            <v-btn v-if="showingMap" @click="toggleMapVisibility" class="white--text" color="error" block depressed>
+                                <v-icon>mdi-map-minus</v-icon>Hide map
+                            </v-btn>
+                            <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>
                             <div style="border: solid red" v-if="debug">
                                 <h4 style="color: red">DEBUG PANEL</h4>
                                 <div v-if="resSpatialType=='point'">
@@ -169,7 +209,7 @@
                                             class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
                                     </div>
                                 </div>
-                                <button type="button" @click="fillFromExtent" class="btn btn-primary btn-xs">
+                                <button type="button" @click="fillValuesFromResExtent" class="btn btn-primary btn-xs">
                                     Populate from Spatial Extent
                                 </button>
                                 <button type="button" @click="getGeoItemsFromDebug" class="btn btn-primary btn-xs">
@@ -186,7 +226,7 @@
                     </div>
                 {% else %}
                     <div class="geo-list">
-                        <div v-if="!loading && values.length > 0">
+                        <div v-if="!loadingCollections && values.length > 0">
                             <table class="table hs-table info-table">
                                 <ul>
                                     <tr v-for="value in values" style="padding-bottom: 20px">
@@ -198,7 +238,14 @@
                         </div>
                     </div>
                 {% endif %}
-                <div id="geo-leaflet"></div>
+                <div v-show="showingMap" id="geoconnex-map-wrapper">
+                    <v-progress-linear
+                        :active="loadingCollections || isSearching"
+                        :indeterminate="loadingCollections"
+                        ></v-progress-linear>
+                    <div id="geoconnex-leaflet"></div>
+                    <p id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
+                </div>
             </div>
         </v-app>
     </div>

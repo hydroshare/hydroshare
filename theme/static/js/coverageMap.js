@@ -152,9 +152,15 @@ function initMap() {
 
     // setup a marker group
     leafletMarkers = L.featureGroup();
+
+    const southWest = L.latLng(-90, -180), northEast = L.latLng(90, 180);
+    const bounds = L.latLngBounds(southWest, northEast);
+
     coverageMap = L.map('coverageMap', {
         scrollWheelZoom: false,
-        zoomControl: false
+        zoomControl: false,
+        maxBounds: bounds,
+        maxBoundsViscosity: 1.0
     }).setView([41.850033, -87.6500523], 3);
 
     // https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html#l-draw
@@ -169,15 +175,15 @@ function initMap() {
         maxZoom: 18,
     });
 
-    let toner = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
-        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
-        maxZoom: 18,
+    let googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+        maxZoom: 20,
+        subdomains:['mt0','mt1','mt2','mt3']
     });
 
-    var baseMaps = {
-        "Terrain": terrain,
+      var baseMaps = {
         "Streets": streets,
-        "Toner": toner
+        "Terrain": terrain,
+        "Satelite": googleSat
       };
 
       var overlayMaps = {
@@ -242,7 +248,7 @@ function initMap() {
         });
 
       L.control.fullscreen({
-        position: 'topright',
+        position: 'bottomright',
         title: {
         'false': 'Toggle fullscreen view',
         'true': 'Exit Fullscreen'
@@ -250,8 +256,44 @@ function initMap() {
         content: `<i class="fa fa-expand fa-2x" aria-hidden="true"></i>`
       }).addTo(coverageMap);
 
+      L.Control.RecenterButton = L.Control.extend({
+        onAdd: function(map) {
+            let recenterButton = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            recenterButton.setAttribute("data-toggle", "tooltip");
+            recenterButton.setAttribute("data-placement", "right");
+            recenterButton.setAttribute("title", "Recenter");
+
+            recenterButton.innerHTML = `<a role="button"><i class="fa fa-dot-circle-o fa-2x" style="padding-top:3px"></i></a>`
+
+            L.DomEvent.on(recenterButton, 'click', (e)=>{
+              e.stopPropagation();
+              try{
+                coverageMap.fitBounds(leafletMarkers.getBounds());
+              }
+              catch (error){
+                console.log(error.message);
+                coverageMap.setView([30, 0], 1);
+              }
+             });
+    
+            return recenterButton;
+        },
+    
+        onRemove: function(map) {
+        //   L.DomEvent.off();
+        }
+    });
+    
+    L.control.watermark = function(opts) {
+        return new L.Control.RecenterButton(opts);
+    }
+    
+    L.control.watermark({
+      position: 'bottomright'
+    }).addTo(coverageMap);
+
       // show the default layers at start
-      coverageMap.addLayer(terrain);
+      coverageMap.addLayer(streets);
       coverageMap.addLayer(leafletMarkers);
       drawInitialShape();
 }
