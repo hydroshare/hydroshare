@@ -35,6 +35,7 @@ let geoconnexApp = new Vue({
             geoCache: null,
             resShortId: SHORT_ID,
             cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
+            enforceCacheDuration: false, 
             search: null,
             rules: null,
             showingMap: false,
@@ -485,44 +486,52 @@ let geoconnexApp = new Vue({
               data = await cache_resp.json();
             }
           }else{
-            console.log("Fetching + adding to cache, geoconnex data from:\n" + url);
-            try{
-              let fetch_resp = await fetch(url);
-              if (!fetch_resp.ok){
-                console.log(`Error when attempting to fetch: ${fetch_resp.statusText}`);
-              }else{
-                let copy = fetch_resp.clone();
-                let headers = new Headers(copy.headers);
-                headers.append('fetched-on', new Date().getTime());
-                let body = await copy.blob();
-                geoconnexApp.geoCache.put(url, new Response(body, {
-                  status: copy.status,
-                  statusText: copy.statusText,
-                  headers: headers
-                }));
-                data = await fetch_resp.json(); 
-              }
-            }catch(e){
-              console.log(e.message)
-              geoconnexApp.geoCache.match(url).then(function (response) {
-                console.log("Geoconnex API fetch error. Falling back to old cached version.")
-                return response.data;
-              }).catch(function (e){
-                console.log(e.message);
-                geoconnexApp.errored = true;
-              })
-            }
+            data = geoconnexApp.fetchFromGeoconnexApi(url)
           }
+          return data;
+        }
+      },
+      async fetchFromGeoconnexApi(url){
+        let data = {};
+        console.log("Fetching + adding to cache, geoconnex data from:\n" + url);
+        try{
+          let fetch_resp = await fetch(url);
+          if (!fetch_resp.ok){
+            console.log(`Error when attempting to fetch: ${fetch_resp.statusText}`);
+          }else{
+            let copy = fetch_resp.clone();
+            let headers = new Headers(copy.headers);
+            headers.append('fetched-on', new Date().getTime());
+            let body = await copy.blob();
+            geoconnexApp.geoCache.put(url, new Response(body, {
+              status: copy.status,
+              statusText: copy.statusText,
+              headers: headers
+            }));
+            data = await fetch_resp.json(); 
+          }
+        }catch(e){
+          console.log(e.message)
+          geoconnexApp.geoCache.match(url).then(function (response) {
+            console.log("Geoconnex API fetch error. Falling back to old cached version.")
+            return response.data;
+          }).catch(function (e){
+            console.log(e.message);
+            geoconnexApp.errored = true;
+          })
         }
         return data;
       },
       isCacheValid(response) {
         let geoconnexApp = this;
         if (!response) return false;
-        var fetched = response.headers.get('fetched-on');
-        if (fetched && (parseFloat(fetched) + geoconnexApp.cacheDuration) > new Date().getTime()) return true;
-        console.log("Cached data not valid.");
-        return false;
+        if (geoconnexApp.enforceCacheDuration){
+          var fetched = response.headers.get('fetched-on');
+          if (fetched && (parseFloat(fetched) + geoconnexApp.cacheDuration) > new Date().getTime()) return true;
+          console.log("Cached data not valid.");
+          return false;
+        }
+        return true;
       },
       isUrl(stringToTest){
         try {
@@ -858,7 +867,9 @@ let geoconnexApp = new Vue({
         geoconnexApp.loadingCollections = false;
         
         // load geometries in the background
-        await geoconnexApp.fetchAllGeometries();
+        geoconnexApp.fetchAllGeometries();
+
+        // update the cache in the background
       }else if(geoconnexApp.resMode == "View" && geoconnexApp.relations.length > 0){
         geoconnexApp.showingMap = true;
         geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
