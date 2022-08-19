@@ -2161,6 +2161,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
 
+    @property
+    def absolute_url(self):
+        return self.get_url_of_path('')
+
     def get_url_of_path(self, path):
         """Return the URL of an arbtrary path in this resource.
 
