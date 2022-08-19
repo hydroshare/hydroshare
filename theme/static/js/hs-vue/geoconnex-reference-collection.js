@@ -422,6 +422,7 @@ let geoconnexApp = new Vue({
         }
       },
       getFeatureProperties(feature){
+        // console.log(feature)s
         feature.relative_id = feature.properties.uri.split('ref/').pop();
         feature.collection = feature.relative_id.split('/')[0];
         feature.uri = feature.properties.uri;
@@ -448,7 +449,8 @@ let geoconnexApp = new Vue({
         // Used in resource VIEW mode, when no new items will be added
         let vue = this;
         for (let relation of vue.relations){
-          if (this.isUrl(relation.value)){
+          console.log(relation)
+          if (this.isUrl(relation.value) && relation.value.indexOf("geoconnex") > -1){
             let feature = await vue.fetchReferenceItem(relation.value);
             vue.items.push(vue.getFeatureProperties(feature));
           }
@@ -856,6 +858,7 @@ let geoconnexApp = new Vue({
         // load geometries in the background
         await vue.fetchAllGeometries();
       }else if(vue.resMode == "View" && vue.relations.length > 0){
+        vue.showingMap = true;
         vue.geoCache = await caches.open(vue.cacheName);
         await vue.getOnlyRelationItems();
         vue.createMap();

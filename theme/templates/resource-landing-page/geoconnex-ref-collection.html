@@ -84,8 +84,8 @@
                             <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="searchUsingSpatialExtent" class="white--text" color="success">
                                 Search map using resource Spatial Extent
                             </v-btn>
-                            <div v-if="!geometriesAreLoaded">${geometriesMessage}</div>
-                            <v-btn v-if="hasSearches" @click="clearMappedSearches" class="white--text" color="warning">
+                            <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>
+                            <v-btn v-if="hasSearches && showingMap" @click="clearMappedSearches" class="white--text" color="warning">
                                 Clear searches from the map
                             </v-btn>
                             <div style="border: solid red" v-if="debug">
