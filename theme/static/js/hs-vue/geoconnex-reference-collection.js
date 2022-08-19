@@ -1,11 +1,4 @@
 let counter = 0;
-// Okay, so we want to do the bulk load, but we want to give some feedback...can we do bulk by collection and provide feedback for that?
-//TODO:  if select a ref item then search using a boundary that contains the selected item, then try to remove it, it stays on the map
-// if write custom in text box, it fails on view (nonedit) mode
-// Mauriel: schema-based metadata
-// additional picker integrated into current extent map?
-// popup window with progression?
-// list text select
 let geoconnexApp = new Vue({
     el: '#app-geoconnex',
     delimiters: ['${', '}'],
@@ -104,7 +97,8 @@ let geoconnexApp = new Vue({
         // save a copy of the items
         geoconnexApp.unfilteredItems = geoconnexApp.items;
 
-        // first remove any unused collections -- this has been removed because it is plenty fast just to use "filter"
+        // alternative to remove any unused collections
+        // ommitted for now, as it is plenty fast just to use "filter"
         // geoconnexApp.items = geoconnexApp.items.filter(s => Object.keys(geoconnexApp.layerGroupDictionary).includes(s.collection));
 
         // remove all items currently not in the map search
@@ -115,12 +109,6 @@ let geoconnexApp = new Vue({
           }
         }
         geoconnexApp.items = geoconnexApp.items.filter(s => keep.includes(s.uri));
-        // geoconnexApp.items = geoconnexApp.items.map(function(s){
-        //   if(!keep.includes(s.uri)){
-        //     s.disabled = true;
-        //   }
-        //   return s;
-        // });
         geoconnexApp.loadingCollections = false;
       },
       addSelectedToResMetadata(selected){
@@ -345,7 +333,6 @@ let geoconnexApp = new Vue({
         } catch (e) {
           console.log(e.message);
         }
-        // geoconnexApp.showingMap = true;
       },
       fitMapToFeatures(group=null){
         let geoconnexApp = this;
@@ -675,7 +662,6 @@ let geoconnexApp = new Vue({
         geoconnexApp.addToMap(center, false, {color:'red', fillColor: 'red', fillOpacity: 0.1, radius: 1}, group=geoconnexApp.searchFeatureGroup);
 
         for (let item of geoconnexApp.items){
-          // console.log(`Searching for overlap with ${item.text}`);s
           try{
             geoconnexApp.loadingDescription = item.collection;
             let geometry = await geoconnexApp.fetchSingleGeometry(item);
@@ -708,7 +694,6 @@ let geoconnexApp = new Vue({
         geoconnexApp.addToMap(polygon, false, {color:'red', fillColor: 'red', fillOpacity: 0.1}, group=geoconnexApp.searchFeatureGroup);
 
         for (let item of geoconnexApp.items){
-          // console.log(`Searching for overlap with ${item.text}`);
           try{
             geoconnexApp.loadingDescription = item.collection;
             let geometry = await geoconnexApp.fetchSingleGeometry(item);
@@ -737,8 +722,6 @@ let geoconnexApp = new Vue({
           geoconnexApp.layerControl.removeLayer(geoconnexApp.layerGroupDictionary[key]);
           delete geoconnexApp.layerGroupDictionary[key];
         }
-        // geoconnexApp.layerControl.removeLayer(geoconnexApp.searchFeatureGroup);
-        // geoconnexApp.map.removeLayer(geoconnexApp.searchFeatureGroup);
 
         geoconnexApp.hasSearches = false;
         geoconnexApp.hasExtentSearch = false;
@@ -843,7 +826,7 @@ let geoconnexApp = new Vue({
       toggleMapVisibility(){
         let geoconnexApp = this;
         geoconnexApp.showingMap = !geoconnexApp.showingMap;
-        // TODO force DOM refresh
+        // force state refresh
         setTimeout(function(){
           if (geoconnexApp.showingMap && geoconnexApp.map == null){
             geoconnexApp.updateSpatialExtentType()
@@ -867,7 +850,7 @@ let geoconnexApp = new Vue({
         // load geometries in the background
         geoconnexApp.fetchAllGeometries();
 
-        // update the cache in the background
+        // TODO update the cache in the background
       }else if(geoconnexApp.resMode == "View" && geoconnexApp.relations.length > 0){
         geoconnexApp.showingMap = true;
         geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
