@@ -677,21 +677,20 @@ let geoconnexApp = new Vue({
         geoconnexApp.addToMap(center, false, {color:'red', fillColor: 'red', fillOpacity: 0.1, radius: 1}, group=geoconnexApp.searchFeatureGroup);
 
         for (let item of geoconnexApp.items){
+          if (item.header) continue;
           try{
             geoconnexApp.loadingDescription = item.collection;
             let geometry = await geoconnexApp.fetchSingleGeometry(item);
             item.geometry = geometry.geometry;
-            if (turf.area(item) < geoconnexApp.maxAreaToReturn*1e6){
-              if(turf.booleanPointInPolygon(center, item)){
-                if(item.geometry.type.includes("Point")){
-                  await geoconnexApp.addToMap(item, false, {color: geoconnexApp.searchColor, radius: 5, fillColor: 'yellow', fillOpacity: 0.8}, group=geoconnexApp.searchFeatureGroup);
-                }else{
+            if(item.geometry.type.includes("Polygon")){
+              if (turf.area(item) < geoconnexApp.maxAreaToReturn*1e6){
+                if(turf.booleanPointInPolygon(center, item)){
                   await geoconnexApp.addToMap(item, false, {color: geoconnexApp.searchColor}, group=geoconnexApp.searchFeatureGroup);
                 }
               }
             }
           }catch(e){
-            console.log(`Error while attempting to load ${item.text}: ${e.message}`);
+            console.log(`Error while attempting to load ${item.text}: ${e}`);
           }
         }
         geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
