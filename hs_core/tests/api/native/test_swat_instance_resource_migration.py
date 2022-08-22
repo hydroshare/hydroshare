@@ -1,7 +1,7 @@
 import os
 import sys
 import traceback
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import jsonschema
 from django.contrib.auth.models import Group
@@ -542,6 +542,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self._validate_meta_with_schema(mi_aggr)
         self._validate_meta_with_schema(mi_aggr_2)
 
+    @skip("management command to prepare model instance resource for migration has been removed as part of "
+          "removing code for MODFLOW resource type")
     def test_executed_by(self):
         """
         Migrate a mi resource that has a link (executed_by) to a composite resource

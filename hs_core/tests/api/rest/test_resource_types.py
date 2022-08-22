@@ -18,7 +18,6 @@ class TestResourceTypes(APITestCase):
                                'ToolResource',
                                'SWATModelInstanceResource',
                                'CollectionResource',
-                               'MODFLOWModelInstanceResource',
                                'CompositeResource'}
 
     def test_resource_typelist(self):
