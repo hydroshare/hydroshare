@@ -10,7 +10,6 @@ from mezzanine.pages.views import page
 
 import hs_communities.views.communities
 from hs_core import views as hs_core_views
-from hs_core.views.discovery_json_view import DiscoveryJsonView
 from hs_core.views.oauth2_view import GroupAuthorizationView
 from hs_discover.views import SearchAPI, SearchView
 from hs_rest_api.urls import hsapi_urlpatterns
@@ -72,14 +71,14 @@ urlpatterns = i18n_patterns(
     url(r'^discoverapi/$', SearchAPI.as_view(), name='DiscoverAPI'),
     url(r'^search/$', SearchView.as_view(), name='Discover'),
     url(r'^topics/$', hs_communities.views.communities.TopicsView.as_view(), name='topics'),
-    url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', sitemap, name='sitemap'),
     url(r'^sitemap', include('hs_sitemap.urls')),
     url(r'^groups', hs_core_views.FindGroupsView.as_view(), name='groups'),
     url(r'^communities/$', hs_communities.views.communities.FindCommunitiesView.as_view(), name='communities'),
     url(r'^community/(?P<community_id>[0-9]+)/$', hs_communities.views.communities.CommunityView.as_view(), name='community'),
     url(r'^collaborate/$', hs_communities.views.communities.CollaborateView.as_view(), name='collaborate'),
-    url(r'^my-resources/$', hs_core_views.MyResourcesView.as_view(), name='my_resources'),
+    url(r'^my-resources/$', hs_core_views.my_resources, name='my_resources'),
+    url(r'^my-resources-counts/$', hs_core_views.my_resources_filter_counts, name='my_resources_counts'),
     url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
     url(r'^my-communities/$', hs_communities.views.communities.MyCommunitiesView.as_view(), name='my_communities'),
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),

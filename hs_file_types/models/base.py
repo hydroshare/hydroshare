@@ -793,12 +793,13 @@ class AbstractLogicalFile(models.Model):
         return None
 
     @classmethod
-    def can_set_folder_to_aggregation(cls, resource, dir_path):
+    def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """helper to check if the specified folder *dir_path* can be set to this aggregation type
 
         :param  resource: an instance of composite resource in which the folder to be checked
         :param dir_path: Resource file directory path (full folder path starting with resource id)
         for which this aggregation type to be set
+        :param  aggregations: a list of aggregations in *resource*
         :return True or False
         """
         return False
