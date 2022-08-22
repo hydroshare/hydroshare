@@ -20,7 +20,6 @@ RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Composite Resource",
                                      "CollectionResource": "Collection Resource",
                                      "ModelProgramResource": "Model Program Resource",
                                      "ModelInstanceResource": "Model Instance Resource",
-                                     "MODFLOWModelInstanceResource": "MODFLOW Model Instance Resource",
                                      "SWATModelInstanceResource": "SWAT Model Instance Resource",
                                      "ToolResource": "Web App Resource"
                                      }

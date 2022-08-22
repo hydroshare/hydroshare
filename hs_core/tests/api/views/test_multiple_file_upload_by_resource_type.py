@@ -52,10 +52,6 @@ class TestResourceTypeFileTypes(TestCase):
         resp_json = self._make_request("ModelInstanceResource")
         self.assertEqual(resp_json['allow_multiple_file'], True)
 
-        # test for MODFLOWModelInstanceResource
-        resp_json = self._make_request("MODFLOWModelInstanceResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
         # test for SWATModelInstanceResource
         resp_json = self._make_request("SWATModelInstanceResource")
         self.assertEqual(resp_json['allow_multiple_file'], True)
