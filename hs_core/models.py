@@ -604,7 +604,7 @@ class Party(AbstractMetaDataElement):
                             res_cr.order += 1
                             res_cr.save()
                     else:
-                        if res_cr.order > party.order:
+                        if res_cr.order > party.order and res_cr.order <= creator_order:
                             res_cr.order -= 1
                             res_cr.save()
 
@@ -1578,7 +1578,7 @@ class Coverage(AbstractMetaDataElement):
         graph.add((coverage, RDF.value, Literal(value_string)))
 
     @classmethod
-    def validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
+    def validate_coverage_type_value_attributes(cls, coverage_type, value_dict, use_limit_postfix=True):
         """Validate values based on coverage type."""
         def compute_longitude(key_name):
             if value_dict[key_name] <= -180 and value_dict[key_name] >= -360:
@@ -1614,7 +1614,12 @@ class Coverage(AbstractMetaDataElement):
 
         elif coverage_type == 'box':
             # check that all the required sub-elements exist
-            for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+            box_key_names = {'north': 'north', 'east': 'east', 'south': 'south', 'west': 'west'}
+            if use_limit_postfix:
+                for key, value in box_key_names.items():
+                    box_key_names[key] = f"{value}limit"
+            required_keys = list(box_key_names.values()) + ['units']
+            for value_item in required_keys:
                 if value_item not in value_dict:
                     raise ValidationError("For coverage of type 'box' values for one or more "
                                           "bounding box limits or 'units' is missing.")
@@ -1626,22 +1631,22 @@ class Coverage(AbstractMetaDataElement):
                             raise ValidationError("Value for '{}' must be numeric"
                                                   .format(value_item))
 
-            if value_dict['northlimit'] < -90 or value_dict['northlimit'] > 90:
+            if value_dict[box_key_names['north']] < -90 or value_dict[box_key_names['north']] > 90:
                 raise ValidationError("Value for North latitude should be "
                                       "in the range of -90 to 90")
 
-            if value_dict['southlimit'] < -90 or value_dict['southlimit'] > 90:
+            if value_dict[box_key_names['south']] < -90 or value_dict[box_key_names['south']] > 90:
                 raise ValidationError("Value for South latitude should be "
                                       "in the range of -90 to 90")
 
-            if (value_dict['northlimit'] < 0 and value_dict['southlimit'] < 0) or (
-                    value_dict['northlimit'] > 0 and value_dict['southlimit'] > 0):
-                if value_dict['northlimit'] < value_dict['southlimit']:
+            if (value_dict[box_key_names['north']] < 0 and value_dict[box_key_names['south']] < 0) or (
+                    value_dict[box_key_names['north']] > 0 and value_dict[box_key_names['south']] > 0):
+                if value_dict[box_key_names['north']] < value_dict[box_key_names['south']]:
                     raise ValidationError("Value for North latitude must be greater than or "
                                           "equal to that of South latitude.")
 
-            compute_longitude(key_name='eastlimit')
-            compute_longitude(key_name='westlimit')
+            compute_longitude(key_name=box_key_names['east'])
+            compute_longitude(key_name=box_key_names['west'])
 
     def get_html(self, pretty=True):
         """Use the dominate module to generate element display HTML.
@@ -1979,9 +1984,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Return True only if all required metadata is present."""
         if self.metadata is None or not self.metadata.has_all_required_elements():
             return False
-        for f in self.logical_files:
-            if not f.metadata.has_all_required_elements():
-                return False
         return True
 
     @property
@@ -2158,6 +2160,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Update the settings of the public and discoverable flags for changes in metadata."""
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
+
+    @property
+    def absolute_url(self):
+        return self.get_url_of_path('')
 
     def get_url_of_path(self, path):
         """Return the URL of an arbtrary path in this resource.
@@ -2577,65 +2583,41 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     @property
     def logical_files(self):
-        """Get a list of logical files for resource."""
-        logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is not None:
-                if res_file.logical_file not in logical_files_list:
-                    logical_files_list.append(res_file.logical_file)
-        return logical_files_list
+        """Gets a generator to access each of the logical files of the resource.
+        Note: Any derived class that supports logical file must override this function
+        """
+
+        # empty generator
+        yield from ()
 
     @property
     def aggregation_types(self):
-        """Gets a list of all aggregation types that currently exist in this resource"""
-        aggr_types = []
-        aggr_type_names = []
-        for lf in self.logical_files:
-            if lf.type_name not in aggr_type_names:
-                aggr_type_names.append(lf.type_name)
-                aggr_type = lf.get_aggregation_display_name().split(":")[0]
-                aggr_types.append(aggr_type)
-        return aggr_types
-
-    @property
-    def non_logical_files(self):
-        """Get list of non-logical files for resource."""
-        non_logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is None:
-                if res_file.logical_file not in non_logical_files_list:
-                    non_logical_files_list.append(res_file)
-        return non_logical_files_list
-
-    @property
-    def generic_logical_files(self):
-        """Get list of generic logical files for resource."""
-        generic_logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.has_generic_logical_file:
-                if res_file.logical_file not in generic_logical_files_list:
-                    generic_logical_files_list.append(res_file.logical_file)
-        return generic_logical_files_list
+        """Gets a list of all aggregation types that currently exist in this resource
+        Note: Any derived class that supports logical file must override this function
+        """
+        return []
 
     def get_logical_files(self, logical_file_class_name):
-        """Get a list of logical files (aggregations) for a specified logical file class name."""
-
-        logical_files_list = [lf for lf in self.logical_files if
-                              lf.type_name() == logical_file_class_name]
-
-        return logical_files_list
+        """Get a list of logical files (aggregations) for a specified logical file class name.
+        Note: Any derived class that supports logical file must override this function
+        """
+        return []
 
     @property
     def has_logical_spatial_coverage(self):
-        """Checks if any of the logical files has spatial coverage"""
+        """Checks if any of the logical files has spatial coverage
+        Note: Any derived class that supports logical file must override this function
+        """
 
-        return any(lf.metadata.spatial_coverage is not None for lf in self.logical_files)
+        return False
 
     @property
     def has_logical_temporal_coverage(self):
-        """Checks if any of the logical files has temporal coverage"""
+        """Checks if any of the logical files has temporal coverage
+        Note: Any derived class that supports logical file must override this function
+        """
 
-        return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
+        return False
 
     @property
     def supports_logical_file(self):

@@ -618,12 +618,12 @@ function getAuthorFormData(author, isPerson) {
     // Person-exclusive fields
     if (isPerson) {
         formData.append("creator-" + (author.order - 1) + "-name", author.name);
-        formData.append("creator-" + (author.order - 1) + "-description", author.profileUrl !== null ? author.profileUrl : "");
+        formData.append("creator-" + (author.order - 1) + "-hydroshare_user_id", author.profileUrl !== null ? author.profileUrl.replace(/\D/g,'') : "");
     }
     else {
         // Empty values still needed for valid request
         formData.append("creator-" + (author.order - 1) + "-name", "");
-        formData.append("creator-" + (author.order - 1) + "-description", "");
+        formData.append("creator-" + (author.order - 1) + "-hydroshare_user_id", "");
     }
 
     return formData;

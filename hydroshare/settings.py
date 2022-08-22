@@ -240,6 +240,13 @@ MEDIA_URL = STATIC_URL + "media/"
 # Sorl settings for generating thumbnails
 THUMBNAIL_PRESERVE_FORMAT = True
 THUMBNAIL_QUALITY = 95
+THUMBNAIL_DUMMY = True
+THUMBNAIL_DUMMY_SOURCE = STATIC_URL + 'img/home-page/step4.png'
+THUMBNAIL_DUMMY_RATIO = 1
+
+# Allow PIL to ignore imgs with lots of metadata
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
