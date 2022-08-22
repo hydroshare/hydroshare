@@ -3754,7 +3754,7 @@ class BaseResource(Page, AbstractResource):
 
         def _update_relation_meta(relation_meta_obj):
             relation_updated = False
-            if (relation_meta_obj.value and '/resource/' in relation_meta_obj.value):
+            if relation_meta_obj.value and '/resource/' in relation_meta_obj.value:
                 version_citation = relation_meta_obj.value
                 version_res_id = version_citation.split('/resource/')[-1]
                 try:
