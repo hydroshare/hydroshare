@@ -498,7 +498,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
 
         # add or update Relation element to link source and target resources
         ori_res.metadata.create_element('relation', type=RelationTypes.isReplacedBy,
-                                        value=new_res.get_citation(includePendingMessage=False))
+                                        value=new_res.get_citation())
 
         if new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
             # the original resource is already a versioned resource, and its isVersionOf relation
@@ -506,7 +506,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
             # it can be created to link to its original resource correctly
             new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
         new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf,
-                                        value=ori_res.get_citation(includePendingMessage=False))
+                                        value=ori_res.get_citation())
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
