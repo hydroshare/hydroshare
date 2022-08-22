@@ -3966,7 +3966,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         # if custom citation does not exist, use the default citation
         if not self.citation.first():
-            graph.add((subject, DCTERMS.bibliographicCitation, Literal(self.resource.get_citation(forceHydroshareURI=False))))
+            graph.add((subject, DCTERMS.bibliographicCitation, Literal(
+                self.resource.get_citation(forceHydroshareURI=False))))
 
         from .hydroshare import current_site_url
         TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))
