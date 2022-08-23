@@ -7,7 +7,7 @@ let geoconnexApp = new Vue({
     return {
       metadataRelations: RELATIONS,
       relationObjects: [],
-      debug: false,
+      debug: true,
       resMode: RESOURCE_MODE,
       resSpatialType: null,
       items: [],
@@ -519,24 +519,29 @@ let geoconnexApp = new Vue({
       });
     },
     async refreshItemsSilently() {
+      let calls = [];
       let geoconnexApp = this;
       if (geoconnexApp.debug) console.log("Refreshing from Geoconnex API");
       let collections = await geoconnexApp.getCollections(true);
       geoconnexApp.collections = collections.collections;
       let refreshedItems = [];
       for (let col of geoconnexApp.collections) {
-        // TODO do these at the same time
         refreshedItems.push(geoconnexApp.createVuetifySelectSubheader(col));
-        let resp = await geoconnexApp.getItemsIn(col.id, true);
-        if (!jQuery.isEmptyObject(resp)) {
-          for (let feature of resp.features) {
-            refreshedItems.push(geoconnexApp.getFeatureProperties(feature));
+        calls.push(await geoconnexApp.getItemsIn(col.id, true));
+      }
+      Promise.all(calls).then(function(resultsArray){
+        for (let resp of resultsArray){
+          if (!jQuery.isEmptyObject(resp)) {
+            for (let feature of resp.features) {
+              refreshedItems.push(geoconnexApp.getFeatureProperties(feature));
+            }
           }
         }
-      }
-      geoconnexApp.items = refreshedItems;
+      }).then(()=>{
+        geoconnexApp.items = refreshedItems;
       if (geoconnexApp.debug)
         console.log("Completed background refresh from Geoconnex API");
+      });
     },
     getFeatureProperties(feature) {
       // Account for some oddities in the Geoconnex API schema
