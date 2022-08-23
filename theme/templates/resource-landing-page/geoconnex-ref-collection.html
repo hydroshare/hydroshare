@@ -71,52 +71,42 @@
                                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
                             </div>
-                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="limitOptionsToMappedFeatures" class="white--text text-none" color="info" :block="showingMap" depressed>
+                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="limitOptionsToMappedFeatures" class="white--text text-none btn btn-info" :block="showingMap" depressed small color="info">
                                 <v-icon>mdi-filter-check</v-icon>Limit dropdown to searches shown in map
                             </v-btn>
-                            <v-tooltip v-if="hasSearches && !hasFilteredItems" right max-width="300" z-index="999">
-                                <template v-slot:activator="{ on }">
-                                    <v-icon v-on="on">mdi-information-outline</v-icon>
-                                </template>
-                                <span>Filters the options in the above dropdown list so that it only contains features that have been mapped</span>
-                            </v-tooltip>
-                            <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text text-none" color="info" :block="showingMap" depressed>
+                            <span v-if="hasSearches && !hasFilteredItems" data-toggle="tooltip" data-placement="auto"
+                            title='Filters the options in the above dropdown list so that it only contains features that have been mapped'
+                            class="glyphicon glyphicon-info-sign text-muted">
+                            </span>
+                            <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text text-none btn btn-info" :block="showingMap" depressed small color="info">
                                 <v-icon>mdi-filter-remove</v-icon>Reset dropdown to all collection items
                             </v-btn>
-                            <v-tooltip v-if="hasFilteredItems" right max-width="300" z-index="999">
-                                <template v-slot:activator="{ on }">
-                                    <v-icon v-on="on">mdi-information-outline</v-icon>
-                                </template>
-                                <span>Resets the above dropdown list so that it contains all potentially related features</span>
-                            </v-tooltip>
-                            <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMapVisibility" class="white--text text-none" color="success" depressed>
+                            <span v-if="hasFilteredItems" data-toggle="tooltip" data-placement="auto"
+                            title='Resets the above dropdown list so that it contains all potentially related features'
+                            class="glyphicon glyphicon-info-sign text-muted">
+                            </span>
+                            <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMapVisibility" class="white--text text-none btn btn-success" depressed small>
                                 <v-icon>mdi-map-plus</v-icon>Show map
                             </v-btn>
-                            <v-tooltip v-if="!showingMap" right max-width="300" z-index="999">
-                                <template v-slot:activator="{ on }">
-                                    <v-icon v-on="on">mdi-information-outline</v-icon>
-                                </template>
-                                <span>Shows additional map that you can use to query and view related geospatial features</span>
-                            </v-tooltip>
-                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="white--text text-none" color="success" block depressed>
+                            <span v-if="!showingMap" data-toggle="tooltip" data-placement="auto"
+                            title='Shows additional map that you can use to query and view related geospatial features'
+                            class="glyphicon glyphicon-info-sign text-muted">
+                            </span>
+                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="white--text text-none btn btn-success" block depressed small color="success">
                                 <v-icon>mdi-map-search</v-icon>Search map using resource Spatial Extent
                             </v-btn>
-                            <v-tooltip v-if="resSpatialType" right max-width="300" z-index="999">
-                                <template v-slot:activator="{ on }">
-                                    <v-icon v-on="on">mdi-information-outline</v-icon>
-                                </template>
-                                <span>Perform a query to find related features that overlap with your resource's spatial extent</span>
-                            </v-tooltip>
-                            <v-btn v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="white--text text-none" color="warning" block depressed>
+                            <span v-if="resSpatialType && !hasExtentSearch && showingMap" data-toggle="tooltip" data-placement="auto"
+                            title="Perform a query to find related features that overlap with your resource's spatial extent"
+                            class="glyphicon glyphicon-info-sign text-muted">
+                            </span>
+                            <v-btn v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="white--text text-none btn btn-warning" block depressed small color="warning">
                                 <v-icon>mdi-map-marker-off</v-icon>Clear searches from map
                             </v-btn>
-                            <v-tooltip v-if="hasSearches && showingMap" right max-width="300" z-index="999">
-                                <template v-slot:activator="{ on }">
-                                    <v-icon v-on="on">mdi-information-outline</v-icon>
-                                </template>
-                                <span>Clears unselected spatial features from the map</span>
-                            </v-tooltip>
-                            <v-btn v-if="showingMap" @click="toggleMapVisibility" class="white--text text-none" color="error" block depressed>
+                            <span v-if="hasSearches && showingMap" data-toggle="tooltip" data-placement="auto"
+                            title="Clears unselected spatial features from the map"
+                            class="glyphicon glyphicon-info-sign text-muted">
+                            </span>
+                            <v-btn v-if="showingMap" @click="toggleMapVisibility" class="white--text text-none btn btn-danger" block depressed small color="error">
                                 <v-icon>mdi-map-minus</v-icon>Hide map
                             </v-btn>
                             <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>
