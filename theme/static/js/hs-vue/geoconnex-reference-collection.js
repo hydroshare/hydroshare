@@ -509,12 +509,12 @@ let geoconnexApp = new Vue({
       geoconnexApp.collections = collections.collections;
       for (let col of geoconnexApp.collections) {
         geoconnexApp.loadingDescription = col.description;
-        geoconnexApp.items.push(geoconnexApp.createVuetifySelectSubheader(col));
-        calls.push(geoconnexApp.getItemsIn(col.id, forceFresh));
+        calls.push(await geoconnexApp.getItemsIn(col.id, forceFresh, col));
       }
       Promise.all(calls).then(function (resultsArray) {
         for (let resp of resultsArray) {
-          if (!jQuery.isEmptyObject(resp)) {
+          if (!jQuery.isEmptyObject(resp) && resp.features) {
+            geoconnexApp.items.push(geoconnexApp.createVuetifySelectSubheader(resp.collection));
             for (let feature of resp.features) {
               geoconnexApp.items.push(
                 geoconnexApp.getFeatureProperties(feature)
