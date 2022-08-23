@@ -71,14 +71,14 @@
                                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
                             </div>
-                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="limitOptionsToMappedFeatures" class="white--text text-none btn btn-info" :block="showingMap" depressed small color="info">
+                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="limitOptionsToMappedFeatures" class="white--text text-none btn btn-info" :block="showingMap" depressed small>
                                 <v-icon>mdi-filter-check</v-icon>Limit dropdown to searches shown in map
                             </v-btn>
                             <span v-if="hasSearches && !hasFilteredItems" data-toggle="tooltip" data-placement="auto"
                             title='Filters the options in the above dropdown list so that it only contains features that have been mapped'
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
-                            <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text text-none btn btn-info" :block="showingMap" depressed small color="info">
+                            <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text text-none btn btn-info" :block="showingMap" depressed small>
                                 <v-icon>mdi-filter-remove</v-icon>Reset dropdown to all collection items
                             </v-btn>
                             <span v-if="hasFilteredItems" data-toggle="tooltip" data-placement="auto"
@@ -92,21 +92,21 @@
                             title='Shows additional map that you can use to query and view related geospatial features'
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
-                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="white--text text-none btn btn-success" block depressed small color="success">
+                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="white--text text-none btn btn-success" block depressed small>
                                 <v-icon>mdi-map-search</v-icon>Search map using resource Spatial Extent
                             </v-btn>
                             <span v-if="resSpatialType && !hasExtentSearch && showingMap" data-toggle="tooltip" data-placement="auto"
                             title="Perform a query to find related features that overlap with your resource's spatial extent"
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
-                            <v-btn v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="white--text text-none btn btn-warning" block depressed small color="warning">
+                            <v-btn v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="white--text text-none btn btn-warning" block depressed small>
                                 <v-icon>mdi-map-marker-off</v-icon>Clear searches from map
                             </v-btn>
                             <span v-if="hasSearches && showingMap" data-toggle="tooltip" data-placement="auto"
                             title="Clears unselected spatial features from the map"
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
-                            <v-btn v-if="showingMap" @click="toggleMapVisibility" class="white--text text-none btn btn-danger" block depressed small color="error">
+                            <v-btn v-if="showingMap" @click="toggleMapVisibility" class="white--text text-none btn btn-danger" block depressed small>
                                 <v-icon>mdi-map-minus</v-icon>Hide map
                             </v-btn>
                             <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>

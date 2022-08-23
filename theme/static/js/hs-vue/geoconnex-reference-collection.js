@@ -29,7 +29,8 @@ let geoconnexApp = new Vue({
       geoCache: null,
       resShortId: SHORT_ID,
       cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
-      enforceCacheDuration: false,
+      cacheDuration:0,
+      enforceCacheDuration: true,
       search: null,
       rules: null,
       showingMap: false,
@@ -333,14 +334,14 @@ let geoconnexApp = new Vue({
               geoconnexApp.resMode == "Edit" &&
               style.color == geoconnexApp.searchColor
             ) {
-              popupText += `<button type="button" class="white--text v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default success map-add-geoconnex" data='${JSON.stringify(
+              popupText += `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-success map-add-geoconnex" data='${JSON.stringify(
                 feature
               )}'>Add feature to resource metadata</button>`;
             } else if (
               geoconnexApp.resMode == "Edit" &&
               style.color == geoconnexApp.selectColor
             ) {
-              popupText += `<button type="button" class="white--text v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default error map-remove-geoconnex" data='${JSON.stringify(
+              popupText += `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-danger map-remove-geoconnex" data='${JSON.stringify(
                 feature
               )}'>Remove feature from resource metadata</button>`;
             }
@@ -973,7 +974,7 @@ let geoconnexApp = new Vue({
       function onMapClick(e) {
         let loc = { lat: e.latlng.lat, long: e.latlng.lng };
         if (geoconnexApp.geometriesAreLoaded) {
-          let content = `<button type="button" class="white--text v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default success leaflet-point-search" data='${JSON.stringify(
+          let content = `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-success leaflet-point-search" data='${JSON.stringify(
             loc
           )}'>Search for related items containing this point</button>`;
           popup
