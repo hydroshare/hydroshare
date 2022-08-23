@@ -491,19 +491,23 @@ let geoconnexApp = new Vue({
       };
     },
     async getAllItems(forceFresh = false) {
+      let calls = [];
       let geoconnexApp = this;
       let collections = await geoconnexApp.getCollections(forceFresh);
       geoconnexApp.collections = collections.collections;
       for (let col of geoconnexApp.collections) {
         geoconnexApp.loadingDescription = col.description;
         geoconnexApp.items.push(geoconnexApp.createVuetifySelectSubheader(col));
-        let resp = await geoconnexApp.getItemsIn(col.id, forceFresh);
+        calls.push(geoconnexApp.getItemsIn(col.id, forceFresh));
+      }
+      // TODO: use promise.all()
+      $.when.apply($, calls).done(function(resp) {
         if (!jQuery.isEmptyObject(resp)) {
           for (let feature of resp.features) {
             geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
           }
         }
-      }
+      });
     },
     async refreshItemsSilently() {
       let geoconnexApp = this;
