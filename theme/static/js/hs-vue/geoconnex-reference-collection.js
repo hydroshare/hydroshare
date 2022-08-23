@@ -158,23 +158,31 @@ let geoconnexApp = new Vue({
     },
     async fetchAllGeometries() {
       let geoconnexApp = this;
-      let itemsWithGeo = [];
+      var itemsWithGeo = [];
+      let calls = [];
       for (let collection of geoconnexApp.collections) {
         geoconnexApp.geometriesMessage = `Loading geometries from collection: ${collection.id}`;
         const url = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexApp.apiQueryYesGeo}`;
-        let response = await geoconnexApp.fetchFromCacheOrAPI(url);
-        if (!$.isEmptyObject(response)) {
-          itemsWithGeo.push(
-            geoconnexApp.createVuetifySelectSubheader(collection)
-          );
-          for (let feature of response.features) {
-            itemsWithGeo.push(geoconnexApp.getFeatureProperties(feature));
+        calls.push(await geoconnexApp.fetchFromCacheOrAPI(url, false, collection));
+      }
+      Promise.all(calls).then(function(resultsArray){
+        if (!$.isEmptyObject(resultsArray)) {
+          for(let response of resultsArray){
+          if(response.features){
+            itemsWithGeo.push(
+              geoconnexApp.createVuetifySelectSubheader(response.collection)
+            );
+            for (let feature of response.features) {
+              itemsWithGeo.push(geoconnexApp.getFeatureProperties(feature));
+            }
           }
         }
-      }
-      // overwrite now that we have the geometries
-      geoconnexApp.items = itemsWithGeo;
-      geoconnexApp.geometriesAreLoaded = true;
+        }
+      }).then(function(){
+        // overwrite now that we have the geometries
+        geoconnexApp.items = itemsWithGeo;
+        geoconnexApp.geometriesAreLoaded = true;
+      });
     },
     async fetchSingleReferenceItem(uri) {
       let geoconnexApp = this;
@@ -516,6 +524,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.collections = collections.collections;
       let refreshedItems = [];
       for (let col of geoconnexApp.collections) {
+        // TODO do these at the same time
         refreshedItems.push(geoconnexApp.createVuetifySelectSubheader(col));
         let resp = await geoconnexApp.getItemsIn(col.id, true);
         if (!jQuery.isEmptyObject(resp)) {
@@ -573,7 +582,7 @@ let geoconnexApp = new Vue({
       let response = await geoconnexApp.fetchFromCacheOrAPI(url, forceFresh);
       return response;
     },
-    async fetchFromCacheOrAPI(url, forceFresh = false) {
+    async fetchFromCacheOrAPI(url, forceFresh = false, collection = null) {
       let geoconnexApp = this;
       let data = {};
       if (!("caches" in window)) {
@@ -596,8 +605,11 @@ let geoconnexApp = new Vue({
             console.log("Using Geoconnex from cache for:\n" + url);
           data = await cache_resp.json();
         } else {
-          data = geoconnexApp.fetchFromGeoconnexApi(url);
+          data = await geoconnexApp.fetchFromGeoconnexApi(url);
         }
+      }
+      if (collection){
+        data.collection = collection;
       }
       return data;
     },
