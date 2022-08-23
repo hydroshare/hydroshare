@@ -848,6 +848,13 @@ li.account p{
 	gap: 2rem;
 }
 
+#app-geoconnex .flex-left{
+	flex-direction: row;
+	flex-wrap: nowrap;
+	justify-content: space-around;
+	gap: 2rem;
+}
+
 #app-geoconnex .v-application--wrap{
 	min-height: 100px;
 	overflow: hidden;
@@ -874,9 +881,21 @@ li.account p{
 	font-size: 1.5rem;
 }
 
-.geo-list{
+#geo-list{
 	flex: 1 2 auto;
 	width: 25%;
+}
+
+.geo-list-item{
+	flex: 1 1 auto;
+	width: 90%;
+	height: 28px;
+	text-align: center;
+	margin-bottom: 1rem;
+}
+
+.geo-list-item [type="checkbox"]{
+	float: unset !important;
 }
 
 #geoconnex-map-wrapper{
