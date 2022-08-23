@@ -12,6 +12,7 @@ from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet, SQ
 from haystack.inputs import Exact
 from rest_framework.views import APIView
+from hs_core.discovery_parser import ParseSQ
 
 logger = logging.getLogger(__name__)
 
@@ -51,12 +52,13 @@ class SearchAPI(APIView):
         "coverage_type": list point, period, ...
         """
         start = time.time()
-
         sqs = SearchQuerySet().all()
 
         if request.GET.get('q'):
             q = request.GET.get('q')
-            sqs = sqs.filter(content=q)
+            parser = ParseSQ(handle_fields=True, handle_logic=True)
+            sq = parser.parse(q)
+            sqs = sqs.filter(sq)
 
         try:
             qs = request.query_params

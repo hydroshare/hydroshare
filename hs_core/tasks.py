@@ -17,6 +17,7 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
+from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
@@ -63,6 +64,11 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
 # only way to successfully log in code executed
 # by celery, despite our catch-all handler).
 logger = logging.getLogger('django')
+
+
+class FileOverrideException(Exception):
+    def __init__(self, error_message):
+        super(FileOverrideException, self).__init__(self, error_message)
 
 
 # Currently there are two different cleanups scheduled.
@@ -217,7 +223,7 @@ def send_over_quota_emails():
 
                 msg_str += '\n\nHydroShare Support'
                 subject = 'Quota warning'
-                if settings.DEBUG:
+                if settings.DEBUG or "www.hydroshare.org" not in Site.objects.get_current().domain:
                     logger.info("quota warning email not sent out on debug server but logged instead: "
                                 "{}".format(msg_str))
                 else:
@@ -499,8 +505,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
             # element is copied over to this new version resource, needs to delete this element so
             # it can be created to link to its original resource correctly
             new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
-        new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf,
-                                        value=ori_res.get_citation(includePendingMessage=False))
+        new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf, value=ori_res.get_citation())
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
