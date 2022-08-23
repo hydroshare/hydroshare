@@ -29,8 +29,9 @@ let geoconnexApp = new Vue({
       geoCache: null,
       resShortId: SHORT_ID,
       cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
-      cacheDuration:0,
-      enforceCacheDuration: true,
+      // cacheDuration:0,
+      // enforceCacheDuration: true,
+      enforceCacheDuration: false,
       search: null,
       rules: null,
       showingMap: false,
@@ -91,6 +92,14 @@ let geoconnexApp = new Vue({
     },
   },
   methods: {
+    toggleItemFiltering(){
+      let geoconnexApp = this;
+      if(geoconnexApp.hasFilteredItems){
+        geoconnexApp.resetItems();
+      }else{
+        geoconnexApp.limitOptionsToMappedFeatures();
+      }
+    },
     resetItems() {
       let geoconnexApp = this;
       geoconnexApp.items = geoconnexApp.unfilteredItems;

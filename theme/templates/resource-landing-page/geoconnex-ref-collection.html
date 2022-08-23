@@ -71,20 +71,18 @@
                                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
                             </div>
-                            <v-btn v-if="hasSearches && !hasFilteredItems" @click="limitOptionsToMappedFeatures" class="white--text text-none btn btn-info" :block="showingMap" depressed small>
-                                <v-icon>mdi-filter-check</v-icon>Limit dropdown to searches shown in map
-                            </v-btn>
-                            <span v-if="hasSearches && !hasFilteredItems" data-toggle="tooltip" data-placement="auto"
-                            title='Filters the options in the above dropdown list so that it only contains features that have been mapped'
-                            class="glyphicon glyphicon-info-sign text-muted">
-                            </span>
-                            <v-btn v-if="hasFilteredItems" @click="resetItems" class="white--text text-none btn btn-info" :block="showingMap" depressed small>
-                                <v-icon>mdi-filter-remove</v-icon>Reset dropdown to all collection items
-                            </v-btn>
-                            <span v-if="hasFilteredItems" data-toggle="tooltip" data-placement="auto"
-                            title='Resets the above dropdown list so that it contains all potentially related features'
-                            class="glyphicon glyphicon-info-sign text-muted">
-                            </span>
+                            <div v-if="hasSearches" class="checkbox">
+                                <label>
+                                    <input type="checkbox" 
+                                        @change="toggleItemFiltering">
+                                    <v-icon>mdi-filter</v-icon>
+                                    Limit dropdown to map search
+                                </label>
+                                <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
+                                title='Filters the options in the above dropdown list so that it only contains features that have been mapped'
+                                class="glyphicon glyphicon-info-sign text-muted">
+                                </span>
+                            </div>
                             <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMapVisibility" class="white--text text-none btn btn-success" depressed small>
                                 <v-icon>mdi-map-plus</v-icon>Show map
                             </v-btn>
@@ -93,7 +91,7 @@
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
                             <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="white--text text-none btn btn-success" block depressed small>
-                                <v-icon>mdi-map-search</v-icon>Search map using resource Spatial Extent
+                                <v-icon>mdi-map-search</v-icon>Search using spatial extent
                             </v-btn>
                             <span v-if="resSpatialType && !hasExtentSearch && showingMap" data-toggle="tooltip" data-placement="auto"
                             title="Perform a query to find related features that overlap with your resource's spatial extent"
