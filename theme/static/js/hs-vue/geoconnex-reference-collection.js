@@ -29,9 +29,9 @@ let geoconnexApp = new Vue({
       geoCache: null,
       resShortId: SHORT_ID,
       cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
+      enforceCacheDuration: false,
       // cacheDuration:0,
       // enforceCacheDuration: true,
-      enforceCacheDuration: false,
       search: null,
       rules: null,
       showingMap: false,
@@ -508,11 +508,12 @@ let geoconnexApp = new Vue({
         geoconnexApp.items.push(geoconnexApp.createVuetifySelectSubheader(col));
         calls.push(geoconnexApp.getItemsIn(col.id, forceFresh));
       }
-      // TODO: use promise.all()
-      $.when.apply($, calls).done(function(resp) {
-        if (!jQuery.isEmptyObject(resp)) {
-          for (let feature of resp.features) {
-            geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
+      Promise.all(calls).then(function(resultsArray){
+        for (let resp of resultsArray){
+          if (!jQuery.isEmptyObject(resp)) {
+            for (let feature of resp.features) {
+              geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
+            }
           }
         }
       });
