@@ -92,11 +92,11 @@ let geoconnexApp = new Vue({
     },
   },
   methods: {
-    toggleItemFiltering(){
+    toggleItemFiltering() {
       let geoconnexApp = this;
-      if(geoconnexApp.hasFilteredItems){
+      if (geoconnexApp.hasFilteredItems) {
         geoconnexApp.resetItems();
-      }else{
+      } else {
         geoconnexApp.limitOptionsToMappedFeatures();
       }
     },
@@ -163,26 +163,30 @@ let geoconnexApp = new Vue({
       for (let collection of geoconnexApp.collections) {
         geoconnexApp.geometriesMessage = `Loading geometries from collection: ${collection.id}`;
         const url = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexApp.apiQueryYesGeo}`;
-        calls.push(await geoconnexApp.fetchFromCacheOrAPI(url, false, collection));
+        calls.push(
+          await geoconnexApp.fetchFromCacheOrAPI(url, false, collection)
+        );
       }
-      Promise.all(calls).then(function(resultsArray){
-        if (!$.isEmptyObject(resultsArray)) {
-          for(let response of resultsArray){
-          if(response.features){
-            itemsWithGeo.push(
-              geoconnexApp.createVuetifySelectSubheader(response.collection)
-            );
-            for (let feature of response.features) {
-              itemsWithGeo.push(geoconnexApp.getFeatureProperties(feature));
+      Promise.all(calls)
+        .then(function (resultsArray) {
+          if (!$.isEmptyObject(resultsArray)) {
+            for (let response of resultsArray) {
+              if (response.features) {
+                itemsWithGeo.push(
+                  geoconnexApp.createVuetifySelectSubheader(response.collection)
+                );
+                for (let feature of response.features) {
+                  itemsWithGeo.push(geoconnexApp.getFeatureProperties(feature));
+                }
+              }
             }
           }
-        }
-        }
-      }).then(function(){
-        // overwrite now that we have the geometries
-        geoconnexApp.items = itemsWithGeo;
-        geoconnexApp.geometriesAreLoaded = true;
-      });
+        })
+        .then(function () {
+          // overwrite now that we have the geometries
+          geoconnexApp.items = itemsWithGeo;
+          geoconnexApp.geometriesAreLoaded = true;
+        });
     },
     async fetchSingleReferenceItem(uri) {
       let geoconnexApp = this;
@@ -508,11 +512,13 @@ let geoconnexApp = new Vue({
         geoconnexApp.items.push(geoconnexApp.createVuetifySelectSubheader(col));
         calls.push(geoconnexApp.getItemsIn(col.id, forceFresh));
       }
-      Promise.all(calls).then(function(resultsArray){
-        for (let resp of resultsArray){
+      Promise.all(calls).then(function (resultsArray) {
+        for (let resp of resultsArray) {
           if (!jQuery.isEmptyObject(resp)) {
             for (let feature of resp.features) {
-              geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
+              geoconnexApp.items.push(
+                geoconnexApp.getFeatureProperties(feature)
+              );
             }
           }
         }
@@ -529,19 +535,21 @@ let geoconnexApp = new Vue({
         refreshedItems.push(geoconnexApp.createVuetifySelectSubheader(col));
         calls.push(await geoconnexApp.getItemsIn(col.id, true));
       }
-      Promise.all(calls).then(function(resultsArray){
-        for (let resp of resultsArray){
-          if (!jQuery.isEmptyObject(resp)) {
-            for (let feature of resp.features) {
-              refreshedItems.push(geoconnexApp.getFeatureProperties(feature));
+      Promise.all(calls)
+        .then(function (resultsArray) {
+          for (let resp of resultsArray) {
+            if (!jQuery.isEmptyObject(resp)) {
+              for (let feature of resp.features) {
+                refreshedItems.push(geoconnexApp.getFeatureProperties(feature));
+              }
             }
           }
-        }
-      }).then(()=>{
-        geoconnexApp.items = refreshedItems;
-      if (geoconnexApp.debug)
-        console.log("Completed background refresh from Geoconnex API");
-      });
+        })
+        .then(() => {
+          geoconnexApp.items = refreshedItems;
+          if (geoconnexApp.debug)
+            console.log("Completed background refresh from Geoconnex API");
+        });
     },
     getFeatureProperties(feature) {
       // Account for some oddities in the Geoconnex API schema
@@ -614,7 +622,7 @@ let geoconnexApp = new Vue({
           data = await geoconnexApp.fetchFromGeoconnexApi(url);
         }
       }
-      if (collection){
+      if (collection) {
         data.collection = collection;
       }
       return data;
