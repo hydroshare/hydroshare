@@ -1,76 +1,66 @@
-import json
 import datetime
-import pytz
+import json
 import logging
-from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
-from django.db.models import Q
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
-from django.core.mail import send_mail
+import pytz
+from autocomplete_light import shortcuts as autocomplete_light
+from django import forms
+from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
-from django.contrib import messages
-from django.utils.decorators import method_decorator
-from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
-    HttpResponseBadRequest, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, render, redirect
 from django.core import signing
-from django.db import Error, IntegrityError
-from django import forms
-from django.views.generic import TemplateView
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
+from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
+from django.db import Error, IntegrityError
+from django.db.models import F
+from django.db.models import Q
 from django.forms.models import model_to_dict
-
-from rest_framework import status
-from rest_framework.decorators import api_view
-
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from inplaceeditform.commons import apply_filters, get_dict_from_obj
+from inplaceeditform.views import _get_adaptor, _get_http_response
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
-from mezzanine.utils.email import subject_template, send_mail_template
+from mezzanine.utils.email import send_mail_template, subject_template
+from rest_framework import status
+from rest_framework.decorators import api_view
+from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
-from autocomplete_light import shortcuts as autocomplete_light
-from inplaceeditform.commons import get_dict_from_obj, apply_filters
-from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.icommands import SessionException
-
+from hs_access_control.forms import UpdateCommunityForm, RequestNewCommunityForm
+from hs_access_control.models import Community, GroupCommunityRequest, GroupMembershipRequest, GroupResourcePrivilege, \
+    PrivilegeCodes
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
-from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
-    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
-
-from hs_core.models import GenericResource, get_access_object, resource_processor, CoreMetaData, Subject, TaskNotification
-from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
-    update_quota_usage as update_quota_usage_utility
-
-from hs_tools_resource.app_launch_helper import resource_level_tool_urls
-
-from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by_id, \
-    set_task_delivered_by_id, get_or_create_task_notification, get_task_user_id, get_resource_delete_task
-from hs_core.tasks import copy_resource_task, replicate_resource_bag_to_user_zone_task, \
-    create_new_version_resource_task, delete_resource_task
 from hs_core.enums import RelationTypes
-
-from . import resource_rest_api
-from . import resource_metadata_rest_api
-from . import user_rest_api
-from . import resource_folder_hierarchy
-
-from . import resource_access_api
-from . import resource_folder_rest_api
-from . import debug_resource_view
-from . import resource_ticket_rest_api
-from . import apps
-
 from hs_core.hydroshare import utils
-
+from hs_core.hydroshare.resource import METADATA_STATUS_INSUFFICIENT, METADATA_STATUS_SUFFICIENT, \
+    update_quota_usage as update_quota_usage_utility
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resolve_request, resource_modified
+from hs_core.models import CoreMetaData, GenericResource, Subject, TaskNotification, resource_processor
 from hs_core.signals import *
-from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
-
+from hs_core.task_utils import dismiss_task_by_id, get_all_tasks, get_or_create_task_notification, \
+    get_resource_delete_task, get_task_user_id, revoke_task_by_id, set_task_delivered_by_id
+from hs_core.tasks import copy_resource_task, create_new_version_resource_task, delete_resource_task, \
+    replicate_resource_bag_to_user_zone_task
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+from . import apps
+from . import debug_resource_view
+from . import resource_access_api
+from . import resource_folder_hierarchy
+from . import resource_folder_rest_api
+from . import resource_metadata_rest_api
+from . import resource_rest_api
+from . import resource_ticket_rest_api
+from . import user_rest_api
+from .utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict, get_my_resources_list, \
+    run_script_to_update_hyrax_input_files, send_action_to_take_email, upload_from_irods
 
 logger = logging.getLogger(__name__)
 
@@ -1447,27 +1437,26 @@ def create_user_group(request, *args, **kwargs):
 
 @login_required
 def update_user_community(request, community_id, *args, **kwargs):
-    user = request.user
-    community_to_update = utils.community_from_id(community_id)
+    """Updates metadata for a community"""
+
+    community_to_update = hydroshare.utils.community_from_id(community_id)
 
     # TODO: need community equivalent of can_change_group_flags
     # if user.uaccess.can_change_group_flags(community_to_update):
-    if True:
-        community_form = CommunityUpdateForm(request.POST, request.FILES)
-        if community_form.is_valid():
-            try:
-                community_form.update(community_to_update, request)
-                messages.success(request, "Community update was successful.")
-            except IntegrityError as ex:
-                if community_form.cleaned_data['name'] in str(ex):
-                    message = "Community name '{}' already exists".format(community_form.cleaned_data['name'])
-                    messages.error(request, "Community update errors: {}.".format(message))
-                else:
-                    messages.error(request, "Community update errors:{}.".format(str(ex)))
-        else:
-            messages.error(request, "Community update errors:{}.".format(community_form.errors.as_json))
+
+    community_form = UpdateCommunityForm(request.POST, request.FILES)
+    if community_form.is_valid():
+        try:
+            community_form.update(community_to_update, request)
+            messages.success(request, "Community update was successful.")
+        except PermissionDenied:
+            err_msg = f"You don't have permission to update community"
+            messages.error(request, err_msg)
+        except Exception as ex:
+            messages.error(request, f"Community update errors:{str(ex)}.")
+
     else:
-        messages.error(request, "Community update errors: You don't have permission to update this community")
+        messages.error(request, "Community update errors:{}.".format(community_form.errors.as_json))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -1999,9 +1988,6 @@ class AddUserForm(forms.Form):
     user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
 
-from hs_access_control.models import Community, GroupCommunityRequest
-from django.db.models import F
-
 def user_json(user):
     """ JSON format for user data suitable for UI """
     if user is not None:
@@ -2084,58 +2070,18 @@ def gcr_json(request):
     }
 
 
-class CommunityForm(forms.Form):
-    name = forms.CharField(required=True)
-    description = forms.CharField(required=True)
-    purpose = forms.CharField(required=False)
-    email = forms.EmailField(required=False)
-    url = forms.URLField(required=False)
-    picture = ThumbnailImageField()
-    auto_approve = forms.BooleanField(required=False)
-
-class RequestNewCommunityForm(CommunityForm):
-    def save(self, request):
-        form_data = self.cleaned_data
-
-        new_community = request.user.uaccess.create_community(title=form_data['name'],
-                                                      description=form_data['description'],
-                                                      purpose=form_data['purpose'],
-                                                      email=form_data['email'],
-                                                      url=form_data['url'])
-        if 'picture' in request.FILES:
-            # resize uploaded image
-            img = request.FILES['picture']
-            img.image = get_thumbnail(img, 'x150', crop='center')
-            new_community.picture = img
-        return new_community
-
-
-class CommunityUpdateForm(CommunityForm):
-
-    def update(self, community_to_update, request):
-        frm_data = self.cleaned_data
-        community_to_update.name = frm_data['name']
-        community_to_update.save()
-        community_to_update.description = frm_data['description']
-        community_to_update.purpose = frm_data['purpose']
-        community_to_update.email = frm_data['email']
-        community_to_update.url = frm_data['url']
-        community_to_update.auto_approve = frm_data['auto_approve']
-        # if 'picture' in request.FILES:
-        #     community_to_update.gaccess.picture = request.FILES['picture']
-
-        # privacy_level = frm_data['privacy_level']
-        # self._set_privacy_level(community_to_update, privacy_level)
-
-
 @login_required
 def request_new_community(request, *args, **kwargs):
+    """ A view function to server request for creating a new community """
+
     community_form = RequestNewCommunityForm(request.POST, request.FILES)
     if community_form.is_valid():
         try:
-            new_community = community_form.save(request)
-            messages.success(request, "Community creation was successful.")
-            return HttpResponseRedirect(reverse('community', args=[new_community.id]))
+            new_community_request = community_form.save(request)
+            new_community_name = new_community_request.community_to_approve.name
+            msg = f"New community ({new_community_name}) request was successful."
+            messages.success(request, msg)
+            return HttpResponseRedirect(reverse('my_communities'))
         except IntegrityError as ex:
             if community_form.cleaned_data['name'] in str(ex):
                 message = "Community name '{}' already exists".format(community_form.cleaned_data['name'])
@@ -2146,6 +2092,7 @@ def request_new_community(request, *args, **kwargs):
         messages.error(request, "Community creation errors:{}.".format(community_form.errors.as_json))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 class GroupView(TemplateView):
     template_name = 'pages/group-unauthenticated.html'
