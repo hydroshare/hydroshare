@@ -1,13 +1,15 @@
-from django.views.generic import View
-from django.contrib.auth.models import User, Group
+import logging
+
+from django.contrib.auth.models import Group, User
+from django.core.exceptions import ValidationError
 from django.db.models import F
 from django.http import JsonResponse
-from datetime import datetime
+from django.views.generic import View
+from rest_framework import status
 
-from hs_access_control.models import Community, CommunityRequest, \
-    GroupCommunityRequest, PrivilegeCodes
+from hs_access_control.models import Community, GroupCommunityRequest, PrivilegeCodes
+from hs_access_control.models.community import RequestCommunity
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -100,28 +102,31 @@ def gcr_json(request):
 def cr_json(cr):
     """ JSON format for community request data suitable for UI """
     if cr is not None:
+        community = cr.community_to_approve
         try:
-            picture_url = cr.picture.url
+            picture_url = community.picture.url
         except ValueError:
             picture_url = ""
+        try:
+            banner_url = community.banner.url
+        except ValueError:
+            banner_url = ""
+
         return {
             'id': cr.id,
             'type': 'CommunityRequest',
-            'name': cr.name,
-            'url': cr.url,
-            'email': cr.email,
-            'description': cr.description or '',
-            'purpose': cr.purpose or '',
-            'auto_approve': 1 if cr.auto_approve is True else 0,
-            'date_requested': (cr.date_requested.strftime("%m/%d/%Y, %H:%M:%S")
-                               if cr.date_requested is not None
-                               else ""),
-            'date_processed': (cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S")
-                               if cr.date_processed is not None
-                               else ""),
+            'name': community.name,
+            'url': community.url,
+            'email': community.email,
+            'description': community.description or '',
+            'purpose': community.purpose or '',
+            'auto_approve': community.auto_approve,
+            'date_requested': cr.date_requested,
+            'date_processed': cr.date_processed,
             'picture_url': picture_url,
-            'closed': 1 if cr.closed is True else 0,
-            'owner': user_json(cr.owner)
+            'banner_url': banner_url,
+            'closed': community.closed,
+            'owner': user_json(cr.requested_by)
         }
     else:
         return {}
@@ -471,156 +476,143 @@ class CommunityView(View):
 
 class CommunityRequestView(View):
 
-    """ Request the creation of a community. """
+    """ View for creating or acting on a pending request to create a community. """
 
     def hydroshare_denied(self):
         user = self.request.user
         if not user or not user.is_authenticated:
-            message = "You must be logged in to access this function."
+            message = "You must be logged in to access this functionality."
             logger.error(message)
             return message
         else:
             return ""
 
+    def get_community_requests(self, user, context=None):
+        if context is None:
+            context = {}
+        # approved requests
+        if user.is_superuser:  # privileged user sees all
+            context['approved'] = []
+            for r in RequestCommunity.objects.filter(approved=True):
+                context['approved'].append(cr_json(r))
+
+            # declined requests
+            context['declined'] = []
+            for r in RequestCommunity.objects.filter(approved=False):
+                context['declined'].append(cr_json(r))
+
+            # pending requests
+            context['pending'] = []
+            for r in RequestCommunity.objects.filter(approved__isnull=True):
+                context['pending'].append(cr_json(r))
+
+        else:  # just for current user
+            context['approved'] = []
+            for r in RequestCommunity.objects.filter(approved=True, requested_by=user):
+                context['approved'].append(cr_json(r))
+
+            # declined requests
+            context['declined'] = []
+            for r in RequestCommunity.objects.filter(approved=False, requested_by=user):
+                context['declined'].append(cr_json(r))
+
+            # pending requests
+            context['pending'] = []
+            for r in RequestCommunity.objects.filter(approved__isnull=True, requested_by=user):
+                context['pending'].append(cr_json(r))
+
+        return JsonResponse(context)
+
+    def get(self, *args, **kwargs):
+        user = self.request.user
+        denied = self.hydroshare_denied()
+        context = {}
+        if denied:
+            context['denied'] = denied
+            logger.error(denied)
+            return JsonResponse(context, status=status.HTTP_401_UNAUTHORIZED)
+
+        return self.get_community_requests(user)
+
     def post(self, *args, **kwargs):
         message = ''
-        denied = ''
-        context = {}
-
-        if 'action' in kwargs:  # what to do; otherwise provide options
-            action = kwargs['action']
-        else:
-            action = None
-
-        if 'crid' in kwargs:  # which entry to act upon, if any
-            crid = int(kwargs['crid'])
-        else:
-            crid = None
-
-        cr = None  # no request yet
-
+        cr = None  # no community request yet
+        user = self.request.user
         denied = self.hydroshare_denied()
+        context = {}
+        if denied:
+            context['denied'] = denied
+            logger.error(denied)
+            return JsonResponse(context, status=status.HTTP_401_UNAUTHORIZED)
 
-        if denied == "":  # no error; permission granted
-            user = self.request.user
-            if action is not None:
-                if crid is not None:  # request
-                    try:
-                        cr = CommunityRequest.objects.get(id=int(crid))
-                        if cr.approved is not None:
-                            denied = "Request already acted upon!"
-                    except CommunityRequest.DoesNotExist:
-                        denied = "No request matching that id found"
-                if denied == "":
-                    if action == 'request':
-                        # update the community description from POST data.
-                        name = self.request.POST['name']
-                        description = self.request.POST['description']
-                        email = self.request.POST['email']
-                        url = self.request.POST['url']
-                        purpose = self.request.POST['purpose']
-                        # picture = self.request.POST['picture']
-                        closed = self.request.POST['closed']
-                        owner = self.request.POST['owner']
-                        if user.username != 'admin' and owner != user.username:
-                            denied = "You are only allowed to specify yourself as owner"
-                        else:
-                            try:
-                                ouser = User.objects.get(username=owner)
-                            except User.DoesNotExist:
-                                denied = "No owner '{}'".format(owner)
-                        if denied == "":
-                            if cr is not None:
-                                cr.name = name
-                                cr.description = description
-                                cr.email = email
-                                cr.purpose = purpose
-                                cr.url = url
-                                # cr.picture = picture
-                                cr.closed = closed
-                                cr.owner = User.objects.get(username=ouser)
-                                cr.date_requested = datetime.now()
-                                cr.save()
-                                message = "Community request updated"
-                            else:  # create request
-                                cr = CommunityRequest.objects.create(
-                                    name=name,
-                                    description=description,
-                                    email=email,
-                                    purpose=purpose,
-                                    url=url,
-                                    # picture=picture,
-                                    closed=closed,
-                                    owner=ouser)
-                                message = "Community request created"
-                    elif action == 'approve':
-                        if user.username == 'admin':
-                            message = cr.approve()
-                        else:
-                            denied = "You are not allowed to approve community requests."
-                    elif action == 'decline':  # decline a request to create a community
-                        if user.username == 'admin':
-                            message = cr.decline()
-                        else:
-                            denied = "You are not allowed to decline community requests"
-                    elif action == 'remove':
-                        if user == cr.owner or user.username == 'admin':
-                            cr.delete()
-                            message = "Request removed"
-                        else:
-                            denied = "You are not allowed to remove this request"
+        action = kwargs['action']
+        crid = kwargs.get('crid', '')
+        if not crid:
+            if action != 'request':
+                denied = "Invalid action requested for community request"
+            else:
+                try:
+                    cr = RequestCommunity.create_request(self.request)
+                except ValidationError as err:
+                    denied = err.message
+        else:
+            # user taking action on an existing community request
+            crid = int(crid)
+            action = kwargs['action']
+            if action not in ('update', 'approve', 'decline', 'remove'):
+                denied = "Invalid action requested for community request"
+
+            if not denied:
+                try:
+                    cr = RequestCommunity.objects.get(id=crid)
+                    if cr.approved is not None:
+                        denied = "Request already acted upon!"
+                except RequestCommunity.DoesNotExist:
+                    denied = "No request matching that id found"
+
+            if not denied:
+                if action == 'update':
+                    # update the community fields from POST data.
+                    cr_by_user = cr.requested_by
+                    if cr_by_user != user and not user.is_superuser:
+                        denied = "You are not allowed to update this community request"
+                    if not denied:
+                        try:
+                            cr.update_request(user, self.request)
+                        except ValidationError as err:
+                            denied = err.message
+                elif action == 'approve':
+                    if user.is_superuser:
+                        cr.approve()
+                        message = "Request approved"
                     else:
-                        denied = "unknown action '{}'".format(action)
-                        logger.error(denied)
+                        denied = "You are not allowed to approve community requests."
+                elif action == 'decline':  # decline a request to create a community
+                    if user.is_superuser:
+                        cr.decline()
+                        message = "Request declined"
+                    else:
+                        denied = "You are not allowed to decline community requests"
+                else:
+                    # action == 'remove'
+                    if user == cr.requested_by or user.is_superuser:
+                        cr.remove()
+                        message = "Request removed"
+                    else:
+                        denied = "You are not allowed to remove this request"
 
         # at the end of this, message is not None
         # if one tried to act on the request;
         # otherwise denied indicates what went wrong.
-
-        if denied == "":
-            # build a JSON object that contains the results of the query
-            context = {}
-            context['denied'] = denied
-            context['message'] = message
-            context['user'] = user_json(user)
-            if cr is not None:
-                context['request'] = cr_json(cr)
-
-            # approved requests
-            if user.username == 'admin':  # privileged user sees all
-                context['approved'] = []
-                for r in CommunityRequest.objects.filter(approved=True):
-                    context['approved'].append(cr_json(r))
-
-                # declined requests
-                context['declined'] = []
-                for r in CommunityRequest.objects.filter(approved=False):
-                    context['declined'].append(cr_json(r))
-
-                # pending requests
-                context['pending'] = []
-                for r in CommunityRequest.objects.filter(approved__isnull=True):
-                    context['pending'].append(cr_json(r))
-
-            else:  # just for current user
-                context['approved'] = []
-                for r in CommunityRequest.objects.filter(approved=True, owner=user):
-                    context['approved'].append(cr_json(r))
-
-                # declined requests
-                context['declined'] = []
-                for r in CommunityRequest.objects.filter(approved=False, owner=user):
-                    context['declined'].append(cr_json(r))
-
-                # pending requests
-                context['pending'] = []
-                for r in CommunityRequest.objects.filter(approved__isnull=True, owner=user):
-                    context['pending'].append(cr_json(r))
-
-            return JsonResponse(context)
-
-        else:
-            context = {}
+        if denied:
             context['denied'] = denied
             logger.error(denied)
-            return JsonResponse(context, status=404)
+            return JsonResponse(context, status=status.HTTP_400_BAD_REQUEST)
+
+        # build a JSON object that contains the results of the query
+        context['denied'] = denied
+        context['message'] = message
+        context['user'] = user_json(user)
+        context['request'] = cr_json(cr)
+
+        return self.get_community_requests(user, context)
