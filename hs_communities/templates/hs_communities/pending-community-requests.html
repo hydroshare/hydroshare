@@ -1,0 +1,32 @@
+{% extends "pages/page.html" %}
+
+{% load hydroshare_tags thumbnail %}
+
+{% block meta_title %} Pending Community Requests {% endblock %}
+
+{% block main %}
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <h2 class="page-title">Pending Community Requests</h2>
+            </div>
+        </div>
+       <div class="row">
+            <div class="col-sm-12">
+                {% for pcr in pending_requests %}
+                    <p>Requests by: {{ pcr.requested_by.username }}</p>
+                    <p>Community name: {{ pcr.community_to_approve.name }}</p>
+                    <p>Community ID: {{ pcr.community_to_approve.id }}</p>
+                    {% if pcr.approved == None %}
+                        <p>Status: Pending</p>
+                    {% elif pcr.approved %}
+                        <p>Status: Approved</p>
+                     {% else %}
+                        <p>Status: Rejected</p>
+                    {% endif %}
+
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

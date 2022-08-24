@@ -77,6 +77,8 @@ urlpatterns = i18n_patterns(
     url(r'^sitemap', include('hs_sitemap.urls')),
     url(r'^groups', hs_core_views.FindGroupsView.as_view(), name='groups'),
     url(r'^communities/$', hs_communities.views.communities.FindCommunitiesView.as_view(), name='communities'),
+    url(r'^communities/manage-requests/$', hs_communities.views.communities.PendingCommunityRequests.as_view(),
+        name='manage_requests'),
     url(r'^community/(?P<cid>[0-9]+)/$', hs_communities.views.communities.CommunityView.as_view(), name='community'),
     url(r'^collaborate/$', hs_communities.views.communities.CollaborateView.as_view(), name='collaborate'),
     url(r'^my-resources/$', hs_core_views.MyResourcesView.as_view(), name='my_resources'),
