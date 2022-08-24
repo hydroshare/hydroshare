@@ -30,6 +30,8 @@ let geoconnexApp = new Vue({
       resShortId: SHORT_ID,
       cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
       enforceCacheDuration: false,
+      // cacheDuration:0,
+      // enforceCacheDuration: true,
       search: null,
       rules: null,
       showingMap: false,
