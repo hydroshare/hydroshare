@@ -39,8 +39,7 @@
                                 color="blue-grey"
                                 :search-input.sync="search"
                                 :rules="rules"
-                                return-object="true"
-                                style="z-index: 999">
+                                return-object="true">
                                 <template v-slot:item="data">
                                     <template v-if="typeof data.item !== 'object'">
                                         <v-list-tile-content v-text="data.item"></v-list-tile-content>

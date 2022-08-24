@@ -901,6 +901,7 @@ li.account p{
 #geoconnex-map-wrapper{
 	flex: 2 1 500px;
 	width: 75%;
+	z-index: 2;
 }
 
 #geoconnex-leaflet{
@@ -2453,8 +2454,9 @@ div#coverage-spatial .coordinates-label-addon {
 }
 
 #coverageMap {
-	height:350px;
-	border:1px solid #DDD;
+	height: 350px;
+	border: 1px solid #DDD;
+	z-index: 2;
 }
 
 .coverage-container {
