@@ -22,4 +22,3 @@ class RelationTypes(str, enum.Enum):
     source = 'source'
     relation = 'relation'
     isSimilarTo = 'isSimilarTo'
-    relation = 'relation'
