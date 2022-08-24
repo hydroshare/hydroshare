@@ -15,6 +15,11 @@
                 <a class="btn btn-success" data-toggle="modal" data-target="#request-new-community-dialog">
                     <i class="fa fa-plus"></i> Request a New Community
                 </a>
+                {# Pabitra: Here is how you access the pending requests  #}
+                {% for pr in pending_requests %}
+                    {{ pr.community_to_approve.name }}
+                    <br>
+                {% endfor %}
             </div>
             <div class="col-sm-9">
                 <div class="row">
