@@ -1,11 +1,14 @@
-from django.contrib.auth.models import User, Group
-from django.db import models
-from django.db.models import Q, F, Exists, OuterRef
+from datetime import datetime
+
+from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.db.models import Exists, F, OuterRef, Q
+from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
+
 from hs_core.models import BaseResource
 from theme.utils import get_upload_path_community
-from sorl.thumbnail import ImageField as ThumbnailImageField
-from datetime import datetime
 
 
 ###################################
@@ -21,9 +24,11 @@ class Community(models.Model):
     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = ThumbnailImageField(upload_to=get_upload_path_community, null=True, blank=True)
+    banner = ThumbnailImageField(upload_to=get_upload_path_community, null=True, blank=True)
     # whether community is available to be joined
     closed = models.BooleanField(null=False, default=False, blank=False, editable=False)
-    active = models.BooleanField(null=False, default=True, blank=False, editable=False)
+    # as part of approving a request for a new community, active is set to true.
+    active = models.BooleanField(null=False, default=False, blank=False, editable=False)
 
     def __str__(self):
         return self.name
