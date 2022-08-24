@@ -1,15 +1,17 @@
-from django.test import TestCase, Client
+import json
+
 from django.contrib.auth.models import Group
+from django.test import Client, TransactionTestCase
+from django.urls import reverse
 
 from hs_access_control.models import Community
+from hs_access_control.models.community import RequestCommunity
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_access_control.views import user_json
 from hs_core import hydroshare
-from django.urls import reverse
-import json
 
 
-class TestViews(TestCase):
+class TestViews(TransactionTestCase):
 
     def setUp(self):
         super(TestViews, self).setUp()
@@ -65,6 +67,8 @@ class TestViews(TestCase):
                 'all kinds of pets',
                 'collaboration on how to be a more effective pet.')
 
+        self.pets.active = True
+        self.pets.save()
         # client connection: not authenticated yet
         self.client = Client()
 
@@ -72,7 +76,7 @@ class TestViews(TestCase):
     # Community management
     #######################
     def test_community_not_authenticated(self):
-        " try using the system unauthenticated "
+        """ try using the system unauthenticated """
         url = reverse('access_manage_community', kwargs={'cid': self.pets.id})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 404)
@@ -81,7 +85,7 @@ class TestViews(TestCase):
                          "You must be logged in to access this function.")
 
     def test_community_wrong_owner(self):
-        " try accessing a community without being an owner "
+        """ try accessing a community without being an owner """
         self.client.login(username='dog', password='anotherpassword')
         url = reverse('access_manage_community', kwargs={'cid': self.pets.id})
         result = self.client.get(url)
@@ -91,7 +95,7 @@ class TestViews(TestCase):
                          "user 'dog' does not own community 'all kinds of pets'")
 
     def test_community_list(self):
-        " list a community "
+        """ list a community """
 
         self.client.login(username='cat', password='adumbpassword')
 
@@ -108,7 +112,7 @@ class TestViews(TestCase):
         self.assertEqual(json_response['we_declined'], [])
 
     def test_community_add_owner(self):
-        " add an owner to a community "
+        """ add an owner to a community """
         self.client.login(username='cat', password='adumbpassword')
         url = reverse('access_manage_community',
                       kwargs={'cid': self.pets.id,
@@ -122,7 +126,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(owners, ['cat', 'dog']))
 
     def test_community_change_owner(self):
-        " add a new owner and remove self as owner "
+        """ add a new owner and remove self as owner """
         self.client.login(username='cat', password='adumbpassword')
 
         # add dog as an owner.
@@ -150,7 +154,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(owners, ['dog']))
 
     def test_community_remove_sole_owner(self):
-        " prevent removing the sole owner "
+        """ prevent removing the sole owner """
         self.client.login(username='cat', password='adumbpassword')
         url = reverse('access_manage_community',
                       kwargs={'cid': self.pets.id,
@@ -163,7 +167,7 @@ class TestViews(TestCase):
         self.assertEqual(json_response['denied'], "Cannot remove last owner 'cat' of community")
 
     def test_community_add_existing_owner(self):
-        " try to add an owner who already owns the community "
+        """ try to add an owner who already owns the community """
         self.client.login(username='cat', password='adumbpassword')
         url = reverse('access_manage_community',
                       kwargs={'cid': self.pets.id,
@@ -176,7 +180,7 @@ class TestViews(TestCase):
         self.assertEqual(json_response['denied'], "user 'cat' already owns community")
 
     def test_community_add_group_automatically(self):
-        " add a group automatically to a community "
+        """ add a group automatically to a community """
         self.client.login(username='cat', password='adumbpassword')
 
         # cat owns group and community; automatically approved
@@ -192,7 +196,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(members, ['cats']))
 
     def test_community_add_group_and_remove(self):
-        " add a group automatically to a community "
+        """ add a group automatically to a community """
         self.client.login(username='cat', password='adumbpassword')
 
         # cat owns group and community; automatically approved
@@ -218,7 +222,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(members, []))
 
     def test_community_invite_group_deferred(self):
-        " invite a group to a community with deferral "
+        """ invite a group to a community with deferral """
         self.client.login(username='cat', password='adumbpassword')
 
         # cat owns community but not group: deferred and queued.
@@ -234,7 +238,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(pending, ['dogs']))
 
     def test_community_invite_group_not_owner(self):
-        " prohibit invitations from non-owners "
+        """ prohibit invitations from non-owners """
         self.client.login(username='dog', password='anotherpassword')
 
         # cat owns group and community; automatically approved
@@ -250,7 +254,7 @@ class TestViews(TestCase):
                          "user 'dog' does not own community 'all kinds of pets'")
 
     def test_community_invite_group_and_retract(self):
-        " invite a group and retract the invitation "
+        """ invite a group and retract the invitation """
         self.client.login(username='cat', password='adumbpassword')
 
         # cat owns community but not group: deferred and queued.
@@ -278,7 +282,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(pending, []))
 
     def test_community_invite_group_and_accept(self):
-        " invite a group to a community and group accepts "
+        """ invite a group to a community and group accepts """
         self.client.login(username='cat', password='adumbpassword')
 
         # cat owns community but not group: deferred and queued.
@@ -327,7 +331,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(joined, ['all kinds of pets']))
 
     def test_community_invite_group_and_decline(self):
-        " invite a group to a community and group accepts "
+        """ invite a group to a community and group accepts """
         self.client.login(username='cat', password='adumbpassword')
 
         # cat owns community but not group: deferred and queued.
@@ -384,7 +388,7 @@ class TestViews(TestCase):
     # group management
     #######################
     def test_group_not_authenticated(self):
-        " try using the system unauthenticated on a group "
+        """ try using the system unauthenticated on a group """
         url = reverse('access_manage_group', kwargs={'gid': self.cats.id})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 404)
@@ -393,7 +397,7 @@ class TestViews(TestCase):
                          "You must be logged in to access this function.")
 
     def test_group_wrong_owner(self):
-        " try accessing a group without being an owner "
+        """ try accessing a group without being an owner """
         self.client.login(username='dog', password='anotherpassword')
         url = reverse('access_manage_group', kwargs={'gid': self.cats.id})
         result = self.client.get(url)
@@ -403,7 +407,7 @@ class TestViews(TestCase):
                          "user 'dog' does not own group 'cats'")
 
     def test_group_list(self):
-        " list a group "
+        """ list a group """
 
         self.client.login(username='cat', password='adumbpassword')
 
@@ -420,7 +424,7 @@ class TestViews(TestCase):
         self.assertEqual(json_response['we_declined'], [])
 
     def test_group_add_community_automatically(self):
-        " add a group automatically to a community "
+        """ add a group automatically to a community """
         self.client.login(username='cat', password='adumbpassword')
 
         # cat owns group and community; automatically approved
@@ -437,7 +441,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(joined, ['all kinds of pets']))
 
     def test_group_add_community_and_remove(self):
-        " add a group automatically to a community "
+        """ add a group automatically to a community """
         self.client.login(username='cat', password='adumbpassword')
 
         # cat owns group and community; automatically approved
@@ -465,7 +469,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(joined, []))
 
     def test_group_join_community_deferred(self):
-        " request joining a community with deferral "
+        """ request joining a community with deferral """
         self.client.login(username='dog', password='anotherpassword')
 
         # dog owns group but not community: deferred and queued.
@@ -482,7 +486,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(pending, ['all kinds of pets']))
 
     def test_group_join_community_deferred_and_accept(self):
-        " request joining a community with deferral and accept "
+        """ request joining a community with deferral and accept """
         self.client.login(username='dog', password='anotherpassword')
 
         # dog owns group but not community: deferred and queued.
@@ -529,7 +533,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(members, ['dogs']))
 
     def test_group_join_community_deferred_and_decline(self):
-        " request joining a community with deferral and decline"
+        """ request joining a community with deferral and decline"""
         self.client.login(username='dog', password='anotherpassword')
 
         # dog owns group but not community: deferred and queued.
@@ -578,7 +582,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(members, []))
 
     def test_group_join_community_deferred_and_retract(self):
-        " request joining a community with deferral and retract the request "
+        """ request joining a community with deferral and retract the request """
         self.client.login(username='dog', password='anotherpassword')
 
         # dog owns group but not community: deferred and queued.
@@ -612,23 +616,24 @@ class TestViews(TestCase):
     #######################
     # community creation
     #######################
+
     def test_community_request_not_logged_in(self):
-        " catch users who are not logged in "
+        """ catch users who are not logged in """
 
         url = reverse("access_manage_crequests")
-        result = self.client.post(url)
-        self.assertEqual(result.status_code, 404)
+        result = self.client.get(url)
+        self.assertEqual(result.status_code, 401)
 
         json_response = json.loads(result.content)
         self.assertEqual(json_response['denied'],
-                         "You must be logged in to access this function.")
+                         "You must be logged in to access this functionality.")
 
     def test_community_request_logged_in(self):
-        " list community requests for to a regular user "
+        """ list community requests for to a regular user """
         self.client.login(username='dog', password='anotherpassword')
 
         url = reverse("access_manage_crequests")
-        result = self.client.post(url)
+        result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
         self.assertTrue(is_equal_to_as_set(json_response['pending'], []))
@@ -636,11 +641,11 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(json_response['declined'], []))
 
     def test_community_request_logged_in_admin(self):
-        " list community requests for to a regular user "
+        """ list community requests for to a regular user """
         self.client.login(username='admin', password='passwordsarestupid')
 
         url = reverse("access_manage_crequests")
-        result = self.client.post(url)
+        result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
         self.assertTrue(is_equal_to_as_set(json_response['pending'], []))
@@ -648,8 +653,13 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(json_response['declined'], []))
 
     def test_community_request_entry(self):
-        " enter a request for a regular user "
+        """ enter a request for a regular user """
         self.client.login(username='dog', password='anotherpassword')
+
+        # no community request object at this point
+        self.assertEqual(RequestCommunity.objects.count(), 0)
+        # no community object at this point apart from the pets community
+        self.assertEqual(Community.objects.exclude(id=self.pets.id).count(), 0)
 
         url = reverse("access_manage_crequests", kwargs={"action": "request"})
         result = self.client.post(url, {
@@ -657,9 +667,7 @@ class TestViews(TestCase):
             "description": "News thats fit for liberals and not for conservatives.",
             "email": "acouch@hydroshare.org",
             "purpose": "To be the opposite of InfoWars.",
-            "url": "",
-            "closed": False,
-            "owner": "dog"
+            "url": "https://google.com/my-cummunity"
         })
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -671,8 +679,20 @@ class TestViews(TestCase):
         pending = [x['name'] for x in json_response['pending']]
         self.assertTrue(is_equal_to_as_set(pending, ["Fake news"]))
 
+        # there should be one community request object at this point
+        self.assertEqual(RequestCommunity.objects.count(), 1)
+        cr = RequestCommunity.objects.first()
+        self.assertEqual(cr.approved, None)
+        self.assertEqual(cr.requested_by, self.dog)
+
+        # there should be one community object at this point that is in active state
+        self.assertEqual(Community.objects.exclude(id=self.pets.id).count(), 1)
+        new_community = Community.objects.exclude(id=self.pets.id).first()
+        self.assertFalse(new_community.active)
+        self.assertEqual(cr.community_to_approve, new_community)
+
     def test_community_edit_request(self):
-        " admin edits a request without approval "
+        """ admin edits a request without approval """
         self.client.login(username='dog', password='anotherpassword')
 
         url = reverse("access_manage_crequests", kwargs={"action": "request"})
@@ -680,10 +700,7 @@ class TestViews(TestCase):
             "name": "Fake news",
             "description": "News thats fit for liberals and not for conservatives.",
             "email": "acouch@hydroshare.org",
-            "purpose": "To be the opposite of InfoWars.",
-            "url": "",
-            "closed": False,
-            "owner": "dog"
+            "purpose": "To be the opposite of InfoWars."
         })
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -701,18 +718,16 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(pending, ["Fake news"]))
         crid = json_response['request']['id']
 
-        # now approve the request as admin
+        # now update the request as admin
         self.client.login(username='admin', password='passwordsarestupid')
 
-        url = reverse("access_manage_crequests", kwargs={"action": "request", "crid": crid})
+        url = reverse("access_manage_crequests", kwargs={"action": "update", "crid": crid})
         result = self.client.post(url, {
             "name": "Real news",
             "description": "News thats fit for conservatives.",
             "email": "acouch@hydroshare.org",
             "purpose": "To be the opposite of InfoWars.",
-            "url": "",
-            "closed": False,
-            "owner": "dog"
+            "url": "https://google.com"
         })
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -725,7 +740,7 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(declined, []))
 
     def test_community_approve_request(self):
-        " approve a request for a regular user "
+        """ approve a request for a regular user """
         self.client.login(username='dog', password='anotherpassword')
 
         # create a request to approve
@@ -734,10 +749,8 @@ class TestViews(TestCase):
             "name": "Fake news",
             "description": "News thats fit for liberals and not for conservatives.",
             "email": "acouch@hydroshare.org",
-            "purpose": "To be the opposite of InfoWars.",
-            "url": "",
-            "closed": False,
-            "owner": "dog"
+            "purpose": "To be the opposite of InfoWars."
+
         })
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -754,24 +767,29 @@ class TestViews(TestCase):
         # This is the request to be approved.
         crid = json_response['request']['id']
 
+        self.assertEqual(RequestCommunity.objects.count(), 1)
+        cr = RequestCommunity.objects.first()
+        self.assertEqual(cr.approved, None)
+
+        # There should be a community now that is not active
+        self.assertEqual(Community.objects.filter(name='Fake news').count(), 1)
+        new_community = Community.objects.filter(name='Fake news').first()
+        self.assertFalse(new_community.active)
+
         # now approve the request as admin
         self.client.login(username='admin', password='passwordsarestupid')
 
         url = reverse("access_manage_crequests", kwargs={"action": "approve", "crid": crid})
-        result = self.client.post(url, {
-            "name": "Fake news",
-            "description": "News thats fit for liberals and not for conservatives.",
-            "email": "acouch@hydroshare.org",
-            "purpose": "To be the opposite of InfoWars.",
-            "url": "",
-            "closed": False,
-            "owner": "dog"
-        })
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
-        # There should be a community now.
+        # There should be a community now that is active
         self.assertEqual(Community.objects.filter(name='Fake news').count(), 1)
+        new_community = Community.objects.filter(name='Fake news').first()
+        self.assertTrue(new_community.active)
+        cr = RequestCommunity.objects.first()
+        self.assertEqual(cr.approved, True)
 
         pending = [x['name'] for x in json_response['pending']]
         self.assertTrue(is_equal_to_as_set(pending, []))
@@ -781,19 +799,19 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(declined, []))
 
     def test_community_decline_request(self):
-        " decline a request for a regular user "
+        """ decline a request for a regular user """
         self.client.login(username='dog', password='anotherpassword')
 
+        self.assertEqual(RequestCommunity.objects.count(), 0)
         # create a request to approve
         url = reverse("access_manage_crequests", kwargs={"action": "request"})
+        # url = reverse("access_manage_crequests_create")
         result = self.client.post(url, {
             "name": "Fake news",
             "description": "News thats fit for liberals and not for conservatives.",
             "email": "acouch@hydroshare.org",
-            "purpose": "To be the opposite of InfoWars.",
-            "url": "",
-            "closed": False,
-            "owner": "dog"
+            "purpose": "To be the opposite of InfoWars."
+
         })
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -805,27 +823,34 @@ class TestViews(TestCase):
         declined = [x['name'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
 
+        # there should be one community request object at this point
+        self.assertEqual(RequestCommunity.objects.count(), 1)
+        cr = RequestCommunity.objects.first()
+        self.assertEqual(cr.approved, None)
+        self.assertEqual(cr.requested_by, self.dog)
+
+        # There should be a community now.
+        self.assertEqual(Community.objects.filter(name='Fake news').count(), 1)
+
         # To act, we need this ID.
         crid = json_response['request']['id']
 
-        # now approve the request as admin
+        # now reject the request as admin
         self.client.login(username='admin', password='passwordsarestupid')
 
         url = reverse("access_manage_crequests", kwargs={"action": "decline", "crid": crid})
-        result = self.client.post(url, {
-            "name": "Fake news",
-            "description": "News thats fit for liberals and not for conservatives.",
-            "email": "acouch@hydroshare.org",
-            "purpose": "To be the opposite of InfoWars.",
-            "url": "",
-            "closed": False,
-            "owner": "dog"
-        })
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
-        # There should be a community now.
-        self.assertEqual(Community.objects.filter(name='Fake news').count(), 0)
+        self.assertEqual(RequestCommunity.objects.count(), 1)
+        cr = RequestCommunity.objects.first()
+        self.assertEqual(cr.approved, False)
+
+        # There should be still the community in inactive state.
+        self.assertEqual(Community.objects.filter(name='Fake news').count(), 1)
+        new_community = Community.objects.filter(name='Fake news').first()
+        self.assertFalse(new_community.active)
 
         pending = [x['name'] for x in json_response['pending']]
         self.assertTrue(is_equal_to_as_set(pending, []))
@@ -835,8 +860,11 @@ class TestViews(TestCase):
         self.assertTrue(is_equal_to_as_set(declined, ['Fake news']))
 
     def test_community_delete_request(self):
-        " remove a request from a regular user "
+        """ remove a request from a regular user """
+
         self.client.login(username='dog', password='anotherpassword')
+
+        self.assertEqual(RequestCommunity.objects.count(), 0)
 
         # create a request to approve; if crid is not specified, it's new
         url = reverse("access_manage_crequests", kwargs={"action": "request"})
@@ -845,9 +873,7 @@ class TestViews(TestCase):
             "description": "News thats fit for liberals and not for conservatives.",
             "email": "acouch@hydroshare.org",
             "purpose": "To be the opposite of InfoWars.",
-            "url": "",
-            "closed": False,
-            "owner": "dog"
+            "url": "http://usu.edu/waterlab"
         })
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -862,14 +888,20 @@ class TestViews(TestCase):
         # To act, we need this ID.
         crid = json_response['request']['id']
 
+        self.assertEqual(RequestCommunity.objects.count(), 1)
+
         # no user switching: removing a request doesn't require admin
         url = reverse("access_manage_crequests", kwargs={"action": "remove", "crid": crid})
         result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
-        # There should be a community now.
+        # request community object gets deleted
+        self.assertEqual(RequestCommunity.objects.count(), 0)
+
+        # There should be no community now.
         self.assertEqual(Community.objects.filter(name='Fake news').count(), 0)
+        self.assertEqual(RequestCommunity.objects.count(), 0)
 
         pending = [x['name'] for x in json_response['pending']]
         self.assertTrue(is_equal_to_as_set(pending, []))
