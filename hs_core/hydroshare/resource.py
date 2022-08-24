@@ -437,7 +437,8 @@ def create_resource(
     :return: a new resource which is an instance of BaseResource with specified resource_type.
     """
     if not __debug__:
-        if resource_type in ("ModelProgramResource",):
+        if resource_type in ("ModelInstanceResource", "ModelProgramResource", "MODFLOWModelInstanceResource",
+                             "SWATModelInstanceResource"):
             raise ValidationError("Resource type '{}' is no more supported for resource creation".format(resource_type))
 
     with transaction.atomic():
