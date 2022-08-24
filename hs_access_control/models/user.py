@@ -9,7 +9,7 @@ from hs_access_control.models.privilege import PrivilegeCodes, \
         UserCommunityPrivilege, GroupCommunityPrivilege, CommunityResourcePrivilege
 from hs_access_control.models.group import GroupAccess, GroupMembershipRequest
 from hs_access_control.models.exceptions import PolymorphismError
-from hs_access_control.models.community import Community
+from hs_access_control.models.community import Community, RequestCommunity
 from hs_access_control.models.invite import GroupCommunityRequest
 
 #############################################
@@ -2501,7 +2501,7 @@ class UserAccess(models.Model):
 
         raw_community = Community.objects.create(name=title, description=description,
                                                  purpose=purpose, auto_approve=auto_approve,
-                                                 email=email, url=url)
+                                                 email=email, url=url, active=False)
         raw_user = self.user
 
         # Must bootstrap access control system initially
@@ -2510,6 +2510,98 @@ class UserAccess(models.Model):
                                      grantor=raw_user,
                                      privilege=PrivilegeCodes.OWNER)
         return raw_community
+
+    def create_community_request(self, title, description, auto_approve=False, purpose=None, email=None, url=None):
+        """
+        Creates a community and generates a request for approval so that the community can be used.
+
+        :param title: Community title/name.
+        :param description: a description of the community
+        :param purpose: what's the purpose of the community (optional)
+        :param auto_approve: whether to bypass Group-like request/approve process for requests
+        :return: RequestCommunity object
+
+        Anyone can create a community. The creator is also the first owner.
+
+        An owner can assign ownership to another user via share_community_with_user,
+        but cannot remove self-ownership if that would leave the community with no
+        owner.
+        """
+        if __debug__:
+            assert isinstance(title, str)
+            assert isinstance(description, str)
+            if purpose:
+                assert isinstance(purpose, str)
+            if email:
+                assert isinstance(email, str)
+            if url:
+                assert isinstance(url, str)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        raw_community = Community.objects.create(name=title, description=description,
+                                                 purpose=purpose, auto_approve=auto_approve,
+                                                 email=email, url=url, active=False)
+        raw_user = self.user
+
+        # Must bootstrap access control system initially
+        UserCommunityPrivilege.share(community=raw_community,
+                                     user=raw_user,
+                                     grantor=raw_user,
+                                     privilege=PrivilegeCodes.OWNER)
+
+        # create the request object
+        community_request = RequestCommunity.objects.create(community_to_approve=raw_community,
+                                                            requested_by=self.user)
+        return community_request
+
+    def pending_community_requests(self):
+        """Gets a queryset of all requests for community creation by self.user"""
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        return RequestCommunity.pending_requests().filter(requested_by=self.user)
+
+    def update_community(self, this_community, title, description, auto_approve=False, purpose=None,
+                         email=None, url=None):
+        """
+        Updates community metadata for an active community.
+
+        :param  this_community: community to update
+        :param title: Community title/name.
+        :param description: a description of the community
+        :param purpose: what's the purpose of the community (optional)
+        :param auto_approve: whether to bypass Group-like request/approve process for requests
+        :return: Community object
+
+        Anyone can create a community. The creator is also the first owner.
+
+        An owner can assign ownership to another user via share_community_with_user,
+        but cannot remove self-ownership if that would leave the community with no
+        owner.
+        """
+        if __debug__:
+            assert isinstance(this_community, Community)
+            assert isinstance(title, str)
+            assert isinstance(description, str)
+            if purpose:
+                assert isinstance(purpose, str)
+            if email:
+                assert isinstance(email, str)
+            if url:
+                assert isinstance(url, str)
+
+        if self.can_change_community_flags(this_community):
+            this_community.name = title
+            this_community.description = description
+            this_community.purpose = purpose
+            this_community.email = email
+            this_community.url = url
+            this_community.auto_approve = auto_approve
+            this_community.save()
+
+        return this_community
 
     def owns_community(self, this_community):
         """
