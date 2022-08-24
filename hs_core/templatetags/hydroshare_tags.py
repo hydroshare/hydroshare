@@ -11,6 +11,7 @@ from mezzanine import template
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.search_indexes import normalize_name
+from hs_access_control.models.privilege import PrivilegeCodes
 
 
 register = template.Library()
@@ -18,9 +19,6 @@ register = template.Library()
 RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Composite Resource",
                                      "CollectionResource": "Collection Resource",
                                      "ModelProgramResource": "Model Program Resource",
-                                     "ModelInstanceResource": "Model Instance Resource",
-                                     "MODFLOWModelInstanceResource": "MODFLOW Model Instance Resource",
-                                     "SWATModelInstanceResource": "SWAT Model Instance Resource",
                                      "ToolResource": "Web App Resource"
                                      }
 
@@ -49,6 +47,20 @@ def user_resource_labels(resource, user):
     if resource.has_labels:
         return resource.rlabels.get_labels(user)
     return []
+
+
+@register.filter
+def get_user_privilege(resource, user):
+    user_privilege = resource.raccess.get_effective_privilege(user, ignore_superuser=True)
+    if user_privilege == PrivilegeCodes.OWNER:
+        self_access_level = 'Owned'
+    elif user_privilege == PrivilegeCodes.CHANGE:
+        self_access_level = 'Editable'
+    elif user_privilege == PrivilegeCodes.VIEW:
+        self_access_level = 'Viewable'
+    else:
+        self_access_level = "Discovered"
+    return self_access_level
 
 
 @register.filter
@@ -97,13 +109,20 @@ def resource_type(content):
 def resource_first_author(content):
     if not content:
         return ''
-    first_creator = content.first_creator
-    if first_creator.name and first_creator.relative_uri:
-        return format_html('<a href="{desc}">{name}</a>',
-                           desc=first_creator.relative_uri,
-                           name=first_creator.name)
-    elif first_creator.name:
-        return format_html('<span>{name}</span>', name=first_creator.name)
+
+    first_creator = None
+    for creator in content.metadata.creators.all():
+        if creator.order == 1:
+            first_creator = creator
+            break
+
+    if first_creator:
+        if first_creator.name and first_creator.relative_uri:
+            return format_html('<a href="{desc}">{name}</a>',
+                               desc=first_creator.relative_uri,
+                               name=first_creator.name)
+        elif first_creator.name:
+            return format_html('<span>{name}</span>', name=first_creator.name)
     else:
         first_creator = content.metadata.creators.filter(order=1).first()
         if first_creator.name:
@@ -349,3 +368,32 @@ def discoverable(item):
     if item is None or item == 'Unknown':
         return ""
     return item
+
+
+@register.simple_tag(takes_context=True)
+def param_replace(context, **kwargs):
+    """
+    Return encoded URL parameters that are the same as the current
+    request's parameters, only with the specified GET parameters added or changed.
+
+    It also removes any empty parameters to keep things neat,
+    so you can remove a parm by setting it to ``""``.
+
+    For example, if you're on the page ``/things/?with_frosting=true&page=5``,
+    then
+
+    <a href="/things/?{% param_replace page=3 %}">Page 3</a>
+
+    would expand to
+
+    <a href="/things/?with_frosting=true&page=3">Page 3</a>
+
+    Based on
+    https://stackoverflow.com/questions/22734695/next-and-before-links-for-a-django-paginated-query/22735278#22735278
+    """
+    d = context['request'].GET.copy()
+    for k, v in kwargs.items():
+        d[k] = v
+    for k in [k for k, v in d.items() if not v]:
+        del d[k]
+    return d.urlencode()

@@ -1,7 +1,7 @@
 <table id="table-stats" class="info-table">
     <tr>
         <th>Sharing Status:</th>
-        <td id="hl-sharing-status">
+        <td id="hl-sharing-status" style="display: flex; align-items: flex-start;">
             {% if cm.raccess.published %}
                 Published
             {% elif cm.raccess.public %}
@@ -14,6 +14,13 @@
                 Private (Accessible via direct link sharing)
             {% else %}
                 Private
+            {% endif %}
+            {% if resource_edit_mode %}
+            <a data-toggle="tooltip" data-placement="auto"
+                href="https://www.youtube.com/watch?v=_zfeUpyk0to" target="_blank"
+                title='How to: Set a HydroShare Resource to “public”, “private”, or “discoverable”'
+                class="fa fa-youtube-play icon-red space-left no-decoration icon-guide">
+            </a>
             {% endif %}
         </td>
     </tr>

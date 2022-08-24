@@ -314,7 +314,7 @@ class ResourceAccess(models.Model):
         else:  # invalid privilege given
             return User.objects.none()
 
-    def __get_raw_user_privilege(self, this_user):
+    def __get_raw_user_privilege(self, this_user, ignore_superuser=False):
         """
         Return the user-based privilege of a specific user over this resource
 
@@ -330,7 +330,7 @@ class ResourceAccess(models.Model):
         if not this_user.is_active:
             raise PermissionDenied("Grantee user is not active")
 
-        if this_user.is_superuser:
+        if this_user.is_superuser and not ignore_superuser:
             return PC.OWNER
 
         # compute simple user privilege over resource
@@ -393,7 +393,7 @@ class ResourceAccess(models.Model):
         else:
             return PC.VIEW
 
-    def get_effective_user_privilege(self, this_user):
+    def get_effective_user_privilege(self, this_user, ignore_superuser=False):
         """
         Return the effective user-based privilege of a specific user over this resource
 
@@ -402,7 +402,7 @@ class ResourceAccess(models.Model):
 
         This accounts for resource flags by revoking CHANGE on immutable resources.
         """
-        user_priv = self.__get_raw_user_privilege(this_user)
+        user_priv = self.__get_raw_user_privilege(this_user, ignore_superuser=ignore_superuser)
         if self.immutable and user_priv == PC.CHANGE:
             return PC.VIEW
         else:
@@ -434,7 +434,7 @@ class ResourceAccess(models.Model):
         community_priv = self.__get_raw_community_privilege(this_user)
         return community_priv
 
-    def get_effective_privilege(self, this_user):
+    def get_effective_privilege(self, this_user, ignore_superuser=False):
         """
         Compute effective privilege of user over a resource, accounting for resource flags.
 
@@ -465,7 +465,7 @@ class ResourceAccess(models.Model):
         if not this_user.is_active:
             raise PermissionDenied("Grantee user is not active")
 
-        user_priv = self.get_effective_user_privilege(this_user)
+        user_priv = self.get_effective_user_privilege(this_user, ignore_superuser=ignore_superuser)
         group_priv = self.get_effective_group_privilege(this_user)
         # community_priv = self.get_effective_community_privilege(this_user)
         return min(user_priv, group_priv)  # , community_priv)

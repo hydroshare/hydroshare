@@ -20,7 +20,7 @@ from mezzanine.core.request import current_request
 from mezzanine.pages.models import Page
 from mezzanine.utils.models import upload_to
 
-from sorl.thumbnail import ImageField as TumbnailImageField
+from sorl.thumbnail import ImageField as ThumbnailImageField
 from theme.utils import get_upload_path_userprofile
 
 
@@ -253,7 +253,7 @@ class UserQuota(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
-    picture = TumbnailImageField(upload_to=get_upload_path_userprofile, null=True, blank=True)
+    picture = ThumbnailImageField(upload_to=get_upload_path_userprofile, null=True, blank=True)
     middle_name = models.CharField(max_length=1024, null=True, blank=True)
     website = models.URLField(null=True, blank=True)
     title = models.CharField(

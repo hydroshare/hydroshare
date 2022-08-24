@@ -15,7 +15,7 @@
                                 <th>Name: </th>
                                 <td>${author.name}</td>
                             </tr>
-                            <tr v-if="is_person && author.profileUrl">
+                            <tr v-if="is_person && author.profileUrl && author.is_active">
                                 <td class="text-center"><i class="fa fa-user-circle" aria-hidden="true"></i></td>
                                 <th>HydroShare Profile: </th>
                                 <td><a :href="author.profileUrl">View Profile</a></td>

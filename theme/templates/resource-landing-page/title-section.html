@@ -137,39 +137,10 @@
     {% endif %}
 {% endif %}
 
-{# ======= Check MODFLOW Model Instance content files =======#}
-{% if cm.resource_type == "MODFLOWModelInstanceResource" %}
-    {% if self_access_level == 'owner' or self_access_level == 'edit' %}
-        {% if cm.check_content_files %}
-            <div class="col-sm-12">
-                <div id="missing-metadata-or-file" role="alert"
-                     class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="false">&times;</span>
-                    </button>
-                    <br>
-                    {% if cm.check_content_files == 'multiple_nam' %}
-                        <span>The following conditions are recommended to have a complete resource before making the resource public or discoverable:<br>
-                        <ul>
-                            <li>Only one .nam or .mfn is allowed</li>
-                        </ul>
-                    </span>
-                    {% else %}
-                        <span>The following files are recommended to have a complete resource before making the resource public or discoverable:<br>
-                        <ul>{% for f in cm.check_content_files %}
-                            <li>{{ f }} </li>{% endfor %}</ul>
-                    </span>
-                    {% endif %}
-                </div>
-            </div>
-        {% endif %}
-    {% endif %}
-{% endif %}
-
 {# ======= Title ======= #}
 <div class="col-xs-12">
     {% if not resource_edit_mode %}
-        <div class="flex">
+        <div class="flex align-center">
             <h2 id="resource-title">{{ title|escape }}</h2>
 
             {% if tool_homepage_url %}
@@ -177,7 +148,6 @@
                     <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
                 </span>
             {% endif %}
-
             <span id="apps-dropdown" v-if="openWithTools.length">
                 <div v-if="!isLoading" class="btn-group">
                     <button class="btn btn-primary dropdown-toggle"
@@ -197,6 +167,11 @@
                         </li>
                      </ul>
                 </div>
+                <a v-if="openWithTools.length" data-toggle="tooltip" data-placement="auto"
+                  href="https://www.youtube.com/watch?v=rw4RERFchns" target="_blank"
+                  title='How to: Use Open With Function'
+                  class="fa fa-youtube-play icon-red space-left no-decoration icon-guide">
+                </a>
             </span>
             <script type="text/javascript" src="{% static 'js/hs-vue/relevant-tools.js' %}"></script>
         </div>
