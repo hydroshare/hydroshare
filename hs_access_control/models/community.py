@@ -308,3 +308,101 @@ class CommunityRequest(models.Model):
         self.date_processed = datetime.now()
         self.save()
         return "community '{}' declined and not created.".format(self.name)
+
+
+class RequestCommunity(models.Model):
+    """A request to create a new community
+    Note: As part of creating an instance this request, a new community gets created which is in inactive state
+    When this request gets approved the community becomes active
+    """
+    community_to_approve = models.ForeignKey(Community, related_name='c2crequest')
+    requested_by = models.ForeignKey(User, related_name='u2crequest')
+    date_requested = models.DateTimeField(editable=False, auto_now_add=True)
+    date_processed = models.DateTimeField(editable=False, null=True)
+    approved = models.NullBooleanField(null=True, default=None, blank=False)
+
+    @classmethod
+    def create_request(cls, request):
+        """Helper to create a request for a new community"""
+        from ..forms import RequestNewCommunityForm
+
+        community_form = RequestNewCommunityForm(request.POST, request.FILES)
+        if community_form.is_valid():
+            new_community_request = community_form.save(request)
+            return new_community_request
+
+        err_msg = f"Failed to make a request for a new community. Errors: {community_form.errors.as_json}"
+        raise ValidationError(err_msg)
+
+
+    def approve(self):
+        """Helper to approve a request to create a new community
+        Note: The caller of this function needs to check authorization for approval
+        """
+        assert self.approved is None
+
+        self.date_processed = datetime.now()
+        self.approved = True
+        # upon approval the request the associated community is set to active
+        self.community_to_approve.active = True
+        self.community_to_approve.save()
+        self.save()
+
+    def decline(self):
+        """Helper to reject a request to create a new community
+        Note: The caller of this function needs to check authorization for approval
+        """
+        assert self.approved is None
+
+        self.date_processed = datetime.now()
+        self.approved = False
+        # upon approval the request the associated community is set to active
+        self.community_to_approve.active = False
+        self.community_to_approve.save()
+        self.save()
+
+    def remove(self):
+        assert not self.community_to_approve.active
+        # Note: deleting the community will cascade to delete self (RequestCommunity)
+        self.community_to_approve.delete()
+
+    def update_request(self, user, request):
+        """Updates data for a community that is waiting for approval"""
+        from ..forms import CommunityForm
+
+        if self.approved is not None:
+            raise ValidationError("Can't update this community request")
+
+        community_to_update = self.community_to_approve
+        cf = CommunityForm(data=request.POST)
+        if cf.is_valid():
+            frm_data = cf.cleaned_data
+            community_to_update.name = frm_data['name']
+            community_to_update.description = frm_data['description']
+            community_to_update.purpose = frm_data['purpose']
+            community_to_update.email = frm_data['email']
+            community_to_update.url = frm_data['url']
+            community_to_update.save()
+        else:
+            raise ValidationError("Community creation errors:{}.".format(cf.errors.as_json))
+
+        if 'picture' in request.FILES:
+            # resize uploaded logo image
+            img = request.FILES['picture']
+            img.image = get_thumbnail(img, 'x150', crop='center')
+            community_to_update.picture = img
+            community_to_update.save()
+
+        # set the banner field of the newly created community
+        if 'banner' in request.FILES:
+            # resize uploaded banner image
+            img = request.FILES['banner']
+            img.image = get_thumbnail(img, '1200x200', crop='center')
+            community_to_update.banner = img
+            community_to_update.save()
+
+    @classmethod
+    def pending_requests(cls):
+        """Gets a queryset of all pending community requests"""
+
+        return cls.objects.filter(approved=None).select_related('community_to_approve')
