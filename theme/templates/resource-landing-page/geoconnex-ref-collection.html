@@ -70,6 +70,9 @@
                                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
                             </div>
+                            <div v-if="isSearching">
+                                <p v-if="resMode=='Edit'"><b>Searching Geoconnex collection:</b> ${loadingDescription}</p>
+                            </div>
                             <div v-if="hasSearches" :class="[showingMap ? 'geo-list-item' : '', 'checkbox']">
                                 <label>
                                     <input type="checkbox" 

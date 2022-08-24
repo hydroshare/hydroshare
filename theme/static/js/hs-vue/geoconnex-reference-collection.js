@@ -869,6 +869,12 @@ let geoconnexApp = new Vue({
 
       for (let item of geoconnexApp.items) {
         if (item.header) continue;
+        let alreadySelected = geoconnexApp.values.find((obj) => {
+          return obj.value === item.uri;
+        });
+        if (alreadySelected){
+          continue;
+        }
         try {
           geoconnexApp.loadingDescription = item.collection;
           let geometry = await geoconnexApp.fetchSingleGeometry(item);
@@ -909,8 +915,15 @@ let geoconnexApp = new Vue({
       );
 
       for (let item of geoconnexApp.items) {
+        if (item.header) continue;
         try {
           geoconnexApp.loadingDescription = item.collection;
+          let alreadySelected = geoconnexApp.values.find((obj) => {
+            return obj.value === item.uri;
+          });
+          if (alreadySelected){
+            continue;
+          }
           let geometry = await geoconnexApp.fetchSingleGeometry(item);
           item.geometry = geometry.geometry;
           if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
