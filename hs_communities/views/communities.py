@@ -1,23 +1,19 @@
-
-
 import json
+import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
-from django.shortcuts import render, redirect
-from django.utils.decorators import method_decorator
-from django.utils.html import mark_safe, escapejs
-from django.views.generic import TemplateView
-from hs_access_control.management.utilities import community_from_name_or_id
 from django.db.models import F
+from django.shortcuts import redirect, render
+from django.utils.decorators import method_decorator
+from django.utils.html import escapejs, mark_safe
+from django.views.generic import TemplateView
 
-from hs_access_control.models import Community
-from hs_access_control.models.privilege import UserCommunityPrivilege, PrivilegeCodes
 from hs_access_control.models import Community, GroupCommunityRequest
+from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
 from hs_access_control.views import community_json, gcr_json, group_json, user_json
 from hs_communities.models import Topic
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -27,9 +23,6 @@ class CollaborateView(TemplateView):
 
 class CommunityView(TemplateView):
     template_name = 'hs_communities/community.html'
-
-    # def dispatch(self, *args, **kwargs):
-    #     return super(CommunityView, self).dispatch(*args, **kwargs)
 
     def dispatch(self, *args, **kwargs):
         self.template_name = 'hs_communities/community.html'
@@ -196,7 +189,7 @@ class CommunityView(TemplateView):
             logger.error(denied)
             return context
 
-
+    # TODO: cleanup this commented code
     # def get_context_data(self, **kwargs):
     #     grpfilter = self.request.GET.get('grp')
 
@@ -239,8 +232,18 @@ class FindCommunitiesView(TemplateView):
         return super(FindCommunitiesView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        user = self.request.user
+        user_is_admin = False
+        if user:
+            user_is_admin = user.is_authenticated() and user.is_superuser
+
+        # get the list of any pending community create requests by this user
+        pending_requests = user.uaccess.pending_community_requests()
+
         return {
-            'communities_list': Community.objects.filter(active=True)
+            'communities_list': Community.objects.filter(active=True),
+            'pending_requests': pending_requests,
+            'user_is_admin': user_is_admin
         }
 
 
@@ -286,8 +289,12 @@ class MyCommunitiesView(TemplateView):
             is_owner = u in c.owners
             if is_owner and c not in comms_member_of:
                 comms_member_of.append(c)
+
+        # get the list of any pending community create requests by this user
+        pending_requests = u.uaccess.pending_community_requests()
         return {
-            'communities_list': [c for c in comms_member_of if c is not None]
+            'communities_list': [c for c in comms_member_of if c is not None],
+            'pending_requests': pending_requests,
         }
 
 
