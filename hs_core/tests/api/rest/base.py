@@ -208,6 +208,43 @@ class SciMetaTestCase(HSRESTTestCase):
         return response
 
 
+class ModelInstanceSciMetaTestCase(SciMetaTestCase):
+
+    MOD_OUT_PATH = ('/rdf:RDF/rdf:Description[1]/hsterms:ModelOutput/'
+                    'rdf:Description/hsterms:includesModelOutput')
+    EXECUTED_BY_PATH = ('/rdf:RDF/rdf:Description[1]/hsterms:ExecutedBY/'
+                        'rdf:Description')
+    EXECUTED_BY_NAME_PATH = "{exec_by_path}/hsterms:modelProgramName".format(exec_by_path=EXECUTED_BY_PATH)
+    EXECUTED_BY_ID_PATH = "{exec_by_path}/hsterms:modelProgramIdentifier".format(exec_by_path=EXECUTED_BY_PATH)
+
+    def setUp(self):
+        super(ModelInstanceSciMetaTestCase, self).setUp()
+
+        self.rtype_prog = 'ModelProgramResource'
+        self.title_prog = 'Some program'
+        res = resource.create_resource(self.rtype_prog,
+                                       self.user,
+                                       self.title_prog)
+        self.pid_prog = res.short_id
+        self.resources_to_delete.append(self.pid_prog)
+
+    def updateExecutedBy(self, scimeta, name, id):
+        """ Update ExecutedBy
+
+        :param scimeta: ElementTree representing science metadata
+        :param name: String representing the title of the program resource.
+        :param id: String representing the ID of the program resource.
+        :return: ElementTree representing science metadata
+        """
+        name_elem = scimeta.xpath(self.EXECUTED_BY_NAME_PATH, namespaces=self.NS)[0]
+        name_elem.text = name
+
+        id_elem = scimeta.xpath(self.EXECUTED_BY_ID_PATH, namespaces=self.NS)[0]
+        id_elem.text = self.RESOURCE_URL_TEMPLATE.format(id) + '/'
+
+        return scimeta
+
+
 class ResMapTestCase(HSRESTTestCase):
 
     NS = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
