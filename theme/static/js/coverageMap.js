@@ -3,8 +3,8 @@
  */
 // Map js
 var coverageMap;
-var leafletMarkers;
 var allOverlays = [];
+var allShapes = []; // Keeps track of shapes added by text change events
 var drawingManager;
 
 $(document).ready(function () {
@@ -36,7 +36,7 @@ $(document).ready(function () {
     }
 
     if ($("#coverageMap").length) {
-        initMap();
+        google.maps.event.addDomListener(window, "load", initMap);
     }
 });
 
@@ -47,7 +47,7 @@ function drawInitialShape() {
     var resourceType = $("#resource-type").val();
     // Center the map
     if (shapeType || resourceType === "Time Series") {
-        leafletMarkers.clearLayers();
+        deleteAllShapes();
         if (shapeType == "point" || (resourceType === "Time Series" && spatial_coverage_type == "point")) {
             var myLatLng;
             if (shapeType == "point") {
@@ -71,7 +71,17 @@ function drawInitialShape() {
             if (!myLatLng.lat || !myLatLng.lng) {
                 return;
             }
-            drawMarker(L.latLng(myLatLng.lat, myLatLng.lng));
+            // Define the rectangle and set its editable property to true.
+            var marker = new google.maps.Marker({
+                position: myLatLng,
+                map: coverageMap
+            });
+            allShapes.push(marker);
+            // Center map at new market
+            coverageMap.setCenter(marker.getPosition());
+            $("#coverageMap").on("click", "#resetZoomBtn", function () {
+                coverageMap.setCenter(marker.getPosition());
+            });
         }
         else if (shapeType == "box" || (resourceType === "Time Series" && spatial_coverage_type == "box")) {
             var bounds;
@@ -101,7 +111,17 @@ function drawInitialShape() {
                 return;
             }
             // Define the rectangle and set its editable property to true.
-            drawRectangle(bounds);
+            var rectangle = new google.maps.Rectangle({
+                bounds: bounds,
+                editable: false,
+                draggable: false
+            });
+            rectangle.setMap(coverageMap);
+            allShapes.push(rectangle);
+            zoomCoverageMap(bounds);
+             $("#coverageMap").on("click", "#resetZoomBtn", function () {
+                zoomCoverageMap(bounds);
+            });
         }
     }
     else {
@@ -125,6 +145,7 @@ function drawInitialShape() {
             $("#div_id_uplimit").hide();
             $("#div_id_downlimit").hide();
             drawMarkerOnTextChange();
+            drawingManager.setDrawingMode(google.maps.drawing.OverlayType.MARKER);
         }
         else {
             $("#div_id_north").hide();
@@ -137,6 +158,7 @@ function drawInitialShape() {
             $("#div_id_uplimit").show();
             $("#div_id_downlimit").show();
             drawRectangleOnTextChange();
+            drawingManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
         }
         // Show save changes button
         $("#coverage-spatial").find(".btn-primary").show();
@@ -148,203 +170,141 @@ function drawInitialShape() {
 }
 
 function initMap() {
-    if (coverageMap != undefined) { coverageMap.remove(); }
-
-    // setup a marker group
-    leafletMarkers = L.featureGroup();
-
-    const southWest = L.latLng(-90, -180), northEast = L.latLng(90, 180);
-    const bounds = L.latLngBounds(southWest, northEast);
-
-    coverageMap = L.map('coverageMap', {
-        scrollWheelZoom: false,
-        zoomControl: false,
-        maxBounds: bounds,
-        maxBoundsViscosity: 1.0
-    }).setView([41.850033, -87.6500523], 3);
-
-    // https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html#l-draw
-    
-    let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
-        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
-        maxZoom: 18,
-    });
-
-    let streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 18,
-    });
-
-    let googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
-        maxZoom: 20,
-        subdomains:['mt0','mt1','mt2','mt3']
-    });
-
-      var baseMaps = {
-        "Streets": streets,
-        "Terrain": terrain,
-        "Satelite": googleSat
-      };
-
-      var overlayMaps = {
-        "Spatial Extent": leafletMarkers,
-      };
-
-      L.control.zoom({
-        position: 'bottomright'
-      }).addTo(coverageMap);
-
-      let layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'topright'});
-      layerControl.addTo(coverageMap);
-
-      var drawControl = new L.Control.Draw({
-        draw: {
-            featureGroup: leafletMarkers,
-            polygon: false,
-            circle: false,
-            circlemarker: false,
-            polyline: false
-        },
-        edit: {
-            featureGroup: leafletMarkers,
-            remove: false
+    var shapeType;
+    var resourceType;
+    if ($("#coverageMap")[0]) {
+        // data-shape-type is set to have a value only in resource view mode
+        shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+        resourceType = $("#resource-type").val();
+        if (resourceType === "Time Series"){
+            // set to view mode
+            shapeType = " ";
         }
-      });
-      if(RESOURCE_MODE === 'Edit'){
-        coverageMap.addControl(drawControl);
-      }
-        coverageMap.on(L.Draw.Event.CREATED, function (e) {
-            let coordinates;
-            var type = e.layerType,
-                layer = e.layer;
-            leafletMarkers.addLayer(layer);
-
-            if(type === 'rectangle'){
-                coordinates = layer.getBounds();
-            }else{
-                coordinates = layer.getLatLng();
-            }
-            processDrawing(coordinates, type);
-        });
-
-        coverageMap.on(L.Draw.Event.DRAWSTART, function (e) {
-            leafletMarkers.clearLayers();
-        });
-
-        coverageMap.on(L.Draw.Event.EDITED, function (e) {
-            var layers = e.layers;
-            layers.eachLayer(function (layer) {
-                let coordinates;
-                let type = "rectangle";
-                if (layer instanceof L.Marker){
-                    coordinates = layer.getLatLng();
-                    type = "marker";
-                }else{
-                    coordinates = layer.getBounds();
-                }
-                processDrawing(coordinates, type);
-            });
-            $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').trigger('click');
-        });
-
-      L.control.fullscreen({
-        position: 'bottomright',
-        title: {
-        'false': 'Toggle fullscreen view',
-        'true': 'Exit Fullscreen'
-        },
-        content: `<i class="fa fa-expand fa-2x" aria-hidden="true"></i>`
-      }).addTo(coverageMap);
-
-      L.Control.RecenterButton = L.Control.extend({
-        onAdd: function(map) {
-            let recenterButton = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-            recenterButton.setAttribute("data-toggle", "tooltip");
-            recenterButton.setAttribute("data-placement", "right");
-            recenterButton.setAttribute("title", "Recenter");
-
-            recenterButton.innerHTML = `<a role="button"><i class="fa fa-dot-circle-o fa-2x" style="padding-top:3px"></i></a>`
-
-            L.DomEvent.on(recenterButton, 'click', (e)=>{
-              e.stopPropagation();
-              try{
-                coverageMap.fitBounds(leafletMarkers.getBounds());
-              }
-              catch (error){
-                console.log(error.message);
-                coverageMap.setView([30, 0], 1);
-              }
-             });
-    
-            return recenterButton;
-        },
-    
-        onRemove: function(map) {
-        //   L.DomEvent.off();
-        }
-    });
-    
-    L.control.watermark = function(opts) {
-        return new L.Control.RecenterButton(opts);
     }
-    
-    L.control.watermark({
-      position: 'bottomright'
-    }).addTo(coverageMap);
 
-      // show the default layers at start
-      coverageMap.addLayer(streets);
-      coverageMap.addLayer(leafletMarkers);
-      drawInitialShape();
+    coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
+        color:"#DDD",
+        zoom: 3,
+        restriction: {
+            latLngBounds: {
+              north: 85,
+              south: -85,
+              east: 179.99999,
+              west: -179.99999,
+            },
+          },        
+        minZoom: 1, 
+        streetViewControl: false,
+        scrollwheel: false,
+        center: {lat: 41.850033, lng: -87.6500523}, // Default center
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+            mapTypeIds: [
+                google.maps.MapTypeId.ROADMAP,
+                google.maps.MapTypeId.SATELLITE
+            ],
+            position: google.maps.ControlPosition.TOP_RIGHT
+        }
+    });
+
+    // Set CSS for the control border.
+    var btnRecenter = document.createElement('button');
+    btnRecenter.setAttribute("dragable", "false");
+    btnRecenter.setAttribute("title", "Recenter");
+    btnRecenter.setAttribute("aria-label", "Recenter");
+    btnRecenter.setAttribute("type", "button");
+    btnRecenter.setAttribute("id", "resetZoomBtn");
+    btnRecenter.setAttribute("class", "gm-control-active");
+    btnRecenter.style.background = 'none rgb(255, 255, 255)';
+    btnRecenter.style.border = '0';
+    btnRecenter.style.boxShadow = '0 1px 1px rgba(0,0,0,.3)';
+    btnRecenter.style.margin = '10px';
+    btnRecenter.style.padding = '0px';
+    btnRecenter.style.position = 'absolute';
+    btnRecenter.style.borderRadius = "2px";
+    btnRecenter.style.boxShadow = "rgba(0, 0, 0, 0.3) 0px 1px 4px -1px";
+    btnRecenter.style.width = "40px";
+    btnRecenter.style.height = "40px";
+    btnRecenter.style.color = "#666666";
+    btnRecenter.style.fontSize = "24px";
+    btnRecenter.innerHTML = '<i class="fa fa-dot-circle-o"></i>';
+
+    coverageMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(btnRecenter);
+
+    drawInitialShape();
+    if (!shapeType) {
+        drawingManager = new google.maps.drawing.DrawingManager({
+            drawingControl: true,
+            drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_CENTER,
+                drawingModes: [
+                    google.maps.drawing.OverlayType.MARKER,
+                    google.maps.drawing.OverlayType.RECTANGLE
+                ]
+            },
+            rectangleOptions: {
+                editable: true,
+                draggable: true
+            }
+        });
+        drawingManager.setMap(coverageMap);
+        google.maps.event.addListener(drawingManager, 'rectanglecomplete', function (rectangle) {
+            var coordinates = (rectangle.getBounds());
+            processDrawing(coordinates, "rectangle");
+            rectangle.addListener('bounds_changed', function () {
+                var coordinates = (rectangle.getBounds());
+                processDrawing(coordinates, "rectangle");
+            });
+        });
+        google.maps.event.addListener(drawingManager, 'markercomplete', function (marker) {
+            var coordinates = (marker.getPosition());
+            // Set onClick event for recenter button
+            processDrawing(coordinates, "marker");
+        });
+        google.maps.event.addListener(drawingManager, 'overlaycomplete', function (e) {
+            allOverlays.push(e);
+        });
+    }
 }
 
 function drawMarkerOnTextChange(){
-    let north = parseFloat($("#id_north").val());
-    let east = parseFloat($("#id_east").val());
-    var myLatLng = {lat: north, lng: east};
-
+    var myLatLng = {lat: parseFloat($("#id_north").val()), lng: parseFloat($("#id_east").val())};
+    // Delete previous drawings
+    deleteAllShapes();
+    deleteAllOverlays();
     // Bounds validation
     var badInput = false;
-
-    if (isNaN(north) || isNaN(east)){
-        return;
-    }
+    // Lat
     if (myLatLng.lat > 90 || myLatLng.lat < -90) {
         $("#id_north").addClass("invalid-input");
         badInput = true;
-    }else {
+    }
+    else {
         $("#id_north").removeClass("invalid-input");
     }
     if (myLatLng.lng > 180 || myLatLng.lng < -180) {
         $("#id_east").addClass("invalid-input");
         badInput = true;
-    }else {
+    }
+    else {
         $("#id_east").removeClass("invalid-input");
     }
-    if (badInput) {
+    if (badInput || isNaN(myLatLng.lat) || isNaN(myLatLng.lng)) {
         return;
     }
-    leafletMarkers.clearLayers();
-    var latlng = L.latLng(north, east);
-    // Define the marker.
-    drawMarker(latlng);
-
+    // Define the rectangle and set its editable property to true.
+    var marker = new google.maps.Marker({
+        position: myLatLng,
+        map: coverageMap
+    });
+    // Center map at new market
+    coverageMap.setCenter(marker.getPosition());
     // Set onClick event for recenter button
-    // $("#coverageMap").on("click", "#resetZoomBtn", function () {
-    //     coverageMap.setCenter(marker.getPosition());
-    // });
-}
-
-function drawMarker(latLng){
-    let marker = L.marker(latLng);
-    leafletMarkers.addLayer(marker);
-    
-    marker.addTo(coverageMap)
-        // .bindPopup('TODO: add res link and lat/long');
-        // .openPopup();
-
-    // Center map at new marker
-    coverageMap.setView(latLng, 3);
+    $("#coverageMap").on("click", "#resetZoomBtn", function () {
+        coverageMap.setCenter(marker.getPosition());
+    });
+    allShapes.push(marker);
 }
 
 function drawRectangleOnTextChange(){
@@ -355,8 +315,8 @@ function drawRectangleOnTextChange(){
         west: parseFloat($("#id_westlimit").val())
     };
     // Delete previous drawings
-    leafletMarkers.clearLayers();
-    // deleteAllOverlays();
+    deleteAllShapes();
+    deleteAllOverlays();
     // Bounds validation
     var badInput = false;
     // North
@@ -394,29 +354,37 @@ function drawRectangleOnTextChange(){
     if (badInput || isNaN(bounds.north) || isNaN(bounds.south) || isNaN(bounds.east) || isNaN(bounds.west)) {
         return;
     }
-
     // Define the rectangle and set its editable property to true.
-    drawRectangle(bounds);
-
-    // zoomCoverageMap(bounds);
-    // $("#coverageMap").on("click", "#resetZoomBtn", function () {
-    //     zoomCoverageMap(bounds);
-    // });
+    var rectangle = new google.maps.Rectangle({
+        bounds: bounds,
+        editable: true,
+        draggable: true
+    });
+    rectangle.setMap(coverageMap);
+    rectangle.addListener('bounds_changed', function () {
+        var coordinates = (rectangle.getBounds());
+        processDrawing(coordinates, "rectangle");
+    });
+    zoomCoverageMap(bounds);
+    $("#coverageMap").on("click", "#resetZoomBtn", function () {
+        zoomCoverageMap(bounds);
+    });
+    allShapes.push(rectangle);
 }
-function drawRectangle(bounds){
-    var rectangle = L.rectangle([[bounds.north, bounds.east], [bounds.south, bounds.west]]);
-    leafletMarkers.addLayer(rectangle);
 
-    rectangle.addTo(coverageMap)
-        // .bindPopup('TODO: add res link and lat/long');
-    
-    coverageMap.fitBounds(rectangle.getBounds());
-}
-
-function processDrawing(coordinates, shape){
+function processDrawing (coordinates, shape) {
+    // Delete previous drawings
+    if (allOverlays.length > 1){
+        for (var i = 1; i < allOverlays.length; i++){
+            allOverlays[i-1].overlay.setMap(null);
+        }
+        allOverlays.shift();
+    }
+    if (allOverlays.length > 0) {
+        deleteAllShapes();
+    }
     // Show save changes button
     $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').show();
-
     if (shape === "rectangle"){
         var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
         $radioBox.prop("checked", true);
@@ -430,10 +398,10 @@ function processDrawing(coordinates, shape){
         $("#div_id_uplimit").show();
         $("#div_id_downlimit").show();
         var bounds = {
-            north: parseFloat(coordinates.getNorthEast().lat),
-            south: parseFloat(coordinates.getSouthWest().lat),
-            east: parseFloat(coordinates.getNorthEast().lng),
-            west: parseFloat(coordinates.getSouthWest().lng)
+            north: parseFloat(coordinates.getNorthEast().lat()),
+            south: parseFloat(coordinates.getSouthWest().lat()),
+            east: parseFloat(coordinates.getNorthEast().lng()),
+            west: parseFloat(coordinates.getSouthWest().lng())
         };
         // Update fields
         $("#id_northlimit").val(bounds.north.toFixed(4));
@@ -446,7 +414,7 @@ function processDrawing(coordinates, shape){
         $("#id_southlimit").removeClass("invalid-input");
         $("#id_westlimit").removeClass("invalid-input");
         $("#coverageMap").on("click", "#resetZoomBtn", function () {
-            // zoomCoverageMap(bounds);
+            zoomCoverageMap(bounds);
         });
     }
     else {
@@ -461,14 +429,31 @@ function processDrawing(coordinates, shape){
         $("#div_id_westlimit").hide();
         $("#div_id_uplimit").hide();
         $("#div_id_downlimit").hide();
-        $("#id_east").val(coordinates.lng.toFixed(4));
-        $("#id_north").val(coordinates.lat.toFixed(4));
+        $("#id_east").val(coordinates.lng().toFixed(4));
+        $("#id_north").val(coordinates.lat().toFixed(4));
         // Remove red borders
         $("#id_east").removeClass("invalid-input");
         $("#id_north").removeClass("invalid-input");
-        // $("#coverageMap").on("click", "#resetZoomBtn", function () {
-        //     coverageMap.setCenter(coordinates);
-        // });
+        $("#coverageMap").on("click", "#resetZoomBtn", function () {
+            coverageMap.setCenter(coordinates);
+        });
     }
-    geoconnexApp.updateSpatialExtentType();
+}
+
+function deleteAllOverlays() {
+    for (var i = 0; i < allOverlays.length; i++) {
+        allOverlays[i].overlay.setMap(null);
+    }
+    allOverlays = [];
+}
+
+function deleteAllShapes(){
+    for (var i = 0; i < allShapes.length; i++) {
+        allShapes[i].setMap(null);
+    }
+    allShapes = [];
+}
+
+function zoomCoverageMap(bounds) {
+    coverageMap.fitBounds(bounds);
 }

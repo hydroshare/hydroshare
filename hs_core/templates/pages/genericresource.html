@@ -8,10 +8,6 @@
     <link href="{% static 'css/toolresource.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/modal-vue.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/hs-file-icons.css' %}" rel="stylesheet"/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
-    integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
-    crossorigin=""/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 
 {% if not page|is_debug %}
 {# ======= JSON-LD Structure ======= #}
@@ -60,17 +56,6 @@
     ],
     {% endif %}
     "creator": {{ creators | creator_json_ld_element | safe }},
-    {% if generic_relations %}
-    "about": [
-    {% for generic_relation in generic_relations %}{% if generic_relation.value|is_url %}
-      {
-        "@id": "{{ generic_relation.value | escapejs }}",
-        "@type": "Place",
-        "url": "{{ generic_relation.value | escapejs }}"
-      }{%if not forloop.last%},{%endif%}
-    {% endif %}{% endfor %}
-    ],
-    {% endif %}
     {% if temporal_coverage %}
     "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
     {% endif %}
@@ -245,7 +230,7 @@
         {% if cm.resource_type != "ToolResource" %}
             {# POPUP MENU - Right clicking items #}
             <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
-                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                {% if cm.resource_type == "CompositeResource" %}
                     <li id="btn-open" data-menu-name="open" data-fb-action="open">
                         <span class="fa fa-folder-open icon-blue"></span>
                         <span>Open</span>
@@ -413,7 +398,7 @@
             {# POPUP MENU - Right clicking empty space in file browser #}
             <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
                 {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
-                    {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                    {% if cm.resource_type == "CompositeResource" %}
                         <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                             data-fb-action="createFolder"
                             data-target="#create-folder-dialog">
@@ -581,7 +566,7 @@
                                 <div id="fb-inner-buttons">
                                     <div class="flex">
                                         {# FOLDER NAVIGATION #}
-                                        {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                                        {% if cm.resource_type == "CompositeResource" %}
                                             <div>
                                                 <button id="fb-move-back"
                                                         class="btn btn-default fb-control-round disabled"
@@ -709,7 +694,7 @@
                                             {% endif %}
 
                                             {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
-                                                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                                                {% if cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-create-folder" class="disabled"
                                                             data-fb-action="createFolder" data-toggle="modal"
                                                             data-target="#create-folder-dialog"
@@ -746,7 +731,7 @@
                                                     </button>
                                                 {% endif %}
 
-                                                {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
+                                                {% if cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-zip" data-fb-action="zip"
                                                             class="disabled"
                                                             title="Zip folder" data-toggle="modal"
@@ -975,9 +960,6 @@
         {# ======= Additional Metadata ======= #}
         {% include "resource-landing-page/additional-metadata.html" %}
 
-        {# ======= Geoconnex ======= #}
-        {% include "resource-landing-page/geoconnex-ref-collection.html" %}
-
         {# ======= References ======= #}
         {% include "resource-landing-page/references.html" %}
 
@@ -1048,15 +1030,6 @@
             },
           {% endfor %}
       ];
-      const RELATIONS = [
-        {% for generic_relation in generic_relations %}
-            {
-                "value": "{{ generic_relation.value| escapejs}}",
-                "type": "{{ generic_relation.type }}",
-                "id": "{{ generic_relation.id }}"
-            },
-        {% endfor %}
-      ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
       {% if show_manage_access %}
@@ -1075,13 +1048,8 @@
 
     </script>
 
-    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
-        integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
-        crossorigin="">
-    </script>
-    <script src="{% static 'js/hs-vue/Leaflet.fullscreen.min.js' %}"></script>
-    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script type="text/javascript" src="{% static 'js/coverageMap.js' %}"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs-file-icons.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs_file_browser.js' %}"></script>

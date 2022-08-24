@@ -1379,9 +1379,7 @@
                                     <div class="controls">
                                         <select class="form-control input-sm select" id="id_type" name="type">
                                             {% for type_value, type_display in relation_source_types %}
-                                                {% if type_value != "relation" %}
-                                                    <option value={{ type_value }}>{{ type_display }}</option>
-                                                {% endif %}
+                                                <option value={{ type_value }}>{{ type_display }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>

@@ -91,7 +91,7 @@
 
             {% if spatial_coverage.exists %}
                 <div class="col-xs-12 col-sm-8">
-                    <div id="coverageMap" data-mode="view" data-shape-type="{{ spatial_coverage.type }}" style="height:350px"></div>
+                    <div id="coverageMap" data-mode="view" data-shape-type="{{ spatial_coverage.type }}"></div>
                 </div>
             {% endif %}
         </div>
@@ -278,7 +278,7 @@
                                     </label>
                                 </div>
 
-                                <div id="coverageMap" style="height:350px"></div>
+                                <div id="coverageMap"></div>
 
                                 <button type="button" class="btn btn-primary pull-right btn-form-submit space-top"
                                         style="display: none;">Save changes

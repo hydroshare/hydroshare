@@ -51,22 +51,12 @@ def resource_verbose_name_builder(rsc_type):
 class ResourceNameDBToUIMap:
     dict = {
         'CompositeResource': 'composite',
-        'RefTimeSeriesResource': 'his',
-        'ScriptResource': 'script',
-        'ModelProgramResource': 'modelprogram',
-        'ModelInstanceResource': 'modelinstance',
-        'SWATModelInstanceResource': 'swat',
         'Time Series': 'timeseries',
         'ToolResource': 'webapp',
         'CollectionResource': 'collection'
     }
     dict_verbose_name = {
         'CompositeResource': 'Composite',
-        'RefTimeSeriesResource': 'HIS Referenced Time Series',
-        'ScriptResource': 'Script',
-        'ModelProgramResource': 'Model Program',
-        'ModelInstanceResource': 'Model Instance',
-        'SWATModelInstanceResource': 'SWAT Model Instance',
         'Time Series': 'Time Series',
         'ToolResource': 'Web App',
         'CollectionResource': 'Collection'
