@@ -2082,14 +2082,14 @@ def request_new_community(request, *args, **kwargs):
             msg = f"New community ({new_community_name}) request was successful."
             messages.success(request, msg)
             return HttpResponseRedirect(reverse('my_communities'))
-        except IntegrityError as ex:
-            if community_form.cleaned_data['name'] in str(ex):
-                message = "Community name '{}' already exists".format(community_form.cleaned_data['name'])
-                messages.error(request, "Community creation errors: {}.".format(message))
-            else:
-                messages.error(request, "Community creation errors:{}.".format(str(ex)))
+        except PermissionDenied:
+            err_msg = f"You don't have permission to request new community"
+            messages.error(request, err_msg)
+        except Exception as ex:
+            messages.error(request, f"Community request errors:{str(ex)}.")
+
     else:
-        messages.error(request, "Community creation errors:{}.".format(community_form.errors.as_json))
+        messages.error(request, "Community request errors:{}.".format(community_form.errors.as_json))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
