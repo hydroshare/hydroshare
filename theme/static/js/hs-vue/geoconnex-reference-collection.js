@@ -872,7 +872,7 @@ let geoconnexApp = new Vue({
         let alreadySelected = geoconnexApp.values.find((obj) => {
           return obj.value === item.uri;
         });
-        if (alreadySelected){
+        if (alreadySelected) {
           continue;
         }
         try {
@@ -921,7 +921,7 @@ let geoconnexApp = new Vue({
           let alreadySelected = geoconnexApp.values.find((obj) => {
             return obj.value === item.uri;
           });
-          if (alreadySelected){
+          if (alreadySelected) {
             continue;
           }
           let geometry = await geoconnexApp.fetchSingleGeometry(item);
@@ -1054,7 +1054,12 @@ let geoconnexApp = new Vue({
         $("div").on("click", "button.map-add-geoconnex", function (e) {
           e.stopPropagation();
           let data = JSON.parse($(this).attr("data"));
-          geoconnexApp.addSelectedToResMetadata(data);
+          let alreadySelected = geoconnexApp.values.find((obj) => {
+            return obj.value === data.uri;
+          });
+          if (!alreadySelected) {
+            geoconnexApp.addSelectedToResMetadata(data);
+          }
           geoconnexApp.map.closePopup();
         });
 
