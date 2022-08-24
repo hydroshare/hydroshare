@@ -514,7 +514,9 @@ let geoconnexApp = new Vue({
       await Promise.all(calls).then(function (resultsArray) {
         for (let resp of resultsArray) {
           if (!jQuery.isEmptyObject(resp) && resp.features) {
-            geoconnexApp.items.push(geoconnexApp.createVuetifySelectSubheader(resp.collection));
+            geoconnexApp.items.push(
+              geoconnexApp.createVuetifySelectSubheader(resp.collection)
+            );
             for (let feature of resp.features) {
               geoconnexApp.items.push(
                 geoconnexApp.getFeatureProperties(feature)
@@ -538,7 +540,9 @@ let geoconnexApp = new Vue({
         .then(function (resultsArray) {
           for (let resp of resultsArray) {
             if (!jQuery.isEmptyObject(resp) && resp.features) {
-              refreshedItems.push(geoconnexApp.createVuetifySelectSubheader(resp.collection));
+              refreshedItems.push(
+                geoconnexApp.createVuetifySelectSubheader(resp.collection)
+              );
               for (let feature of resp.features) {
                 refreshedItems.push(geoconnexApp.getFeatureProperties(feature));
               }
@@ -1075,7 +1079,7 @@ let geoconnexApp = new Vue({
     let geoconnexApp = this;
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      await geoconnexApp.getAllItems(forceFresh = false);
+      await geoconnexApp.getAllItems(false);
       await geoconnexApp.loadMetadataRelations();
       geoconnexApp.loadingCollections = false;
       // load geometries in the background
