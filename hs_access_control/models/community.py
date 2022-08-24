@@ -21,7 +21,8 @@ class Community(models.Model):
     email = models.TextField(null=True, blank=True)
     url = models.TextField(null=True, blank=True)
     purpose = models.TextField(null=True, blank=True)
-    auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
+    auto_approve_resource = models.BooleanField(null=False, default=False, blank=False, editable=False)
+    auto_approve_group = models.BooleanField(null=False, default=False, blank=False, editable=False)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = ThumbnailImageField(upload_to=get_upload_path_community, null=True, blank=True)
     banner = ThumbnailImageField(upload_to=get_upload_path_community, null=True, blank=True)
@@ -29,6 +30,9 @@ class Community(models.Model):
     closed = models.BooleanField(null=False, default=False, blank=False, editable=False)
     # as part of approving a request for a new community, active is set to true.
     active = models.BooleanField(null=False, default=False, blank=False, editable=False)
+
+    class Meta:
+        ordering = ['date_created']
 
     def __str__(self):
         return self.name
@@ -320,6 +324,9 @@ class RequestCommunity(models.Model):
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     date_processed = models.DateTimeField(editable=False, null=True)
     approved = models.NullBooleanField(null=True, default=None, blank=False)
+
+    class Meta:
+        ordering = ['date_requested']
 
     @classmethod
     def create_request(cls, request):

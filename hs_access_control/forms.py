@@ -11,7 +11,8 @@ class CommunityForm(forms.Form):
     url = forms.URLField(required=False)
     picture = ThumbnailImageField()
     banner = ThumbnailImageField()
-    auto_approve = forms.BooleanField(required=False)
+    auto_approve_resource = forms.BooleanField(required=False)
+    auto_approve_group = forms.BooleanField(required=False)
 
     def update_image_fields(self, community, request):
         """sets the picture and banner image fields of the community record"""
@@ -42,6 +43,8 @@ class RequestNewCommunityForm(CommunityForm):
             title=form_data['name'],
             description=form_data['description'],
             purpose=form_data['purpose'],
+            auto_approve_resource=form_data['auto_approve_resource'],
+            auto_approve_group=form_data['auto_approve_group'],
             email=form_data['email'],
             url=form_data['url'])
 
@@ -60,9 +63,10 @@ class UpdateCommunityForm(CommunityForm):
             title=form_data['name'],
             description=form_data['description'],
             purpose=form_data['purpose'],
+            auto_approve_resource=form_data['auto_approve_resource'],
+            auto_approve_group=form_data['auto_approve_group'],
             email=form_data['email'],
-            url=form_data['url'],
-            auto_approve=form_data['auto_approve']
+            url=form_data['url']
         )
 
         self.update_image_fields(community=community, request=request)

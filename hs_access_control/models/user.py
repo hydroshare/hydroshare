@@ -2470,14 +2470,18 @@ class UserAccess(models.Model):
     # PUBLIC METHODS: community
     ##########################################
 
-    def create_community(self, title, description, auto_approve=False, purpose=None, email=None, url=None):
+    def create_community(self, title, description, auto_approve_resource=False, auto_approve_group=False,
+                         purpose=None, email=None, url=None):
         """
         Create a community.
 
         :param title: Community title/name.
         :param description: a description of the community
         :param purpose: what's the purpose of the community (optional)
-        :param auto_approve: whether to bypass Group-like request/approve process for requests
+        :param auto_approve_resource: whether resources need approval in order to list in community page
+        :param auto_approve_group: whether group requesting to join a community is auto approved
+        :param  email: email for the community
+        :param  url:    url of the community website
         :return: Community object
 
         Anyone can create a community. The creator is also the first owner.
@@ -2494,13 +2498,14 @@ class UserAccess(models.Model):
             if email:
                 assert isinstance(email, str)
             if url:
-                assert isinstance(email, str)
+                assert isinstance(url, str)
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
         raw_community = Community.objects.create(name=title, description=description,
-                                                 purpose=purpose, auto_approve=auto_approve,
+                                                 purpose=purpose, auto_approve_resource=auto_approve_resource,
+                                                 auto_approve_group=auto_approve_group,
                                                  email=email, url=url, active=False)
         raw_user = self.user
 
@@ -2511,14 +2516,18 @@ class UserAccess(models.Model):
                                      privilege=PrivilegeCodes.OWNER)
         return raw_community
 
-    def create_community_request(self, title, description, auto_approve=False, purpose=None, email=None, url=None):
+    def create_community_request(self, title, description, auto_approve_resource=False, auto_approve_group=False,
+                                 purpose=None, email=None, url=None):
         """
         Creates a community and generates a request for approval so that the community can be used.
 
         :param title: Community title/name.
         :param description: a description of the community
         :param purpose: what's the purpose of the community (optional)
-        :param auto_approve: whether to bypass Group-like request/approve process for requests
+        :param auto_approve_resource: whether resources need approval in order to list in community page
+        :param auto_approve_group: whether group requesting to join a community is auto approved
+        :param  email: email for the community
+        :param  url:    url of the community website
         :return: RequestCommunity object
 
         Anyone can create a community. The creator is also the first owner.
@@ -2541,7 +2550,8 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         raw_community = Community.objects.create(name=title, description=description,
-                                                 purpose=purpose, auto_approve=auto_approve,
+                                                 purpose=purpose, auto_approve_resource=auto_approve_resource,
+                                                 auto_approve_group=auto_approve_group,
                                                  email=email, url=url, active=False)
         raw_user = self.user
 
@@ -2563,8 +2573,8 @@ class UserAccess(models.Model):
 
         return RequestCommunity.pending_requests().filter(requested_by=self.user)
 
-    def update_community(self, this_community, title, description, auto_approve=False, purpose=None,
-                         email=None, url=None):
+    def update_community(self, this_community, title, description, auto_approve_resource=False,
+                         auto_approve_group=False, purpose=None, email=None, url=None):
         """
         Updates community metadata for an active community.
 
@@ -2572,7 +2582,10 @@ class UserAccess(models.Model):
         :param title: Community title/name.
         :param description: a description of the community
         :param purpose: what's the purpose of the community (optional)
-        :param auto_approve: whether to bypass Group-like request/approve process for requests
+        :param auto_approve_resource: whether resources need approval in order to list in community page
+        :param auto_approve_group: whether group requesting to join a community is auto approved
+        :param  email: email for the community
+        :param  url:    url of the community website
         :return: Community object
 
         Anyone can create a community. The creator is also the first owner.
@@ -2598,7 +2611,8 @@ class UserAccess(models.Model):
             this_community.purpose = purpose
             this_community.email = email
             this_community.url = url
-            this_community.auto_approve = auto_approve
+            this_community.auto_approve_resource = auto_approve_resource
+            this_community.auto_approve_group = auto_approve_group
             this_community.save()
 
         return this_community

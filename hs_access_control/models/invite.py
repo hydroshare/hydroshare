@@ -254,7 +254,7 @@ class GroupCommunityRequest(models.Model):
                     .format(group.name, community.name)
 
             # auto-approve if auto_approve is True
-            elif community.auto_approve:
+            elif community.auto_approve_group:
                 request.group_owner = group_owner
                 request.community_owner = community.first_owner
                 request.privilege = PrivilegeCodes.VIEW
