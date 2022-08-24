@@ -2435,7 +2435,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             return ''
         return str(self.metadata.citation.first())
 
-    def get_citation(self, includePendingMessage=True):
+    def get_citation(self, forceHydroshareURI=True):
         """Get citation or citations from resource metadata."""
 
         citation_str_lst = []
@@ -2472,7 +2472,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         citation_str_lst.append(self.metadata.title.value)
 
         isPendingActivation = False
-        if self.metadata.identifiers.all().filter(name="doi"):
+        if self.metadata.identifiers.all().filter(name="doi") and not forceHydroshareURI:
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
             if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
                 isPendingActivation = True
@@ -2483,7 +2483,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
-        if isPendingActivation and includePendingMessage:
+        if isPendingActivation and not forceHydroshareURI:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
 
         return ''.join(citation_str_lst)
@@ -3971,7 +3971,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         # if custom citation does not exist, use the default citation
         if not self.citation.first():
-            graph.add((subject, DCTERMS.bibliographicCitation, Literal(self.resource.get_citation())))
+            graph.add((subject, DCTERMS.bibliographicCitation, Literal(
+                self.resource.get_citation(forceHydroshareURI=False))))
 
         from .hydroshare import current_site_url
         TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))

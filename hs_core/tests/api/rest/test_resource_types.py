@@ -14,9 +14,7 @@ class TestResourceTypes(APITestCase):
         # added or removed (so that the test can be updated)
         self.resource_types = {'GenericResource',
                                'ModelProgramResource',
-                               'ModelInstanceResource',
                                'ToolResource',
-                               'SWATModelInstanceResource',
                                'CollectionResource',
                                'CompositeResource'}
 

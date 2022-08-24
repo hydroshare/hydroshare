@@ -505,8 +505,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
             # element is copied over to this new version resource, needs to delete this element so
             # it can be created to link to its original resource correctly
             new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
-        new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf,
-                                        value=ori_res.get_citation(includePendingMessage=False))
+        new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf, value=ori_res.get_citation())
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
