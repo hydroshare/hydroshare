@@ -402,7 +402,8 @@ class RequestCommunity(models.Model):
             community_to_update.save()
 
     @classmethod
-    def pending_requests(cls):
+    def pending_requests(cls, include_rejects=False):
         """Gets a queryset of all pending community requests"""
-
-        return cls.objects.filter(approved=None).select_related('community_to_approve')
+        if not include_rejects:
+            return cls.objects.filter(approved=None).select_related('community_to_approve')
+        return cls.objects.filter(Q(approved=None) | Q(approved=False)).select_related('community_to_approve')
