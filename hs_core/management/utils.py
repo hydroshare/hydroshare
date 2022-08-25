@@ -679,9 +679,7 @@ def repair_resource(resource, logger, stop_on_error=False,
     # Do this before check because otherwise, errors get printed twice
     # TODO: This does not currently work properly for composite resources
     # if resource.resource_type == 'CompositeResource' or \
-    if resource.resource_type == 'GenericResource' or \
-       resource.resource_type == 'ModelInstanceResource' or \
-       resource.resource_type == 'ModelProgramResource':
+    if resource.resource_type == 'GenericResource':
         _, count = ingest_irods_files(resource,
                                       logger,
                                       stop_on_error=False,
