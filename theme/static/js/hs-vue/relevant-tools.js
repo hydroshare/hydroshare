@@ -110,18 +110,29 @@ let relevantToolsApp = new Vue({
                     const path = file.attr("data-url").split(new RegExp("resource/[a-z0-9]*/data/contents/"))[1];
                     let fullURL;
                     if ($(this).attr("data-url-aggregation")) {
-                        fullURL = $(this).attr("data-url-aggregation").replace("HS_JS_AGG_KEY", path);
+                        fullURL = $(this).attr("data-url-aggregation")
+                        if(fullURL.includes('HS_JS_AGG_KEY')) {
+                            fullURL = fullURL + ';HS_JS_AGG_KEY=' + path;
+                        }
+
                         if (file.children('span.fb-file-type').text() === 'File Folder') {
                             // TODO: populate main_file value in aggregation object of structure response
-                            fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.attr("data-main-file"));
+                            if(fullURL.includes('HS_JS_MAIN_FILE_KEY')) {
+                                fullURL = fullURL + ';HS_JS_MAIN_FILE_KEY=' + file.attr("data-main-file");
+                            }
                         }
                         else {
-                            fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.children('span.fb-file-name').text());
+                            if(fullURL.includes('HS_JS_MAIN_FILE_KEY')) {
+                                fullURL = fullURL + ';HS_JS_MAIN_FILE_KEY=' + file.children('span.fb-file-name').text();
+                            }
                         }
                     }
                     else {
                         // not an aggregation
-                        fullURL = $(this).attr("data-url-file").replace("HS_JS_FILE_KEY", path);
+                        fullURL = $(this).attr("data-url-file");
+                        if(fullURL.includes('HS_JS_FILE_KEY')) {
+                            fullURL = fullURL + ';HS_JS_FILE_KEY=' + path;
+                        }
                     }
                     window.open(fullURL);
                 });

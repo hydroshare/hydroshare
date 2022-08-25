@@ -674,3 +674,21 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(
             bikes.raccess.get_effective_privilege(alva),
             PrivilegeCodes.NONE)
+
+    def test_resource_get_effective_privilege_ignore_super(self):
+        george = self.george
+        alva = self.alva
+        admin = self.admin
+        bikes = self.bikes
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(admin, ignore_superuser=False),
+            PrivilegeCodes.OWNER)
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(admin, ignore_superuser=True),
+            PrivilegeCodes.NONE)
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(george, ignore_superuser=True),
+            PrivilegeCodes.OWNER)
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(alva, ignore_superuser=True),
+            PrivilegeCodes.NONE)

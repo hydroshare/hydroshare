@@ -140,9 +140,9 @@ class IrodsStorage(Storage):
 
         abs_path = os.path.dirname(zip_file_path)
         if not unzipped_folder:
-            unzipped_folder = os.path.splitext(os.path.basename(zip_file_path))[0].strip()
-
-        unzipped_folder = self._get_nonexistant_path(os.path.join(abs_path, unzipped_folder))
+            unzipped_folder = abs_path
+        else:
+            unzipped_folder = self._get_nonexistant_path(os.path.join(abs_path, unzipped_folder))
 
         # SessionException will be raised from run() in icommands.py
         self.session.run("ibun", None, '-xDzip', zip_file_path, unzipped_folder)

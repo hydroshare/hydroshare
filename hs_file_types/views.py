@@ -192,8 +192,8 @@ def set_file_type_public(request, pk, file_path, hs_file_type):
 
 def get_fileset_id(resource_id, file_path):
     resource = utils.get_resource_by_shortkey(resource_id)
-    filesets = [lf for lf in resource.logical_files if lf.get_aggregation_type_name() == "FileSetAggregation" and
-                lf.folder == file_path]
+    filesets = resource.get_logical_files("FileSetLogicalFile")
+    filesets = [fs for fs in filesets if fs.folder == file_path]
     if not filesets:
         return Response('Folder {} does not exist.'.format(file_path),
                         status=status.HTTP_400_BAD_REQUEST)

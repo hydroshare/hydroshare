@@ -93,7 +93,6 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         # check updated metadata
         self.assertEqual(mp_aggr.dataset_name, metadata_json['title'])
-        self.assertEqual(mp_aggr.model_program_type, metadata_json['name'])
         self.assertEqual(mp_aggr.metadata.keywords, metadata_json['keywords'])
         self.assertEqual(mp_aggr.metadata.extra_metadata, metadata_json['additional_metadata'])
         self.assertEqual(mp_aggr.metadata.version, metadata_json['version'])
@@ -131,7 +130,6 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
 
         # check the retrieved metadata
         self.assertEqual(response_json['title'], metadata_json['title'])
-        self.assertEqual(response_json['name'], metadata_json['name'])
         self.assertEqual(response_json['keywords'], metadata_json['keywords'])
         self.assertEqual(response_json['additional_metadata'], metadata_json['additional_metadata'])
         self.assertEqual(response_json['version'], metadata_json['version'])

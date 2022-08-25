@@ -1984,9 +1984,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Return True only if all required metadata is present."""
         if self.metadata is None or not self.metadata.has_all_required_elements():
             return False
-        for f in self.logical_files:
-            if not f.metadata.has_all_required_elements():
-                return False
         return True
 
     @property
@@ -2163,6 +2160,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Update the settings of the public and discoverable flags for changes in metadata."""
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
+
+    @property
+    def absolute_url(self):
+        return self.get_url_of_path('')
 
     def get_url_of_path(self, path):
         """Return the URL of an arbtrary path in this resource.
@@ -2433,7 +2434,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             return ''
         return str(self.metadata.citation.first())
 
-    def get_citation(self, includePendingMessage=True):
+    def get_citation(self, forceHydroshareURI=True):
         """Get citation or citations from resource metadata."""
 
         citation_str_lst = []
@@ -2470,7 +2471,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         citation_str_lst.append(self.metadata.title.value)
 
         isPendingActivation = False
-        if self.metadata.identifiers.all().filter(name="doi"):
+        if self.metadata.identifiers.all().filter(name="doi") and not forceHydroshareURI:
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
             if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
                 isPendingActivation = True
@@ -2481,7 +2482,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
-        if isPendingActivation and includePendingMessage:
+        if isPendingActivation and not forceHydroshareURI:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
 
         return ''.join(citation_str_lst)
@@ -2582,65 +2583,41 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     @property
     def logical_files(self):
-        """Get a list of logical files for resource."""
-        logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is not None:
-                if res_file.logical_file not in logical_files_list:
-                    logical_files_list.append(res_file.logical_file)
-        return logical_files_list
+        """Gets a generator to access each of the logical files of the resource.
+        Note: Any derived class that supports logical file must override this function
+        """
+
+        # empty generator
+        yield from ()
 
     @property
     def aggregation_types(self):
-        """Gets a list of all aggregation types that currently exist in this resource"""
-        aggr_types = []
-        aggr_type_names = []
-        for lf in self.logical_files:
-            if lf.type_name not in aggr_type_names:
-                aggr_type_names.append(lf.type_name)
-                aggr_type = lf.get_aggregation_display_name().split(":")[0]
-                aggr_types.append(aggr_type)
-        return aggr_types
-
-    @property
-    def non_logical_files(self):
-        """Get list of non-logical files for resource."""
-        non_logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is None:
-                if res_file.logical_file not in non_logical_files_list:
-                    non_logical_files_list.append(res_file)
-        return non_logical_files_list
-
-    @property
-    def generic_logical_files(self):
-        """Get list of generic logical files for resource."""
-        generic_logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.has_generic_logical_file:
-                if res_file.logical_file not in generic_logical_files_list:
-                    generic_logical_files_list.append(res_file.logical_file)
-        return generic_logical_files_list
+        """Gets a list of all aggregation types that currently exist in this resource
+        Note: Any derived class that supports logical file must override this function
+        """
+        return []
 
     def get_logical_files(self, logical_file_class_name):
-        """Get a list of logical files (aggregations) for a specified logical file class name."""
-
-        logical_files_list = [lf for lf in self.logical_files if
-                              lf.type_name() == logical_file_class_name]
-
-        return logical_files_list
+        """Get a list of logical files (aggregations) for a specified logical file class name.
+        Note: Any derived class that supports logical file must override this function
+        """
+        return []
 
     @property
     def has_logical_spatial_coverage(self):
-        """Checks if any of the logical files has spatial coverage"""
+        """Checks if any of the logical files has spatial coverage
+        Note: Any derived class that supports logical file must override this function
+        """
 
-        return any(lf.metadata.spatial_coverage is not None for lf in self.logical_files)
+        return False
 
     @property
     def has_logical_temporal_coverage(self):
-        """Checks if any of the logical files has temporal coverage"""
+        """Checks if any of the logical files has temporal coverage
+        Note: Any derived class that supports logical file must override this function
+        """
 
-        return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
+        return False
 
     @property
     def supports_logical_file(self):
@@ -3993,7 +3970,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         # if custom citation does not exist, use the default citation
         if not self.citation.first():
-            graph.add((subject, DCTERMS.bibliographicCitation, Literal(self.resource.get_citation())))
+            graph.add((subject, DCTERMS.bibliographicCitation, Literal(
+                self.resource.get_citation(forceHydroshareURI=False))))
 
         from .hydroshare import current_site_url
         TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))

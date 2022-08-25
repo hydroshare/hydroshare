@@ -59,7 +59,8 @@ from . import resource_metadata_rest_api
 from . import resource_rest_api
 from . import resource_ticket_rest_api
 from . import user_rest_api
-from .utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict, get_my_resources_list, \
+from .utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict, get_my_resources_filter_counts, \
+    get_my_resources_list, \
     run_script_to_update_hyrax_input_files, send_action_to_take_email, upload_from_irods
 
 logger = logging.getLogger(__name__)
@@ -395,7 +396,10 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource", type=openapi.TYPE_STRING)
+
+
 @swagger_auto_schema(method='get', operation_description="Gets all key/value metadata for the resource",
                      responses={200: "key/value metadata"}, manual_parameters=[res_id])
 @swagger_auto_schema(method='post', operation_description="Updates key/value metadata for the resource",
@@ -835,7 +839,8 @@ def copy_resource(request, shortkey, *args, **kwargs):
     if request.is_ajax():
         task = copy_resource_task.apply_async((shortkey, None, user.username))
         task_id = task.task_id
-        task_dict = get_or_create_task_notification(task_id, name='resource copy', payload=shortkey, username=user.username)
+        task_dict = get_or_create_task_notification(task_id, name='resource copy', payload=shortkey,
+                                                    username=user.username)
         return JsonResponse(task_dict)
     else:
         try:
@@ -844,9 +849,14 @@ def copy_resource(request, shortkey, *args, **kwargs):
         except utils.ResourceCopyException:
             return HttpResponseRedirect(res.get_absolute_url())
 
-res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be copied", type=openapi.TYPE_STRING)
+
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be copied",
+                           type=openapi.TYPE_STRING)
+
+
 @swagger_auto_schema(method='post', operation_description="Copy a resource",
-                     responses={202: "Returns the resource ID of the newly created resource"}, manual_parameters=[res_id])
+                     responses={202: "Returns the resource ID of the newly created resource"},
+                     manual_parameters=[res_id])
 @api_view(['POST'])
 def copy_resource_public(request, pk):
     '''
@@ -889,7 +899,11 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
                                                          'this resource: ' + str(ex)
             return HttpResponseRedirect(res.get_absolute_url())
 
-res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be versioned", type=openapi.TYPE_STRING)
+
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be versioned",
+                           type=openapi.TYPE_STRING)
+
+
 @swagger_auto_schema(method='post', operation_description="Create a new version of a resource",
                      responses={202: "Returns the resource ID of the new version"}, manual_parameters=[res_id])
 @api_view(['POST'])
@@ -963,7 +977,10 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     return JsonResponse(ajax_response_data)
 
 
-res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be flagged", type=openapi.TYPE_STRING)
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be flagged",
+                           type=openapi.TYPE_STRING)
+
+
 @swagger_auto_schema(method='post', operation_description="Set resource flag to 'Public'",
                      responses={202: "Returns the resource ID of the new version"}, manual_parameters=[res_id])
 @api_view(['POST'])
@@ -1309,7 +1326,6 @@ class GroupUpdateForm(GroupForm):
         self._set_privacy_level(group_to_update, privacy_level)
 
 
-
 @processor_for(GenericResource)
 def add_generic_context(request, page):
     user = request.user
@@ -1526,6 +1542,7 @@ def restore_user_group(request, group_id, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 @login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
     requesting_user = request.user
@@ -1741,7 +1758,10 @@ def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
 
-uid = openapi.Parameter('user_identifier', openapi.IN_PATH, description="id of the user for which data is needed", type=openapi.TYPE_INTEGER)
+uid = openapi.Parameter('user_identifier', openapi.IN_PATH, description="id of the user for which data is needed",
+                        type=openapi.TYPE_INTEGER)
+
+
 @swagger_auto_schema(method='get', operation_description="Get user data",
                      responses={200: "Returns JsonResponse containing user data"}, manual_parameters=[uid])
 @api_view(['GET'])
@@ -2285,22 +2305,61 @@ class GroupView(TemplateView):
         else:
             public_group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
             context['group_resources'] = public_group_resources
-        
+
         return context
 
 
-class MyResourcesView(TemplateView):
-    template_name = 'pages/my-resources.html'
+@login_required
+def my_resources_filter_counts(request, *args, **kwargs):
+    """
+    View for counting resources that belong to a given user.
+    """
+    filter=request.GET.getlist('filter', default=None)
+    u = User.objects.get(pk=request.user.id)
 
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(MyResourcesView, self).dispatch(*args, **kwargs)
+    filter_counts = get_my_resources_filter_counts(u)
 
-    def get_context_data(self, **kwargs):
-        u = User.objects.get(pk=self.request.user.id)
+    return JsonResponse({
+        'filter_counts': filter_counts
+    })
 
-        resource_collection = get_my_resources_list(u)
 
-        return {
-            'collection': resource_collection
-        }
+@login_required
+def my_resources(request, *args, **kwargs):
+    """
+    View for listing resources that belong to a given user.
+
+    Renders either a full my-resources page, or just a table of new resorces
+    """
+
+    if not request.is_ajax():
+        filter=request.GET.getlist('f', default=[])
+    else:
+        filter = [request.GET['new_filter']]
+    u = User.objects.get(pk=request.user.id)
+
+    if not filter:
+        # add default filters
+        filter = ['owned', 'discovered', 'favorites']
+
+    if 'shared' in filter:
+        filter.remove('shared')
+        filter.append('viewable')
+        filter.append('editable')
+
+    resource_collection = get_my_resources_list(u, annotate=True, filter=filter)
+
+    context = {
+        'collection': resource_collection
+    }
+
+    if not request.is_ajax():
+        return render(request,
+                      'pages/my-resources.html',
+                      context)
+    else:
+        from django.template.loader import render_to_string
+        trows = render_to_string('includes/my-resources-trows.html', context, request)
+        return JsonResponse({
+            "trows": trows,
+        })

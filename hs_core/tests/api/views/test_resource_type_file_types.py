@@ -44,22 +44,6 @@ class TestResourceTypeFileTypes(TestCase):
         resp_json = self._make_request("CompositeResource")
         self.assertEqual(resp_json['file_types'], '".*"')
 
-        # test for ModelProgramResource
-        resp_json = self._make_request("ModelProgramResource")
-        self.assertEqual(resp_json['file_types'], '".*"')
-
-        # test for ModelInstanceResource
-        resp_json = self._make_request("ModelInstanceResource")
-        self.assertEqual(resp_json['file_types'], '".*"')
-
-        # test for MODFLOWModelInstanceResource
-        resp_json = self._make_request("MODFLOWModelInstanceResource")
-        self.assertEqual(resp_json['file_types'], '".*"')
-
-        # test for SWATModelInstanceResource
-        resp_json = self._make_request("SWATModelInstanceResource")
-        self.assertEqual(resp_json['file_types'], '".*"')
-
         # test for ToolResource
         resp_json = self._make_request("ToolResource")
         self.assertEqual(resp_json['file_types'], '[]')

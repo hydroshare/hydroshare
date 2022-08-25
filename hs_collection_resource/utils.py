@@ -133,7 +133,7 @@ def get_collectable_resources(user, coll_resource):
     # Start with both my resources and favorited public resources; so no need to
     # check that user can view resources.
 
-    collectable_resources = get_my_resources_list(user, annotate=False)
+    collectable_resources = get_my_resources_list(user)
     collectable_resources = collectable_resources \
         .filter(Q(raccess__shareable=True) |  # shareable and viewable, --or--
                 Q(raccess__discoverable=True) |  # discoverable, public, and/or published --or--
