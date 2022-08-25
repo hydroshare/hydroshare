@@ -195,8 +195,14 @@ let geoconnexApp = new Vue({
       let response = await geoconnexApp.fetchFromCacheOrAPI(query);
       return response;
     },
+    initLeafletFeatureGroups(){
+      let geoconnexApp = this;
+      geoconnexApp.selectedFeatureGroup = L.featureGroup();
+      geoconnexApp.searchFeatureGroup = L.featureGroup();
+    },
     initLeafletMap() {
       let geoconnexApp = this;
+      geoconnexApp.selectedFeatureGroup ?? geoconnexApp.initLeafletFeatureGroups();
       const southWest = L.latLng(-90, -180),
         northEast = L.latLng(90, 180);
       const bounds = L.latLngBounds(southWest, northEast);
@@ -233,16 +239,13 @@ let geoconnexApp = new Vue({
         }
       );
 
-      var baseMaps = {
+      let baseMaps = {
         Streets: streets,
         Terrain: terrain,
         Satelite: googleSat,
       };
 
-      geoconnexApp.selectedFeatureGroup = L.featureGroup();
-      geoconnexApp.searchFeatureGroup = L.featureGroup();
-
-      var overlayMaps = {
+      let overlayMaps = {
         "Selected Collection Items": geoconnexApp.selectedFeatureGroup,
       };
       if (geoconnexApp.resMode == "Edit") {
@@ -639,7 +642,7 @@ let geoconnexApp = new Vue({
         let fetch_resp = await fetch(url);
         if (!fetch_resp.ok) {
           console.error(
-            `Error when attempting to fetch: ${fetch_resp.statusText}`
+            `Error when attempting to fetch Geoconnex relations: ${fetch_resp.statusText}`
           );
         } else {
           let copy = fetch_resp.clone();
@@ -1098,6 +1101,7 @@ let geoconnexApp = new Vue({
       await geoconnexApp.getAllItems(false);
       await geoconnexApp.loadMetadataRelations();
       geoconnexApp.loadingCollections = false;
+      geoconnexApp.initLeafletFeatureGroups();
       // load geometries in the background
       geoconnexApp.fetchAllGeometries();
       // refresh cache in the background
