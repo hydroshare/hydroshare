@@ -1151,7 +1151,6 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             istorage.delete(unzip_path)
         raise
 
-
     if bool_remove_original and not ingest_metadata:  # ingest_metadata deletes the zip by default
         zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
         delete_resource_file(res_id, zip_with_rel_path, user)
