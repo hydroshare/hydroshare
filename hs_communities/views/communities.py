@@ -87,13 +87,14 @@ class CommunityView(TemplateView):
             community = Community.objects.get(id=int(cid))
             community_resources = community.public_resources.distinct()
             grpfilter = self.request.GET.get('grp')
-            is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community, privilege=PrivilegeCodes.OWNER).exists() else 0
+            is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
+                                                                  privilege=PrivilegeCodes.OWNER).exists() else 0
 
             context['community_resources'] = community_resources
             context['grpfilter'] = grpfilter
             context['is_admin'] = is_admin
             context['czo_community'] = "CZO National" in community.name
-                                                      
+
             if action is not None:
                 group = Group.objects.get(id=int(gid))
                 if action == 'approve':  # approve a request from a group

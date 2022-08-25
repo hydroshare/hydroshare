@@ -341,7 +341,6 @@ class RequestCommunity(models.Model):
         err_msg = f"Failed to make a request for a new community. Errors: {community_form.errors.as_json}"
         raise ValidationError(err_msg)
 
-
     def approve(self):
         """Helper to approve a request to create a new community
         Note: The caller of this function needs to check authorization for approval
