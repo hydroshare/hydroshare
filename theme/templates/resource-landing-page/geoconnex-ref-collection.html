@@ -36,6 +36,7 @@
                                 :hide-no-data="!search"
                                 label="Type a custom URI or select from the Geoconnex list"
                                 :disabled="loadingCollections"
+                                :loading="loadingCollections"
                                 color="blue-grey"
                                 :search-input.sync="search"
                                 :rules="rules"
@@ -62,16 +63,9 @@
                                     </v-list-item>
                                 </template>
                             </v-combobox>
-                            <v-progress-linear
-                            :active="loadingCollections || isSearching"
-                            :indeterminate="loadingCollections"
-                            ></v-progress-linear>
                             <div v-if="loadingCollections">
                                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
-                            </div>
-                            <div v-if="isSearching">
-                                <p v-if="resMode=='Edit'"><b>Searching Geoconnex collection:</b> ${loadingDescription}</p>
                             </div>
                             <div v-if="hasSearches" :class="[showingMap ? 'geo-list-item' : '', 'checkbox']">
                                 <label>
@@ -85,6 +79,14 @@
                                 class="glyphicon glyphicon-info-sign text-muted">
                                 </span>
                             </div>
+                            <v-progress-linear
+                            :active="isSearching || (!geometriesAreLoaded && showingMap)"
+                            indeterminate
+                            ></v-progress-linear>
+                            <div v-if="isSearching">
+                                <p v-if="resMode=='Edit'"><b>Searching Geoconnex collection:</b> ${loadingDescription}</p>
+                            </div>
+                            <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>
                             <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMapVisibility" class="white--text text-none btn btn-success" depressed small>
                                 <v-icon>mdi-map-plus</v-icon>Use map
                             </v-btn>
@@ -109,7 +111,6 @@
                             <v-btn v-if="showingMap" @click="toggleMapVisibility" class="white--text text-none btn btn-danger geo-list-item" depressed small>
                                 <v-icon>mdi-map-minus</v-icon>Hide map
                             </v-btn>
-                            <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>
                             <div style="border: solid red" v-if="debug">
                                 <h4 style="color: red">DEBUG PANEL</h4>
                                 <div v-if="resSpatialType=='point'">
@@ -227,10 +228,6 @@
                     </div>
                 {% endif %}
                 <div v-show="showingMap" id="geoconnex-map-wrapper">
-                    <v-progress-linear
-                        :active="loadingCollections || isSearching"
-                        :indeterminate="loadingCollections"
-                        ></v-progress-linear>
                     <div id="geoconnex-leaflet"></div>
                     <p id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
                 </div>
