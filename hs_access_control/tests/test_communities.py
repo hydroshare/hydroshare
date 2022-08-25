@@ -164,6 +164,12 @@ class TestCommunities(TestCase):
                 'all kinds of pests',
                 'collaboration on how to be a more effective pest.')
 
+        # make the communities active
+        self.pets.active = True
+        self.pets.save()
+        self.pests.active = True
+        self.pests.save()
+
     def test_share_community_with_group(self):
         " share and unshare community with group "
 

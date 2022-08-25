@@ -71,6 +71,9 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
                 'all kinds of pets',
                 'collaboration on how to be a better pet.')
 
+        self.pets.active = True
+        self.pets.save()
+
         # Make cats and dogs part of community pets
         self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)
         self.cat.uaccess.share_group_with_user(self.cats, self.dog, PrivilegeCodes.OWNER)

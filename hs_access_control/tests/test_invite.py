@@ -79,6 +79,9 @@ class TestRequest(TestCase):
                 'all kinds of pets',
                 'collaboration on how to be a better pet.')
 
+        self.pets.active = True
+        self.pets.save()
+
     def test_community_invite_group_to_community(self):
         "share community with group according to invitation protocol"
 
@@ -483,7 +486,7 @@ class TestRequest(TestCase):
         # first check permissions
         self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
                                                                         PrivilegeCodes.VIEW))
-        self.pets.auto_approve = True
+        self.pets.auto_approve_group = True
         self.pets.save()
 
         message, approved = GroupCommunityRequest.create_or_update(

@@ -73,6 +73,8 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a community 'rebels'
         self.rebels = self.george.uaccess.create_community('Rebels', 'Random rebels')
+        self.rebels.active = True
+        self.rebels.save()
 
     def test_usercommunityprivilege_get_current_record(self):
         george = self.george
