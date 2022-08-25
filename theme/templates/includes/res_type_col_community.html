@@ -6,29 +6,12 @@
              data-toggle="tooltip" data-placement="right"
              alt="{{ resource_type }}" title="{{ resource_type }}"
              class="table-res-type-icon"/>
-    {% elif resource.resource_type == "ModelProgramResource" %}
-        <img src="{% static 'img/resource-icons/modelprogram48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
-    {% elif resource.resource_type == "ModelInstanceResource" %}
-        <img src="{% static 'img/resource-icons/modelinstance48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
-    {% elif resource.resource_type == "SWATModelInstanceResource" %}
-        <img src="{% static 'img/resource-icons/swat48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
     {% elif resource.resource_type == "ToolResource" %}
         <img src="{% static 'img/resource-icons/webapp48x48.png' %}"
              data-toggle="tooltip" data-placement="right"
              alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
     {% elif resource.resource_type == "CollectionResource" %}
         <img src="{% static 'img/resource-icons/collection48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}"
-             class="table-res-type-icon"/>
-    {% elif resource.resource_type == "MODFLOWModelInstanceResource" %}
-        <img src="{% static 'img/resource-icons/modflow48x48.png' %}"
              data-toggle="tooltip" data-placement="right"
              alt="{{ resource_type }}" title="{{ resource_type }}"
              class="table-res-type-icon"/>
