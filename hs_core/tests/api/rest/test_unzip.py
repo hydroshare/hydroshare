@@ -87,7 +87,8 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
 
         # second run of unzip of the same file to folder should create a different subfolder without overwriting
         unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
-        self.client.post(unzip_url, data={})
+        self.client.post(unzip_url, data={"remove_original_zip": "false",
+                                          "unzip_to_folder": "true"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # second run should unzip to another folder
         list_url = "/hsapi/resource/%s/folders/test-1/" % self.pid
