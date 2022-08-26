@@ -557,6 +557,7 @@ let geoconnexApp = new Vue({
         });
     },
     getFeatureProperties(feature) {
+      let geoconnexApp = this;
       // Account for some oddities in the Geoconnex API schema
       feature.relative_id = feature.properties.uri.split("ref/").pop();
       feature.collection = feature.relative_id.split("/")[0];
@@ -578,6 +579,13 @@ let geoconnexApp = new Vue({
         feature.NAME = feature.properties.NAME10;
       }
       feature.text = `${feature.NAME} [${feature.relative_id}]`;
+
+      //prevent duplicate selections
+      geoconnexApp.values.forEach((it) => {
+        if (feature.uri === it.value) {
+          feature.disabled = true;
+        }
+      });
       return feature;
     },
     async getRelationsFromMetadata() {
