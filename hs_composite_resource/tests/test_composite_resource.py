@@ -2726,7 +2726,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # ensure files aren't overwritten but instead a new file is created in a different sub folder
         self.assertEqual(self.composite_resource.files.count(), 4)
 
-
     def test_unzip_folder_clash_overwrite(self):
         """Test that when a zip file gets unzipped a folder with the same
         name already exists and overwrite is True, the existing folder is overwritten """
