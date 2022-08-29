@@ -1,6 +1,5 @@
 #app-geoconnex .flex {
   flex-direction: row;
-  flex-wrap: wrap;
   justify-content: space-around;
   gap: 2rem;
 }
@@ -67,6 +66,7 @@
 
 #geoconnex-leaflet {
   height: 400px;
+  margin-bottom: 1rem;
 }
 
 .leaflet-control-container,

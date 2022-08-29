@@ -158,33 +158,30 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       var itemsWithGeo = [];
       let calls = [];
+
       for (let collection of geoconnexApp.collections) {
         geoconnexApp.geometriesMessage = `Loading geometries from collection: ${collection.id}`;
         const url = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexApp.apiQueryYesGeo}`;
-        calls.push(
-          await geoconnexApp.fetchFromCacheOrAPI(url, false, collection)
-        );
+        calls.push(geoconnexApp.fetchFromCacheOrAPI(url, false, collection));
       }
-      Promise.all(calls)
-        .then(function (resultsArray) {
-          if (!$.isEmptyObject(resultsArray)) {
-            for (let response of resultsArray) {
-              if (response.features) {
-                itemsWithGeo.push(
-                  geoconnexApp.createVuetifySelectSubheader(response.collection)
-                );
-                for (let feature of response.features) {
-                  itemsWithGeo.push(geoconnexApp.getFeatureProperties(feature));
-                }
-              }
+
+      const resultsArray = await Promise.all(calls)
+
+      if (!$.isEmptyObject(resultsArray)) {
+        for (let response of resultsArray) {
+          if (response.features) {
+            itemsWithGeo.push(
+              geoconnexApp.createVuetifySelectSubheader(response.collection)
+            );
+            for (let feature of response.features) {
+              itemsWithGeo.push(geoconnexApp.getFeatureProperties(feature));
             }
           }
-        })
-        .then(function () {
-          // overwrite now that we have the geometries
-          geoconnexApp.items = itemsWithGeo;
-          geoconnexApp.geometriesAreLoaded = true;
-        });
+        }
+      }
+      // overwrite now that we have the geometries
+      geoconnexApp.items = itemsWithGeo;
+      geoconnexApp.geometriesAreLoaded = true;
     },
     async fetchSingleReferenceItem(uri) {
       let geoconnexApp = this;
@@ -883,34 +880,47 @@ let geoconnexApp = new Vue({
         (group = geoconnexApp.searchFeatureGroup)
       );
 
+      const promises = []
       for (let item of geoconnexApp.items) {
         if (item.header) continue;
+
         let alreadySelected = geoconnexApp.values.find((obj) => {
           return obj.value === item.uri;
         });
+
         if (alreadySelected) {
           continue;
         }
+
         try {
           geoconnexApp.loadingDescription = item.collection;
-          let geometry = await geoconnexApp.fetchSingleGeometry(item);
-          item.geometry = geometry.geometry;
-          if (item.geometry.type.includes("Polygon")) {
-            if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
-              if (turf.booleanPointInPolygon(center, item)) {
-                await geoconnexApp.addToMap(
-                  item,
-                  false,
-                  { color: geoconnexApp.searchColor },
-                  (group = geoconnexApp.searchFeatureGroup)
-                );
-              }
-            }
-          }
+          promises.push(geoconnexApp.fetchSingleGeometry(item))
         } catch (e) {
           console.error(`Error while attempting to load ${item.text}: ${e}`);
         }
       }
+
+      const results = await Promise.all(promises);
+
+      for (let i = 0; i < results.length; i++) {
+        const item = results[i]
+        const geometry = await geoconnexApp.fetchSingleGeometry(item);
+        item.geometry = geometry.geometry;
+        if (item.geometry.type.includes("Polygon")) {
+          if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
+            if (turf.booleanPointInPolygon(center, item)) {
+              // TODO: verify if this is indeed an async call
+              geoconnexApp.addToMap(
+                item,
+                false,
+                { color: geoconnexApp.searchColor },
+                (group = geoconnexApp.searchFeatureGroup)
+              );
+            }
+          }
+        }
+      }
+
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
       geoconnexApp.loadingCollections = false;
       geoconnexApp.hasSearches = true;
@@ -1060,14 +1070,14 @@ let geoconnexApp = new Vue({
       if (geoconnexApp.resMode === "Edit") {
         geoconnexApp.map.on("click", onMapClick);
 
-        $("div").on("click", "button.leaflet-point-search", function (e) {
+        $("#geoconnex-map-wrapper").on("click", "button.leaflet-point-search", function (e) {
           e.stopPropagation();
-          var loc = JSON.parse($(this).attr("data"));
+          const loc = JSON.parse($(this).attr("data"));
           geoconnexApp.fillValuesFromResCoordinates(loc.lat, loc.long);
           geoconnexApp.queryGeoItemsContainingPoint(loc.lat, loc.long);
         });
 
-        $("div").on("click", "button.map-add-geoconnex", function (e) {
+        $("#geoconnex-map-wrapper").on("click", "button.map-add-geoconnex", function (e) {
           e.stopPropagation();
           let data = JSON.parse($(this).attr("data"));
           let alreadySelected = geoconnexApp.values.find((obj) => {
@@ -1079,7 +1089,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.map.closePopup();
         });
 
-        $("div").on("click", "button.map-remove-geoconnex", function (e) {
+        $("#geoconnex-map-wrapper").on("click", "button.map-remove-geoconnex", function (e) {
           e.stopPropagation();
           let data = JSON.parse($(this).attr("data"));
           geoconnexApp.values = geoconnexApp.values.filter(
