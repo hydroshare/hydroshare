@@ -67,6 +67,19 @@
                                         </v-list-item-content>
                                     </v-list-item>
                                 </template>
+                                <template v-slot:selection="{ attrs, item, parent, selected }">
+                                    <v-chip v-bind="attrs" :input-value="selected">
+                                        <span class="text-truncate">
+                                            ${ item.text }
+                                        </span>
+                                        <v-icon
+                                        small
+                                        @click.stop="parent.selectItem(item)"
+                                      >
+                                        $delete
+                                      </v-icon>
+                                    </v-chip>
+                                </template>
                             </v-combobox>
                             <div v-if="loadingCollections">
                                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>

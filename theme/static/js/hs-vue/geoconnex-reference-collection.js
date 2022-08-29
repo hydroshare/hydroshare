@@ -790,7 +790,14 @@ let geoconnexApp = new Vue({
           $.ajax({
             type: "POST",
             url: url,
-            success: function () {},
+            success: function (result) {
+              if (geoconnexApp.debug)
+                console.log(
+                  `Removed ${
+                    relation.text ? relation.text : relation
+                  } from resource metadata`
+                );
+            },
             error: function (request, status, error) {
               geoconnexApp.errorMsg = `${error} while attempting to remove related feature.`;
               console.error(request.responseText);
