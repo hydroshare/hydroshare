@@ -1,4 +1,10 @@
 {% load hydroshare_tags crispy_forms_tags staticfiles %}
+
+{% block extra_css %}
+<link rel='stylesheet' type='text/css' href="{% static 'css/vuetify.min.css' %}">
+<link rel='stylesheet' type='text/css' href="{% static 'css/vuetify.bs.button.override.css' %}">
+{% endblock %}
+
 {% if resource_edit_mode or generic_relations %}
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
@@ -17,12 +23,11 @@
                     aria-hidden="true">&times;</span></button>
                 <p>${errorMsg}</p>
             </div>
-            <div class="flex">
-                {% if resource_edit_mode %}
-                    <div id="geo-list" class="flex-left">
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/relation/add-metadata/"
-                            method="POST" enctype="multipart/form-data">
-                            {% csrf_token %}
+
+            <div class="container">
+                <div class="row">
+                    {% if resource_edit_mode %}
+                        <div class="col-xs-12">
                             <v-combobox
                                 v-model="values"
                                 :items="items"
@@ -80,23 +85,22 @@
                                 </span>
                             </div>
                             <v-progress-linear
-                            :active="isSearching || (!geometriesAreLoaded && showingMap)"
+                            :active="true"
+                            v-if="isSearching || (!geometriesAreLoaded && showingMap)"
                             indeterminate
                             ></v-progress-linear>
                             <div v-if="isSearching">
                                 <p v-if="resMode=='Edit'"><b>Searching Geoconnex collection:</b> ${loadingDescription}</p>
                             </div>
                             <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>
-                            <v-btn v-if="!showingMap" :loading="isSearching" @click="toggleMapVisibility" class="white--text text-none btn btn-success" depressed small>
-                                <v-icon>mdi-map-plus</v-icon>Use map
-                            </v-btn>
+                            <button v-if="!showingMap" :loading="isSearching" @click="toggleMapVisibility" class="btn btn-success" depressed small>
+                                <i class="fa fa-globe"></i>Use map
+                            </button>
                             <span v-if="!showingMap" data-toggle="tooltip" data-placement="auto"
                             title='Shows additional map that you can use to query and view related geospatial features'
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
-                            <v-btn v-if="resSpatialType && !hasExtentSearch && showingMap" :loading="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="white--text text-none btn btn-success geo-list-item" depressed small>
-                                <v-icon>mdi-map-search</v-icon>Search using spatial extent
-                            </v-btn>
+
                             <span v-if="resSpatialType && !hasExtentSearch && showingMap" data-toggle="tooltip" data-placement="auto"
                             title="Performs a query to find related features that overlap with your resource's spatial extent"
                             class="glyphicon glyphicon-info-sign text-muted">
@@ -108,9 +112,9 @@
                             title="Clears unselected spatial features from the map"
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
-                            <v-btn v-if="showingMap" @click="toggleMapVisibility" class="white--text text-none btn btn-danger geo-list-item" depressed small>
-                                <v-icon>mdi-map-minus</v-icon>Hide map
-                            </v-btn>
+                            <button v-if="showingMap" @click="toggleMapVisibility" class="btn btn-default">
+                                <v-icon>mdi-map-minus</v-icon>Hide Map
+                            </button>
                             <div style="border: solid red" v-if="debug">
                                 <h4 style="color: red">DEBUG PANEL</h4>
                                 <div v-if="resSpatialType=='point'">
@@ -211,27 +215,32 @@
                                     </ul>
                                 </div>
                             </div>
-                        </form>
-                    </div>
-                {% else %}
-                    <div id="geo-list">
-                        <div v-if="!loadingCollections && values.length > 0">
+                        </div>
+                    {% else %}
+                        <div class="col-xs-12 col-md-4 info-table-wrapper" v-if="!loadingCollections && values.length > 0">
                             <table class="table hs-table info-table">
-                                <ul>
-                                    <tr v-for="value in values" style="padding-bottom: 20px">
-                                        <td v-if="isUrl(value.value)" class="dataset-details"><a v-if="isUrl(value.value)" :href="value.value"> ${value.text}</a></td>
-                                        <td v-else class="dataset-details">${value.text}</td>
-                                    </tr>
-                                </ul>
+                                <tr v-for="value in values" style="padding-bottom: 20px">
+                                    <td v-if="isUrl(value.value)" class="dataset-details">
+                                        <a v-if="isUrl(value.value)" target="_blank" :href="value.value"> ${value.text}</a>
+                                        <i class="fa fa-external-link"></i>
+                                    </td>
+                                    <td v-else class="dataset-details">${value.text}</td>
+                                </tr>
                             </table>
                         </div>
+                    {% endif %}
+    
+                    <div :class="{ 'col-xs-12 col-md-8': resMode === 'View', 'col-xs-12': resMode === 'Edit' }" v-show="showingMap" id="geoconnex-map-wrapper">
+                        <div id="geoconnex-leaflet"></div>
+                        <p v-if="resMode === 'Edit'" id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
+
+                        <button v-if="resSpatialType && !hasExtentSearch && showingMap" :disabled="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="btn btn-default" depressed small>
+                            <v-icon>mdi-map-search</v-icon>Search using spatial extent
+                        </button>
                     </div>
-                {% endif %}
-                <div v-show="showingMap" id="geoconnex-map-wrapper">
-                    <div id="geoconnex-leaflet"></div>
-                    <p id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
                 </div>
             </div>
+
         </v-app>
     </div>
 {% endif %}
