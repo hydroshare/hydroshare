@@ -696,7 +696,7 @@ let geoconnexApp = new Vue({
       }
       return true;
     },
-    async loadMetadataRelations() {
+    loadMetadataRelations() {
       let geoconnexApp = this;
       for (relation of geoconnexApp.metadataRelations) {
         if (relation.type === "relation") {
@@ -1132,7 +1132,7 @@ let geoconnexApp = new Vue({
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       await geoconnexApp.getAllItems(false);
-      await geoconnexApp.loadMetadataRelations();
+      geoconnexApp.loadMetadataRelations();
       geoconnexApp.initLeafletFeatureGroups();
       // load geometries in the background
       geoconnexApp.fetchAllGeometries();
@@ -1145,7 +1145,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.showingMap = true;
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       await geoconnexApp.getRelationsFromMetadata();
-      await geoconnexApp.loadMetadataRelations();
+      geoconnexApp.loadMetadataRelations();
       geoconnexApp.initLeafletMap();
     }
   },
