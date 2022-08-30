@@ -26,17 +26,17 @@
   font-size: 1.5rem;
 }
 
-#app-geoconnex div.v-application{
+#app-geoconnex div.v-application {
   margin-top: 1rem;
 }
 
-#geoconnex-controls{
+#geoconnex-controls {
   justify-content: flex-start !important;
   flex-wrap: wrap;
-  flex-direction: row
+  flex-direction: row;
 }
 
-.negative-top{
+.negative-top {
   margin-top: -3rem;
 }
 
@@ -49,7 +49,7 @@
   margin-right: 1rem;
 }
 
-#app-geoconnex .v-chip__content .glyphicon{
+#app-geoconnex .v-chip__content .glyphicon {
   padding: 1rem;
 }
 
