@@ -128,13 +128,6 @@
                             title='Shows additional map that you can use to query and view related geospatial features'
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
-                            <button v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="btn btn-warning" depressed small>
-                                <i class="fa fa-search-minus"></i>Clear searches from map
-                            </button>
-                            <span v-show="hasSearches && showingMap" data-toggle="tooltip" data-placement="auto"
-                            title="Clears unselected spatial features from the map"
-                            class="glyphicon glyphicon-info-sign text-muted">
-                            </span>
                             <button v-if="showingMap" @click="toggleMapVisibility" class="btn btn-default">
                                 <i class="fa fa-minus"></i>Hide Map
                             </button>
@@ -143,6 +136,13 @@
                             </button>
                             <span v-show="resSpatialType && !hasExtentSearch && showingMap" data-toggle="tooltip" data-placement="right"
                             title="Performs a query to find related features that overlap with your resource's spatial extent"
+                            class="glyphicon glyphicon-info-sign text-muted">
+                            </span>
+                            <button v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="btn btn-warning" depressed small>
+                                <i class="fa fa-search-minus"></i>Clear searches from map
+                            </button>
+                            <span v-show="hasSearches && showingMap" data-toggle="tooltip" data-placement="auto"
+                            title="Clears unselected spatial features from the map"
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
                             <div style="border: solid red" v-if="debug">
