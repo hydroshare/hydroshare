@@ -149,10 +149,9 @@ let geoconnexApp = new Vue({
       if (refresh || !geoconnexObj.geometry) {
         let query = `${geoconnexApp.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
         response = await geoconnexApp.fetchFromCacheOrAPI(query, refresh);
-      } else {
-        response.geometry = geoconnexObj.geometry;
+        geoconnexObj.geometry = response.geometry;
       }
-      return response;
+      return geoconnexObj;
     },
     async fetchAllGeometries() {
       let geoconnexApp = this;
@@ -904,8 +903,6 @@ let geoconnexApp = new Vue({
 
       for (let i = 0; i < results.length; i++) {
         const item = results[i]
-        const geometry = await geoconnexApp.fetchSingleGeometry(item);
-        item.geometry = geometry.geometry;
         if (item.geometry.type.includes("Polygon")) {
           if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
             if (turf.booleanPointInPolygon(center, item)) {
@@ -932,6 +929,7 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       geoconnexApp.loadingCollections = true;
       geoconnexApp.map.closePopup();
+      const promises = []
 
       geoconnexApp.addToMap(
         polygon,
@@ -939,10 +937,9 @@ let geoconnexApp = new Vue({
         { color: "red", fillColor: "red", fillOpacity: 0.1 },
         (group = geoconnexApp.searchFeatureGroup)
       );
-
+    try{
       for (let item of geoconnexApp.items) {
         if (item.header) continue;
-        try {
           geoconnexApp.loadingDescription = item.collection;
           let alreadySelected = geoconnexApp.values.find((obj) => {
             return obj.value === item.uri;
@@ -950,38 +947,43 @@ let geoconnexApp = new Vue({
           if (alreadySelected) {
             continue;
           }
-          let geometry = await geoconnexApp.fetchSingleGeometry(item);
-          item.geometry = geometry.geometry;
-          if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
-            if (turf.booleanIntersects(polygon, item)) {
-              if (item.geometry.type.includes("Point")) {
-                await geoconnexApp.addToMap(
-                  item,
-                  false,
-                  {
-                    color: geoconnexApp.searchColor,
-                    radius: 5,
-                    fillColor: "yellow",
-                    fillOpacity: 0.8,
-                  },
-                  (group = geoconnexApp.searchFeatureGroup)
-                );
-              } else {
-                await geoconnexApp.addToMap(
-                  item,
-                  false,
-                  { color: geoconnexApp.searchColor },
-                  (group = geoconnexApp.searchFeatureGroup)
-                );
-              }
+          promises.push(geoconnexApp.fetchSingleGeometry(item));
+      }
+
+      const results = await Promise.all(promises);
+
+      for (item of results){
+        if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
+          if (turf.booleanIntersects(polygon, item)) {
+            if (item.geometry.type.includes("Point")) {
+              await geoconnexApp.addToMap(
+                item,
+                false,
+                {
+                  color: geoconnexApp.searchColor,
+                  radius: 5,
+                  fillColor: "yellow",
+                  fillOpacity: 0.8,
+                },
+                (group = geoconnexApp.searchFeatureGroup)
+              );
+            } else {
+              await geoconnexApp.addToMap(
+                item,
+                false,
+                { color: geoconnexApp.searchColor },
+                (group = geoconnexApp.searchFeatureGroup)
+              );
             }
           }
-        } catch (e) {
-          console.error(
-            `Error while attempting to find intersecting geometries: ${e.message}`
-          );
         }
       }
+    } catch (e) {
+      console.error(
+        `Error while attempting to find intersecting geometries: ${e.message}`
+      );
+    }
+
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
       geoconnexApp.loadingCollections = false;
       geoconnexApp.hasSearches = true;
