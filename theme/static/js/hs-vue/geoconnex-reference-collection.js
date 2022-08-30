@@ -189,14 +189,15 @@ let geoconnexApp = new Vue({
       let response = await geoconnexApp.fetchFromCacheOrAPI(query);
       return response;
     },
-    initLeafletFeatureGroups(){
+    initLeafletFeatureGroups() {
       let geoconnexApp = this;
       geoconnexApp.selectedFeatureGroup = L.featureGroup();
       geoconnexApp.searchFeatureGroup = L.featureGroup();
     },
     initLeafletMap() {
       let geoconnexApp = this;
-      geoconnexApp.selectedFeatureGroup ?? geoconnexApp.initLeafletFeatureGroups();
+      geoconnexApp.selectedFeatureGroup ??
+        geoconnexApp.initLeafletFeatureGroups();
       const southWest = L.latLng(-90, -180),
         northEast = L.latLng(90, 180);
       const bounds = L.latLngBounds(southWest, northEast);
@@ -513,9 +514,7 @@ let geoconnexApp = new Vue({
             geoconnexApp.createVuetifySelectSubheader(resp.collection)
           );
           for (let feature of resp.features) {
-            geoconnexApp.items.push(
-              geoconnexApp.getFeatureProperties(feature)
-            );
+            geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
           }
         }
       }
@@ -542,8 +541,8 @@ let geoconnexApp = new Vue({
         }
       }
       geoconnexApp.items = refreshedItems;
-          if (geoconnexApp.debug)
-            console.log("Completed background refresh from Geoconnex API");
+      if (geoconnexApp.debug)
+        console.log("Completed background refresh from Geoconnex API");
     },
     getFeatureProperties(feature) {
       let geoconnexApp = this;
@@ -872,7 +871,7 @@ let geoconnexApp = new Vue({
         (group = geoconnexApp.searchFeatureGroup)
       );
 
-      const promises = []
+      const promises = [];
       for (let item of geoconnexApp.items) {
         if (item.header) continue;
 
@@ -886,7 +885,7 @@ let geoconnexApp = new Vue({
 
         try {
           geoconnexApp.loadingDescription = item.collection;
-          promises.push(geoconnexApp.fetchSingleGeometry(item))
+          promises.push(geoconnexApp.fetchSingleGeometry(item));
         } catch (e) {
           console.error(`Error while attempting to load ${item.text}: ${e}`);
         }
@@ -895,7 +894,7 @@ let geoconnexApp = new Vue({
       const results = await Promise.all(promises);
 
       for (let i = 0; i < results.length; i++) {
-        const item = results[i]
+        const item = results[i];
         if (item.geometry.type.includes("Polygon")) {
           if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
             if (turf.booleanPointInPolygon(center, item)) {
@@ -921,7 +920,7 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       geoconnexApp.loadingCollections = true;
       geoconnexApp.map.closePopup();
-      const promises = []
+      const promises = [];
 
       geoconnexApp.addToMap(
         polygon,
@@ -929,9 +928,9 @@ let geoconnexApp = new Vue({
         { color: "red", fillColor: "red", fillOpacity: 0.1 },
         (group = geoconnexApp.searchFeatureGroup)
       );
-    try{
-      for (let item of geoconnexApp.items) {
-        if (item.header) continue;
+      try {
+        for (let item of geoconnexApp.items) {
+          if (item.header) continue;
           geoconnexApp.loadingDescription = item.collection;
           let alreadySelected = geoconnexApp.values.find((obj) => {
             return obj.value === item.uri;
@@ -940,41 +939,41 @@ let geoconnexApp = new Vue({
             continue;
           }
           promises.push(geoconnexApp.fetchSingleGeometry(item));
-      }
+        }
 
-      const results = await Promise.all(promises);
+        const results = await Promise.all(promises);
 
-      for (item of results){
-        if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
-          if (turf.booleanIntersects(polygon, item)) {
-            if (item.geometry.type.includes("Point")) {
-              await geoconnexApp.addToMap(
-                item,
-                false,
-                {
-                  color: geoconnexApp.searchColor,
-                  radius: 5,
-                  fillColor: "yellow",
-                  fillOpacity: 0.8,
-                },
-                (group = geoconnexApp.searchFeatureGroup)
-              );
-            } else {
-              await geoconnexApp.addToMap(
-                item,
-                false,
-                { color: geoconnexApp.searchColor },
-                (group = geoconnexApp.searchFeatureGroup)
-              );
+        for (item of results) {
+          if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
+            if (turf.booleanIntersects(polygon, item)) {
+              if (item.geometry.type.includes("Point")) {
+                await geoconnexApp.addToMap(
+                  item,
+                  false,
+                  {
+                    color: geoconnexApp.searchColor,
+                    radius: 5,
+                    fillColor: "yellow",
+                    fillOpacity: 0.8,
+                  },
+                  (group = geoconnexApp.searchFeatureGroup)
+                );
+              } else {
+                await geoconnexApp.addToMap(
+                  item,
+                  false,
+                  { color: geoconnexApp.searchColor },
+                  (group = geoconnexApp.searchFeatureGroup)
+                );
+              }
             }
           }
         }
+      } catch (e) {
+        console.error(
+          `Error while attempting to find intersecting geometries: ${e.message}`
+        );
       }
-    } catch (e) {
-      console.error(
-        `Error while attempting to find intersecting geometries: ${e.message}`
-      );
-    }
 
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
       geoconnexApp.loadingCollections = false;
@@ -1064,33 +1063,45 @@ let geoconnexApp = new Vue({
       if (geoconnexApp.resMode === "Edit") {
         geoconnexApp.map.on("click", onMapClick);
 
-        $("#geoconnex-map-wrapper").on("click", "button.leaflet-point-search", function (e) {
-          e.stopPropagation();
-          const loc = JSON.parse($(this).attr("data"));
-          geoconnexApp.fillValuesFromResCoordinates(loc.lat, loc.long);
-          geoconnexApp.queryGeoItemsContainingPoint(loc.lat, loc.long);
-        });
-
-        $("#geoconnex-map-wrapper").on("click", "button.map-add-geoconnex", function (e) {
-          e.stopPropagation();
-          let data = JSON.parse($(this).attr("data"));
-          let alreadySelected = geoconnexApp.values.find((obj) => {
-            return obj.value === data.uri;
-          });
-          if (!alreadySelected) {
-            geoconnexApp.addSelectedToResMetadata(data);
+        $("#geoconnex-map-wrapper").on(
+          "click",
+          "button.leaflet-point-search",
+          function (e) {
+            e.stopPropagation();
+            const loc = JSON.parse($(this).attr("data"));
+            geoconnexApp.fillValuesFromResCoordinates(loc.lat, loc.long);
+            geoconnexApp.queryGeoItemsContainingPoint(loc.lat, loc.long);
           }
-          geoconnexApp.map.closePopup();
-        });
+        );
 
-        $("#geoconnex-map-wrapper").on("click", "button.map-remove-geoconnex", function (e) {
-          e.stopPropagation();
-          let data = JSON.parse($(this).attr("data"));
-          geoconnexApp.values = geoconnexApp.values.filter(
-            (s) => s.value !== data.uri
-          );
-          geoconnexApp.map.closePopup();
-        });
+        $("#geoconnex-map-wrapper").on(
+          "click",
+          "button.map-add-geoconnex",
+          function (e) {
+            e.stopPropagation();
+            let data = JSON.parse($(this).attr("data"));
+            let alreadySelected = geoconnexApp.values.find((obj) => {
+              return obj.value === data.uri;
+            });
+            if (!alreadySelected) {
+              geoconnexApp.addSelectedToResMetadata(data);
+            }
+            geoconnexApp.map.closePopup();
+          }
+        );
+
+        $("#geoconnex-map-wrapper").on(
+          "click",
+          "button.map-remove-geoconnex",
+          function (e) {
+            e.stopPropagation();
+            let data = JSON.parse($(this).attr("data"));
+            geoconnexApp.values = geoconnexApp.values.filter(
+              (s) => s.value !== data.uri
+            );
+            geoconnexApp.map.closePopup();
+          }
+        );
       }
 
       // listen for spatial coverage  type change
