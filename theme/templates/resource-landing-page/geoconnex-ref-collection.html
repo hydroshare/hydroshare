@@ -96,22 +96,18 @@
                                     </v-chip>
                                 </template>
                             </v-combobox>
+                            <p v-show="hasSearches" class="small text-muted negative-top">
+                                <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
+                                title='Options in the above dropdown list have been filtered to only contain features that have been mapped in your searches'
+                                class="glyphicon glyphicon-exclamation-sign text-muted"
+                                style="color: #f0ad4e;">
+                                </span>
+                                Options have been limited to current map search
+                            </p>
                             <div v-if="loadingCollections || !geometriesAreLoaded">
                                 <p v-if="resMode=='Edit' && loadingCollections"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
                                 <p v-else-if="resMode=='Edit' && !geometriesAreLoaded"><b>Loading Geoconnex geometries from:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
-                            </div>
-                            <div v-if="hasSearches" class="[showingMap ? 'geo-list-item' : '', 'checkbox']">
-                                <label>
-                                    <input type="checkbox" 
-                                        @change="toggleItemFiltering">
-                                        <i class="fa fa-filter"></i>
-                                    Limit dropdown to map search
-                                </label>
-                                <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
-                                title='Filters the options in the above dropdown list so that it only contains features that have been mapped'
-                                class="glyphicon glyphicon-info-sign text-muted">
-                                </span>
                             </div>
                             <v-progress-linear
                             :active="true"

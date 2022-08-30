@@ -913,6 +913,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
       geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
+      geoconnexApp.toggleItemFiltering();
     },
     async queryGeoItemsInPoly(polygon = null) {
       // https://turfjs.org/docs/#intersects
@@ -979,6 +980,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
       geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
+      geoconnexApp.toggleItemFiltering();
     },
     clearLeafletOfMappedSearches() {
       let geoconnexApp = this;
