@@ -96,8 +96,9 @@
                                     </v-chip>
                                 </template>
                             </v-combobox>
-                            <div v-if="loadingCollections">
-                                <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
+                            <div v-if="loadingCollections || !geometriesAreLoaded">
+                                <p v-if="resMode=='Edit' && loadingCollections"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
+                                <p v-else-if="resMode=='Edit' && !geometriesAreLoaded"><b>Loading Geoconnex geometries from:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
                             </div>
                             <div v-if="hasSearches" class="[showingMap ? 'geo-list-item' : '', 'checkbox']">
@@ -114,24 +115,23 @@
                             </div>
                             <v-progress-linear
                             :active="true"
-                            v-if="isSearching || (!geometriesAreLoaded && showingMap)"
+                            v-if="isSearching || (!geometriesAreLoaded && !loadingCollections)"
                             indeterminate
                             ></v-progress-linear>
                             <div v-if="isSearching">
-                                <p v-if="resMode=='Edit'"><b>Searching Geoconnex collection:</b> ${loadingDescription}</p>
+                                <p><b>Searching Geoconnex collection:</b> ${loadingDescription}</p>
                             </div>
-                            <div v-if="!geometriesAreLoaded && showingMap">${geometriesMessage}</div>
-                            <button v-if="!showingMap" :loading="isSearching" @click="toggleMapVisibility" class="btn btn-default" depressed small>
+                            <button v-if="!showingMap && geometriesAreLoaded" :loading="isSearching" @click="toggleMapVisibility" class="btn btn-default" depressed small>
                                 <i class="fa fa-globe"></i>Show Map
                             </button>
-                            <span v-show="!showingMap" data-toggle="tooltip" data-placement="auto"
+                            <span v-if="!showingMap && geometriesAreLoaded" data-toggle="tooltip" data-placement="auto"
                             title='Shows additional map that you can use to query and view related geospatial features'
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
                             <button v-if="showingMap" @click="toggleMapVisibility" class="btn btn-default">
                                 <i class="fa fa-minus"></i>Hide Map
                             </button>
-                            <button v-if="resSpatialType && !hasExtentSearch && showingMap"         :disabled="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="btn btn-default" depressed small>
+                            <button v-if="resSpatialType && !hasExtentSearch && showingMap" :disabled="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="btn btn-default" depressed small>
                                 <i class="fa fa-search"></i>Search Using Spatial Extent
                             </button>
                             <span v-show="resSpatialType && !hasExtentSearch && showingMap" data-toggle="tooltip" data-placement="right"
