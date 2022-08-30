@@ -92,12 +92,7 @@
                                         <span class="text-truncate">
                                             ${ item.text }
                                         </span>
-                                        <v-icon
-                                        small
-                                        @click.stop="parent.selectItem(item)"
-                                      >
-                                        $delete
-                                      </v-icon>
+                                      <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
                                     </v-chip>
                                 </template>
                             </v-combobox>
