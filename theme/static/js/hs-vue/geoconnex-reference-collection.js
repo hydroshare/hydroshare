@@ -155,17 +155,17 @@ let geoconnexApp = new Vue({
     async fetchAllGeometries() {
       let geoconnexApp = this;
       var itemsWithGeo = [];
-      let calls = [];
+      const promises = [];
 
       for (let collection of geoconnexApp.collections) {
         const url = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexApp.apiQueryYesGeo}`;
-        calls.push(geoconnexApp.fetchFromCacheOrAPI(url, false, collection));
+        promises.push(geoconnexApp.fetchFromCacheOrAPI(url, false, collection));
       }
 
-      const resultsArray = await Promise.all(calls)
+      const results = await Promise.all(promises);
 
-      if (!$.isEmptyObject(resultsArray)) {
-        for (let response of resultsArray) {
+      if (!$.isEmptyObject(results)) {
+        for (let response of results) {
           if (response.features) {
             itemsWithGeo.push(
               geoconnexApp.createVuetifySelectSubheader(response.collection)
@@ -498,57 +498,52 @@ let geoconnexApp = new Vue({
       };
     },
     async getAllItems(forceFresh = false) {
-      let calls = [];
+      const promises = [];
       let geoconnexApp = this;
       let collections = await geoconnexApp.getCollections(forceFresh);
       geoconnexApp.collections = collections.collections;
       for (let col of geoconnexApp.collections) {
         geoconnexApp.loadingDescription = col.description;
-        calls.push(geoconnexApp.getItemsIn(col, forceFresh));
+        promises.push(geoconnexApp.getItemsIn(col, forceFresh));
       }
-      await Promise.all(calls).then(function (resultsArray) {
-        for (let resp of resultsArray) {
-          if (!jQuery.isEmptyObject(resp) && resp.features) {
+      const results = await Promise.all(promises);
+      for (let resp of results) {
+        if (!jQuery.isEmptyObject(resp) && resp.features) {
+          geoconnexApp.items.push(
+            geoconnexApp.createVuetifySelectSubheader(resp.collection)
+          );
+          for (let feature of resp.features) {
             geoconnexApp.items.push(
-              geoconnexApp.createVuetifySelectSubheader(resp.collection)
+              geoconnexApp.getFeatureProperties(feature)
             );
-            for (let feature of resp.features) {
-              geoconnexApp.items.push(
-                geoconnexApp.getFeatureProperties(feature)
-              );
-            }
           }
         }
-      });
+      }
     },
     async refreshItemsSilently() {
-      let calls = [];
+      const promises = [];
       let geoconnexApp = this;
       if (geoconnexApp.debug) console.log("Refreshing from Geoconnex API");
       let collections = await geoconnexApp.getCollections(true);
       geoconnexApp.collections = collections.collections;
       let refreshedItems = [];
       for (let col of geoconnexApp.collections) {
-        calls.push(geoconnexApp.getItemsIn(col, true));
+        promises.push(geoconnexApp.getItemsIn(col, true));
       }
-      Promise.all(calls)
-        .then(function (resultsArray) {
-          for (let resp of resultsArray) {
-            if (!jQuery.isEmptyObject(resp) && resp.features) {
-              refreshedItems.push(
-                geoconnexApp.createVuetifySelectSubheader(resp.collection)
-              );
-              for (let feature of resp.features) {
-                refreshedItems.push(geoconnexApp.getFeatureProperties(feature));
-              }
-            }
+      const results = await Promise.all(promises);
+      for (let resp of results) {
+        if (!jQuery.isEmptyObject(resp) && resp.features) {
+          refreshedItems.push(
+            geoconnexApp.createVuetifySelectSubheader(resp.collection)
+          );
+          for (let feature of resp.features) {
+            refreshedItems.push(geoconnexApp.getFeatureProperties(feature));
           }
-        })
-        .then(() => {
-          geoconnexApp.items = refreshedItems;
+        }
+      }
+      geoconnexApp.items = refreshedItems;
           if (geoconnexApp.debug)
             console.log("Completed background refresh from Geoconnex API");
-        });
     },
     getFeatureProperties(feature) {
       let geoconnexApp = this;
