@@ -728,6 +728,7 @@ let geoconnexApp = new Vue({
           }
         }
       }
+      geoconnexApp.loadingCollections = false;
     },
     async loadAllRelationGeometries() {
       let geoconnexApp = this;
@@ -861,7 +862,7 @@ let geoconnexApp = new Vue({
       lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
       let center = turf.point([long, lat]);
       center.text = "Search point";
-      geoconnexApp.loadingCollections = true;
+      geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
 
       geoconnexApp.addToMap(
@@ -910,7 +911,7 @@ let geoconnexApp = new Vue({
       }
 
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
-      geoconnexApp.loadingCollections = false;
+      geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
     },
     async queryGeoItemsInPoly(polygon = null) {
@@ -918,7 +919,7 @@ let geoconnexApp = new Vue({
       // https://turfjs.org/docs/#booleanIntersects
       // https://turfjs.org/docs/#booleanContains
       let geoconnexApp = this;
-      geoconnexApp.loadingCollections = true;
+      geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
       const promises = [];
 
@@ -976,7 +977,7 @@ let geoconnexApp = new Vue({
       }
 
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
-      geoconnexApp.loadingCollections = false;
+      geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
     },
     clearLeafletOfMappedSearches() {
@@ -1130,7 +1131,6 @@ let geoconnexApp = new Vue({
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       await geoconnexApp.getAllItems(false);
       await geoconnexApp.loadMetadataRelations();
-      geoconnexApp.loadingCollections = false;
       geoconnexApp.initLeafletFeatureGroups();
       // load geometries in the background
       geoconnexApp.fetchAllGeometries();
@@ -1145,7 +1145,6 @@ let geoconnexApp = new Vue({
       await geoconnexApp.getRelationsFromMetadata();
       await geoconnexApp.loadMetadataRelations();
       geoconnexApp.initLeafletMap();
-      geoconnexApp.loadingCollections = false;
     }
   },
 });
