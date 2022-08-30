@@ -30,7 +30,7 @@
         </div>
 
         <label>This HydroShare resource is related to the following geospatial features
-            <span v-if="resMode=='Edit'" data-toggle="tooltip" data-placement="auto"
+            <span v-show="resMode=='Edit'" data-toggle="tooltip" data-placement="auto"
             title='Use this section to add persistent identifiers pointing at related geospatial features.'
             class="glyphicon glyphicon-info-sign text-muted">
             </span>
@@ -60,7 +60,7 @@
                                 outlined
                                 hide-selected
                                 :hide-no-data="!search"
-                                label="Type a custom URI or select from the Geoconnex list"
+                                label="Type a custom URL or select items from the Geoconnex list"
                                 :disabled="loadingCollections"
                                 :loading="loadingCollections"
                                 color="blue-grey"
@@ -106,11 +106,11 @@
                                 <p v-if="resMode=='Edit'"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
                             </div>
-                            <div v-if="hasSearches" :class="[showingMap ? 'geo-list-item' : '', 'checkbox']">
+                            <div v-if="hasSearches" class="[showingMap ? 'geo-list-item' : '', 'checkbox']">
                                 <label>
                                     <input type="checkbox" 
                                         @change="toggleItemFiltering">
-                                    <v-icon>mdi-filter</v-icon>
+                                        <i class="fa fa-filter"></i>
                                     Limit dropdown to map search
                                 </label>
                                 <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
@@ -134,10 +134,10 @@
                             title='Shows additional map that you can use to query and view related geospatial features'
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
-                            <v-btn v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="white--text text-none btn btn-warning geo-list-item" depressed small>
-                                <v-icon>mdi-map-marker-off</v-icon>Clear searches from map
-                            </v-btn>
-                            <span v-if="hasSearches && showingMap" data-toggle="tooltip" data-placement="auto"
+                            <button v-if="hasSearches && showingMap" @click="clearLeafletOfMappedSearches" class="btn btn-warning" depressed small>
+                                <i class="fa fa-search-minus"></i>Clear searches from map
+                            </button>
+                            <span v-show="hasSearches && showingMap" data-toggle="tooltip" data-placement="auto"
                             title="Clears unselected spatial features from the map"
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
