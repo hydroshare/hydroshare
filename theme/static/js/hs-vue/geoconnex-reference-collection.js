@@ -313,7 +313,7 @@ let geoconnexApp = new Vue({
 
       geoconnexApp.loadAllRelationGeometries();
     },
-    async addToMap(
+    addToMap(
       geojson,
       fit = false,
       style = { color: this.selectColor, radius: 5 },
@@ -906,7 +906,6 @@ let geoconnexApp = new Vue({
         if (item.geometry.type.includes("Polygon")) {
           if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
             if (turf.booleanPointInPolygon(center, item)) {
-              // TODO: verify if this is indeed an async call
               geoconnexApp.addToMap(
                 item,
                 false,
