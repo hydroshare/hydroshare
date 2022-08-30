@@ -82,11 +82,11 @@
   display: none;
 }
 
-.dataset-details {
+#app-geoconnex .dataset-details {
   display: flex;
   gap: 1rem;
   align-items: center;
-  justify-content: space-between;
+  /* justify-content: space-between; */
 }
 
 /* ******************* BUTTON OVERRIDES ******************* */
