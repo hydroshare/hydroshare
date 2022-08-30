@@ -30,6 +30,12 @@
   margin-top: 1rem;
 }
 
+#geoconnex-controls{
+  justify-content: flex-start !important;
+  flex-wrap: wrap;
+  flex-direction: row
+}
+
 .negative-top{
   margin-top: -3rem;
 }
