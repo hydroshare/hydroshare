@@ -1079,9 +1079,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         unzipped_foldername = os.path.basename(unzip_path)
         override_tgt_paths = []
         for sub_dir_name in unzip_subdir_list:
-            dest_sub_dir_path = os.path.join(os.path.dirname(zip_with_full_path), sub_dir_name)
-            if istorage.exists(dest_sub_dir_path):
-                override_tgt_paths.append(dest_sub_dir_path)
+            dest_sub_path = os.path.join(os.path.dirname(zip_with_full_path), sub_dir_name)
+            if istorage.exists(dest_sub_path):
+                override_tgt_paths.append(dest_sub_path)
 
         res_files = []
         for unzipped_file in unzipped_files:
@@ -1107,18 +1107,21 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                         aggregation_object.logical_delete(user)
                     else:
                         # check if destination override path is a file
-                        f = ResourceFile.get(resource=resource, file=override_tgt_path)
-                        if f:
+                        try:
+                            f = ResourceFile.get(resource=resource, file=override_tgt_path)
                             f.delete()
-                        else:
-                            # check if destination override path is a folder
-                            files = ResourceFile.objects.filter(resource=resource,
-                                                                file_folder=override_tgt_path.rsplit('data/contents/'))
+                        except ObjectDoesNotExist:
+                            # it should be a folder if not a file, but double check it is indeed a folder
+                            files = ResourceFile.objects.filter(
+                                object_id=resource.id,
+                                file_folder=override_tgt_path.rsplit('data/contents/')[1])
                             if files:
-                                # delete all files in the folder
-                                files.delete()
-                            # delete the folder in iRODS
-                            istorage.delete(override_tgt_path)
+                                # it is indeed a folder
+                                remove_folder(user, resource.short_id,
+                                              override_tgt_path.rsplit(f'{resource.short_id}/')[1])
+                            else:
+                                # it is somehow in iRODS but not in Django, delete it from iRODS to be consistent
+                                istorage.delete(override_tgt_path)
                 else:
                     istorage.delete(override_tgt_path)
 
