@@ -2571,7 +2571,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         characters in the file will be escaped when we return the file content.
         """
         readme_file = self.readme_file
-        if readme_file is not None:
+        # check the file exists on irods
+
+        if readme_file is None:
+            return readme_file
+
+        # check the file exists on irods
+        if readme_file.exists:
             readme_file_content = readme_file.read().decode('utf-8', 'ignore')
             if readme_file.extension.lower() == '.md':
                 markdown_file_content = markdown(readme_file_content)
@@ -2579,7 +2585,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                         'file_name': readme_file.file_name, 'file_type': 'md'}
             else:
                 return {'content': readme_file_content, 'file_name': readme_file.file_name}
-        return readme_file
+        else:
+            file_name = readme_file.file_name
+            readme_file.delete()
+            logger = logging.getLogger(__name__)
+            log_msg = f"readme file ({file_name}) is missing on iRODS. Deleting the file from Django."
+            logger.warning(log_msg)
+            return None
 
     @property
     def logical_files(self):
