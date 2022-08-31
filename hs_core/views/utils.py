@@ -1072,10 +1072,16 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     try:
         # unzip to a temporary folder
         unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+        dir_file_list = istorage.listdir(unzip_path)
+        unzip_subdir_list = dir_file_list[0]
         # list all files to be moved into the resource
         unzipped_files = listfiles_recursively(istorage, unzip_path)
         unzipped_foldername = os.path.basename(unzip_path)
         override_tgt_paths = []
+        for sub_dir_name in unzip_subdir_list:
+            dest_sub_dir_path = os.path.join(os.path.dirname(zip_with_full_path), sub_dir_name)
+            if istorage.exists(dest_sub_dir_path):
+                override_tgt_paths.append(dest_sub_dir_path)
 
         res_files = []
         for unzipped_file in unzipped_files:
@@ -1100,7 +1106,19 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                     if aggregation_object:
                         aggregation_object.logical_delete(user)
                     else:
-                        istorage.delete(override_tgt_path)
+                        # check if destination override path is a file
+                        f = ResourceFile.get(resource=resource, file=override_tgt_path)
+                        if f:
+                            f.delete()
+                        else:
+                            # check if destination override path is a folder
+                            files = ResourceFile.objects.filter(resource=resource,
+                                                                file_folder=override_tgt_path.rsplit('data/contents/'))
+                            if files:
+                                # delete all files in the folder
+                                files.delete()
+                            # delete the folder in iRODS
+                            istorage.delete(override_tgt_path)
                 else:
                     istorage.delete(override_tgt_path)
 
