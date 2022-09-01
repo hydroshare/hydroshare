@@ -1112,7 +1112,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         added_resource_files = []
         for file in res_files:
             destination_file = _get_destination_filename(file.name, unzipped_foldername)
-            destination_file = destination_file.replace(res_id + "/", "")
+            destination_file = destination_file.replace(res_id + "/", "", 1)
             destination_file = resource.get_irods_path(destination_file)
             res_file = link_irods_file_to_django(resource, destination_file)
             added_resource_files.append(res_file)
