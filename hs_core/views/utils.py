@@ -43,7 +43,7 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
-from hs_core.tasks import create_temp_zip
+from hs_core.tasks import create_temp_zip, FileOverrideException
 from hs_file_types.utils import set_logical_file_type
 from theme.backends import without_login_date_token_generator
 
@@ -559,15 +559,13 @@ def get_metadata_contenttypes():
     return meta_contenttypes
 
 
-def get_my_resources_list(user, annotate=True):
+def get_my_resources_filter_counts(user, **kwargs):
     """
-    Gets a QuerySet object for listing resources that belong to a given user.
+    Gets counts of resources that belong to a given user.
     :param user: an instance of User - user who wants to see his/her resources
-    :param annotate: whether to annotate for my resources page listing.
-    :return: an instance of QuerySet of resources
+    :return: an json object with counts for specific filter cases
     """
 
-    # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     # remove obsoleted resources from the owned_resources
     owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
@@ -575,69 +573,109 @@ def get_my_resources_list(user, annotate=True):
 
     # get a list of resources with effective CHANGE privilege (should include resources that the
     # user has access to via group
-    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
-                                                                         via_group=True)
+    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE, via_group=True)
     # remove obsoleted resources from the editable_resources
-    editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
-        type='isReplacedBy').values('object_id'))
+    editable_resources = editable_resources.exclude(
+        object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
 
     # get a list of resources with effective VIEW privilege (should include resources that the
     # user has access via group
-    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
-                                                                         via_group=True)
+    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW, via_group=True)
+
     # remove obsoleted resources from the viewable_resources
-    viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
-        type='isReplacedBy').values('object_id'))
+    viewable_resources = viewable_resources.exclude(
+        object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
 
     discovered_resources = user.ulabels.my_resources
 
-    # join all queryset objects
+    favorite_resources = user.ulabels.favorited_resources
+
+    return {
+        'favorites': favorite_resources.count(),
+        'ownedCount': owned_resources.count(),
+        'addedCount': discovered_resources.count(),
+        'sharedCount': viewable_resources.count() + editable_resources.count()
+    }
+
+
+def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
+    """
+    Gets a QuerySet object for listing resources that belong to a given user.
+    :param user: an instance of User - user who wants to see his/her resources
+    :param annotate: whether to annotate for my resources page listing.
+    :param filter: an array containing filters that determine the type of resources fetched
+    :return: an instance of QuerySet of resources
+    """
+
+    owned_resources = BaseResource.objects.none()
+    editable_resources = BaseResource.objects.none()
+    viewable_resources = BaseResource.objects.none()
+    discovered_resources = BaseResource.objects.none()
+
+    if not filter or 'owned' in filter:
+        # get a list of resources with effective OWNER privilege
+        owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
+
+    if not filter or 'editable' in filter:
+        # get a list of resources with effective CHANGE privilege (should include resources that the
+        # user has access to via group
+        editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                                             via_group=True)
+
+    if not filter or 'viewable' in filter:
+        # get a list of resources with effective VIEW privilege (should include resources that the
+        # user has access via group
+        viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                                             via_group=True)
+
+    if not filter or 'discovered' in filter:
+        discovered_resources = user.ulabels.my_resources
+
+    favorite_resources = user.ulabels.favorited_resources
+
+    # join all queryset objects.
     resource_collection = owned_resources.distinct() | \
         editable_resources.distinct() | \
         viewable_resources.distinct() | \
         discovered_resources.distinct()
+    if not filter or 'favorites' in filter:
+        resource_collection = resource_collection | favorite_resources.distinct()
 
-    if annotate:  # When used in the My Resources page, annotate for speed
+    # remove obsoleted resources
+    resource_collection = resource_collection.exclude(object_id__in=Relation.objects.filter(
+            type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
+
+    # When used in the My Resources page, annotate for speed
+    if annotate:
+        # The annotated field 'has_labels' would allow us to query the DB for labels only if the
+        # resource has labels - that means we won't hit the DB for each resource listed on the page
+        # to get the list of labels for a resource
         labeled_resources = user.ulabels.labeled_resources
-        favorite_resources = user.ulabels.favorited_resources
-        resource_collection = resource_collection.annotate(
-            owned=Case(When(short_id__in=owned_resources.values_list('short_id', flat=True),
-                            then=Value(True, BooleanField()))))
-
-        resource_collection = resource_collection.annotate(
-            editable=Case(When(short_id__in=editable_resources.values_list('short_id', flat=True),
-                          then=Value(True, BooleanField()))))
-
-        resource_collection = resource_collection.annotate(
-            viewable=Case(When(short_id__in=viewable_resources.values_list('short_id', flat=True),
-                               then=Value(True, BooleanField()))))
-
-        resource_collection = resource_collection.annotate(
-            discovered=Case(When(short_id__in=discovered_resources.values_list('short_id', flat=True),
-                            then=Value(True, BooleanField()))))
+        resource_collection = resource_collection.annotate(has_labels=Case(
+            When(short_id__in=labeled_resources.values_list('short_id', flat=True),
+                 then=Value(True, BooleanField()))))
 
         resource_collection = resource_collection.annotate(
             is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
                                   then=Value(True, BooleanField()))))
 
-        # The annotated field 'has_labels' would allow us to query the DB for labels only if the
-        # resource has labels - that means we won't hit the DB for each resource listed on the page
-        # to get the list of labels for a resource
-        resource_collection = resource_collection.annotate(has_labels=Case(
-            When(short_id__in=labeled_resources.values_list('short_id', flat=True),
-                 then=Value(True, BooleanField()))))
-
-        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
+        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created', 'updated')
         # we won't hit the DB for each resource to know if it's status is public/private/discoverable
         # etc
         resource_collection = resource_collection.select_related('raccess', 'rlabels')
-        # prefetch metadata items - creators, keywords(subjects), dates and title
-        prefetch_related_objects(resource_collection,
-                                 Prefetch('content_object__creators'),
-                                 Prefetch('content_object__subjects'),
-                                 Prefetch('content_object___title'),
-                                 Prefetch('content_object__dates')
-                                 )
+        meta_contenttypes = get_metadata_contenttypes()
+
+        for ct in meta_contenttypes:
+            # get a list of resources having metadata that is an instance of a specific
+            # metadata class (e.g., CoreMetaData) - we have to prefetch by content_type as
+            # prefetch works only for the same object type (type of 'content_object' in this case)
+            res_list = [res for res in resource_collection if res.content_type == ct]
+            # prefetch metadata items - creators, keywords(subjects)
+            if res_list:
+                prefetch_related_objects(res_list,
+                                         Prefetch('content_object__creators'),
+                                         Prefetch('content_object__subjects'),
+                                         )
 
     return resource_collection
 
@@ -1027,74 +1065,94 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         raise ValidationError("Unzipping of file is not allowed for a published resource.")
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
-
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
     unzip_path = None
     try:
-        if overwrite:
-            # unzip to a temporary folder
-            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
-            # list all files to be moved into the resource
-            unzipped_files = listfiles_recursively(istorage, unzip_path)
-            unzipped_foldername = os.path.basename(unzip_path)
+        # unzip to a temporary folder
+        unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+        dir_file_list = istorage.listdir(unzip_path)
+        unzip_subdir_list = dir_file_list[0]
+        # list all files to be moved into the resource
+        unzipped_files = listfiles_recursively(istorage, unzip_path)
+        unzipped_foldername = os.path.basename(unzip_path)
+        override_tgt_paths = []
+        for sub_dir_name in unzip_subdir_list:
+            dest_sub_path = os.path.join(os.path.dirname(zip_with_full_path), sub_dir_name)
+            if istorage.exists(dest_sub_path):
+                override_tgt_paths.append(dest_sub_path)
 
-            res_files = []
-            for unzipped_file in unzipped_files:
-                res_files.append(IrodsFile(unzipped_file, istorage))
-            meta_files = []
-            if ingest_metadata:
-                res_files, meta_files, map_files = identify_metadata_files(res_files)
-            # walk through each unzipped file, delete aggregations if they exist
-            for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzipped_foldername)
-                if (istorage.exists(destination_file)):
-                    if resource.resource_type == "CompositeResource":
-                        aggregation_object = resource.get_file_aggregation_object(
-                            destination_file)
-                        if aggregation_object:
-                            aggregation_object.logical_delete(user)
-                        else:
-                            logger.error("No aggregation object found for " + destination_file)
-                            istorage.delete(destination_file)
+        res_files = []
+        for unzipped_file in unzipped_files:
+            res_files.append(IrodsFile(unzipped_file, istorage))
+        meta_files = []
+        if ingest_metadata:
+            res_files, meta_files, map_files = identify_metadata_files(res_files)
+
+        for file in res_files:
+            destination_file = _get_destination_filename(file.name, unzipped_foldername)
+            if istorage.exists(destination_file):
+                override_tgt_paths.append(destination_file)
+
+        if not overwrite and override_tgt_paths:
+            override_simplified_paths = [tgt_path.split('data/contents/')[1] for tgt_path in override_tgt_paths]
+            raise FileOverrideException('move would overwrite {}'.format(', '.join(override_simplified_paths)))
+
+        for override_tgt_path in override_tgt_paths:
+            if istorage.exists(override_tgt_path):
+                if resource.resource_type == "CompositeResource":
+                    aggregation_object = resource.get_file_aggregation_object(override_tgt_path)
+                    if aggregation_object:
+                        aggregation_object.logical_delete(user)
                     else:
-                        istorage.delete(destination_file)
-            # now move each file to the destination
-            for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzipped_foldername)
-                istorage.moveFile(file.name, destination_file)
-            # and now link them to the resource
-            added_resource_files = []
-            for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzipped_foldername)
-                destination_file = destination_file.replace(res_id + "/", "")
-                destination_file = resource.get_irods_path(destination_file)
-                res_file = link_irods_file_to_django(resource, destination_file)
-                added_resource_files.append(res_file)
+                        # check if destination override path is a file
+                        try:
+                            f = ResourceFile.get(resource=resource, file=override_tgt_path)
+                            f.delete()
+                        except ObjectDoesNotExist:
+                            # it should be a folder if not a file, but double check it is indeed a folder
+                            files = ResourceFile.objects.filter(
+                                object_id=resource.id,
+                                file_folder=override_tgt_path.rsplit('data/contents/')[1])
+                            if files:
+                                # it is indeed a folder
+                                remove_folder(user, resource.short_id,
+                                              override_tgt_path.rsplit(f'{resource.short_id}/')[1])
+                            else:
+                                # it is somehow in iRODS but not in Django, delete it from iRODS to be consistent
+                                istorage.delete(override_tgt_path)
+                else:
+                    istorage.delete(override_tgt_path)
 
-            if resource.resource_type == "CompositeResource":
-                # make the newly added files part of an aggregation if needed
-                for res_file in added_resource_files:
-                    resource.add_file_to_aggregation(res_file)
+        # now move each file to the destination
+        for file in res_files:
+            destination_file = _get_destination_filename(file.name, unzipped_foldername)
+            istorage.moveFile(file.name, destination_file)
+        # and now link them to the resource
+        added_resource_files = []
+        for file in res_files:
+            destination_file = _get_destination_filename(file.name, unzipped_foldername)
+            destination_file = destination_file.replace(res_id + "/", "", 1)
+            destination_file = resource.get_irods_path(destination_file)
+            res_file = link_irods_file_to_django(resource, destination_file)
+            added_resource_files.append(res_file)
 
-            if auto_aggregate:
-                check_aggregations(resource, added_resource_files)
-            if ingest_metadata:
-                # delete original zip to prevent from being pulled into an aggregation
-                zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
-                delete_resource_file(res_id, zip_with_rel_path, user)
+        if resource.resource_type == "CompositeResource":
+            # make the newly added files part of an aggregation if needed
+            for res_file in added_resource_files:
+                resource.add_file_to_aggregation(res_file)
 
-                from hs_file_types.utils import ingest_metadata_files
-                ingest_metadata_files(resource, meta_files, map_files)
-            istorage.delete(unzip_path)
-        else:
-            unzip_path = istorage.unzip(zip_with_full_path)
-            res_files = link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
-            if resource.resource_type == 'CompositeResource':
-                # make the newly added files part of an aggregation if needed
-                for res_file in res_files:
-                    resource.add_file_to_aggregation(res_file)
+        if auto_aggregate:
+            check_aggregations(resource, added_resource_files)
+        if ingest_metadata:
+            # delete original zip to prevent from being pulled into an aggregation
+            zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
+            delete_resource_file(res_id, zip_with_rel_path, user)
+
+            from hs_file_types.utils import ingest_metadata_files
+            ingest_metadata_files(resource, meta_files, map_files)
+        istorage.delete(unzip_path)
 
     except Exception:
         logger.exception("failed to unzip")
@@ -1404,8 +1462,6 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         src_full_path = os.path.join(resource.root_path, src_path)
         src_base_name = os.path.basename(src_path)
         tgt_qual_path = os.path.join(tgt_full_path, src_base_name)
-        # logger = logging.getLogger(__name__)
-        # logger.info("moving file {} to {}".format(src_full_path, tgt_qual_path))
 
         istorage.moveFile(src_full_path, tgt_qual_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)

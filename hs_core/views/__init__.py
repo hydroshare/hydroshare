@@ -6,6 +6,7 @@ from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
@@ -40,7 +41,7 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
-    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
+    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict, get_my_resources_filter_counts
 
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject, TaskNotification
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
@@ -404,14 +405,27 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='get', operation_description="Gets all key/value metadata for the resource",
+                     responses={200: "key/value metadata"}, manual_parameters=[res_id])
+@swagger_auto_schema(method='post', operation_description="Updates key/value metadata for the resource",
+                     responses={200: ""}, manual_parameters=[res_id])
 @api_view(['POST', 'GET'])
-def update_key_value_metadata_public(request, pk):
+def update_key_value_metadata_public(request, id):
+    '''
+    Update resource key/value metadata pair
+
+    Metadata to be updated should be included as key/value pairs in the REST request
+    
+    :param request:
+    :param id: id of the resource to be updated
+    :return: HttpResponse with status code
+    '''
     if request.method == 'GET':
-        res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        res, _, _ = authorize(request, id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
 
-    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    res, _, _ = authorize(request, id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
     post_data = request.data.copy()
     res.extra_metadata = post_data
@@ -840,9 +854,17 @@ def copy_resource(request, shortkey, *args, **kwargs):
         except utils.ResourceCopyException:
             return HttpResponseRedirect(res.get_absolute_url())
 
-
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be copied", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='post', operation_description="Copy a resource",
+                     responses={202: "Returns the resource ID of the newly created resource"}, manual_parameters=[res_id])
 @api_view(['POST'])
 def copy_resource_public(request, pk):
+    '''
+    Copy a resource
+
+    :param request:
+    :param pk: id of the resource to be copied
+    '''
     response = copy_resource(request, pk)
     return HttpResponse(response.url.split('/')[2], status=202)
 
@@ -877,9 +899,18 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
                                                          'this resource: ' + str(ex)
             return HttpResponseRedirect(res.get_absolute_url())
 
-
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be versioned", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='post', operation_description="Create a new version of a resource",
+                     responses={202: "Returns the resource ID of the new version"}, manual_parameters=[res_id])
 @api_view(['POST'])
 def create_new_version_resource_public(request, pk):
+    '''
+    Create a new version of a resource
+
+    :param request:
+    :param pk: id of the resource to be versioned
+    :return: HttpResponse with status code
+    '''
     redirect = create_new_version_resource(request, pk)
     return HttpResponse(redirect.url.split('/')[2], status=202)
 
@@ -942,8 +973,18 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     return JsonResponse(ajax_response_data)
 
 
+res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be flagged", type=openapi.TYPE_STRING)
+@swagger_auto_schema(method='post', operation_description="Set resource flag to 'Public'",
+                     responses={202: "Returns the resource ID of the new version"}, manual_parameters=[res_id])
 @api_view(['POST'])
 def set_resource_flag_public(request, pk):
+    '''
+    Set resource flag to "Public"
+
+    :param request:
+    :param pk: id of the resource to be modified
+    :return: HttpResponse with status code
+    '''
     http_request = request._request
     http_request.data = request.data.copy()
     js_response = set_resource_flag(http_request, pk)
@@ -1662,8 +1703,17 @@ def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
 
+uid = openapi.Parameter('user_identifier', openapi.IN_PATH, description="id of the user for which data is needed", type=openapi.TYPE_INTEGER)
+@swagger_auto_schema(method='get', operation_description="Get user data",
+                     responses={200: "Returns JsonResponse containing user data"}, manual_parameters=[uid])
 @api_view(['GET'])
 def hsapi_get_user(request, user_identifier):
+    '''
+    Get user data
+
+    :param user_identifier: id of the user for which data is needed
+    :return: JsonResponse containing user data
+    '''
     return get_user_or_group_data(request, user_identifier, "false")
 
 
@@ -1963,19 +2013,58 @@ class GroupView(TemplateView):
                 'add_view_user_form': AddUserForm(),
             }
 
+@login_required
+def my_resources_filter_counts(request, *args, **kwargs):
+    """
+    View for counting resources that belong to a given user.
+    """
+    filter=request.GET.getlist('filter', default=None)
+    u = User.objects.get(pk=request.user.id)
 
-class MyResourcesView(TemplateView):
-    template_name = 'pages/my-resources.html'
+    filter_counts = get_my_resources_filter_counts(u)
 
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(MyResourcesView, self).dispatch(*args, **kwargs)
+    return JsonResponse({
+        'filter_counts': filter_counts
+    })
 
-    def get_context_data(self, **kwargs):
-        u = User.objects.get(pk=self.request.user.id)
+@login_required
+def my_resources(request, *args, **kwargs):
+    """
+    View for listing resources that belong to a given user.
 
-        resource_collection = get_my_resources_list(u)
+    Renders either a full my-resources page, or just a table of new resorces
+    """
 
-        return {
-            'collection': resource_collection
-        }
+    if not request.is_ajax():
+        filter=request.GET.getlist('f', default=[])
+    else:
+        filter = [request.GET['new_filter']]
+    u = User.objects.get(pk=request.user.id)
+
+    if not filter:
+        # add default filters
+        filter = ['owned', 'discovered', 'favorites']
+
+    if 'shared' in filter: 
+        filter.remove('shared')
+        filter.append('viewable')
+        filter.append('editable')
+
+    resource_collection = get_my_resources_list(u, annotate=True, filter=filter)
+
+    context = {
+        'collection': resource_collection
+    }
+
+    if not request.is_ajax():
+        return render(request,
+                      'pages/my-resources.html',
+                      context)
+    else:
+        from django.template.loader import render_to_string
+        trows = render_to_string(
+                    'includes/my-resources-trows.html',
+                      context, request)
+        return JsonResponse({
+            "trows": trows,
+        })

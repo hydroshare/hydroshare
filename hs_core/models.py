@@ -604,7 +604,7 @@ class Party(AbstractMetaDataElement):
                             res_cr.order += 1
                             res_cr.save()
                     else:
-                        if res_cr.order > party.order:
+                        if res_cr.order > party.order and res_cr.order <= creator_order:
                             res_cr.order -= 1
                             res_cr.save()
 
@@ -1984,9 +1984,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Return True only if all required metadata is present."""
         if self.metadata is None or not self.metadata.has_all_required_elements():
             return False
-        for f in self.logical_files:
-            if not f.metadata.has_all_required_elements():
-                return False
         return True
 
     @property
@@ -2163,6 +2160,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Update the settings of the public and discoverable flags for changes in metadata."""
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
+
+    @property
+    def absolute_url(self):
+        return self.get_url_of_path('')
 
     def get_url_of_path(self, path):
         """Return the URL of an arbtrary path in this resource.
@@ -2433,7 +2434,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             return ''
         return str(self.metadata.citation.first())
 
-    def get_citation(self, includePendingMessage=True):
+    def get_citation(self, forceHydroshareURI=True):
         """Get citation or citations from resource metadata."""
 
         citation_str_lst = []
@@ -2470,7 +2471,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         citation_str_lst.append(self.metadata.title.value)
 
         isPendingActivation = False
-        if self.metadata.identifiers.all().filter(name="doi"):
+        if self.metadata.identifiers.all().filter(name="doi") and not forceHydroshareURI:
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
             if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
                 isPendingActivation = True
@@ -2481,7 +2482,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
-        if isPendingActivation and includePendingMessage:
+        if isPendingActivation and not forceHydroshareURI:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
 
         return ''.join(citation_str_lst)
@@ -2570,7 +2571,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         characters in the file will be escaped when we return the file content.
         """
         readme_file = self.readme_file
-        if readme_file is not None:
+        # check the file exists on irods
+
+        if readme_file is None:
+            return readme_file
+
+        # check the file exists on irods
+        if readme_file.exists:
             readme_file_content = readme_file.read().decode('utf-8', 'ignore')
             if readme_file.extension.lower() == '.md':
                 markdown_file_content = markdown(readme_file_content)
@@ -2578,69 +2585,51 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                         'file_name': readme_file.file_name, 'file_type': 'md'}
             else:
                 return {'content': readme_file_content, 'file_name': readme_file.file_name}
-        return readme_file
+        else:
+            file_name = readme_file.file_name
+            readme_file.delete()
+            logger = logging.getLogger(__name__)
+            log_msg = f"readme file ({file_name}) is missing on iRODS. Deleting the file from Django."
+            logger.warning(log_msg)
+            return None
 
     @property
     def logical_files(self):
-        """Get a list of logical files for resource."""
-        logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is not None:
-                if res_file.logical_file not in logical_files_list:
-                    logical_files_list.append(res_file.logical_file)
-        return logical_files_list
+        """Gets a generator to access each of the logical files of the resource.
+        Note: Any derived class that supports logical file must override this function
+        """
+
+        # empty generator
+        yield from ()
 
     @property
     def aggregation_types(self):
-        """Gets a list of all aggregation types that currently exist in this resource"""
-        aggr_types = []
-        aggr_type_names = []
-        for lf in self.logical_files:
-            if lf.type_name not in aggr_type_names:
-                aggr_type_names.append(lf.type_name)
-                aggr_type = lf.get_aggregation_display_name().split(":")[0]
-                aggr_types.append(aggr_type)
-        return aggr_types
-
-    @property
-    def non_logical_files(self):
-        """Get list of non-logical files for resource."""
-        non_logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.logical_file is None:
-                if res_file.logical_file not in non_logical_files_list:
-                    non_logical_files_list.append(res_file)
-        return non_logical_files_list
-
-    @property
-    def generic_logical_files(self):
-        """Get list of generic logical files for resource."""
-        generic_logical_files_list = []
-        for res_file in self.files.all():
-            if res_file.has_generic_logical_file:
-                if res_file.logical_file not in generic_logical_files_list:
-                    generic_logical_files_list.append(res_file.logical_file)
-        return generic_logical_files_list
+        """Gets a list of all aggregation types that currently exist in this resource
+        Note: Any derived class that supports logical file must override this function
+        """
+        return []
 
     def get_logical_files(self, logical_file_class_name):
-        """Get a list of logical files (aggregations) for a specified logical file class name."""
-
-        logical_files_list = [lf for lf in self.logical_files if
-                              lf.type_name() == logical_file_class_name]
-
-        return logical_files_list
+        """Get a list of logical files (aggregations) for a specified logical file class name.
+        Note: Any derived class that supports logical file must override this function
+        """
+        return []
 
     @property
     def has_logical_spatial_coverage(self):
-        """Checks if any of the logical files has spatial coverage"""
+        """Checks if any of the logical files has spatial coverage
+        Note: Any derived class that supports logical file must override this function
+        """
 
-        return any(lf.metadata.spatial_coverage is not None for lf in self.logical_files)
+        return False
 
     @property
     def has_logical_temporal_coverage(self):
-        """Checks if any of the logical files has temporal coverage"""
+        """Checks if any of the logical files has temporal coverage
+        Note: Any derived class that supports logical file must override this function
+        """
 
-        return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
+        return False
 
     @property
     def supports_logical_file(self):
@@ -2746,9 +2735,17 @@ def get_resource_file_path(resource, filename, folder=''):
     # cannot only test folder string to start with resource.root_path, since a relative folder path
     # may start with the resource's uuid if the same resource bag is added into the same resource and unzipped
     # into the resource as in the bug reported in this issue: https://github.com/hydroshare/hydroshare/issues/2984
-    if folder is not None and folder.startswith(os.path.join(resource.root_path, 'data', 'contents')):
+
+    res_data_content_path = os.path.join(resource.root_path, 'data', 'contents')
+    if folder is not None and folder.startswith(res_data_content_path):
         # TODO: does this now start with /?
-        folder = folder[len(resource.root_path):]
+        # check if the folder is a path relative to the resource data content path, if yes, no need to strip out
+        # resource.root_path
+        istorage = resource.get_irods_storage()
+        if not istorage.exists(os.path.join(res_data_content_path, folder)):
+            # folder is not a path relative to res_data_content_path, but a path including resource root path,
+            # strip out resource root path to make folder a relative path
+            folder = folder[len(resource.root_path):]
 
     # retrieve federation path -- if any -- from Resource object containing the file
     if filename.startswith(resource.file_path):
@@ -3993,7 +3990,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         # if custom citation does not exist, use the default citation
         if not self.citation.first():
-            graph.add((subject, DCTERMS.bibliographicCitation, Literal(self.resource.get_citation())))
+            graph.add((subject, DCTERMS.bibliographicCitation, Literal(
+                self.resource.get_citation(forceHydroshareURI=False))))
 
         from .hydroshare import current_site_url
         TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))

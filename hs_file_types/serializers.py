@@ -73,8 +73,6 @@ class ModelProgramResourceFileTypeSerializer(serializers.Serializer):
 
 
 class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
-    name = serializers.CharField(required=False, max_length=255,
-                                 help_text='The type/name of model program')
     version = serializers.CharField(required=False, max_length=255, allow_blank=True,
                                     help_text='The software version or build number of the model')
     programming_languages = serializers.ListField(required=False, child=serializers.CharField(max_length=100),
@@ -136,7 +134,6 @@ class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
     def update(self, mp_aggr, validated_data):
         """Updates the metadata for a model program aggregation."""
 
-        mp_aggr.model_program_type = validated_data.get('name', mp_aggr.model_program_type)
         mp_aggr.dataset_name = validated_data.get('title', mp_aggr.dataset_name)
         mp_aggr.metadata.keywords = validated_data.get('keywords', mp_aggr.metadata.keywords)
         mp_aggr.metadata.extra_metadata = validated_data.get('additional_metadata', mp_aggr.metadata.extra_metadata)
@@ -169,7 +166,6 @@ class ModelProgramMetaSerializer(BaseAggregationMetaSerializer):
         """Helper to serialize the metadata for a model program aggregation."""
 
         data = dict()
-        data['name'] = mp_aggr.model_program_type
         data['title'] = mp_aggr.dataset_name
         data['keywords'] = mp_aggr.metadata.keywords
         data['additional_metadata'] = mp_aggr.metadata.extra_metadata

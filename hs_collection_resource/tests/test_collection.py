@@ -72,11 +72,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
             title='Gen 4'
         )
 
-        self.resModelInstance = create_resource(
-                    resource_type='ModelInstanceResource',
-                    owner=self.user1,
-                    title='Test Model Instance Resource')
-
         self.user2 = create_account(
             'byu2@byu.edu',
             username='user2',
@@ -109,18 +104,15 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 0)
         # add res to collection.resources
         self.resCollection.resources.add(self.resGen1)
-        self.resModelInstance.collections.add(self.resCollection)
 
         # test count
-        self.assertEqual(self.resCollection.resources.count(), 2)
+        self.assertEqual(self.resCollection.resources.count(), 1)
 
         # test res in collection.resources
         self.assertIn(self.resGen1, self.resCollection.resources.all())
-        self.assertIn(self.resModelInstance, self.resCollection.resources.all())
 
         # test collection in res.collections
         self.assertIn(self.resCollection, self.resGen1.collections.all())
-        self.assertIn(self.resCollection, self.resModelInstance.collections.all())
 
         # test remove all res from collection.resources
         self.resCollection.resources.clear()
@@ -128,7 +120,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test collection NOT in res.collections
         self.assertNotIn(self.resCollection, self.resGen1.collections.all())
-        self.assertNotIn(self.resCollection, self.resModelInstance.collections.all())
 
         # test adding same resources to multiple collection resources
         self.resCollection.resources.add(self.resGen1)
@@ -144,12 +135,10 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
         self.assertEqual(CollectionDeletedResource.objects.count(), 0)
         # create 2 CollectionDeletedResource obj and associate with collection
-        CollectionDeletedResource.objects.create(resource_title=self.resGen1.
-                                                 metadata.title,
+        CollectionDeletedResource.objects.create(resource_title=self.resGen1.metadata.title,
                                                  deleted_by=self.user1,
                                                  collection=self.resCollection)
-        CollectionDeletedResource.objects.create(resource_title=self.
-                                                 resModelInstance.metadata.title,
+        CollectionDeletedResource.objects.create(resource_title=self.resGen2.metadata.title,
                                                  deleted_by=self.user1,
                                                  collection=self.resCollection)
 
@@ -157,12 +146,10 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.deleted_resources.count(), 2)
         self.assertEqual(self.resCollection.
                          deleted_resources.
-                         filter(resource_title=self.
-                                resGen1.metadata.title).count(), 1)
+                         filter(resource_title=self.resGen1.metadata.title).count(), 1)
         self.assertEqual(self.resCollection.
                          deleted_resources.
-                         filter(resource_title=self.
-                                resModelInstance.metadata.title).count(), 1)
+                         filter(resource_title=self.resGen2.metadata.title).count(), 1)
 
         # remove CollectionDeletedResource objs
         self.resCollection.deleted_resources.all().delete()

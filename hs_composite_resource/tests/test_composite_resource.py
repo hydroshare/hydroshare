@@ -25,6 +25,7 @@ from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, Gener
     GeoFeatureLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from hs_file_types.tests.utils import CompositeResourceTestMixin
+from hs_core.tasks import FileOverrideException
 
 
 class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -2679,11 +2680,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # resource should have 2 files now
         self.assertEqual(self.composite_resource.files.count(), 2)
 
-        unzipped_folder = zip_file_rel_path.replace(".zip", "")
         renamed_folder = os.path.join('data', 'contents', "renamed")
         try:
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                          unzipped_folder, renamed_folder)
+                                          zip_file_rel_path, renamed_folder)
         except:
             self.fail("Exception thrown while renaming a folder.")
 
@@ -2705,12 +2705,13 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # resource should have 2 files now
         self.assertEqual(self.composite_resource.files.count(), 2)
 
-        # unzip again
-        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
-                   bool_remove_original=False)
+        # unzip again should raise FileOverrideException
+        with self.assertRaises(FileOverrideException):
+            unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                       bool_remove_original=False)
 
         # ensure files aren't overwriting name clash
-        self.assertEqual(self.composite_resource.files.count(), 3)
+        self.assertEqual(self.composite_resource.files.count(), 2)
 
     def test_unzip_folder_clash_overwrite(self):
         """Test that when a zip file gets unzipped a folder with the same

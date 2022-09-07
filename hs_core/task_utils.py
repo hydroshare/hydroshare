@@ -154,7 +154,7 @@ def dismiss_task_by_id(task_id):
 
 def set_task_delivered_by_id(task_id):
     """
-    Set task to delivered status from TaskNotificatoin model by task id
+    Set task to delivered status from TaskNotification model by task id
     :param task_id: task id
     :return: dict of the task that has been set to the delivered status
     """

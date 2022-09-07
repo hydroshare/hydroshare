@@ -444,12 +444,12 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         return self.folder is None
 
     @classmethod
-    def can_set_folder_to_aggregation(cls, resource, dir_path):
+    def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """helper to check if the specified folder *dir_path* can be set to ModelProgram or ModelInstance aggregation
         """
 
         # checking target folder for any aggregation
-        if resource.get_folder_aggregation_object(dir_path) is not None:
+        if resource.get_folder_aggregation_object(dir_path, aggregations=aggregations) is not None:
             # target folder is already an aggregation
             return False
 
@@ -488,7 +488,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         while '/' in path:
             if path == resource.file_path:
                 break
-            parent_aggregation = resource.get_folder_aggregation_object(path)
+            parent_aggregation = resource.get_folder_aggregation_object(path, aggregations=aggregations)
             if parent_aggregation is not None:
                 # this is the first parent folder that represents an aggregation
                 break

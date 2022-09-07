@@ -140,8 +140,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         if self.logical_file.metadata_schema_json:
             graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_url)))
 
-        if self.logical_file.model_program_type:
-            graph.add((subject, HSTERMS.modelProgramName, Literal(self.logical_file.model_program_type)))
         if self.version:
             graph.add((subject, HSTERMS.modelVersion, Literal(self.version)))
         if self.release_date:
@@ -180,7 +178,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
         subject = self.rdf_subject_from_graph(graph)
 
-        set_field(HSTERMS.modelProgramName, "model_program_type", self.logical_file)
         set_field(HSTERMS.modelVersion, "version", self)
         set_field(HSTERMS.modelReleaseDate, "release_date", self, is_date=True)
         set_field(HSTERMS.modelWebsite, "website", self)
@@ -223,11 +220,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         """generates html code to display aggregation metadata in view mode"""
 
         html_string = super(ModelProgramFileMetaData, self).get_html(skip_coverage=True)
-        mp_program_type_div = dom_tags.div()
-        with mp_program_type_div:
-            dom_tags.legend("Name")
-            dom_tags.p(self.logical_file.model_program_type)
-        html_string += mp_program_type_div.render()
 
         if self.version:
             version_div = dom_tags.div(cls="content-block")
@@ -341,16 +333,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                         dom_tags.legend("General Information", cls="legend-border")
                         with dom_tags.div(cls="form-group"):
                             with dom_tags.div(cls="control-group"):
-                                with dom_tags.div(id="mp-program-type"):
-                                    dom_tags.label('Name*', fr="id_mp_program_type", cls="control-label")
-                                    dom_tags.span(cls="glyphicon glyphicon-info-sign text-muted", data_toggle="tooltip",
-                                                  data_placement="auto",
-                                                  data_original_title="Provide the name of your model "
-                                                                      "program (e.g., SWAT, MODFLOW, etc.)")
-                                    dom_tags.input(type="text", id="id_mp_program_type", name="mp_program_type",
-                                                   cls="form-control input-sm textinput",
-                                                   value=self.logical_file.model_program_type)
-
                                 dom_tags.label('Version', cls="control-label", fr="file_version")
                                 with dom_tags.div(cls="controls"):
                                     if self.version:
@@ -481,9 +463,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
 class ModelProgramLogicalFile(AbstractModelLogicalFile):
     """ One file or more than one file in a specific folder can be part of this aggregation """
-
-    # attribute to store type of model program (SWAT, UEB etc)
-    model_program_type = models.CharField(max_length=255, default="Unknown Model Program")
 
     metadata = models.OneToOneField(ModelProgramFileMetaData, related_name="logical_file")
     data_type = "Model Program"
@@ -686,7 +665,6 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         copy_of_logical_file.metadata.code_repository = self.metadata.code_repository
         copy_of_logical_file.metadata.save()
 
-        copy_of_logical_file.model_program_type = self.model_program_type
         copy_of_logical_file.metadata_schema_json = self.metadata_schema_json
         copy_of_logical_file.folder = self.folder
         copy_of_logical_file.save()

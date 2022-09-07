@@ -7,7 +7,6 @@
     "key-1": "value-1",
     "key-2": "value-2"
   },
-  "name": "SWAT",
   "version": "1.1",
   "programming_languages": [
     "python"

@@ -246,7 +246,11 @@
                                         <small v-else>${taskMessages[task.name].status[task.status]}.
                                             <span v-if="task.payload && (task.status === 'delivered' || task.status === 'completed')">
                                             Click <a :href="task.payload">here</a> to refresh user interface.
-                                            </span></small>
+                                            </span>
+                                            <span v-else-if="task.payload.includes('FileOverrideException') && task.status === 'failed'">
+                                            <a id='btn-file-override' v-on:click="showFileOverrideDialog(task.payload)">Select whether to allow file override</a>
+                                            </span>
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -394,8 +398,8 @@
         </div>
     </div>
 </div>
-{# ======= Modal window ends =======#}
 
+{# ======= Modal window ends =======#}
 
 <script>
     $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
@@ -579,6 +583,18 @@
             }
         },
         methods: {
+            showFileOverrideDialog: function (message) {
+              let msg_start_pos = message.indexOf("'");
+              if (msg_start_pos >= 0) {
+                  let msg_end_pos = message.indexOf("'", msg_start_pos+1);
+                  if (msg_end_pos > 0) {
+                      message = message.slice(msg_start_pos + 1, msg_end_pos);
+                      message = message.charAt(0).toUpperCase() + message.slice(1);
+                  }
+              }
+              $('#unzip-resp-message').text(message);
+              $('#unzip-override-confirm-dialog').modal('show');
+            },
             // Shows the tasks dropdown
             show: function () {
                 $('#notifications-dropdown').addClass('open');
@@ -831,6 +847,4 @@
             vue.fetchTasks();
         }
     });
-
-
 </script>

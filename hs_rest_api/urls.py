@@ -19,7 +19,6 @@ from .discovery import DiscoverSearchView
 hsapi_urlpatterns = [
     url('^hsapi/', include('hs_rest_api.urls')),
     url('^hsapi/', include('hs_core.urls')),
-    url('^hsapi/', include('hs_model_program.urls')),
     url('^hsapi/', include('hs_labels.urls')),
     url('^hsapi/', include('hs_collection_resource.urls')),
     url('^hsapi/', include('hs_file_types.urls')),
@@ -99,7 +98,7 @@ urlpatterns = [
         name='get_update_science_metadata_elements'),
 
     # Update key-value metadata
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/scimeta/custom/$',
+    url(r'^resource/(?P<id>[0-9a-f-]+)/scimeta/custom/$',
         core_views.update_key_value_metadata_public,
         name='update_custom_metadata'),
 
