@@ -59,7 +59,7 @@
                                 outlined
                                 hide-selected
                                 :hide-no-data="!search"
-                                label="Type a custom URL or select items from the Geoconnex list"
+                                label="Please type here or select using map"
                                 :disabled="loadingCollections"
                                 :loading="loadingCollections"
                                 color="blue-grey"
@@ -120,7 +120,7 @@
                             <div id="geoconnex-controls" class="flex">
                                 <div v-show="!showingMap && geometriesAreLoaded">
                                     <button :loading="isSearching" @click="toggleMapVisibility" class="btn btn-default" depressed small>
-                                        <i class="fa fa-globe"></i>Show Map
+                                        <i class="fa fa-globe"></i>Select With Map
                                     </button>
                                     <span data-toggle="tooltip" data-placement="auto"
                                     title='Shows additional map that you can use to query and view related geospatial features'

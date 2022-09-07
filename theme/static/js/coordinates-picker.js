@@ -149,7 +149,10 @@ function initMapFileType() {
         zoomControl: false,
         maxBounds: bounds,
         maxBoundsViscosity: 1.0
-    }).setView([41.850033, -87.6500523], 3);
+    })
+    // USA
+    // coordinatesPicker.setView([41.850033, -87.6500523], 3);
+    coordinatesPicker.setView([30, 0], 1);
 
     let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
         attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',

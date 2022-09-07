@@ -161,7 +161,10 @@ function initMap() {
         zoomControl: false,
         maxBounds: bounds,
         maxBoundsViscosity: 1.0
-    }).setView([41.850033, -87.6500523], 3);
+    });
+    // USA
+    // coverageMap.setView([41.850033, -87.6500523], 3);
+    coverageMap.setView([30, 0], 1);
 
     // https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html#l-draw
     

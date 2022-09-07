@@ -306,8 +306,9 @@ let geoconnexApp = new Vue({
       // show the default layers at start
       geoconnexApp.map.addLayer(streets);
       geoconnexApp.map.addLayer(geoconnexApp.selectedFeatureGroup);
-      // World: geoconnexApp.map.setView([30, 0], 1);
-      geoconnexApp.map.setView([41.850033, -87.6500523], 3);
+      // USA
+      // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
+      geoconnexApp.map.setView([30, 0], 1);
       geoconnexApp.setLeafletMapEvents();
 
       geoconnexApp.loadAllRelationGeometries();
@@ -438,8 +439,9 @@ let geoconnexApp = new Vue({
               geoconnexApp.searchFeatureGroup.getBounds()
             );
           } else {
-            // World: geoconnexApp.map.setView([30, 0], 1);
-            geoconnexApp.map.setView([41.850033, -87.6500523], 3);
+            // USA
+            // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
+            geoconnexApp.map.setView([30, 0], 1);
           }
         }
       } catch (e) {
