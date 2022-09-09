@@ -8,7 +8,7 @@ from django.db import transaction
 from rdflib import RDFS, Graph
 from rdflib.namespace import DC, Namespace
 
-from hs_core.hydroshare import utils, get_resource_file
+from hs_core.hydroshare import utils, get_resource_file, resource_modified
 from hs_file_types.models.base import AbstractLogicalFile
 from .models import (
     GenericLogicalFile,
@@ -290,8 +290,7 @@ def ingest_metadata_files(resource, meta_files, map_files):
         except:
             # logger.exception("Error processing resource metadata file")
             raise
-    resource.setAVU('metadata_dirty', True)
-    resource.setAVU("bag_modified", True)
+    resource_modified(resource, overwrite_bag=False)
 
 
 def identify_metadata_files(files):
