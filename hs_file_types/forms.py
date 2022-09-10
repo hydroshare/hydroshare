@@ -373,9 +373,9 @@ class OriginalCoverageSpatialForm(forms.Form):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         file_type = kwargs.pop('file_type', False)
         super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
-        self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id,
-                                                 element_name='OriginalCoverage',
-                                                 file_type=file_type)
+        self.helper = OriginalCoverageRasterFormHelper(allow_edit, res_short_id, element_id,
+                                                       element_name='OriginalCoverageRaster',
+                                                       file_type=file_type)
         self.delete_modal_form = None
         self.number = 0
         self.delete_modal_form = None

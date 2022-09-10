@@ -1072,10 +1072,16 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     try:
         # unzip to a temporary folder
         unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+        dir_file_list = istorage.listdir(unzip_path)
+        unzip_subdir_list = dir_file_list[0]
         # list all files to be moved into the resource
         unzipped_files = listfiles_recursively(istorage, unzip_path)
         unzipped_foldername = os.path.basename(unzip_path)
         override_tgt_paths = []
+        for sub_dir_name in unzip_subdir_list:
+            dest_sub_path = os.path.join(os.path.dirname(zip_with_full_path), sub_dir_name)
+            if istorage.exists(dest_sub_path):
+                override_tgt_paths.append(dest_sub_path)
 
         res_files = []
         for unzipped_file in unzipped_files:
@@ -1100,7 +1106,22 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                     if aggregation_object:
                         aggregation_object.logical_delete(user)
                     else:
-                        istorage.delete(override_tgt_path)
+                        # check if destination override path is a file
+                        try:
+                            f = ResourceFile.get(resource=resource, file=override_tgt_path)
+                            f.delete()
+                        except ObjectDoesNotExist:
+                            # it should be a folder if not a file, but double check it is indeed a folder
+                            files = ResourceFile.objects.filter(
+                                object_id=resource.id,
+                                file_folder=override_tgt_path.rsplit('data/contents/')[1])
+                            if files:
+                                # it is indeed a folder
+                                remove_folder(user, resource.short_id,
+                                              override_tgt_path.rsplit(f'{resource.short_id}/')[1])
+                            else:
+                                # it is somehow in iRODS but not in Django, delete it from iRODS to be consistent
+                                istorage.delete(override_tgt_path)
                 else:
                     istorage.delete(override_tgt_path)
 
@@ -1112,7 +1133,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         added_resource_files = []
         for file in res_files:
             destination_file = _get_destination_filename(file.name, unzipped_foldername)
-            destination_file = destination_file.replace(res_id + "/", "")
+            destination_file = destination_file.replace(res_id + "/", "", 1)
             destination_file = resource.get_irods_path(destination_file)
             res_file = link_irods_file_to_django(resource, destination_file)
             added_resource_files.append(res_file)
