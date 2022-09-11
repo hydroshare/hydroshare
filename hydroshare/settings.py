@@ -289,11 +289,11 @@ INSTALLED_APPS = (
     "mezzanine.core",
     "mezzanine.generic",
     "mezzanine.blog",
-    "mezzanine.forms",
+    # "mezzanine.forms",
     "mezzanine.pages",
     "mezzanine.galleries",
     "crispy_forms",
-    "mezzanine.accounts",
+    # "mezzanine.accounts",
     "haystack",
     "rest_framework",
     "robots",
@@ -475,6 +475,14 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
 
 ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
+# TODO: Pabitra - Need to check which of the newly added variables is really needed
+ACCOUNTS_NO_USERNAME = True
+ACCOUNTS_APPROVAL_REQUIRED = False
+ACCOUNTS_APPROVAL_EMAILS = ""
+ACCOUNTS_VERIFICATION_REQUIRED = True
+EMAIL_FAIL_SILENTLY = True
+DEFAULT_FROM_EMAIL = "hydroshare@cuahsi.org"
+
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',

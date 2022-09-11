@@ -57,7 +57,10 @@ urlpatterns = i18n_patterns(
     url(r'^deactivate_account/$', theme.deactivate_user, name='deactivate_account'),
     url(r'^delete_irods_account/$', theme.delete_irods_account, name='delete_irods_account'),
     url(r'^create_irods_account/$', theme.create_irods_account, name='create_irods_account'),
+    url(r'^sign-up/$', theme.SignupView.as_view(), name='signup'),
     url(r'^accounts/login/$', theme.login, name='login'),
+    url(r'^accounts/logout/$', theme.logout, name='logout'),
+    url(r'^accounts/update/$', theme.UpdatePasswordView.as_view(), name='update-password-template'),
     url(r'^landingPage/$', theme.landingPage, name='landing_page'),
     url(r'^home/$', theme.dashboard, name='dashboard'),
     url(r'^$', theme.home_router, name='home_router'),
@@ -161,7 +164,7 @@ urlpatterns += [
 
     # Override Mezzanine URLs here, before the Mezzanine URL include
     url("^accounts/signup/", theme.signup),
-    url("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", theme.signup_verify),
+    url("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", theme.signup_verify, name="signup_verify"),
 
     # MEZZANINE'S URLS
     # ----------------

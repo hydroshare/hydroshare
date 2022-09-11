@@ -1,11 +1,12 @@
 from json import dumps
 
+# from django.urls import get_script_prefix
 from django_comments.models import Comment
 from django_comments.views.moderation import perform_delete
 from rest_framework import status
 
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.messages import info, error
@@ -23,26 +24,29 @@ from django.template.response import TemplateResponse
 from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import TemplateView
-from mezzanine.accounts.forms import LoginForm
-from mezzanine.conf import settings
+# from mezzanine.accounts.forms import LoginForm
+# from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
 from mezzanine.utils.cache import add_cache_bypass
-from mezzanine.utils.email import send_verification_mail, send_approve_mail, subject_template, \
-    default_token_generator, send_mail_template
-from mezzanine.utils.urls import login_redirect, next_url
+# from mezzanine.utils.email import send_mail_template
+
+# from mezzanine.utils.urls import login_redirect
 from mezzanine.utils.views import set_cookie, is_spam
 
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare.utils import user_from_id
+from hydroshare import settings
 from hs_core.models import Party
 from hs_core.views.utils import run_ssh_command, get_metadata_contenttypes
 from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
-from theme.forms import RatingForm, UserProfileForm, UserForm
-from theme.forms import ThreadedCommentForm
+from theme.forms import RatingForm, UserProfileForm, UserForm, ThreadedCommentForm
+
 from theme.models import UserProfile
-from theme.utils import get_quota_message
-from .forms import SignupForm
+from theme.utils import get_quota_message, send_verification_mail, send_approve_mail, subject_template, \
+    send_mail_template, default_token_generator, next_url
+
+from .forms import SignupForm, LoginForm
 
 
 class UserProfileView(TemplateView):
@@ -105,6 +109,14 @@ class UserProfileView(TemplateView):
         }
 
 
+class SignupView(TemplateView):
+    template_name = 'pages/sign-up.html'
+
+
+class UpdatePasswordView(TemplateView):
+    template_name = 'accounts/account_profile_update.html'
+
+
 class UserPasswordResetView(TemplateView):
     template_name = 'accounts/reset_password.html'
 
@@ -114,6 +126,7 @@ class UserPasswordResetView(TemplateView):
             return HttpResponseRedirect(reverse('password_reset_url'))
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
+
 
 def landingPage(request, template="pages/homepage.html"):
     return render(request, template)
@@ -210,7 +223,8 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
             else:
                 info(request, _("Successfully signed up"))
                 auth_login(request, new_user)
-                return login_redirect(request)
+                return redirect("/")
+                # return login_redirect(request)
 
     # remove the key 'response' from errors as the user would have no idea what it means
     form.errors.pop('response', None)
@@ -509,10 +523,22 @@ def login(request, template="accounts/account_login.html",
             login_msg += ' - ' + add_msg
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
-        return login_redirect(request)
+        # return login_redirect(request)
+        return redirect("/home")
     context = {"form": form, "title": _("Log in")}
     context.update(extra_context or {})
     return TemplateResponse(request, template, context)
+
+
+def logout(request):
+    """
+    Log the user out.
+    """
+    auth_logout(request)
+    info(request, _("Successfully logged out"))
+    # return redirect(next_url(request) or get_script_prefix())
+    hs_home = "/"
+    return redirect(hs_home)
 
 
 def email_verify(request, new_email, uidb36=None, token=None):

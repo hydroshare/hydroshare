@@ -1,19 +1,18 @@
 import json
 import logging
 
-from django.contrib.auth.models import User, Group
-from django.contrib.gis.geos import Polygon, Point
+from django.contrib.auth.models import Group, User
+from django.contrib.gis.geos import Point, Polygon
 from django.core import exceptions
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q
 
-from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title, \
-    Coverage, Relation
-from hs_dictionary.models import University, UncategorizedTerm
+from hs_core.models import BaseResource, Contributor, Coverage, Creator, Description, Relation, Subject, Title
+from hs_dictionary.models import UncategorizedTerm, University
 from theme.models import UserQuota
-from .utils import user_from_id, group_from_id, get_profile
+from .utils import get_profile, group_from_id, user_from_id
 
 DO_NOT_DISTRIBUTE = 'donotdistribute'
 EDIT = 'edit'
@@ -36,6 +35,7 @@ def create_account(
     from django.contrib.auth.models import User, Group
     from hs_access_control.models import UserAccess
     from hs_labels.models import UserLabels
+    from theme.models import UserProfile
 
     try:
         user = User.objects.get(Q(username__iexact=username))
@@ -81,8 +81,8 @@ def create_account(
     user_access.save()
     user_labels = UserLabels(user=u)
     user_labels.save()
-    user_profile = get_profile(u)
-
+    # user_profile = get_profile(u)
+    user_profile = UserProfile.objects.create(user=u)
     if organization:
         user_profile.organization = organization
         user_profile.save()

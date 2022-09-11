@@ -1,4 +1,4 @@
-{% load pages_tags mezzanine_tags theme_tags hydroshare_tags thumbnail %}
+{% load theme_tags hydroshare_tags thumbnail %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/notifications-app.css' %}">
 
 <style>
@@ -165,7 +165,7 @@
         </div>
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav navbar-right hidden-xs">
-                {% ifinstalled mezzanine.accounts %}
+{#                {% ifinstalled mezzanine.accounts %}#}
                     {% if request.user.is_authenticated %}
                         <li id="profile-menu" class="display-block">
                             {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
@@ -277,7 +277,7 @@
                         <li id="signin-menu"><a href="{% url 'login' %}"><span
                                 class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
                     {% endif %}
-                {% endifinstalled %}
+{#                {% endifinstalled %}#}
             </ul>
             {% load mezzanine_tags %}
 
@@ -353,7 +353,7 @@
                     <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
                 {% endif %}
 
-                {% ifinstalled mezzanine.accounts %}
+{#                {% ifinstalled mezzanine.accounts %}#}
                     <!-- Profile links for extra small screens -->
                     {% if not user.is_anonymous %}
                         <li class="visible-xs"><a href="{% url 'logout' %}"><span
@@ -362,7 +362,7 @@
                         <li class="visible-xs"><a href="{% url 'login' %}"><span
                                 class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
                     {% endif %}
-                {% endifinstalled %}
+{#                {% endifinstalled %}#}
             </ul>
 
         </div>

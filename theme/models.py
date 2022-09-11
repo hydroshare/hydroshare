@@ -7,11 +7,12 @@ from django.utils import timezone
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db import models
+from django.apps import apps
 from django.db.models.signals import pre_save
 from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import strip_tags
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.postgres.fields import HStoreField
 
 from mezzanine.core.fields import FileField, RichTextField
@@ -22,10 +23,38 @@ from mezzanine.utils.models import upload_to
 
 from sorl.thumbnail import ImageField as ThumbnailImageField
 from theme.utils import get_upload_path_userprofile
+from hydroshare import settings as hydroshare_settings
 
 
 DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
 logger = logging.getLogger(__name__)
+
+
+class ProfileNotConfigured(Exception):
+    pass
+
+
+def get_profile_model():
+    """
+    Returns the Mezzanine profile model, defined in
+    ``settings.ACCOUNTS_PROFILE_MODEL``, or ``None`` if no profile
+    model is configured.
+    """
+
+    if not getattr(hydroshare_settings, "ACCOUNTS_PROFILE_MODEL", None):
+        raise ProfileNotConfigured
+
+    try:
+        return apps.get_model(hydroshare_settings.ACCOUNTS_PROFILE_MODEL)
+    except ValueError:
+        raise ImproperlyConfigured(
+            "ACCOUNTS_PROFILE_MODEL must be of " "the form 'app_label.model_name'"
+        )
+    except LookupError:
+        raise ImproperlyConfigured(
+            "ACCOUNTS_PROFILE_MODEL refers to "
+            "model '%s' that has not been installed" % hydroshare_settings.ACCOUNTS_PROFILE_MODEL
+        )
 
 
 class SiteConfiguration(SiteRelated):
@@ -315,6 +344,21 @@ class UserProfile(models.Model):
 
     email_opt_out = models.BooleanField(default=False)
 
+
+# def get_profile_user_fieldname(profile_model=None, user_model=None):
+#     """
+#     Returns the name of the first field on the profile model that
+#     points to the ``auth.User`` model.
+#     """
+#     Profile = profile_model or get_profile_model()
+#     User = user_model or get_user_model()
+#     for field in Profile._meta.get_fields():
+#         if get_related_model(field) == User:
+#             return field.name
+#     raise ImproperlyConfigured(
+#         "Value for ACCOUNTS_PROFILE_MODEL does not "
+#         "contain a ForeignKey field for auth.User: %s" % Profile.__name__
+#     )
 
 def force_unique_emails(sender, instance, **kwargs):
     if instance:
