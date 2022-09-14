@@ -24,9 +24,10 @@ var filtersLoaded = []
 var spinner = $('<i class="fa fa-spinner fa-pulse fa-lg my-res-filter-spinner" style="z-index: 1;"></i>')
 
 $(document).ready(function () {
-    setInitialFilters()
+    const isMyResPage = window.location.href.indexOf("my-resources") > -1;
+    isMyResPage && setInitialFilters()
     resourceTable = initTable("#item-selectors");
-    updateFilterCount();
+    isMyResPage && updateFilterCount();
     updateTable();
     setEventListeners();
 });
