@@ -234,7 +234,7 @@ class TestCaseCommonUtilities(object):
 
         else:
             # TODO: Why isn't this a method of resource?
-            add_resource_files(res.short_id, self.file_name_list[0])
+            add_resource_files(res.short_id, self.test_file_1)
 
         # create a subfolder with the same name as a file name in the zip file to make sure an exception will be raised
         # when unzipping without overwriting
