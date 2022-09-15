@@ -446,6 +446,42 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
+    def test_user_sending_invitation_without_explanation(self):
+        # require explanation on the group
+        self.modeling_group.gaccess.requires_explanation = True
+
+        # lisa should should not be one of the members
+        self.assertNotIn(
+            self.lisa_group_member,
+            self.modeling_group.gaccess.members)
+
+        # let john (group owner) invite lisa to join group without explanation
+        membership_request = self.john_group_owner.uaccess.create_group_membership_request(
+            self.modeling_group, self.lisa_group_member)
+
+        # modeling group should have 1 pending membership request
+        self.assertEqual(
+            self.modeling_group.gaccess.group_membership_requests.count(), 1)
+
+        # user lisa should have 1 request to join group
+        self.assertEqual(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 1)
+
+        # let lisa accept john's invitation
+        self.lisa_group_member.uaccess.act_on_group_membership_request(
+            membership_request, accept_request=True)
+
+        # user lisa should have no pending request to join group
+        self.assertEqual(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
+
+        # modeling group should have no pending membership requests
+        self.assertEqual(
+            self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+        # there should be 5 members in the group
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 5)
+
     def test_user_sending_request_auto_approval(self):
         # here we are testing auto approval of group membership request
 
