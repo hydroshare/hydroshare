@@ -480,7 +480,7 @@ let geoconnexApp = new Vue({
         },
       ];
     },
-    async getCollections(forceFresh = false) {
+    async loadCollections(forceFresh = false) {
       let geoconnexApp = this;
       const collectionsUrl = `${geoconnexApp.geoconnexUrl}?f=json&lang=en-US`;
       try {
@@ -488,7 +488,7 @@ let geoconnexApp = new Vue({
           collectionsUrl,
           forceFresh
         );
-        return response;
+        geoconnexApp.collections = response.collections;
       } catch (e) {
         console.error(e.message);
         geoconnexApp.errored = true;
@@ -500,11 +500,9 @@ let geoconnexApp = new Vue({
         text: `${collection.description} (${collection.id})`,
       };
     },
-    async getAllItems(forceFresh = false) {
+    async loadAllCollectionItemsWithoutGeometries(forceFresh = false) {
       const promises = [];
       let geoconnexApp = this;
-      let collections = await geoconnexApp.getCollections(forceFresh);
-      geoconnexApp.collections = collections.collections;
       for (let col of geoconnexApp.collections) {
         geoconnexApp.loadingDescription = col.description;
         promises.push(geoconnexApp.getItemsIn(col, forceFresh));
@@ -525,8 +523,7 @@ let geoconnexApp = new Vue({
       const promises = [];
       let geoconnexApp = this;
       if (geoconnexApp.debug) console.log("Refreshing from Geoconnex API");
-      let collections = await geoconnexApp.getCollections(true);
-      geoconnexApp.collections = collections.collections;
+      geoconnexApp.loadCollections(true);
       let refreshedItems = [];
       for (let col of geoconnexApp.collections) {
         promises.push(geoconnexApp.getItemsIn(col, true));
@@ -1133,7 +1130,8 @@ let geoconnexApp = new Vue({
     let geoconnexApp = this;
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      await geoconnexApp.getAllItems(false);
+      await geoconnexApp.loadCollections(true);
+      await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
       geoconnexApp.loadMetadataRelations();
       geoconnexApp.initLeafletFeatureGroups();
       // load geometries in the background
