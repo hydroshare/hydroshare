@@ -455,7 +455,7 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.assertNotIn(
             self.lisa_group_member,
             self.modeling_group.gaccess.members)
-        
+
         # user lisa should have no pending request to join group
         self.assertEqual(
             self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
