@@ -36,7 +36,7 @@ let geoconnexApp = new Vue({
       layerControl: null,
       selectedItemLayers: {},
       selectedFeatureGroup: null,
-      selectedCollection: null,
+      selectedCollections: null,
       hasSearches: false,
       hasExtentSearch: false,
       geometriesAreLoaded: false,
@@ -828,7 +828,7 @@ let geoconnexApp = new Vue({
         alert("Spatial extent isn't set?....");
       }
     },
-    queryGeoItemsFromExtent(collection = null) {
+    queryGeoItemsFromExtent(collections = null) {
       let geoconnexApp = this;
       if (geoconnexApp.resSpatialType == "point") {
         // Geoconnex API only acccepts bounding box
@@ -849,7 +849,7 @@ let geoconnexApp = new Vue({
       } else {
         alert("Spatial extent isn't set?....");
       }
-      geoconnexApp.queryGeoItemsInBbox(bbox, collection);
+      geoconnexApp.queryGeoItemsInBbox(bbox, collections);
       geoconnexApp.hasExtentSearch = true;
     },
     queryGeoItemsRadius(lat = null, long = null) {
@@ -929,7 +929,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.hasSearches = true;
       geoconnexApp.toggleItemFiltering();
     },
-    async queryGeoItemsInBbox(bbox, collection = null) {
+    async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
       let items = [];
       geoconnexApp.isSearching = true;
@@ -949,17 +949,17 @@ let geoconnexApp = new Vue({
         if (alreadySelected) {
           return
         }
-        if (collection){
-          items = await geoconnexApp.fetchCollectionItemsInBbox(collection, bbox);
-        }else{
+        if (!collections){
           // fetch items from all collections
-          const promises = [];
-          for (collection of geoconnexApp.collections){
-            promises.push(geoconnexApp.fetchCollectionItemsInBbox(collection, bbox));
-          }
-          let results = await Promise.all(promises);
-          items = results.flat().filter(Boolean);
+          collections = geoconnexApp.collections;
         }
+
+        const promises = [];
+        for (collection of collections){
+          promises.push(geoconnexApp.fetchCollectionItemsInBbox(collection, bbox));
+        }
+        let results = await Promise.all(promises);
+        items = results.flat().filter(Boolean);
 
         for (let item of items){
           geoconnexApp.getFeatureProperties(item);
@@ -1077,14 +1077,14 @@ let geoconnexApp = new Vue({
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.layerControl.collapse();
     },
-    queryUsingSpatialExtent(collection = null) {
+    queryUsingSpatialExtent(collections = null) {
       let geoconnexApp = this;
       geoconnexApp.isSearching = true;
 
       // force isSearching state to updated before running search
       setTimeout(async function () {
         geoconnexApp.fillValuesFromResExtent();
-        geoconnexApp.queryGeoItemsFromExtent(collection);
+        geoconnexApp.queryGeoItemsFromExtent(collections);
         geoconnexApp.isSearching = false;
       }, 0);
     },
@@ -1214,9 +1214,10 @@ let geoconnexApp = new Vue({
         }
       }, 0);
     },
-    querySelectedCollection(collection){
+    querySelectedCollections(){
       // query just the single collection (not all of them)
-      this.queryUsingSpatialExtent(collection ? collection : this.selectedCollection)
+      let geoconnexApp = this;
+      geoconnexApp.queryUsingSpatialExtent(geoconnexApp.selectedCollections);
     }
   },
   beforeMount() {
