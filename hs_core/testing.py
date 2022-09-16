@@ -191,6 +191,8 @@ class TestCaseCommonUtilities(object):
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/' + file_name_list[1],
                                       'data/contents/sub_test_dir/' + file_name_list[1])
+        # in preparation to test folder overwriting file with the same name
+        create_folder(res.short_id, f'data/contents/sub_test_dir/new_{file_name_list[2]}')
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
             updated_res_file_names.append(rf.short_path)
@@ -269,24 +271,26 @@ class TestCaseCommonUtilities(object):
         file_cnt = res.files.all().count()
         self.assertEqual(file_cnt, 2, msg="resource file count didn't match - " +
                                           str(file_cnt) + " != 2")
-        # rename new_file3.txt to sub_test_dir to test folder overriding file with the same name will raise exception
+        # move new_file3.txt to sub_test_dir to test folder overriding file with the same name will raise exception
         move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/new_' + file_name_list[2],
-                                      'data/contents/sub_test_dir/')
+                                      f'data/contents/new_{file_name_list[2]}',
+                                      f'data/contents/sub_test_dir/new_{file_name_list[2]}')
         # should raise FileOverrideException since folder overriding file with the same name is not allowed without
         # overwriting
         with self.assertRaises(FileOverrideException):
             unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
-        # rename sub_test_dir back to new_file3.txt
+        # move new_file3.txt back from sub_test_dir
         move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/sub_test_dir',
-                                      'data/contents/new_' + file_name_list[2])
+                                      f'data/contents/sub_test_dir/new_{file_name_list[2]}',
+                                      f'data/contents/new_{file_name_list[2]}')
+
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
 
         # unzipping should succeed with original zip file removed
         unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', True)
 
         # Now resource should contain three files: file1.txt, file2.txt, and new_file3.txt
-        self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
+        self.assertEqual(res.files.all().count(), 3, msg=f"resource file count didn't match")
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
             updated_res_file_names.append(rf.short_path)
