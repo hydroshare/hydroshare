@@ -152,6 +152,13 @@ let geoconnexApp = new Vue({
       }
       return geoconnexObj;
     },
+    async fetchCollectionItemsInBbox(collection, bbox = null, refresh = false) {
+      let geoconnexApp = this;
+      let response = {};
+      let query = `${geoconnexApp.geoconnexUrl}/${collection.id}/items/?f=json&bbox=${bbox.toString()}`;
+      response = await geoconnexApp.fetchFromCacheOrAPI(query, refresh);
+      return response.features;
+    },
     async fetchAllGeometries() {
       let geoconnexApp = this;
       var itemsWithGeo = [];
@@ -482,6 +489,7 @@ let geoconnexApp = new Vue({
     },
     async loadCollections(forceFresh = false) {
       let geoconnexApp = this;
+      geoconnexApp.loadingCollections = true;
       const collectionsUrl = `${geoconnexApp.geoconnexUrl}?f=json&lang=en-US`;
       try {
         let response = await geoconnexApp.fetchFromCacheOrAPI(
@@ -493,6 +501,7 @@ let geoconnexApp = new Vue({
         console.error(e.message);
         geoconnexApp.errored = true;
       }
+      geoconnexApp.loadingCollections = false;
     },
     createVuetifySelectSubheader(collection) {
       return {
@@ -815,26 +824,29 @@ let geoconnexApp = new Vue({
         alert("Spatial extent isn't set?....");
       }
     },
-    queryGeoItemsFromExtent() {
+    queryGeoItemsFromExtent(collection = null) {
       let geoconnexApp = this;
+      // todo: 
       if (geoconnexApp.resSpatialType == "point") {
-        geoconnexApp.queryGeoItemsContainingPoint(
+        // Geoconnex API only acccepts bounding box
+        // if point, just make it a small bounding box
+        var bbox = [
+          geoconnexApp.pointLong,
           geoconnexApp.pointLat,
-          geoconnexApp.pointLong
-        );
+          geoconnexApp.pointLong + 1,
+          geoconnexApp.pointLat + 1,
+        ];
       } else if (geoconnexApp.resSpatialType == "box") {
-        let bbox = [
+        var bbox = [
           geoconnexApp.eastLong,
           geoconnexApp.southLat,
           geoconnexApp.westLong,
           geoconnexApp.northLat,
         ];
-        var polygon = turf.bboxPolygon(bbox);
-        polygon.text = "Search bounds";
-        geoconnexApp.queryGeoItemsInPoly(polygon);
       } else {
         alert("Spatial extent isn't set?....");
       }
+      geoconnexApp.queryGeoItemsInBbox(bbox, collection);
       geoconnexApp.hasExtentSearch = true;
     },
     queryGeoItemsRadius(lat = null, long = null) {
@@ -907,6 +919,62 @@ let geoconnexApp = new Vue({
             }
           }
         }
+      }
+
+      geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
+      geoconnexApp.isSearching = false;
+      geoconnexApp.hasSearches = true;
+      geoconnexApp.toggleItemFiltering();
+    },
+    async queryGeoItemsInBbox(bbox, collection = null) {
+      let geoconnexApp = this;
+      geoconnexApp.isSearching = true;
+      geoconnexApp.map.closePopup();
+      let poly = turf.bboxPolygon(bbox)
+      poly.text = "Search bounds";
+      geoconnexApp.addToMap(
+        poly,
+        false,
+        { color: "red", fillColor: "red", fillOpacity: 0.1 },
+        (group = geoconnexApp.searchFeatureGroup)
+      );
+      try {
+        geoconnexApp.loadingDescription = collection.description;
+        let alreadySelected = geoconnexApp.values.find((obj) => {
+          return obj.value === item.uri;
+        });
+        if (alreadySelected) {
+          return
+        }
+
+        const items = await geoconnexApp.fetchCollectionItemsInBbox(collection, bbox)
+        
+        for (let item of items){
+          if (item.geometry.type.includes("Point")) {
+            await geoconnexApp.addToMap(
+              item,
+              false,
+              {
+                color: geoconnexApp.searchColor,
+                radius: 5,
+                fillColor: "yellow",
+                fillOpacity: 0.8,
+              },
+              (group = geoconnexApp.searchFeatureGroup)
+            );
+          } else {
+            await geoconnexApp.addToMap(
+              item,
+              false,
+              { color: geoconnexApp.searchColor },
+              (group = geoconnexApp.searchFeatureGroup)
+            );
+          }
+        }
+      } catch (e) {
+        console.error(
+          `Error while attempting to find intersecting geometries: ${e.message}`
+        );
       }
 
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
@@ -996,14 +1064,14 @@ let geoconnexApp = new Vue({
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.layerControl.collapse();
     },
-    queryUsingSpatialExtent() {
+    queryUsingSpatialExtent(collection = null) {
       let geoconnexApp = this;
       geoconnexApp.isSearching = true;
 
       // force isSearching state to updated before running search
       setTimeout(async function () {
         geoconnexApp.fillValuesFromResExtent();
-        geoconnexApp.queryGeoItemsFromExtent();
+        geoconnexApp.queryGeoItemsFromExtent(collection);
         geoconnexApp.isSearching = false;
       }, 0);
     },
@@ -1122,6 +1190,13 @@ let geoconnexApp = new Vue({
         }
       }, 0);
     },
+    querySelectedCollection(collection){
+      // query just the single collection (not all of them)
+      // todo remove this
+      this.geometriesAreLoaded = true;
+      this.toggleMapVisibility()
+      this.queryUsingSpatialExtent(collection)
+    }
   },
   beforeMount() {
     this.setCustomItemRules();
@@ -1131,13 +1206,18 @@ let geoconnexApp = new Vue({
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       await geoconnexApp.loadCollections(true);
+
+      // TODO: only show the collectionOptions without loading all the other stuff
+
       await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
       geoconnexApp.loadMetadataRelations();
       geoconnexApp.initLeafletFeatureGroups();
+      
       // load geometries in the background
-      geoconnexApp.fetchAllGeometries();
+      // geoconnexApp.fetchAllGeometries();
       // refresh cache in the background
-      geoconnexApp.refreshItemsSilently();
+      // geoconnexApp.refreshItemsSilently();
+
     } else if (
       geoconnexApp.resMode == "View" &&
       geoconnexApp.metadataRelations.length > 0
