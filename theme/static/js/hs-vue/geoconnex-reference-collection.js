@@ -7,7 +7,7 @@ let geoconnexApp = new Vue({
     return {
       metadataRelations: RELATIONS,
       relationObjects: [],
-      debug: false,
+      debug: true,
       resMode: RESOURCE_MODE,
       resSpatialType: null,
       items: [],
@@ -518,7 +518,7 @@ let geoconnexApp = new Vue({
         promises.push(geoconnexApp.getItemsIn(col, forceFresh));
       }
       const results = await Promise.all(promises);
-      for (let resp of results) {
+      for (let resp of results.flat()) {
         if (!jQuery.isEmptyObject(resp) && resp.features) {
           geoconnexApp.items.push(
             geoconnexApp.createVuetifySelectSubheader(resp.collection)
@@ -650,7 +650,8 @@ let geoconnexApp = new Vue({
         let fetch_resp = await fetch(url);
         if (!fetch_resp.ok) {
           console.error(
-            `Error when attempting to fetch Geoconnex relations: ${fetch_resp.statusText}`
+            `Error when attempting to fetch Geoconnex relations: ${fetch_resp.statusText}`,
+            fetch_resp
           );
         } else {
           let copy = fetch_resp.clone();
@@ -1227,7 +1228,7 @@ let geoconnexApp = new Vue({
     let geoconnexApp = this;
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      await geoconnexApp.loadCollections(true);
+      await geoconnexApp.loadCollections(false);
 
       // TODO: only show the collectionOptions without loading all the other stuff
 
@@ -1235,7 +1236,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.loadMetadataRelations();
       geoconnexApp.initLeafletFeatureGroups();
 
-      // todo remove this
+      // TODO remove this
       this.geometriesAreLoaded = true;
       this.showMap();
       
