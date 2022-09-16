@@ -36,6 +36,7 @@ let geoconnexApp = new Vue({
       layerControl: null,
       selectedItemLayers: {},
       selectedFeatureGroup: null,
+      selectedCollection: null,
       hasSearches: false,
       hasExtentSearch: false,
       geometriesAreLoaded: false,
@@ -1215,7 +1216,7 @@ let geoconnexApp = new Vue({
     },
     querySelectedCollection(collection){
       // query just the single collection (not all of them)
-      this.queryUsingSpatialExtent(collection)
+      this.queryUsingSpatialExtent(collection ? collection : this.selectedCollection)
     }
   },
   beforeMount() {

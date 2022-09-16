@@ -118,12 +118,10 @@
                                 <p><b>Searching Geoconnex collection:</b> ${loadingDescription}</p>
                             </div>
                             <div id="geoconnex-controls" class="flex">
-                                <div v-if="!loadingCollections" id="collection-select">
-                                    <div v-for="collection in collections">
-                                        <input type="radio" name="collections" @click="querySelectedCollection(collection)">
-                                        <label>${collection.description}</label><br>
-                                    </div>
-                                </div>
+                                <select v-if="!loadingCollections" id="collection-select" class="form-control" v-on:change="querySelectedCollection()" v-model="selectedCollection">
+                                    <option v-for="collection in collections" :value="collection">
+                                        ${collection.description}</option>
+                                </select>
                                 <div v-show="!showingMap && geometriesAreLoaded">
                                     <button :loading="isSearching" @click="toggleMapVisibility" class="btn btn-default" depressed small>
                                         <i class="fa fa-globe"></i>Select With Map
