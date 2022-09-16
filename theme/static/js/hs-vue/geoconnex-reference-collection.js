@@ -532,7 +532,7 @@ let geoconnexApp = new Vue({
       const promises = [];
       let geoconnexApp = this;
       if (geoconnexApp.debug) console.log("Refreshing from Geoconnex API");
-      geoconnexApp.loadCollections(true);
+      await geoconnexApp.loadCollections(true);
       let refreshedItems = [];
       for (let col of geoconnexApp.collections) {
         promises.push(geoconnexApp.getItemsIn(col, true));
