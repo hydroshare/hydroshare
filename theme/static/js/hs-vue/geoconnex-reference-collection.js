@@ -943,12 +943,6 @@ let geoconnexApp = new Vue({
         (group = geoconnexApp.searchFeatureGroup)
       );
       try {
-        let alreadySelected = geoconnexApp.values.find((obj) => {
-          return obj.value === item.uri;
-        });
-        if (alreadySelected) {
-          return
-        }
         if (!collections){
           // fetch items from all collections
           collections = geoconnexApp.collections;
@@ -962,6 +956,12 @@ let geoconnexApp = new Vue({
         items = results.flat().filter(Boolean);
 
         for (let item of items){
+          let alreadySelected = geoconnexApp.values.find((obj) => {
+            return obj.value === item.uri;
+          });
+          if (alreadySelected) {
+            return
+          }
           geoconnexApp.getFeatureProperties(item);
           if (item.geometry.type.includes("Point")) {
             await geoconnexApp.addToMap(
