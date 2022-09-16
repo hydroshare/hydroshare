@@ -449,11 +449,23 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
     def test_user_sending_invitation_without_explanation(self):
         # require explanation on the group
         self.modeling_group.gaccess.requires_explanation = True
+        self.modeling_group.gaccess.save()
 
         # lisa should should not be one of the members
         self.assertNotIn(
             self.lisa_group_member,
             self.modeling_group.gaccess.members)
+        
+        # user lisa should have no pending request to join group
+        self.assertEqual(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
+
+        # modeling group should have no pending membership requests
+        self.assertEqual(
+            self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+        # there should be 4 members in the group
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 4)
 
         # let john (group owner) invite lisa to join group without explanation
         membership_request = self.john_group_owner.uaccess.create_group_membership_request(
