@@ -137,7 +137,7 @@
                                     <i class="fa fa-minus"></i>Hide Map
                                 </button>
                                 <div v-show="resSpatialType && !hasExtentSearch && showingMap">
-                                    <button :disabled="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent" class="btn btn-default" depressed small>
+                                    <button :disabled="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent()" class="btn btn-default" depressed small>
                                         <i class="fa fa-search"></i>Search Using Spatial Extent
                                     </button>
                                     <span data-toggle="tooltip" data-placement="right"

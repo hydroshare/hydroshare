@@ -157,7 +157,7 @@ let geoconnexApp = new Vue({
       let response = {};
       let query = `${geoconnexApp.geoconnexUrl}/${collection.id}/items/?f=json&bbox=${bbox.toString()}`;
       response = await geoconnexApp.fetchFromCacheOrAPI(query, refresh);
-      return response.features;
+      return response ? response.features : null
     },
     async fetchAllGeometries() {
       let geoconnexApp = this;
@@ -829,7 +829,6 @@ let geoconnexApp = new Vue({
     },
     queryGeoItemsFromExtent(collection = null) {
       let geoconnexApp = this;
-      // todo: 
       if (geoconnexApp.resSpatialType == "point") {
         // Geoconnex API only acccepts bounding box
         // if point, just make it a small bounding box
@@ -931,6 +930,7 @@ let geoconnexApp = new Vue({
     },
     async queryGeoItemsInBbox(bbox, collection = null) {
       let geoconnexApp = this;
+      let items = [];
       geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
       let poly = turf.bboxPolygon(bbox)
@@ -942,16 +942,24 @@ let geoconnexApp = new Vue({
         (group = geoconnexApp.searchFeatureGroup)
       );
       try {
-        geoconnexApp.loadingDescription = collection.description;
         let alreadySelected = geoconnexApp.values.find((obj) => {
           return obj.value === item.uri;
         });
         if (alreadySelected) {
           return
         }
+        if (collection){
+          items = await geoconnexApp.fetchCollectionItemsInBbox(collection, bbox);
+        }else{
+          // fetch items from all collections
+          const promises = [];
+          for (collection of geoconnexApp.collections){
+            promises.push(geoconnexApp.fetchCollectionItemsInBbox(collection, bbox));
+          }
+          let results = await Promise.all(promises);
+          items = results.flat().filter(Boolean);
+        }
 
-        const items = await geoconnexApp.fetchCollectionItemsInBbox(collection, bbox)
-        
         for (let item of items){
           geoconnexApp.getFeatureProperties(item);
           if (item.geometry.type.includes("Point")) {
@@ -1194,11 +1202,19 @@ let geoconnexApp = new Vue({
         }
       }, 0);
     },
+    showMap() {
+      let geoconnexApp = this;
+      geoconnexApp.showingMap = true;
+      // force state refresh
+      setTimeout(function () {
+        if (geoconnexApp.showingMap && geoconnexApp.map == null) {
+          geoconnexApp.updateSpatialExtentType();
+          geoconnexApp.initLeafletMap();
+        }
+      }, 0);
+    },
     querySelectedCollection(collection){
       // query just the single collection (not all of them)
-      // todo remove this
-      this.geometriesAreLoaded = true;
-      this.toggleMapVisibility()
       this.queryUsingSpatialExtent(collection)
     }
   },
@@ -1216,6 +1232,10 @@ let geoconnexApp = new Vue({
       await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
       geoconnexApp.loadMetadataRelations();
       geoconnexApp.initLeafletFeatureGroups();
+
+      // todo remove this
+      this.geometriesAreLoaded = true;
+      this.showMap();
       
       // load geometries in the background
       // geoconnexApp.fetchAllGeometries();
