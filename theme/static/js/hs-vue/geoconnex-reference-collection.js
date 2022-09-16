@@ -552,12 +552,7 @@ let geoconnexApp = new Vue({
       if (geoconnexApp.debug)
         console.log("Completed background refresh from Geoconnex API");
     },
-    getFeatureProperties(feature) {
-      let geoconnexApp = this;
-      // Account for some oddities in the Geoconnex API schema
-      feature.relative_id = feature.properties.uri.split("ref/").pop();
-      feature.collection = feature.relative_id.split("/")[0];
-      feature.uri = feature.properties.uri;
+    setFeatureName(feature){
       feature.NAME = feature.properties.NAME;
       if (feature.properties.AQ_NAME) {
         feature.NAME = feature.properties.AQ_NAME;
@@ -574,6 +569,14 @@ let geoconnexApp = new Vue({
       if (feature.properties.NAME10) {
         feature.NAME = feature.properties.NAME10;
       }
+    },
+    getFeatureProperties(feature) {
+      let geoconnexApp = this;
+      // Account for some oddities in the Geoconnex API schema
+      feature.relative_id = feature.properties.uri.split("ref/").pop();
+      feature.collection = feature.relative_id.split("/")[0];
+      feature.uri = feature.properties.uri;
+      geoconnexApp.setFeatureName(feature);
       feature.text = `${feature.NAME} [${feature.relative_id}]`;
 
       //prevent duplicate selections
@@ -950,6 +953,7 @@ let geoconnexApp = new Vue({
         const items = await geoconnexApp.fetchCollectionItemsInBbox(collection, bbox)
         
         for (let item of items){
+          geoconnexApp.getFeatureProperties(item);
           if (item.geometry.type.includes("Point")) {
             await geoconnexApp.addToMap(
               item,
