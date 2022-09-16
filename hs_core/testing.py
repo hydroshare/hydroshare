@@ -272,7 +272,7 @@ class TestCaseCommonUtilities(object):
         # rename new_file3.txt to sub_test_dir to test folder overriding file with the same name will raise exception
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/new_' + file_name_list[2],
-                                      'data/contents/sub_test_dir')
+                                      'data/contents/sub_test_dir/')
         # should raise FileOverrideException since folder overriding file with the same name is not allowed without
         # overwriting
         with self.assertRaises(FileOverrideException):
