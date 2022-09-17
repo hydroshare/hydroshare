@@ -25,6 +25,7 @@ let geoconnexApp = new Vue({
       apiQueryYesGeo: "items?f=json&lang=en-US&skipGeometry=false",
       cacheName: "geoconnexCache",
       collectionsDefaultHidden: ["principal_aq", "nat_aq"],
+      ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
       geoCache: null,
       resShortId: SHORT_ID,
       cacheDuration: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
@@ -525,7 +526,9 @@ let geoconnexApp = new Vue({
           collectionsUrl,
           forceFresh
         );
-        geoconnexApp.collections = response.collections;
+        geoconnexApp.collections = response.collections.filter(col => {
+          return !geoconnexApp.ignoredCollections.includes(col.id);
+        });
       } catch (e) {
         console.error(e.message);
         geoconnexApp.errored = true;
