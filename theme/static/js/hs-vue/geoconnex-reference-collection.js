@@ -634,9 +634,9 @@ let geoconnexApp = new Vue({
     async getItemsIn(collection, forceFresh = false) {
       let geoconnexApp = this;
       const url = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexApp.apiQueryNoGeo}`;
-      let response = await geoconnexApp.fetchFromCacheOrAPI(url, forceFresh);
-      response.collection = collection;
-      return response;
+      let featureCollection = await geoconnexApp.fetchFromCacheOrAPI(url, forceFresh);
+      featureCollection.collection = collection;
+      return featureCollection;
     },
     async fetchFromCacheOrAPI(url, forceFresh = false, collection = null) {
       let geoconnexApp = this;
