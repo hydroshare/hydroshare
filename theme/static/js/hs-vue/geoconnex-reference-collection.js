@@ -82,6 +82,34 @@ let geoconnexApp = new Vue({
         });
       }
     },
+    selectedCollections(newValue, oldValue){
+      let geoconnexApp = this;
+      if (newValue.length > oldValue.length) {
+        geoconnexApp.queryUsingSpatialExtent([newValue.at(-1)]);
+      } else if (newValue.length < oldValue.length) {
+        let remove = oldValue.filter((obj) =>
+          newValue.every((s) => s.id !== obj.id)
+        );
+        
+        // TODO: remove layers from the leaflet map when removed...
+        // try {
+        //   geoconnexApp.selectedFeatureGroup.removeLayer(
+        //     geoconnexApp.selectedItemLayers[remove[0].value]
+        //   );
+        //   geoconnexApp.fitMapToFeatures();
+        // } catch (e) {
+        //   console.error(e.message);
+        // }
+        // geoconnexApp.ajaxRemoveMetadata(remove);
+
+        // re-enable the item for selection
+        // geoconnexApp.items.forEach((it) => {
+        //   if (remove[0].value === it.uri) {
+        //     it.disabled = false;
+        //   }
+        // });
+      }
+    },
     loadingCollections(newValue, oldValue) {
       let geoconnexApp = this;
       if (!newValue) {
@@ -1075,6 +1103,7 @@ let geoconnexApp = new Vue({
 
       geoconnexApp.hasSearches = false;
       geoconnexApp.hasExtentSearch = false;
+      geoconnexApp.selectedCollections = null;
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.layerControl.collapse();
     },
@@ -1214,11 +1243,6 @@ let geoconnexApp = new Vue({
           geoconnexApp.initLeafletMap();
         }
       }, 0);
-    },
-    querySelectedCollections(){
-      // query just the single collection (not all of them)
-      let geoconnexApp = this;
-      geoconnexApp.queryUsingSpatialExtent(geoconnexApp.selectedCollections);
     }
   },
   beforeMount() {
