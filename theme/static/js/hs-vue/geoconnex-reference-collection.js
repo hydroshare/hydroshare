@@ -9,7 +9,7 @@ let geoconnexApp = new Vue({
     return {
       metadataRelations: RELATIONS,
       relationObjects: [],
-      debug: true,
+      debug: false,
       resMode: RESOURCE_MODE,
       resSpatialType: null,
       items: [],

@@ -151,21 +151,20 @@
                                 </span>
                                 Options have been limited to current map search
                             </p>
-                            <div v-if="loadingCollections || !geometriesAreLoaded">
+                            <div v-if="loadingCollections">
                                 <p v-if="resMode=='Edit' && loadingCollections"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
-                                <p v-else-if="resMode=='Edit' && !geometriesAreLoaded"><b>Loading Geoconnex geometries from:</b> ${loadingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
                             </div>
                             <v-progress-linear
-                            :active="true"
-                            v-if="isSearching || (!geometriesAreLoaded && !loadingCollections)"
-                            indeterminate
+                                :active="true"
+                                v-if="isSearching || loadingCollections"
+                                indeterminate
                             ></v-progress-linear>
                             <div v-if="isSearching">
                                 <p><b>Searching Geoconnex collection:</b> ${loadingDescription}</p>
                             </div>
                             <div id="geoconnex-controls" class="flex">
-                                <div v-show="!showingMap && geometriesAreLoaded">
+                                <div v-show="!showingMap">
                                     <button :loading="isSearching" @click="toggleMapVisibility" class="btn btn-default" depressed small>
                                         <i class="fa fa-globe"></i>Select With Map
                                     </button>
@@ -177,15 +176,6 @@
                                 <button v-if="showingMap" @click="toggleMapVisibility" class="btn btn-default">
                                     <i class="fa fa-minus"></i>Hide Map
                                 </button>
-                                <div v-show="resSpatialType && !hasExtentSearch && showingMap">
-                                    <button :disabled="!geometriesAreLoaded || isSearching" @click="queryUsingSpatialExtent()" class="btn btn-default" depressed small>
-                                        <i class="fa fa-search"></i>Search All Collections Using Spatial Extent
-                                    </button>
-                                    <span data-toggle="tooltip" data-placement="right"
-                                    title="Performs a query to find related features that overlap with your resource's spatial extent"
-                                    class="glyphicon glyphicon-info-sign text-muted">
-                                    </span>
-                                </div>
                                 <div v-show="hasSearches && showingMap">
                                     <button @click="clearLeafletOfMappedSearches" class="btn btn-warning" depressed small>
                                         <i class="fa fa-search-minus"></i>Clear searches from map
@@ -194,106 +184,6 @@
                                     title="Clears unselected spatial features from the map"
                                     class="glyphicon glyphicon-info-sign text-muted">
                                     </span>
-                                </div>
-                                <div style="border: solid red" v-if="debug">
-                                    <h4 style="color: red">DEBUG PANEL</h4>
-                                    <div v-if="resSpatialType=='point'">
-                                        <div class="control-group">
-                                            <div class="input-group">
-                                                <span class="input-group-addon coordinates-label-addon" style="width: 127px">Center Latitude</span>
-                                                <input type="number" class="form-control" v-model="pointLat" type="number" class="form-control"
-                                                    placeholder="Lat"
-                                                >
-                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                                    class="input-group-addon" style="width: 50px;">°</span>
-                                            </div>
-                                        </div>
-                                        <div class="control-group">
-                                            <div class="input-group">
-                                                <span class="input-group-addon coordinates-label-addon" style="width: 127px">Center Longitude</span>
-                                                <input type="number" class="form-control" v-model="pointLong" type="number" class="form-control"
-                                                    placeholder="Long"
-                                                >
-                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                                    class="input-group-addon" style="width: 50px;">°</span>
-                                            </div>
-                                        </div>  
-                                        <div class="control-group">
-                                            <div class="input-group">
-                                                <span class="input-group-addon coordinates-label-addon" style="width: 127px">Search Radius</span>
-                                                <input type="number" class="form-control" v-model="searchRadius" type="number" class="form-control"
-                                                    placeholder="Radius"
-                                                >
-                                                <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
-                                                    class="input-group-addon" style="width: 50px;">km</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-else>
-                                        <div class="control-group">
-                                            <div class="input-group">
-                                                <span class="input-group-addon coordinates-label-addon" style="width: 127px">North Latitude</span>
-                                                <input type="number" class="form-control" v-model="northLat" type="number" class="form-control"
-                                                    placeholder="North Lat"
-                                                >
-                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                                    class="input-group-addon" style="width: 50px;">°</span>
-                                            </div>
-                                        </div>
-                                        <div class="control-group">
-                                            <div class="input-group">
-                                                <span class="input-group-addon coordinates-label-addon" style="width: 127px">East Longitude</span>
-                                                <input type="number" class="form-control" v-model="eastLong" type="number" class="form-control"
-                                                    placeholder="East Long"
-                                                >
-                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                                    class="input-group-addon" style="width: 50px;">°</span>
-                                            </div>
-                                        </div>
-                                        <div class="control-group">
-                                            <div class="input-group">
-                                                <span class="input-group-addon coordinates-label-addon" style="width: 127px">South Latitude</span>
-                                                <input type="number" class="form-control" v-model="southLat" type="number" class="form-control"
-                                                    placeholder="South Lat"
-                                                >
-                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                                    class="input-group-addon" style="width: 50px;">°</span>
-                                            </div>
-                                        </div>
-                                        <div class="control-group">
-                                            <div class="input-group">
-                                                <span class="input-group-addon coordinates-label-addon" style="width: 127px">West Longitude</span>
-                                                <input type="number" class="form-control" v-model="westLong" type="number" class="form-control"
-                                                    placeholder="West Long"
-                                                >
-                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                                    class="input-group-addon" style="width: 50px;">°</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="control-group">
-                                        <div class="input-group">
-                                            <span class="input-group-addon coordinates-label-addon" style="width: 127px">Max Area Returned</span>
-                                            <input type="number" class="form-control" v-model="maxAreaToReturn" type="number" class="form-control"
-                                                placeholder="Max Area"
-                                            >
-                                            <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
-                                                class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
-                                        </div>
-                                    </div>
-                                    <button type="button" @click="fillValuesFromResExtent" class="btn btn-primary btn-xs">
-                                        Populate from Spatial Extent
-                                    </button>
-                                    <button type="button" @click="getGeoItemsFromDebug()" class="btn btn-primary btn-xs">
-                                        Search using debug parameters
-                                    </button>
-                                    <h4 v-if="values.length > 0">SELECTED VALUES</h4>
-                                    <div style="border: thin solid black" v-if="values.length > 0">
-                                        <ul>
-                                            <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
-                                        </ul>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -314,6 +204,115 @@
                     <div :class="{ 'col-xs-12 col-md-8': resMode === 'View', 'col-xs-12': resMode === 'Edit' }" v-show="showingMap" id="geoconnex-map-wrapper">
                         <div id="geoconnex-leaflet"></div>
                         <p v-if="resMode === 'Edit'" id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div style="border: solid red" v-if="debug" class="col-xs-12">
+                        <h4 style="color: red">DEBUG PANEL</h4>
+                        <div v-if="resSpatialType=='point'">
+                            <div class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">Center Latitude</span>
+                                    <input type="number" class="form-control" v-model="pointLat" type="number" class="form-control"
+                                        placeholder="Lat"
+                                    >
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                        class="input-group-addon" style="width: 50px;">°</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">Center Longitude</span>
+                                    <input type="number" class="form-control" v-model="pointLong" type="number" class="form-control"
+                                        placeholder="Long"
+                                    >
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                        class="input-group-addon" style="width: 50px;">°</span>
+                                </div>
+                            </div>  
+                            <div class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">Search Radius</span>
+                                    <input type="number" class="form-control" v-model="searchRadius" type="number" class="form-control"
+                                        placeholder="Radius"
+                                    >
+                                    <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
+                                        class="input-group-addon" style="width: 50px;">km</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <div class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">North Latitude</span>
+                                    <input type="number" class="form-control" v-model="northLat" type="number" class="form-control"
+                                        placeholder="North Lat"
+                                    >
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                        class="input-group-addon" style="width: 50px;">°</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">East Longitude</span>
+                                    <input type="number" class="form-control" v-model="eastLong" type="number" class="form-control"
+                                        placeholder="East Long"
+                                    >
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                        class="input-group-addon" style="width: 50px;">°</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">South Latitude</span>
+                                    <input type="number" class="form-control" v-model="southLat" type="number" class="form-control"
+                                        placeholder="South Lat"
+                                    >
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                        class="input-group-addon" style="width: 50px;">°</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">West Longitude</span>
+                                    <input type="number" class="form-control" v-model="westLong" type="number" class="form-control"
+                                        placeholder="West Long"
+                                    >
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                        class="input-group-addon" style="width: 50px;">°</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <div class="input-group">
+                                <span class="input-group-addon coordinates-label-addon" style="width: 127px">Max Area Returned</span>
+                                <input type="number" class="form-control" v-model="maxAreaToReturn" type="number" class="form-control"
+                                    placeholder="Max Area"
+                                >
+                                <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
+                                    class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
+                            </div>
+                        </div>
+                        <button type="button" @click="fillValuesFromResExtent" class="btn btn-primary btn-xs">
+                            Populate from Spatial Extent
+                        </button>
+                        <button type="button" @click="getGeoItemsFromDebug()" class="btn btn-primary btn-xs">
+                            Search using debug parameters
+                        </button>
+                        <button v-show="resSpatialType && !hasExtentSearch && showingMap" :disabled="isSearching" @click="queryUsingSpatialExtent()" class="btn btn-default" depressed small>
+                            <i class="fa fa-search"></i>Search All Collections Using Spatial Extent
+                        </button>
+                        <span data-toggle="tooltip" data-placement="right"
+                            title="Performs a query to find related features that overlap with your resource's spatial extent"
+                            class="glyphicon glyphicon-info-sign text-muted">
+                            </span>
+                        <h4 v-if="values.length > 0">SELECTED VALUES</h4>
+                        <div style="border: thin solid black" v-if="values.length > 0">
+                            <ul>
+                                <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
