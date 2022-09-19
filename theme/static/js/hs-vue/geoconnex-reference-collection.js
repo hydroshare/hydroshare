@@ -36,7 +36,7 @@ let geoconnexApp = new Vue({
       layerControl: null,
       selectedItemLayers: {},
       selectedFeatureGroup: null,
-      selectedCollections: null,
+      selectedCollections: [],
       hasSearches: false,
       hasExtentSearch: false,
       geometriesAreLoaded: false,
@@ -905,55 +905,13 @@ let geoconnexApp = new Vue({
       geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
 
-      geoconnexApp.addToMap(
-        center,
-        false,
-        { color: "red", fillColor: "red", fillOpacity: 0.1, radius: 1 },
-        (group = geoconnexApp.searchFeatureGroup)
-      );
-
-      const promises = [];
-      for (let item of geoconnexApp.items) {
-        if (item.header) continue;
-
-        let alreadySelected = geoconnexApp.values.find((obj) => {
-          return obj.value === item.uri;
-        });
-
-        if (alreadySelected) {
-          continue;
-        }
-
-        try {
-          geoconnexApp.loadingDescription = item.collection;
-          promises.push(geoconnexApp.fetchSingleGeometry(item));
-        } catch (e) {
-          console.error(`Error while attempting to load ${item.text}: ${e}`);
-        }
-      }
-
-      const results = await Promise.all(promises);
-
-      for (let i = 0; i < results.length; i++) {
-        const item = results[i];
-        if (item.geometry.type.includes("Polygon")) {
-          if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
-            if (turf.booleanPointInPolygon(center, item)) {
-              geoconnexApp.addToMap(
-                item,
-                false,
-                { color: geoconnexApp.searchColor },
-                (group = geoconnexApp.searchFeatureGroup)
-              );
-            }
-          }
-        }
-      }
-
-      geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
-      geoconnexApp.isSearching = false;
-      geoconnexApp.hasSearches = true;
-      geoconnexApp.toggleItemFiltering();
+      var bbox = [
+        long,
+        lat,
+        long + 10e-12,
+        lat + 10e-12,
+      ];
+      geoconnexApp.queryGeoItemsInBbox(bbox);
     },
     async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
@@ -1011,6 +969,17 @@ let geoconnexApp = new Vue({
             }
           }
           geoconnexApp.items.push(item);
+          // TODO: make sure that the item collection is enabled in the collections select
+          let addCollection = item.collection;
+          if (geoconnexApp.selectedCollections==null || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
+            addCollection = geoconnexApp.collections.filter(col=>{
+              return col.id == addCollection
+            });
+            console.log(addCollection)
+            geoconnexApp.selectedCollections.push(
+              addCollection.pop()
+            );
+          }
         }
       } catch (e) {
         console.error(
@@ -1161,15 +1130,13 @@ let geoconnexApp = new Vue({
 
       function onMapClick(e) {
         let loc = { lat: e.latlng.lat, long: e.latlng.lng };
-        if (geoconnexApp.geometriesAreLoaded) {
-          let content = `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-success leaflet-point-search" data='${JSON.stringify(
-            loc
-          )}'>Search for related items containing this point</button>`;
-          popup
-            .setLatLng(e.latlng)
-            .setContent(content)
-            .openOn(geoconnexApp.map);
-        }
+        let content = `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-success leaflet-point-search" data='${JSON.stringify(
+          loc
+        )}'>Search for related items containing this point</button>`;
+        popup
+          .setLatLng(e.latlng)
+          .setContent(content)
+          .openOn(geoconnexApp.map);
       }
 
       if (geoconnexApp.resMode === "Edit") {
