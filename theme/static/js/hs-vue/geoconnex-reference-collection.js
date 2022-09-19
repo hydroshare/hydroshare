@@ -109,9 +109,15 @@ let geoconnexApp = new Vue({
           }
         }else{
           geoconnexApp.clearLeafletOfMappedSearches()
+          remove = oldValue;
         }
+
         geoconnexApp.fitMapToFeatures();
-        // geoconnexApp.layerControl.collapse();
+        for (let collection of remove){
+          geoconnexApp.items = geoconnexApp.items.filter(item =>{
+            return collection.id !== item.collection;
+          });
+        }
       }
     },
     loadingCollections(newValue, oldValue) {
@@ -916,6 +922,7 @@ let geoconnexApp = new Vue({
     async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
       let items = [];
+      // TODO: this doesn't work
       geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
       let poly = turf.bboxPolygon(bbox)
@@ -968,8 +975,10 @@ let geoconnexApp = new Vue({
               );
             }
           }
+          // TODO: sometimes this works but not always?
+          // seems like there are some odd state not refreshing issues
           geoconnexApp.items.push(item);
-          // TODO: make sure that the item collection is enabled in the collections select
+
           let addCollection = item.collection;
           if (geoconnexApp.selectedCollections==null || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
             addCollection = geoconnexApp.collections.filter(col=>{
