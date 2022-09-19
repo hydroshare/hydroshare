@@ -58,9 +58,12 @@ let geoconnexApp = new Vue({
     values(newValue, oldValue) {
       let geoconnexApp = this;
       geoconnexApp.errorMsg = "";
-      if (!oldValue || newValue.length > oldValue.length) {
+
+      let oldLength = oldValue ? oldValue.length : 0;
+      let newLength = newValue ? newValue.length : 0;
+      if (newLength > oldLength) {
         geoconnexApp.addSelectedToResMetadata(newValue.pop());
-      } else if (newValue.length < oldValue.length) {
+      } else if (newLength < oldLength) {
         let remove = oldValue.filter((obj) =>
           newValue.every((s) => s.id !== obj.id)
         );
@@ -84,9 +87,12 @@ let geoconnexApp = new Vue({
     },
     selectedCollections(newValue, oldValue){
       let geoconnexApp = this;
-      if (!oldValue || newValue.length > oldValue.length) {
+
+      let oldLength = oldValue ? oldValue.length : 0;
+      let newLength = newValue ? newValue.length : 0;
+      if (newLength > oldLength) {
         geoconnexApp.queryUsingSpatialExtent([newValue.at(-1)]);
-      } else if (!newValue || newValue.length < oldValue.length) {
+      } else if (newLength < oldLength) {
         let remove = oldValue.filter((obj) =>
           newValue.every((s) => s.id !== obj.id)
         );
@@ -102,13 +108,6 @@ let geoconnexApp = new Vue({
         //   console.error(e.message);
         // }
         // geoconnexApp.ajaxRemoveMetadata(remove);
-
-        // re-enable the item for selection
-        // geoconnexApp.items.forEach((it) => {
-        //   if (remove[0].value === it.uri) {
-        //     it.disabled = false;
-        //   }
-        // });
       }
     },
     loadingCollections(newValue, oldValue) {
