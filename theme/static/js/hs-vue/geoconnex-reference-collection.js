@@ -87,27 +87,31 @@ let geoconnexApp = new Vue({
     },
     selectedCollections(newValue, oldValue){
       let geoconnexApp = this;
-
       let oldLength = oldValue ? oldValue.length : 0;
       let newLength = newValue ? newValue.length : 0;
       if (newLength > oldLength) {
         geoconnexApp.queryUsingSpatialExtent([newValue.at(-1)]);
       } else if (newLength < oldLength) {
-        let remove = oldValue.filter((obj) =>
+        let remove;
+        if (newLength){
+          remove = oldValue.filter((obj) =>
           newValue.every((s) => s.id !== obj.id)
-        );
-        
-        // TODO: remove layers from the leaflet map when removed...
-        // and also remove them from the combobox "items"
-        // try {
-        //   geoconnexApp.selectedFeatureGroup.removeLayer(
-        //     geoconnexApp.selectedItemLayers[remove[0].value]
-        //   );
-        //   geoconnexApp.fitMapToFeatures();
-        // } catch (e) {
-        //   console.error(e.message);
-        // }
-        // geoconnexApp.ajaxRemoveMetadata(remove);
+          );
+          for (let layer of remove) {
+            geoconnexApp.searchFeatureGroup.removeLayer(
+              geoconnexApp.layerGroupDictionary[layer.id]
+            );
+            geoconnexApp.layerGroupDictionary[layer.id].clearLayers();
+
+            geoconnexApp.layerControl.removeLayer(
+              geoconnexApp.layerGroupDictionary[layer.id]
+            );
+          }
+        }else{
+          geoconnexApp.clearLeafletOfMappedSearches()
+        }
+        geoconnexApp.fitMapToFeatures();
+        // geoconnexApp.layerControl.collapse();
       }
     },
     loadingCollections(newValue, oldValue) {
