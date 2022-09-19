@@ -17,6 +17,7 @@ let geoconnexApp = new Vue({
       hasFilteredItems: false,
       collections: null,
       values: [],
+      // TODO: isSearching was working for point select search. but now broken for all...
       isSearching: false,
       loadingCollections: true,
       loadingDescription: "",
@@ -857,8 +858,10 @@ let geoconnexApp = new Vue({
     getGeoItemsFromDebug(collections = null) {
       let geoconnexApp = this;
       geoconnexApp.isSearching = true;
-      geoconnexApp.queryGeoItemsFromExtent(collections);
-      geoconnexApp.isSearching = false;
+      setTimeout(async function () {
+        geoconnexApp.queryGeoItemsFromExtent(collections);
+        geoconnexApp.isSearching = false;
+      }, 0);
     },
     queryGeoItemsFromExtent(collections = null) {
       let geoconnexApp = this;
@@ -886,6 +889,7 @@ let geoconnexApp = new Vue({
     },
     queryGeoItemsRadius(lat = null, long = null) {
       let geoconnexApp = this;
+      geoconnexApp.isSearching = true;
       long = typeof long == "number" ? long : geoconnexApp.pointLong;
       lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
       let center = turf.point([long, lat]);
@@ -899,7 +903,10 @@ let geoconnexApp = new Vue({
       };
       var polygon = turf.circle(center, geoconnexApp.searchRadius, options);
       polygon.text = "Search bounds";
-      geoconnexApp.queryGeoItemsInPoly(polygon);
+      setTimeout(async function () {
+        geoconnexApp.queryGeoItemsInPoly(polygon);
+        geoconnexApp.isSearching = false;
+      }, 0);
     },
     async queryGeoItemsContainingPoint(lat = null, long = null) {
       // https://turfjs.org/docs/#booleanPointInPolygon
@@ -917,13 +924,14 @@ let geoconnexApp = new Vue({
         long + 10e-12,
         lat + 10e-12,
       ];
-      geoconnexApp.queryGeoItemsInBbox(bbox);
+      setTimeout(async function () {
+        geoconnexApp.queryGeoItemsInBbox(bbox);
+        geoconnexApp.isSearching = false;
+      }, 0);
     },
     async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
       let items = [];
-      // TODO: this doesn't work
-      geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
       let poly = turf.bboxPolygon(bbox)
       poly.text = "Search bounds";
@@ -980,11 +988,10 @@ let geoconnexApp = new Vue({
           geoconnexApp.items.push(item);
 
           let addCollection = item.collection;
-          if (geoconnexApp.selectedCollections==null || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
+          if (geoconnexApp.selectedCollections == [] || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
             addCollection = geoconnexApp.collections.filter(col=>{
               return col.id == addCollection
             });
-            console.log(addCollection)
             geoconnexApp.selectedCollections.push(
               addCollection.pop()
             );
@@ -997,7 +1004,6 @@ let geoconnexApp = new Vue({
       }
 
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
-      geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
       geoconnexApp.toggleItemFiltering();
     },
@@ -1006,7 +1012,6 @@ let geoconnexApp = new Vue({
       // https://turfjs.org/docs/#booleanIntersects
       // https://turfjs.org/docs/#booleanContains
       let geoconnexApp = this;
-      geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
       const promises = [];
 
@@ -1064,7 +1069,6 @@ let geoconnexApp = new Vue({
       }
 
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
-      geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
       geoconnexApp.toggleItemFiltering();
     },
@@ -1114,6 +1118,7 @@ let geoconnexApp = new Vue({
         geoconnexApp.fillValuesFromResBoxExtent();
       } else {
         console.error("Resource spatial extent isn't set");
+        // TODO: decide what functionality we should allow in the case that no spatial extent
       }
     },
     fillValuesFromResPointExtent() {
@@ -1141,7 +1146,8 @@ let geoconnexApp = new Vue({
         let loc = { lat: e.latlng.lat, long: e.latlng.lng };
         let content = `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-success leaflet-point-search" data='${JSON.stringify(
           loc
-        )}'>Search for related items containing this point</button>`;
+        )}'>Search all collections for items containing this point</button>`;
+        // TODO: maby make this "search selected collections --in the typeahead, instead of all collections"
         popup
           .setLatLng(e.latlng)
           .setContent(content)

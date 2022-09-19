@@ -48,6 +48,7 @@
                 <div class="row">
                     {% if resource_edit_mode %}
                         <div class="col-xs-12">
+                            <!-- TODO: typeahead doesn't work for typing collection names -->
                             <v-autocomplete
                                 v-model="selectedCollections"
                                 :items="collections"
@@ -95,6 +96,7 @@
                                         </v-chip>
                                     </template>
                                 </v-autocomplete>
+                                <!-- TODO: disable (hide?) the combobox until they have selected a collection-->
                             <v-combobox
                                 v-model="values"
                                 :items="items"
