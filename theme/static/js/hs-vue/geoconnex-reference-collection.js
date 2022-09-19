@@ -59,7 +59,7 @@ let geoconnexApp = new Vue({
     values(newValue, oldValue) {
       let geoconnexApp = this;
       geoconnexApp.errorMsg = "";
-      if (newValue.length > oldValue.length) {
+      if (!oldValue || newValue.length > oldValue.length) {
         geoconnexApp.addSelectedToResMetadata(newValue.pop());
       } else if (newValue.length < oldValue.length) {
         let remove = oldValue.filter((obj) =>
@@ -85,9 +85,9 @@ let geoconnexApp = new Vue({
     },
     selectedCollections(newValue, oldValue){
       let geoconnexApp = this;
-      if (newValue.length > oldValue.length) {
+      if (!oldValue || newValue.length > oldValue.length) {
         geoconnexApp.queryUsingSpatialExtent([newValue.at(-1)]);
-      } else if (newValue.length < oldValue.length) {
+      } else if (!newValue || newValue.length < oldValue.length) {
         let remove = oldValue.filter((obj) =>
           newValue.every((s) => s.id !== obj.id)
         );
@@ -174,10 +174,9 @@ let geoconnexApp = new Vue({
     },
     async fetchSingleGeometry(geoconnexObj, refresh = false) {
       let geoconnexApp = this;
-      let response = {};
       if (refresh || !geoconnexObj.geometry) {
         let query = `${geoconnexApp.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
-        response = await geoconnexApp.fetchFromCacheOrAPI(query, refresh);
+        let response = await geoconnexApp.fetchFromCacheOrAPI(query, refresh);
         geoconnexObj.geometry = response.geometry;
       }
       return geoconnexObj;
@@ -667,13 +666,13 @@ let geoconnexApp = new Vue({
           data = await geoconnexApp.fetchFromGeoconnexApi(url);
         }
       }
-      if (collection) {
+      if (collection && data) {
         data.collection = collection;
       }
       return data;
     },
     async fetchFromGeoconnexApi(url) {
-      let data = {};
+      let fetchData = {};
       let geoconnexApp = this;
       if (geoconnexApp.debug)
         console.log("Fetching + adding to cache, geoconnex data from:\n" + url);
@@ -697,7 +696,7 @@ let geoconnexApp = new Vue({
               headers: headers,
             })
           );
-          data = await fetch_resp.json();
+          fetchData = await fetch_resp.json();
         }
       } catch (e) {
         console.error(e.message);
@@ -714,7 +713,7 @@ let geoconnexApp = new Vue({
             geoconnexApp.errored = true;
           });
       }
-      return data;
+      return fetchData;
     },
     isCacheValid(response) {
       let geoconnexApp = this;
@@ -748,7 +747,7 @@ let geoconnexApp = new Vue({
           try {
             new URL(relation.value);
             item = geoconnexApp.items.find((obj) => {
-              return obj.uri === relation.value;
+                return obj.uri && obj.uri == relation.value;
             });
           } catch (_) {
             item = null;
@@ -989,7 +988,7 @@ let geoconnexApp = new Vue({
 
         for (let item of items){
           let alreadySelected = geoconnexApp.values.find((obj) => {
-            return obj.value === item.uri;
+            return obj.value && obj.value === item.uri;
           });
           if (alreadySelected) {
             return
@@ -1258,6 +1257,7 @@ let geoconnexApp = new Vue({
       await geoconnexApp.loadCollections(false);
 
       // TODO: only show the collectionOptions without loading all the other stuff
+      // TODO: ensure that we are only fetching the info we need
 
       await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
       geoconnexApp.loadMetadataRelations();
