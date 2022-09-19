@@ -241,7 +241,13 @@ class TestCaseCommonUtilities(object):
         with self.assertRaises(FileOverrideException):
             unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
         # remove the subfolder with conflicting name with a file name in the zip file
-        remove_folder(user, res.short_id, f'data/contents/sub_test_dir/{file_name_list[0]}')
+        remove_folder(user, res.short_id, f'data/contents/sub_test_dir')
+        # unzip should succeed after the conflicting subfolder is removed
+        unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
+
+        # remove all files in sub_test_dir created by unzip, and then create an empty sub_test_dir
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
+        create_folder(res.short_id, 'data/contents/sub_test_dir')
 
         # TODO: use ResourceFile.rename, which doesn't require data/contents prefix
         move_or_rename_file_or_folder(user, res.short_id,
