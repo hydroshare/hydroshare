@@ -2571,7 +2571,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         characters in the file will be escaped when we return the file content.
         """
         readme_file = self.readme_file
-        if readme_file is not None:
+        # check the file exists on irods
+
+        if readme_file is None:
+            return readme_file
+
+        # check the file exists on irods
+        if readme_file.exists:
             readme_file_content = readme_file.read().decode('utf-8', 'ignore')
             if readme_file.extension.lower() == '.md':
                 markdown_file_content = markdown(readme_file_content)
@@ -2579,7 +2585,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                         'file_name': readme_file.file_name, 'file_type': 'md'}
             else:
                 return {'content': readme_file_content, 'file_name': readme_file.file_name}
-        return readme_file
+        else:
+            file_name = readme_file.file_name
+            readme_file.delete()
+            logger = logging.getLogger(__name__)
+            log_msg = f"readme file ({file_name}) is missing on iRODS. Deleting the file from Django."
+            logger.warning(log_msg)
+            return None
 
     @property
     def logical_files(self):
@@ -2723,9 +2735,17 @@ def get_resource_file_path(resource, filename, folder=''):
     # cannot only test folder string to start with resource.root_path, since a relative folder path
     # may start with the resource's uuid if the same resource bag is added into the same resource and unzipped
     # into the resource as in the bug reported in this issue: https://github.com/hydroshare/hydroshare/issues/2984
-    if folder is not None and folder.startswith(os.path.join(resource.root_path, 'data', 'contents')):
+
+    res_data_content_path = os.path.join(resource.root_path, 'data', 'contents')
+    if folder is not None and folder.startswith(res_data_content_path):
         # TODO: does this now start with /?
-        folder = folder[len(resource.root_path):]
+        # check if the folder is a path relative to the resource data content path, if yes, no need to strip out
+        # resource.root_path
+        istorage = resource.get_irods_storage()
+        if not istorage.exists(os.path.join(res_data_content_path, folder)):
+            # folder is not a path relative to res_data_content_path, but a path including resource root path,
+            # strip out resource root path to make folder a relative path
+            folder = folder[len(resource.root_path):]
 
     # retrieve federation path -- if any -- from Resource object containing the file
     if filename.startswith(resource.file_path):
