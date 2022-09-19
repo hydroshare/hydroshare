@@ -2754,7 +2754,9 @@ $(document).ready(function () {
             calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='true'));
         }
 
-        // Wait for the asynchronous calls to finish to get new folder structure
+        // If asynchronous calls for unzipping failed, refresh file browser; otherwise, if it succeeds which triggers
+        // putting unzipping async task in the queue to be executed, there is no need to refresh file browser while
+        // the unzipping async task is scheduled to run
         $.when.apply($, calls).fail(function () {
             refreshFileBrowser();
         });
