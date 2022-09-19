@@ -92,6 +92,7 @@ let geoconnexApp = new Vue({
         );
         
         // TODO: remove layers from the leaflet map when removed...
+        // and also remove them from the combobox "items"
         // try {
         //   geoconnexApp.selectedFeatureGroup.removeLayer(
         //     geoconnexApp.selectedItemLayers[remove[0].value]
@@ -156,14 +157,7 @@ let geoconnexApp = new Vue({
     },
     addSelectedToResMetadata(selected) {
       let geoconnexApp = this;
-      if (!selected.geometry){
-        geoconnexApp.fetchSingleGeometry(selected).then((geometry) => {
-          selected.geometry = geometry.geometry;
-          let shouldZoom = selected.geometry.type.includes("Poly");
-          geoconnexApp.addToMap(selected, shouldZoom);
-          shouldZoom ? null : geoconnexApp.fitMapToFeatures();
-        });
-      }
+      geoconnexApp.addFeatureToMap(selected);
       geoconnexApp.ajaxSaveMetadata(selected);
 
       // disable so that it can't be duplicated
@@ -172,6 +166,17 @@ let geoconnexApp = new Vue({
           it.disabled = true;
         }
       });
+    },
+    async addFeatureToMap(feature){
+      let geoconnexApp = this;
+      if (!feature.geometry){
+        geoconnexApp.fetchSingleGeometry(feature).then((geometry) => {
+          feature.geometry = geometry.geometry;
+        });
+        let shouldZoom = feature.geometry.type.includes("Poly");
+        geoconnexApp.addToMap(feature, shouldZoom);
+        shouldZoom ? null : geoconnexApp.fitMapToFeatures();
+      }
     },
     async fetchSingleGeometry(geoconnexObj, refresh = false) {
       let geoconnexApp = this;
@@ -619,7 +624,6 @@ let geoconnexApp = new Vue({
       return feature;
     },
     async getRelationsFromMetadata() {
-      // Used in resource VIEW mode, when no new items will be added
       let geoconnexApp = this;
       for (let relation of geoconnexApp.metadataRelations) {
         if (
@@ -629,7 +633,9 @@ let geoconnexApp = new Vue({
           let feature = await geoconnexApp.fetchSingleReferenceItem(
             relation.value
           );
+          // TODO: only push if not alreay an item?
           geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
+          geoconnexApp.addFeatureToMap(feature);
         }
       }
     },
@@ -740,6 +746,7 @@ let geoconnexApp = new Vue({
       return true;
     },
     loadMetadataRelations() {
+      // TODO redo this function so that it doesn't rely on preloaded items to get properties
       let geoconnexApp = this;
       for (relation of geoconnexApp.metadataRelations) {
         if (relation.type === "relation") {
@@ -838,26 +845,11 @@ let geoconnexApp = new Vue({
         }
       }
     },
-    getGeoItemsFromDebug() {
+    getGeoItemsFromDebug(collections = null) {
       let geoconnexApp = this;
-      if (geoconnexApp.resSpatialType == "point") {
-        geoconnexApp.queryGeoItemsRadius(
-          geoconnexApp.pointLat,
-          geoconnexApp.pointLong
-        );
-      } else if (geoconnexApp.resSpatialType == "box") {
-        let bbox = [
-          geoconnexApp.eastLong,
-          geoconnexApp.southLat,
-          geoconnexApp.westLong,
-          geoconnexApp.northLat,
-        ];
-        var polygon = turf.bboxPolygon(bbox);
-        polygon.text = "Search bounds";
-        geoconnexApp.queryGeoItemsInPoly(polygon);
-      } else {
-        alert("Spatial extent isn't set?....");
-      }
+      geoconnexApp.isSearching = true;
+      geoconnexApp.queryGeoItemsFromExtent(collections);
+      geoconnexApp.isSearching = false;
     },
     queryGeoItemsFromExtent(collections = null) {
       let geoconnexApp = this;
@@ -985,36 +977,37 @@ let geoconnexApp = new Vue({
         }
         let results = await Promise.all(promises);
         items = results.flat().filter(Boolean);
-        // TODO: filter to make sure returned items are in geoconnex items
 
         for (let item of items){
           let alreadySelected = geoconnexApp.values.find((obj) => {
             return obj.value && obj.value === item.uri;
           });
           if (alreadySelected) {
-            return
+            item.disabled = true;
+          }else{
+            geoconnexApp.getFeatureProperties(item);
+            if (item.geometry.type.includes("Point")) {
+              await geoconnexApp.addToMap(
+                item,
+                false,
+                {
+                  color: geoconnexApp.searchColor,
+                  radius: 5,
+                  fillColor: "yellow",
+                  fillOpacity: 0.8,
+                },
+                (group = geoconnexApp.searchFeatureGroup)
+              );
+            } else {
+              await geoconnexApp.addToMap(
+                item,
+                false,
+                { color: geoconnexApp.searchColor },
+                (group = geoconnexApp.searchFeatureGroup)
+              );
+            }
           }
-          geoconnexApp.getFeatureProperties(item);
-          if (item.geometry.type.includes("Point")) {
-            await geoconnexApp.addToMap(
-              item,
-              false,
-              {
-                color: geoconnexApp.searchColor,
-                radius: 5,
-                fillColor: "yellow",
-                fillOpacity: 0.8,
-              },
-              (group = geoconnexApp.searchFeatureGroup)
-            );
-          } else {
-            await geoconnexApp.addToMap(
-              item,
-              false,
-              { color: geoconnexApp.searchColor },
-              (group = geoconnexApp.searchFeatureGroup)
-            );
-          }
+          geoconnexApp.items.push(item);
         }
       } catch (e) {
         console.error(
@@ -1260,15 +1253,14 @@ let geoconnexApp = new Vue({
       // TODO: only show the collectionOptions without loading all the other stuff
       // TODO: maybe we need to only load items from the selected collection? to reduce load time...
 
-      await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
+      // await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
+
+      await geoconnexApp.getRelationsFromMetadata();
       geoconnexApp.loadMetadataRelations();
       geoconnexApp.initLeafletFeatureGroups();
-
-      // TODO remove this
-      this.geometriesAreLoaded = true;
-      this.showMap();
+      geoconnexApp.showMap();
       
-      // load geometries in the background
+      // TODO: load items/geoms in the background and cache so that it is faster next time?
       // geoconnexApp.fetchAllGeometries();
       // refresh cache in the background
       // geoconnexApp.refreshItemsSilently();
