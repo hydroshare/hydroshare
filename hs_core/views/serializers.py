@@ -1,6 +1,6 @@
 import json
 from collections import namedtuple
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth.models import Group, User
 from theme.models import UserProfile
 from rest_framework import serializers

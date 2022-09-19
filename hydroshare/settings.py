@@ -235,7 +235,11 @@ STATICFILES_STORAGE = 'hydroshare.storage.ForgivingManifestStaticFilesStorage'
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = STATIC_URL + "media/"
+# TODO: Pabitra - needed to change MEDIA_URL as required since djnago 2.2 (see the link below)
+#  (Ref: https://stackoverflow.com/questions/59469585/runserver-cant-serve-media-if-media-url-is-within-static-url)
+# MEDIA_URL = "/static/media/"
+# if DEBUG:
+#     MEDIA_URL = '/media/'
 
 # Sorl settings for generating thumbnails
 THUMBNAIL_PRESERVE_FORMAT = True
@@ -250,7 +254,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
+# MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
@@ -264,7 +268,9 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 
 INSTALLED_APPS = (
     'test_without_migrations',
-    "autocomplete_light",
+    # "autocomplete_light",
+    "dal",
+    "dal_select2",
     "django.contrib.admin",
     "django.contrib.auth",
     "oauth2_provider",
@@ -277,7 +283,8 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
-    "inplaceeditform",
+    "django.contrib.messages",
+    # "inplaceeditform",
     "django_nose",
     "django_irods",
     "drf_yasg",
@@ -359,7 +366,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            (os.path.join(BASE_DIR, "hs_core", "templates"),)
+            os.path.join(BASE_DIR, "hs_core", "templates")
         ],
         'OPTIONS': {
             'context_processors': [
@@ -505,7 +512,7 @@ HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealti
 
 # customized value for password reset token, email verification and group invitation link token
 # to expire in 7 days
-PASSWORD_RESET_TIMEOUT_DAYS = 7
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 
 # customized temporary file path for large files retrieved from iRODS user zone for metadata
 # extraction
@@ -751,6 +758,11 @@ local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
+MEDIA_URL = "/static/media/"
+if DEBUG:
+    MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 ####################
 # DYNAMIC SETTINGS #
 ####################

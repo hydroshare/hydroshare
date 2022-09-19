@@ -80,7 +80,10 @@ services:
     stdin_open: true
     tty: true
   postgis:
-    image: hydroshare/hs_postgres:9.4.7
+    #image: hydroshare/hs_postgres:9.6-3.2
+    image: postgis/postgis:9.6-3.2
+    environment:
+      POSTGRES_PASSWORD: 'postgres'
     container_name: postgis
     hostname: postgis
     volumes:

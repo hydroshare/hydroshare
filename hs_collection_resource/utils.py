@@ -13,10 +13,13 @@ from hs_core.hydroshare.utils import current_site_url, resource_modified
 from hs_core.views.utils import get_my_resources_list
 
 logger = logging.getLogger(__name__)
-RES_LANDING_PAGE_URL_TEMPLATE = current_site_url() + "/resource/{0}/"
+# RES_LANDING_PAGE_URL_TEMPLATE = current_site_url() + "/resource/{0}/"
 CSV_FULL_NAME_TEMPLATE = "collection_list_{0}.csv"
 DELETED_RES_STRING = "Resource Deleted"
 
+
+def get_landing_page_url_template():
+    return current_site_url() + "/resource/{0}/"
 
 def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type="",
                                     relation_value="", set_res_modified=False,
@@ -83,7 +86,7 @@ def update_collection_list_csv(collection_obj):
                 csv_data_row = [res.metadata.title,
                                 res.resource_type,
                                 res.short_id,
-                                RES_LANDING_PAGE_URL_TEMPLATE.format(res.short_id),
+                                get_landing_page_url_template().format(res.short_id),
                                 _get_owners_string(list(res.raccess.owners.all())),
                                 _get_sharing_status_string(res)
                                 ]

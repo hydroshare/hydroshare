@@ -27,12 +27,12 @@ from theme.utils import get_upload_path_group
 # (Revised Sept 17, 2021)
 #############################################
 class GroupMembershipRequest(models.Model):
-    request_from = models.ForeignKey(User, related_name='ru2gmrequest')
+    request_from = models.ForeignKey(User, on_delete=models.CASCADE,  related_name='ru2gmrequest')
 
     # when user is requesting to join a group this will be blank
     # when a group owner is sending an invitation, this field will represent the inviting user
-    invitation_to = models.ForeignKey(User, null=True, blank=True, related_name='iu2gmrequest')
-    group_to_join = models.ForeignKey(Group, related_name='g2gmrequest')
+    invitation_to = models.ForeignKey(User, on_delete=models.CASCADE,  null=True, blank=True, related_name='iu2gmrequest')
+    group_to_join = models.ForeignKey(Group, on_delete=models.CASCADE,  related_name='g2gmrequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     explanation = models.TextField(null=True, blank=True, max_length=300)
     redeemed = models.BooleanField(default=False)
@@ -49,7 +49,7 @@ class GroupAccess(models.Model):
     """
 
     # Django Group object: this has a side effect of creating Group.gaccess back relation.
-    group = models.OneToOneField(Group,
+    group = models.OneToOneField(Group, on_delete=models.CASCADE, 
                                  editable=False,
                                  null=False,
                                  related_name='gaccess',

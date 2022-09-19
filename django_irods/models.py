@@ -2,7 +2,7 @@ from django.db import models as m
 from django.contrib.auth.models import User
 
 class RodsEnvironment(m.Model):
-    owner = m.ForeignKey(User)
+    owner = m.ForeignKey(User, on_delete=m.CASCADE)
     host = m.CharField(verbose_name='Hostname', max_length=255)
     port = m.IntegerField()
     def_res = m.CharField(verbose_name="Default resource", max_length=255)

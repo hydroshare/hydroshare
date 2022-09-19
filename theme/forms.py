@@ -138,7 +138,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         """
         comment = self.get_comment_object()
         obj = comment.content_object
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             comment.user = request.user
             comment.user_name = best_name(comment.user)
 
@@ -190,7 +190,7 @@ class RatingForm(CommentSecurityForm):
         request = self.request
         self.previous = request.COOKIES.get("mezzanine-rating", "").split(",")
         already_rated = self.current in self.previous
-        if already_rated and not self.request.user.is_authenticated():
+        if already_rated and not self.request.user.is_authenticated:
             raise forms.ValidationError(ugettext("Already rated."))
         return 1
 
@@ -203,7 +203,7 @@ class RatingForm(CommentSecurityForm):
         rating_value = 1
         rating_name = self.target_object.get_ratingfield_name()
         rating_manager = getattr(self.target_object, rating_name)
-        if user.is_authenticated():
+        if user.is_authenticated:
             try:
                 rating_instance = rating_manager.get(user=user)
             except Rating.DoesNotExist:

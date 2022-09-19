@@ -72,7 +72,8 @@ def create_account(
         u.is_active = False
     u.save()
 
-    u.groups = groups
+    print(f">> groups:{groups}")
+    u.groups.set(groups)
 
     # make the user a member of the Hydroshare role group
     u.groups.add(Group.objects.get(name='Hydroshare Author'))

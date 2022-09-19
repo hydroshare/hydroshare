@@ -54,7 +54,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     content_model = page.get_content_model()
 
     show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
-    if not show_content_files and user.is_authenticated():
+    if not show_content_files and user.is_authenticated:
         show_content_files = user.uaccess.can_view_resource(content_model)
 
     can_view = content_model.can_view(request)
@@ -64,7 +64,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     discoverable = content_model.raccess.discoverable
     validation_error = None
     resource_is_mine = False
-    if user.is_authenticated():
+    if user.is_authenticated:
         resource_is_mine = content_model.rlabels.is_mine(user)
 
     metadata_status = _get_metadata_status(content_model)

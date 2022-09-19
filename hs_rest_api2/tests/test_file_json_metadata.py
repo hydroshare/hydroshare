@@ -2,7 +2,7 @@ import os
 import json
 import tempfile
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from hsmodels.schemas.resource import ResourceMetadataIn
 from hsmodels.schemas.aggregations import GeographicFeatureMetadataIn, GeographicRasterMetadataIn, \
     MultidimensionalMetadataIn, SingleFileMetadataIn, FileSetMetadataIn, TimeSeriesMetadataIn, \

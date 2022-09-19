@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('unit', models.CharField(default='G', max_length=10)),
                 ('zone', models.CharField(default='hydroshare_internal', max_length=100)),
                 ('remaining_grace_period', models.IntegerField(default=-1)),
-                ('user', models.ForeignKey(related_query_name='quotas', related_name='quotas', editable=False, to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(related_query_name='quotas', related_name='quotas', editable=False, on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'User quota',

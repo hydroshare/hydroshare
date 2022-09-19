@@ -19,7 +19,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.validators import URLValidator
 from django.db.models import When, Case, Value, BooleanField, Prefetch
 from django.db.models.query import prefetch_related_objects
@@ -326,7 +326,7 @@ def rights_allows_copy(res, user):
     :param user: the requesting user to check for whether copy is allowed
     :return: return True if the resource can be copied; otherwise, return False
     """
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         return False
 
     if not user.uaccess.owns_resource(res) and \
@@ -384,9 +384,9 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
     if needed_permission == ACTION_TO_AUTHORIZE.VIEW_METADATA:
         if res.raccess.discoverable or res.raccess.public or res.raccess.allow_private_sharing:
             authorized = True
-        elif user.is_authenticated() and user.is_active:
+        elif user.is_authenticated and user.is_active:
             authorized = user.uaccess.can_view_resource(res)
-    elif user.is_authenticated() and user.is_active:
+    elif user.is_authenticated and user.is_active:
         if needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
             authorized = user.uaccess.can_view_resource(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE:

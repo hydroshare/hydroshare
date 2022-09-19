@@ -4,7 +4,7 @@ import shutil
 
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from rest_framework import status
 
 from hs_core import hydroshare

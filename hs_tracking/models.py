@@ -39,7 +39,7 @@ class SessionManager(models.Manager):
                 pass
 
             if session is not None and user is not None:
-                if session.visitor.user is None and user.is_authenticated():
+                if session.visitor.user is None and user.is_authenticated:
                     try:
                         session.visitor = Visitor.objects.get(user=user)
                         session.save()
@@ -49,7 +49,7 @@ class SessionManager(models.Manager):
                 return session
 
         # No session found, create one
-        if user.is_authenticated():
+        if user.is_authenticated:
             visitor, _ = Visitor.objects.get_or_create(user=user)
         else:
             visitor = Visitor.objects.create()
@@ -93,7 +93,7 @@ class Visitor(models.Model):
 
 class Session(models.Model):
     begin = models.DateTimeField(auto_now_add=True)
-    visitor = models.ForeignKey(Visitor, related_name='session')
+    visitor = models.ForeignKey(Visitor, on_delete=models.CASCADE,  related_name='session')
     # TODO: hostname = models.CharField(null=True, default=None, max_length=256)
 
     objects = SessionManager()
@@ -125,7 +125,7 @@ class Variable(models.Model):
 
     from hs_core.models import BaseResource
 
-    session = models.ForeignKey(Session, related_name='variable')
+    session = models.ForeignKey(Session, on_delete=models.CASCADE,  related_name='variable')
     timestamp = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=32)
     type = models.IntegerField(choices=TYPE_CHOICES)

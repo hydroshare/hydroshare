@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 
 from hs_core.hydroshare.utils import resource_modified
 from hs_collection_resource.utils import add_or_remove_relation_metadata
-from hs_collection_resource.utils import RES_LANDING_PAGE_URL_TEMPLATE
+from hs_collection_resource.utils import get_landing_page_url_template
 from hs_collection_resource.models import CollectionResource
 
 last_changed_by_user = None
@@ -36,7 +36,8 @@ for collection_res_obj in collection_res_list:
                                                                         counter,
                                                                         collection_count)))
         for contained_res_obj in collection_res_obj.resources.all():
-            value = RES_LANDING_PAGE_URL_TEMPLATE.format(contained_res_obj.short_id)
+            # value = RES_LANDING_PAGE_URL_TEMPLATE.format(contained_res_obj.short_id)
+            value = get_landing_page_url_template().format(contained_res_obj.short_id)
             add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
                                             relation_type=hasPart, relation_value=value,
                                             set_res_modified=False)

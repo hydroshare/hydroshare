@@ -713,7 +713,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 class AbstractLogicalFile(models.Model):
     """ base class for HydroShare file types """
 
-    resource = models.ForeignKey('hs_composite_resource.CompositeResource')
+    resource = models.ForeignKey('hs_composite_resource.CompositeResource', on_delete=models.CASCADE)
     # files associated with this logical file group
     files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
                             object_id_field='logical_file_object_id')

@@ -18,7 +18,7 @@ from django.contrib.postgres.fields import HStoreField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
     SuspiciousFileOperation, PermissionDenied
 from django.core.files import File
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.validators import URLValidator
 from django.db import models
 from django.db import transaction
@@ -98,8 +98,8 @@ def clean_for_xml(s):
 class GroupOwnership(models.Model):
     """Define lookup table allowing django auth users to own django auth groups."""
 
-    group = models.ForeignKey(Group)
-    owner = models.ForeignKey(User)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 def get_user(request):
@@ -113,7 +113,7 @@ def get_user(request):
     """
     if not hasattr(request, 'user'):
         raise PermissionDenied
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return User.objects.get(pk=request.user.pk)
     else:
         return request.user
@@ -154,7 +154,7 @@ def validate_user_url(value):
 class ResourcePermissionsMixin(Ownable):
     """Mix in can_* permission helper functions between users and resources."""
 
-    creator = models.ForeignKey(User,
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, 
                                 related_name='creator_of_%(app_label)s_%(class)s',
                                 help_text='This is the person who first uploaded the resource',
                                 )
@@ -256,7 +256,7 @@ def page_permissions_page_processor(request, page):
     cm = page.get_content_model()
     can_change_resource_flags = False
     self_access_level = None
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         if request.user.uaccess.can_change_resource_flags(cm):
             can_change_resource_flags = True
 
@@ -279,7 +279,7 @@ def page_permissions_page_processor(request, page):
 
     last_changed_by = cm.last_changed_by
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         for owner in owners:
             owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
             owner.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(owner)
@@ -381,7 +381,7 @@ class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
     # see the following link the reason for having the related_name setting
     # for the content_type attribute
     # https://docs.djangoproject.com/en/1.6/topics/db/models/#abstract-related-name
-    content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related")
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,  related_name="%(app_label)s_%(class)s_related")
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __str__(self):
@@ -1272,7 +1272,7 @@ class Language(AbstractMetaDataElement):
     """Define language custom metadata model."""
 
     term = 'Language'
-    code = models.CharField(max_length=3, choices=iso_languages)
+    code = models.CharField(max_length=7, choices=iso_languages)
 
     class Meta:
         """Define meta properties for Language model."""
@@ -1917,7 +1917,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     """
 
     content = models.TextField()  # the field added for use by Django inplace editing
-    last_changed_by = models.ForeignKey(User,
+    last_changed_by = models.ForeignKey(User, on_delete=models.CASCADE, 
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
                                         null=False,
@@ -1944,7 +1944,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # this is to establish a relationship between a resource and
     # any metadata container object (e.g., CoreMetaData object)
     object_id = models.PositiveIntegerField(null=True, blank=True)
-    content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,  null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     extra_metadata = HStoreField(default={})
@@ -2797,7 +2797,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                           ]
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     # This is used to direct uploads to a subfolder of the root folder for the resource.
@@ -2818,7 +2818,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
     logical_file_object_id = models.PositiveIntegerField(null=True, blank=True)
-    logical_file_content_type = models.ForeignKey(ContentType,
+    logical_file_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, 
                                                   null=True, blank=True,
                                                   related_name="files")
     logical_file_content_object = GenericForeignKey('logical_file_content_type',

@@ -1,6 +1,4 @@
 
-
-from autocomplete_light import shortcuts as autocomplete_light
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
@@ -19,7 +17,6 @@ from hs_tracking import views as tracking
 from theme import views as theme
 from theme.views import delete_resource_comment
 
-autocomplete_light.autodiscover()
 admin.autodiscover()
 
 # Add the urlpatterns for any custom Django applications here.
@@ -31,7 +28,7 @@ urlpatterns = i18n_patterns(
     url("^admin/", include(admin.site.urls)),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url("^o/groupauthorize/(?P<group_id>[0-9]+)/$", GroupAuthorizationView.as_view(), name="group-authorize"),
-    url("^inplaceeditform/", include("inplaceeditform.urls")),
+    # url("^inplaceeditform/", include("inplaceeditform.urls")),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', hs_core_views.short_url),
     url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(),
         name='tracking-report-profiles'),
@@ -67,7 +64,7 @@ urlpatterns = i18n_patterns(
         theme.email_verify_password_reset, name='email_verify_password_reset'),
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', hs_core_views.verify),
     url(r'^django_irods/', include('django_irods.urls')),
-    url(r'^autocomplete/', include('autocomplete_light.urls')),
+    # url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^discoverapi/$', SearchAPI.as_view(), name='DiscoverAPI'),
     url(r'^search/$', SearchView.as_view(), name='Discover'),
     url(r'^topics/$', hs_communities.views.communities.TopicsView.as_view(), name='topics'),

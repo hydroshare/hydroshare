@@ -36,7 +36,7 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
 
     # TODO: Use form for input data validation
     # validate post data
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         err_msg = "Permission denied"
     elif label_type not in (LABEL, FAVORITE, MINE, SAVEDLABEL, OPENWITHAPP):
         err_msg = "Invalid type of label"

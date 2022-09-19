@@ -126,7 +126,7 @@ def contact(content):
     if not content:
         return ''
 
-    if not content.is_authenticated():
+    if not content.is_authenticated:
         content = "Anonymous"
     elif content.first_name:
         if content.userprofile.middle_name:
@@ -155,7 +155,7 @@ def best_name(content):
     each of the functions specified by the RICHTEXT_FILTERS setting.
     """
 
-    if not content.is_authenticated():
+    if not content.is_authenticated:
         content = "Anonymous"
     elif content.first_name:
         if content.userprofile.middle_name:

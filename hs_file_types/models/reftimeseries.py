@@ -620,7 +620,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 class RefTimeseriesLogicalFile(AbstractLogicalFile):
     """ Each resource file is assigned an instance of this logical file type on upload to
     Composite Resource """
-    metadata = models.OneToOneField(RefTimeseriesFileMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(RefTimeseriesFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
     data_type = "referenceTimeseriesData"
 
     @classmethod

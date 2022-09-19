@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.contrib.messages import info, error
 from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.mail import send_mail
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.db.models.query import prefetch_related_objects
@@ -74,7 +74,7 @@ class UserProfileView(TemplateView):
         # if requesting user is not the profile user, then show only resources that the
         # requesting user has access
         if self.request.user != u:
-            if self.request.user.is_authenticated():
+            if self.request.user.is_authenticated:
                 if self.request.user.is_superuser:
                     # admin can see all resources owned by profile user
                     pass
@@ -478,7 +478,7 @@ def send_verification_mail_for_password_reset(request, user):
 
 
 def home_router(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return redirect("dashboard")
     else:
         return render(request, "pages/homepage.html")
