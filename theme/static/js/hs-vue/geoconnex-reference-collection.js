@@ -349,6 +349,9 @@ let geoconnexApp = new Vue({
       // show the default layers at start
       geoconnexApp.map.addLayer(streets);
       geoconnexApp.map.addLayer(geoconnexApp.selectedFeatureGroup);
+      // TODO if decide to just map in the background, maybe just have this here in initmap?
+      // geoconnexApp.map.addLayer(geoconnexApp.searchFeatureGroup);
+
       // USA
       // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
       geoconnexApp.map.setView([30, 0], 1);
@@ -545,10 +548,15 @@ let geoconnexApp = new Vue({
         text: `${collection.description} (${collection.id})`,
       };
     },
-    async loadAllCollectionItemsWithoutGeometries(forceFresh = false) {
+    async loadCollectionItemsWithoutGeometries(forceFresh = false, collections = []) {
       const promises = [];
       let geoconnexApp = this;
-      for (let col of geoconnexApp.collections) {
+      if (collections.length === 0){
+        // fetch items from all collections
+        collections = geoconnexApp.collections;
+      }
+
+      for (let col of collections) {
         geoconnexApp.loadingDescription = col.description;
         promises.push(geoconnexApp.getItemsIn(col, forceFresh));
       }
@@ -623,9 +631,9 @@ let geoconnexApp = new Vue({
       });
       return feature;
     },
-    async getItemsIn(collection, forceFresh = false) {
+    async getItemsIn(collection, forceFresh = false, skipGeometry = true) {
       let geoconnexApp = this;
-      const url = `${geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&skipGeometry=true`;
+      const url = `${geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&skipGeometry=${skipGeometry.toString()}`;
       let featureCollection = await geoconnexApp.fetchFromCacheOrGeoconnex(url, forceFresh);
       featureCollection.collection = collection;
       return featureCollection;
@@ -938,7 +946,6 @@ let geoconnexApp = new Vue({
         geoconnexApp.displayNoFoundItems(bbox[1], bbox[0]);
       }
       geoconnexApp.isSearching = false;
-      geoconnexApp.hasSearches = true;
       geoconnexApp.limitOptionsToMappedFeatures();
     },
     displayNoFoundItems(lat, lng) {
@@ -1114,7 +1121,9 @@ let geoconnexApp = new Vue({
       await geoconnexApp.loadCollections(false);
       await geoconnexApp.initLeafletFeatureGroups();
       await geoconnexApp.loadMetadataRelations();
-      geoconnexApp.showMap();
+      // TODO: do things work if we hide the map initially?
+      // geoconnexApp.showMap();
+
       // TODO: load items/geoms in the background and cache so that it is faster next time?
       // await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
       // geoconnexApp.fetchAllGeometries();
