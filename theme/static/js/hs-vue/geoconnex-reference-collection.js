@@ -858,10 +858,8 @@ let geoconnexApp = new Vue({
     getGeoItemsFromDebug(collections = null) {
       let geoconnexApp = this;
       geoconnexApp.isSearching = true;
-      setTimeout(async function () {
-        geoconnexApp.queryGeoItemsFromExtent(collections);
-        geoconnexApp.isSearching = false;
-      }, 0);
+      geoconnexApp.queryGeoItemsFromExtent(collections);
+      geoconnexApp.isSearching = false;
     },
     queryGeoItemsFromExtent(collections = null) {
       let geoconnexApp = this;
@@ -889,7 +887,6 @@ let geoconnexApp = new Vue({
     },
     queryGeoItemsRadius(lat = null, long = null) {
       let geoconnexApp = this;
-      geoconnexApp.isSearching = true;
       long = typeof long == "number" ? long : geoconnexApp.pointLong;
       lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
       let center = turf.point([long, lat]);
@@ -903,10 +900,7 @@ let geoconnexApp = new Vue({
       };
       var polygon = turf.circle(center, geoconnexApp.searchRadius, options);
       polygon.text = "Search bounds";
-      setTimeout(async function () {
-        geoconnexApp.queryGeoItemsInPoly(polygon);
-        geoconnexApp.isSearching = false;
-      }, 0);
+      geoconnexApp.queryGeoItemsInPoly(polygon);
     },
     async queryGeoItemsContainingPoint(lat = null, long = null) {
       // https://turfjs.org/docs/#booleanPointInPolygon
@@ -924,14 +918,13 @@ let geoconnexApp = new Vue({
         long + 10e-12,
         lat + 10e-12,
       ];
-      setTimeout(async function () {
-        geoconnexApp.queryGeoItemsInBbox(bbox);
-        geoconnexApp.isSearching = false;
-      }, 0);
+      geoconnexApp.queryGeoItemsInBbox(bbox);
     },
     async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
       let items = [];
+      // TODO: this doesn't work
+      geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
       let poly = turf.bboxPolygon(bbox)
       poly.text = "Search bounds";
@@ -1004,6 +997,7 @@ let geoconnexApp = new Vue({
       }
 
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
+      geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
       geoconnexApp.toggleItemFiltering();
     },
@@ -1012,6 +1006,7 @@ let geoconnexApp = new Vue({
       // https://turfjs.org/docs/#booleanIntersects
       // https://turfjs.org/docs/#booleanContains
       let geoconnexApp = this;
+      geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
       const promises = [];
 
@@ -1069,6 +1064,7 @@ let geoconnexApp = new Vue({
       }
 
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
+      geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
       geoconnexApp.toggleItemFiltering();
     },
