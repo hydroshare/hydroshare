@@ -159,7 +159,7 @@ let geoconnexApp = new Vue({
     },
     addSelectedToResMetadata(selected) {
       let geoconnexApp = this;
-      geoconnexApp.addFeatureToMap(selected);
+      geoconnexApp.addSelectedFeatureToMap(selected);
       geoconnexApp.ajaxSaveMetadata(selected);
 
       // disable so that it can't be duplicated
@@ -169,16 +169,14 @@ let geoconnexApp = new Vue({
         }
       });
     },
-    async addFeatureToMap(feature){
+    async addSelectedFeatureToMap(feature){
       let geoconnexApp = this;
       if (!feature.geometry){
         geoconnexApp.fetchSingleGeometry(feature).then((geometry) => {
           feature.geometry = geometry.geometry;
         });
       }
-      let shouldZoom = feature.geometry.type.includes("Poly");
-        geoconnexApp.addToMap(feature, shouldZoom);
-        shouldZoom ? null : geoconnexApp.fitMapToFeatures();
+      geoconnexApp.addToMap(feature);
     },
     async fetchSingleGeometry(geoconnexObj, refresh = false) {
       let geoconnexApp = this;
@@ -625,21 +623,6 @@ let geoconnexApp = new Vue({
       });
       return feature;
     },
-    async getRelationsFromMetadata() {
-      let geoconnexApp = this;
-      for (let relation of geoconnexApp.metadataRelations) {
-        if (
-          this.isUrl(relation.value) &&
-          relation.value.indexOf("geoconnex") > -1
-        ) {
-          let feature = await geoconnexApp.fetchSingleReferenceItem(
-            relation.value
-          );
-          geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
-          geoconnexApp.addFeatureToMap(feature);
-        }
-      }
-    },
     async getItemsIn(collection, forceFresh = false) {
       let geoconnexApp = this;
       const url = `${geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&skipGeometry=true`;
@@ -746,9 +729,23 @@ let geoconnexApp = new Vue({
       }
       return true;
     },
-    loadMetadataRelations() {
+    async loadMetadataRelations() {
       // TODO redo this function so that it doesn't rely on preloaded items to get properties
       let geoconnexApp = this;
+      // TODO: 2 loops are the same... remove repeat
+      for (let relation of geoconnexApp.metadataRelations) {
+        if (
+          this.isUrl(relation.value) &&
+          relation.value.indexOf("geoconnex") > -1
+        ) {
+          let feature = await geoconnexApp.fetchSingleReferenceItem(
+            relation.value
+          );
+          geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
+          geoconnexApp.addSelectedFeatureToMap(feature);
+        }
+      }
+
       for (relation of geoconnexApp.metadataRelations) {
         if (relation.type === "relation") {
           let item;
@@ -780,6 +777,7 @@ let geoconnexApp = new Vue({
         }
       }
       geoconnexApp.loadingCollections = false;
+      geoconnexApp.fitMapToFeatures();
     },
     async loadAllRelationGeometries() {
       let geoconnexApp = this;
@@ -1223,12 +1221,10 @@ let geoconnexApp = new Vue({
       // TODO: only show the collectionOptions without loading all the other stuff
 
       // await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
-
-      await geoconnexApp.getRelationsFromMetadata();
-      geoconnexApp.loadMetadataRelations();
-      geoconnexApp.initLeafletFeatureGroups();
+      await geoconnexApp.initLeafletFeatureGroups();
+      // geoconnexApp.showMap();
+      await geoconnexApp.loadMetadataRelations();
       geoconnexApp.showMap();
-      
       // TODO: load items/geoms in the background and cache so that it is faster next time?
       // geoconnexApp.fetchAllGeometries();
       // refresh cache in the background
@@ -1240,8 +1236,7 @@ let geoconnexApp = new Vue({
     ) {
       geoconnexApp.showingMap = true;
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      await geoconnexApp.getRelationsFromMetadata();
-      geoconnexApp.loadMetadataRelations();
+      await geoconnexApp.loadMetadataRelations();
       geoconnexApp.initLeafletMap();
     }
   },
