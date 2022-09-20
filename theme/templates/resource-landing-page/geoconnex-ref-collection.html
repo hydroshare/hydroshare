@@ -110,7 +110,7 @@
                                 :hide-no-data="!search"
                                 label="Please type here or select using map"
                                 :disabled="loadingCollections"
-                                :loading="loadingCollections"
+                                :loading="loadingRelations"
                                 color="blue-grey"
                                 :search-input.sync="search"
                                 :rules="rules"
@@ -152,6 +152,7 @@
                                 style="color: #f0ad4e;">
                                 </span>
                                 Options have been limited to current map search
+                                <!-- TODO: this overlaps with URI warning -->
                             </p>
                             <div v-if="loadingCollections">
                                 <p v-if="resMode=='Edit' && loadingCollections"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>

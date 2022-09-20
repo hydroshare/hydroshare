@@ -21,6 +21,7 @@ let geoconnexApp = new Vue({
       isSearching: false,
       loadingCollections: true,
       loadingDescription: "",
+      loadingRelations: true,
       errorMsg: "",
       errored: false,
       cacheName: "geoconnexCache",
@@ -732,52 +733,35 @@ let geoconnexApp = new Vue({
     async loadMetadataRelations() {
       // TODO redo this function so that it doesn't rely on preloaded items to get properties
       let geoconnexApp = this;
-      // TODO: 2 loops are the same... remove repeat
+
       for (let relation of geoconnexApp.metadataRelations) {
         if (
           this.isUrl(relation.value) &&
+          relation.type === "relation" &&
           relation.value.indexOf("geoconnex") > -1
         ) {
           let feature = await geoconnexApp.fetchSingleReferenceItem(
             relation.value
           );
-          geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
+          feature = geoconnexApp.getFeatureProperties(feature)
+          feature.disabled = true;
+          geoconnexApp.items.push(feature);
           geoconnexApp.addSelectedFeatureToMap(feature);
-        }
-      }
 
-      for (relation of geoconnexApp.metadataRelations) {
-        if (relation.type === "relation") {
-          let item;
-          try {
-            new URL(relation.value);
-            item = geoconnexApp.items.find((obj) => {
-                return obj.uri && obj.uri == relation.value;
-            });
-          } catch (_) {
-            item = null;
-          }
-          let data = {
-            id: relation.id,
-            text: item ? item.text : relation.value,
+          let featureValues = {
+            id: feature.id,
+            text: feature.text ? feature.text : relation.value,
             value: relation.value,
           };
-          geoconnexApp.values.push(data);
-
-          // disable already selected items
-          geoconnexApp.items.forEach((it) => {
-            if (item && item.uri === it.uri) {
-              it.disabled = true;
-            }
-          });
-
-          if (item) {
-            geoconnexApp.relationObjects.push(item);
-          }
+  
+          geoconnexApp.values.push(featureValues);
+  
+          // TODO: do we need to do this? isn't values the same?
+          geoconnexApp.relationObjects.push(feature);
         }
       }
-      geoconnexApp.loadingCollections = false;
       geoconnexApp.fitMapToFeatures();
+      geoconnexApp.loadingRelations = false;
     },
     async loadAllRelationGeometries() {
       let geoconnexApp = this;
