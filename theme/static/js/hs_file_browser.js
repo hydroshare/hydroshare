@@ -208,6 +208,7 @@ function updateSelectionMenuContext() {
         "setModelInstanceFileType",
         "subMenuSetContentType",
         "unzip",
+        "unzipToFolder",
         "updateRefUrl",
         "uploadFiles",
         "zip"
@@ -237,6 +238,9 @@ function updateSelectionMenuContext() {
 
         uiActionStates.unzip.disabled = true;
         uiActionStates.unzip.fileMenu.hidden = true;
+
+        uiActionStates.unzipToFolder.disabled = true;
+        uiActionStates.unzipToFolder.fileMenu.hidden = true;
 
         uiActionStates.downloadZipped.disabled = true;
         uiActionStates.downloadZipped.fileMenu.hidden = true;
@@ -291,6 +295,8 @@ function updateSelectionMenuContext() {
         if (selected.hasClass("fb-folder")) {
             uiActionStates.unzip.disabled = true;
             uiActionStates.unzip.fileMenu.hidden = true;
+            uiActionStates.unzipToFolder.disabled = true;
+            uiActionStates.unzipToFolder.fileMenu.hidden = true;
 
             uiActionStates.getRefUrl.disabled = true;
             uiActionStates.getRefUrl.fileMenu.hidden = true;
@@ -361,6 +367,8 @@ function updateSelectionMenuContext() {
             if (!fileName.toUpperCase().endsWith(".ZIP")) {
                 uiActionStates.unzip.disabled = true;
                 uiActionStates.unzip.fileMenu.hidden = true;
+                uiActionStates.unzipToFolder.disabled = true;
+                uiActionStates.unzipToFolder.fileMenu.hidden = true;
             }
 
             if (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile") {
@@ -481,6 +489,7 @@ function updateSelectionMenuContext() {
         uiActionStates.cut.disabled = true;
         uiActionStates.rename.disabled = true;
         uiActionStates.unzip.disabled = true;
+        uiActionStates.unzipToFolder.disabled = true;
         uiActionStates.zip.disabled = true;
         uiActionStates.delete.disabled = true;
         uiActionStates.download.disabled = true;
@@ -585,7 +594,7 @@ function updateSelectionMenuContext() {
 
     $("#open-separator").toggleClass("hidden", uiActionStates.open.fileMenu.hidden);
     $("#content-type-separator").toggleClass("hidden", mode !== "edit" || uiActionStates.removeAggregation.fileMenu.hidden && uiActionStates.subMenuSetContentType.fileMenu.hidden);
-    $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden);
+    $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden && uiActionStates.unzipToFolder.fileMenu.hidden);
 }
 
 // Proxy function when pasting in current directory triggering from menu item or button
