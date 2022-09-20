@@ -129,14 +129,6 @@ let geoconnexApp = new Vue({
     },
   },
   methods: {
-    toggleItemFiltering() {
-      let geoconnexApp = this;
-      if (geoconnexApp.hasFilteredItems) {
-        geoconnexApp.resetItems();
-      } else {
-        geoconnexApp.limitOptionsToMappedFeatures();
-      }
-    },
     resetItems() {
       let geoconnexApp = this;
       geoconnexApp.items = geoconnexApp.unfilteredItems;
@@ -976,8 +968,6 @@ let geoconnexApp = new Vue({
               );
             }
           }
-          // TODO: sometimes this works but not always?
-          // seems like there are some odd state not refreshing issues
           geoconnexApp.items.push(item);
 
           let addCollection = item.collection;
@@ -999,7 +989,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
       geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
-      geoconnexApp.toggleItemFiltering();
+      geoconnexApp.limitOptionsToMappedFeatures();
     },
     async queryGeoItemsInPoly(polygon = null) {
       // https://turfjs.org/docs/#intersects
@@ -1066,7 +1056,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
       geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
-      geoconnexApp.toggleItemFiltering();
+      geoconnexApp.limitOptionsToMappedFeatures();
     },
     clearLeafletOfMappedSearches() {
       let geoconnexApp = this;
