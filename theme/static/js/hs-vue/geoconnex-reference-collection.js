@@ -845,12 +845,9 @@ let geoconnexApp = new Vue({
       geoconnexApp.hasExtentSearch = true;
     },
     async queryGeoItemsContainingPoint(lat = null, long = null) {
-      // https://turfjs.org/docs/#booleanPointInPolygon
       let geoconnexApp = this;
       long = typeof long == "number" ? long : geoconnexApp.pointLong;
       lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
-      let center = turf.point([long, lat]);
-      center.text = "Search point";
       geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
 
@@ -868,7 +865,7 @@ let geoconnexApp = new Vue({
       // TODO: this isSearching doesn't work
       geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
-      let poly = turf.bboxPolygon(bbox)
+      let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]]).toGeoJSON();
       poly.text = "Search bounds";
       geoconnexApp.addToMap(
         poly,
@@ -1015,9 +1012,7 @@ let geoconnexApp = new Vue({
         let loc = { lat: e.latlng.lat, long: e.latlng.lng };
         let content = `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-success leaflet-point-search" data='${JSON.stringify(
           loc
-        )}'>Search all collections for items containing this point</button>`;
-        // TODO: maby make this "search selected collections --in the typeahead, instead of all collections"
-        // TODO: if point search has no hits, avoid zoom in only on the point
+        )}'>Search collections for items containing this point</button>`;
         popup
           .setLatLng(e.latlng)
           .setContent(content)
@@ -1035,6 +1030,8 @@ let geoconnexApp = new Vue({
             const loc = JSON.parse($(this).attr("data"));
             geoconnexApp.fillValuesFromResCoordinates(loc.lat, loc.long);
             geoconnexApp.queryGeoItemsContainingPoint(loc.lat, loc.long);
+            // TODO: if point search has no hits, avoid zoom in only on the point
+            // TODO: maby make this "search selected collections --in the typeahead, instead of all collections"
           }
         );
 
