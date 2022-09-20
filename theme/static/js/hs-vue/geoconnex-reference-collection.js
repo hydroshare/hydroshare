@@ -981,7 +981,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.items.push(item);
 
           let addCollection = item.collection;
-          if (geoconnexApp.selectedCollections == [] || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
+          if (geoconnexApp.selectedCollections === null || geoconnexApp.selectedCollections.length == 0 || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
             addCollection = geoconnexApp.collections.filter(col=>{
               return col.id == addCollection
             });
