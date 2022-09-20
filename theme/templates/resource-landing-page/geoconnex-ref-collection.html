@@ -98,7 +98,7 @@
                                 </v-autocomplete>
                                 <!-- TODO: disable (hide?) the combobox until they have selected a collection-->
                             <v-combobox
-                                v-model="values"
+                                v-model="selectedReferenceItems"
                                 :items="items"
                                 hide-no-data
                                 allow-overflow="false"
@@ -191,9 +191,9 @@
                             </div>
                         </div>
                     {% else %}
-                        <div class="col-xs-12 col-md-4 info-table-wrapper" v-if="!loadingCollections && values.length > 0">
+                        <div class="col-xs-12 col-md-4 info-table-wrapper" v-if="!loadingCollections && selectedReferenceItems.length > 0">
                             <table class="table hs-table info-table">
-                                <tr v-for="value in values" style="padding-bottom: 20px">
+                                <tr v-for="value in selectedReferenceItems" style="padding-bottom: 20px">
                                     <td v-if="isUrl(value.value)" class="dataset-details">
                                         <a v-if="isUrl(value.value)" target="_blank" :href="value.value"> ${value.text}</a>
                                         <i class="fa fa-external-link"></i>
@@ -310,10 +310,10 @@
                             title="Performs a query to find related features that overlap with your resource's spatial extent"
                             class="glyphicon glyphicon-info-sign text-muted">
                             </span>
-                        <h4 v-if="values.length > 0">SELECTED VALUES</h4>
-                        <div style="border: thin solid black" v-if="values.length > 0">
+                        <h4 v-if="selectedReferenceItems.length > 0">SELECTED VALUES</h4>
+                        <div style="border: thin solid black" v-if="selectedReferenceItems.length > 0">
                             <ul>
-                                <li v-for="value in values">${value}<hr><a :href="value.value">${value.value}</a></li>
+                                <li v-for="value in selectedReferenceItems">${value}<hr><a :href="value.value">${value.value}</a></li>
                             </ul>
                         </div>
                     </div>

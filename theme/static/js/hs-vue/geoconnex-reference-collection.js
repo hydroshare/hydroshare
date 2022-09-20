@@ -16,7 +16,7 @@ let geoconnexApp = new Vue({
       unfilteredItems: [],
       hasFilteredItems: false,
       collections: null,
-      values: [],
+      selectedReferenceItems: [],
       // TODO: isSearching was working for point select search. but now broken for all...
       isSearching: false,
       loadingCollections: true,
@@ -57,7 +57,7 @@ let geoconnexApp = new Vue({
     };
   },
   watch: {
-    values(newValue, oldValue) {
+    selectedReferenceItems(newValue, oldValue) {
       let geoconnexApp = this;
       geoconnexApp.errorMsg = "";
 
@@ -616,7 +616,7 @@ let geoconnexApp = new Vue({
       feature.text = `${feature.NAME} [${feature.relative_id}]`;
 
       //prevent duplicate selections
-      geoconnexApp.values.forEach((it) => {
+      geoconnexApp.selectedReferenceItems.forEach((it) => {
         if (feature.uri === it.value) {
           feature.disabled = true;
         }
@@ -752,7 +752,7 @@ let geoconnexApp = new Vue({
             value: relation.value,
           };
   
-          geoconnexApp.values.push(featureValues);
+          geoconnexApp.selectedReferenceItems.push(featureValues);
   
           geoconnexApp.relationObjects.push(feature);
         }
@@ -778,7 +778,7 @@ let geoconnexApp = new Vue({
                 selected.text ? selected.text : selected
               } to resource metadata`
             );
-          geoconnexApp.values.push({
+          geoconnexApp.selectedReferenceItems.push({
             id: result.element_id,
             value: selected.uri ? selected.uri : selected,
             text: selected.text ? selected.text : selected,
@@ -848,6 +848,7 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       long = typeof long == "number" ? long : geoconnexApp.pointLong;
       lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
+      // TODO: remove turf
       let center = turf.point([long, lat]);
       let sides = geoconnexApp.searchRadius / 100;
       var options = {
@@ -893,7 +894,7 @@ let geoconnexApp = new Vue({
         { color: "red", fillColor: "red", fillOpacity: 0.1 },
         (group = geoconnexApp.searchFeatureGroup)
       );
-      try {
+      // try {
         if (!collections){
           // fetch items from all collections
           collections = geoconnexApp.collections;
@@ -907,7 +908,7 @@ let geoconnexApp = new Vue({
         items = results.flat().filter(Boolean);
 
         for (let item of items){
-          let alreadySelected = geoconnexApp.values.find((obj) => {
+          let alreadySelected = geoconnexApp.selectedReferenceItems.find((obj) => {
             return obj.value && obj.value === item.uri;
           });
           if (alreadySelected) {
@@ -938,7 +939,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.items.push(item);
 
           let addCollection = item.collection;
-          if (geoconnexApp.selectedCollections === null || geoconnexApp.selectedCollections.length == 0 || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
+          if (geoconnexApp.selectedCollections.length == 0 || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
             addCollection = geoconnexApp.collections.filter(col=>{
               return col.id == addCollection
             });
@@ -947,11 +948,11 @@ let geoconnexApp = new Vue({
             );
           }
         }
-      } catch (e) {
-        console.error(
-          `Error while attempting to find intersecting geometries: ${e.message}`
-        );
-      }
+      // } catch (e) {
+      //   console.error(
+      //     `Error while attempting to find intersecting geometries: ${e.message}`
+      //   );
+      // }
 
       geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
       geoconnexApp.isSearching = false;
@@ -977,7 +978,7 @@ let geoconnexApp = new Vue({
         for (let item of geoconnexApp.items) {
           if (item.header) continue;
           geoconnexApp.loadingDescription = item.collection;
-          let alreadySelected = geoconnexApp.values.find((obj) => {
+          let alreadySelected = geoconnexApp.selectedReferenceItems.find((obj) => {
             return obj.value === item.uri;
           });
           if (alreadySelected) {
@@ -1037,7 +1038,7 @@ let geoconnexApp = new Vue({
 
       geoconnexApp.hasSearches = false;
       geoconnexApp.hasExtentSearch = false;
-      geoconnexApp.selectedCollections = null;
+      geoconnexApp.selectedCollections = [];
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.layerControl.collapse();
     },
@@ -1101,6 +1102,7 @@ let geoconnexApp = new Vue({
           loc
         )}'>Search all collections for items containing this point</button>`;
         // TODO: maby make this "search selected collections --in the typeahead, instead of all collections"
+        // TODO: if point search has no hits, avoid zoom in only on the point
         popup
           .setLatLng(e.latlng)
           .setContent(content)
@@ -1127,7 +1129,7 @@ let geoconnexApp = new Vue({
           function (e) {
             e.stopPropagation();
             let data = JSON.parse($(this).attr("data"));
-            let alreadySelected = geoconnexApp.values.find((obj) => {
+            let alreadySelected = geoconnexApp.selectedReferenceItems.find((obj) => {
               return obj.value === data.uri;
             });
             if (!alreadySelected) {
@@ -1143,7 +1145,7 @@ let geoconnexApp = new Vue({
           function (e) {
             e.stopPropagation();
             let data = JSON.parse($(this).attr("data"));
-            geoconnexApp.values = geoconnexApp.values.filter(
+            geoconnexApp.selectedReferenceItems = geoconnexApp.selectedReferenceItems.filter(
               (s) => s.value !== data.uri
             );
             geoconnexApp.map.closePopup();
