@@ -25,7 +25,7 @@ let geoconnexApp = new Vue({
       errorMsg: "",
       errored: false,
       cacheName: "geoconnexCache",
-      collectionsDefaultHidden: ["principal_aq", "nat_aq"],
+      collectionsDefaultHidden: [],
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
       geoCache: null,
       resShortId: SHORT_ID,
@@ -844,7 +844,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.queryGeoItemsInBbox(bbox, collections);
       geoconnexApp.hasExtentSearch = true;
     },
-    async queryGeoItemsContainingPoint(lat = null, long = null) {
+    async queryGeoItemsContainingPoint(lat = null, long = null, collections = null) {
       let geoconnexApp = this;
       long = typeof long == "number" ? long : geoconnexApp.pointLong;
       lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
@@ -857,7 +857,7 @@ let geoconnexApp = new Vue({
         long + 10e-12,
         lat + 10e-12,
       ];
-      geoconnexApp.queryGeoItemsInBbox(bbox);
+      geoconnexApp.queryGeoItemsInBbox(bbox, collections);
     },
     async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
@@ -874,7 +874,7 @@ let geoconnexApp = new Vue({
         (group = geoconnexApp.searchFeatureGroup)
       );
       try {
-        if (!collections){
+        if (collections.length === 0){
           // fetch items from all collections
           collections = geoconnexApp.collections;
         }
@@ -1029,9 +1029,8 @@ let geoconnexApp = new Vue({
             e.stopPropagation();
             const loc = JSON.parse($(this).attr("data"));
             geoconnexApp.fillValuesFromResCoordinates(loc.lat, loc.long);
-            geoconnexApp.queryGeoItemsContainingPoint(loc.lat, loc.long);
+            geoconnexApp.queryGeoItemsContainingPoint(loc.lat, loc.long, geoconnexApp.selectedCollections);
             // TODO: if point search has no hits, avoid zoom in only on the point
-            // TODO: maby make this "search selected collections --in the typeahead, instead of all collections"
           }
         );
 
@@ -1101,15 +1100,11 @@ let geoconnexApp = new Vue({
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       await geoconnexApp.loadCollections(false);
-
-      // TODO: only show the collectionOptions without loading all the other stuff
-
-      // await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
       await geoconnexApp.initLeafletFeatureGroups();
-      // geoconnexApp.showMap();
       await geoconnexApp.loadMetadataRelations();
       geoconnexApp.showMap();
       // TODO: load items/geoms in the background and cache so that it is faster next time?
+      // await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
       // geoconnexApp.fetchAllGeometries();
       // refresh cache in the background
       // geoconnexApp.refreshItemsSilently();
