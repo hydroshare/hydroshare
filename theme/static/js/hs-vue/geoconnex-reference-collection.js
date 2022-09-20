@@ -844,24 +844,6 @@ let geoconnexApp = new Vue({
       geoconnexApp.queryGeoItemsInBbox(bbox, collections);
       geoconnexApp.hasExtentSearch = true;
     },
-    queryGeoItemsRadius(lat = null, long = null) {
-      let geoconnexApp = this;
-      long = typeof long == "number" ? long : geoconnexApp.pointLong;
-      lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
-      // TODO: remove turf
-      let center = turf.point([long, lat]);
-      let sides = geoconnexApp.searchRadius / 100;
-      var options = {
-        steps: sides < 25 ? 25 : sides,
-        units: "kilometers",
-        properties: {
-          Radius: `${geoconnexApp.searchRadius} kilometers`,
-        },
-      };
-      var polygon = turf.circle(center, geoconnexApp.searchRadius, options);
-      polygon.text = "Search bounds";
-      geoconnexApp.queryGeoItemsInPoly(polygon);
-    },
     async queryGeoItemsContainingPoint(lat = null, long = null) {
       // https://turfjs.org/docs/#booleanPointInPolygon
       let geoconnexApp = this;
@@ -894,7 +876,7 @@ let geoconnexApp = new Vue({
         { color: "red", fillColor: "red", fillOpacity: 0.1 },
         (group = geoconnexApp.searchFeatureGroup)
       );
-      // try {
+      try {
         if (!collections){
           // fetch items from all collections
           collections = geoconnexApp.collections;
@@ -946,73 +928,6 @@ let geoconnexApp = new Vue({
             geoconnexApp.selectedCollections.push(
               addCollection.pop()
             );
-          }
-        }
-      // } catch (e) {
-      //   console.error(
-      //     `Error while attempting to find intersecting geometries: ${e.message}`
-      //   );
-      // }
-
-      geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
-      geoconnexApp.isSearching = false;
-      geoconnexApp.hasSearches = true;
-      geoconnexApp.limitOptionsToMappedFeatures();
-    },
-    async queryGeoItemsInPoly(polygon = null) {
-      // https://turfjs.org/docs/#intersects
-      // https://turfjs.org/docs/#booleanIntersects
-      // https://turfjs.org/docs/#booleanContains
-      let geoconnexApp = this;
-      geoconnexApp.isSearching = true;
-      geoconnexApp.map.closePopup();
-      const promises = [];
-
-      geoconnexApp.addToMap(
-        polygon,
-        false,
-        { color: "red", fillColor: "red", fillOpacity: 0.1 },
-        (group = geoconnexApp.searchFeatureGroup)
-      );
-      try {
-        for (let item of geoconnexApp.items) {
-          if (item.header) continue;
-          geoconnexApp.loadingDescription = item.collection;
-          let alreadySelected = geoconnexApp.selectedReferenceItems.find((obj) => {
-            return obj.value === item.uri;
-          });
-          if (alreadySelected) {
-            continue;
-          }
-          promises.push(geoconnexApp.fetchSingleGeometry(item));
-        }
-
-        const results = await Promise.all(promises);
-
-        for (item of results) {
-          if (turf.area(item) < geoconnexApp.maxAreaToReturn * 1e6) {
-            if (turf.booleanIntersects(polygon, item)) {
-              if (item.geometry.type.includes("Point")) {
-                await geoconnexApp.addToMap(
-                  item,
-                  false,
-                  {
-                    color: geoconnexApp.searchColor,
-                    radius: 5,
-                    fillColor: "yellow",
-                    fillOpacity: 0.8,
-                  },
-                  (group = geoconnexApp.searchFeatureGroup)
-                );
-              } else {
-                await geoconnexApp.addToMap(
-                  item,
-                  false,
-                  { color: geoconnexApp.searchColor },
-                  (group = geoconnexApp.searchFeatureGroup)
-                );
-              }
-            }
           }
         }
       } catch (e) {
