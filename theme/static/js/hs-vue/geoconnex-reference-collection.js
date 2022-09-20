@@ -175,10 +175,10 @@ let geoconnexApp = new Vue({
         geoconnexApp.fetchSingleGeometry(feature).then((geometry) => {
           feature.geometry = geometry.geometry;
         });
-        let shouldZoom = feature.geometry.type.includes("Poly");
+      }
+      let shouldZoom = feature.geometry.type.includes("Poly");
         geoconnexApp.addToMap(feature, shouldZoom);
         shouldZoom ? null : geoconnexApp.fitMapToFeatures();
-      }
     },
     async fetchSingleGeometry(geoconnexObj, refresh = false) {
       let geoconnexApp = this;
@@ -635,7 +635,6 @@ let geoconnexApp = new Vue({
           let feature = await geoconnexApp.fetchSingleReferenceItem(
             relation.value
           );
-          // TODO: only push if not alreay an item?
           geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
           geoconnexApp.addFeatureToMap(feature);
         }
@@ -915,7 +914,7 @@ let geoconnexApp = new Vue({
     async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
       let items = [];
-      // TODO: this doesn't work
+      // TODO: this isSearching doesn't work
       geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
       let poly = turf.bboxPolygon(bbox)
@@ -1222,7 +1221,6 @@ let geoconnexApp = new Vue({
       await geoconnexApp.loadCollections(false);
 
       // TODO: only show the collectionOptions without loading all the other stuff
-      // TODO: maybe we need to only load items from the selected collection? to reduce load time...
 
       // await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
 
