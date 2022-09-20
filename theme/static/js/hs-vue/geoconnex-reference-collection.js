@@ -353,8 +353,7 @@ let geoconnexApp = new Vue({
       // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
       geoconnexApp.map.setView([30, 0], 1);
       geoconnexApp.setLeafletMapEvents();
-
-      geoconnexApp.loadAllRelationGeometries();
+      geoconnexApp.fitMapToFeatures();
     },
     addToMap(
       geojson,
@@ -731,7 +730,6 @@ let geoconnexApp = new Vue({
       return true;
     },
     async loadMetadataRelations() {
-      // TODO redo this function so that it doesn't rely on preloaded items to get properties
       let geoconnexApp = this;
 
       for (let relation of geoconnexApp.metadataRelations) {
@@ -756,23 +754,11 @@ let geoconnexApp = new Vue({
   
           geoconnexApp.values.push(featureValues);
   
-          // TODO: do we need to do this? isn't values the same?
           geoconnexApp.relationObjects.push(feature);
         }
       }
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.loadingRelations = false;
-    },
-    async loadAllRelationGeometries() {
-      let geoconnexApp = this;
-      for (relation of geoconnexApp.relationObjects) {
-        if (relation && geoconnexApp.showingMap) {
-          let geometry = await geoconnexApp.fetchSingleGeometry(relation);
-          relation.geometry = geometry.geometry;
-          geoconnexApp.addToMap(relation, false);
-        }
-      }
-      geoconnexApp.fitMapToFeatures();
     },
     ajaxSaveMetadata(selected) {
       let geoconnexApp = this;
