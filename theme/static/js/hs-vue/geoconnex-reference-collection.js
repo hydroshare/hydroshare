@@ -932,11 +932,24 @@ let geoconnexApp = new Vue({
           `Error while attempting to find intersecting geometries: ${e.message}`
         );
       }
-
-      geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
+      if(items.length){
+        geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
+      }else{
+        geoconnexApp.displayNoFoundItems(bbox[1], bbox[0]);
+      }
       geoconnexApp.isSearching = false;
       geoconnexApp.hasSearches = true;
       geoconnexApp.limitOptionsToMappedFeatures();
+    },
+    displayNoFoundItems(lat, lng) {
+      let loc = { lat: lat, lng: lng };
+      let content = `<div data='${JSON.stringify(
+        loc
+      )}'>No collection items found containing this search.</div>`;
+      L.popup({ maxWidth: 400, autoClose: true})
+        .setLatLng(loc)
+        .setContent(content)
+        .openOn(geoconnexApp.map);
     },
     clearLeafletOfMappedSearches() {
       let geoconnexApp = this;
@@ -1030,7 +1043,6 @@ let geoconnexApp = new Vue({
             const loc = JSON.parse($(this).attr("data"));
             geoconnexApp.fillValuesFromResCoordinates(loc.lat, loc.long);
             geoconnexApp.queryGeoItemsContainingPoint(loc.lat, loc.long, geoconnexApp.selectedCollections);
-            // TODO: if point search has no hits, avoid zoom in only on the point
           }
         );
 
