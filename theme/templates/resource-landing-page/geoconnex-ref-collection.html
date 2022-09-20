@@ -16,11 +16,11 @@
                 <em style="padding-right:20px;">
                     If this resource is related to other geospatial resources, you can record those relationships here.
                     For example, if this resource has spatial extent contained within a specific Eight-digit Hydrologic Subbasin, you could reference that "HU08" here.
-                    A reference can be created by typing a URL that links to the related geospatial resource.
+                    A reference can also be created by typing a URL that links to the related geospatial resource.
                     <strong><a href="https://geoconnex.internetofwater.dev/" target="_blank">Geoconnex</a></strong>,
                     a project of the 
                     <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
-                    provides a reference set of resources which you can search by typing or by showing the map.
+                    provides collections of reference resources which you can search by selecting a collection or by showing the map.
                     If you enter a URL, it will be converted to an active link.
                     Adding these relations improves discoverability of your resource and contributes to
                     <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>
@@ -60,7 +60,7 @@
                                 multiple
                                 outlined
                                 hide-selected
-                                label="Choose a collection that you would like to search"
+                                label="Choose a collection of related items to search"
                                 :disabled="loadingCollections"
                                 :loading="loadingCollections"
                                 color="blue-grey"
@@ -72,8 +72,7 @@
                                         </template>
                                         <template v-else>
                                             <v-list-item-content>
-                                                <v-list-item-title v-html="data.item.id"></v-list-item-title>
-                                                <v-list-item-subtitle v-html="data.item.description"></v-list-item-subtitle>
+                                                <v-list-item-title v-html="`${data.item.description} (${data.item.id})`"></v-list-item-title>
                                             </v-list-item-content>
                                         </template>
                                     </template>
@@ -108,7 +107,7 @@
                                 outlined
                                 hide-selected
                                 :hide-no-data="!search"
-                                label="Please type here or select using map"
+                                label="Add related items here or select using map"
                                 :disabled="loadingCollections"
                                 :loading="loadingRelations"
                                 color="blue-grey"
@@ -151,7 +150,7 @@
                                 class="glyphicon glyphicon-exclamation-sign text-muted"
                                 style="color: #f0ad4e;">
                                 </span>
-                                Options have been limited to current map search
+                                Options have been limited to collections you selected above
                                 <!-- TODO: this overlaps with URI warning -->
                             </p>
                             <div v-if="loadingCollections">
@@ -188,6 +187,7 @@
                                     class="glyphicon glyphicon-info-sign text-muted">
                                     </span>
                                 </div>
+                                <!-- TODO: add button to search ALL geoconnex items in the collection if no spatial extent -->
                             </div>
                         </div>
                     {% else %}
