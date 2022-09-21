@@ -214,7 +214,7 @@ let geoconnexApp = new Vue({
     async fetchCollectionItemsInBbox(collection, bbox = null, refresh = false) {
       let geoconnexApp = this;
       let response = {};
-      let query = `${geoconnexUrl}/${collection.id}/items/?f=json&bbox=${bbox.toString()}`;
+      let query = `${geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&bbox=${bbox.toString()}`;
       response = await geoconnexApp.fetchFromCacheOrGeoconnex(query, refresh);
       return response ? response.features : null
     },
