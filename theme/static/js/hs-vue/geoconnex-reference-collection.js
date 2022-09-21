@@ -58,6 +58,11 @@ let geoconnexApp = new Vue({
       selectColor: "purple",
     };
   },
+  computed: {
+    hasSelections() {
+      return this.selectedCollections.length > 0 || this.selectedReferenceItems.length > 0
+    }
+  },
   watch: {
     selectedReferenceItems(newValue, oldValue) {
       let geoconnexApp = this;
@@ -1164,7 +1169,9 @@ let geoconnexApp = new Vue({
         // await geoconnexApp.fillValuesFromResExtent();
         // geoconnexApp.showSpatialExtent();
       })
+      // TODO: update the goeconnex map when update spatial extent =-- without page refresh
       
+      // TODO: figure out zoom -- should we zoom to the selected items, the spatial extent, the searches, or all of the above?
       
       geoconnexApp.loadCollections(false);
       geoconnexApp.loadMetadataRelations();

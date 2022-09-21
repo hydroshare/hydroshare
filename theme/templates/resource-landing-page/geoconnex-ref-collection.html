@@ -98,6 +98,7 @@
                                 <!-- TODO: disable (hide?) the combobox until they have selected a collection-->
                             <v-combobox
                                 v-model="selectedReferenceItems"
+                                v-show="hasSelections"
                                 :items="items"
                                 hide-no-data
                                 allow-overflow="false"
