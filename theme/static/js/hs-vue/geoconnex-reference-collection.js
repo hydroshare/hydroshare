@@ -9,7 +9,7 @@ let geoconnexApp = new Vue({
     return {
       metadataRelations: RELATIONS,
       relationObjects: [],
-      debug: false,
+      debug: true,
       resMode: RESOURCE_MODE,
       resSpatialType: null,
       items: [],
@@ -22,6 +22,7 @@ let geoconnexApp = new Vue({
       loadingCollections: true,
       loadingDescription: "",
       loadingRelations: true,
+      // TODO: Internal Server Error while attempting to remove related feature.
       errorMsg: "",
       errored: false,
       cacheName: "geoconnexCache",
@@ -29,8 +30,8 @@ let geoconnexApp = new Vue({
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
       geoCache: null,
       resShortId: SHORT_ID,
-      cacheDuration: 0, // one week in milliseconds
-      enforceCacheDuration: true,
+      cacheDuration: 6.048e+8, // one week in milliseconds
+      enforceCacheDuration: false,
       search: null,
       rules: null,
       showingMap: true,
@@ -516,6 +517,7 @@ let geoconnexApp = new Vue({
             geoconnexApp.layerControl.addOverlay(
               geoconnexApp.layerGroupDictionary[geojson.collection],
               geojson.collection
+              // TODO: instead of collection id, use collection description
             );
             geoconnexApp.layerControl.expand();
           }
@@ -1164,17 +1166,30 @@ let geoconnexApp = new Vue({
       await geoconnexApp.initLeafletMap();
 
       // TODO: get the spatial coverage directly (backend?) instead of from DOM?
-      geoconnexApp.$nextTick(async function () {
+      // geoconnexApp.$nextTick(async function () {
         // coverageMap.initialShapesDrawn
         // await geoconnexApp.fillValuesFromResExtent();
         // geoconnexApp.showSpatialExtent();
-      })
+      // })
+
+    checkFlag();
+    async function checkFlag() {
+      if(!coverageMap || !coverageMap.initialShapesDrawn) {
+         window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
+      } else {
+      await geoconnexApp.fillValuesFromResExtent();
+      geoconnexApp.showSpatialExtent();
+      }
+    }
       // TODO: update the goeconnex map when update spatial extent =-- without page refresh
       
       // TODO: figure out zoom -- should we zoom to the selected items, the spatial extent, the searches, or all of the above?
       
       geoconnexApp.loadCollections(false);
       geoconnexApp.loadMetadataRelations();
+
+      // TODO: Add some limits (ex: if zoomed to US, we shouldn’t allow query of HUC10) -- "disabled based on your zoom level"
+
 
       // TODO: load items/geoms in the background and cache so that it is faster next time?
       // I think this would have to be done by collection, so that the urls match in the cache
@@ -1189,11 +1204,18 @@ let geoconnexApp = new Vue({
       geoconnexApp.resMode == "View" &&
       geoconnexApp.metadataRelations.length > 0
     ) {
-      geoconnexApp.showingMap = true;
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      await geoconnexApp.initLeafletMap();
-      await geoconnexApp.loadMetadataRelations();
       // TODO: look into the console errors on view mode
+      checkFlag();
+      async function checkFlag() {
+        if(!coverageMap || !coverageMap.initialShapesDrawn) {
+           window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
+        } else {
+          await geoconnexApp.initLeafletMap();
+          await geoconnexApp.loadMetadataRelations();
+          geoconnexApp.loadingCollections = false;
+        }
+      }
     }
   },
 });

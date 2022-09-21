@@ -20,10 +20,10 @@
                     <strong><a href="https://geoconnex.internetofwater.dev/" target="_blank">Geoconnex</a></strong>,
                     a project of the 
                     <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
-                    provides collections of reference resources which you can search by selecting a collection or by showing the map.
+                    provides collections of reference resources, within the United States, which you can search by selecting a collection or by showing the map.
                     If you enter a URL, it will be converted to an active link.
                     Adding these relations improves discoverability of your resource and contributes to
-                    <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>
+                    <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>.
                 </em>
             </div>
         </div>
@@ -48,7 +48,7 @@
                 <div class="row">
                     {% if resource_edit_mode %}
                         <div class="col-xs-12">
-                            <!-- TODO: typeahead doesn't work for typing collection names -->
+                            <!-- TODO flexbox partial width instead of full width? -->
                             <v-autocomplete
                                 v-model="selectedCollections"
                                 :items="collections"
@@ -95,7 +95,6 @@
                                         </v-chip>
                                     </template>
                                 </v-autocomplete>
-                                <!-- TODO: disable (hide?) the combobox until they have selected a collection-->
                             <v-combobox
                                 v-model="selectedReferenceItems"
                                 v-show="hasSelections"
@@ -115,6 +114,7 @@
                                 :search-input.sync="search"
                                 :rules="rules"
                                 return-object="true">
+                                <!-- TODO: hilight the layer on hover? -->
                                 <template v-slot:item="data">
                                     <template v-if="typeof data.item !== 'object'">
                                         <v-list-tile-content v-text="data.item"></v-list-tile-content>
@@ -193,6 +193,7 @@
                         </div>
                     {% else %}
                         <div class="col-xs-12 col-md-4 info-table-wrapper" v-if="!loadingCollections && selectedReferenceItems.length > 0">
+                            <!-- TODO: the table is missing in view mode -->
                             <table class="table hs-table info-table">
                                 <tr v-for="value in selectedReferenceItems" style="padding-bottom: 20px">
                                     <td v-if="isUrl(value.value)" class="dataset-details">

@@ -146,8 +146,6 @@ async function drawInitialShape() {
         $("#btn-select-irods-file").show();
     }
     coverageMap.initialShapesDrawn = true;
-    await geoconnexApp.fillValuesFromResExtent();
-    geoconnexApp.showSpatialExtent();
 }
 
 function initMap() {
