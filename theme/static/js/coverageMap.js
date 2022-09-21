@@ -40,7 +40,7 @@ $(document).ready(function () {
     }
 });
 
-function drawInitialShape() {
+async function drawInitialShape() {
     // This field is populated if the page is in view mode
     var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
 
@@ -145,6 +145,9 @@ function drawInitialShape() {
         $("#sign-in-info").text(sessionStorage.signininfo);
         $("#btn-select-irods-file").show();
     }
+    coverageMap.initialShapesDrawn = true;
+    await geoconnexApp.fillValuesFromResExtent();
+    geoconnexApp.showSpatialExtent();
 }
 
 function initMap() {

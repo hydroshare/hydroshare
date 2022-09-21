@@ -33,7 +33,7 @@ let geoconnexApp = new Vue({
       enforceCacheDuration: true,
       search: null,
       rules: null,
-      showingMap: false,
+      showingMap: true,
       map: null,
       layerControl: null,
       selectedItemLayers: {},
@@ -52,6 +52,7 @@ let geoconnexApp = new Vue({
       eastLong: null,
       southLat: null,
       westLong: null,
+      bBox: null,
       searchColor: "orange",
       selectColor: "purple",
     };
@@ -87,7 +88,7 @@ let geoconnexApp = new Vue({
         });
       }
     },
-    async selectedCollections(newValue, oldValue){
+    selectedCollections(newValue, oldValue){
       let geoconnexApp = this;
       let oldLength = oldValue ? oldValue.length : 0;
       let newLength = newValue ? newValue.length : 0;
@@ -101,8 +102,8 @@ let geoconnexApp = new Vue({
           // TODO: require that they add spatial coverage
           // https://docs.google.com/document/d/1HjYJ50UgaNXbaQo8VJwsedfOMwBDyw7sphtoiEs67Kw/edit#
           // see ^^^
-          let featureCollection = await geoconnexApp.getItemsIn(newCollection, forceFresh = false, skipGeometry = false);
-          geoconnexApp.addFeaturesToMap(featureCollection.features);
+          // let featureCollection = await geoconnexApp.getItemsIn(newCollection, forceFresh = false, skipGeometry = false);
+          // geoconnexApp.addFeaturesToMap(featureCollection.features);
         }
       } else if (newLength < oldLength) {
         let remove;
@@ -257,15 +258,10 @@ let geoconnexApp = new Vue({
       let response = await geoconnexApp.fetchFromCacheOrGeoconnex(query);
       return response;
     },
-    initLeafletFeatureGroups() {
+    initLeafletMap() {
       let geoconnexApp = this;
       geoconnexApp.selectedFeatureGroup = L.featureGroup();
       geoconnexApp.searchFeatureGroup = L.featureGroup();
-    },
-    initLeafletMap() {
-      let geoconnexApp = this;
-      geoconnexApp.selectedFeatureGroup ??
-        geoconnexApp.initLeafletFeatureGroups();
       const southWest = L.latLng(-90, -180),
         northEast = L.latLng(90, 180);
       const bounds = L.latLngBounds(southWest, northEast);
@@ -902,17 +898,29 @@ let geoconnexApp = new Vue({
     },
     queryGeoItemsFromExtent(collections = null) {
       let geoconnexApp = this;
+      // geoconnexApp.setBbox();
+      geoconnexApp.queryGeoItemsInBbox(geoconnexApp.bbox, collections);
+      geoconnexApp.hasExtentSearch = true;
+    },
+    getBbox(){
+      let geoconnexApp = this;
+      geoconnexApp.bBox || geoconnexApp.fillValuesFromResExtent();
+      return geoconnexApp.bBox
+    },
+    setBbox() {
+      let geoconnexApp = this;
+      geoconnexApp.updateSpatialExtentType();
       if (geoconnexApp.resSpatialType == "point") {
         // Geoconnex API only acccepts bounding box
         // if point, just make it a small bounding box
-        var bbox = [
+        geoconnexApp.bBox = [
           geoconnexApp.pointLong,
           geoconnexApp.pointLat,
           geoconnexApp.pointLong + 1,
           geoconnexApp.pointLat + 1,
         ];
       } else if (geoconnexApp.resSpatialType == "box") {
-        var bbox = [
+        geoconnexApp.bBox = [
           geoconnexApp.eastLong,
           geoconnexApp.southLat,
           geoconnexApp.westLong,
@@ -921,8 +929,6 @@ let geoconnexApp = new Vue({
       } else {
         alert("Spatial extent isn't set?....");
       }
-      geoconnexApp.queryGeoItemsInBbox(bbox, collections);
-      geoconnexApp.hasExtentSearch = true;
     },
     async queryGeoItemsContainingPoint(lat = null, long = null, collections = null) {
       let geoconnexApp = this;
@@ -939,12 +945,9 @@ let geoconnexApp = new Vue({
       ];
       geoconnexApp.queryGeoItemsInBbox(bbox, collections);
     },
-    async queryGeoItemsInBbox(bbox, collections = null) {
+    showSpatialExtent(bbox=null){
       let geoconnexApp = this;
-      let items = [];
-      // TODO: this isSearching doesn't work
-      geoconnexApp.isSearching = true;
-      geoconnexApp.map.closePopup();
+      if (!bbox) bbox = geoconnexApp.getBbox();
       let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]]).toGeoJSON();
       poly.text = "Search bounds";
       geoconnexApp.addToMap(
@@ -953,6 +956,14 @@ let geoconnexApp = new Vue({
         { color: "red", fillColor: "red", fillOpacity: 0.1 },
         (group = geoconnexApp.searchFeatureGroup)
       );
+    },
+    async queryGeoItemsInBbox(bbox, collections = null) {
+      let geoconnexApp = this;
+      if (!bbox) bbox = geoconnexApp.bBox
+      let items = [];
+      // TODO: this isSearching doesn't work
+      geoconnexApp.isSearching = true;
+      geoconnexApp.map.closePopup();
       try {
         if (collections.length === 0){
           // fetch items from all collections
@@ -1005,7 +1016,6 @@ let geoconnexApp = new Vue({
 
       // force isSearching state to updated before running search
       setTimeout(async function () {
-        geoconnexApp.fillValuesFromResExtent();
         geoconnexApp.queryGeoItemsFromExtent(collections);
         geoconnexApp.isSearching = false;
       }, 0);
@@ -1024,13 +1034,16 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       geoconnexApp.updateSpatialExtentType();
       if (geoconnexApp.resSpatialType == "point") {
+        if (geoconnexApp.debug) console.log("Using point spatial extent");
         geoconnexApp.fillValuesFromResPointExtent();
       } else if (geoconnexApp.resSpatialType == "box") {
+        if (geoconnexApp.debug) console.log("Using box spatial extent");
         geoconnexApp.fillValuesFromResBoxExtent();
       } else {
         console.error("Resource spatial extent isn't set");
         // TODO: decide what functionality we should allow in the case that no spatial extent
       }
+      geoconnexApp.setBbox();
     },
     fillValuesFromResPointExtent() {
       let geoconnexApp = this;
@@ -1119,21 +1132,16 @@ let geoconnexApp = new Vue({
       // force state refresh
       setTimeout(function () {
         if (geoconnexApp.showingMap && geoconnexApp.map == null) {
-          geoconnexApp.updateSpatialExtentType();
           geoconnexApp.initLeafletMap();
         }
       }, 0);
     },
-    showMap() {
+    async showMap() {
       let geoconnexApp = this;
+      if (geoconnexApp.showingMap && geoconnexApp.map == null) {
+        await geoconnexApp.initLeafletMap();
+      }
       geoconnexApp.showingMap = true;
-      // force state refresh
-      setTimeout(function () {
-        if (geoconnexApp.showingMap && geoconnexApp.map == null) {
-          geoconnexApp.updateSpatialExtentType();
-          geoconnexApp.initLeafletMap();
-        }
-      }, 0);
     }
   },
   beforeMount() {
@@ -1143,12 +1151,18 @@ let geoconnexApp = new Vue({
     let geoconnexApp = this;
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      await geoconnexApp.loadCollections(false);
-      // TODO: do things work if we hide the map initially?
-      geoconnexApp.showMap();
-      // await geoconnexApp.initLeafletMap();
-      // await geoconnexApp.initLeafletFeatureGroups();
-      await geoconnexApp.loadMetadataRelations();
+      await geoconnexApp.initLeafletMap();
+
+      // TODO: get the spatial coverage directly (backend?) instead of from DOM?
+      geoconnexApp.$nextTick(async function () {
+        // coverageMap.initialShapesDrawn
+        // await geoconnexApp.fillValuesFromResExtent();
+        // geoconnexApp.showSpatialExtent();
+      })
+      
+      
+      geoconnexApp.loadCollections(false);
+      geoconnexApp.loadMetadataRelations();
 
       // TODO: load items/geoms in the background and cache so that it is faster next time?
       // I think this would have to be done by collection, so that the urls match in the cache
