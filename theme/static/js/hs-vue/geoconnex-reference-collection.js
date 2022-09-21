@@ -43,6 +43,7 @@ let geoconnexApp = new Vue({
       hasExtentSearch: false,
       geometriesAreLoaded: false,
       searchFeatureGroup: null,
+      spatialExtentGroup: null,
       layerGroupDictionary: {},
       searchRadius: 1,
       maxAreaToReturn: 1e12,
@@ -262,6 +263,7 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       geoconnexApp.selectedFeatureGroup = L.featureGroup();
       geoconnexApp.searchFeatureGroup = L.featureGroup();
+      geoconnexApp.spatialExtentGroup = L.featureGroup();
       const southWest = L.latLng(-90, -180),
         northEast = L.latLng(90, 180);
       const bounds = L.latLngBounds(southWest, northEast);
@@ -309,7 +311,9 @@ let geoconnexApp = new Vue({
       };
       if (geoconnexApp.resMode == "Edit") {
         overlayMaps["Search (all items)"] = geoconnexApp.searchFeatureGroup;
+        overlayMaps["Resource Spatial Extent"] = geoconnexApp.spatialExtentGroup;
         geoconnexApp.map.addLayer(geoconnexApp.searchFeatureGroup);
+        geoconnexApp.map.addLayer(geoconnexApp.spatialExtentGroup);
       }
       L.control
         .zoom({
@@ -489,6 +493,7 @@ let geoconnexApp = new Vue({
         if (group) {
           group.addLayer(leafletLayer);
         } else {
+          // TODO: selectedFeatureGroup is null sometimes on load? see console...
           geoconnexApp.selectedFeatureGroup.addLayer(leafletLayer);
         }
         if (group === geoconnexApp.searchFeatureGroup) {
@@ -954,7 +959,7 @@ let geoconnexApp = new Vue({
         poly,
         false,
         { color: "red", fillColor: "red", fillOpacity: 0.1 },
-        (group = geoconnexApp.searchFeatureGroup)
+        (group = geoconnexApp.spatialExtentGroup)
       );
     },
     async queryGeoItemsInBbox(bbox, collections = null) {
