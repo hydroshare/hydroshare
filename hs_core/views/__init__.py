@@ -33,9 +33,11 @@ from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import subject_template, send_mail_template
 
-from dal import widgets as autocomplete_light
+from autocomplete_light import shortcuts as autocomplete_light
+# TODO: clean up for django 3.2 upgrade
 # from inplaceeditform.commons import get_dict_from_obj, apply_filters
 # from inplaceeditform.views import _get_http_response, _get_adaptor
+
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
@@ -69,7 +71,7 @@ from . import apps
 from hs_core.hydroshare import utils
 
 from hs_core.signals import *
-from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
+from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege
 
 
 logger = logging.getLogger(__name__)
@@ -1168,7 +1170,7 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
 
     return JsonResponse(ajax_response_data)
 
-
+# TODO: clean up for django 3.2 upgrade
 # view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
 # def save_ajax(request):
 #     if not request.method == 'POST':
@@ -1313,6 +1315,24 @@ class GroupUpdateForm(GroupForm):
         self._set_privacy_level(group_to_update, privacy_level)
 
 
+class PatchedChoiceWidget(autocomplete_light.ChoiceWidget):
+    """Patching the render() function of ChoiceWidget class to work with Django 3.2"""
+    def __init__(self, autocomplete=None, widget_js_attributes=None,
+                 autocomplete_js_attributes=None, extra_context=None, registry=None,
+                 widget_template=None, widget_attrs=None, *args,
+                 **kwargs):
+        super(PatchedChoiceWidget, self).__init__(autocomplete, widget_js_attributes,
+                                                  autocomplete_js_attributes, extra_context, registry,
+                                                  widget_template, widget_attrs, *args,
+                                                  **kwargs)
+
+    def render(self, name, value, attrs=None, renderer=None):
+        """Adding the 'renderer' parameter to fix the exception
+        'render() got an unexpected keyword argument 'renderer'"""
+
+        return super(PatchedChoiceWidget, self).render(name, value, attrs)
+
+
 @processor_for(GenericResource)
 def add_generic_context(request, page):
     user = request.user
@@ -1320,23 +1340,27 @@ def add_generic_context(request, page):
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.Select("UserAutocomplete"))
+                                      widget=PatchedChoiceWidget(autocomplete="UserAutocomplete",
+                                                                 attrs={'id': 'user'}))
 
     class AddUserContriForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.Select("UserAutocomplete", attrs={'id':'contri'}))
+                                      widget=PatchedChoiceWidget(autocomplete="UserAutocomplete",
+                                                                 attrs={'id': 'user'}))
 
     class AddUserInviteForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.Select("UserAutocomplete", attrs={'id':'invite'}))
+                                      widget=PatchedChoiceWidget(autocomplete="UserAutocomplete",
+                                                                 attrs={'id': 'user'}))
 
     class AddUserHSForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.Select("UserAutocomplete", attrs={'id':'hs-user'}))
+                                      widget=PatchedChoiceWidget(autocomplete="UserAutocomplete",
+                                                                 attrs={'id': 'user'}))
 
     class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='Hydroshare Author').all(),
-                                       widget=autocomplete_light.Select("GroupAutocomplete"))
+        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(
+            name='Hydroshare Author').all(), widget=PatchedChoiceWidget(autocomplete="GroupAutocomplete"))
 
     return {
         'add_view_contrib_user_form': AddUserContriForm(),
@@ -1947,7 +1971,7 @@ class MyGroupsView(TemplateView):
 
 
 class AddUserForm(forms.Form):
-    user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.Select("UserAutocomplete"))
+    user = forms.ModelChoiceField(User.objects.all(), widget=PatchedChoiceWidget("UserAutocomplete"))
 
 
 class GroupView(TemplateView):

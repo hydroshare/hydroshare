@@ -1,8 +1,8 @@
-from dal import widgets as autocomplete_light
+from autocomplete_light import shortcuts as autocomplete_light
 from django.contrib.auth.models import User, Group
 
 
-class UserAutocomplete(autocomplete_light.Select):
+class UserAutocomplete(autocomplete_light.AutocompleteModelBase):
     search_fields = ['username', 'first_name', 'last_name']
     split_words = True
 
