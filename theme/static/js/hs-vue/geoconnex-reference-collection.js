@@ -87,34 +87,57 @@ let geoconnexApp = new Vue({
         });
       }
     },
-    selectedCollections(newValue, oldValue){
+    async selectedCollections(newValue, oldValue){
       let geoconnexApp = this;
       let oldLength = oldValue ? oldValue.length : 0;
       let newLength = newValue ? newValue.length : 0;
       if (newLength > oldLength) {
-        geoconnexApp.queryUsingSpatialExtent([newValue.at(-1)]);
+        geoconnexApp.hasSearches = true;
+        let newCollection = newValue.at(-1);
+        // TODO: add case that map is hidden (map can be hidden and independent of spatial type)
+        if(geoconnexApp.resSpatialType){
+          geoconnexApp.queryUsingSpatialExtent([newCollection]);
+        }else{
+          // TODO: add them to map async in background
+          let featureCollection = await geoconnexApp.getItemsIn(newCollection, forceFresh = false, skipGeometry = false);
+          geoconnexApp.addFeaturesToMap(featureCollection.features);
+        }
       } else if (newLength < oldLength) {
         let remove;
         if (newLength){
           remove = oldValue.filter((obj) =>
           newValue.every((s) => s.id !== obj.id)
           );
-          for (let layer of remove) {
-            geoconnexApp.searchFeatureGroup.removeLayer(
-              geoconnexApp.layerGroupDictionary[layer.id]
-            );
-            geoconnexApp.layerGroupDictionary[layer.id].clearLayers();
-
-            geoconnexApp.layerControl.removeLayer(
-              geoconnexApp.layerGroupDictionary[layer.id]
-            );
-          }
         }else{
-          geoconnexApp.clearLeafletOfMappedSearches()
           remove = oldValue;
+          geoconnexApp.hasSearches = false;
         }
 
-        geoconnexApp.fitMapToFeatures();
+        // TODO: maybe we remove layers even if the map is hidden?
+        if (geoconnexApp.showingMap){
+          if (newLength){
+            for (let layer of remove) {
+              geoconnexApp.searchFeatureGroup.removeLayer(
+                geoconnexApp.layerGroupDictionary[layer.id]
+              );
+              geoconnexApp.layerGroupDictionary[layer.id].clearLayers();
+
+              geoconnexApp.layerControl.removeLayer(
+                geoconnexApp.layerGroupDictionary[layer.id]
+              );
+            }
+          }else{
+            geoconnexApp.clearLeafletOfMappedSearches()
+          }
+          geoconnexApp.fitMapToFeatures();
+        }else{
+          if (newLength){
+            geoconnexApp.unmappedSelectedCollectionIds = geoconnexApp.unmappedSelectedCollectionIds.filter(col=>col != remove[0].id);
+          }else{
+            geoconnexApp.unmappedSelectedCollectionIds = [];
+          }
+        }
+
         for (let collection of remove){
           geoconnexApp.items = geoconnexApp.items.filter(item =>{
             return collection.id !== item.collection;
@@ -357,6 +380,55 @@ let geoconnexApp = new Vue({
       geoconnexApp.map.setView([30, 0], 1);
       geoconnexApp.setLeafletMapEvents();
       geoconnexApp.fitMapToFeatures();
+    },
+    async addFeaturesToMap(features){
+      for (let item of features){
+        let alreadySelected = geoconnexApp.selectedReferenceItems.find((obj) => {
+          return obj.value && obj.value === item.uri;
+        });
+        if (alreadySelected) {
+          item.disabled = true;
+        }else{
+          geoconnexApp.getFeatureProperties(item);
+          if (item.geometry.type.includes("Point")) {
+            await geoconnexApp.addToMap(
+              item,
+              false,
+              {
+                color: geoconnexApp.searchColor,
+                radius: 5,
+                fillColor: "yellow",
+                fillOpacity: 0.8,
+              },
+              (group = geoconnexApp.searchFeatureGroup)
+            );
+          } else {
+            await geoconnexApp.addToMap(
+              item,
+              false,
+              { color: geoconnexApp.searchColor },
+              (group = geoconnexApp.searchFeatureGroup)
+            );
+          }
+        }
+        geoconnexApp.items.push(item);
+
+        let addCollection = item.collection;
+        if (geoconnexApp.selectedCollections.length == 0 || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
+          addCollection = geoconnexApp.collections.filter(col=>{
+            return col.id == addCollection
+          });
+          geoconnexApp.selectedCollections.push(
+            addCollection.pop()
+          );
+        }
+      }
+      if(features.length){
+        geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
+      }else{
+        geoconnexApp.displayNoFoundItems(bbox[1], bbox[0]);
+      }
+      geoconnexApp.limitOptionsToMappedFeatures();
     },
     addToMap(
       geojson,
@@ -893,60 +965,13 @@ let geoconnexApp = new Vue({
         }
         let results = await Promise.all(promises);
         items = results.flat().filter(Boolean);
-
-        for (let item of items){
-          let alreadySelected = geoconnexApp.selectedReferenceItems.find((obj) => {
-            return obj.value && obj.value === item.uri;
-          });
-          if (alreadySelected) {
-            item.disabled = true;
-          }else{
-            geoconnexApp.getFeatureProperties(item);
-            if (item.geometry.type.includes("Point")) {
-              await geoconnexApp.addToMap(
-                item,
-                false,
-                {
-                  color: geoconnexApp.searchColor,
-                  radius: 5,
-                  fillColor: "yellow",
-                  fillOpacity: 0.8,
-                },
-                (group = geoconnexApp.searchFeatureGroup)
-              );
-            } else {
-              await geoconnexApp.addToMap(
-                item,
-                false,
-                { color: geoconnexApp.searchColor },
-                (group = geoconnexApp.searchFeatureGroup)
-              );
-            }
-          }
-          geoconnexApp.items.push(item);
-
-          let addCollection = item.collection;
-          if (geoconnexApp.selectedCollections.length == 0 || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
-            addCollection = geoconnexApp.collections.filter(col=>{
-              return col.id == addCollection
-            });
-            geoconnexApp.selectedCollections.push(
-              addCollection.pop()
-            );
-          }
-        }
+        geoconnexApp.addFeaturesToMap(items);
       } catch (e) {
         console.error(
           `Error while attempting to find intersecting geometries: ${e.message}`
         );
       }
-      if(items.length){
-        geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
-      }else{
-        geoconnexApp.displayNoFoundItems(bbox[1], bbox[0]);
-      }
       geoconnexApp.isSearching = false;
-      geoconnexApp.limitOptionsToMappedFeatures();
     },
     displayNoFoundItems(lat, lng) {
       let loc = { lat: lat, lng: lng };
@@ -1119,13 +1144,14 @@ let geoconnexApp = new Vue({
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       await geoconnexApp.loadCollections(false);
-      await geoconnexApp.initLeafletFeatureGroups();
-      await geoconnexApp.loadMetadataRelations();
       // TODO: do things work if we hide the map initially?
-      // geoconnexApp.showMap();
+      geoconnexApp.showMap();
+      // await geoconnexApp.initLeafletMap();
+      // await geoconnexApp.initLeafletFeatureGroups();
+      await geoconnexApp.loadMetadataRelations();
 
       // TODO: load items/geoms in the background and cache so that it is faster next time?
-      // await geoconnexApp.loadAllCollectionItemsWithoutGeometries(false);
+      // await geoconnexApp.loadCollectionItemsWithoutGeometries(false);
       // geoconnexApp.fetchAllGeometries();
       // refresh cache in the background
       // geoconnexApp.refreshItemsSilently();
