@@ -937,7 +937,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.northLat,
         ];
       } else {
-        alert("Spatial extent isn't set?....");
+        console.error("Spatial extent isn't set");
       }
     },
     async queryGeoItemsContainingPoint(lat = null, long = null, collections = null) {
@@ -1191,8 +1191,9 @@ let geoconnexApp = new Vue({
     ) {
       geoconnexApp.showingMap = true;
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
+      await geoconnexApp.initLeafletMap();
       await geoconnexApp.loadMetadataRelations();
-      geoconnexApp.initLeafletMap();
+      // TODO: look into the console errors on view mode
     }
   },
 });
