@@ -94,11 +94,13 @@ let geoconnexApp = new Vue({
       if (newLength > oldLength) {
         geoconnexApp.hasSearches = true;
         let newCollection = newValue.at(-1);
-        // TODO: add case that map is hidden (map can be hidden and independent of spatial type)
+        // TODO: revise this, show map initially
         if(geoconnexApp.resSpatialType){
           geoconnexApp.queryUsingSpatialExtent([newCollection]);
         }else{
-          // TODO: add them to map async in background
+          // TODO: require that they add spatial coverage
+          // https://docs.google.com/document/d/1HjYJ50UgaNXbaQo8VJwsedfOMwBDyw7sphtoiEs67Kw/edit#
+          // see ^^^
           let featureCollection = await geoconnexApp.getItemsIn(newCollection, forceFresh = false, skipGeometry = false);
           geoconnexApp.addFeaturesToMap(featureCollection.features);
         }
@@ -372,8 +374,6 @@ let geoconnexApp = new Vue({
       // show the default layers at start
       geoconnexApp.map.addLayer(streets);
       geoconnexApp.map.addLayer(geoconnexApp.selectedFeatureGroup);
-      // TODO if decide to just map in the background, maybe just have this here in initmap?
-      // geoconnexApp.map.addLayer(geoconnexApp.searchFeatureGroup);
 
       // USA
       // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
@@ -1151,6 +1151,9 @@ let geoconnexApp = new Vue({
       await geoconnexApp.loadMetadataRelations();
 
       // TODO: load items/geoms in the background and cache so that it is faster next time?
+      // I think this would have to be done by collection, so that the urls match in the cache
+      // Seems like it will be a TON of items residing in the cache...
+
       // await geoconnexApp.loadCollectionItemsWithoutGeometries(false);
       // geoconnexApp.fetchAllGeometries();
       // refresh cache in the background
