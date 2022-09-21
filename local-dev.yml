@@ -81,7 +81,8 @@ services:
     tty: true
   postgis:
     #image: hydroshare/hs_postgres:9.6-3.2
-    image: postgis/postgis:9.6-3.2
+    #image: postgis/postgis:9.6-3.2
+    image: postgis/postgis:14-master
     environment:
       POSTGRES_PASSWORD: 'postgres'
     container_name: postgis
