@@ -452,7 +452,7 @@ class Party(AbstractMetaDataElement):
     homepage = models.URLField(null=True, blank=True)
     # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
     # each identifier is stored as a key/value pair {name:link}
-    identifiers = HStoreField(default={})
+    identifiers = HStoreField(default=dict)
 
     # list of identifier currently supported
     supported_identifiers = {'ResearchGateID': 'https://www.researchgate.net/',
@@ -1947,13 +1947,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,  null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    extra_metadata = HStoreField(default={})
+    extra_metadata = HStoreField(default=dict)
 
     # this field is for resources to store extra key:value pairs as needed, e.g., bag checksum is stored as
     # "bag_checksum":value pair for published resources in order to meet the DataONE data distribution needs
     # for internal use only
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
-    extra_data = HStoreField(default={})
+    extra_data = HStoreField(default=dict)
 
     # for tracking number of times resource and its files have been downloaded
     download_count = models.PositiveIntegerField(default=0)

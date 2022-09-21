@@ -84,10 +84,10 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     # one temporal coverage and one spatial coverage
     coverages = GenericRelation(Coverage)
     # key/value metadata
-    extra_metadata = HStoreField(default={})
+    extra_metadata = HStoreField(default=dict)
 
     # keywords
-    keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[])
+    keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=list)
     # to track if any metadata element has been modified to trigger file update
     is_dirty = models.BooleanField(default=False)
 
@@ -727,7 +727,7 @@ class AbstractLogicalFile(models.Model):
     # this field is for logical file to store extra key:value pairs, e.g., currently for .url
     # file to store url value for easy redirection when opening the file
     # for internal use only - won't get recorded in bag and shouldn't be used for storing metadata
-    extra_data = HStoreField(default={})
+    extra_data = HStoreField(default=dict)
 
     class Meta:
         abstract = True

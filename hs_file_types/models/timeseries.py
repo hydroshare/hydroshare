@@ -82,7 +82,7 @@ class CVAggregationStatistic(AbstractCVLookupTable):
 
 class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
     # for associating an metadata element with one or more time series
-    series_ids = ArrayField(models.CharField(max_length=36, null=True, blank=True), default=[])
+    series_ids = ArrayField(models.CharField(max_length=36, null=True, blank=True), default=list)
     # to track if element has been modified to trigger sqlite file update
     is_dirty = models.BooleanField(default=False)
 
@@ -777,7 +777,7 @@ class TimeSeriesMetaDataMixin(models.Model):
     # for storing data column name (key) and number of data points (value) for that column
     # this field is set to an empty dict once metadata changes are written to the blank sqlite
     # file as part of the sync operation
-    value_counts = HStoreField(default={})
+    value_counts = HStoreField(default=dict)
 
     class Meta:
         abstract = True

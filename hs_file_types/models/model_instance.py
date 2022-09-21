@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import jsonschema
 from deepdiff import DeepDiff
-from django.contrib.postgres.fields import JSONField
+
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
@@ -29,7 +29,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 
     # additional metadata in json format based on metadata schema of the related (executed_by)
     # model program aggregation
-    metadata_json = JSONField(default=dict)
+    metadata_json = models.JSONField(default=dict)
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         html_string = super(ModelInstanceFileMetaData, self).get_html()
