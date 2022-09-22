@@ -390,6 +390,9 @@ TEMPLATES = [
             'builtins': [
                 'django.templatetags.static',
             ],
+            'libraries': {
+                'staticfiles': 'django.templatetags.static',
+            }
         },
     },
 ]
@@ -759,10 +762,14 @@ local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-MEDIA_URL = "/static/media/"
-if DEBUG:
+#  Pabitra - needed to change MEDIA_URL as required since django 2.2 (see the link below)
+#  (Ref: https://stackoverflow.com/questions/59469585/runserver-cant-serve-media-if-media-url-is-within-static-url)
+# this change is only
+if LOCAL_DEV:
     MEDIA_URL = '/media/'
 
+# Absolute filesystem path to the directory that will hold user-uploaded files.
+# Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 ####################
 # DYNAMIC SETTINGS #
