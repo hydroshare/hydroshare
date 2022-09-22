@@ -50,7 +50,7 @@ class GroupAccess(models.Model):
     """
 
     # Django Group object: this has a side effect of creating Group.gaccess back relation.
-    group = models.OneToOneField(Group, on_delete=models.CASCADE, 
+    group = models.OneToOneField(Group, on_delete=models.CASCADE,
                                  editable=False,
                                  null=False,
                                  related_name='gaccess',
