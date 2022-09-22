@@ -21,6 +21,7 @@ DELETED_RES_STRING = "Resource Deleted"
 def get_landing_page_url_template():
     return current_site_url() + "/resource/{0}/"
 
+
 def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type="",
                                     relation_value="", set_res_modified=False,
                                     last_change_user=None):

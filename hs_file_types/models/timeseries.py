@@ -53,7 +53,8 @@ class CVSpeciation(AbstractCVLookupTable):
 
 
 class CVElevationDatum(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_elevation_datums")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,
+                                 related_name="cv_elevation_datums")
 
 
 class CVSiteType(AbstractCVLookupTable):
@@ -77,7 +78,8 @@ class CVMedium(AbstractCVLookupTable):
 
 
 class CVAggregationStatistic(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_aggregation_statistics")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,
+                                 related_name="cv_aggregation_statistics")
 
 
 class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):

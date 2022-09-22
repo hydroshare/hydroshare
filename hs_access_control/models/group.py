@@ -31,7 +31,8 @@ class GroupMembershipRequest(models.Model):
 
     # when user is requesting to join a group this will be blank
     # when a group owner is sending an invitation, this field will represent the inviting user
-    invitation_to = models.ForeignKey(User, on_delete=models.CASCADE,  null=True, blank=True, related_name='iu2gmrequest')
+    invitation_to = models.ForeignKey(User, on_delete=models.CASCADE,  null=True, blank=True,
+                                      related_name='iu2gmrequest')
     group_to_join = models.ForeignKey(Group, on_delete=models.CASCADE,  related_name='g2gmrequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     explanation = models.TextField(null=True, blank=True, max_length=300)
@@ -62,8 +63,7 @@ class GroupAccess(models.Model):
 
     discoverable = models.BooleanField(default=True,
                                        editable=False,
-                                       help_text='whether group description is discoverable' +
-                                                 ' by everyone')
+                                       help_text='whether group description is discoverable by everyone')
 
     public = models.BooleanField(default=True,
                                  editable=False,
@@ -77,9 +77,8 @@ class GroupAccess(models.Model):
                                        editable=False,
                                        help_text='whether group membership can be auto approved')
 
-    requires_explanation = models.BooleanField(default=False,
-                                                        editable=False,
-                                                        help_text='whether membership requests include explanation')
+    requires_explanation = models.BooleanField(default=False, editable=False,
+                                               help_text='whether membership requests include explanation')
 
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)

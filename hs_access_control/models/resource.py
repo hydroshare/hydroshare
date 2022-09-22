@@ -23,7 +23,7 @@ class ResourceAccess(models.Model):
     # model variables
     #############################################
 
-    resource = models.OneToOneField(BaseResource, on_delete=models.CASCADE, 
+    resource = models.OneToOneField(BaseResource, on_delete=models.CASCADE,
                                     editable=False,
                                     null=False,
                                     related_name='raccess',

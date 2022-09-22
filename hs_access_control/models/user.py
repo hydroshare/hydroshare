@@ -70,7 +70,7 @@ class UserAccess(models.Model):
     Here the methods that require user permission are kept.
     """
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, 
+    user = models.OneToOneField(User, on_delete=models.CASCADE,
                                 editable=False,
                                 null=False,
                                 related_name='uaccess',
