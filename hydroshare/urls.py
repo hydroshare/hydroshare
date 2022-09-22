@@ -1,4 +1,6 @@
 
+
+from autocomplete_light import shortcuts as autocomplete_light
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
@@ -17,6 +19,7 @@ from hs_tracking import views as tracking
 from theme import views as theme
 from theme.views import delete_resource_comment
 
+autocomplete_light.autodiscover()
 admin.autodiscover()
 
 # Add the urlpatterns for any custom Django applications here.
@@ -64,7 +67,7 @@ urlpatterns = i18n_patterns(
         theme.email_verify_password_reset, name='email_verify_password_reset'),
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', hs_core_views.verify),
     url(r'^django_irods/', include('django_irods.urls')),
-    # url(r'^autocomplete/', include('autocomplete_light.urls')),
+    url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^discoverapi/$', SearchAPI.as_view(), name='DiscoverAPI'),
     url(r'^search/$', SearchView.as_view(), name='Discover'),
     url(r'^topics/$', hs_communities.views.communities.TopicsView.as_view(), name='topics'),
