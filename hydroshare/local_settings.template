@@ -8,6 +8,7 @@ import os
 from kombu import Queue, Exchange
 
 DEBUG = True
+LOCAL_DEV = True
 
 # Make these unique, and don't share it with anybody
 SECRET_KEY = \

@@ -131,7 +131,7 @@ LANGUAGES = (
 # are displayed for error pages. Should always be set to ``False`` in
 # production. Best set to ``True`` in local_settings.py
 DEBUG = False
-
+LOCAL_DEV = False
 # Whether a user's session cookie expires when the Web browser is closed.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
@@ -236,11 +236,8 @@ STATICFILES_STORAGE = 'hydroshare.storage.ForgivingManifestStaticFilesStorage'
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-# TODO: Pabitra - needed to change MEDIA_URL as required since djnago 2.2 (see the link below)
-#  (Ref: https://stackoverflow.com/questions/59469585/runserver-cant-serve-media-if-media-url-is-within-static-url)
-# MEDIA_URL = "/static/media/"
-# if DEBUG:
-#     MEDIA_URL = '/media/'
+
+MEDIA_URL = "/static/media/"
 
 # Sorl settings for generating thumbnails
 THUMBNAIL_PRESERVE_FORMAT = True
@@ -252,10 +249,6 @@ THUMBNAIL_DUMMY_RATIO = 1
 # Allow PIL to ignore imgs with lots of metadata
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-# Absolute filesystem path to the directory that will hold user-uploaded files.
-# Example: "/home/media/media.lawrence.com/media/"
-# MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
@@ -269,9 +262,7 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 
 INSTALLED_APPS = (
     'test_without_migrations',
-    # "autocomplete_light",
-    "dal",
-    "dal_select2",
+    "autocomplete_light",
     "django.contrib.admin",
     "django.contrib.auth",
     "oauth2_provider",
