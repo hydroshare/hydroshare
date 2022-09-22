@@ -8,7 +8,8 @@ import os
 from kombu import Queue, Exchange
 
 DEBUG = True
-LOCAL_DEV = True
+# set the following variable to True in your local_settings.py file that you create from this template file
+LOCAL_DEV = False
 
 # Make these unique, and don't share it with anybody
 SECRET_KEY = \

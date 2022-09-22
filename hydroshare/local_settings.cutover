@@ -10,7 +10,9 @@ import yaml
 from kombu import Queue, Exchange
 
 DEBUG = True
-LOCAL_DEV = True
+
+# set the following variable to True in your local_settings.py file
+LOCAL_DEV = False
 
 # DEVELOPMENT EXAMPLE ONLY - make these unique, and don't share with anybody
 SECRET_KEY = \
