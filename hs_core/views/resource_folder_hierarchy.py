@@ -477,17 +477,19 @@ def data_store_folder_unzip(request, **kwargs):
     auto_aggregate = request.POST.get('auto_aggregate', 'true').lower() == 'true'  # True by default
     ingest_metadata = request.POST.get('ingest_metadata', 'false').lower() == 'true'  # False by default
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
+    unzip_to_folder = request.POST.get('unzip_to_folder', 'false').lower() == 'true'
 
     if request.is_ajax():
         task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite,
-                                       auto_aggregate, ingest_metadata))
+                                       auto_aggregate, ingest_metadata, unzip_to_folder))
         task_id = task.task_id
         task_dict = get_or_create_task_notification(task_id, name='file unzip', username=request.user.username,
                                                     payload=resource.get_absolute_url())
         return JsonResponse(task_dict)
     else:
         try:
-            unzip_file(user, res_id, zip_with_rel_path, remove_original_zip, overwrite, auto_aggregate, ingest_metadata)
+            unzip_file(user, res_id, zip_with_rel_path, remove_original_zip, overwrite, auto_aggregate,
+                       ingest_metadata, unzip_to_folder)
         except SessionException as ex:
             specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
                            "protection from overwriting existing files. Unzip in a different " \

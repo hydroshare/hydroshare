@@ -278,6 +278,11 @@
                         <span>Unzip here</span>
                     </li>
 
+                    <li id="btn-unzip-to-folder" data-menu-name="unzip-to-folder" data-fb-action="unzipToFolder">
+                        <span class="fa fa-file-archive-o icon-blue"></span>
+                        <span>Unzip to folder</span>
+                    </li>
+
                     <li role="separator" class="divider"></li>
                 {% endif %}
 
@@ -701,7 +706,6 @@
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
                                                     </button>
-                                                    {% if cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-add-reference" class="fb-space-right"
                                                             data-fb-action="createFolder"
                                                             data-toggle="modal"
@@ -709,7 +713,6 @@
                                                         title="Add content from the web">
                                                     <span class="fa fa-external-link icon-blue"></span>
                                                     </button>
-                                                    {% endif %}
                                                     <button id="fb-cut" data-fb-action="cut"
                                                             class="disabled"
                                                             title="Cut">
@@ -742,6 +745,11 @@
                                                     <button id="fb-unzip" data-fb-action="unzip"
                                                             class="disabled fb-space-right"
                                                             title="Unzip here">
+                                                        <span class="fa fa-file-archive-o icon-blue"></span>
+                                                    </button>
+                                                    <button id="fb-unzip-to-folder" data-fb-action="unzipToFolder"
+                                                            class="disabled fb-space-right"
+                                                            title="Unzip to folder">
                                                         <span class="fa fa-file-archive-o icon-blue"></span>
                                                     </button>
                                                 {% endif %}
