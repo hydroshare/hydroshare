@@ -821,13 +821,6 @@ let geoconnexApp = new Vue({
         }
       }
     },
-    // TODO remove this function
-    getGeoItemsFromDebug(collections = null) {
-      let geoconnexApp = this;
-      geoconnexApp.isSearching = true;
-      geoconnexApp.queryGeoItemsFromExtent(collections);
-      geoconnexApp.isSearching = false;
-    },
     queryGeoItemsFromExtent(collections = null) {
       let geoconnexApp = this;
       // geoconnexApp.setBbox();
@@ -947,7 +940,6 @@ let geoconnexApp = new Vue({
         geoconnexApp.resSpatialType = null;
       }
     },
-    // TODO: revise how this is done -- remove debug
     fillValuesFromResExtent() {
       let geoconnexApp = this;
       geoconnexApp.updateSpatialExtentType();
