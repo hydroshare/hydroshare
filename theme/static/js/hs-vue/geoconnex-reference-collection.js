@@ -163,11 +163,6 @@ let geoconnexApp = new Vue({
     },
   },
   methods: {
-    resetItems() {
-      let geoconnexApp = this;
-      geoconnexApp.items = geoconnexApp.unfilteredItems;
-      geoconnexApp.hasFilteredItems = false;
-    },
     limitOptionsToMappedFeatures() {
       let geoconnexApp = this;
       geoconnexApp.loadingCollections = true;
@@ -227,34 +222,6 @@ let geoconnexApp = new Vue({
       let query = `${geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&bbox=${bbox.toString()}`;
       response = await geoconnexApp.fetchFromCacheOrGeoconnex(query, refresh);
       return response ? response.features : null
-    },
-    async fetchAllGeometries() {
-      let geoconnexApp = this;
-      var itemsWithGeo = [];
-      const promises = [];
-
-      for (let collection of geoconnexApp.collections) {
-        const url = `${geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&skipGeometry=false`;
-        promises.push(geoconnexApp.fetchFromCacheOrGeoconnex(url, false, collection));
-      }
-
-      const results = await Promise.all(promises);
-
-      if (!$.isEmptyObject(results)) {
-        for (let response of results) {
-          if (response.features) {
-            itemsWithGeo.push(
-              geoconnexApp.createVuetifySelectSubheader(response.collection)
-            );
-            for (let feature of response.features) {
-              itemsWithGeo.push(geoconnexApp.getFeatureProperties(feature));
-            }
-          }
-        }
-      }
-      // overwrite now that we have the geometries
-      geoconnexApp.items = itemsWithGeo;
-      geoconnexApp.geometriesAreLoaded = true;
     },
     async fetchSingleReferenceItem(uri) {
       let geoconnexApp = this;
@@ -628,54 +595,6 @@ let geoconnexApp = new Vue({
         text: `${collection.description} (${collection.id})`,
       };
     },
-    async loadCollectionItemsWithoutGeometries(forceFresh = false, collections = []) {
-      const promises = [];
-      let geoconnexApp = this;
-      if (collections.length === 0){
-        // fetch items from all collections
-        collections = geoconnexApp.collections;
-      }
-
-      for (let col of collections) {
-        geoconnexApp.loadingDescription = col.description;
-        promises.push(geoconnexApp.getItemsIn(col, forceFresh));
-      }
-      const results = await Promise.all(promises);
-      for (let resp of results.flat()) {
-        if (!jQuery.isEmptyObject(resp) && resp.features) {
-          geoconnexApp.items.push(
-            geoconnexApp.createVuetifySelectSubheader(resp.collection)
-          );
-          for (let feature of resp.features) {
-            geoconnexApp.items.push(geoconnexApp.getFeatureProperties(feature));
-          }
-        }
-      }
-    },
-    async refreshItemsSilently() {
-      const promises = [];
-      let geoconnexApp = this;
-      if (geoconnexApp.debug) console.log("Refreshing from Geoconnex API");
-      await geoconnexApp.loadCollections(true);
-      let refreshedItems = [];
-      for (let col of geoconnexApp.collections) {
-        promises.push(geoconnexApp.getItemsIn(col, true));
-      }
-      const results = await Promise.all(promises);
-      for (let resp of results) {
-        if (!jQuery.isEmptyObject(resp) && resp.features) {
-          refreshedItems.push(
-            geoconnexApp.createVuetifySelectSubheader(resp.collection)
-          );
-          for (let feature of resp.features) {
-            refreshedItems.push(geoconnexApp.getFeatureProperties(feature));
-          }
-        }
-      }
-      geoconnexApp.items = refreshedItems;
-      if (geoconnexApp.debug)
-        console.log("Completed background refresh from Geoconnex API");
-    },
     setFeatureName(feature){
       feature.NAME = feature.properties.NAME;
       if (feature.properties.AQ_NAME) {
@@ -902,6 +821,7 @@ let geoconnexApp = new Vue({
         }
       }
     },
+    // TODO remove this function
     getGeoItemsFromDebug(collections = null) {
       let geoconnexApp = this;
       geoconnexApp.isSearching = true;
@@ -941,21 +861,6 @@ let geoconnexApp = new Vue({
       } else {
         console.error("Spatial extent isn't set");
       }
-    },
-    async queryGeoItemsContainingPoint(lat = null, long = null, collections = null) {
-      let geoconnexApp = this;
-      long = typeof long == "number" ? long : geoconnexApp.pointLong;
-      lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
-      geoconnexApp.isSearching = true;
-      geoconnexApp.map.closePopup();
-
-      var bbox = [
-        long,
-        lat,
-        long + 10e-12,
-        lat + 10e-12,
-      ];
-      geoconnexApp.queryGeoItemsInBbox(bbox, collections);
     },
     showSpatialExtent(bbox=null){
       let geoconnexApp = this;
@@ -1042,6 +947,7 @@ let geoconnexApp = new Vue({
         geoconnexApp.resSpatialType = null;
       }
     },
+    // TODO: revise how this is done -- remove debug
     fillValuesFromResExtent() {
       let geoconnexApp = this;
       geoconnexApp.updateSpatialExtentType();
