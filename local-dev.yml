@@ -82,7 +82,7 @@ services:
   postgis:
     #image: hydroshare/hs_postgres:9.6-3.2
     #image: postgis/postgis:9.6-3.2
-    image: postgis/postgis:14-master
+    image: postgis/postgis:14-3.3
     environment:
       POSTGRES_PASSWORD: 'postgres'
     container_name: postgis
