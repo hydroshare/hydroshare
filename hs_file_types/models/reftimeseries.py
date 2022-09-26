@@ -733,7 +733,9 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                                                           new_files_to_upload=[],
                                                           folder_path=upload_folder)
 
-                    logical_file.metadata.json_file_content = json_file_content
+                    # pass the json data to the TextField (json_file_content) as string data
+                    # otherwise, loading the data using json.loads() will fail in django 3.2
+                    logical_file.metadata.json_file_content = json_file_content.decode()
                     logical_file.metadata.save()
                     logical_file.dataset_name = logical_file.metadata.get_title_from_json()
                     logical_file.save()
