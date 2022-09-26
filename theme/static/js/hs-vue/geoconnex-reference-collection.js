@@ -920,6 +920,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.queryGeoItemsFromExtent(collections);
     },
     updateSpatialExtentType() {
+      // TODO: update spatial extent on change -- add a listener?
       let geoconnexApp = this;
       let spatial_coverage_drawing = $("#coverageMap .leaflet-interactive");
       if (spatial_coverage_drawing.size() > 0) {
@@ -986,6 +987,7 @@ let geoconnexApp = new Vue({
             e.stopPropagation();
             const loc = JSON.parse($(this).attr("data"));
             geoconnexApp.fillValuesFromResCoordinates(loc.lat, loc.long);
+            // TODO: GeoItemsContainingPoint not a function anymore
             geoconnexApp.queryGeoItemsContainingPoint(loc.lat, loc.long, geoconnexApp.selectedCollections);
           }
         );

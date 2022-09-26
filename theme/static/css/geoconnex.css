@@ -43,6 +43,7 @@
 #app-geoconnex .opaque{
   opacity: 0.4;
   filter: alpha(opacity=40);
+  pointer-events: none;
 }
 
 .v-application .btn {

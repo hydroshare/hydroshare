@@ -14,15 +14,14 @@
             <div class="flex">
                 <i class="glyphicon glyphicon-info-sign"></i>
                 <em style="padding-right:20px;">
-                    If this resource is related to other geospatial resources, you can record those relationships by <strong><span :style="`color: ${selectColor}`">adding the items</span></strong> here.
-                    For example, if this resource has spatial extent contained within a specific Eight-digit Hydrologic Subbasin, you could reference that "HU08" here.
-                    A reference can also be created by typing a URL that links to the related geospatial resource.
+                    If this resource is related to other geospatial resources, you can record those relationships by adding the items here.
                     <strong><a href="https://geoconnex.internetofwater.dev/" target="_blank">Geoconnex</a></strong>,
-                    a project of the 
-                    <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
-                    provides collections of reference resources, within the United States, which you can search by selecting a <strong><span :style="`color: ${searchColor}`">collection</span></strong> or by showing the map.
-                    If you enter a URL, it will be converted to an active link.
-                    Adding these relations improves discoverability of your resource and contributes to
+                    a project of the <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
+                    provides collections of reference resources within the United States that might overlap with your resource.
+                    For example, if this resource has spatial extent contained within an Eight-digit Hydrologic Subbasin, you could search the "HU08" collection <strong><span :style="`color: ${searchColor}`">(step #1)</span></strong>.
+                    Once you found the specific related item, you could select it <strong><span :style="`color: ${selectColor}`">(step #2)</span></strong>, adding it to you resource metadata.
+                    A reference can alternatively be created by typing a URL that links to the related geospatial resource.
+                    If you enter a URL, it will be converted to an active link. Adding these relations improves discoverability of your resource and contributes to
                     <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>.
                 </em>
             </div>
@@ -34,20 +33,24 @@
             class="glyphicon glyphicon-info-sign text-muted">
             </span>
         </label>
+        <div v-if="!resSpatialType" class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                aria-hidden="true">&times;</span></button>
+            <p>You must add Spatial Coverage to this resource before you can reference related geospatial features</p>
+        </div>
+        <div v-if="errored">
+            <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
+        </div>
+        <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                aria-hidden="true">&times;</span></button>
+            <p>${errorMsg}</p>
+        </div>
         <v-app>
-            <div v-if="errored">
-                <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
-            </div>
-            <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                    aria-hidden="true">&times;</span></button>
-                <p>${errorMsg}</p>
-            </div>
-
             <div class="container">
                 <div class="row">
                     {% if resource_edit_mode %}
-                        <div class="col-xs-12">
+                        <div class="col-xs-12" :class="{'opaque': !resSpatialType }" >
                             <v-autocomplete
                                 v-model="selectedCollections"
                                 :items="collections"
