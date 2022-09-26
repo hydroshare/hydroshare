@@ -415,7 +415,7 @@ let geoconnexApp = new Vue({
         }
       }
       if(features.length){
-        geoconnexApp.fitMapToFeatures(geoconnexApp.searchFeatureGroup);
+        geoconnexApp.fitMapToFeatures();
       }else{
         geoconnexApp.displayNoFoundItems(bbox[1], bbox[0]);
       }
@@ -508,20 +508,17 @@ let geoconnexApp = new Vue({
       }
     },
     fitMapToFeatures(group = null) {
-      // TODO: fit map to all features
       let geoconnexApp = this;
       try {
         if (group) {
           geoconnexApp.map.fitBounds(group.getBounds());
         } else {
-          if (geoconnexApp.selectedFeatureGroup.getLayers().length !== 0) {
-            geoconnexApp.map.fitBounds(
-              geoconnexApp.selectedFeatureGroup.getBounds()
-            );
-          } else if (geoconnexApp.searchFeatureGroup.getLayers().length !== 0) {
-            geoconnexApp.map.fitBounds(
-              geoconnexApp.searchFeatureGroup.getBounds()
-            );
+          let bounds = L.latLngBounds();
+          geoconnexApp.spatialExtentGroup && bounds.extend(geoconnexApp.spatialExtentGroup.getBounds());
+          geoconnexApp.searchFeatureGroup && bounds.extend(geoconnexApp.searchFeatureGroup.getBounds());
+          geoconnexApp.searchFeatureGroup && bounds.extend(geoconnexApp.selectedFeatureGroup.getBounds());
+          if (bounds.isValid()) {
+            geoconnexApp.map.fitBounds(bounds);
           } else {
             // USA
             // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
