@@ -1,5 +1,5 @@
 postgis:
-  image: postgis/postgis:14-master
+  image: postgis/postgis:14-3.3
   container_name: postgis
   volumes:
     - "/var/lib/postgresql/data"
