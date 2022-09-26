@@ -57,6 +57,7 @@ let geoconnexApp = new Vue({
       bBox: null,
       searchColor: "orange",
       selectColor: "purple",
+      spatialExtentColor: "#3388ff"
     };
   },
   computed: {
@@ -863,7 +864,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.addToMap(
         poly,
         false,
-        { color: "red", fillColor: "red", fillOpacity: 0.1 },
+        { color: geoconnexApp.spatialExtentColor, fillColor: geoconnexApp.spatialExtentColor, fillOpacity: 0.1 },
         (group = geoconnexApp.spatialExtentGroup)
       );
     },

@@ -14,13 +14,13 @@
             <div class="flex">
                 <i class="glyphicon glyphicon-info-sign"></i>
                 <em style="padding-right:20px;">
-                    If this resource is related to other geospatial resources, you can record those relationships here.
+                    If this resource is related to other geospatial resources, you can record those relationships by <strong><span :style="`color: ${selectColor}`">adding the items</span></strong> here.
                     For example, if this resource has spatial extent contained within a specific Eight-digit Hydrologic Subbasin, you could reference that "HU08" here.
                     A reference can also be created by typing a URL that links to the related geospatial resource.
                     <strong><a href="https://geoconnex.internetofwater.dev/" target="_blank">Geoconnex</a></strong>,
                     a project of the 
                     <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
-                    provides collections of reference resources, within the United States, which you can search by selecting a collection or by showing the map.
+                    provides collections of reference resources, within the United States, which you can search by selecting a <strong><span :style="`color: ${searchColor}`">collection</span></strong> or by showing the map.
                     If you enter a URL, it will be converted to an active link.
                     Adding these relations improves discoverability of your resource and contributes to
                     <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>.
@@ -54,16 +54,14 @@
                                 :items="collections"
                                 :item-text="item => item.description"
                                 hide-no-data
-                                allow-overflow="false"
-                                chips
-                                deletable-chips
                                 multiple
-                                outlined
-                                hide-selected
-                                label="Choose a collection of related items to search"
+                                placeholder="Type to narrow down options or select from the list"
+                                label="1. Choose a collection to search"
                                 :disabled="loadingCollections"
                                 :loading="loadingCollections"
-                                color="blue-grey"
+                                outlined
+                                :color="searchColor"
+                                :item-color="searchColor"
                                 :search-input.sync="search"
                                 return-object="true">
                                     <template v-slot:item="data">
@@ -81,20 +79,20 @@
                                             <v-list-item-content>
                                                 <v-list-item-title>
                                                     No results matching "<strong>${ search }</strong>". 
-                                                    Press <kbd>enter</kbd> to add <v-chip><strong>${ search }</strong></v-chip> as a custom item.
+                                                    Press <kbd>enter</kbd> to add <v-chip :color="searchColor"><strong>${ search }</strong></v-chip> as a custom item.
                                                 </v-list-item-title>
                                             </v-list-item-content>
                                         </v-list-item>
                                     </template>
                                     <template v-slot:selection="{ attrs, item, parent, selected }">
-                                        <v-chip v-bind="attrs" :input-value="selected">
+                                        <v-chip v-bind="attrs" :input-value="selected" :color="searchColor" label outlined large>
                                             <span class="text-truncate">
                                                 ${ item.description }
                                             </span>
                                         <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
                                         </v-chip>
                                     </template>
-                                </v-autocomplete>
+                            </v-autocomplete>
                             <v-combobox
                                 v-model="selectedReferenceItems"
                                 v-show="hasSelections"
@@ -107,10 +105,11 @@
                                 outlined
                                 hide-selected
                                 :hide-no-data="!search"
-                                label="Add related items here or select using map"
+                                label="2. Select related items to add to resource metadata"
+                                placeholder="Type to narrow down options or select on the map"
                                 :disabled="loadingCollections"
                                 :loading="loadingRelations"
-                                color="blue-grey"
+                                :color=selectColor
                                 :search-input.sync="search"
                                 :rules="rules"
                                 return-object="true">
@@ -131,13 +130,13 @@
                                         <v-list-item-content>
                                             <v-list-item-title>
                                                 No results matching "<strong>${ search }</strong>". 
-                                                Press <kbd>enter</kbd> to add <v-chip><strong>${ search }</strong></v-chip> as a custom item.
+                                                Press <kbd>enter</kbd> to add <v-chip :color=selectColor outlined><strong>${ search }</strong></v-chip> as a custom item.
                                             </v-list-item-title>
                                         </v-list-item-content>
                                     </v-list-item>
                                 </template>
                                 <template v-slot:selection="{ attrs, item, parent, selected }">
-                                    <v-chip v-bind="attrs" :input-value="selected">
+                                    <v-chip v-bind="attrs" :input-value="selected" :color=selectColor outlined>
                                         <span class="text-truncate">
                                             ${ item.text }
                                         </span>
@@ -149,7 +148,7 @@
                                 <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
                                 title='Options in the above dropdown list have been filtered to only contain features that have been mapped in your searches'
                                 class="glyphicon glyphicon-exclamation-sign text-muted"
-                                style="color: #f0ad4e;">
+                                :style="`color: ${searchColor}`">
                                 </span>
                                 Options have been limited to collections you selected above
                                 <!-- TODO: this overlaps with URI warning -->
@@ -179,15 +178,6 @@
                                 <button v-if="showingMap" @click="toggleMapVisibility" class="btn btn-default">
                                     <i class="fa fa-minus"></i>Hide Map
                                 </button>
-                                <div v-show="hasSearches && showingMap">
-                                    <button @click="clearLeafletOfMappedSearches" class="btn btn-warning" depressed small>
-                                        <i class="fa fa-search-minus"></i>Clear searches from map
-                                    </button>
-                                    <span data-toggle="tooltip" data-placement="auto"
-                                    title="Clears unselected spatial features from the map"
-                                    class="glyphicon glyphicon-info-sign text-muted">
-                                    </span>
-                                </div>
                                 <!-- TODO: add button to search ALL geoconnex items in the collection if no spatial extent -->
                             </div>
                         </div>
