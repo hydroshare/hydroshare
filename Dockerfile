@@ -14,7 +14,7 @@ RUN pip install six==1.16.0
 RUN pip install sorl-thumbnail==12.8.0
 RUN pip install --upgrade Django==3.2.15
 RUN pip install --upgrade Mezzanine==5.1.4
-RUN pip install --upgrade requests==2.17.1
+RUN pip install --upgrade requests==2.27.1
 RUN pip install --upgrade django-security==0.12.0
 RUN pip install --upgrade django-braces==1.15.0 django-compressor==4.1 django-appconf==1.0.5 django-contrib-comments==2.2.0 django-cors-headers==3.10.1 django-crispy-forms==1.13.0 django-debug-toolbar==3.2.4 django-jsonfield==1.4.1 django-oauth-toolkit==2.1.0 django-robots==4.0
 RUN pip install --upgrade django-autocomplete-light==2.3.6
