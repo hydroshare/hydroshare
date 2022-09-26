@@ -48,7 +48,6 @@
                 <div class="row">
                     {% if resource_edit_mode %}
                         <div class="col-xs-12">
-                            <!-- TODO flexbox partial width instead of full width? -->
                             <v-autocomplete
                                 v-model="selectedCollections"
                                 :items="collections"
@@ -113,7 +112,7 @@
                                 :search-input.sync="search"
                                 :rules="rules"
                                 return-object="true">
-                                <!-- TODO: hilight the layer on hover? -->
+                                <!-- TODO: hilight the layer on hover? Only do this if we do a split left/right list...-->
                                 <template v-slot:item="data">
                                     <template v-if="typeof data.item !== 'object'">
                                         <v-list-tile-content v-text="data.item"></v-list-tile-content>
@@ -183,7 +182,6 @@
                         </div>
                     {% else %}
                         <div class="col-xs-12 col-md-4 info-table-wrapper" v-if="!loadingCollections && selectedReferenceItems.length > 0">
-                            <!-- TODO: the table is missing in view mode -->
                             <table class="table hs-table info-table">
                                 <tr v-for="value in selectedReferenceItems" style="padding-bottom: 20px">
                                     <td v-if="isUrl(value.value)" class="dataset-details">
@@ -196,7 +194,15 @@
                         </div>
                     {% endif %}
     
-                    <div :class="{ 'col-xs-12 col-md-8': resMode === 'View', 'col-xs-12': resMode === 'Edit' }" v-show="showingMap" id="geoconnex-map-wrapper">
+                    <div 
+                        id="geoconnex-map-wrapper"
+                        :class="{
+                            'col-xs-12 col-md-8': resMode === 'View', 
+                            'col-xs-12': resMode === 'Edit',
+                            'opaque': !hasSearches && selectedReferenceItems.length === 0
+                        }" 
+                        v-show="showingMap" 
+                    >
                         <div id="geoconnex-leaflet"></div>
                         <p v-if="resMode === 'Edit'" id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
                     </div>

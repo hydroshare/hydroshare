@@ -40,6 +40,11 @@
   margin-top: -3rem;
 }
 
+#app-geoconnex .opaque{
+  opacity: 0.4;
+  filter: alpha(opacity=40);
+}
+
 .v-application .btn {
   padding: 6px 12px;
   color: initial;
