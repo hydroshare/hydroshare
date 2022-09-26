@@ -17,10 +17,8 @@ let geoconnexApp = new Vue({
       hasFilteredItems: false,
       collections: null,
       selectedReferenceItems: [],
-      // TODO: isSearching was working for point select search. but now broken for all...
-      isSearching: false,
       loadingCollections: true,
-      loadingDescription: "",
+      searchingDescription: "",
       loadingRelations: true,
       // TODO: Internal Server Error while attempting to remove related feature.
       errorMsg: "",
@@ -199,7 +197,7 @@ let geoconnexApp = new Vue({
         }
       });
     },
-    async addSelectedFeatureToMap(feature){
+    addSelectedFeatureToMap(feature){
       let geoconnexApp = this;
       if (!feature.geometry){
         geoconnexApp.fetchSingleGeometry(feature).then((geometry) => {
@@ -210,27 +208,33 @@ let geoconnexApp = new Vue({
     },
     async fetchSingleGeometry(geoconnexObj, refresh = false) {
       let geoconnexApp = this;
+      geoconnexApp.searchingDescription = geoconnexObj.collection;
       if (refresh || !geoconnexObj.geometry) {
         let query = `${geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
         let response = await geoconnexApp.fetchFromCacheOrGeoconnex(query, refresh);
         geoconnexObj.geometry = response.geometry;
       }
+      geoconnexApp.searchingDescription = "";
       return geoconnexObj;
     },
     async fetchCollectionItemsInBbox(collection, bbox = null, refresh = false) {
       let geoconnexApp = this;
+      geoconnexApp.searchingDescription = collection.description
       let response = {};
       let query = `${geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&bbox=${bbox.toString()}`;
       response = await geoconnexApp.fetchFromCacheOrGeoconnex(query, refresh);
+      geoconnexApp.searchingDescription = "";
       return response ? response.features : null
     },
     async fetchSingleReferenceItem(uri) {
       let geoconnexApp = this;
+      geoconnexApp.searchingDescription = uri;
       let relative_id = uri.split("ref/").pop();
       let collection = relative_id.split("/")[0];
       let id = relative_id.split("/")[1];
       let query = `${geoconnexUrl}/${collection}/items/${id}?f=json`;
       let response = await geoconnexApp.fetchFromCacheOrGeoconnex(query);
+      geoconnexApp.searchingDescription = "";
       return response;
     },
     initLeafletMap() {
@@ -355,7 +359,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.setLeafletMapEvents();
       geoconnexApp.fitMapToFeatures();
     },
-    async addFeaturesToMap(features, collection = null){
+    addFeaturesToMap(features, collection = null){
       // check if layergroup exists in the "dictionary"
       if (
         !geoconnexApp.layerGroupDictionary ||
@@ -382,7 +386,7 @@ let geoconnexApp = new Vue({
         }else{
           geoconnexApp.getFeatureProperties(item);
           if (item.geometry.type.includes("Point")) {
-            await geoconnexApp.addToMap(
+            geoconnexApp.addToMap(
               item,
               false,
               {
@@ -394,7 +398,7 @@ let geoconnexApp = new Vue({
               (group = geoconnexApp.searchFeatureGroup)
             );
           } else {
-            await geoconnexApp.addToMap(
+            geoconnexApp.addToMap(
               item,
               false,
               { color: geoconnexApp.searchColor },
@@ -730,6 +734,7 @@ let geoconnexApp = new Vue({
     },
     async loadMetadataRelations() {
       let geoconnexApp = this;
+      const promises = [];
 
       for (let relation of geoconnexApp.metadataRelations) {
         if (
@@ -737,25 +742,26 @@ let geoconnexApp = new Vue({
           relation.type === "relation" &&
           relation.value.indexOf("geoconnex") > -1
         ) {
-          let feature = await geoconnexApp.fetchSingleReferenceItem(
-            relation.value
-          );
-          feature = geoconnexApp.getFeatureProperties(feature)
-          feature.disabled = true;
-          geoconnexApp.items.push(feature);
-          geoconnexApp.addSelectedFeatureToMap(feature);
-
-          let featureValues = {
-            id: feature.id,
-            text: feature.text ? feature.text : relation.value,
-            value: relation.value,
-          };
-  
-          geoconnexApp.selectedReferenceItems.push(featureValues);
-  
-          geoconnexApp.relationObjects.push(feature);
-        }
+        promises.push(geoconnexApp.fetchSingleReferenceItem(relation.value));
       }
+    }
+    let results = await Promise.all(promises);
+    results.forEach(feature=>{
+      feature = geoconnexApp.getFeatureProperties(feature)
+      feature.disabled = true;
+      geoconnexApp.items.push(feature);
+      geoconnexApp.addSelectedFeatureToMap(feature);
+
+      let featureValues = {
+        id: feature.id,
+        text: feature.text,
+        value: feature.uri,
+      };
+
+      geoconnexApp.selectedReferenceItems.push(featureValues);
+
+      geoconnexApp.relationObjects.push(feature);
+    });
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.loadingRelations = false;
     },
@@ -863,8 +869,6 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.bBox
       let items = [];
-      // TODO: this isSearching doesn't work
-      geoconnexApp.isSearching = true;
       geoconnexApp.map.closePopup();
       try {
         if (collections.length === 0){
@@ -884,7 +888,6 @@ let geoconnexApp = new Vue({
           `Error while attempting to find intersecting geometries: ${e.message}`
         );
       }
-      geoconnexApp.isSearching = false;
     },
     displayNoFoundItems(lat, lng) {
       let loc = { lat: lat, lng: lng };
@@ -914,13 +917,7 @@ let geoconnexApp = new Vue({
     },
     queryUsingSpatialExtent(collections = null) {
       let geoconnexApp = this;
-      geoconnexApp.isSearching = true;
-
-      // force isSearching state to updated before running search
-      setTimeout(async function () {
-        geoconnexApp.queryGeoItemsFromExtent(collections);
-        geoconnexApp.isSearching = false;
-      }, 0);
+      geoconnexApp.queryGeoItemsFromExtent(collections);
     },
     updateSpatialExtentType() {
       let geoconnexApp = this;
@@ -1038,10 +1035,10 @@ let geoconnexApp = new Vue({
         }
       }, 0);
     },
-    async showMap() {
+    showMap() {
       let geoconnexApp = this;
       if (geoconnexApp.showingMap && geoconnexApp.map == null) {
-        await geoconnexApp.initLeafletMap();
+        geoconnexApp.initLeafletMap();
       }
       geoconnexApp.showingMap = true;
     }
@@ -1053,7 +1050,7 @@ let geoconnexApp = new Vue({
     let geoconnexApp = this;
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      await geoconnexApp.initLeafletMap();
+      geoconnexApp.initLeafletMap();
 
       // TODO: get the spatial coverage directly (backend?) instead of from DOM?
       // geoconnexApp.$nextTick(async function () {
@@ -1067,13 +1064,12 @@ let geoconnexApp = new Vue({
       if(!coverageMap || !coverageMap.initialShapesDrawn) {
          window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
       } else {
-      await geoconnexApp.fillValuesFromResExtent();
+      geoconnexApp.fillValuesFromResExtent();
       geoconnexApp.showSpatialExtent();
       }
     }
       // TODO: update the goeconnex map when update spatial extent =-- without page refresh
       
-      // TODO: figure out zoom -- should we zoom to the selected items, the spatial extent, the searches, or all of the above?
       
       geoconnexApp.loadCollections(false);
       geoconnexApp.loadMetadataRelations();
@@ -1101,8 +1097,8 @@ let geoconnexApp = new Vue({
         if(!coverageMap || !coverageMap.initialShapesDrawn) {
            window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
         } else {
-          await geoconnexApp.initLeafletMap();
-          await geoconnexApp.loadMetadataRelations();
+          geoconnexApp.initLeafletMap();
+          geoconnexApp.loadMetadataRelations();
           geoconnexApp.loadingCollections = false;
         }
       }

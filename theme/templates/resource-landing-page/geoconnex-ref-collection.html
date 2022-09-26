@@ -153,20 +153,20 @@
                                 <!-- TODO: this overlaps with URI warning -->
                             </p>
                             <div v-if="loadingCollections">
-                                <p v-if="resMode=='Edit' && loadingCollections"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
+                                <p v-if="resMode=='Edit' && loadingCollections"><b>Loading Geoconnex collection:</b> ${searchingDescription}</p>
                                 <p v-else>Loading Geoconnex relations...</p>
                             </div>
                             <v-progress-linear
                                 :active="true"
-                                v-if="isSearching || loadingCollections"
+                                v-if="searchingDescription || loadingCollections"
                                 indeterminate
                             ></v-progress-linear>
-                            <div v-if="isSearching">
-                                <p><b>Searching Geoconnex collection:</b> ${loadingDescription}</p>
+                            <div v-if="searchingDescription">
+                                <p><b>Searching Geoconnex collection:</b> ${searchingDescription}</p>
                             </div>
                             <div id="geoconnex-controls" class="flex">
                                 <div v-show="!showingMap">
-                                    <button :loading="isSearching" @click="toggleMapVisibility" class="btn btn-default" depressed small>
+                                    <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>
                                         <i class="fa fa-globe"></i>Select With Map
                                     </button>
                                     <span data-toggle="tooltip" data-placement="auto"
