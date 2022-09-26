@@ -11,9 +11,6 @@ from kombu import Queue, Exchange
 
 DEBUG = True
 
-# set the following variable to True in your local_settings.py file
-LOCAL_DEV = False
-
 # DEVELOPMENT EXAMPLE ONLY - make these unique, and don't share with anybody
 SECRET_KEY = \
     "9e2e3c2d-8282-41b2-a027-de304c0bc3d944963c9a-4778-43e0-947c-38889e976dcab9f328cb-1576-4314-bfa6-70c42a6e773c"

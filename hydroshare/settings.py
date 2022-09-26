@@ -131,7 +131,7 @@ LANGUAGES = (
 # are displayed for error pages. Should always be set to ``False`` in
 # production. Best set to ``True`` in local_settings.py
 DEBUG = False
-LOCAL_DEV = False
+
 # Whether a user's session cookie expires when the Web browser is closed.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
@@ -753,10 +753,17 @@ local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-#  Pabitra - needed to change MEDIA_URL as required since django 2.2 (see the link below)
+#  Pabitra - needed to change MEDIA_URL as required since django 2.2 when running in DEBUG mode
+#  Django does the following check in django =>2.2:
+# if (settings.DEBUG and settings.MEDIA_URL and settings.STATIC_URL and
+# 		settings.MEDIA_URL.startswith(settings.STATIC_URL)):
+# 	raise ImproperlyConfigured(
+# 		"runserver can't serve media if MEDIA_URL is within STATIC_URL."
+# 	)
+#  (see the link below)
 #  (Ref: https://stackoverflow.com/questions/59469585/runserver-cant-serve-media-if-media-url-is-within-static-url)
-# this change is only
-if LOCAL_DEV:
+
+if DEBUG:
     MEDIA_URL = '/media/'
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
