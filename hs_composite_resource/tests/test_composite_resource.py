@@ -2688,15 +2688,15 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.fail("Exception thrown while renaming a folder.")
 
     def test_unzip_folder_clash(self):
-        """Test that when a zip file gets unzipped a folder with the same
+        """Test that when a zip file gets unzipped here or to a folder and a folder with the same
         name already exists, the existing folder is not overwritten """
 
         self.create_composite_resource()
         # add a zip file that contains only one file
         self.add_file_to_resource(file_to_add=self.zip_file)
-        # resource should have 2 files now
+        # resource should have 1 file now
         self.assertEqual(self.composite_resource.files.count(), 1)
-        # unzip the above zip file  which should add one more file to the resource
+        # unzip the above zip file here in the current folder which should add one more file to the resource
         zip_res_file = ResourceFile.get(self.composite_resource, self.zip_file_name)
         zip_file_rel_path = os.path.join('data', 'contents', zip_res_file.file_name)
         unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
@@ -2712,6 +2712,19 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # ensure files aren't overwriting name clash
         self.assertEqual(self.composite_resource.files.count(), 2)
+
+        # unzip the above zip file again to the sub folder this time which should add a new folder to the resource
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False, unzip_to_folder=True)
+
+        # resource should have 3 files now
+        self.assertEqual(self.composite_resource.files.count(), 3)
+
+        # unzip again should not override previously unzipped file in the sub folder
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False, unzip_to_folder=True)
+        # ensure files aren't overwritten but instead a new file is created in a different sub folder
+        self.assertEqual(self.composite_resource.files.count(), 4)
 
     def test_unzip_folder_clash_overwrite(self):
         """Test that when a zip file gets unzipped a folder with the same
