@@ -188,7 +188,7 @@ def update_account(user, **kwargs):
         setattr(user, k, v)
     user.save()
 
-    user.groups = groups
+    user.groups.set(groups)
     return user.username
 
 # Pabitra: This one seems to be not used anywhere. Can I delete it?
