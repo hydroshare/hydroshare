@@ -723,4 +723,3 @@ def get_number_of_decimal_places(number):
     """
     _, decimal_str = str(number).split('.')
     return len(decimal_str) - 1
-
