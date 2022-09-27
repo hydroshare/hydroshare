@@ -1,5 +1,7 @@
 postgis:
   image: postgis/postgis:14-3.3
+  environment:
+      POSTGRES_PASSWORD: 'postgres'
   container_name: postgis
   volumes:
     - "/var/lib/postgresql/data"
