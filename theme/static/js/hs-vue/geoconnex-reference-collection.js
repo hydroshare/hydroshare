@@ -38,6 +38,8 @@ let geoconnexApp = new Vue({
       selectedItemLayers: {},
       selectedFeatureGroup: null,
       selectedCollections: [],
+      lockCollections: false,
+      limitToSingleCollection: true,
       hasSearches: false,
       hasExtentSearch: false,
       geometriesAreLoaded: false,
@@ -96,6 +98,10 @@ let geoconnexApp = new Vue({
     },
     selectedCollections(newValue, oldValue){
       let geoconnexApp = this;
+      if(geoconnexApp.limitToSingleCollection){
+        newValue.length == 1 && (geoconnexApp.lockCollections = true);
+        newValue.length == 0 && (geoconnexApp.lockCollections = false);
+      }
       let oldLength = oldValue ? oldValue.length : 0;
       let newLength = newValue ? newValue.length : 0;
       if (newLength > oldLength) {

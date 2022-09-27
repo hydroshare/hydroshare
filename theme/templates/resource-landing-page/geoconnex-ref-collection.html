@@ -52,13 +52,14 @@
                     {% if resource_edit_mode %}
                         <div class="col-xs-12" :class="{'opaque': !resSpatialType }" >
                             <v-autocomplete
+                                :readonly="lockCollections"
                                 v-model="selectedCollections"
                                 :items="collections"
                                 :item-text="item => item.description"
                                 hide-no-data
                                 multiple
                                 placeholder="Type to narrow down options or select from the list"
-                                label="1. Choose a collection to search"
+                                :label="limitToSingleCollection ? '1. Choose a collection to search' : '1. Choose collections to search'"
                                 :disabled="loadingCollections"
                                 :loading="loadingCollections"
                                 outlined
