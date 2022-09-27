@@ -233,6 +233,9 @@ let geoconnexApp = new Vue({
       let query = `${geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&bbox=${bbox.toString()}`;
       response = await geoconnexApp.fetchFromCacheOrGeoconnex(query, refresh);
       geoconnexApp.searchingDescription = "";
+
+      // store the collection for future reference
+      response && response.features.forEach(feature=>{feature.collection = collection});
       return response ? response.features : null
     },
     async fetchSingleReferenceItem(uri) {
@@ -368,25 +371,40 @@ let geoconnexApp = new Vue({
       geoconnexApp.setLeafletMapEvents();
       geoconnexApp.fitMapToFeatures();
     },
-    addFeaturesToMap(features, collection = null){
-      // check if layergroup exists in the "dictionary"
-      if (
-        !geoconnexApp.layerGroupDictionary ||
-        geoconnexApp.layerGroupDictionary[collection.id] == undefined
-      ) {
-        geoconnexApp.layerGroupDictionary[collection.id] =
-          L.layerGroup();
-        geoconnexApp.layerGroupDictionary[collection.id].uris = [];
-        geoconnexApp.layerControl.addOverlay(
-          geoconnexApp.layerGroupDictionary[collection.id],
-          geoconnexApp.trimString(collection.description)
-        );
-        geoconnexApp.layerControl.expand();
-      }
-      geoconnexApp.map.addLayer(
-        geoconnexApp.layerGroupDictionary[collection.id]
-      );
+    addFeaturesToMap(features, collectionOverride = null){
       for (let feature of features){
+
+        // deal with collection first
+        let collection = collectionOverride ? collectionOverride :  feature.collection
+        // check if layergroup exists in the "dictionary"
+        if (
+          !geoconnexApp.layerGroupDictionary ||
+          geoconnexApp.layerGroupDictionary[collection.id] == undefined
+        ) {
+          geoconnexApp.layerGroupDictionary[collection.id] =
+            L.layerGroup();
+          geoconnexApp.layerGroupDictionary[collection.id].uris = [];
+          geoconnexApp.layerControl.addOverlay(
+            geoconnexApp.layerGroupDictionary[collection.id],
+            geoconnexApp.trimString(collection.description)
+          );
+          geoconnexApp.layerControl.expand();
+        }
+        geoconnexApp.map.addLayer(
+          geoconnexApp.layerGroupDictionary[collection.id]
+        );
+        
+        // TODO: simplify this or move it
+        if (geoconnexApp.selectedCollections.length == 0 || !geoconnexApp.selectedCollections.map(col => col.id).includes(collection.id)){
+          let addCollection = geoconnexApp.collections.filter(col=>{
+            return col.id == collection.id
+          });
+          geoconnexApp.selectedCollections.push(
+            addCollection.pop()
+          );
+        }
+
+        // second deal with the actual item
         let alreadySelected = geoconnexApp.selectedReferenceItems.find((obj) => {
           return obj.value && obj.value === feature.uri;
         });
@@ -416,23 +434,13 @@ let geoconnexApp = new Vue({
           }
         }
         geoconnexApp.items.push(feature);
-
-        let addCollection = feature.collection;
-        if (geoconnexApp.selectedCollections.length == 0 || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
-          addCollection = geoconnexApp.collections.filter(col=>{
-            return col.id == addCollection
-          });
-          geoconnexApp.selectedCollections.push(
-            addCollection.pop()
-          );
-        }
       }
       if(features.length){
         geoconnexApp.fitMapToFeatures();
+        geoconnexApp.limitOptionsToMappedFeatures();
       }else{
         geoconnexApp.displayNoFoundItems(bbox[1], bbox[0]);
       }
-      geoconnexApp.limitOptionsToMappedFeatures();
     },
     addToMap(
       geojson,
@@ -862,6 +870,20 @@ let geoconnexApp = new Vue({
         console.error("Spatial extent isn't set");
       }
     },
+    queryGeoItemsContainingPoint(lat = null, long = null, collections = null) {
+      let geoconnexApp = this;
+      long = typeof long == "number" ? long : geoconnexApp.pointLong;
+      lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
+      geoconnexApp.map.closePopup();
+
+      var bbox = [
+        long,
+        lat,
+        long + 10e-12,
+        lat + 10e-12,
+      ];
+      geoconnexApp.queryGeoItemsInBbox(bbox, collections);
+    },
     showSpatialExtent(bbox=null){
       let geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.getBbox();
@@ -891,7 +913,7 @@ let geoconnexApp = new Vue({
         }
         let results = await Promise.all(promises);
         items = results.flat().filter(Boolean);
-        geoconnexApp.addFeaturesToMap(items, collection);
+        geoconnexApp.addFeaturesToMap(items);
       } catch (e) {
         console.error(
           `Error while attempting to find intersecting geometries: ${e.message}`
@@ -992,7 +1014,6 @@ let geoconnexApp = new Vue({
             e.stopPropagation();
             const loc = JSON.parse($(this).attr("data"));
             geoconnexApp.fillValuesFromResCoordinates(loc.lat, loc.long);
-            // TODO: GeoItemsContainingPoint not a function anymore
             geoconnexApp.queryGeoItemsContainingPoint(loc.lat, loc.long, geoconnexApp.selectedCollections);
           }
         );
