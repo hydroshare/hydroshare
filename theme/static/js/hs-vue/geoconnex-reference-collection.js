@@ -94,7 +94,8 @@ let geoconnexApp = new Vue({
         });
       }
     },
-    selectedCollections(newValue, oldValue){
+    async selectedCollections(newValue, oldValue){
+      // TODO: hide the collection dropdown after selection
       let geoconnexApp = this;
       let oldLength = oldValue ? oldValue.length : 0;
       let newLength = newValue ? newValue.length : 0;
@@ -107,15 +108,13 @@ let geoconnexApp = new Vue({
       if (newLength > oldLength) {
         geoconnexApp.hasSearches = true;
         let newCollection = newValue.at(-1);
-        // TODO: revise this, show map initially
         if(geoconnexApp.resSpatialType){
           geoconnexApp.queryGeoItemsFromExtent([newCollection]);
         }else{
-          // TODO: require that they add spatial coverage
-          // https://docs.google.com/document/d/1HjYJ50UgaNXbaQo8VJwsedfOMwBDyw7sphtoiEs67Kw/edit#
-          // see ^^^
-          // let featureCollection = await geoconnexApp.getItemsIn(newCollection, forceFresh = false, skipGeometry = false);
-          // geoconnexApp.addFeaturesToMap(featureCollection.features, featureCollection.collection);
+          geoconnexApp.searchingDescription = newCollection.description;
+          let featureCollection = await geoconnexApp.getItemsIn(newCollection, forceFresh = false, skipGeometry = false);
+          geoconnexApp.addFeaturesToMap(featureCollection.features, featureCollection.collection);
+          geoconnexApp.searchingDescription = "";
         }
       } else if (newLength < oldLength) {
         let remove;
@@ -851,10 +850,11 @@ let geoconnexApp = new Vue({
           geoconnexApp.northLat,
         ];
       } else {
-        console.error("Spatial extent isn't set");
+        if (geoconnexApp.debug) console.error("Spatial extent isn't set");
       }
     },
     queryGeoItemsContainingPoint(lat = null, long = null, collections = null) {
+      // TODO: add progress bar
       let geoconnexApp = this;
       long = typeof long == "number" ? long : geoconnexApp.pointLong;
       lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
@@ -871,14 +871,18 @@ let geoconnexApp = new Vue({
     showSpatialExtent(bbox=null){
       let geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.getBbox();
-      let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]]).toGeoJSON();
-      poly.text = "Resource Spatial Extent";
-      geoconnexApp.addToMap(
-        poly,
-        false,
-        { color: geoconnexApp.spatialExtentColor, fillColor: geoconnexApp.spatialExtentColor, fillOpacity: 0.1 },
-        (group = geoconnexApp.spatialExtentGroup)
-      );
+      try{
+        let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]]).toGeoJSON();
+        poly.text = "Resource Spatial Extent";
+        geoconnexApp.addToMap(
+          poly,
+          false,
+          { color: geoconnexApp.spatialExtentColor, fillColor: geoconnexApp.spatialExtentColor, fillOpacity: 0.1 },
+          (group = geoconnexApp.spatialExtentGroup)
+        );
+      }catch(e) {
+        if(geoconnexApp.debug) console.error("Error attempting to show spatial extent:", e.message);
+      }
     },
     async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
@@ -953,8 +957,7 @@ let geoconnexApp = new Vue({
         if (geoconnexApp.debug) console.log("Using box spatial extent");
         geoconnexApp.fillValuesFromResBoxExtent();
       } else {
-        console.error("Resource spatial extent isn't set");
-        // TODO: decide what functionality we should allow in the case that no spatial extent
+        if(geoconnexApp.debug) console.error("Resource spatial extent isn't set");
       }
       geoconnexApp.setBbox();
     },
@@ -1072,7 +1075,7 @@ let geoconnexApp = new Vue({
         // geoconnexApp.showSpatialExtent();
       // })
 
-    // TODO: remove this once have a good way to handle spatial extent changes
+    // TODO: remove this + above once have a good way to handle spatial extent changes
     checkFlag();
     async function checkFlag() {
       if(!coverageMap || !coverageMap.initialShapesDrawn) {
@@ -1082,10 +1085,6 @@ let geoconnexApp = new Vue({
       geoconnexApp.showSpatialExtent();
       }
     }
-
-      // TODO: allow point search if no spatial extent , but add a warning that spatial extent is recommended
-      // TODO: also allow search by entire collection if no spatial extent but add warning
-      
       
       geoconnexApp.loadCollections(false);
       geoconnexApp.loadMetadataRelations();
@@ -1095,7 +1094,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.metadataRelations.length > 0
     ) {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      // TODO: look into the console errors on view mode
+      // TODO: remove this if there is a better way
       checkFlag();
       async function checkFlag() {
         if(!coverageMap || !coverageMap.initialShapesDrawn) {
