@@ -394,16 +394,6 @@ let geoconnexApp = new Vue({
           geoconnexApp.layerGroupDictionary[collection.id]
         );
         
-        // TODO: simplify this or move it
-        if (geoconnexApp.selectedCollections.length == 0 || !geoconnexApp.selectedCollections.map(col => col.id).includes(collection.id)){
-          let addCollection = geoconnexApp.collections.filter(col=>{
-            return col.id == collection.id
-          });
-          geoconnexApp.selectedCollections.push(
-            addCollection.pop()
-          );
-        }
-
         // second deal with the actual item
         let alreadySelected = geoconnexApp.selectedReferenceItems.find((obj) => {
           return obj.value && obj.value === feature.uri;
@@ -910,6 +900,9 @@ let geoconnexApp = new Vue({
         const promises = [];
         for (collection of collections){
           promises.push(geoconnexApp.fetchCollectionItemsInBbox(collection, bbox));
+          if (!geoconnexApp.selectedCollections.includes(collection)){
+            geoconnexApp.selectedCollections.push(collection);
+          }
         }
         let results = await Promise.all(promises);
         items = results.flat().filter(Boolean);
