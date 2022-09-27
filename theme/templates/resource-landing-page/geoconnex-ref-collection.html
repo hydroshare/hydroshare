@@ -33,7 +33,7 @@
             class="glyphicon glyphicon-info-sign text-muted">
             </span>
         </label>
-        <div v-if="!resSpatialType" class="alert alert-danger alert-dismissible" role="alert">
+        <div v-if="!resSpatialType && resMode=='Edit'" class="alert alert-danger alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                 aria-hidden="true">&times;</span></button>
             <p>You must add Spatial Coverage to this resource before you can reference related geospatial features</p>
@@ -96,6 +96,15 @@
                                         </v-chip>
                                     </template>
                             </v-autocomplete>
+                            <p v-show="items.length == limitCollectionSize" class="small text-muted negative-top">
+                                <span v-show="items.length == limitCollectionSize" data-toggle="tooltip" data-placement="auto"
+                                :title="`The collection you selected contains more than ${limitCollectionSize}`"
+                                class="glyphicon glyphicon-exclamation-sign text-muted"
+                                :style="`color: ${infoColor}`">
+                                </span>
+                                The collection you selected contains more than the limit (${limitCollectionSize} items).
+                                We recommend that you reduce your resource spatial extent or clear the map and point search by clicking on the map.
+                            </p>
                             <v-combobox
                                 v-model="selectedReferenceItems"
                                 v-show="hasSelections"
@@ -116,7 +125,6 @@
                                 :search-input.sync="search"
                                 :rules="rules"
                                 return-object="true">
-                                <!-- TODO: hilight the layer on hover? Only do this if we do a split left/right list...-->
                                 <template v-slot:item="data">
                                     <template v-if="typeof data.item !== 'object'">
                                         <v-list-tile-content v-text="data.item"></v-list-tile-content>
@@ -151,9 +159,9 @@
                                 <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
                                 title='Options in the above dropdown list have been filtered to only contain features that have been mapped in your searches'
                                 class="glyphicon glyphicon-exclamation-sign text-muted"
-                                :style="`color: ${searchColor}`">
+                                :style="`color: ${infoColor}`">
                                 </span>
-                                Options have been limited to collections you selected above
+                                Related item options have been limited to collection ${ selectedCollections.length > 1 ? "s" : "" } you selected above
                                 <!-- TODO: this overlaps with URI warning -->
                             </p>
                             <div v-if="loadingCollections">
@@ -181,7 +189,6 @@
                                 <button v-if="showingMap" @click="toggleMapVisibility" class="btn btn-default">
                                     <i class="fa fa-minus"></i>Hide Map
                                 </button>
-                                <!-- TODO: add button to search ALL geoconnex items in the collection if no spatial extent -->
                             </div>
                         </div>
                     {% else %}

@@ -24,6 +24,7 @@ let geoconnexApp = new Vue({
       errored: false,
       cacheName: "geoconnexCache",
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
+      limitCollectionSize: limitCollectionSize,
       geoCache: null,
       resShortId: SHORT_ID,
       cacheDuration: 6.048e+8, // one week in milliseconds
@@ -50,6 +51,7 @@ let geoconnexApp = new Vue({
       southLat: null,
       westLong: null,
       bBox: null,
+      infoColor: "red",
       pointFillColor: "yellow",
       searchColor: "orange",
       selectColor: "purple",
@@ -1064,13 +1066,13 @@ let geoconnexApp = new Vue({
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       geoconnexApp.initLeafletMap();
 
-      // TODO: get the spatial coverage directly (backend?) instead of from DOM?
       // geoconnexApp.$nextTick(async function () {
         // coverageMap.initialShapesDrawn
         // await geoconnexApp.fillValuesFromResExtent();
         // geoconnexApp.showSpatialExtent();
       // })
 
+    // TODO: remove this once have a good way to handle spatial extent changes
     checkFlag();
     async function checkFlag() {
       if(!coverageMap || !coverageMap.initialShapesDrawn) {
@@ -1080,17 +1082,13 @@ let geoconnexApp = new Vue({
       geoconnexApp.showSpatialExtent();
       }
     }
-      // TODO: update the goeconnex map when update spatial extent =-- without page refresh
+
+      // TODO: allow point search if no spatial extent , but add a warning that spatial extent is recommended
+      // TODO: also allow search by entire collection if no spatial extent but add warning
       
       
       geoconnexApp.loadCollections(false);
       geoconnexApp.loadMetadataRelations();
-
-      // TODO: Add some limits (ex: if zoomed to US, we shouldn’t allow query of HUC10) -- "disabled based on your zoom level"
-
-      // TODO: Recommend that they add spatial extent but don't make it required
-
-      // TODO: figure out why limit gets hit and notify user of that limit on # of items returned (ex query whole US for huc10)
 
     } else if (
       geoconnexApp.resMode == "View" &&
