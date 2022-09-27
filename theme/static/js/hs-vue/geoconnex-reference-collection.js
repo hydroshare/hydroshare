@@ -57,7 +57,7 @@ let geoconnexApp = new Vue({
       bBox: null,
       searchColor: "orange",
       selectColor: "purple",
-      spatialExtentColor: "#3388ff"
+      spatialExtentColor: "red"
     };
   },
   computed: {
@@ -98,18 +98,20 @@ let geoconnexApp = new Vue({
     },
     selectedCollections(newValue, oldValue){
       let geoconnexApp = this;
-      if(geoconnexApp.limitToSingleCollection){
-        newValue.length == 1 && (geoconnexApp.lockCollections = true);
-        newValue.length == 0 && (geoconnexApp.lockCollections = false);
-      }
       let oldLength = oldValue ? oldValue.length : 0;
       let newLength = newValue ? newValue.length : 0;
+      
+      if(geoconnexApp.limitToSingleCollection){
+        newLength == 1 && (geoconnexApp.lockCollections = true);
+        newLength == 0 && (geoconnexApp.lockCollections = false);
+      }
+
       if (newLength > oldLength) {
         geoconnexApp.hasSearches = true;
         let newCollection = newValue.at(-1);
         // TODO: revise this, show map initially
         if(geoconnexApp.resSpatialType){
-          geoconnexApp.queryUsingSpatialExtent([newCollection]);
+          geoconnexApp.queryGeoItemsFromExtent([newCollection]);
         }else{
           // TODO: require that they add spatial coverage
           // https://docs.google.com/document/d/1HjYJ50UgaNXbaQo8VJwsedfOMwBDyw7sphtoiEs67Kw/edit#
@@ -863,7 +865,7 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.getBbox();
       let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]]).toGeoJSON();
-      poly.text = "Search bounds";
+      poly.text = "Resource Spatial Extent";
       geoconnexApp.addToMap(
         poly,
         false,
@@ -920,10 +922,6 @@ let geoconnexApp = new Vue({
       geoconnexApp.selectedCollections = [];
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.layerControl.collapse();
-    },
-    queryUsingSpatialExtent(collections = null) {
-      let geoconnexApp = this;
-      geoconnexApp.queryGeoItemsFromExtent(collections);
     },
     updateSpatialExtentType() {
       // TODO: update spatial extent on change -- add a listener?
