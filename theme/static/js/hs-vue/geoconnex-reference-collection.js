@@ -14,7 +14,6 @@ let geoconnexApp = new Vue({
       resSpatialType: null,
       items: [],
       unfilteredItems: [],
-      hasFilteredItems: false,
       collections: null,
       selectedReferenceItems: [],
       loadingCollections: true,
@@ -41,13 +40,9 @@ let geoconnexApp = new Vue({
       lockCollections: false,
       limitToSingleCollection: true,
       hasSearches: false,
-      hasExtentSearch: false,
-      geometriesAreLoaded: false,
       searchFeatureGroup: null,
       spatialExtentGroup: null,
       layerGroupDictionary: {},
-      searchRadius: 1,
-      maxAreaToReturn: 1e12,
       pointLat: 0,
       pointLong: 0,
       northLat: null,
@@ -174,7 +169,6 @@ let geoconnexApp = new Vue({
     limitOptionsToMappedFeatures() {
       let geoconnexApp = this;
       geoconnexApp.loadingCollections = true;
-      geoconnexApp.hasFilteredItems = true;
       // save a copy of the items
       geoconnexApp.unfilteredItems = geoconnexApp.items;
 
@@ -495,7 +489,6 @@ let geoconnexApp = new Vue({
         if (group) {
           group.addLayer(leafletLayer);
         } else {
-          // TODO: selectedFeatureGroup is null sometimes on load? see console...
           geoconnexApp.selectedFeatureGroup.addLayer(leafletLayer);
         }
         if (group === geoconnexApp.searchFeatureGroup) {
@@ -830,7 +823,6 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       // geoconnexApp.setBbox();
       geoconnexApp.queryGeoItemsInBbox(geoconnexApp.bbox, collections);
-      geoconnexApp.hasExtentSearch = true;
     },
     getBbox(){
       let geoconnexApp = this;
@@ -934,7 +926,6 @@ let geoconnexApp = new Vue({
       }
 
       geoconnexApp.hasSearches = false;
-      geoconnexApp.hasExtentSearch = false;
       geoconnexApp.selectedCollections = [];
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.layerControl.collapse();
@@ -1097,15 +1088,9 @@ let geoconnexApp = new Vue({
 
       // TODO: Add some limits (ex: if zoomed to US, we shouldn’t allow query of HUC10) -- "disabled based on your zoom level"
 
+      // TODO: Recommend that they add spatial extent but don't make it required
 
-      // TODO: load items/geoms in the background and cache so that it is faster next time?
-      // I think this would have to be done by collection, so that the urls match in the cache
-      // Seems like it will be a TON of items residing in the cache...
-
-      // await geoconnexApp.loadCollectionItemsWithoutGeometries(false);
-      // geoconnexApp.fetchAllGeometries();
-      // refresh cache in the background
-      // geoconnexApp.refreshItemsSilently();
+      // TODO: figure out why limit gets hit and notify user of that limit on # of items returned (ex query whole US for huc10)
 
     } else if (
       geoconnexApp.resMode == "View" &&
