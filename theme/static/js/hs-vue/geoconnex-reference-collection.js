@@ -55,6 +55,7 @@ let geoconnexApp = new Vue({
       southLat: null,
       westLong: null,
       bBox: null,
+      pointFillColor: "yellow",
       searchColor: "orange",
       selectColor: "purple",
       spatialExtentColor: "red"
@@ -385,38 +386,38 @@ let geoconnexApp = new Vue({
       geoconnexApp.map.addLayer(
         geoconnexApp.layerGroupDictionary[collection.id]
       );
-      for (let item of features){
+      for (let feature of features){
         let alreadySelected = geoconnexApp.selectedReferenceItems.find((obj) => {
-          return obj.value && obj.value === item.uri;
+          return obj.value && obj.value === feature.uri;
         });
         if (alreadySelected) {
-          item.disabled = true;
+          feature.disabled = true;
         }else{
-          geoconnexApp.getFeatureProperties(item);
-          if (item.geometry.type.includes("Point")) {
+          geoconnexApp.getFeatureProperties(feature);
+          if (feature.geometry.type.includes("Point")) {
             geoconnexApp.addToMap(
-              item,
+              feature,
               false,
               {
                 color: geoconnexApp.searchColor,
                 radius: 5,
-                fillColor: "yellow",
+                fillColor: geoconnexApp.pointFillColor,
                 fillOpacity: 0.8,
               },
               (group = geoconnexApp.searchFeatureGroup)
             );
           } else {
             geoconnexApp.addToMap(
-              item,
+              feature,
               false,
               { color: geoconnexApp.searchColor },
               (group = geoconnexApp.searchFeatureGroup)
             );
           }
         }
-        geoconnexApp.items.push(item);
+        geoconnexApp.items.push(feature);
 
-        let addCollection = item.collection;
+        let addCollection = feature.collection;
         if (geoconnexApp.selectedCollections.length == 0 || !geoconnexApp.selectedCollections.map(col => col.id).includes(addCollection)){
           addCollection = geoconnexApp.collections.filter(col=>{
             return col.id == addCollection
