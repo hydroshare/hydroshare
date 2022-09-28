@@ -19,7 +19,6 @@ let geoconnexApp = new Vue({
       loadingCollections: true,
       searchingDescription: "",
       loadingRelations: true,
-      // TODO: Internal Server Error while attempting to remove related feature.
       errorMsg: "",
       errored: false,
       cacheName: "geoconnexCache",
@@ -737,33 +736,29 @@ let geoconnexApp = new Vue({
     async loadMetadataRelations() {
       let geoconnexApp = this;
       const promises = [];
-
       for (let relation of geoconnexApp.metadataRelations) {
         if (
           this.isUrl(relation.value) &&
           relation.type === "relation" &&
           relation.value.indexOf("geoconnex") > -1
         ) {
-        promises.push(geoconnexApp.fetchSingleReferenceItem(relation.value));
+        geoconnexApp.fetchSingleReferenceItem(relation.value).then(feature=>{
+          feature = geoconnexApp.getFeatureProperties(feature)
+          feature.disabled = true;
+          geoconnexApp.items.push(feature);
+          geoconnexApp.addSelectedFeatureToMap(feature);
+
+          let featureValues = {
+            id: relation.id,
+            text: feature.text,
+            value: feature.uri,
+          };
+
+          geoconnexApp.selectedReferenceItems.push(featureValues);
+          geoconnexApp.relationObjects.push(feature);
+        });
       }
     }
-    let results = await Promise.all(promises);
-    results.forEach(feature=>{
-      feature = geoconnexApp.getFeatureProperties(feature)
-      feature.disabled = true;
-      geoconnexApp.items.push(feature);
-      geoconnexApp.addSelectedFeatureToMap(feature);
-
-      let featureValues = {
-        id: feature.id,
-        text: feature.text,
-        value: feature.uri,
-      };
-
-      geoconnexApp.selectedReferenceItems.push(featureValues);
-
-      geoconnexApp.relationObjects.push(feature);
-    });
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.loadingRelations = false;
     },
