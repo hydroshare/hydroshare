@@ -38,6 +38,11 @@ $(document).ready(function () {
     if ($("#coverageMap").length) {
         initMap();
     }
+
+    // listen for save after spatial change
+    $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').click(()=>{
+        geoconnexApp.updateGeoconnexWithResSpatialExtent();
+    })
 });
 
 async function drawInitialShape() {
@@ -474,5 +479,5 @@ function processDrawing(coordinates, shape){
         //     coverageMap.setCenter(coordinates);
         // });
     }
-    geoconnexApp.updateSpatialExtentType();
+    // geoconnexApp.updateGeoconnexWithResSpatialExtent();
 }

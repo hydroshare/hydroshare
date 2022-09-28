@@ -33,7 +33,7 @@
             class="glyphicon glyphicon-info-sign text-muted">
             </span>
         </label>
-        <div v-if="!resSpatialType && resMode=='Edit'" class="alert alert-danger alert-dismissible" role="alert">
+        <div v-if="!resSpatialType && resMode=='Edit'" class="alert alert-warning alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                 aria-hidden="true">&times;</span></button>
             <p>We highly recommend that you add Spatial Coverage to this resource before searching for related geospatial items. Otherwise query times can be excessive.</p>
@@ -41,7 +41,7 @@
         <div v-if="errored">
             <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
         </div>
-        <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
+        <div v-if="errorMsg" class="alert alert-warning alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                 aria-hidden="true">&times;</span></button>
             <p>${errorMsg}</p>

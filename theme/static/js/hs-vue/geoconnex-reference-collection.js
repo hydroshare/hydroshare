@@ -51,7 +51,7 @@ let geoconnexApp = new Vue({
       southLat: null,
       westLong: null,
       bBox: null,
-      infoColor: "red",
+      infoColor: "#fcf8e3",
       pointFillColor: "yellow",
       searchColor: "orange",
       selectColor: "purple",
@@ -824,7 +824,7 @@ let geoconnexApp = new Vue({
     },
     getBbox(){
       let geoconnexApp = this;
-      geoconnexApp.bBox || geoconnexApp.fillValuesFromResExtent();
+      geoconnexApp.bBox || geoconnexApp.updateGeoconnexWithResSpatialExtent();
       return geoconnexApp.bBox
     },
     setBbox() {
@@ -885,6 +885,7 @@ let geoconnexApp = new Vue({
       }catch(e) {
         geoconnexApp.error("Error attempting to show spatial extent:", e.message);
       }
+      geoconnexApp.fitMapToFeatures();
     },
     async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
@@ -939,7 +940,6 @@ let geoconnexApp = new Vue({
       geoconnexApp.layerControl.collapse();
     },
     updateSpatialExtentType() {
-      // TODO: update spatial extent on change -- add a listener?
       let geoconnexApp = this;
       let spatial_coverage_drawing = $("#coverageMap .leaflet-interactive");
       if (spatial_coverage_drawing.size() > 0) {
@@ -949,9 +949,10 @@ let geoconnexApp = new Vue({
         geoconnexApp.resSpatialType = null;
       }
     },
-    fillValuesFromResExtent() {
+    updateGeoconnexWithResSpatialExtent() {
       let geoconnexApp = this;
       geoconnexApp.updateSpatialExtentType();
+      geoconnexApp.spatialExtentGroup.clearLayers()
       if (geoconnexApp.resSpatialType == "point") {
         geoconnexApp.log("Using point spatial extent");
         geoconnexApp.fillValuesFromResPointExtent();
@@ -962,6 +963,7 @@ let geoconnexApp = new Vue({
         geoconnexApp.error("Resource spatial extent isn't set");
       }
       geoconnexApp.setBbox();
+      geoconnexApp.showSpatialExtent();
     },
     fillValuesFromResPointExtent() {
       let geoconnexApp = this;
@@ -1073,7 +1075,7 @@ let geoconnexApp = new Vue({
 
       // geoconnexApp.$nextTick(async function () {
         // coverageMap.initialShapesDrawn
-        // await geoconnexApp.fillValuesFromResExtent();
+        // await geoconnexApp.updateGeoconnexWithResSpatialExtent();
         // geoconnexApp.showSpatialExtent();
       // })
 
@@ -1083,8 +1085,7 @@ let geoconnexApp = new Vue({
       if(!coverageMap || !coverageMap.initialShapesDrawn) {
          window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
       } else {
-      geoconnexApp.fillValuesFromResExtent();
-      geoconnexApp.showSpatialExtent();
+      geoconnexApp.updateGeoconnexWithResSpatialExtent();
       }
     }
       
