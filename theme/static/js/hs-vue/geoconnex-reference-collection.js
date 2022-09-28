@@ -55,7 +55,8 @@ let geoconnexApp = new Vue({
       pointFillColor: "yellow",
       searchColor: "orange",
       selectColor: "purple",
-      spatialExtentColor: "red"
+      spatialExtentColor: "red",
+      customLoggers: null
     };
   },
   computed: {
@@ -82,7 +83,7 @@ let geoconnexApp = new Vue({
           );
           geoconnexApp.fitMapToFeatures();
         } catch (e) {
-          console.error(e.message);
+          geoconnexApp.customLog("error", e.message);
         }
         geoconnexApp.ajaxRemoveMetadata(remove);
 
@@ -509,7 +510,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.map.fitBounds(leafletLayer.getBounds());
         }
       } catch (e) {
-        console.error(e.message);
+        geoconnexApp.customLog("error", e.message);
       }
     },
     fitMapToFeatures(group = null) {
@@ -531,7 +532,7 @@ let geoconnexApp = new Vue({
           }
         }
       } catch (e) {
-        console.warn(e.message);
+        geoconnexApp.customLog("error", e.message);
       }
     },
     setCustomItemRules() {
@@ -578,7 +579,7 @@ let geoconnexApp = new Vue({
           return !geoconnexApp.ignoredCollections.includes(col.id);
         });
       } catch (e) {
-        console.error(e.message);
+        geoconnexApp.customLog("error", e.message);
         geoconnexApp.errored = true;
       }
       geoconnexApp.loadingCollections = false;
@@ -635,13 +636,12 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       let data = {};
       if (!("caches" in window)) {
-        if (geoconnexApp.debug)
-          console.log(
+          geoconnexApp.customLog("log", 
             "Cache API not available. Fetching geoconnex data from:\n" + url
           );
         let fetch_resp = await fetch(url);
         if (!fetch_resp.ok) {
-          console.error(
+          geoconnexApp.customLog("error", 
             `Error when attempting to fetch: ${fetch_resp.statusText}`
           );
         } else {
@@ -650,8 +650,7 @@ let geoconnexApp = new Vue({
       } else {
         let cache_resp = await geoconnexApp.geoCache.match(url);
         if (geoconnexApp.isCacheValid(cache_resp) && !forceFresh) {
-          if (geoconnexApp.debug)
-            console.log("Using Geoconnex from cache for:\n" + url);
+            geoconnexApp.customLog("log", "Using Geoconnex from cache for:\n" + url);
           data = await cache_resp.json();
         } else {
           data = await geoconnexApp.fetchFromGeoconnex(url);
@@ -665,12 +664,12 @@ let geoconnexApp = new Vue({
     async fetchFromGeoconnex(url) {
       let fetchData = {};
       let geoconnexApp = this;
-      if (geoconnexApp.debug)
-        console.log("Fetching + adding to cache, geoconnex data from:\n" + url);
+      
+        geoconnexApp.customLog("log", "Fetching + adding to cache, geoconnex data from:\n" + url);
       try {
         let fetch_resp = await fetch(url);
         if (!fetch_resp.ok) {
-          console.error(
+          geoconnexApp.customLog("error", 
             `Error when attempting to fetch Geoconnex relations: ${fetch_resp.statusText}`,
             fetch_resp
           );
@@ -690,17 +689,17 @@ let geoconnexApp = new Vue({
           fetchData = await fetch_resp.json();
         }
       } catch (e) {
-        console.error(e.message);
+        geoconnexApp.customLog("error", e.message);
         geoconnexApp.geoCache
           .match(url)
           .then(function (response) {
-            console.error(
+            geoconnexApp.customLog("error", 
               "Geoconnex API fetch error. Falling back to old cached version."
             );
             return response.data;
           })
           .catch(function (e) {
-            console.error(e.message);
+            geoconnexApp.customLog("error", e.message);
             geoconnexApp.errored = true;
           });
       }
@@ -717,7 +716,7 @@ let geoconnexApp = new Vue({
             new Date().getTime()
         )
           return true;
-        if (geoconnexApp.debug) console.log("Cached data not valid.");
+        geoconnexApp.customLog("log", "Cached data not valid.");
         return false;
       }
       return true;
@@ -778,8 +777,8 @@ let geoconnexApp = new Vue({
         url: url,
         data: data,
         success: function (result) {
-          if (geoconnexApp.debug)
-            console.log(
+          
+            geoconnexApp.customLog("log", 
               `Added ${
                 selected.text ? selected.text : selected
               } to resource metadata`
@@ -792,7 +791,7 @@ let geoconnexApp = new Vue({
         },
         error: function (request, status, error) {
           geoconnexApp.errorMsg = `${error} while attempting to add related feature.`;
-          console.error(request.responseText);
+          geoconnexApp.customLog("error", request.responseText);
         },
       });
     },
@@ -805,8 +804,8 @@ let geoconnexApp = new Vue({
             type: "POST",
             url: url,
             success: function (result) {
-              if (geoconnexApp.debug)
-                console.log(
+              
+                geoconnexApp.customLog("log", 
                   `Removed ${
                     relation.text ? relation.text : relation
                   } from resource metadata`
@@ -814,7 +813,7 @@ let geoconnexApp = new Vue({
             },
             error: function (request, status, error) {
               geoconnexApp.errorMsg = `${error} while attempting to remove related feature.`;
-              console.error(request.responseText);
+              geoconnexApp.customLog("error", request.responseText);
             },
           });
         }
@@ -850,7 +849,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.northLat,
         ];
       } else {
-        if (geoconnexApp.debug) console.error("Spatial extent isn't set");
+        geoconnexApp.customLog("error", "Spatial extent isn't set");
       }
     },
     queryGeoItemsContainingPoint(lat = null, long = null, collections = null) {
@@ -881,7 +880,7 @@ let geoconnexApp = new Vue({
           (group = geoconnexApp.spatialExtentGroup)
         );
       }catch(e) {
-        if(geoconnexApp.debug) console.error("Error attempting to show spatial extent:", e.message);
+        geoconnexApp.customLog("error", "Error attempting to show spatial extent:", e.message);
       }
     },
     async queryGeoItemsInBbox(bbox, collections = null) {
@@ -906,7 +905,7 @@ let geoconnexApp = new Vue({
         items = results.flat().filter(Boolean);
         geoconnexApp.addFeaturesToMap(items);
       } catch (e) {
-        console.error(
+        geoconnexApp.customLog("error", 
           `Error while attempting to find intersecting geometries: ${e.message}`
         );
       }
@@ -951,13 +950,13 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       geoconnexApp.updateSpatialExtentType();
       if (geoconnexApp.resSpatialType == "point") {
-        if (geoconnexApp.debug) console.log("Using point spatial extent");
+        geoconnexApp.customLog("log", "Using point spatial extent");
         geoconnexApp.fillValuesFromResPointExtent();
       } else if (geoconnexApp.resSpatialType == "box") {
-        if (geoconnexApp.debug) console.log("Using box spatial extent");
+        geoconnexApp.customLog("log", "Using box spatial extent");
         geoconnexApp.fillValuesFromResBoxExtent();
       } else {
-        if(geoconnexApp.debug) console.error("Resource spatial extent isn't set");
+        geoconnexApp.customLog("error", "Resource spatial extent isn't set");
       }
       geoconnexApp.setBbox();
     },
@@ -1058,7 +1057,23 @@ let geoconnexApp = new Vue({
         geoconnexApp.initLeafletMap();
       }
       geoconnexApp.showingMap = true;
-    }
+    },
+    customLog(level, itemToLog){
+      let geoconnexApp = this;
+      if (geoconnexApp.debug){
+        if (!geoconnexApp.customLoggers){
+          const log = console.log.bind(window.console, "Geoconnex:");
+          const warn = console.warn.bind(window.console, "Geoconnex warning:");
+          const error = console.error.bind(window.console, "Geoconnex error:");
+          geoconnexApp.customLoggers = {
+            "log": log,
+            "warn": warn,
+            "error": error
+          };
+        }
+        geoconnexApp.customLoggers[level](itemToLog)
+      }
+    },
   },
   beforeMount() {
     this.setCustomItemRules();
