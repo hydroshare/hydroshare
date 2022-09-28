@@ -107,7 +107,11 @@
                             </p>
                             <v-combobox
                                 v-model="selectedReferenceItems"
-                                v-show="hasSelections"
+                                :class="{
+                                    'col-xs-12 col-md-8': resMode === 'View', 
+                                    'col-xs-12': resMode === 'Edit',
+                                    'opaque': !hasSearches && selectedReferenceItems.length === 0
+                                }" 
                                 :items="items"
                                 hide-no-data
                                 allow-overflow="false"
