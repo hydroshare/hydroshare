@@ -43,6 +43,7 @@ let geoconnexApp = new Vue({
       searchFeatureGroup: null,
       spatialExtentGroup: null,
       layerGroupDictionary: {},
+      largeExtentWarningThreshold: 5e+11, // sq meters
       pointLat: 0,
       pointLong: 0,
       northLat: null,
@@ -868,14 +869,19 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.getBbox();
       try{
-        let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]]).toGeoJSON();
+        let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]])
         poly.text = "Resource Spatial Extent";
         geoconnexApp.addToMap(
-          poly,
+          poly.toGeoJSON(),
           false,
           { color: geoconnexApp.spatialExtentColor, fillColor: geoconnexApp.spatialExtentColor, fillOpacity: 0.1 },
           (group = geoconnexApp.spatialExtentGroup)
         );
+        let area = L.GeometryUtil.geodesicArea(poly.getLatLngs()[0]); //sq meters
+        if(area > geoconnexApp.largeExtentWarningThreshold){
+          // TODO: create a general error/warning box that can be filled with different messages
+          geoconnexApp.errorMsg = `Warning: your resource spatial extent is ${(area * 1e-6).toFixed(0)} square kilometers. Geoconnex queries will work best for areas less than ${ (geoconnexApp.largeExtentWarningThreshold * 1e-6).toFixed(0) } square kilometers`;
+        }
       }catch(e) {
         geoconnexApp.error("Error attempting to show spatial extent:", e.message);
       }
