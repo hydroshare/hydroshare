@@ -98,7 +98,6 @@ let geoconnexApp = new Vue({
       }
     },
     async selectedCollections(newValue, oldValue){
-      // TODO: hide the collection dropdown after selection
       let geoconnexApp = this;
       let oldLength = oldValue ? oldValue.length : 0;
       let newLength = newValue ? newValue.length : 0;
@@ -880,7 +879,7 @@ let geoconnexApp = new Vue({
         let area = L.GeometryUtil.geodesicArea(poly.getLatLngs()[0]); //sq meters
         if(area > geoconnexApp.largeExtentWarningThreshold){
           // TODO: create a general error/warning box that can be filled with different messages
-          geoconnexApp.errorMsg = `Warning: your resource spatial extent is ${(area * 1e-6).toFixed(0)} square kilometers. Geoconnex queries will work best for areas less than ${ (geoconnexApp.largeExtentWarningThreshold * 1e-6).toFixed(0) } square kilometers`;
+          geoconnexApp.errorMsg = `Please note: your resource spatial extent (${(area * 1e-6).toFixed(0)} square kilometers) is on the order of large US state. You might experience reduced performance during your searches.`;
         }
       }catch(e) {
         geoconnexApp.error("Error attempting to show spatial extent:", e.message);
@@ -1068,6 +1067,8 @@ let geoconnexApp = new Vue({
     this.setCustomItemRules();
   },
   async mounted() {
+    // TODO: reduce size of collection box so it doesn't look like you should add more
+    // TODO: 
     let geoconnexApp = this;
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);

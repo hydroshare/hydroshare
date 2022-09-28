@@ -52,6 +52,7 @@
                     {% if resource_edit_mode %}
                         <div class="col-xs-12">
                             <v-autocomplete
+                                :menu-props="{closeOnClick: true, closeOnContentClick: true}"
                                 :readonly="lockCollections"
                                 v-model="selectedCollections"
                                 :items="collections"
