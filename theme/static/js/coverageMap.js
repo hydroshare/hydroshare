@@ -479,5 +479,4 @@ function processDrawing(coordinates, shape){
         //     coverageMap.setCenter(coordinates);
         // });
     }
-    // geoconnexApp.updateGeoconnexWithResSpatialExtent();
 }

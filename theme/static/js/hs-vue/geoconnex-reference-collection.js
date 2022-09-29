@@ -56,9 +56,9 @@ let geoconnexApp = new Vue({
       searchColor: "orange",
       selectColor: "purple",
       spatialExtentColor: "red",
-      log: console.log.bind(window.console, "Geoconnex:"),
-      warn: console.warn.bind(window.console, "Geoconnex warning:"),
-      error: console.error.bind(window.console, "Geoconnex error:")
+      log: console.log.bind(window.console, "%cGeoconnex:", "color: white; background:blue;"),
+      warn: console.warn.bind(window.console, "%cGeoconnex warning:", "color: white; background:blue;"),
+      error: console.error.bind(window.console, "%cGeoconnex error:", "color: white; background:blue;")
     };
   },
   computed: {
@@ -818,36 +818,7 @@ let geoconnexApp = new Vue({
     },
     queryGeoItemsFromExtent(collections = null) {
       let geoconnexApp = this;
-      // geoconnexApp.setBbox();
       geoconnexApp.queryGeoItemsInBbox(geoconnexApp.bbox, collections);
-    },
-    getBbox(){
-      let geoconnexApp = this;
-      geoconnexApp.bBox || geoconnexApp.updateGeoconnexWithResSpatialExtent();
-      return geoconnexApp.bBox
-    },
-    setBbox() {
-      let geoconnexApp = this;
-      geoconnexApp.updateSpatialExtentType();
-      if (geoconnexApp.resSpatialType == "point") {
-        // Geoconnex API only acccepts bounding box
-        // if point, just make it a small bounding box
-        geoconnexApp.bBox = [
-          geoconnexApp.pointLong,
-          geoconnexApp.pointLat,
-          geoconnexApp.pointLong + 1,
-          geoconnexApp.pointLat + 1,
-        ];
-      } else if (geoconnexApp.resSpatialType == "box") {
-        geoconnexApp.bBox = [
-          geoconnexApp.eastLong,
-          geoconnexApp.southLat,
-          geoconnexApp.westLong,
-          geoconnexApp.northLat,
-        ];
-      } else {
-        geoconnexApp.error("Spatial extent isn't set");
-      }
     },
     queryGeoItemsContainingPoint(lat = null, long = null, collections = null) {
       // TODO: add progress bar
@@ -866,7 +837,7 @@ let geoconnexApp = new Vue({
     },
     showSpatialExtent(bbox=null){
       let geoconnexApp = this;
-      if (!bbox) bbox = geoconnexApp.getBbox();
+      if (!bbox) bbox = geoconnexApp.bBox;
       try{
         let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]])
         poly.text = "Resource Spatial Extent";
@@ -953,30 +924,38 @@ let geoconnexApp = new Vue({
       geoconnexApp.updateSpatialExtentType();
       geoconnexApp.spatialExtentGroup.clearLayers()
       if (geoconnexApp.resSpatialType == "point") {
-        geoconnexApp.log("Using point spatial extent");
-        geoconnexApp.fillValuesFromResPointExtent();
+        geoconnexApp.log("Setting point spatial extent");
+        geoconnexApp.pointLat = $("#id_north").val();
+        geoconnexApp.pointLong = $("#id_east").val();
+
+        // Geoconnex API only acccepts bounding box
+        // if point, just make it a small bounding box
+        geoconnexApp.bBox = [
+          geoconnexApp.pointLong,
+          geoconnexApp.pointLat,
+          geoconnexApp.pointLong + 1,
+          geoconnexApp.pointLat + 1,
+        ];
+        geoconnexApp.showSpatialExtent();
       } else if (geoconnexApp.resSpatialType == "box") {
-        geoconnexApp.log("Using box spatial extent");
-        geoconnexApp.fillValuesFromResBoxExtent();
+        geoconnexApp.log("Setting box spatial extent");
+        geoconnexApp.northLat = $("#id_northlimit").val();
+        geoconnexApp.eastLong = $("#id_eastlimit").val();
+        geoconnexApp.southLat = $("#id_southlimit").val();
+        geoconnexApp.westLong = $("#id_westlimit").val();
+
+        geoconnexApp.bBox = [
+          geoconnexApp.eastLong,
+          geoconnexApp.southLat,
+          geoconnexApp.westLong,
+          geoconnexApp.northLat,
+        ];
+        geoconnexApp.showSpatialExtent();
       } else {
-        geoconnexApp.error("Resource spatial extent isn't set");
+        geoconnexApp.warn("Resource spatial extent isn't set");
       }
-      geoconnexApp.setBbox();
-      geoconnexApp.showSpatialExtent();
     },
-    fillValuesFromResPointExtent() {
-      let geoconnexApp = this;
-      geoconnexApp.pointLat = $("#id_north").val();
-      geoconnexApp.pointLong = $("#id_east").val();
-    },
-    fillValuesFromResBoxExtent() {
-      let geoconnexApp = this;
-      geoconnexApp.northLat = $("#id_northlimit").val();
-      geoconnexApp.eastLong = $("#id_eastlimit").val();
-      geoconnexApp.southLat = $("#id_southlimit").val();
-      geoconnexApp.westLong = $("#id_westlimit").val();
-    },
-    fillValuesFromResCoordinates(lat, long) {
+    fillValuesFromClickedCoordinates(lat, long) {
       let geoconnexApp = this;
       geoconnexApp.pointLat = lat;
       geoconnexApp.pointLong = long;
@@ -1005,7 +984,7 @@ let geoconnexApp = new Vue({
           function (e) {
             e.stopPropagation();
             const loc = JSON.parse($(this).attr("data"));
-            geoconnexApp.fillValuesFromResCoordinates(loc.lat, loc.long);
+            geoconnexApp.fillValuesFromClickedCoordinates(loc.lat, loc.long);
             geoconnexApp.queryGeoItemsContainingPoint(loc.lat, loc.long, geoconnexApp.selectedCollections);
           }
         );
