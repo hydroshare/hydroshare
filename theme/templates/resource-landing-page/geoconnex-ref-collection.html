@@ -96,13 +96,13 @@
                                         </v-chip>
                                     </template>
                             </v-autocomplete>
-                            <p v-show="items.length == limitCollectionSize" class="small text-muted negative-top">
-                                <span v-show="items.length == limitCollectionSize" data-toggle="tooltip" data-placement="auto"
-                                :title="`The collection you selected contains more than ${limitCollectionSize}`"
+                            <p v-show="items.length == limitNumberOfItemsPerRequest" class="small text-muted negative-top">
+                                <span v-show="items.length == limitNumberOfItemsPerRequest" data-toggle="tooltip" data-placement="auto"
+                                :title="`The collection you selected contains more than ${limitNumberOfItemsPerRequest}`"
                                 class="glyphicon glyphicon-exclamation-sign text-muted"
                                 :style="`color: ${infoColor}`">
                                 </span>
-                                The collection you selected contains more than the limit (${limitCollectionSize} items).
+                                The collection you selected contains more than the limit (${limitNumberOfItemsPerRequest} items).
                                 We recommend that you reduce your resource spatial extent. Or clear the collections and point search by clicking on the map.
                             </p>
                             <v-combobox

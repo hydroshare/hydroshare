@@ -1,12 +1,12 @@
-const limitCollectionSize= 5000;
-const geoconnexUrl = "https://reference.geoconnex.us/collections";
-const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitCollectionSize}`;
+const limitNumberOfItemsPerRequest= 50000;
+const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfItemsPerRequest}`;
 let geoconnexApp = new Vue({
   el: "#app-geoconnex",
   delimiters: ["${", "}"],
   vuetify: new Vuetify(),
   data() {
     return {
+      // TODO: organize parameters and functions so that they are grouped in a way that makes sense
       metadataRelations: RELATIONS,
       relationObjects: [],
       debug: true,
@@ -21,9 +21,10 @@ let geoconnexApp = new Vue({
       loadingRelations: true,
       errorMsg: "",
       errored: false,
+      geoconnexUrl: "https://reference.geoconnex.us/collections",
       cacheName: "geoconnexCache",
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
-      limitCollectionSize: limitCollectionSize,
+      limitNumberOfItemsPerRequest: limitNumberOfItemsPerRequest,
       geoCache: null,
       resShortId: SHORT_ID,
       cacheDuration: 6.048e+8, // one week in milliseconds
@@ -52,7 +53,7 @@ let geoconnexApp = new Vue({
       southLat: null,
       westLong: null,
       bBox: null,
-      infoColor: "#fcf8e3",
+      infoColor: "#3a87ad",
       pointFillColor: "yellow",
       searchColor: "orange",
       selectColor: "purple",
@@ -217,7 +218,7 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       geoconnexApp.searchingDescription = geoconnexObj.collection;
       if (refresh || !geoconnexObj.geometry) {
-        let query = `${geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
+        let query = `${geoconnexApp.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
         let response = await geoconnexApp.fetchFromCacheOrGeoconnex(query, refresh);
         geoconnexObj.geometry = response.geometry;
       }
@@ -228,7 +229,7 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       geoconnexApp.searchingDescription = collection.description
       let response = {};
-      let query = `${geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&bbox=${bbox.toString()}`;
+      let query = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&bbox=${bbox.toString()}`;
       response = await geoconnexApp.fetchFromCacheOrGeoconnex(query, refresh);
       geoconnexApp.searchingDescription = "";
 
@@ -242,7 +243,7 @@ let geoconnexApp = new Vue({
       let relative_id = uri.split("ref/").pop();
       let collection = relative_id.split("/")[0];
       let id = relative_id.split("/")[1];
-      let query = `${geoconnexUrl}/${collection}/items/${id}?f=json`;
+      let query = `${geoconnexApp.geoconnexUrl}/${collection}/items/${id}?f=json`;
       let response = await geoconnexApp.fetchFromCacheOrGeoconnex(query);
       geoconnexApp.searchingDescription = "";
       return response;
@@ -574,7 +575,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.loadingCollections = true;
       try {
         let response = await geoconnexApp.fetchFromCacheOrGeoconnex(
-          `${geoconnexUrl}?f=json&skipGeometry=true`,
+          `${geoconnexApp.geoconnexUrl}?f=json&skipGeometry=true`,
           forceFresh
         );
         geoconnexApp.collections = response.collections.filter(col => {
@@ -629,7 +630,7 @@ let geoconnexApp = new Vue({
     },
     async getItemsIn(collection, forceFresh = false, skipGeometry = true) {
       let geoconnexApp = this;
-      const url = `${geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&skipGeometry=${skipGeometry.toString()}`;
+      const url = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&skipGeometry=${skipGeometry.toString()}`;
       let featureCollection = await geoconnexApp.fetchFromCacheOrGeoconnex(url, forceFresh);
       featureCollection.collection = collection;
       return featureCollection;
