@@ -39,10 +39,10 @@ $(document).ready(function () {
         initMap();
     }
 
-    // listen for save after spatial change
-    $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').click(()=>{
-        geoconnexApp.updateGeoconnexWithResSpatialExtent();
-    })
+    // Update the geoconnexApp with spatial extent
+    geoconnexApp.updateGeoconnexWithResSpatialExtent();
+    // TODO: this occasionally calls before the geoconnex map is ready
+    // so have to find a way to do this from geoconnex...wait for the spatial extent map ready
 });
 
 async function drawInitialShape() {

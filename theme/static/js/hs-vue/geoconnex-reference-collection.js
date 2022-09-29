@@ -6,7 +6,9 @@ let geoconnexApp = new Vue({
   vuetify: new Vuetify(),
   data() {
     return {
+      // TODO: refactor functions
       // TODO: organize parameters and functions so that they are grouped in a way that makes sense
+      // TODO: run formatter on this and the html file
       metadataRelations: RELATIONS,
       relationObjects: [],
       debug: true,
@@ -247,11 +249,11 @@ let geoconnexApp = new Vue({
       geoconnexApp.searchingDescription = "";
       return response;
     },
-    initLeafletMap() {
+    initializeLeafletMap() {
       let geoconnexApp = this;
       geoconnexApp.selectedFeatureGroup = L.featureGroup();
       geoconnexApp.searchFeatureGroup = L.featureGroup();
-      geoconnexApp.spatialExtentGroup = L.featureGroup();
+      !geoconnexApp.spatialExtentGroup && (geoconnexApp.spatialExtentGroup = L.featureGroup());
       const southWest = L.latLng(-90, -180),
         northEast = L.latLng(90, 180);
       const bounds = L.latLngBounds(southWest, northEast);
@@ -1020,6 +1022,11 @@ let geoconnexApp = new Vue({
       $("#div_id_type input[type=radio]").change((e) => {
         geoconnexApp.resSpatialType = e.target.value;
       });
+
+      // listen for save after resource spatial change
+      $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').click(()=>{
+        geoconnexApp.updateGeoconnexWithResSpatialExtent();
+      })
     },
     toggleMapVisibility() {
       let geoconnexApp = this;
@@ -1027,14 +1034,14 @@ let geoconnexApp = new Vue({
       // force state refresh
       setTimeout(function () {
         if (geoconnexApp.showingMap && geoconnexApp.map == null) {
-          geoconnexApp.initLeafletMap();
+          geoconnexApp.initializeLeafletMap();
         }
       }, 0);
     },
     showMap() {
       let geoconnexApp = this;
       if (geoconnexApp.showingMap && geoconnexApp.map == null) {
-        geoconnexApp.initLeafletMap();
+        geoconnexApp.initializeLeafletMap();
       }
       geoconnexApp.showingMap = true;
     }
@@ -1043,29 +1050,10 @@ let geoconnexApp = new Vue({
     this.setCustomItemRules();
   },
   async mounted() {
-    // TODO: reduce size of collection box so it doesn't look like you should add more
-    // TODO: 
     let geoconnexApp = this;
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      geoconnexApp.initLeafletMap();
-
-      // geoconnexApp.$nextTick(async function () {
-        // coverageMap.initialShapesDrawn
-        // await geoconnexApp.updateGeoconnexWithResSpatialExtent();
-        // geoconnexApp.showSpatialExtent();
-      // })
-
-    // TODO: remove this + above once have a good way to handle spatial extent changes
-    checkFlag();
-    async function checkFlag() {
-      if(!coverageMap || !coverageMap.initialShapesDrawn) {
-         window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
-      } else {
-      geoconnexApp.updateGeoconnexWithResSpatialExtent();
-      }
-    }
-      
+      geoconnexApp.initializeLeafletMap();
       geoconnexApp.loadCollections(false);
       geoconnexApp.loadMetadataRelations();
 
@@ -1074,7 +1062,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.metadataRelations.length > 0
     ) {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      geoconnexApp.initLeafletMap();
+      geoconnexApp.initializeLeafletMap();
       geoconnexApp.loadMetadataRelations();
       geoconnexApp.loadingCollections = false;
     }
