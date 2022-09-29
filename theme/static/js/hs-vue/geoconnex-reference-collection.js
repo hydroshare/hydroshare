@@ -20,7 +20,6 @@ let geoconnexApp = new Vue({
       searchingDescription: "",
       loadingRelations: true,
       errorMsg: "",
-      errored: false,
       geoconnexUrl: "https://reference.geoconnex.us/collections",
       cacheName: "geoconnexCache",
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
@@ -583,7 +582,6 @@ let geoconnexApp = new Vue({
         });
       } catch (e) {
         geoconnexApp.error(e.message);
-        geoconnexApp.errored = true;
       }
       geoconnexApp.loadingCollections = false;
     },
@@ -703,7 +701,6 @@ let geoconnexApp = new Vue({
           })
           .catch(function (e) {
             geoconnexApp.error(e.message);
-            geoconnexApp.errored = true;
           });
       }
       return fetchData;
