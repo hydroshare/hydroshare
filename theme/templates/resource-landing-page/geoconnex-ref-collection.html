@@ -7,41 +7,42 @@
 {% if resource_edit_mode or generic_relations %}
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
-        <div v-show="resMode=='Edit'" class="alert alert-info alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">×</span>
-            </button>
-            <div class="flex">
-                <i class="glyphicon glyphicon-info-sign"></i>
-                <em style="padding-right:20px;">
-                    If this resource is related to other geospatial resources, you can record those relationships by adding the items here.
-                    <strong><a href="https://geoconnex.internetofwater.dev/" target="_blank">Geoconnex</a></strong>,
-                    a project of the <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
-                    provides collections of reference resources within the United States that might overlap with your resource.
-                    For example, if this resource has spatial extent contained within an Eight-digit Hydrologic Subbasin, you could search the "HU08" collection <strong><span :style="`color: ${searchColor}`">(step #1)</span></strong>.
-                    Once you found the specific related item, you could select it <strong><span :style="`color: ${selectColor}`">(step #2)</span></strong>, adding it to you resource metadata.
-                    A reference can alternatively be created by typing a URL that links to the related geospatial resource.
-                    If you enter a URL, it will be converted to an active link. Adding these relations improves discoverability of your resource and contributes to
-                    <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>.
-                </em>
-            </div>
-        </div>
-
         <label>This HydroShare resource is related to the following geospatial features
             <span v-show="resMode=='Edit'" data-toggle="tooltip" data-placement="auto"
             title='Use this section to add persistent identifiers pointing at related geospatial features.'
             class="glyphicon glyphicon-info-sign text-muted">
             </span>
         </label>
-        <div v-if="!resSpatialType && resMode=='Edit'" class="alert alert-warning alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                aria-hidden="true">&times;</span></button>
-            <p>We highly recommend that you add Spatial Coverage to this resource before searching for related geospatial items. Otherwise query times can be excessive.</p>
-        </div>
-        <div v-if="errorMsg" class="alert alert-warning alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                aria-hidden="true">&times;</span></button>
-            <p>${errorMsg}</p>
+        <div id="geoconnex-message-wrapper" v-if="resMode=='Edit'">
+            <div class="alert alert-info alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <div class="flex">
+                    <i class="glyphicon glyphicon-info-sign"></i>
+                    <em style="padding-right:20px;">
+                        If this resource is related to other geospatial resources, you can record those relationships by adding the items here.
+                        <strong><a href="https://geoconnex.internetofwater.dev/" target="_blank">Geoconnex</a></strong>,
+                        a project of the <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
+                        provides collections of reference resources within the United States that might overlap with your resource.
+                        For example, if this resource has spatial extent contained within an Eight-digit Hydrologic Subbasin, you could search the "HU08" collection <strong><span :style="`color: ${searchColor}`">(step #1)</span></strong>.
+                        Once you found the specific related item, you could select it <strong><span :style="`color: ${selectColor}`">(step #2)</span></strong>, adding it to you resource metadata.
+                        A reference can alternatively be created by typing a URL that links to the related geospatial resource.
+                        If you enter a URL, it will be converted to an active link. Adding these relations improves discoverability of your resource and contributes to
+                        <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>.
+                    </em>
+                </div>
+            </div>
+            <div v-if="!resSpatialType && resMode=='Edit'" class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
+                <p>We highly recommend that you add Spatial Coverage to this resource before searching for related geospatial items. Otherwise query times can be excessive.</p>
+            </div>
+            <div v-for="messageObj in appMessages" :class="'alert alert-dismissible alert-' + messageObj.level" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
+                <p>${ messageObj.message }</p>
+            </div>
         </div>
         <v-app>
             <div class="container">

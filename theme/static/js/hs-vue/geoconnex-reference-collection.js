@@ -19,7 +19,9 @@ let geoconnexApp = new Vue({
       loadingCollections: true,
       searchingDescription: "",
       loadingRelations: true,
-      errorMsg: "",
+      appMessages: [],
+      collectionMessages: [],
+      featureMessages: [],
       geoconnexUrl: "https://reference.geoconnex.us/collections",
       cacheName: "geoconnexCache",
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
@@ -70,8 +72,6 @@ let geoconnexApp = new Vue({
   watch: {
     selectedReferenceItems(newValue, oldValue) {
       let geoconnexApp = this;
-      geoconnexApp.errorMsg = "";
-
       let oldLength = oldValue ? oldValue.length : 0;
       let newLength = newValue ? newValue.length : 0;
       if (newLength > oldLength) {
@@ -786,7 +786,7 @@ let geoconnexApp = new Vue({
           });
         },
         error: function (request, status, error) {
-          geoconnexApp.errorMsg = `${error} while attempting to add related feature.`;
+          geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to add related feature.`});
           geoconnexApp.error(request.responseText);
         },
       });
@@ -820,7 +820,6 @@ let geoconnexApp = new Vue({
       geoconnexApp.queryGeoItemsInBbox(geoconnexApp.bbox, collections);
     },
     queryGeoItemsContainingPoint(lat = null, long = null, collections = null) {
-      // TODO: add progress bar
       let geoconnexApp = this;
       long = typeof long == "number" ? long : geoconnexApp.pointLong;
       lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
@@ -848,8 +847,7 @@ let geoconnexApp = new Vue({
         );
         let area = L.GeometryUtil.geodesicArea(poly.getLatLngs()[0]); //sq meters
         if(area > geoconnexApp.largeExtentWarningThreshold){
-          // TODO: create a general error/warning box that can be filled with different messages
-          geoconnexApp.errorMsg = `Please note: your resource spatial extent (${(area * 1e-6).toFixed(0)} square kilometers) is on the order of large US state. You might experience reduced performance during your searches.`;
+          geoconnexApp.appMessages.push({"level": "warn", "message": `Please note: your resource spatial extent (${(area * 1e-6).toFixed(0)} square kilometers) is on the order of large US state. You might experience reduced performance during your searches.`});
         }
       }catch(e) {
         geoconnexApp.error("Error attempting to show spatial extent:", e.message);
