@@ -1098,17 +1098,9 @@ let geoconnexApp = new Vue({
       geoconnexApp.metadataRelations.length > 0
     ) {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      // TODO: remove this if there is a better way
-      checkFlag();
-      async function checkFlag() {
-        if(!coverageMap || !coverageMap.initialShapesDrawn) {
-           window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
-        } else {
-          geoconnexApp.initLeafletMap();
-          geoconnexApp.loadMetadataRelations();
-          geoconnexApp.loadingCollections = false;
-        }
-      }
+      geoconnexApp.initLeafletMap();
+      geoconnexApp.loadMetadataRelations();
+      geoconnexApp.loadingCollections = false;
     }
   },
 });
