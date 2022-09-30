@@ -38,11 +38,6 @@ $(document).ready(function () {
     if ($("#coverageMap").length) {
         initMap();
     }
-
-    // Update the geoconnexApp with spatial extent
-    geoconnexApp.updateGeoconnexWithResSpatialExtent();
-    // TODO: this occasionally calls before the geoconnex map is ready
-    // so have to find a way to do this from geoconnex...wait for the spatial extent map ready
 });
 
 async function drawInitialShape() {

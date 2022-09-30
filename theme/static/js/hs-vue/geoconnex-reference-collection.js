@@ -1046,8 +1046,19 @@ let geoconnexApp = new Vue({
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       geoconnexApp.initializeLeafletMap();
+
       geoconnexApp.loadCollections(false);
       geoconnexApp.loadMetadataRelations();
+
+      checkFlag();
+      async function checkFlag() {
+        if(!coverageMap || !coverageMap.initialShapesDrawn) {
+          console.log("LSKDJFLKSJDFLKJSDFKjSLDJF")
+           window.setTimeout(checkFlag, 100);
+        } else {
+          geoconnexApp.updateGeoconnexWithResSpatialExtent();
+        }
+      }
 
     } else if (
       geoconnexApp.resMode == "View" &&
