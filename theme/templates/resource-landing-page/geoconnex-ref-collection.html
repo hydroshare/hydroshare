@@ -124,14 +124,23 @@
                                         </v-chip>
                                     </template>
                             </v-autocomplete>
-                            <p v-show="hasSearches" class="small text-muted negative-top" :style="`color: ${messageColor}`">
+                            <div v-show="hasSearches && !searchResultString" class="small text-muted negative-top" :style="`color: ${messageColor}`">
                                 <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
-                                :title="`Item options in step #2 have been limited to collection ${ selectedCollections.length > 1 ? 's' : '' } you selected here`"
+                                :title="`Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? 's' : '' } you selected here`"
                                 class="glyphicon glyphicon-info-sign text-muted"
                                 :style="`color: ${messageColor}`">
                                 </span>
-                                Item options in step #2 have been limited to collection ${ selectedCollections.length > 1 ? "s" : "" } you selected here
-                            </p>
+                                Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? "s" : "" } you selected here
+                            </div>
+                            <div v-show="searchResultString" 
+                            class="small text-muted negative-top" :style="`color: ${messageColor}`">
+                                <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
+                                :title="searchResultString"
+                                class="glyphicon glyphicon-info-sign text-muted"
+                                :style="`color: ${messageColor}`">
+                                </span>
+                                ${ searchResultString }
+                            </div>
                             <div v-for="message in collectionMessages" :style="`color: ${messageColor}`">
                                 <span data-toggle="tooltip" data-placement="auto"
                                     :title="message"

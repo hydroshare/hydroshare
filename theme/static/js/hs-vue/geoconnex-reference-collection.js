@@ -43,6 +43,7 @@ let geoconnexApp = new Vue({
       selectedItemLayers: {},
       selectedFeatureGroup: null,
       selectedCollections: [],
+      searchResultString: "",
       lockCollections: false,
       limitToSingleCollection: true,
       hasSearches: false,
@@ -113,16 +114,22 @@ let geoconnexApp = new Vue({
         newLength == 1 && (geoconnexApp.lockCollections = true);
         newLength == 0 && (geoconnexApp.lockCollections = false);
       }
+      geoconnexApp.searchResultString = "";
+      geoconnexApp.map.closePopup();
 
       if (newLength > oldLength) {
         geoconnexApp.hasSearches = true;
         let newCollection = newValue.at(-1);
         if(geoconnexApp.resSpatialType){
-          geoconnexApp.queryGeoItemsFromExtent([newCollection]);
+          geoconnexApp.queryGeoItemsInBbox(geoconnexApp.bbox, [newCollection]);
         }else{
           geoconnexApp.searchingDescription = newCollection.description;
           let featureCollection = await geoconnexApp.getItemsIn(newCollection, forceFresh = false, skipGeometry = false);
-          geoconnexApp.addFeaturesToMap(featureCollection.features, featureCollection.collection);
+          if(featureCollection.features){
+            geoconnexApp.addFeaturesToMap(featureCollection.features, featureCollection.collection);
+          }else{
+            geoconnexApp.searchResultString = `Your search in ${newCollection.description} didn't return any features.`;
+          }
           geoconnexApp.searchingDescription = "";
         }
       } else if (newLength < oldLength) {
@@ -172,10 +179,6 @@ let geoconnexApp = new Vue({
       geoconnexApp.loadingCollections = true;
       // save a copy of the items
       geoconnexApp.unfilteredItems = geoconnexApp.items;
-
-      // alternative to remove any unused collections
-      // ommitted for now, as it is plenty fast just to use "filter"
-      // geoconnexApp.items = geoconnexApp.items.filter(s => Object.keys(geoconnexApp.layerGroupDictionary).includes(s.collection));
 
       // remove all items currently not in the map search
       let keep = [];
@@ -421,10 +424,11 @@ let geoconnexApp = new Vue({
         geoconnexApp.items.push(feature);
       }
       if(features.length){
+        geoconnexApp.searchResultString = "";
         geoconnexApp.fitMapToFeatures();
         geoconnexApp.limitOptionsToMappedFeatures();
       }else{
-        geoconnexApp.displayNoFoundItems(bbox[1], bbox[0]);
+        geoconnexApp.searchResultString = `Your search didn't return any features.`;
       }
     },
     addToMap(
@@ -812,17 +816,13 @@ let geoconnexApp = new Vue({
         }
       }
     },
-    queryGeoItemsFromExtent(collections = null) {
-      let geoconnexApp = this;
-      geoconnexApp.queryGeoItemsInBbox(geoconnexApp.bbox, collections);
-    },
     queryGeoItemsContainingPoint(lat = null, long = null, collections = null) {
       let geoconnexApp = this;
       long = typeof long == "number" ? long : geoconnexApp.pointLong;
       lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
       geoconnexApp.map.closePopup();
 
-      var bbox = [
+      let bbox = [
         long,
         lat,
         long + 10e-12,
@@ -851,7 +851,7 @@ let geoconnexApp = new Vue({
     },
     async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
-      if (!bbox) bbox = geoconnexApp.bBox
+      if (!bbox) bbox = geoconnexApp.bBox;
       let items = [];
       geoconnexApp.map.closePopup();
       try {
@@ -869,18 +869,26 @@ let geoconnexApp = new Vue({
         }
         let results = await Promise.all(promises);
         items = results.flat().filter(Boolean);
-        geoconnexApp.addFeaturesToMap(items);
+        if(items.length > 0){
+          geoconnexApp.searchResultString = "";
+          geoconnexApp.addFeaturesToMap(items);
+        }else{
+          geoconnexApp.searchResultString = `Your search didn't return any features.`;
+          geoconnexApp.displayNoFoundItems(bbox);
+        }
       } catch (e) {
         geoconnexApp.error(
           `Error while attempting to find intersecting geometries: ${e.message}`
         );
       }
     },
-    displayNoFoundItems(lat, lng) {
-      let loc = { lat: lat, lng: lng };
+    displayNoFoundItems(bbox) {
+      let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]])
+      let loc = poly.getBounds().getCenter();
+      // let loc = { lat: lat, lng: lng };
       let content = `<div data='${JSON.stringify(
         loc
-      )}'>No collection items found containing this search.</div>`;
+      )}'>No collection items found containing your search.</div>`;
       L.popup({ maxWidth: 400, autoClose: true})
         .setLatLng(loc)
         .setContent(content)
