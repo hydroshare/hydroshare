@@ -1096,3 +1096,10 @@ let geoconnexApp = new Vue({
     }
   },
 });
+
+// TODO: Allow the user to specify what type of relationship the resource has with the related Geoconnex item
+// TODO: add more linked data fields for referenced items, https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1226227651
+
+// TODO: If we are encoding just the URI of each of the GeoConnex features without any additional information about the relationship, the RDF/XML encoding in the resourcemetadata.xml can be simplified to:
+// <dc:relation rdf:resource="https://geoconnex.us/ref/principal_aq/401"/>
+// The nested way they are encoded now creates unnecessary blank nodes in the RDF graph.
