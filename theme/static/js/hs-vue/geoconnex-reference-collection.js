@@ -1036,6 +1036,17 @@ let geoconnexApp = new Vue({
         geoconnexApp.initializeLeafletMap();
       }
       geoconnexApp.showingMap = true;
+    },
+    until(conditionFunction) {
+      geoconnexApp.log(`Waiting for [ ${conditionFunction} ] to resolve...`)
+      const poll = resolve => {
+        if(conditionFunction()){
+          geoconnexApp.log(`Promise for [ ${conditionFunction} ] resolved`)
+          resolve();
+        }
+        else setTimeout(_ => poll(resolve), 400);
+      }
+      return new Promise(poll);
     }
   },
   beforeMount() {
@@ -1050,15 +1061,10 @@ let geoconnexApp = new Vue({
       geoconnexApp.loadCollections(false);
       geoconnexApp.loadMetadataRelations();
 
-      checkFlag();
-      async function checkFlag() {
-        if(!coverageMap || !coverageMap.initialShapesDrawn) {
-          console.log("LSKDJFLKSJDFLKJSDFKjSLDJF")
-           window.setTimeout(checkFlag, 100);
-        } else {
-          geoconnexApp.updateGeoconnexWithResSpatialExtent();
-        }
-      }
+      // wait for spatial coverage map to load before getting extent
+      geoconnexApp.until(_ => coverageMap ).then(()=>{
+        geoconnexApp.updateGeoconnexWithResSpatialExtent();
+      });
 
     } else if (
       geoconnexApp.resMode == "View" &&
