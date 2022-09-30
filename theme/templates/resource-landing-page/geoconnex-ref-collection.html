@@ -50,18 +50,6 @@
                     </em>
                 </div>
             </div>
-            <div v-if="items.length >= limitNumberOfItemsPerRequest" class="alert alert-dismissible alert-warning" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-                <div class="flex">
-                    <i class="glyphicon glyphicon-info-sign"></i>
-                    <em style="padding-right:20px;">
-                        The collection you selected contains more than the limit (${ limitNumberOfItemsPerRequest } items).
-                        We recommend that you reduce your resource spatial extent. Or clear the collections and point search by clicking on the map.
-                    </em>
-                </div>
-            </div>
             <div v-for="messageObj in appMessages" v-if="messageObj.show" :class="'alert alert-dismissible alert-' + messageObj.level" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">×</span>
@@ -125,16 +113,25 @@
                                     </template>
                             </v-autocomplete>
                             <div v-show="hasSearches && !searchResultString" class="small text-muted negative-top" :style="`color: ${messageColor}`">
-                                <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
+                                <span data-toggle="tooltip" data-placement="auto"
                                 :title="`Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? 's' : '' } you selected here`"
                                 class="glyphicon glyphicon-info-sign text-muted"
                                 :style="`color: ${messageColor}`">
                                 </span>
                                 Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? "s" : "" } you selected here
                             </div>
+                            <div v-show="items.length >= limitNumberOfItemsPerRequest" class="small text-muted" :style="`color: ${messageColor}`">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                :title="`${ selectedCollections.map(a => a.id).join() } contains more than the limit (${ limitNumberOfItemsPerRequest } items).`"
+                                class="glyphicon glyphicon-info-sign text-muted"
+                                :style="`color: ${messageColor}`">
+                                </span>
+                                "${ selectedCollections.map(a => a.id).join() }" contains too many items. Only ${ limitNumberOfItemsPerRequest } items were mapped.
+                                We recommend that you reduce your search extent. Or conduct a point search by clicking on the map.
+                            </div>
                             <div v-show="searchResultString" 
                             class="small text-muted negative-top" :style="`color: ${messageColor}`">
-                                <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
+                                <span data-toggle="tooltip" data-placement="auto"
                                 :title="searchResultString"
                                 class="glyphicon glyphicon-info-sign text-muted"
                                 :style="`color: ${messageColor}`">
@@ -253,13 +250,13 @@
                                         <i class="fa fa-search-plus"></i>Search "${ selectedCollections.map(a => a.id).join() }" using visible map bounds
                                     </button>
                                     <span data-toggle="tooltip" data-placement="auto"
-                                        title="Search within the visible boundaries of the map. Zooming in will reduce the search area."
+                                        title="Search within the visible boundaries of the map, instead of using spatial extent. Zooming in will reduce the search area."
                                         class="glyphicon glyphicon-info-sign text-muted"
                                     ></span>
                                 </div>
                                 <div v-show="hasSearches && showingMap">
                                     <button @click="clearLeafletOfMappedSearches" class="btn btn-warning" depressed small>
-                                        <i class="fa fa-search-minus"></i>Clear searches from map
+                                        <i class="fa fa-search-minus"></i>Clear searches
                                     </button>
                                     <span data-toggle="tooltip" data-placement="auto"
                                         title="Clears unselected spatial features from the map"

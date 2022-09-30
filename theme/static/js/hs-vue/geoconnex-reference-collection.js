@@ -898,7 +898,7 @@ let geoconnexApp = new Vue({
       // let loc = { lat: lat, lng: lng };
       let content = `<div data='${JSON.stringify(
         loc
-      )}'>No collection items found containing your search.</div>`;
+      )}'>No collection items found for your search.</div>`;
       L.popup({ maxWidth: 400, autoClose: true})
         .setLatLng(loc)
         .setContent(content)

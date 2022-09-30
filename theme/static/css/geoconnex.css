@@ -38,7 +38,8 @@
 
 .negative-top {
   margin-top: -3rem;
-  margin-bottom: 3rem;
+  /* TODO: figure out spacing with messages etc */
+  /* margin-bottom: 3rem; */
 }
 
 #app-geoconnex .opaque{
