@@ -443,6 +443,7 @@ let geoconnexApp = new Vue({
       try {
         let leafletLayer = L.geoJSON(geojson, {
           onEachFeature: function (feature, layer) {
+            // TODO: limit the ammount of info that shows up? So that popup not off the map
             var popupText = `<h4>${feature.text}</h4>`;
             for (var k in feature.properties) {
               popupText += "<b>" + k + "</b>: ";

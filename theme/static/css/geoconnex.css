@@ -30,10 +30,22 @@
   margin-top: 1rem;
 }
 
+/* TODO: these paddings cause issue on small screens (padding right) */
+#geoconnex-controls-wrapper {
+  padding: 0px !important;
+  padding-right: 12px !important;
+}
+
+#app-geoconnex .v-application .info-table-wrapper {
+  padding:0px !important;
+  padding-right: 12px !important;
+}
+
 #geoconnex-controls {
   justify-content: flex-start !important;
   flex-wrap: wrap;
   flex-direction: row;
+  margin-bottom: 12px;
 }
 
 .negative-top {
@@ -86,7 +98,6 @@
   flex: 2 1 500px;
   z-index: 2;
   padding: 0;
-  padding-top: 12px;
 }
 
 #geoconnex-leaflet {

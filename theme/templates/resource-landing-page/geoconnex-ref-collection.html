@@ -66,7 +66,8 @@
             <div class="container">
                 <div class="row">
                     {% if resource_edit_mode %}
-                        <div class="col-xs-12">
+                    <!-- TODO: perhaps revise this to use flexbox instead of bootstrap? -->
+                        <div class="col-xs-12 col-md-6" id="geoconnex-controls-wrapper">
                             <v-autocomplete
                                 :menu-props="{closeOnClick: true, closeOnContentClick: true}"
                                 :readonly="lockCollections"
@@ -245,7 +246,7 @@
                                         <i class="fa fa-minus"></i>Hide Map
                                     </button>
                                 </div>
-                                <div v-show="hasSelections">
+                                <div v-show="hasSearches">
                                     <button @click="queryUsingVisibleMapBounds" class="btn btn-warning" depressed small>
                                         <i class="fa fa-search-plus"></i>Search "${ selectedCollections.map(a => a.id).join() }" using visible map bounds
                                     </button>
@@ -283,7 +284,7 @@
                         id="geoconnex-map-wrapper"
                         :class="{
                             'col-xs-12 col-md-8': resMode === 'View', 
-                            'col-xs-12': resMode === 'Edit',
+                            'col-xs-12 col-md-6': resMode === 'Edit',
                             'opaque': !hasSearches && selectedReferenceItems.length === 0
                         }" 
                         v-show="showingMap" 
