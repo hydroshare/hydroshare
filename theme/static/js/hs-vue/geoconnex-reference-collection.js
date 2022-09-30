@@ -400,7 +400,7 @@ let geoconnexApp = new Vue({
           if (feature.geometry.type.includes("Point")) {
             geoconnexApp.addToMap(
               feature,
-              false,
+              fit = false,
               {
                 color: geoconnexApp.searchColor,
                 radius: 5,
@@ -412,7 +412,7 @@ let geoconnexApp = new Vue({
           } else {
             geoconnexApp.addToMap(
               feature,
-              false,
+              fit = false,
               { color: geoconnexApp.searchColor },
               (group = geoconnexApp.searchFeatureGroup)
             );
@@ -506,7 +506,7 @@ let geoconnexApp = new Vue({
 
         // handle zooming
         if (fit) {
-          geoconnexApp.map.fitBounds(leafletLayer.getBounds());
+          geoconnexApp.map.fitBounds(leafletLayer.getBounds(), {"maxZoom": 10});
         }
       } catch (e) {
         geoconnexApp.error(e.message);
@@ -524,7 +524,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.searchFeatureGroup && bounds.extend(geoconnexApp.searchFeatureGroup.getBounds());
           geoconnexApp.searchFeatureGroup && bounds.extend(geoconnexApp.selectedFeatureGroup.getBounds());
           if (bounds.isValid()) {
-            geoconnexApp.map.fitBounds(bounds);
+            geoconnexApp.map.fitBounds(bounds, {"maxZoom": 10});
           } else {
             // USA
             // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
