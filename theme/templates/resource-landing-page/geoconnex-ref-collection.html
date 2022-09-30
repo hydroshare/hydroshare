@@ -94,15 +94,14 @@
                                         </v-chip>
                                     </template>
                             </v-autocomplete>
-                            <p v-show="items.length == limitNumberOfItemsPerRequest" class="small text-muted negative-top">
-                                <span v-show="items.length == limitNumberOfItemsPerRequest" data-toggle="tooltip" data-placement="auto"
-                                :title="`The collection you selected contains more than ${limitNumberOfItemsPerRequest}`"
-                                class="glyphicon glyphicon-exclamation-sign text-muted"
-                                :style="`color: ${infoColor}`">
+                            <div v-for="message in collectionMessages" class="small text-muted" :style="`color: ${messageColor}`">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                    :title="message"
+                                    class="glyphicon glyphicon-exclamation-sign text-muted"
+                                    :style="`color: ${messageColor}`">
                                 </span>
-                                The collection you selected contains more than the limit (${limitNumberOfItemsPerRequest} items).
-                                We recommend that you reduce your resource spatial extent. Or clear the collections and point search by clicking on the map.
-                            </p>
+                                ${ message }
+                            </div>
                             <v-combobox
                                 v-model="selectedReferenceItems"
                                 :class="{
@@ -125,7 +124,7 @@
                                 :loading="loadingRelations"
                                 :color=selectColor
                                 :search-input.sync="itemTypeahead"
-                                :rules="rules"
+                                :rules="featureRules"
                                 return-object="true">
                                 <template v-slot:item="data">
                                     <template v-if="typeof data.item !== 'object'">
@@ -156,12 +155,30 @@
                                       <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
                                     </v-chip>
                                 </template>
+                                <template v-slot:message="rulesMessage">
+                                    <div class="small text-muted" :style="`color: ${messageColor}`">
+                                        <span data-toggle="tooltip" data-placement="auto"
+                                            :title="rulesMessage.message"
+                                            class="glyphicon glyphicon-exclamation-sign text-muted"
+                                            :style="`color: ${messageColor}`">
+                                        </span>
+                                        ${ rulesMessage.message }
+                                    </div>
+                                </template>
                             </v-combobox>
+                            <div v-for="message in featureMessages" class="small text-muted" :style="`color: ${messageColor}`">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                    :title="message"
+                                    class="glyphicon glyphicon-exclamation-sign text-muted"
+                                    :style="`color: ${messageColor}`">
+                                </span>
+                                ${ message }
+                            </div>
                             <p v-show="hasSearches" class="small text-muted negative-top">
                                 <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
                                 title='Options in the above dropdown list have been filtered to only contain features that have been mapped in your searches'
-                                class="glyphicon glyphicon-exclamation-sign text-muted"
-                                :style="`color: ${infoColor}`">
+                                class="glyphicon glyphicon-info-sign text-muted"
+                                :style="`color: ${messageColor}`">
                                 </span>
                                 Related item options have been limited to collection ${ selectedCollections.length > 1 ? "s" : "" } you selected above
                                 <!-- TODO: this overlaps with URI warning -->

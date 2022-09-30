@@ -1,4 +1,4 @@
-const limitNumberOfItemsPerRequest= 50000;
+const limitNumberOfItemsPerRequest= 2;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfItemsPerRequest}`;
 let geoconnexApp = new Vue({
   el: "#app-geoconnex",
@@ -35,7 +35,7 @@ let geoconnexApp = new Vue({
       enforceCacheDuration: false,
       collectionTypeahead: null,
       itemTypeahead: null,
-      rules: null,
+      featureRules: null,
       showingMap: true,
       map: null,
       layerControl: null,
@@ -57,7 +57,7 @@ let geoconnexApp = new Vue({
       southLat: null,
       westLong: null,
       bBox: null,
-      infoColor: "#3a87ad",
+      messageColor: "#c09853",
       pointFillColor: "yellow",
       searchColor: "orange",
       selectColor: "purple",
@@ -69,7 +69,12 @@ let geoconnexApp = new Vue({
   },
   computed: {
     hasSelections() {
-      return this.selectedCollections.length > 0 || this.selectedReferenceItems.length > 0
+      let geoconnexApp = this;
+      return geoconnexApp.selectedCollections.length > 0 || geoconnexApp.selectedReferenceItems.length > 0
+    },
+    hitFeatureLimit() {
+      let geoconnexApp = this;
+      return geoconnexApp.items.length >= geoconnexApp.limitNumberOfItemsPerRequest
     }
   },
   watch: {
@@ -99,6 +104,15 @@ let geoconnexApp = new Vue({
             it.disabled = false;
           }
         });
+      }
+    },
+    hitFeatureLimit(newValue, oldValue){
+      let geoconnexApp = this;
+      if (!oldValue && newValue) {
+        geoconnexApp.collectionMessages.push(
+          `The collection you selected contains more than the limit (${ geoconnexApp.limitNumberOfItemsPerRequest } items).
+          We recommend that you reduce your resource spatial extent. Or clear the collections and point search by clicking on the map.`
+        );
       }
     },
     async selectedCollections(newValue, oldValue){
@@ -531,9 +545,10 @@ let geoconnexApp = new Vue({
         geoconnexApp.error(e.message);
       }
     },
+    // TODO: change this to use featureMessages instead?
     setCustomItemRules() {
       let geoconnexApp = this;
-      geoconnexApp.rules = [
+      geoconnexApp.featureRules = [
         function (v) {
           let invalid = [];
           for (let item of v) {
@@ -841,7 +856,7 @@ let geoconnexApp = new Vue({
         );
         let area = L.GeometryUtil.geodesicArea(poly.getLatLngs()[0]); //sq meters
         if(area > geoconnexApp.largeExtentWarningThreshold){
-          geoconnexApp.appMessages.push({"level": "warn", "message": `Please note: your resource spatial extent (${(area * 1e-6).toFixed(0)} square kilometers) is on the order of large US state. You might experience reduced performance during your searches.`});
+          geoconnexApp.appMessages.push({"level": "warning", "message": `Please note: your resource spatial extent (${(area * 1e-6).toFixed(0)} square kilometers) is on the order of large US state. You might experience reduced performance during your searches.`});
         }
       }catch(e) {
         geoconnexApp.error("Error attempting to show spatial extent:", e.message);
