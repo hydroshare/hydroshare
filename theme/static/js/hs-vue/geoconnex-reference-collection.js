@@ -435,7 +435,8 @@ let geoconnexApp = new Vue({
       geojson,
       fit = false,
       style = { color: this.selectColor, radius: 5 },
-      group = null
+      group = null,
+      interactive = true
     ) {
       let geoconnexApp = this;
       try {
@@ -486,6 +487,7 @@ let geoconnexApp = new Vue({
           pointToLayer: function (feature, latlng) {
             return L.circleMarker(latlng, style);
           },
+          interactive: interactive,
         });
         leafletLayer.setStyle(style);
         if (geojson.uri) {
@@ -834,14 +836,15 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.bBox;
       try{
-        let rect = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]]);
+        let rect = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]], {interactive: false});
         let poly = rect.toGeoJSON();
         poly.text = "Resource Spatial Extent";
         geoconnexApp.addToMap(
           poly,
-          false,
+          fit=false,
           { color: geoconnexApp.spatialExtentColor, fillColor: geoconnexApp.spatialExtentColor, fillOpacity: 0.1 },
-          (group = geoconnexApp.spatialExtentGroup)
+          (group = geoconnexApp.spatialExtentGroup),
+          interactive=false
         );
         geoconnexApp.extentArea = L.GeometryUtil.geodesicArea(rect.getLatLngs()[0]); //sq meters
       }catch(e) {
