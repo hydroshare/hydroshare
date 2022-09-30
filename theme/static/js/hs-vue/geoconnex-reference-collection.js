@@ -7,6 +7,7 @@ let geoconnexApp = new Vue({
   data() {
     return {
       // TODO: refactor functions
+      // TODO: ensure that we only load js and css where necessary
       // TODO: organize parameters and functions so that they are grouped in a way that makes sense
       // TODO: run formatter on this and the html file
       metadataRelations: RELATIONS,
@@ -132,30 +133,21 @@ let geoconnexApp = new Vue({
           geoconnexApp.hasSearches = false;
         }
 
-        // TODO: maybe we remove layers even if the map is hidden?
-        if (geoconnexApp.showingMap){
-          if (newLength){
-            for (let layer of remove) {
-              geoconnexApp.searchFeatureGroup.removeLayer(
-                geoconnexApp.layerGroupDictionary[layer.id]
-              );
-              geoconnexApp.layerGroupDictionary[layer.id].clearLayers();
+        if (newLength){
+          for (let layer of remove) {
+            geoconnexApp.searchFeatureGroup.removeLayer(
+              geoconnexApp.layerGroupDictionary[layer.id]
+            );
+            geoconnexApp.layerGroupDictionary[layer.id].clearLayers();
 
-              geoconnexApp.layerControl.removeLayer(
-                geoconnexApp.layerGroupDictionary[layer.id]
-              );
-            }
-          }else{
-            geoconnexApp.clearLeafletOfMappedSearches()
+            geoconnexApp.layerControl.removeLayer(
+              geoconnexApp.layerGroupDictionary[layer.id]
+            );
           }
-          geoconnexApp.fitMapToFeatures();
         }else{
-          if (newLength){
-            geoconnexApp.unmappedSelectedCollectionIds = geoconnexApp.unmappedSelectedCollectionIds.filter(col=>col != remove[0].id);
-          }else{
-            geoconnexApp.unmappedSelectedCollectionIds = [];
-          }
+          geoconnexApp.clearLeafletOfMappedSearches()
         }
+        geoconnexApp.fitMapToFeatures();
 
         for (let collection of remove){
           geoconnexApp.items = geoconnexApp.items.filter(item =>{
