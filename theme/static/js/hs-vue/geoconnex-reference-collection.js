@@ -834,15 +834,16 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.bBox;
       try{
-        let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]])
+        let rect = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]]);
+        let poly = rect.toGeoJSON();
         poly.text = "Resource Spatial Extent";
         geoconnexApp.addToMap(
-          poly.toGeoJSON(),
+          poly,
           false,
           { color: geoconnexApp.spatialExtentColor, fillColor: geoconnexApp.spatialExtentColor, fillOpacity: 0.1 },
           (group = geoconnexApp.spatialExtentGroup)
         );
-        geoconnexApp.extentArea = L.GeometryUtil.geodesicArea(poly.getLatLngs()[0]); //sq meters
+        geoconnexApp.extentArea = L.GeometryUtil.geodesicArea(rect.getLatLngs()[0]); //sq meters
       }catch(e) {
         geoconnexApp.error("Error attempting to show spatial extent:", e.message);
         geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to show spatial extent.`});
