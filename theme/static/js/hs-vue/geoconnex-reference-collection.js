@@ -52,6 +52,7 @@ let geoconnexApp = new Vue({
       extentArea: null,
       layerGroupDictionary: {},
       largeExtentWarningThreshold: 5e+11, // sq meters
+      fitBoundsMaxZoom: 7,
       pointLat: 0,
       pointLong: 0,
       northLat: null,
@@ -512,7 +513,7 @@ let geoconnexApp = new Vue({
 
         // handle zooming
         if (fit) {
-          geoconnexApp.map.fitBounds(leafletLayer.getBounds(), {"maxZoom": 10});
+          geoconnexApp.map.fitBounds(leafletLayer.getBounds(), {"maxZoom": geoconnexApp.fitBoundsMaxZoom});
         }
       } catch (e) {
         geoconnexApp.error(e.message);
@@ -530,7 +531,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.searchFeatureGroup && bounds.extend(geoconnexApp.searchFeatureGroup.getBounds());
           geoconnexApp.searchFeatureGroup && bounds.extend(geoconnexApp.selectedFeatureGroup.getBounds());
           if (bounds.isValid()) {
-            geoconnexApp.map.fitBounds(bounds, {"maxZoom": 10});
+            geoconnexApp.map.fitBounds(bounds, {"maxZoom": geoconnexApp.fitBoundsMaxZoom});
           } else {
             // USA
             // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
@@ -853,13 +854,18 @@ let geoconnexApp = new Vue({
       }
       geoconnexApp.fitMapToFeatures();
     },
+    queryUsingVisibleMapBounds(){
+      let geoconnexApp = this;
+
+      geoconnexApp.queryGeoItemsInBbox(geoconnexApp.map.getBounds().toBBoxString(), collections=geoconnexApp.selectedCollections);
+    },
     async queryGeoItemsInBbox(bbox, collections = null) {
       let geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.bBox;
       let items = [];
       geoconnexApp.map.closePopup();
       try {
-        if (collections.length === 0){
+        if (!collections || collections.length === 0){
           // fetch items from all collections
           collections = geoconnexApp.collections;
         }

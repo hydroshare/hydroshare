@@ -243,9 +243,29 @@
                                     class="glyphicon glyphicon-info-sign text-muted">
                                     </span>
                                 </div>
-                                <button v-if="showingMap" @click="toggleMapVisibility" class="btn btn-default">
-                                    <i class="fa fa-minus"></i>Hide Map
-                                </button>
+                                <div v-show="showingMap">
+                                    <button @click="toggleMapVisibility" class="btn btn-default">
+                                        <i class="fa fa-minus"></i>Hide Map
+                                    </button>
+                                </div>
+                                <div v-show="hasSelections">
+                                    <button @click="queryUsingVisibleMapBounds" class="btn btn-warning" depressed small>
+                                        <i class="fa fa-search-plus"></i>Search "${ selectedCollections.map(a => a.id).join() }" using visible map bounds
+                                    </button>
+                                    <span data-toggle="tooltip" data-placement="auto"
+                                        title="Search within the visible boundaries of the map. Zooming in will reduce the search area."
+                                        class="glyphicon glyphicon-info-sign text-muted"
+                                    ></span>
+                                </div>
+                                <div v-show="hasSearches && showingMap">
+                                    <button @click="clearLeafletOfMappedSearches" class="btn btn-warning" depressed small>
+                                        <i class="fa fa-search-minus"></i>Clear searches from map
+                                    </button>
+                                    <span data-toggle="tooltip" data-placement="auto"
+                                        title="Clears unselected spatial features from the map"
+                                        class="glyphicon glyphicon-info-sign text-muted"
+                                    ></span>
+                                </div>
                             </div>
                         </div>
                     {% else %}
