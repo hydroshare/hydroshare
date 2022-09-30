@@ -1,6 +1,6 @@
 #app-geoconnex .flex {
   flex-direction: row;
-  justify-content: space-around;
+  /* justify-content: space-around; */
   gap: 2rem;
 }
 
@@ -106,6 +106,10 @@
   gap: 1rem;
   align-items: center;
   /* justify-content: space-between; */
+}
+
+#app-geoconnex .v-application .error--text {
+  color: #c09853 !important;
 }
 
 /* ******************* BUTTON OVERRIDES ******************* */

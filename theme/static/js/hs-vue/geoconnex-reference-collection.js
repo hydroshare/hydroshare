@@ -1,4 +1,4 @@
-const limitNumberOfItemsPerRequest= 2;
+const limitNumberOfItemsPerRequest= 5000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfItemsPerRequest}`;
 let geoconnexApp = new Vue({
   el: "#app-geoconnex",
@@ -48,6 +48,7 @@ let geoconnexApp = new Vue({
       hasSearches: false,
       searchFeatureGroup: null,
       spatialExtentGroup: null,
+      extentArea: null,
       layerGroupDictionary: {},
       largeExtentWarningThreshold: 5e+11, // sq meters
       pointLat: 0,
@@ -71,10 +72,6 @@ let geoconnexApp = new Vue({
     hasSelections() {
       let geoconnexApp = this;
       return geoconnexApp.selectedCollections.length > 0 || geoconnexApp.selectedReferenceItems.length > 0
-    },
-    hitFeatureLimit() {
-      let geoconnexApp = this;
-      return geoconnexApp.items.length >= geoconnexApp.limitNumberOfItemsPerRequest
     }
   },
   watch: {
@@ -95,6 +92,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.fitMapToFeatures();
         } catch (e) {
           geoconnexApp.error(e.message);
+          geoconnexApp.appMessages.push({"level": "danger", "message":`${e.message} while attempting to remove related feature.`});
         }
         geoconnexApp.ajaxRemoveMetadata(remove);
 
@@ -104,15 +102,6 @@ let geoconnexApp = new Vue({
             it.disabled = false;
           }
         });
-      }
-    },
-    hitFeatureLimit(newValue, oldValue){
-      let geoconnexApp = this;
-      if (!oldValue && newValue) {
-        geoconnexApp.collectionMessages.push(
-          `The collection you selected contains more than the limit (${ geoconnexApp.limitNumberOfItemsPerRequest } items).
-          We recommend that you reduce your resource spatial extent. Or clear the collections and point search by clicking on the map.`
-        );
       }
     },
     async selectedCollections(newValue, oldValue){
@@ -521,6 +510,7 @@ let geoconnexApp = new Vue({
         }
       } catch (e) {
         geoconnexApp.error(e.message);
+        geoconnexApp.appMessages.push({"level": "danger", "message":`${e.message} while attempting to add item to map.`});
       }
     },
     fitMapToFeatures(group = null) {
@@ -545,7 +535,6 @@ let geoconnexApp = new Vue({
         geoconnexApp.error(e.message);
       }
     },
-    // TODO: change this to use featureMessages instead?
     setCustomItemRules() {
       let geoconnexApp = this;
       geoconnexApp.featureRules = [
@@ -591,6 +580,7 @@ let geoconnexApp = new Vue({
         });
       } catch (e) {
         geoconnexApp.error(e.message);
+        geoconnexApp.appMessages.push({"level": "danger", "message":`${e.message} while loading collections.`});
       }
       geoconnexApp.loadingCollections = false;
     },
@@ -651,9 +641,7 @@ let geoconnexApp = new Vue({
           );
         let fetch_resp = await fetch(url);
         if (!fetch_resp.ok) {
-          geoconnexApp.error(
-            `Error when attempting to fetch: ${fetch_resp.statusText}`
-          );
+          geoconnexApp.error(`Error when attempting to fetch: ${fetch_resp.statusText}`);
         } else {
           data = await fetch_resp.json();
         }
@@ -795,7 +783,7 @@ let geoconnexApp = new Vue({
           });
         },
         error: function (request, status, error) {
-          geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to add related feature.`});
+          geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to save related feature.`});
           geoconnexApp.error(request.responseText);
         },
       });
@@ -817,7 +805,7 @@ let geoconnexApp = new Vue({
                 );
             },
             error: function (request, status, error) {
-              geoconnexApp.errorMsg = `${error} while attempting to remove related feature.`;
+              geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to remove related feature.`});
               geoconnexApp.error(request.responseText);
             },
           });
@@ -854,12 +842,10 @@ let geoconnexApp = new Vue({
           { color: geoconnexApp.spatialExtentColor, fillColor: geoconnexApp.spatialExtentColor, fillOpacity: 0.1 },
           (group = geoconnexApp.spatialExtentGroup)
         );
-        let area = L.GeometryUtil.geodesicArea(poly.getLatLngs()[0]); //sq meters
-        if(area > geoconnexApp.largeExtentWarningThreshold){
-          geoconnexApp.appMessages.push({"level": "warning", "message": `Please note: your resource spatial extent (${(area * 1e-6).toFixed(0)} square kilometers) is on the order of large US state. You might experience reduced performance during your searches.`});
-        }
+        geoconnexApp.extentArea = L.GeometryUtil.geodesicArea(poly.getLatLngs()[0]); //sq meters
       }catch(e) {
         geoconnexApp.error("Error attempting to show spatial extent:", e.message);
+        geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to show spatial extent.`});
       }
       geoconnexApp.fitMapToFeatures();
     },
