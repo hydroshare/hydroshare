@@ -77,7 +77,7 @@
                                 multiple
                                 placeholder="Type to narrow down options or select from the list"
                                 :label="limitToSingleCollection ? '1. Choose a collection to search' : '1. Choose collections to search'"
-                                :disabled="loadingCollections"
+                                :disabled="loadingCollections || searchingDescription !==''"
                                 :loading="loadingCollections"
                                 outlined
                                 :color="searchColor"
@@ -108,7 +108,7 @@
                                             <span class="text-truncate">
                                                 ${ item.description }
                                             </span>
-                                        <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
+                                        <span v-show="!loadingCollections && searchingDescription==''" @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
                                         </v-chip>
                                     </template>
                             </v-autocomplete>
