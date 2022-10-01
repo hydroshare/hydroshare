@@ -231,8 +231,9 @@ let geoconnexApp = new Vue({
       response && response.features.forEach(feature=>{feature.collection = collection});
       return response ? response.features : null
     },
-    async fetchSingleReferenceItem(uri) {
+    async fetchSingleReferenceItem(relation) {
       let geoconnexApp = this;
+      let uri = relation.value
       geoconnexApp.searchingDescription = uri;
       let relative_id = uri.split("ref/").pop();
       let collection = relative_id.split("/")[0];
@@ -240,6 +241,7 @@ let geoconnexApp = new Vue({
       let query = `${geoconnexApp.geoconnexUrl}/${collection}/items/${id}?f=json`;
       let response = await geoconnexApp.fetchFromCacheOrGeoconnex(query);
       geoconnexApp.searchingDescription = "";
+      response.relationId = relation.id;
       return response;
     },
     initializeLeafletMap() {
@@ -740,26 +742,25 @@ let geoconnexApp = new Vue({
           relation.type === "relation" &&
           relation.value.indexOf("geoconnex") > -1
         ) {
-        geoconnexApp.fetchSingleReferenceItem(relation.value).then(feature=>{
-          feature = geoconnexApp.getFeatureProperties(feature)
-          feature.disabled = true;
-          geoconnexApp.items.push(feature);
-          geoconnexApp.addSelectedFeatureToMap(feature);
-
-          let featureValues = {
-            // TODO: get the id from the returned feature
-            id: relation.id,
-            text: feature.text,
-            value: feature.uri,
-          };
-
-          geoconnexApp.selectedReferenceItems.push(featureValues);
-          geoconnexApp.relationObjects.push(feature);
-        });
+          promises.push(geoconnexApp.fetchSingleReferenceItem(relation));
+        }
       }
-    }
-    // TODO: this runs before all the metadata are loaded
-    // push items to the promises array instead? It needs the relation id, so pass that in to fetchSingleReferenceItem and have it return that id
+      let results = await Promise.all(promises);
+      let features = results.flat().filter(Boolean);
+      for (let feature of features){
+        feature = geoconnexApp.getFeatureProperties(feature)
+        feature.disabled = true;
+        geoconnexApp.items.push(feature);
+        geoconnexApp.addSelectedFeatureToMap(feature);
+        let featureValues = {
+          // TODO: get the id from the returned feature
+          id: feature.relationId,
+          text: feature.text,
+          value: feature.uri,
+        };
+        geoconnexApp.selectedReferenceItems.push(featureValues);
+        geoconnexApp.relationObjects.push(feature);
+      }
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.loadingRelations = false;
     },
@@ -1090,9 +1091,6 @@ let geoconnexApp = new Vue({
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       geoconnexApp.initializeLeafletMap();
       await geoconnexApp.loadMetadataRelations();
-      // TODO: fitMapToFeatures doesn't work here...seems like it isn't waiting for the metadata relations to be loaded...
-      // View mode doesn't zoom to fit the map after loading the items
-      geoconnexApp.fitMapToFeatures();
       geoconnexApp.loadingCollections = false;
     }
   },

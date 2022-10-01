@@ -249,7 +249,7 @@
                                     <i class="fa fa-minus"></i>Hide Map
                                 </button>
                             </div>
-                            <div v-show="hasSearches && searchingDescription ==''">
+                            <div v-show="showingMap && hasSearches && searchingDescription ==''">
                                 <button @click="queryUsingVisibleMapBounds" class="btn btn-default" :style="`border-color:${searchColor}`" depressed small>
                                     <i class="fa fa-search-plus"></i>Search "${ selectedCollections.map(a => a.id).join() }" using visible map bounds
                                 </button>
