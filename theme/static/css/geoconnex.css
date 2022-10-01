@@ -80,6 +80,9 @@
 }
 
 /* ******************* BUTTON OVERRIDES ******************* */
+#app-geoconnex .v-btn {
+  font-size: 1.2rem;
+}
 
 .v-application .btn {
   padding: 6px 12px;
