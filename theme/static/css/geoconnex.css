@@ -4,11 +4,14 @@
   gap: 2rem;
 }
 
+#app-geoconnex div.v-application {
+  margin-top: 20px;
+}
+
 #app-geoconnex .v-application--wrap {
   min-height: 100px;
-  overflow: hidden;
-  padding-top: 5px;
 }
+
 
 #app-geoconnex .v-subheader {
   font-size: 1.5rem;
@@ -22,26 +25,10 @@
   font-size: 1.5rem;
 }
 
-#app-geoconnex div.v-application {
-  margin-top: 1rem;
-}
-
-/* TODO: these paddings cause issue on small screens (padding right) */
-#geoconnex-controls-wrapper {
-  padding: 0px !important;
-  padding-right: 12px !important;
-}
-
-#app-geoconnex .v-application .info-table-wrapper {
-  padding:0px !important;
-  padding-right: 12px !important;
-}
-
 #geoconnex-controls {
   justify-content: flex-start !important;
   flex-wrap: wrap;
   flex-direction: row;
-  margin-bottom: 12px;
 }
 
 .negative-top {
@@ -69,27 +56,13 @@
   padding-right: 2rem;
 }
 
-.geo-list-item {
-  flex: 1 1 auto;
-  width: 90%;
-  height: 28px;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.geo-list-item [type="checkbox"] {
-  float: unset !important;
-}
-
 #geoconnex-map-wrapper {
   flex: 2 1 500px;
   z-index: 2;
-  padding: 0;
 }
 
 #geoconnex-leaflet {
   height: 400px;
-  margin-bottom: 1rem;
 }
 
 .leaflet-control-container,
@@ -105,7 +78,6 @@
   display: flex;
   gap: 1rem;
   align-items: center;
-  /* justify-content: space-between; */
 }
 
 #app-geoconnex .v-application .error--text {

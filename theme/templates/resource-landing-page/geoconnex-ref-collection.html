@@ -63,122 +63,33 @@
             </div>
         </div>
         <v-app>
-            <div class="container">
-                <div class="row">
-                    {% if resource_edit_mode %}
-                    <!-- TODO: perhaps revise this to use flexbox instead of bootstrap? -->
-                        <div class="col-xs-12 col-md-6" id="geoconnex-controls-wrapper">
-                            <v-autocomplete
-                                :menu-props="{closeOnClick: true, closeOnContentClick: true}"
-                                :readonly="lockCollections"
-                                v-model="selectedCollections"
-                                :items="collections"
-                                :item-text="item => item.description"
-                                :hide-no-data="!collectionTypeahead"
-                                multiple
-                                placeholder="Type to narrow down options or select from the list"
-                                :label="limitToSingleCollection ? '1. Choose a collection to search' : '1. Choose collections to search'"
-                                :disabled="loadingCollections || searchingDescription !==''"
-                                :loading="loadingCollections"
-                                outlined
-                                :color="searchColor"
-                                :item-color="searchColor"
-                                :search-input.sync="collectionTypeahead"
-                                return-object="true">
-                                    <template v-slot:item="data">
-                                        <template v-if="typeof data.item !== 'object'">
-                                            <v-list-tile-content v-text="data.item"></v-list-tile-content>
-                                        </template>
-                                        <template v-else>
-                                            <v-list-item-content>
-                                                <v-list-item-title v-html="`${data.item.description} (${data.item.id})`"></v-list-item-title>
-                                            </v-list-item-content>
-                                        </template>
-                                    </template>
-                                    <template v-slot:no-data>
-                                        <v-list-item>
-                                            <v-list-item-content>
-                                                <v-list-item-title>
-                                                    No collections matching "<strong>${ collectionTypeahead }</strong>".
-                                                </v-list-item-title>
-                                            </v-list-item-content>
-                                        </v-list-item>
-                                    </template>
-                                    <template v-slot:selection="{ attrs, item, parent, selected }">
-                                        <v-chip v-bind="attrs" :input-value="selected" :color="searchColor" label outlined large>
-                                            <span class="text-truncate">
-                                                ${ item.description }
-                                            </span>
-                                        <span v-show="!loadingCollections && searchingDescription==''" @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
-                                        </v-chip>
-                                    </template>
-                            </v-autocomplete>
-                            <div v-show="hasSearches && !searchResultString" class="small text-muted negative-top" :style="`color: ${messageColor}`">
-                                <span data-toggle="tooltip" data-placement="auto"
-                                :title="`Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? 's' : '' } you selected here`"
-                                class="glyphicon glyphicon-info-sign text-muted"
-                                :style="`color: ${messageColor}`">
-                                </span>
-                                Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? "s" : "" } you selected here
-                            </div>
-                            <div v-show="items.length >= limitNumberOfItemsPerRequest" class="small text-muted" :style="`color: ${messageColor}`">
-                                <span data-toggle="tooltip" data-placement="auto"
-                                :title="`${ selectedCollections.map(a => a.id).join() } contains more than the limit (${ limitNumberOfItemsPerRequest } items).`"
-                                class="glyphicon glyphicon-info-sign text-muted"
-                                :style="`color: ${messageColor}`">
-                                </span>
-                                "${ selectedCollections.map(a => a.id).join() }" contains too many items. Only ${ limitNumberOfItemsPerRequest } items were mapped.
-                                We recommend that you reduce your search extent. Or conduct a point search by clicking on the map.
-                            </div>
-                            <div v-show="searchResultString" 
-                            class="small text-muted negative-top" :style="`color: ${messageColor}`">
-                                <span data-toggle="tooltip" data-placement="auto"
-                                :title="searchResultString"
-                                class="glyphicon glyphicon-info-sign text-muted"
-                                :style="`color: ${messageColor}`">
-                                </span>
-                                ${ searchResultString }
-                            </div>
-                            <div v-for="message in collectionMessages" :style="`color: ${messageColor}`">
-                                <span data-toggle="tooltip" data-placement="auto"
-                                    :title="message"
-                                    class="glyphicon glyphicon-info-sign text-muted"
-                                    :style="`color: ${messageColor}`">
-                                </span>
-                                ${ message }
-                            </div>
-                            <v-combobox
-                                v-model="selectedReferenceItems"
-                                :class="{
-                                    'col-xs-12 col-md-8': resMode === 'View', 
-                                    'col-xs-12': resMode === 'Edit',
-                                    'opaque': !hasSearches && selectedReferenceItems.length === 0
-                                }" 
-                                :items="items"
-                                hide-no-data
-                                allow-overflow="false"
-                                chips
-                                deletable-chips
-                                multiple
-                                outlined
-                                hide-selected
-                                :hide-no-data="!itemTypeahead"
-                                label="2. Select related items to add to resource metadata"
-                                placeholder="Type to narrow down options or select on the map"
-                                :disabled="loadingCollections"
-                                :loading="loadingRelations"
-                                :color=selectColor
-                                :search-input.sync="itemTypeahead"
-                                :rules="featureRules"
-                                return-object="true">
+            <div class="row">
+                {% if resource_edit_mode %}
+                    <div class="col-xs-12 col-md-6" id="geoconnex-controls-wrapper">
+                        <v-autocomplete
+                            :menu-props="{closeOnClick: true, closeOnContentClick: true}"
+                            :readonly="lockCollections"
+                            v-model="selectedCollections"
+                            :items="collections"
+                            :item-text="item => item.description"
+                            :hide-no-data="!collectionTypeahead"
+                            multiple
+                            placeholder="Type to narrow down options or select from the list"
+                            :label="limitToSingleCollection ? '1. Choose a collection to search' : '1. Choose collections to search'"
+                            :disabled="loadingCollections || searchingDescription !==''"
+                            :loading="loadingCollections"
+                            outlined
+                            :color="searchColor"
+                            :item-color="searchColor"
+                            :search-input.sync="collectionTypeahead"
+                            return-object="true">
                                 <template v-slot:item="data">
                                     <template v-if="typeof data.item !== 'object'">
                                         <v-list-tile-content v-text="data.item"></v-list-tile-content>
                                     </template>
                                     <template v-else>
                                         <v-list-item-content>
-                                            <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
-                                            <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
+                                            <v-list-item-title v-html="`${data.item.description} (${data.item.id})`"></v-list-item-title>
                                         </v-list-item-content>
                                     </template>
                                 </template>
@@ -186,115 +97,200 @@
                                     <v-list-item>
                                         <v-list-item-content>
                                             <v-list-item-title>
-                                                No results matching "<strong>${ itemTypeahead }</strong>". 
-                                                Press <kbd>enter</kbd> to add <v-chip :color=selectColor outlined><strong>${ itemTypeahead }</strong></v-chip> as a custom item.
+                                                No collections matching "<strong>${ collectionTypeahead }</strong>".
                                             </v-list-item-title>
                                         </v-list-item-content>
                                     </v-list-item>
                                 </template>
                                 <template v-slot:selection="{ attrs, item, parent, selected }">
-                                    <v-chip v-bind="attrs" :input-value="selected" :color=selectColor outlined>
+                                    <v-chip v-bind="attrs" :input-value="selected" :color="searchColor" label outlined large>
                                         <span class="text-truncate">
-                                            ${ item.text }
+                                            ${ item.description }
                                         </span>
-                                      <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
+                                    <span v-show="!loadingCollections && searchingDescription==''" @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
                                     </v-chip>
                                 </template>
-                                <template v-slot:message="rulesMessage">
-                                    <div :style="`color: ${messageColor}; margin-left: -12px;`">
-                                        <span data-toggle="tooltip" data-placement="auto"
-                                            :title="rulesMessage.message"
-                                            class="glyphicon glyphicon-info-sign"
-                                            :style="`color: ${messageColor}`">
-                                        </span>
-                                        ${ rulesMessage.message }
-                                    </div>
+                        </v-autocomplete>
+                        <div v-show="hasSearches && !searchResultString" class="small text-muted negative-top" :style="`color: ${messageColor}`">
+                            <span data-toggle="tooltip" data-placement="auto"
+                            :title="`Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? 's' : '' } you selected here`"
+                            class="glyphicon glyphicon-info-sign text-muted"
+                            :style="`color: ${messageColor}`">
+                            </span>
+                            Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? "s" : "" } you selected here
+                        </div>
+                        <div v-show="items.length >= limitNumberOfItemsPerRequest" class="small text-muted" :style="`color: ${messageColor}`">
+                            <span data-toggle="tooltip" data-placement="auto"
+                            :title="`${ selectedCollections.map(a => a.id).join() } contains more than the limit (${ limitNumberOfItemsPerRequest } items).`"
+                            class="glyphicon glyphicon-info-sign text-muted"
+                            :style="`color: ${messageColor}`">
+                            </span>
+                            "${ selectedCollections.map(a => a.id).join() }" contains too many items. Only ${ limitNumberOfItemsPerRequest } items were mapped.
+                            We recommend that you reduce your search extent. Or conduct a point search by clicking on the map.
+                        </div>
+                        <div v-show="searchResultString" 
+                        class="small text-muted negative-top" :style="`color: ${messageColor}`">
+                            <span data-toggle="tooltip" data-placement="auto"
+                            :title="searchResultString"
+                            class="glyphicon glyphicon-info-sign text-muted"
+                            :style="`color: ${messageColor}`">
+                            </span>
+                            ${ searchResultString }
+                        </div>
+                        <div v-for="message in collectionMessages" :style="`color: ${messageColor}`">
+                            <span data-toggle="tooltip" data-placement="auto"
+                                :title="message"
+                                class="glyphicon glyphicon-info-sign text-muted"
+                                :style="`color: ${messageColor}`">
+                            </span>
+                            ${ message }
+                        </div>
+                        <v-combobox
+                            v-model="selectedReferenceItems"
+                            :class="{
+                                'col-xs-12 col-md-8': resMode === 'View', 
+                                'col-xs-12': resMode === 'Edit',
+                                'opaque': !hasSearches && selectedReferenceItems.length === 0
+                            }" 
+                            :items="items"
+                            hide-no-data
+                            allow-overflow="false"
+                            chips
+                            deletable-chips
+                            multiple
+                            outlined
+                            hide-selected
+                            :hide-no-data="!itemTypeahead"
+                            label="2. Select related items to add to resource metadata"
+                            placeholder="Type to narrow down options or select on the map"
+                            :disabled="loadingCollections"
+                            :loading="loadingRelations"
+                            :color=selectColor
+                            :search-input.sync="itemTypeahead"
+                            :rules="featureRules"
+                            return-object="true">
+                            <template v-slot:item="data">
+                                <template v-if="typeof data.item !== 'object'">
+                                    <v-list-tile-content v-text="data.item"></v-list-tile-content>
                                 </template>
-                            </v-combobox>
-                            <div v-for="message in featureMessages" :style="`color: ${messageColor}`">
-                                <span data-toggle="tooltip" data-placement="auto"
-                                    :title="message"
-                                    class="glyphicon glyphicon-info-sign"
-                                    :style="`color: ${messageColor}`">
-                                </span>
-                                ${ message }
-                            </div>
-                            <div v-if="loadingCollections">
-                                <p v-if="resMode=='Edit' && loadingCollections"><b>Loading Geoconnex collection:</b> ${searchingDescription}</p>
-                                <p v-else>Loading Geoconnex relations...</p>
-                            </div>
-                            <v-progress-linear
-                                :active="true"
-                                v-if="searchingDescription || loadingCollections"
-                                indeterminate
-                            ></v-progress-linear>
-                            <div v-if="searchingDescription">
-                                <p><b>Searching Geoconnex collection:</b> ${searchingDescription}</p>
-                            </div>
-                            <div id="geoconnex-controls" class="flex">
-                                <div v-show="!showingMap">
-                                    <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>
-                                        <i class="fa fa-globe"></i>Select With Map
-                                    </button>
-                                    <span data-toggle="tooltip" data-placement="auto"
-                                    title='Shows additional map that you can use to query and view related geospatial features'
-                                    class="glyphicon glyphicon-info-sign text-muted">
+                                <template v-else>
+                                    <v-list-item-content>
+                                        <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
+                                        <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
+                                    </v-list-item-content>
+                                </template>
+                            </template>
+                            <template v-slot:no-data>
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title>
+                                            No results matching "<strong>${ itemTypeahead }</strong>". 
+                                            Press <kbd>enter</kbd> to add <v-chip :color=selectColor outlined><strong>${ itemTypeahead }</strong></v-chip> as a custom item.
+                                        </v-list-item-title>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </template>
+                            <template v-slot:selection="{ attrs, item, parent, selected }">
+                                <v-chip v-bind="attrs" :input-value="selected" :color=selectColor outlined>
+                                    <span class="text-truncate">
+                                        ${ item.text }
                                     </span>
-                                </div>
-                                <div v-show="showingMap">
-                                    <button @click="toggleMapVisibility" class="btn btn-default">
-                                        <i class="fa fa-minus"></i>Hide Map
-                                    </button>
-                                </div>
-                                <div v-show="hasSearches">
-                                    <button @click="queryUsingVisibleMapBounds" class="btn btn-warning" depressed small>
-                                        <i class="fa fa-search-plus"></i>Search "${ selectedCollections.map(a => a.id).join() }" using visible map bounds
-                                    </button>
+                                    <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
+                                </v-chip>
+                            </template>
+                            <template v-slot:message="rulesMessage">
+                                <div :style="`color: ${messageColor}; margin-left: -12px;`">
                                     <span data-toggle="tooltip" data-placement="auto"
-                                        title="Search within the visible boundaries of the map, instead of using spatial extent. Zooming in will reduce the search area."
-                                        class="glyphicon glyphicon-info-sign text-muted"
-                                    ></span>
+                                        :title="rulesMessage.message"
+                                        class="glyphicon glyphicon-info-sign"
+                                        :style="`color: ${messageColor}`">
+                                    </span>
+                                    ${ rulesMessage.message }
                                 </div>
-                                <div v-show="hasSearches && showingMap">
-                                    <button @click="clearLeafletOfMappedSearches" class="btn btn-warning" depressed small>
-                                        <i class="fa fa-search-minus"></i>Clear searches
-                                    </button>
-                                    <span data-toggle="tooltip" data-placement="auto"
-                                        title="Clears unselected spatial features from the map"
-                                        class="glyphicon glyphicon-info-sign text-muted"
-                                    ></span>
-                                </div>
+                            </template>
+                        </v-combobox>
+                        <div v-for="message in featureMessages" :style="`color: ${messageColor}`">
+                            <span data-toggle="tooltip" data-placement="auto"
+                                :title="message"
+                                class="glyphicon glyphicon-info-sign"
+                                :style="`color: ${messageColor}`">
+                            </span>
+                            ${ message }
+                        </div>
+                        <div v-if="loadingCollections">
+                            <p v-if="resMode=='Edit' && loadingCollections"><b>Loading Geoconnex collection:</b> ${searchingDescription}</p>
+                            <p v-else>Loading Geoconnex relations...</p>
+                        </div>
+                        <v-progress-linear
+                            :active="true"
+                            v-if="searchingDescription || loadingCollections"
+                            indeterminate
+                        ></v-progress-linear>
+                        <div v-if="searchingDescription">
+                            <p><b>Searching Geoconnex collection:</b> ${searchingDescription}</p>
+                        </div>
+                        <div id="geoconnex-controls" class="flex">
+                            <div v-show="!showingMap">
+                                <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>
+                                    <i class="fa fa-globe"></i>Select With Map
+                                </button>
+                                <span data-toggle="tooltip" data-placement="auto"
+                                title='Shows additional map that you can use to query and view related geospatial features'
+                                class="glyphicon glyphicon-info-sign text-muted">
+                                </span>
+                            </div>
+                            <div v-show="showingMap">
+                                <button @click="toggleMapVisibility" class="btn btn-default">
+                                    <i class="fa fa-minus"></i>Hide Map
+                                </button>
+                            </div>
+                            <div v-show="hasSearches">
+                                <button @click="queryUsingVisibleMapBounds" class="btn btn-warning" depressed small>
+                                    <i class="fa fa-search-plus"></i>Search "${ selectedCollections.map(a => a.id).join() }" using visible map bounds
+                                </button>
+                                <span data-toggle="tooltip" data-placement="auto"
+                                    title="Search within the visible boundaries of the map, instead of using spatial extent. Zooming in will reduce the search area."
+                                    class="glyphicon glyphicon-info-sign text-muted"
+                                ></span>
+                            </div>
+                            <div v-show="hasSearches && showingMap">
+                                <button @click="clearLeafletOfMappedSearches" class="btn btn-warning" depressed small>
+                                    <i class="fa fa-search-minus"></i>Clear searches
+                                </button>
+                                <span data-toggle="tooltip" data-placement="auto"
+                                    title="Clears unselected spatial features from the map"
+                                    class="glyphicon glyphicon-info-sign text-muted"
+                                ></span>
                             </div>
                         </div>
-                    {% else %}
-                        <div class="col-xs-12 col-md-4 info-table-wrapper" v-if="!loadingCollections && selectedReferenceItems.length > 0">
-                            <table class="table hs-table info-table">
-                                <tr v-for="value in selectedReferenceItems" style="padding-bottom: 20px">
-                                    <td v-if="isUrl(value.value)" class="dataset-details">
-                                        <a v-if="isUrl(value.value)" target="_blank" :href="value.value"> ${value.text}</a>
-                                        <i class="fa fa-external-link"></i>
-                                    </td>
-                                    <td v-else class="dataset-details">${value.text}</td>
-                                </tr>
-                            </table>
-                        </div>
-                    {% endif %}
-    
-                    <div 
-                        id="geoconnex-map-wrapper"
-                        :class="{
-                            'col-xs-12 col-md-8': resMode === 'View', 
-                            'col-xs-12 col-md-6': resMode === 'Edit',
-                            'opaque': !hasSearches && selectedReferenceItems.length === 0
-                        }" 
-                        v-show="showingMap" 
-                    >
-                        <div id="geoconnex-leaflet"></div>
-                        <p v-if="resMode === 'Edit'" id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
                     </div>
+                {% else %}
+                    <div class="col-xs-12 col-md-4 info-table-wrapper" v-if="!loadingCollections && selectedReferenceItems.length > 0">
+                        <table class="table hs-table info-table">
+                            <tr v-for="value in selectedReferenceItems" style="padding-bottom: 20px">
+                                <td v-if="isUrl(value.value)" class="dataset-details">
+                                    <a v-if="isUrl(value.value)" target="_blank" :href="value.value"> ${value.text}</a>
+                                    <i class="fa fa-external-link"></i>
+                                </td>
+                                <td v-else class="dataset-details">${value.text}</td>
+                            </tr>
+                        </table>
+                    </div>
+                {% endif %}
+
+                <div 
+                    id="geoconnex-map-wrapper"
+                    :class="{
+                        'col-xs-12 col-md-8': resMode === 'View', 
+                        'col-xs-12 col-md-6': resMode === 'Edit',
+                        'opaque': !hasSearches && selectedReferenceItems.length === 0
+                    }" 
+                    v-show="showingMap" 
+                >
+                    <div id="geoconnex-leaflet"></div>
+                    <p v-if="resMode === 'Edit'" id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
                 </div>
             </div>
-
         </v-app>
     </div>
 {% endif %}
