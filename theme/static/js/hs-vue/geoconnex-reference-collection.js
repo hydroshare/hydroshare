@@ -166,18 +166,12 @@ let geoconnexApp = new Vue({
           });
         }
       }
-    },
-    loadingCollections(newValue, oldValue) {
-      let geoconnexApp = this;
-      if (!newValue) {
-        $("#geoconnex-leaflet-info").show();
-      }
-    },
+    }
   },
   methods: {
     limitOptionsToMappedFeatures() {
       let geoconnexApp = this;
-      geoconnexApp.loadingCollections = true;
+      geoconnexApp.loadingRelations = true;
       // save a copy of the items
       geoconnexApp.unfilteredItems = geoconnexApp.items;
 
@@ -191,7 +185,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.items = geoconnexApp.items.filter((s) =>
         keep.includes(s.uri)
       );
-      geoconnexApp.loadingCollections = false;
+      geoconnexApp.loadingRelations = false;
     },
     addSelectedToResMetadata(selected) {
       let geoconnexApp = this;

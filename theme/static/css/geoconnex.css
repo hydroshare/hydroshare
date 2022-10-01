@@ -33,8 +33,7 @@
 
 .negative-top {
   margin-top: -3rem;
-  /* TODO: figure out spacing with messages etc */
-  /* margin-bottom: 3rem; */
+  margin-bottom: 3rem;
 }
 
 #app-geoconnex .opaque{
@@ -68,10 +67,6 @@
 .leaflet-control-container,
 .leaflet-popup {
   font-size: 1.2rem !important;
-}
-
-#geoconnex-leaflet-info {
-  display: none;
 }
 
 #app-geoconnex .dataset-details {
