@@ -753,7 +753,6 @@ let geoconnexApp = new Vue({
         geoconnexApp.items.push(feature);
         geoconnexApp.addSelectedFeatureToMap(feature);
         let featureValues = {
-          // TODO: get the id from the returned feature
           id: feature.relationId,
           text: feature.text,
           value: feature.uri,
@@ -977,7 +976,7 @@ let geoconnexApp = new Vue({
         let loc = { lat: e.latlng.lat, long: e.latlng.lng };
         let content = `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-success leaflet-point-search" data='${JSON.stringify(
           loc
-        )}'>Search collections for items containing this point</button>`;
+        )}'>Search for items containing this point</button>`;
         popup
           .setLatLng(e.latlng)
           .setContent(content)
