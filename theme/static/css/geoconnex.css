@@ -51,10 +51,6 @@
   font-weight: normal;
 }
 
-#app-geoconnex .info-table-wrapper {
-  padding-right: 2rem;
-}
-
 #geoconnex-map-wrapper {
   flex: 2 1 500px;
   z-index: 2;
