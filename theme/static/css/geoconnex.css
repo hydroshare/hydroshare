@@ -10,10 +10,6 @@
   padding-top: 5px;
 }
 
-#app-geoconnex .v-btn {
-  font-size: 1.2rem;
-}
-
 #app-geoconnex .v-subheader {
   font-size: 1.5rem;
 }
@@ -58,15 +54,6 @@
   opacity: 0.4;
   filter: alpha(opacity=40);
   pointer-events: none;
-}
-
-.v-application .btn {
-  padding: 6px 12px;
-  color: initial;
-}
-
-.v-application .btn i.fa {
-  margin-right: 1rem;
 }
 
 #app-geoconnex .v-chip__content .glyphicon {
@@ -128,14 +115,16 @@
 /* ******************* BUTTON OVERRIDES ******************* */
 
 .v-application .btn {
+  padding: 6px 12px;
+  /* color: initial; */
   border-style: solid !important;
-  /* color: #fff !important; */
-}
-
-.v-application .btn {
   -webkit-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset !important;
   -moz-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset !important;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset !important;
+}
+
+.v-application .btn i.fa {
+  margin-right: 1rem;
 }
 
 .v-application .btn-info,
