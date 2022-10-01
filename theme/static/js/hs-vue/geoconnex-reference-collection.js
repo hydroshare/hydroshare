@@ -747,6 +747,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.addSelectedFeatureToMap(feature);
 
           let featureValues = {
+            // TODO: get the id from the returned feature
             id: relation.id,
             text: feature.text,
             value: feature.uri,
@@ -757,6 +758,8 @@ let geoconnexApp = new Vue({
         });
       }
     }
+    // TODO: this runs before all the metadata are loaded
+    // push items to the promises array instead? It needs the relation id, so pass that in to fetchSingleReferenceItem and have it return that id
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.loadingRelations = false;
     },
@@ -1086,7 +1089,10 @@ let geoconnexApp = new Vue({
     ) {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       geoconnexApp.initializeLeafletMap();
-      geoconnexApp.loadMetadataRelations();
+      await geoconnexApp.loadMetadataRelations();
+      // TODO: fitMapToFeatures doesn't work here...seems like it isn't waiting for the metadata relations to be loaded...
+      // View mode doesn't zoom to fit the map after loading the items
+      geoconnexApp.fitMapToFeatures();
       geoconnexApp.loadingCollections = false;
     }
   },
