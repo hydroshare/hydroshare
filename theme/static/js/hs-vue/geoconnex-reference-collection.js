@@ -93,7 +93,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.error(e.message);
           geoconnexApp.appMessages.push({"level": "danger", "message":`${e.message} while attempting to remove related feature.`});
         }
-        geoconnexApp.ajaxRemoveMetadata(remove);
+        geoconnexApp.ajaxRemoveFeatureFromResMetadata(remove);
 
         // re-enable the item for selection
         geoconnexApp.items.forEach((it) => {
@@ -122,7 +122,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.fetchGeoconnexItemsInBbox(geoconnexApp.bbox, [newCollection]);
         }else{
           geoconnexApp.searchingDescription = newCollection.description;
-          let featureCollection = await geoconnexApp.fetchItemsIn(newCollection, forceFresh = false, skipGeometry = false);
+          let featureCollection = await geoconnexApp.fetchItemsInCollection(newCollection, forceFresh = false, skipGeometry = false);
           if(featureCollection.features){
             geoconnexApp.addFeaturesToMap(featureCollection.features, featureCollection.collection);
           }else{
@@ -153,7 +153,7 @@ let geoconnexApp = new Vue({
             );
           }
         }else{
-          geoconnexApp.clearLeafletOfMappedSearches()
+          geoconnexApp.clearMapOfSearches()
         }
         geoconnexApp.fitMapToFeatures();
 
@@ -166,10 +166,43 @@ let geoconnexApp = new Vue({
     }
   },
   methods: {
-    addSelectedToResMetadata(selected) {
+    /* --------------------------------------------------
+    Resource Metadata Modification Methods
+    -------------------------------------------------- */
+    async loadResourceMetadataRelations() {
       let geoconnexApp = this;
-      geoconnexApp.addSelectedFeatureToMap(selected);
-      geoconnexApp.ajaxSaveMetadata(selected);
+      const promises = [];
+      for (let relation of geoconnexApp.metadataRelations) {
+        if (
+          this.isUrl(relation.value) &&
+          relation.type === "relation" &&
+          relation.value.indexOf("geoconnex") > -1
+        ) {
+          promises.push(geoconnexApp.fetchSingleReferenceItem(relation));
+        }
+      }
+      let results = await Promise.all(promises);
+      let features = results.flat().filter(Boolean);
+      for (let feature of features){
+        feature = geoconnexApp.getFeatureProperties(feature)
+        feature.disabled = true;
+        geoconnexApp.items.push(feature);
+        geoconnexApp.addSelectedFeatureToMap(feature);
+        let featureValues = {
+          id: feature.relationId,
+          text: feature.text,
+          value: feature.uri,
+        };
+        geoconnexApp.selectedReferenceItems.push(featureValues);
+        geoconnexApp.relationObjects.push(feature);
+      }
+      geoconnexApp.fitMapToFeatures();
+      geoconnexApp.loadingRelations = false;
+    },
+    addSelectedToResMetadata(feature) {
+      let geoconnexApp = this;
+      geoconnexApp.addSelectedFeatureToMap(feature);
+      geoconnexApp.ajaxSaveFeatureToResMetadata(feature);
 
       // disable so that it can't be duplicated
       geoconnexApp.items.forEach((it) => {
@@ -181,11 +214,289 @@ let geoconnexApp = new Vue({
     addSelectedFeatureToMap(feature){
       let geoconnexApp = this;
       if (!feature.geometry){
-        geoconnexApp.fetchSingleGeometry(feature).then((geometry) => {
+        geoconnexApp.fetchGeometryForSingleFeature(feature).then((geometry) => {
           feature.geometry = geometry.geometry;
         });
       }
       geoconnexApp.addToMap(feature);
+    },
+    ajaxSaveFeatureToResMetadata(feature) {
+      let geoconnexApp = this;
+      let url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/add-metadata/`;
+      let data = {
+        type: "relation",
+        value: feature.uri ? feature.uri : feature,
+      };
+      $.ajax({
+        type: "POST",
+        url: url,
+        data: data,
+        success: function (result) {
+          
+            geoconnexApp.log(
+              `Added ${
+                feature.text ? feature.text : feature
+              } to resource metadata`
+            );
+          geoconnexApp.selectedReferenceItems.push({
+            id: result.element_id,
+            value: feature.uri ? feature.uri : feature,
+            text: feature.text ? feature.text : feature,
+          });
+        },
+        error: function (request, status, error) {
+          geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to save related feature.`});
+          geoconnexApp.error(request.responseText);
+        },
+      });
+    },
+    ajaxRemoveFeatureFromResMetadata(relations) {
+      let geoconnexApp = this;
+      for (let relation of relations) {
+        if (relation.id) {
+          let url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/${relation.id}/delete-metadata/`;
+          $.ajax({
+            type: "POST",
+            url: url,
+            success: function (result) {
+              
+                geoconnexApp.log(
+                  `Removed ${
+                    relation.text ? relation.text : relation
+                  } from resource metadata`
+                );
+            },
+            error: function (request, status, error) {
+              geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to remove related feature.`});
+              geoconnexApp.error(request.responseText);
+            },
+          });
+        }
+      }
+    },
+    limitFeatureItemsToSearched() {
+      let geoconnexApp = this;
+      geoconnexApp.loadingRelations = true;
+      // save a copy of the items
+      geoconnexApp.unfilteredItems = geoconnexApp.items;
+
+      // remove all items currently not in the map search
+      let keep = [];
+      for (const val of Object.values(geoconnexApp.layerGroupDictionary)) {
+        if (!val.uris.includes(undefined)) {
+          keep = keep.concat(val.uris);
+        }
+      }
+      geoconnexApp.items = geoconnexApp.items.filter((s) =>
+        keep.includes(s.uri)
+      );
+      geoconnexApp.loadingRelations = false;
+    },
+    /* --------------------------------------------------
+    Fetch Request Methods
+    -------------------------------------------------- */
+    async fetchCollections(forceFresh = false) {
+      let geoconnexApp = this;
+      geoconnexApp.loadingCollections = true;
+      try {
+        let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
+          `${geoconnexApp.geoconnexUrl}?f=json&skipGeometry=true`,
+          forceFresh
+        );
+        geoconnexApp.collections = response.collections.filter(col => {
+          return !geoconnexApp.ignoredCollections.includes(col.id);
+        });
+      } catch (e) {
+        geoconnexApp.error(e.message);
+        geoconnexApp.appMessages.push({"level": "danger", "message":`${e.message} while loading collections.`});
+      }
+      geoconnexApp.loadingCollections = false;
+    },
+    async fetchGeoconnexItemsInBbox(bbox, collections = null) {
+      let geoconnexApp = this;
+      if (!bbox) bbox = geoconnexApp.bBox;
+      let items = [];
+      geoconnexApp.map.closePopup();
+      try {
+        if (!collections || collections.length === 0){
+          // fetch items from all collections
+          collections = geoconnexApp.collections;
+        }
+
+        const promises = [];
+        for (collection of collections){
+          promises.push(geoconnexApp.fetchSingleCollectionsItemsInBbox(collection, bbox));
+          if (!geoconnexApp.selectedCollections.includes(collection)){
+            geoconnexApp.selectedCollections.push(collection);
+          }
+        }
+        let results = await Promise.all(promises);
+        items = results.flat().filter(Boolean);
+        if(items.length > 0){
+          geoconnexApp.searchResultString = "";
+          geoconnexApp.addFeaturesToMap(items);
+        }else{
+          geoconnexApp.searchResultString = `Your search didn't return any features.`;
+          geoconnexApp.mapDisplayNoFoundItems(bbox);
+        }
+      } catch (e) {
+        geoconnexApp.error(
+          `Error while attempting to find intersecting geometries: ${e.message}`
+        );
+      }
+    },
+    fetchGeoconnexItemsContainingPoint(lat = null, long = null, collections = null) {
+      let geoconnexApp = this;
+      long = typeof long == "number" ? long : geoconnexApp.pointLong;
+      lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
+      geoconnexApp.map.closePopup();
+
+      let bbox = [
+        long,
+        lat,
+        long + 10e-12,
+        lat + 10e-12,
+      ];
+      geoconnexApp.fetchGeoconnexItemsInBbox(bbox, collections);
+    },
+    async fetchSingleCollectionsItemsInBbox(collection, bbox = null, refresh = false) {
+      let geoconnexApp = this;
+      geoconnexApp.searchingDescription = collection.description
+      let response = {};
+      let propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(collection.id)}`
+      let query = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}${propertiesParameter}&bbox=${bbox.toString()}`;
+      response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(query, refresh);
+      geoconnexApp.searchingDescription = "";
+
+      // store the collection for future reference
+      response && response.features.forEach(feature=>{feature.collection = collection});
+      return response ? response.features : null
+    },
+    async fetchGeometryForSingleFeature(geoconnexObj, refresh = false) {
+      let geoconnexApp = this;
+      geoconnexApp.searchingDescription = geoconnexObj.collection;
+      if (refresh || !geoconnexObj.geometry) {
+        let query = `${geoconnexApp.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
+        let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(query, refresh);
+        geoconnexObj.geometry = response.geometry;
+      }
+      geoconnexApp.searchingDescription = "";
+      return geoconnexObj;
+    },
+    async fetchSingleReferenceItem(relation) {
+      let geoconnexApp = this;
+      let uri = relation.value
+      geoconnexApp.searchingDescription = uri;
+      let relative_id = uri.split("ref/").pop();
+      let collection = relative_id.split("/")[0];
+      let id = relative_id.split("/")[1];
+      let query = `${geoconnexApp.geoconnexUrl}/${collection}/items/${id}?f=json`;
+      let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(query);
+      geoconnexApp.searchingDescription = "";
+      response.relationId = relation.id;
+      return response;
+    },
+    async fetchItemsInCollection(collection, forceFresh = false, skipGeometry = true) {
+      let geoconnexApp = this;
+      let propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(collection.id)}`
+      const url = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}${propertiesParameter}&skipGeometry=${skipGeometry.toString()}`;
+      let featureCollection = await geoconnexApp.fetchURLFromCacheOrGeoconnex(url, forceFresh);
+      featureCollection.collection = collection;
+      return featureCollection;
+    },
+    async fetchURLFromCacheOrGeoconnex(url, forceFresh = false, collection = null) {
+      let geoconnexApp = this;
+      let data = {};
+      if (!("caches" in window)) {
+          geoconnexApp.log(
+            "Cache API not available. Fetching geoconnex data from:\n" + url
+          );
+        let fetch_resp = await fetch(url);
+        if (!fetch_resp.ok) {
+          geoconnexApp.error(`Error when attempting to fetch: ${fetch_resp.statusText}`);
+        } else {
+          data = await fetch_resp.json();
+        }
+      } else {
+        let cache_resp = await geoconnexApp.geoCache.match(url);
+        if (geoconnexApp.isCacheValid(cache_resp) && !forceFresh) {
+            geoconnexApp.log("Using Geoconnex from cache for:\n" + url);
+          data = await cache_resp.json();
+        } else {
+          data = await geoconnexApp.fetchURLFromGeoconnex(url);
+        }
+      }
+      if (collection && data) {
+        data.collection = collection;
+      }
+      return data;
+    },
+    async fetchURLFromGeoconnex(url) {
+      let fetchData = {};
+      let geoconnexApp = this;
+      
+        geoconnexApp.log("Fetching + adding to cache, geoconnex data from:\n" + url);
+      try {
+        let fetch_resp = await fetch(url);
+        if (!fetch_resp.ok) {
+          geoconnexApp.error(
+            `Error when attempting to fetch Geoconnex relations: ${fetch_resp.statusText}`,
+            fetch_resp
+          );
+        } else {
+          let copy = fetch_resp.clone();
+          let headers = new Headers(copy.headers);
+          headers.append("fetched-on", new Date().getTime());
+          let body = await copy.blob();
+          geoconnexApp.geoCache.put(
+            url,
+            new Response(body, {
+              status: copy.status,
+              statusText: copy.statusText,
+              headers: headers,
+            })
+          );
+          fetchData = await fetch_resp.json();
+        }
+      } catch (e) {
+        geoconnexApp.error(e.message);
+        geoconnexApp.geoCache
+          .match(url)
+          .then(function (response) {
+            geoconnexApp.error(
+              "Geoconnex API fetch error. Falling back to old cached version."
+            );
+            return response.data;
+          })
+          .catch(function (e) {
+            geoconnexApp.error(e.message);
+          });
+      }
+      return fetchData;
+    },
+    /* --------------------------------------------------
+    Mapping Methods
+    -------------------------------------------------- */
+    showSpatialExtent(bbox=null){
+      let geoconnexApp = this;
+      if (!bbox) bbox = geoconnexApp.bBox;
+      try{
+        let rect = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]], {interactive: false});
+        let poly = rect.toGeoJSON();
+        poly.text = "Resource Spatial Extent";
+        geoconnexApp.addToMap(
+          poly,
+          fit=false,
+          { color: geoconnexApp.spatialExtentColor, fillColor: geoconnexApp.spatialExtentColor, fillOpacity: 0.1 },
+          (group = geoconnexApp.spatialExtentGroup),
+          interactive=false
+        );
+        geoconnexApp.extentArea = L.GeometryUtil.geodesicArea(rect.getLatLngs()[0]); //sq meters
+      }catch(e) {
+        geoconnexApp.error("Error attempting to show spatial extent:", e.message);
+        geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to show spatial extent.`});
+      }
+      geoconnexApp.fitMapToFeatures();
     },
     initializeLeafletMap() {
       let geoconnexApp = this;
@@ -306,7 +617,7 @@ let geoconnexApp = new Vue({
       // USA
       // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
       geoconnexApp.map.setView([30, 0], 1);
-      geoconnexApp.setLeafletMapEvents();
+      geoconnexApp.setMapEvents();
       geoconnexApp.fitMapToFeatures();
     },
     addFeaturesToMap(features, collectionOverride = null){
@@ -366,28 +677,10 @@ let geoconnexApp = new Vue({
       if(features.length){
         geoconnexApp.searchResultString = "";
         geoconnexApp.fitMapToFeatures();
-        geoconnexApp.limitOptionsToMappedFeatures();
+        geoconnexApp.limitFeatureItemsToSearched();
       }else{
         geoconnexApp.searchResultString = `Your search didn't return any features.`;
       }
-    },
-    limitOptionsToMappedFeatures() {
-      let geoconnexApp = this;
-      geoconnexApp.loadingRelations = true;
-      // save a copy of the items
-      geoconnexApp.unfilteredItems = geoconnexApp.items;
-
-      // remove all items currently not in the map search
-      let keep = [];
-      for (const val of Object.values(geoconnexApp.layerGroupDictionary)) {
-        if (!val.uris.includes(undefined)) {
-          keep = keep.concat(val.uris);
-        }
-      }
-      geoconnexApp.items = geoconnexApp.items.filter((s) =>
-        keep.includes(s.uri)
-      );
-      geoconnexApp.loadingRelations = false;
     },
     addToMap(
       geojson,
@@ -476,388 +769,11 @@ let geoconnexApp = new Vue({
         geoconnexApp.error(e.message);
       }
     },
-    setCustomItemRules() {
-      let geoconnexApp = this;
-      geoconnexApp.featureRules = [
-        function (v) {
-          let invalid = [];
-          for (let item of v) {
-            try {
-              url = new URL(item.value);
-            } catch (_) {
-              invalid.push(item.text);
-            }
-          }
-          if (invalid.length === 1) {
-            return `"${invalid}" is not a valid URI. We recommend that your custom feature be linkable`;
-          }
-          if (invalid.length === 2) {
-            return `"${invalid.join(
-              '" and "'
-            )}" are not a valid URIs. We recommend that custom features be linkable.`;
-          }
-          if (invalid.length > 2) {
-            return `"${invalid
-              .join('", "')
-              .replace(
-                /, ([^,]*)$/,
-                " and $1"
-              )}" are not a valid URIs. We recommend that custom features be linkable`;
-          }
-          return true;
-        },
-      ];
-    },
-    async loadCollections(forceFresh = false) {
-      let geoconnexApp = this;
-      geoconnexApp.loadingCollections = true;
-      try {
-        let response = await geoconnexApp.fetchFromCacheOrGeoconnex(
-          `${geoconnexApp.geoconnexUrl}?f=json&skipGeometry=true`,
-          forceFresh
-        );
-        geoconnexApp.collections = response.collections.filter(col => {
-          return !geoconnexApp.ignoredCollections.includes(col.id);
-        });
-      } catch (e) {
-        geoconnexApp.error(e.message);
-        geoconnexApp.appMessages.push({"level": "danger", "message":`${e.message} while loading collections.`});
-      }
-      geoconnexApp.loadingCollections = false;
-    },
-    createVuetifySelectSubheader(collection) {
-      return {
-        header: `${collection.description} (${collection.id})`,
-        text: `${collection.description} (${collection.id})`,
-      };
-    },
-    setFeatureName(feature){
-      let geoconnexApp = this;
-      let nameField = geoconnexApp.getFeatureNameField(feature.collection);
-      feature.NAME = feature.properties[nameField]
-    },
-    getFeatureNameField(collectionName){
-      let geoconnexApp = this;
-      // This could also be accomplished by flattening json-ld for the feature and searching for the "https://schema.org/name"
-      return geoconnexApp.featureNameFields[collectionName] || "NAME";
-    },
-    getFeatureProperties(feature) {
-      let geoconnexApp = this;
-      // Account for some oddities in the Geoconnex API schema
-      feature.relative_id = feature.properties.uri.split("ref/").pop();
-      feature.collection = feature.relative_id.split("/")[0];
-      feature.uri = feature.properties.uri;
-      geoconnexApp.setFeatureName(feature);
-      feature.text = `${feature.NAME} [${feature.relative_id}]`;
-
-      //prevent duplicate selections
-      geoconnexApp.selectedReferenceItems.forEach((it) => {
-        if (feature.uri === it.value) {
-          feature.disabled = true;
-        }
-      });
-      return feature;
-    },
-    async fetchGeoconnexItemsInBbox(bbox, collections = null) {
-      let geoconnexApp = this;
-      if (!bbox) bbox = geoconnexApp.bBox;
-      let items = [];
-      geoconnexApp.map.closePopup();
-      try {
-        if (!collections || collections.length === 0){
-          // fetch items from all collections
-          collections = geoconnexApp.collections;
-        }
-
-        const promises = [];
-        for (collection of collections){
-          promises.push(geoconnexApp.fetchSingleCollectionsItemsInBbox(collection, bbox));
-          if (!geoconnexApp.selectedCollections.includes(collection)){
-            geoconnexApp.selectedCollections.push(collection);
-          }
-        }
-        let results = await Promise.all(promises);
-        items = results.flat().filter(Boolean);
-        if(items.length > 0){
-          geoconnexApp.searchResultString = "";
-          geoconnexApp.addFeaturesToMap(items);
-        }else{
-          geoconnexApp.searchResultString = `Your search didn't return any features.`;
-          geoconnexApp.displayNoFoundItems(bbox);
-        }
-      } catch (e) {
-        geoconnexApp.error(
-          `Error while attempting to find intersecting geometries: ${e.message}`
-        );
-      }
-    },
-    fetchGeoconnexItemsContainingPoint(lat = null, long = null, collections = null) {
-      let geoconnexApp = this;
-      long = typeof long == "number" ? long : geoconnexApp.pointLong;
-      lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
-      geoconnexApp.map.closePopup();
-
-      let bbox = [
-        long,
-        lat,
-        long + 10e-12,
-        lat + 10e-12,
-      ];
-      geoconnexApp.fetchGeoconnexItemsInBbox(bbox, collections);
-    },
-    async fetchSingleCollectionsItemsInBbox(collection, bbox = null, refresh = false) {
-      let geoconnexApp = this;
-      geoconnexApp.searchingDescription = collection.description
-      let response = {};
-      let propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(collection.id)}`
-      let query = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}${propertiesParameter}&bbox=${bbox.toString()}`;
-      response = await geoconnexApp.fetchFromCacheOrGeoconnex(query, refresh);
-      geoconnexApp.searchingDescription = "";
-
-      // store the collection for future reference
-      response && response.features.forEach(feature=>{feature.collection = collection});
-      return response ? response.features : null
-    },
-    async fetchSingleGeometry(geoconnexObj, refresh = false) {
-      let geoconnexApp = this;
-      geoconnexApp.searchingDescription = geoconnexObj.collection;
-      if (refresh || !geoconnexObj.geometry) {
-        let query = `${geoconnexApp.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
-        let response = await geoconnexApp.fetchFromCacheOrGeoconnex(query, refresh);
-        geoconnexObj.geometry = response.geometry;
-      }
-      geoconnexApp.searchingDescription = "";
-      return geoconnexObj;
-    },
-    async fetchSingleReferenceItem(relation) {
-      let geoconnexApp = this;
-      let uri = relation.value
-      geoconnexApp.searchingDescription = uri;
-      let relative_id = uri.split("ref/").pop();
-      let collection = relative_id.split("/")[0];
-      let id = relative_id.split("/")[1];
-      let query = `${geoconnexApp.geoconnexUrl}/${collection}/items/${id}?f=json`;
-      let response = await geoconnexApp.fetchFromCacheOrGeoconnex(query);
-      geoconnexApp.searchingDescription = "";
-      response.relationId = relation.id;
-      return response;
-    },
-    async fetchItemsIn(collection, forceFresh = false, skipGeometry = true) {
-      let geoconnexApp = this;
-      let propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(collection.id)}`
-      const url = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}${propertiesParameter}&skipGeometry=${skipGeometry.toString()}`;
-      let featureCollection = await geoconnexApp.fetchFromCacheOrGeoconnex(url, forceFresh);
-      featureCollection.collection = collection;
-      return featureCollection;
-    },
-    async fetchFromCacheOrGeoconnex(url, forceFresh = false, collection = null) {
-      let geoconnexApp = this;
-      let data = {};
-      if (!("caches" in window)) {
-          geoconnexApp.log(
-            "Cache API not available. Fetching geoconnex data from:\n" + url
-          );
-        let fetch_resp = await fetch(url);
-        if (!fetch_resp.ok) {
-          geoconnexApp.error(`Error when attempting to fetch: ${fetch_resp.statusText}`);
-        } else {
-          data = await fetch_resp.json();
-        }
-      } else {
-        let cache_resp = await geoconnexApp.geoCache.match(url);
-        if (geoconnexApp.isCacheValid(cache_resp) && !forceFresh) {
-            geoconnexApp.log("Using Geoconnex from cache for:\n" + url);
-          data = await cache_resp.json();
-        } else {
-          data = await geoconnexApp.fetchFromGeoconnex(url);
-        }
-      }
-      if (collection && data) {
-        data.collection = collection;
-      }
-      return data;
-    },
-    async fetchFromGeoconnex(url) {
-      let fetchData = {};
-      let geoconnexApp = this;
-      
-        geoconnexApp.log("Fetching + adding to cache, geoconnex data from:\n" + url);
-      try {
-        let fetch_resp = await fetch(url);
-        if (!fetch_resp.ok) {
-          geoconnexApp.error(
-            `Error when attempting to fetch Geoconnex relations: ${fetch_resp.statusText}`,
-            fetch_resp
-          );
-        } else {
-          let copy = fetch_resp.clone();
-          let headers = new Headers(copy.headers);
-          headers.append("fetched-on", new Date().getTime());
-          let body = await copy.blob();
-          geoconnexApp.geoCache.put(
-            url,
-            new Response(body, {
-              status: copy.status,
-              statusText: copy.statusText,
-              headers: headers,
-            })
-          );
-          fetchData = await fetch_resp.json();
-        }
-      } catch (e) {
-        geoconnexApp.error(e.message);
-        geoconnexApp.geoCache
-          .match(url)
-          .then(function (response) {
-            geoconnexApp.error(
-              "Geoconnex API fetch error. Falling back to old cached version."
-            );
-            return response.data;
-          })
-          .catch(function (e) {
-            geoconnexApp.error(e.message);
-          });
-      }
-      return fetchData;
-    },
-    isCacheValid(response) {
-      let geoconnexApp = this;
-      if (!response || !response.ok) return false;
-      if (geoconnexApp.enforceCacheDuration) {
-        var fetched = response.headers.get("fetched-on");
-        if (
-          fetched &&
-          parseFloat(fetched) + geoconnexApp.cacheDuration >
-            new Date().getTime()
-        )
-          return true;
-        geoconnexApp.log("Cached data not valid.");
-        return false;
-      }
-      return true;
-    },
-    isUrl(stringToTest) {
-      try {
-        new URL(stringToTest);
-      } catch (_) {
-        return false;
-      }
-      return true;
-    },
-    trimString(longString){
-      return (longString.length > geoconnexApp.stringLengthLimit ? `${longString.substring(0, geoconnexApp.stringLengthLimit)}...` : longString);
-    },
-    async loadMetadataRelations() {
-      let geoconnexApp = this;
-      const promises = [];
-      for (let relation of geoconnexApp.metadataRelations) {
-        if (
-          this.isUrl(relation.value) &&
-          relation.type === "relation" &&
-          relation.value.indexOf("geoconnex") > -1
-        ) {
-          promises.push(geoconnexApp.fetchSingleReferenceItem(relation));
-        }
-      }
-      let results = await Promise.all(promises);
-      let features = results.flat().filter(Boolean);
-      for (let feature of features){
-        feature = geoconnexApp.getFeatureProperties(feature)
-        feature.disabled = true;
-        geoconnexApp.items.push(feature);
-        geoconnexApp.addSelectedFeatureToMap(feature);
-        let featureValues = {
-          id: feature.relationId,
-          text: feature.text,
-          value: feature.uri,
-        };
-        geoconnexApp.selectedReferenceItems.push(featureValues);
-        geoconnexApp.relationObjects.push(feature);
-      }
-      geoconnexApp.fitMapToFeatures();
-      geoconnexApp.loadingRelations = false;
-    },
-    ajaxSaveMetadata(selected) {
-      let geoconnexApp = this;
-      let url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/add-metadata/`;
-      let data = {
-        type: "relation",
-        value: selected.uri ? selected.uri : selected,
-      };
-      $.ajax({
-        type: "POST",
-        url: url,
-        data: data,
-        success: function (result) {
-          
-            geoconnexApp.log(
-              `Added ${
-                selected.text ? selected.text : selected
-              } to resource metadata`
-            );
-          geoconnexApp.selectedReferenceItems.push({
-            id: result.element_id,
-            value: selected.uri ? selected.uri : selected,
-            text: selected.text ? selected.text : selected,
-          });
-        },
-        error: function (request, status, error) {
-          geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to save related feature.`});
-          geoconnexApp.error(request.responseText);
-        },
-      });
-    },
-    ajaxRemoveMetadata(relations) {
-      let geoconnexApp = this;
-      for (let relation of relations) {
-        if (relation.id) {
-          let url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/${relation.id}/delete-metadata/`;
-          $.ajax({
-            type: "POST",
-            url: url,
-            success: function (result) {
-              
-                geoconnexApp.log(
-                  `Removed ${
-                    relation.text ? relation.text : relation
-                  } from resource metadata`
-                );
-            },
-            error: function (request, status, error) {
-              geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to remove related feature.`});
-              geoconnexApp.error(request.responseText);
-            },
-          });
-        }
-      }
-    },
-    showSpatialExtent(bbox=null){
-      let geoconnexApp = this;
-      if (!bbox) bbox = geoconnexApp.bBox;
-      try{
-        let rect = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]], {interactive: false});
-        let poly = rect.toGeoJSON();
-        poly.text = "Resource Spatial Extent";
-        geoconnexApp.addToMap(
-          poly,
-          fit=false,
-          { color: geoconnexApp.spatialExtentColor, fillColor: geoconnexApp.spatialExtentColor, fillOpacity: 0.1 },
-          (group = geoconnexApp.spatialExtentGroup),
-          interactive=false
-        );
-        geoconnexApp.extentArea = L.GeometryUtil.geodesicArea(rect.getLatLngs()[0]); //sq meters
-      }catch(e) {
-        geoconnexApp.error("Error attempting to show spatial extent:", e.message);
-        geoconnexApp.appMessages.push({"level": "danger", "message":`${error} while attempting to show spatial extent.`});
-      }
-      geoconnexApp.fitMapToFeatures();
-    },
     queryUsingVisibleMapBounds(){
       let geoconnexApp = this;
-
       geoconnexApp.fetchGeoconnexItemsInBbox(geoconnexApp.map.getBounds().toBBoxString(), collections=geoconnexApp.selectedCollections);
     },
-    displayNoFoundItems(bbox) {
+    mapDisplayNoFoundItems(bbox) {
       let poly = L.rectangle([[bbox[1], bbox[0]],[bbox[3], bbox[2]]])
       let loc = poly.getBounds().getCenter();
       // let loc = { lat: lat, lng: lng };
@@ -869,7 +785,7 @@ let geoconnexApp = new Vue({
         .setContent(content)
         .openOn(geoconnexApp.map);
     },
-    clearLeafletOfMappedSearches() {
+    clearMapOfSearches() {
       let geoconnexApp = this;
       geoconnexApp.searchFeatureGroup.clearLayers();
       for (let key in geoconnexApp.layerGroupDictionary) {
@@ -894,7 +810,7 @@ let geoconnexApp = new Vue({
         geoconnexApp.resSpatialType = null;
       }
     },
-    updateGeoconnexWithResSpatialExtent() {
+    updateAppWithResSpatialExtent() {
       let geoconnexApp = this;
       geoconnexApp.updateSpatialExtentType();
       geoconnexApp.spatialExtentGroup.clearLayers()
@@ -930,12 +846,12 @@ let geoconnexApp = new Vue({
         geoconnexApp.warn("Resource spatial extent isn't set");
       }
     },
-    fillValuesFromClickedCoordinates(lat, long) {
+    fillCoordinatesFromClickedCoordinates(lat, long) {
       let geoconnexApp = this;
       geoconnexApp.pointLat = lat;
       geoconnexApp.pointLong = long;
     },
-    setLeafletMapEvents() {
+    setMapEvents() {
       let geoconnexApp = this;
       var popup = L.popup({ maxWidth: 400 });
 
@@ -959,7 +875,7 @@ let geoconnexApp = new Vue({
           function (e) {
             e.stopPropagation();
             const loc = JSON.parse($(this).attr("data"));
-            geoconnexApp.fillValuesFromClickedCoordinates(loc.lat, loc.long);
+            geoconnexApp.fillCoordinatesFromClickedCoordinates(loc.lat, loc.long);
             geoconnexApp.fetchGeoconnexItemsContainingPoint(loc.lat, loc.long, geoconnexApp.selectedCollections);
           }
         );
@@ -1001,7 +917,7 @@ let geoconnexApp = new Vue({
 
       // listen for save after resource spatial change
       $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').click(()=>{
-        geoconnexApp.updateGeoconnexWithResSpatialExtent();
+        geoconnexApp.updateAppWithResSpatialExtent();
       })
     },
     toggleMapVisibility() {
@@ -1021,6 +937,53 @@ let geoconnexApp = new Vue({
       }
       geoconnexApp.showingMap = true;
     },
+    /* --------------------------------------------------
+    Utility Methods
+    -------------------------------------------------- */
+    createVuetifySelectSubheader(collection) {
+      return {
+        header: `${collection.description} (${collection.id})`,
+        text: `${collection.description} (${collection.id})`,
+      };
+    },
+    setFeatureName(feature){
+      let geoconnexApp = this;
+      let nameField = geoconnexApp.getFeatureNameField(feature.collection);
+      feature.NAME = feature.properties[nameField]
+    },
+    getFeatureNameField(collectionName){
+      let geoconnexApp = this;
+      // This could also be accomplished by flattening json-ld for the feature and searching for the "https://schema.org/name"
+      return geoconnexApp.featureNameFields[collectionName] || "NAME";
+    },
+    getFeatureProperties(feature) {
+      let geoconnexApp = this;
+      // Account for some oddities in the Geoconnex API schema
+      feature.relative_id = feature.properties.uri.split("ref/").pop();
+      feature.collection = feature.relative_id.split("/")[0];
+      feature.uri = feature.properties.uri;
+      geoconnexApp.setFeatureName(feature);
+      feature.text = `${feature.NAME} [${feature.relative_id}]`;
+
+      //prevent duplicate selections
+      geoconnexApp.selectedReferenceItems.forEach((it) => {
+        if (feature.uri === it.value) {
+          feature.disabled = true;
+        }
+      });
+      return feature;
+    },
+    isUrl(stringToTest) {
+      try {
+        new URL(stringToTest);
+      } catch (_) {
+        return false;
+      }
+      return true;
+    },
+    trimString(longString){
+      return (longString.length > geoconnexApp.stringLengthLimit ? `${longString.substring(0, geoconnexApp.stringLengthLimit)}...` : longString);
+    },
     until(conditionFunction) {
       geoconnexApp.log(`Waiting for [ ${conditionFunction} ] to resolve...`)
       const poll = resolve => {
@@ -1031,6 +994,54 @@ let geoconnexApp = new Vue({
         else setTimeout(_ => poll(resolve), 400);
       }
       return new Promise(poll);
+    },
+    isCacheValid(response) {
+      let geoconnexApp = this;
+      if (!response || !response.ok) return false;
+      if (geoconnexApp.enforceCacheDuration) {
+        var fetched = response.headers.get("fetched-on");
+        if (
+          fetched &&
+          parseFloat(fetched) + geoconnexApp.cacheDuration >
+            new Date().getTime()
+        )
+          return true;
+        geoconnexApp.log("Cached data not valid.");
+        return false;
+      }
+      return true;
+    },
+    setCustomItemRules() {
+      let geoconnexApp = this;
+      geoconnexApp.featureRules = [
+        function (v) {
+          let invalid = [];
+          for (let item of v) {
+            try {
+              url = new URL(item.value);
+            } catch (_) {
+              invalid.push(item.text);
+            }
+          }
+          if (invalid.length === 1) {
+            return `"${invalid}" is not a valid URI. We recommend that your custom feature be linkable`;
+          }
+          if (invalid.length === 2) {
+            return `"${invalid.join(
+              '" and "'
+            )}" are not a valid URIs. We recommend that custom features be linkable.`;
+          }
+          if (invalid.length > 2) {
+            return `"${invalid
+              .join('", "')
+              .replace(
+                /, ([^,]*)$/,
+                " and $1"
+              )}" are not a valid URIs. We recommend that custom features be linkable`;
+          }
+          return true;
+        },
+      ];
     }
   },
   beforeMount() {
@@ -1042,12 +1053,12 @@ let geoconnexApp = new Vue({
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       geoconnexApp.initializeLeafletMap();
 
-      geoconnexApp.loadCollections(false);
-      geoconnexApp.loadMetadataRelations();
+      geoconnexApp.fetchCollections(false);
+      geoconnexApp.loadResourceMetadataRelations();
 
       // wait for spatial coverage map to load before getting extent
       geoconnexApp.until(_ => coverageMap ).then(()=>{
-        geoconnexApp.updateGeoconnexWithResSpatialExtent();
+        geoconnexApp.updateAppWithResSpatialExtent();
       });
 
     } else if (
@@ -1056,7 +1067,7 @@ let geoconnexApp = new Vue({
     ) {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       geoconnexApp.initializeLeafletMap();
-      await geoconnexApp.loadMetadataRelations();
+      await geoconnexApp.loadResourceMetadataRelations();
       geoconnexApp.loadingCollections = false;
     }
   },
