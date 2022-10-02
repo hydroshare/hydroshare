@@ -923,12 +923,9 @@ let geoconnexApp = new Vue({
     toggleMapVisibility() {
       let geoconnexApp = this;
       geoconnexApp.showingMap = !geoconnexApp.showingMap;
-      // force state refresh
-      setTimeout(function () {
-        if (geoconnexApp.showingMap && geoconnexApp.map == null) {
-          geoconnexApp.initializeLeafletMap();
-        }
-      }, 0);
+      if (geoconnexApp.showingMap && geoconnexApp.map == null) {
+        geoconnexApp.initializeLeafletMap();
+      }
     },
     showMap() {
       let geoconnexApp = this;
@@ -1075,7 +1072,9 @@ let geoconnexApp = new Vue({
 
 // TODO: selecting an item and "adding" via map doesn't dismiss the popup (should at least change the button to: "remove" once it has been added...)
 // TODO: same with when remove an existing item using the x, it should dismiss the map popup if it is up.
-// TODO: refactor functions
+
+// TODO: test the resource spatial coverage map and smaller maps
+
 // TODO: ensure that we only load js and css where necessary
 // TODO: organize parameters and functions so that they are grouped in a way that makes sense
 // TODO: run formatter on this and the html file

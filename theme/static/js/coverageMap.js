@@ -2,7 +2,6 @@
  * Created by Mauriel on 2/9/2016.
  */
 // Map js
-// TODO: test coverage map and small metadata level maps
 var coverageMap;
 var leafletMarkers;
 var allOverlays = [];
