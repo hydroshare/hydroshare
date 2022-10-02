@@ -79,7 +79,7 @@ let geoconnexApp = new Vue({
       let oldLength = oldValue ? oldValue.length : 0;
       let newLength = newValue ? newValue.length : 0;
       if (newLength > oldLength) {
-        geoconnexApp.addSelectedToResMetadata(newValue.pop());
+        geoconnexApp.addSelectedFeatureToResMetadata(newValue.pop());
       } else if (newLength < oldLength) {
         let remove = oldValue.filter((obj) =>
           newValue.every((s) => s.id !== obj.id)
@@ -199,14 +199,14 @@ let geoconnexApp = new Vue({
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.loadingRelations = false;
     },
-    addSelectedToResMetadata(feature) {
+    addSelectedFeatureToResMetadata(feature) {
       let geoconnexApp = this;
       geoconnexApp.addSelectedFeatureToMap(feature);
       geoconnexApp.ajaxSaveFeatureToResMetadata(feature);
 
       // disable so that it can't be duplicated
       geoconnexApp.items.forEach((it) => {
-        if (selected.uri === it.uri) {
+        if (feature.uri === it.uri) {
           it.disabled = true;
         }
       });
@@ -890,7 +890,7 @@ let geoconnexApp = new Vue({
               return obj.value === data.uri;
             });
             if (!alreadySelected) {
-              geoconnexApp.addSelectedToResMetadata(data);
+              geoconnexApp.addSelectedFeatureToResMetadata(data);
             }
             geoconnexApp.map.closePopup();
           }
@@ -1069,10 +1069,7 @@ let geoconnexApp = new Vue({
     }
   },
 });
-
-// TODO: selecting an item and "adding" via map doesn't dismiss the popup (should at least change the button to: "remove" once it has been added...)
-// TODO: same with when remove an existing item using the x, it should dismiss the map popup if it is up.
-
+// TODO: weird bits of text/elements are shown during initial load of page (less than 1 sec)
 // TODO: test the resource spatial coverage map and smaller maps
 
 // TODO: ensure that we only load js and css where necessary
