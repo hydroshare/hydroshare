@@ -6,44 +6,33 @@ let geoconnexApp = new Vue({
   vuetify: new Vuetify(),
   data() {
     return {
-      metadataRelations: RELATIONS,
-      relationObjects: [],
-      debug: true,
-      resMode: RESOURCE_MODE,
-      resSpatialType: null,
+      // Geoconnex collection and feature data structures
+      collections: null,
       items: [],
       unfilteredItems: [],
-      collections: null,
+      selectedCollections: [],
       selectedReferenceItems: [],
-      loadingCollections: true,
-      searchingDescription: "",
-      loadingRelations: true,
-      appMessages: [],
-      collectionMessages: [],
-      featureMessages: [],
-      geoconnexUrl: "https://reference.geoconnex.us/collections",
-      cacheName: "geoconnexCache",
-      ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
-      featureNameFields: {"nat_aq": "AQ_NAME", "principal_aq":"AQ_NAME", "dams":"name", "gages":"name", "mainstems":"name_at_outlet", "sec_hydrg_reg":"SHR", "ua10":"NAME10"},
-      limitNumberOfItemsPerRequest: limitNumberOfItemsPerRequest,
-      geoCache: null,
+      relationObjects: [],
+      
+      // Resource-level data
       resShortId: SHORT_ID,
+      metadataRelations: RELATIONS,
+      resMode: RESOURCE_MODE,
+      resSpatialType: null,
+
+      // Fetching and cacheing
+      geoCache: null,
+      cacheName: "geoconnexCache",
       cacheDuration: 6.048e+8, // one week in milliseconds
       enforceCacheDuration: false,
-      collectionTypeahead: null,
-      itemTypeahead: null,
-      featureRules: null,
+      geoconnexUrl: "https://reference.geoconnex.us/collections",
+      limitNumberOfItemsPerRequest: limitNumberOfItemsPerRequest,
+      ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
+      featureNameFieldMap: {"nat_aq": "AQ_NAME", "principal_aq":"AQ_NAME", "dams":"name", "gages":"name", "mainstems":"name_at_outlet", "sec_hydrg_reg":"SHR", "ua10":"NAME10"},
+
+      // Mapping
       showingMap: true,
       map: null,
-      layerControl: null,
-      stringLengthLimit: 30, 
-      selectedItemLayers: {},
-      selectedFeatureGroup: null,
-      selectedCollections: [],
-      searchResultString: "",
-      lockCollections: false,
-      limitToSingleCollection: true,
-      hasSearches: false,
       searchFeatureGroup: null,
       spatialExtentGroup: null,
       extentArea: null,
@@ -57,14 +46,38 @@ let geoconnexApp = new Vue({
       southLat: null,
       westLong: null,
       bBox: null,
+      layerControl: null, 
+      selectedItemLayers: {},
+      selectedFeatureGroup: null,
+
+      // Messages and logging
+      debug: false, // modifies log verbosity
+      searchingDescription: "",
+      searchResultString: "",
+      appMessages: [],
+      collectionMessages: [],
+      featureMessages: [],
+      log: console.log.bind(window.console, "%cGeoconnex:", "color: white; background:blue;"),
+      warn: console.warn.bind(window.console, "%cGeoconnex warning:", "color: white; background:blue;"),
+      error: console.error.bind(window.console, "%cGeoconnex error:", "color: white; background:blue;"),
+
+      // State and utility
+      loadingRelations: true,
+      loadingCollections: true,
+      lockCollections: false,
+      limitToSingleCollection: true,
+      hasSearches: false,
+      collectionTypeahead: null,
+      itemTypeahead: null,
+      featureRules: null,
+
+      // UI "theme"
+      stringLengthLimit: 30,
       messageColor: "#c09853",
       pointFillColor: "yellow",
       searchColor: "orange",
       selectColor: "purple",
-      spatialExtentColor: "red",
-      log: console.log.bind(window.console, "%cGeoconnex:", "color: white; background:blue;"),
-      warn: console.warn.bind(window.console, "%cGeoconnex warning:", "color: white; background:blue;"),
-      error: console.error.bind(window.console, "%cGeoconnex error:", "color: white; background:blue;")
+      spatialExtentColor: "red"
     };
   },
   computed: {
@@ -951,7 +964,7 @@ let geoconnexApp = new Vue({
     getFeatureNameField(collectionName){
       let geoconnexApp = this;
       // This could also be accomplished by flattening json-ld for the feature and searching for the "https://schema.org/name"
-      return geoconnexApp.featureNameFields[collectionName] || "NAME";
+      return geoconnexApp.featureNameFieldMap[collectionName] || "NAME";
     },
     getFeatureProperties(feature) {
       let geoconnexApp = this;
@@ -1070,12 +1083,10 @@ let geoconnexApp = new Vue({
   },
 });
 // TODO: weird bits of text/elements are shown during initial load of page (less than 1 sec)
+
 // TODO: test the resource spatial coverage map and smaller maps
 
-// TODO: ensure that we only load js and css where necessary
-// TODO: organize parameters and functions so that they are grouped in a way that makes sense
 // TODO: run formatter on this and the html file
-
 
 // TODO: Allow the user to specify what type of relationship the resource has with the related Geoconnex item
 // TODO: Add more linked data fields for referenced items, https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1127776555
