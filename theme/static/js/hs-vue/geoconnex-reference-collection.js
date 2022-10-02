@@ -6,10 +6,6 @@ let geoconnexApp = new Vue({
   vuetify: new Vuetify(),
   data() {
     return {
-      // TODO: refactor functions
-      // TODO: ensure that we only load js and css where necessary
-      // TODO: organize parameters and functions so that they are grouped in a way that makes sense
-      // TODO: run formatter on this and the html file
       metadataRelations: RELATIONS,
       relationObjects: [],
       debug: true,
@@ -28,6 +24,7 @@ let geoconnexApp = new Vue({
       geoconnexUrl: "https://reference.geoconnex.us/collections",
       cacheName: "geoconnexCache",
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
+      featureNameFields: {"nat_aq": "AQ_NAME", "principal_aq":"AQ_NAME", "dams":"name", "gages":"name", "mainstems":"name_at_outlet", "sec_hydrg_reg":"SHR", "ua10":"NAME10"},
       limitNumberOfItemsPerRequest: limitNumberOfItemsPerRequest,
       geoCache: null,
       resShortId: SHORT_ID,
@@ -223,7 +220,8 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       geoconnexApp.searchingDescription = collection.description
       let response = {};
-      let query = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&bbox=${bbox.toString()}`;
+      let propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(collection.id)}`
+      let query = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}${propertiesParameter}&bbox=${bbox.toString()}`;
       response = await geoconnexApp.fetchFromCacheOrGeoconnex(query, refresh);
       geoconnexApp.searchingDescription = "";
 
@@ -439,32 +437,8 @@ let geoconnexApp = new Vue({
       try {
         let leafletLayer = L.geoJSON(geojson, {
           onEachFeature: function (feature, layer) {
-            // TODO: limit the ammount of info that shows up? So that popup not off the map
-            var popupText = `<h4>${feature.text}</h4>`;
-            for (var k in feature.properties) {
-              popupText += "<b>" + k + "</b>: ";
-              if (k === "uri") {
-                popupText += `<a href=${feature.properties[k]}>${feature.properties[k]}</a></br>`;
-              } else {
-                popupText += feature.properties[k] + "</br>";
-              }
-            }
-            let hide = [
-              "properties",
-              "text",
-              "geometry",
-              "relative_id",
-              "type",
-              "links",
-              "disabled",
-            ];
-            for (var k in feature) {
-              if (hide.includes(k) | (k in feature.properties)) {
-                continue;
-              }
-              popupText += "<b>" + k + "</b>: ";
-              popupText += feature[k] + "</br>";
-            }
+            let popupText = `<h4>${feature.text}</h4>`;
+            popupText += `<a href=${feature['uri']}>${feature['uri']}</a></br>`;
             if (
               geoconnexApp.resMode == "Edit" &&
               style.color == geoconnexApp.searchColor
@@ -595,22 +569,14 @@ let geoconnexApp = new Vue({
       };
     },
     setFeatureName(feature){
-      feature.NAME = feature.properties.NAME;
-      if (feature.properties.AQ_NAME) {
-        feature.NAME = feature.properties.AQ_NAME;
-      }
-      if (feature.properties.name) {
-        feature.NAME = feature.properties.name;
-      }
-      if (feature.properties.name_at_outlet) {
-        feature.NAME = feature.properties.name_at_outlet;
-      }
-      if (feature.properties.SHR) {
-        feature.NAME = feature.properties.SHR;
-      }
-      if (feature.properties.NAME10) {
-        feature.NAME = feature.properties.NAME10;
-      }
+      let geoconnexApp = this;
+      let nameField = geoconnexApp.getFeatureNameField(feature.collection);
+      feature.NAME = feature.properties[nameField]
+    },
+    getFeatureNameField(collectionName){
+      let geoconnexApp = this;
+      // This could also be accomplished by flattening json-ld for the feature and searching for the "https://schema.org/name"
+      return geoconnexApp.featureNameFields[collectionName] || "NAME";
     },
     getFeatureProperties(feature) {
       let geoconnexApp = this;
@@ -631,7 +597,8 @@ let geoconnexApp = new Vue({
     },
     async getItemsIn(collection, forceFresh = false, skipGeometry = true) {
       let geoconnexApp = this;
-      const url = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}&skipGeometry=${skipGeometry.toString()}`;
+      let propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(collection.id)}`
+      const url = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}${propertiesParameter}&skipGeometry=${skipGeometry.toString()}`;
       let featureCollection = await geoconnexApp.fetchFromCacheOrGeoconnex(url, forceFresh);
       featureCollection.collection = collection;
       return featureCollection;
@@ -1095,8 +1062,14 @@ let geoconnexApp = new Vue({
   },
 });
 
+// TODO: refactor functions
+// TODO: ensure that we only load js and css where necessary
+// TODO: organize parameters and functions so that they are grouped in a way that makes sense
+// TODO: run formatter on this and the html file
+
+
 // TODO: Allow the user to specify what type of relationship the resource has with the related Geoconnex item
-// TODO: add more linked data fields for referenced items, https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1226227651
+// TODO: Add more linked data fields for referenced items, https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1127776555
 
 // TODO: If we are encoding just the URI of each of the GeoConnex features without any additional information about the relationship, the RDF/XML encoding in the resourcemetadata.xml can be simplified to:
 // <dc:relation rdf:resource="https://geoconnex.us/ref/principal_aq/401"/>
