@@ -1073,6 +1073,8 @@ let geoconnexApp = new Vue({
   },
 });
 
+// TODO: selecting an item and "adding" via map doesn't dismiss the popup (should at least change the button to: "remove" once it has been added...)
+// TODO: same with when remove an existing item using the x, it should dismiss the map popup if it is up.
 // TODO: refactor functions
 // TODO: ensure that we only load js and css where necessary
 // TODO: organize parameters and functions so that they are grouped in a way that makes sense
