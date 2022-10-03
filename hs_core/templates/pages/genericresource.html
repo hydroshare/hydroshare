@@ -62,11 +62,15 @@
     ],
     {% endif %}
     "creator": {{ creators | creator_json_ld_element | safe }},
+    {# There is discussion about adding more linked data fields for referenced items #} 
+    {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
     {% if generic_relations %}
     "about": [
     {% for generic_relation in generic_relations %}{% if generic_relation.value|is_url %}
       {
         "@id": "{{ generic_relation.value | escapejs }}",
+        {# We might eventually want to encode related features with more specificity than generic https://schema.org/Place #}
+        {# Examples include https://schema.org/Landform and https://schema.org/BodyOfWater #}
         "@type": "Place",
         "url": "{{ generic_relation.value | escapejs }}"
       }{%if not forloop.last%},{%endif%}
@@ -77,6 +81,7 @@
     "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
     {% endif %}
     {% if spatial_coverage.exists %}
+    {# Could include specific properties https://schema.org/GeospatialGeometry for related features #}
     "spatialCoverage": {
         "@type": "Place",
         {% if spatial_coverage.name %}
