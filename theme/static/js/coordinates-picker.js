@@ -121,7 +121,7 @@ function drawPickerMarker(latLng){
     marker.addTo(coordinatesPicker);
 
     // Center map at new marker
-    coordinatesPicker.setView(latLng, 3);
+    coordinatesPicker.fitBounds(marker.getBounds(), , {"maxZoom": 7}))
     processDrawingFileType(marker.getLatLng(), "marker");
 }
 
@@ -131,7 +131,7 @@ function drawPickerRectangle(bounds){
 
     rectangle.addTo(coordinatesPicker);
     
-    coordinatesPicker.fitBounds(rectangle.getBounds());
+    coordinatesPicker.fitBounds(rectangle.getBounds(), {"maxZoom": 7});
     processDrawingFileType(rectangle.getBounds(), "rectangle");
 }
 

@@ -20,5 +20,5 @@ class RelationTypes(str, enum.Enum):
     references = 'references'
     replaces = 'replaces'
     source = 'source'
-    relation = 'relation'
+    inspecificRelation = 'inspecificRelation'
     isSimilarTo = 'isSimilarTo'

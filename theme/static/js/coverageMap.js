@@ -40,7 +40,7 @@ $(document).ready(function () {
     }
 });
 
-function drawInitialShape() {
+async function drawInitialShape() {
     // This field is populated if the page is in view mode
     var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
 
@@ -145,6 +145,7 @@ function drawInitialShape() {
         $("#sign-in-info").text(sessionStorage.signininfo);
         $("#btn-select-irods-file").show();
     }
+    coverageMap.initialShapesDrawn = true;
 }
 
 function initMap() {
@@ -271,10 +272,9 @@ function initMap() {
             L.DomEvent.on(recenterButton, 'click', (e)=>{
               e.stopPropagation();
               try{
-                coverageMap.fitBounds(leafletMarkers.getBounds());
+                coverageMap.fitBounds(leafletMarkers.getBounds(), {"maxZoom": 7});
               }
               catch (error){
-                console.log(error.message);
                 coverageMap.setView([30, 0], 1);
               }
              });
@@ -347,7 +347,7 @@ function drawMarker(latLng){
         // .openPopup();
 
     // Center map at new marker
-    coverageMap.setView(latLng, 3);
+    coverageMap.fitBounds(leafletMarkers.getBounds(), {"maxZoom": 7})
 }
 
 function drawRectangleOnTextChange(){
@@ -411,9 +411,7 @@ function drawRectangle(bounds){
     leafletMarkers.addLayer(rectangle);
 
     rectangle.addTo(coverageMap)
-        // .bindPopup('TODO: add res link and lat/long');
-    
-    coverageMap.fitBounds(rectangle.getBounds());
+    coverageMap.fitBounds(rectangle.getBounds(), {"maxZoom": 7});
 }
 
 function processDrawing(coordinates, shape){
@@ -473,5 +471,4 @@ function processDrawing(coordinates, shape){
         //     coverageMap.setCenter(coordinates);
         // });
     }
-    geoconnexApp.updateSpatialExtentType();
 }

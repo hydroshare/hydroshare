@@ -4,124 +4,92 @@
 <link rel='stylesheet' type='text/css' href="{% static 'css/geoconnex.css' %}">
 {% endblock %}
 
-{% if resource_edit_mode or generic_relations %}
+{% if resource_edit_mode or inspecific_relations %}
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
-        <div v-show="resMode=='Edit'" class="alert alert-info alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">×</span>
-            </button>
-            <div class="flex">
-                <i class="glyphicon glyphicon-info-sign"></i>
-                <em style="padding-right:20px;">
-                    If this resource is related to other geospatial resources, you can record those relationships here.
-                    For example, if this resource has spatial extent contained within a specific Eight-digit Hydrologic Subbasin, you could reference that "HU08" here.
-                    A reference can also be created by typing a URL that links to the related geospatial resource.
-                    <strong><a href="https://geoconnex.internetofwater.dev/" target="_blank">Geoconnex</a></strong>,
-                    a project of the 
-                    <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
-                    provides collections of reference resources which you can search by selecting a collection or by showing the map.
-                    If you enter a URL, it will be converted to an active link.
-                    Adding these relations improves discoverability of your resource and contributes to
-                    <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>
-                </em>
-            </div>
-        </div>
-
         <label>This HydroShare resource is related to the following geospatial features
             <span v-show="resMode=='Edit'" data-toggle="tooltip" data-placement="auto"
             title='Use this section to add persistent identifiers pointing at related geospatial features.'
             class="glyphicon glyphicon-info-sign text-muted">
             </span>
         </label>
-        <v-app>
-            <div v-if="errored">
-                <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
+        <div id="geoconnex-message-wrapper" v-if="resMode=='Edit'">
+            <div class="alert alert-info alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <div class="flex">
+                    <i class="glyphicon glyphicon-info-sign"></i>
+                    <em style="padding-right:20px;">
+                        If this resource is related to other geospatial resources, you can record those relationships by adding the items here.
+                        <strong><a href="https://geoconnex.internetofwater.dev/" target="_blank">Geoconnex</a></strong>,
+                        a project of the <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
+                        provides collections of reference resources within the United States that might overlap with your resource.
+                        For example, if this resource has spatial extent contained within an Eight-digit Hydrologic Subbasin, you could search the "HU08" collection <strong><span :style="`color: ${searchColor}`">(step #1)</span></strong>.
+                        Once you found the specific related item, you could select it <strong><span :style="`color: ${selectColor}`">(step #2)</span></strong>, adding it to you resource metadata.
+                        A reference can alternatively be created by typing a URL that links to the related geospatial resource.
+                        If you enter a URL, it will be converted to an active link. Adding these relations improves discoverability of your resource and contributes to
+                        <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>.
+                    </em>
+                </div>
             </div>
-            <div v-if="errorMsg" class="alert alert-danger alert-dismissible" role="alert">
+            <div v-if="!resSpatialType && resMode=='Edit'" class="alert alert-warning alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                     aria-hidden="true">&times;</span></button>
-                <p>${errorMsg}</p>
+                <p>We highly recommend that you add Spatial Coverage to this resource before searching for related geospatial items. Otherwise query times can be excessive.</p>
             </div>
-
-            <div class="container">
-                <div class="row">
-                    {% if resource_edit_mode %}
-                        <div class="col-xs-12">
-                            <!-- TODO: typeahead doesn't work for typing collection names -->
-                            <v-autocomplete
-                                v-model="selectedCollections"
-                                :items="collections"
-                                :item-text="item => item.description"
-                                hide-no-data
-                                allow-overflow="false"
-                                chips
-                                deletable-chips
-                                multiple
-                                outlined
-                                hide-selected
-                                label="Choose a collection of related items to search"
-                                :disabled="loadingCollections"
-                                :loading="loadingCollections"
-                                color="blue-grey"
-                                :search-input.sync="search"
-                                return-object="true">
-                                    <template v-slot:item="data">
-                                        <template v-if="typeof data.item !== 'object'">
-                                            <v-list-tile-content v-text="data.item"></v-list-tile-content>
-                                        </template>
-                                        <template v-else>
-                                            <v-list-item-content>
-                                                <v-list-item-title v-html="`${data.item.description} (${data.item.id})`"></v-list-item-title>
-                                            </v-list-item-content>
-                                        </template>
-                                    </template>
-                                    <template v-slot:no-data>
-                                        <v-list-item>
-                                            <v-list-item-content>
-                                                <v-list-item-title>
-                                                    No results matching "<strong>${ search }</strong>". 
-                                                    Press <kbd>enter</kbd> to add <v-chip><strong>${ search }</strong></v-chip> as a custom item.
-                                                </v-list-item-title>
-                                            </v-list-item-content>
-                                        </v-list-item>
-                                    </template>
-                                    <template v-slot:selection="{ attrs, item, parent, selected }">
-                                        <v-chip v-bind="attrs" :input-value="selected">
-                                            <span class="text-truncate">
-                                                ${ item.description }
-                                            </span>
-                                        <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
-                                        </v-chip>
-                                    </template>
-                                </v-autocomplete>
-                                <!-- TODO: disable (hide?) the combobox until they have selected a collection-->
-                            <v-combobox
-                                v-model="selectedReferenceItems"
-                                :items="items"
-                                hide-no-data
-                                allow-overflow="false"
-                                chips
-                                deletable-chips
-                                multiple
-                                outlined
-                                hide-selected
-                                :hide-no-data="!search"
-                                label="Add related items here or select using map"
-                                :disabled="loadingCollections"
-                                :loading="loadingRelations"
-                                color="blue-grey"
-                                :search-input.sync="search"
-                                :rules="rules"
-                                return-object="true">
+            <div v-if="extentArea > largeExtentWarningThreshold" class="alert alert-dismissible alert-warning" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <div class="flex">
+                    <i class="glyphicon glyphicon-info-sign"></i>
+                    <em style="padding-right:20px;">
+                        Please note: your resource spatial extent (${(extentArea * 1e-6).toFixed(0)} square kilometers) is larger than a big US state.
+                        You might experience reduced performance during your searches.
+                    </em>
+                </div>
+            </div>
+            <div v-for="messageObj in appMessages" v-if="messageObj.show" :class="'alert alert-dismissible alert-' + messageObj.level" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <div class="flex">
+                    <i class="glyphicon glyphicon-info-sign"></i>
+                    <em style="padding-right:20px;">
+                        ${ messageObj.message }
+                    </em>
+                </div>
+            </div>
+        </div>
+        <v-app>
+            <div class="row">
+                {% if resource_edit_mode %}
+                    <div class="col-xs-12" :class="{'col-lg-6': showingMap}" id="geoconnex-controls-wrapper">
+                        <v-autocomplete
+                            :menu-props="{closeOnClick: true, closeOnContentClick: true}"
+                            :readonly="lockCollections"
+                            v-model="selectedCollections"
+                            :items="collections"
+                            :item-text="item => item.description"
+                            :hide-no-data="!collectionTypeahead"
+                            multiple
+                            placeholder="Type to narrow down options or select from the list"
+                            :label="limitToSingleCollection ? '1. Choose a collection to search' : '1. Choose collections to search'"
+                            :disabled="loadingCollections || searchingDescription !==''"
+                            :loading="loadingCollections || searchingDescription !==''"
+                            outlined
+                            :color="searchColor"
+                            :item-color="searchColor"
+                            :search-input.sync="collectionTypeahead"
+                            return-object="true">
                                 <template v-slot:item="data">
                                     <template v-if="typeof data.item !== 'object'">
                                         <v-list-tile-content v-text="data.item"></v-list-tile-content>
                                     </template>
                                     <template v-else>
                                         <v-list-item-content>
-                                            <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
-                                            <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
+                                            <v-list-item-title v-html="`${data.item.description} (${data.item.id})`"></v-list-item-title>
                                         </v-list-item-content>
                                     </template>
                                 </template>
@@ -129,197 +97,216 @@
                                     <v-list-item>
                                         <v-list-item-content>
                                             <v-list-item-title>
-                                                No results matching "<strong>${ search }</strong>". 
-                                                Press <kbd>enter</kbd> to add <v-chip><strong>${ search }</strong></v-chip> as a custom item.
+                                                No collections matching "<strong>${ collectionTypeahead }</strong>".
                                             </v-list-item-title>
                                         </v-list-item-content>
                                     </v-list-item>
                                 </template>
                                 <template v-slot:selection="{ attrs, item, parent, selected }">
-                                    <v-chip v-bind="attrs" :input-value="selected">
+                                    <v-chip v-bind="attrs" :input-value="selected" :color="searchColor" label outlined large>
                                         <span class="text-truncate">
-                                            ${ item.text }
+                                            ${ item.description }
                                         </span>
-                                      <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
+                                    <span v-show="!loadingCollections && searchingDescription==''" @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
                                     </v-chip>
                                 </template>
-                            </v-combobox>
-                            <p v-show="hasSearches" class="small text-muted negative-top">
-                                <span v-if="hasSearches" data-toggle="tooltip" data-placement="auto"
-                                title='Options in the above dropdown list have been filtered to only contain features that have been mapped in your searches'
-                                class="glyphicon glyphicon-exclamation-sign text-muted"
-                                style="color: #f0ad4e;">
+                        </v-autocomplete>
+                        <div id="geoconnex-col-msg-container" class="negative-top small text-muted" :style="`color: ${messageColor}`">
+                            <div v-show="hasSearches && !searchResultString && searchingDescription ==''">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                :title="`Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? 's' : '' } you selected here`"
+                                class="glyphicon glyphicon-info-sign text-muted"
+                                :style="`color: ${messageColor}`">
                                 </span>
-                                Options have been limited to collections you selected above
-                                <!-- TODO: this overlaps with URI warning -->
-                            </p>
-                            <div v-if="loadingCollections">
-                                <p v-if="resMode=='Edit' && loadingCollections"><b>Loading Geoconnex collection:</b> ${loadingDescription}</p>
-                                <p v-else>Loading Geoconnex relations...</p>
+                                Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? "s" : "" } you selected here
                             </div>
-                            <v-progress-linear
-                                :active="true"
-                                v-if="isSearching || loadingCollections"
-                                indeterminate
-                            ></v-progress-linear>
-                            <div v-if="isSearching">
-                                <p><b>Searching Geoconnex collection:</b> ${loadingDescription}</p>
+                            <div v-show="items.length >= limitNumberOfItemsPerRequest">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                :title="`${ selectedCollections.map(a => a.id).join() } contains more than the limit (${ limitNumberOfItemsPerRequest } items).`"
+                                class="glyphicon glyphicon-info-sign text-muted"
+                                :style="`color: ${messageColor}`">
+                                </span>
+                                "${ selectedCollections.map(a => a.id).join() }" contains too many items. Only ${ limitNumberOfItemsPerRequest } items were mapped.
+                                We recommend that you reduce your search extent. Or conduct a point search by clicking on the map.
                             </div>
-                            <div id="geoconnex-controls" class="flex">
-                                <div v-show="!showingMap">
-                                    <button :loading="isSearching" @click="toggleMapVisibility" class="btn btn-default" depressed small>
-                                        <i class="fa fa-globe"></i>Select With Map
-                                    </button>
-                                    <span data-toggle="tooltip" data-placement="auto"
-                                    title='Shows additional map that you can use to query and view related geospatial features'
-                                    class="glyphicon glyphicon-info-sign text-muted">
+                            <div v-show="searchResultString">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                :title="searchResultString"
+                                class="glyphicon glyphicon-info-sign text-muted"
+                                :style="`color: ${messageColor}`">
+                                </span>
+                                ${ searchResultString }
+                            </div>
+                            <div v-show="loadingCollections">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                title="Loading Geoconnex relations"
+                                class="glyphicon glyphicon-info-sign text-muted"
+                                :style="`color: ${messageColor}`">
+                                </span>
+                                Loading Geoconnex relations...
+                            </div>
+                            <div v-show="searchingDescription">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                title="Searching Geoconnex"
+                                class="glyphicon glyphicon-info-sign text-muted"
+                                :style="`color: ${messageColor}`">
+                                </span>
+                                <b>Searching Geoconnex collection:</b> ${searchingDescription}
+                            </div>
+                            <div v-for="message in collectionMessages">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                    :title="message"
+                                    class="glyphicon glyphicon-info-sign text-muted"
+                                    :style="`color: ${messageColor}`">
+                                </span>
+                                ${ message }
+                            </div>
+                        </div>
+                        <v-combobox
+                            v-model="selectedReferenceItems"
+                            :class="{
+                                'col-xs-12 col-md-8': resMode === 'View', 
+                                'col-xs-12': resMode === 'Edit',
+                                'opaque': !hasSearches && selectedReferenceItems.length === 0
+                            }" 
+                            :items="items"
+                            hide-no-data
+                            allow-overflow="false"
+                            chips
+                            deletable-chips
+                            multiple
+                            outlined
+                            hide-selected
+                            :hide-no-data="!itemTypeahead"
+                            label="2. Select related items to add to resource metadata"
+                            placeholder="Type to narrow down options or select on the map"
+                            :disabled="searchingDescription !==''"
+                            :loading="loadingRelations"
+                            :color=selectColor
+                            :search-input.sync="itemTypeahead"
+                            :rules="featureRules"
+                            return-object="true">
+                            <template v-slot:item="data">
+                                <template v-if="typeof data.item !== 'object'">
+                                    <v-list-tile-content v-text="data.item"></v-list-tile-content>
+                                </template>
+                                <template v-else>
+                                    <v-list-item-content>
+                                        <v-list-item-title v-html="data.item.NAME"></v-list-item-title>
+                                        <v-list-item-subtitle v-html="data.item.relative_id"></v-list-item-subtitle>
+                                    </v-list-item-content>
+                                </template>
+                            </template>
+                            <template v-slot:no-data>
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title>
+                                            No results matching "<strong>${ itemTypeahead }</strong>". 
+                                            Press <kbd>enter</kbd> to add <v-chip :color=selectColor outlined><strong>${ itemTypeahead }</strong></v-chip> as a custom item.
+                                        </v-list-item-title>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </template>
+                            <template v-slot:selection="{ attrs, item, parent, selected }">
+                                <v-chip v-bind="attrs" :input-value="selected" :color=selectColor outlined>
+                                    <span class="text-truncate">
+                                        ${ item.text }
                                     </span>
+                                    <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
+                                </v-chip>
+                            </template>
+                            <template v-slot:message="rulesMessage">
+                                <div :style="`color: ${messageColor}; margin-left: -12px;`">
+                                    <span data-toggle="tooltip" data-placement="auto"
+                                        :title="rulesMessage.message"
+                                        class="glyphicon glyphicon-info-sign"
+                                        :style="`color: ${messageColor}`">
+                                    </span>
+                                    ${ rulesMessage.message }
                                 </div>
-                                <button v-if="showingMap" @click="toggleMapVisibility" class="btn btn-default">
+                            </template>
+                        </v-combobox>
+                        <div v-for="message in featureMessages" :style="`color: ${messageColor}`">
+                            <span data-toggle="tooltip" data-placement="auto"
+                                :title="message"
+                                class="glyphicon glyphicon-info-sign"
+                                :style="`color: ${messageColor}`">
+                            </span>
+                            ${ message }
+                        </div>
+                        <div id="geoconnex-controls" class="flex">
+                            <div v-show="!showingMap">
+                                <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>
+                                    <i class="fa fa-globe"></i>Select With Map
+                                </button>
+                                <span data-toggle="tooltip" data-placement="auto"
+                                title='Shows additional map that you can use to query and view related geospatial features'
+                                class="glyphicon glyphicon-info-sign text-muted">
+                                </span>
+                            </div>
+                            <div v-show="showingMap">
+                                <button @click="toggleMapVisibility" class="btn btn-default">
                                     <i class="fa fa-minus"></i>Hide Map
                                 </button>
-                                <div v-show="hasSearches && showingMap">
-                                    <button @click="clearLeafletOfMappedSearches" class="btn btn-warning" depressed small>
-                                        <i class="fa fa-search-minus"></i>Clear searches from map
-                                    </button>
-                                    <span data-toggle="tooltip" data-placement="auto"
+                            </div>
+                            <div v-show="showingMap && hasSearches && searchingDescription ==''">
+                                <button @click="queryUsingVisibleMapBounds" class="btn btn-default" :style="`border-color:${searchColor}`" depressed small>
+                                    <i class="fa fa-search-plus"></i>Search "${ selectedCollections.map(a => a.id).join() }" using visible map bounds
+                                </button>
+                                <span data-toggle="tooltip" data-placement="auto"
+                                    title="Search within the visible boundaries of the map, instead of using spatial extent. Zooming in will reduce the search area."
+                                    class="glyphicon glyphicon-info-sign text-muted"
+                                ></span>
+                            </div>
+                            <div v-show="hasSearches && searchingDescription ==''">
+                                <button @click="clearMapOfSearches" class="btn btn-default" :style="`border-color:${searchColor}`" depressed small>
+                                    <i class="fa fa-search-minus"></i>Clear search
+                                </button>
+                                <span data-toggle="tooltip" data-placement="auto"
                                     title="Clears unselected spatial features from the map"
-                                    class="glyphicon glyphicon-info-sign text-muted">
-                                    </span>
-                                </div>
-                                <!-- TODO: add button to search ALL geoconnex items in the collection if no spatial extent -->
+                                    class="glyphicon glyphicon-info-sign text-muted"
+                                ></span>
                             </div>
-                        </div>
-                    {% else %}
-                        <div class="col-xs-12 col-md-4 info-table-wrapper" v-if="!loadingCollections && selectedReferenceItems.length > 0">
-                            <table class="table hs-table info-table">
-                                <tr v-for="value in selectedReferenceItems" style="padding-bottom: 20px">
-                                    <td v-if="isUrl(value.value)" class="dataset-details">
-                                        <a v-if="isUrl(value.value)" target="_blank" :href="value.value"> ${value.text}</a>
-                                        <i class="fa fa-external-link"></i>
-                                    </td>
-                                    <td v-else class="dataset-details">${value.text}</td>
-                                </tr>
-                            </table>
-                        </div>
-                    {% endif %}
-    
-                    <div :class="{ 'col-xs-12 col-md-8': resMode === 'View', 'col-xs-12': resMode === 'Edit' }" v-show="showingMap" id="geoconnex-map-wrapper">
-                        <div id="geoconnex-leaflet"></div>
-                        <p v-if="resMode === 'Edit'" id="geoconnex-leaflet-info" class="small text-muted">Click a location to search for overlapping features, or select a feature for more info</p>
-                    </div>
-                </div>
-                <div class="row">
-                    <div style="border: solid red" v-if="debug" class="col-xs-12">
-                        <h4 style="color: red">DEBUG PANEL</h4>
-                        <div v-if="resSpatialType=='point'">
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">Center Latitude</span>
-                                    <input type="number" class="form-control" v-model="pointLat" type="number" class="form-control"
-                                        placeholder="Lat"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                        class="input-group-addon" style="width: 50px;">°</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">Center Longitude</span>
-                                    <input type="number" class="form-control" v-model="pointLong" type="number" class="form-control"
-                                        placeholder="Long"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                        class="input-group-addon" style="width: 50px;">°</span>
-                                </div>
-                            </div>  
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">Search Radius</span>
-                                    <input type="number" class="form-control" v-model="searchRadius" type="number" class="form-control"
-                                        placeholder="Radius"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
-                                        class="input-group-addon" style="width: 50px;">km</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-else>
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">North Latitude</span>
-                                    <input type="number" class="form-control" v-model="northLat" type="number" class="form-control"
-                                        placeholder="North Lat"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                        class="input-group-addon" style="width: 50px;">°</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">East Longitude</span>
-                                    <input type="number" class="form-control" v-model="eastLong" type="number" class="form-control"
-                                        placeholder="East Long"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                        class="input-group-addon" style="width: 50px;">°</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">South Latitude</span>
-                                    <input type="number" class="form-control" v-model="southLat" type="number" class="form-control"
-                                        placeholder="South Lat"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                        class="input-group-addon" style="width: 50px;">°</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon coordinates-label-addon" style="width: 127px">West Longitude</span>
-                                    <input type="number" class="form-control" v-model="westLong" type="number" class="form-control"
-                                        placeholder="West Long"
-                                    >
-                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                        class="input-group-addon" style="width: 50px;">°</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="control-group">
-                            <div class="input-group">
-                                <span class="input-group-addon coordinates-label-addon" style="width: 127px">Max Area Returned</span>
-                                <input type="number" class="form-control" v-model="maxAreaToReturn" type="number" class="form-control"
-                                    placeholder="Max Area"
-                                >
-                                <span data-toggle="tooltip" data-placement="auto" title="Kilometers"
-                                    class="input-group-addon" style="width: 50px;">km<span>&#178;</span></span>
-                            </div>
-                        </div>
-                        <button type="button" @click="fillValuesFromResExtent" class="btn btn-primary btn-xs">
-                            Populate from Spatial Extent
-                        </button>
-                        <button type="button" @click="getGeoItemsFromDebug()" class="btn btn-primary btn-xs">
-                            Search using debug parameters
-                        </button>
-                        <button v-show="resSpatialType && !hasExtentSearch && showingMap" :disabled="isSearching" @click="queryUsingSpatialExtent()" class="btn btn-default" depressed small>
-                            <i class="fa fa-search"></i>Search All Collections Using Spatial Extent
-                        </button>
-                        <span data-toggle="tooltip" data-placement="right"
-                            title="Performs a query to find related features that overlap with your resource's spatial extent"
-                            class="glyphicon glyphicon-info-sign text-muted">
-                            </span>
-                        <h4 v-if="selectedReferenceItems.length > 0">SELECTED VALUES</h4>
-                        <div style="border: thin solid black" v-if="selectedReferenceItems.length > 0">
-                            <ul>
-                                <li v-for="value in selectedReferenceItems">${value}<hr><a :href="value.value">${value.value}</a></li>
-                            </ul>
                         </div>
                     </div>
+                {% else %}
+                    <div class="col-xs-12 col-lg-4 info-table-wrapper" v-if="searchingDescription =='' && selectedReferenceItems.length > 0">
+                        <table class="table hs-table info-table">
+                            <tr v-for="value in selectedReferenceItems" style="padding-bottom: 20px">
+                                <td v-if="isUrl(value.value)" class="dataset-details">
+                                    <a v-if="isUrl(value.value)" target="_blank" :href="value.value"> ${value.text}</a>
+                                    <i class="fa fa-external-link"></i>
+                                </td>
+                                <td v-else class="dataset-details">${value.text}</td>
+                            </tr>
+                        </table>
+                    </div>
+                {% endif %}
+
+                <div 
+                    id="geoconnex-map-wrapper"
+                    class="col-xs-12"
+                    :class="{
+                        'col-lg-8': resMode === 'View', 
+                        'col-lg-6': resMode === 'Edit',
+                        'opaque': !hasSearches && selectedReferenceItems.length === 0
+                    }" 
+                    v-show="showingMap" 
+                >
+                <v-progress-linear
+                    :active="true"
+                    v-if="searchingDescription !==''"
+                    indeterminate
+                    :color="searchColor"
+                ></v-progress-linear>
+                    <div id="geoconnex-leaflet"></div>
+                    <div v-if="resMode === 'Edit'" id="geoconnex-leaflet-info" class="small text-muted">
+                        <p v-if="searchResultString">Click a point to search for features that overlap with that location.</p>
+                        <p v-if="items.length > 0">Select a feature for more information.</p>
+                    </div>
+                    
                 </div>
             </div>
-
         </v-app>
     </div>
 {% endif %}

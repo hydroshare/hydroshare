@@ -1,17 +1,15 @@
 #app-geoconnex .flex {
   flex-direction: row;
-  justify-content: space-around;
+  /* justify-content: space-around; */
   gap: 2rem;
+}
+
+#app-geoconnex div.v-application {
+  margin-top: 20px;
 }
 
 #app-geoconnex .v-application--wrap {
   min-height: 100px;
-  overflow: hidden;
-  padding-top: 5px;
-}
-
-#app-geoconnex .v-btn {
-  font-size: 1.2rem;
 }
 
 #app-geoconnex .v-subheader {
@@ -26,10 +24,6 @@
   font-size: 1.5rem;
 }
 
-#app-geoconnex div.v-application {
-  margin-top: 1rem;
-}
-
 #geoconnex-controls {
   justify-content: flex-start !important;
   flex-wrap: wrap;
@@ -38,15 +32,13 @@
 
 .negative-top {
   margin-top: -3rem;
+  margin-bottom: 3rem;
 }
 
-.v-application .btn {
-  padding: 6px 12px;
-  color: initial;
-}
-
-.v-application .btn i.fa {
-  margin-right: 1rem;
+#app-geoconnex .opaque {
+  opacity: 0.4;
+  filter: alpha(opacity=40);
+  pointer-events: none;
 }
 
 #app-geoconnex .v-chip__content .glyphicon {
@@ -58,32 +50,18 @@
   font-weight: normal;
 }
 
-#app-geoconnex .info-table-wrapper {
-  padding-right: 2rem;
-}
-
-.geo-list-item {
-  flex: 1 1 auto;
-  width: 90%;
-  height: 28px;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.geo-list-item [type="checkbox"] {
-  float: unset !important;
-}
-
 #geoconnex-map-wrapper {
   flex: 2 1 500px;
   z-index: 2;
-  padding: 0;
-  padding-top: 12px;
+}
+
+#geoconnex-controls-wrapper {
+  padding-right: 12px;
+  padding-left: 12px;
 }
 
 #geoconnex-leaflet {
   height: 400px;
-  margin-bottom: 1rem;
 }
 
 .leaflet-control-container,
@@ -91,28 +69,32 @@
   font-size: 1.2rem !important;
 }
 
-#geoconnex-leaflet-info {
-  display: none;
-}
-
 #app-geoconnex .dataset-details {
   display: flex;
   gap: 1rem;
   align-items: center;
-  /* justify-content: space-between; */
+}
+
+#app-geoconnex .v-application .error--text {
+  color: #c09853 !important;
 }
 
 /* ******************* BUTTON OVERRIDES ******************* */
-
-.v-application .btn {
-  border-style: solid !important;
-  /* color: #fff !important; */
+#app-geoconnex .v-btn {
+  font-size: 1.2rem;
 }
 
 .v-application .btn {
+  padding: 6px 12px;
+  /* color: initial; */
+  border-style: solid !important;
   -webkit-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset !important;
   -moz-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset !important;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset !important;
+}
+
+.v-application .btn i.fa {
+  margin-right: 1rem;
 }
 
 .v-application .btn-info,
