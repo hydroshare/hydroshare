@@ -272,10 +272,9 @@ function initMap() {
             L.DomEvent.on(recenterButton, 'click', (e)=>{
               e.stopPropagation();
               try{
-                coverageMap.fitBounds(leafletMarkers.getBounds());
+                coverageMap.fitBounds(leafletMarkers.getBounds(), {"maxZoom": 7});
               }
               catch (error){
-                console.log(error.message);
                 coverageMap.setView([30, 0], 1);
               }
              });
@@ -348,7 +347,7 @@ function drawMarker(latLng){
         // .openPopup();
 
     // Center map at new marker
-    coverageMap.setView(latLng, 3);
+    coverageMap.fitBounds(leafletMarkers.getBounds(), {"maxZoom": 7})
 }
 
 function drawRectangleOnTextChange(){
@@ -412,9 +411,7 @@ function drawRectangle(bounds){
     leafletMarkers.addLayer(rectangle);
 
     rectangle.addTo(coverageMap)
-        // .bindPopup('TODO: add res link and lat/long');
-    
-    coverageMap.fitBounds(rectangle.getBounds());
+    coverageMap.fitBounds(rectangle.getBounds(), {"maxZoom": 7});
 }
 
 function processDrawing(coordinates, shape){

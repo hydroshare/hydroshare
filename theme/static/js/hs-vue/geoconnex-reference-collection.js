@@ -1060,6 +1060,7 @@ let geoconnexApp = new Vue({
     this.setCustomItemRules();
   },
   async mounted() {
+    // TODO: artifacts / bits of text/elements are shown during initial load of page (less than 1 sec)
     let geoconnexApp = this;
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
@@ -1084,8 +1085,3 @@ let geoconnexApp = new Vue({
     }
   },
 });
-// TODO: weird bits of text/elements are shown during initial load of page (less than 1 sec)
-
-// TODO: test the resource spatial coverage map and smaller maps
-
-// TODO: run formatter on this and the html file
