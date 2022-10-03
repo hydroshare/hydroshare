@@ -266,7 +266,7 @@ let geoconnexApp = new Vue({
           feature.geometry = geometry.geometry;
         });
       }
-      geoconnexApp.addToMap(feature);
+      geoconnexApp.addToMap(feature, fit=false, style=undefined, group=geoconnexApp.selectedFeatureGroup);
     },
     ajaxSaveFeatureToResMetadata(feature) {
       let geoconnexApp = this;
@@ -760,7 +760,7 @@ let geoconnexApp = new Vue({
         // second deal with the actual item
         let alreadySelected = geoconnexApp.selectedReferenceItems.find(
           (obj) => {
-            return obj.value && obj.value === feature.uri;
+            return obj.value && obj.value === feature.properties.uri;
           }
         );
         if (alreadySelected) {
@@ -834,13 +834,13 @@ let geoconnexApp = new Vue({
           interactive: interactive,
         });
         leafletLayer.setStyle(style);
-        if (geojson.uri) {
+        if (geojson.uri && group === geoconnexApp.selectedFeatureGroup) {
           geoconnexApp.selectedItemLayers[geojson.uri] = leafletLayer;
         }
         if (group) {
-          group.addLayer(leafletLayer);
-        } else {
-          geoconnexApp.selectedFeatureGroup.addLayer(leafletLayer);
+          if (!group.hasLayer(leafletLayer)){
+            group.addLayer(leafletLayer);
+          }
         }
         if (group === geoconnexApp.searchFeatureGroup) {
           if (!geojson.collection) {
