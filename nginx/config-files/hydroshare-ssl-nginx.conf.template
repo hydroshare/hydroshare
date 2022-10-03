@@ -99,7 +99,7 @@ server {
     ssl_certificate_key     /hs-certs/SSL_KEY_FILE;
 
     location /static/ {
-        alias /hydroshare/hydroshare/static/;
+        alias /hydroshare/hydroshare/static/static/;
     }
 
     location /media/ {
