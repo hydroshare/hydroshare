@@ -12,7 +12,6 @@
   min-height: 100px;
 }
 
-
 #app-geoconnex .v-subheader {
   font-size: 1.5rem;
 }
@@ -36,7 +35,7 @@
   margin-bottom: 3rem;
 }
 
-#app-geoconnex .opaque{
+#app-geoconnex .opaque {
   opacity: 0.4;
   filter: alpha(opacity=40);
   pointer-events: none;
