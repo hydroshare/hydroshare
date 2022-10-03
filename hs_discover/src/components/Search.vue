@@ -219,7 +219,7 @@
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                            <img v-if="entry.geo" src="/static/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
                         <td class="tbl-col-title">
@@ -292,19 +292,9 @@ export default {
       countAvailabilities: {},
       availabilityFilter: [],
       resIconName: {
-        'Composite Resource': '/static/img/resource-icons/composite48x48.png',
-        Generic: '/static/img/resource-icons/generic48x48.png',
-        'Geopgraphic Raster': '/static/img/resource-icons/geographicraster48x48.png',
-        'Model Program Resource': '/static/img/resource-icons/modelprogram48x48.png',
-        'Collection Resource': '/static/img/resource-icons/collection48x48.png',
-        'Web App Resource': '/static/img/resource-icons/webapp48x48.png',
-        'Time Series': '/static/img/resource-icons/timeseries48x48.png',
-        'Script Resource': '/static/img/resource-icons/script48x48.png',
-        'Model Instance Resource': '/static/img/resource-icons/modelinstance48x48.png',
-        'SWAT Model Instance Resource': '/static/img/resource-icons/swat48x48.png',
-        'MODFLOW Model Instance Resource': '/static/img/resource-icons/modflow48x48.png',
-        'Multidimensional (NetCDF)': '/static/img/resource-icons/multidimensional48x48.png',
-        'HIS Referenced Time Series': '/static/img/resource-icons/his48x48.png',
+        'Composite Resource': '/static/static/img/resource-icons/composite48x48.png',
+        'Collection Resource': '/static/static/img/resource-icons/collection48x48.png',
+        'Web App Resource': '/static/static/img/resource-icons/webapp48x48.png',
       },
       sortMap: {
         'First Author': 'author',
