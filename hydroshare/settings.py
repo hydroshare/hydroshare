@@ -220,7 +220,17 @@ CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = "/static/"
+
+#  Had to change STATIC_URL as required since django 2.2 when running in DEBUG mode
+#  Django does the following check in django =>2.2:
+# if (settings.DEBUG and settings.MEDIA_URL and settings.STATIC_URL and
+# 		settings.MEDIA_URL.startswith(settings.STATIC_URL)):
+# 	raise ImproperlyConfigured(
+# 		"runserver can't serve media if MEDIA_URL is within STATIC_URL."
+# 	)
+# that means path for STATIC_URL can't be a parent directory of path for MEDIA_URL
+# Ref: https://docs.djangoproject.com/en/2.2/ref/settings/#media-root
+STATIC_URL = "/static/static/"
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -237,6 +247,7 @@ STATICFILES_STORAGE = 'hydroshare.storage.ForgivingManifestStaticFilesStorage'
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 
+# Note: MEDIA_URL needs to be set to a path so that STATIC_URL is not a parent folder of MEDIA_URL
 MEDIA_URL = "/static/media/"
 
 # Sorl settings for generating thumbnails
@@ -249,6 +260,10 @@ THUMBNAIL_DUMMY_RATIO = 1
 # Allow PIL to ignore imgs with lots of metadata
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+# Absolute filesystem path to the directory that will hold user-uploaded files.
+# Example: "/home/media/media.lawrence.com/media/"
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
@@ -753,22 +768,6 @@ local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-#  Pabitra - needed to change MEDIA_URL as required since django 2.2 when running in DEBUG mode
-#  Django does the following check in django =>2.2:
-# if (settings.DEBUG and settings.MEDIA_URL and settings.STATIC_URL and
-# 		settings.MEDIA_URL.startswith(settings.STATIC_URL)):
-# 	raise ImproperlyConfigured(
-# 		"runserver can't serve media if MEDIA_URL is within STATIC_URL."
-# 	)
-#  (see the link below)
-#  (Ref: https://stackoverflow.com/questions/59469585/runserver-cant-serve-media-if-media-url-is-within-static-url)
-
-if DEBUG:
-    MEDIA_URL = '/media/'
-
-# Absolute filesystem path to the directory that will hold user-uploaded files.
-# Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 ####################
 # DYNAMIC SETTINGS #
 ####################
