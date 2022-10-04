@@ -166,7 +166,7 @@ let geoconnexApp = new Vue({
             (skipGeometry = false)
           );
           if (featureCollection.features) {
-            geoconnexApp.addFeaturesToMap(
+            geoconnexApp.addSearchFeaturesToMap(
               featureCollection.features,
               featureCollection.collection
             );
@@ -387,7 +387,7 @@ let geoconnexApp = new Vue({
         items = results.flat().filter(Boolean);
         if (items.length > 0) {
           geoconnexApp.searchResultString = "";
-          geoconnexApp.addFeaturesToMap(items);
+          geoconnexApp.addSearchFeaturesToMap(items);
         } else {
           geoconnexApp.searchResultString = `Your search didn't return any features.`;
           geoconnexApp.mapDisplayNoFoundItems(bbox);
@@ -728,7 +728,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.setMapEvents();
       geoconnexApp.fitMapToFeatures();
     },
-    addFeaturesToMap(features, collectionOverride = null) {
+    addSearchFeaturesToMap(features, collectionOverride = null) {
       for (let feature of features) {
         // deal with collection first
         let collection = collectionOverride
