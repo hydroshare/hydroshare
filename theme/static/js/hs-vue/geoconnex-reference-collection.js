@@ -100,15 +100,6 @@ let geoconnexApp = new Vue({
       spatialExtentColor: "red",
     };
   },
-  computed: {
-    hasSelections() {
-      let geoconnexApp = this;
-      return (
-        geoconnexApp.collectionsSelectedToSearch.length > 0 ||
-        geoconnexApp.selectedReferenceFeatures.length > 0
-      );
-    },
-  },
   watch: {
     async collectionsSelectedToSearch(newValue, oldValue) {
       let geoconnexApp = this;
@@ -267,7 +258,7 @@ let geoconnexApp = new Vue({
           feature.geometry = geometry.geometry;
         });
       }
-      geoconnexApp.addToMap(
+      geoconnexApp.addGeojsonToMap(
         feature,
         (fit = false),
         (style = undefined),
@@ -595,7 +586,7 @@ let geoconnexApp = new Vue({
         );
         let poly = rect.toGeoJSON();
         poly.text = "Resource Spatial Extent";
-        geoconnexApp.addToMap(
+        geoconnexApp.addGeojsonToMap(
           poly,
           (fit = false),
           {
@@ -780,7 +771,7 @@ let geoconnexApp = new Vue({
         } else {
           geoconnexApp.getFeatureProperties(feature);
           if (feature.geometry.type.includes("Point")) {
-            geoconnexApp.addToMap(
+            geoconnexApp.addGeojsonToMap(
               feature,
               (fit = false),
               {
@@ -792,7 +783,7 @@ let geoconnexApp = new Vue({
               (group = geoconnexApp.searchFeatureGroup)
             );
           } else {
-            geoconnexApp.addToMap(
+            geoconnexApp.addGeojsonToMap(
               feature,
               (fit = false),
               { color: geoconnexApp.collectionSearchColor },
@@ -810,7 +801,7 @@ let geoconnexApp = new Vue({
         geoconnexApp.searchResultString = `Your search didn't return any features.`;
       }
     },
-    addToMap(
+    addGeojsonToMap(
       geojson,
       fit = false,
       style = { color: this.featureSelectColor, radius: 5 },
@@ -906,7 +897,7 @@ let geoconnexApp = new Vue({
         geoconnexApp.error(e.message);
       }
     },
-    queryUsingVisibleMapBounds() {
+    searchForFeaturesUsingVisibleMapBounds() {
       let geoconnexApp = this;
       geoconnexApp.fetchGeoconnexFeaturesInBbox(
         geoconnexApp.map.getBounds().toBBoxString(),
@@ -1080,13 +1071,6 @@ let geoconnexApp = new Vue({
         geoconnexApp.initializeLeafletMap();
       }
     },
-    showMap() {
-      let geoconnexApp = this;
-      if (geoconnexApp.showingMap && geoconnexApp.map == null) {
-        geoconnexApp.initializeLeafletMap();
-      }
-      geoconnexApp.showingMap = true;
-    },
 
     /* --------------------------------------------------
     Utility Methods
@@ -1163,7 +1147,7 @@ let geoconnexApp = new Vue({
       }
       return true;
     },
-    setCustomItemRules() {
+    setCustomFeatureRules() {
       let geoconnexApp = this;
       geoconnexApp.featureRules = [
         function (v) {
@@ -1197,7 +1181,7 @@ let geoconnexApp = new Vue({
     },
   },
   beforeMount() {
-    this.setCustomItemRules();
+    this.setCustomFeatureRules();
   },
   async mounted() {
     // TODO: artifacts / bits of text/elements are shown during initial load of page (less than 1 sec)
