@@ -226,14 +226,6 @@
                                 </div>
                             </template>
                         </v-combobox>
-                        <div v-for="message in featureMessages" :style="`color: ${messageColor}`">
-                            <span data-toggle="tooltip" data-placement="auto"
-                                :title="message"
-                                class="glyphicon glyphicon-info-sign"
-                                :style="`color: ${messageColor}`">
-                            </span>
-                            ${ message }
-                        </div>
                         <div id="geoconnex-controls" class="flex">
                             <div v-show="!showingMap">
                                 <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>

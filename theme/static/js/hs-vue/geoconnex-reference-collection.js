@@ -9,10 +9,8 @@ let geoconnexApp = new Vue({
       // Geoconnex collection and feature data structures
       collections: null,
       items: [],
-      unfilteredItems: [],
       selectedCollections: [],
       selectedReferenceItems: [],
-      relationObjects: [],
 
       // Resource-level data
       resShortId: SHORT_ID,
@@ -41,10 +39,11 @@ let geoconnexApp = new Vue({
       // Mapping
       showingMap: true,
       map: null,
-      searchFeatureGroup: null,
       spatialExtentGroup: null,
-      extentArea: null,
-      layerGroupDictionary: {},
+      searchFeatureGroup: null,
+      selectedFeatureGroup: null,
+      searchLayerGroupDictionary: {}, //TODO: can we get rid of these?
+      selectedLayerGroupDictionary: {},
       largeExtentWarningThreshold: 5e11, // sq meters
       fitBoundsMaxZoom: 7,
       pointLat: 0,
@@ -55,8 +54,7 @@ let geoconnexApp = new Vue({
       westLong: null,
       bBox: null,
       layerControl: null,
-      selectedItemLayers: {},
-      selectedFeatureGroup: null,
+      extentArea: null,
 
       // Messages and logging
       debug: false, // modifies log verbosity
@@ -64,7 +62,6 @@ let geoconnexApp = new Vue({
       searchResultString: "",
       appMessages: [],
       collectionMessages: [],
-      featureMessages: [],
       log: console.log.bind(
         window.console,
         "%cGeoconnex:",
@@ -122,7 +119,7 @@ let geoconnexApp = new Vue({
         );
         try {
           geoconnexApp.selectedFeatureGroup.removeLayer(
-            geoconnexApp.selectedItemLayers[remove[0].value]
+            geoconnexApp.selectedLayerGroupDictionary[remove[0].value]
           );
           geoconnexApp.fitMapToFeatures();
         } catch (e) {
@@ -192,12 +189,12 @@ let geoconnexApp = new Vue({
         if (newLength) {
           for (let layer of remove) {
             geoconnexApp.searchFeatureGroup.removeLayer(
-              geoconnexApp.layerGroupDictionary[layer.id]
+              geoconnexApp.searchLayerGroupDictionary[layer.id]
             );
-            geoconnexApp.layerGroupDictionary[layer.id].clearLayers();
+            geoconnexApp.searchLayerGroupDictionary[layer.id].clearLayers();
 
             geoconnexApp.layerControl.removeLayer(
-              geoconnexApp.layerGroupDictionary[layer.id]
+              geoconnexApp.searchLayerGroupDictionary[layer.id]
             );
           }
         } else {
@@ -242,7 +239,6 @@ let geoconnexApp = new Vue({
           value: feature.uri,
         };
         geoconnexApp.selectedReferenceItems.push(featureValues);
-        geoconnexApp.relationObjects.push(feature);
       }
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.loadingRelations = false;
@@ -331,12 +327,10 @@ let geoconnexApp = new Vue({
     limitFeatureItemsToSearched() {
       let geoconnexApp = this;
       geoconnexApp.loadingRelations = true;
-      // save a copy of the items
-      geoconnexApp.unfilteredItems = geoconnexApp.items;
 
       // remove all items currently not in the map search
       let keep = [];
-      for (const val of Object.values(geoconnexApp.layerGroupDictionary)) {
+      for (const val of Object.values(geoconnexApp.searchLayerGroupDictionary)) {
         if (!val.uris.includes(undefined)) {
           keep = keep.concat(val.uris);
         }
@@ -742,19 +736,19 @@ let geoconnexApp = new Vue({
           : feature.collection;
         // check if layergroup exists in the "dictionary"
         if (
-          !geoconnexApp.layerGroupDictionary ||
-          geoconnexApp.layerGroupDictionary[collection.id] == undefined
+          !geoconnexApp.searchLayerGroupDictionary ||
+          geoconnexApp.searchLayerGroupDictionary[collection.id] == undefined
         ) {
-          geoconnexApp.layerGroupDictionary[collection.id] = L.layerGroup();
-          geoconnexApp.layerGroupDictionary[collection.id].uris = [];
+          geoconnexApp.searchLayerGroupDictionary[collection.id] = L.layerGroup();
+          geoconnexApp.searchLayerGroupDictionary[collection.id].uris = [];
           geoconnexApp.layerControl.addOverlay(
-            geoconnexApp.layerGroupDictionary[collection.id],
+            geoconnexApp.searchLayerGroupDictionary[collection.id],
             geoconnexApp.trimString(collection.description)
           );
           geoconnexApp.layerControl.expand();
         }
         geoconnexApp.map.addLayer(
-          geoconnexApp.layerGroupDictionary[collection.id]
+          geoconnexApp.searchLayerGroupDictionary[collection.id]
         );
 
         // second deal with the actual item
@@ -835,7 +829,7 @@ let geoconnexApp = new Vue({
         });
         leafletLayer.setStyle(style);
         if (geojson.uri && group === geoconnexApp.selectedFeatureGroup) {
-          geoconnexApp.selectedItemLayers[geojson.uri] = leafletLayer;
+          geoconnexApp.selectedLayerGroupDictionary[geojson.uri] = leafletLayer;
         }
         if (group) {
           if (!group.hasLayer(leafletLayer)){
@@ -846,10 +840,10 @@ let geoconnexApp = new Vue({
           if (!geojson.collection) {
             geojson.collection = "Search Bounds";
           }
-          geoconnexApp.layerGroupDictionary[geojson.collection].addLayer(
+          geoconnexApp.searchLayerGroupDictionary[geojson.collection].addLayer(
             leafletLayer
           );
-          geoconnexApp.layerGroupDictionary[geojson.collection].uris.push(
+          geoconnexApp.searchLayerGroupDictionary[geojson.collection].uris.push(
             geojson.uri
           );
         }
@@ -920,11 +914,11 @@ let geoconnexApp = new Vue({
     clearMapOfSearches() {
       let geoconnexApp = this;
       geoconnexApp.searchFeatureGroup.clearLayers();
-      for (let key in geoconnexApp.layerGroupDictionary) {
+      for (let key in geoconnexApp.searchLayerGroupDictionary) {
         geoconnexApp.layerControl.removeLayer(
-          geoconnexApp.layerGroupDictionary[key]
+          geoconnexApp.searchLayerGroupDictionary[key]
         );
-        delete geoconnexApp.layerGroupDictionary[key];
+        delete geoconnexApp.searchLayerGroupDictionary[key];
       }
 
       geoconnexApp.hasSearches = false;
