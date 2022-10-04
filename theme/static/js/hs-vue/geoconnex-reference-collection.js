@@ -9,7 +9,7 @@ let geoconnexApp = new Vue({
       // Geoconnex collection and feature data structures
       collections: null,
       features: [],
-      selectedCollections: [],
+      collectionsSelectedToSearch: [],
       selectedReferenceFeatures: [],
 
       // Resource-level data
@@ -27,6 +27,7 @@ let geoconnexApp = new Vue({
       limitNumberOfFeaturesPerRequest: limitNumberOfFeaturesPerRequest,
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
       featureNameFieldMap: {
+        // Geoconnex features have different "name" fields depending on which collection the belong to
         nat_aq: "AQ_NAME",
         principal_aq: "AQ_NAME",
         dams: "name",
@@ -42,9 +43,10 @@ let geoconnexApp = new Vue({
       spatialExtentGroup: null,
       searchFeatureGroup: null,
       selectedFeatureGroup: null,
-      searchLayerGroupDictionary: {}, // dictionary of {collection.id, layerGroup}
-      selectedLayerDictionary: {}, // dictionary of {feature.uri, leafletLayer.id}
-      largeExtentWarningThreshold: 5e11, // sq meters
+      searchLayerGroupDictionary: {}, // dictionary of {collection.id, layerGroup} for layerGroups in searchFeatureGroup
+      selectedLayerDictionary: {}, // dictionary of {feature.uri, leafletLayer.id} for layers in selectedFeatureGroup
+      layerControl: null, // Leaflet layerControl
+      largeExtentWarningThreshold: 5e11, // square meter area above which warning is provided
       fitBoundsMaxZoom: 7,
       pointLat: 0,
       pointLong: 0,
@@ -53,15 +55,14 @@ let geoconnexApp = new Vue({
       southLat: null,
       westLong: null,
       bBox: null,
-      layerControl: null,
-      extentArea: null,
+      resSpatialExtentArea: null,
 
       // Messages and logging
       debug: false, // modifies log verbosity
       searchingDescription: "",
       searchResultString: "",
-      appMessages: [],
-      collectionMessages: [],
+      appMessages: [], // notifications displayed at top of App
+      collectionMessages: [], // notifications displayed below "Collection" autoselect
       log: console.log.bind(
         window.console,
         "%cGeoconnex:",
@@ -78,22 +79,24 @@ let geoconnexApp = new Vue({
         "color: white; background:blue;"
       ),
 
-      // State and utility
+      // State
       loadingRelations: true,
       loadingCollections: true,
-      lockCollections: false,
+      lockCollectionsInput: false,
       limitToSingleCollection: true,
       hasSearches: false,
+
+      // VUE utility
       collectionTypeahead: null,
       itemTypeahead: null,
       featureRules: null,
 
       // UI "theme"
-      stringLengthLimit: 30,
-      messageColor: "#c09853",
-      pointFillColor: "yellow",
-      searchColor: "orange",
-      selectColor: "purple",
+      stringLengthLimit: 30, // after which ellipse...
+      collectionMessageColor: "#c09853",
+      mappedPointFillColor: "yellow",
+      collectionSearchColor: "orange",
+      featureSelectColor: "purple",
       spatialExtentColor: "red",
     };
   },
@@ -101,20 +104,20 @@ let geoconnexApp = new Vue({
     hasSelections() {
       let geoconnexApp = this;
       return (
-        geoconnexApp.selectedCollections.length > 0 ||
+        geoconnexApp.collectionsSelectedToSearch.length > 0 ||
         geoconnexApp.selectedReferenceFeatures.length > 0
       );
     },
   },
   watch: {
-    async selectedCollections(newValue, oldValue) {
+    async collectionsSelectedToSearch(newValue, oldValue) {
       let geoconnexApp = this;
       let oldLength = oldValue ? oldValue.length : 0;
       let newLength = newValue ? newValue.length : 0;
 
       if (geoconnexApp.limitToSingleCollection) {
-        newLength == 1 && (geoconnexApp.lockCollections = true);
-        newLength == 0 && (geoconnexApp.lockCollections = false);
+        newLength == 1 && (geoconnexApp.lockCollectionsInput = true);
+        newLength == 0 && (geoconnexApp.lockCollectionsInput = false);
       }
       geoconnexApp.searchResultString = "";
       geoconnexApp.map.closePopup();
@@ -210,7 +213,7 @@ let geoconnexApp = new Vue({
           }
         });
       }
-    }
+    },
   },
   methods: {
     /* --------------------------------------------------
@@ -349,6 +352,7 @@ let geoconnexApp = new Vue({
       );
       geoconnexApp.loadingRelations = false;
     },
+
     /* --------------------------------------------------
     Fetch Request Methods
     -------------------------------------------------- */
@@ -399,10 +403,13 @@ let geoconnexApp = new Vue({
         const promises = [];
         for (collection of collections) {
           promises.push(
-            geoconnexApp.fetchFeaturesFromSingleCollectionInBbox(collection, bbox)
+            geoconnexApp.fetchFeaturesFromSingleCollectionInBbox(
+              collection,
+              bbox
+            )
           );
-          if (!geoconnexApp.selectedCollections.includes(collection)) {
-            geoconnexApp.selectedCollections.push(collection);
+          if (!geoconnexApp.collectionsSelectedToSearch.includes(collection)) {
+            geoconnexApp.collectionsSelectedToSearch.push(collection);
           }
         }
         let results = await Promise.all(promises);
@@ -571,6 +578,7 @@ let geoconnexApp = new Vue({
       }
       return fetchData;
     },
+
     /* --------------------------------------------------
     Mapping Methods
     -------------------------------------------------- */
@@ -598,7 +606,7 @@ let geoconnexApp = new Vue({
           (group = geoconnexApp.spatialExtentGroup),
           (interactive = false)
         );
-        geoconnexApp.extentArea = L.GeometryUtil.geodesicArea(
+        geoconnexApp.resSpatialExtentArea = L.GeometryUtil.geodesicArea(
           rect.getLatLngs()[0]
         ); //sq meters
       } catch (e) {
@@ -776,9 +784,9 @@ let geoconnexApp = new Vue({
               feature,
               (fit = false),
               {
-                color: geoconnexApp.searchColor,
+                color: geoconnexApp.collectionSearchColor,
                 radius: 5,
-                fillColor: geoconnexApp.pointFillColor,
+                fillColor: geoconnexApp.mappedPointFillColor,
                 fillOpacity: 0.8,
               },
               (group = geoconnexApp.searchFeatureGroup)
@@ -787,7 +795,7 @@ let geoconnexApp = new Vue({
             geoconnexApp.addToMap(
               feature,
               (fit = false),
-              { color: geoconnexApp.searchColor },
+              { color: geoconnexApp.collectionSearchColor },
               (group = geoconnexApp.searchFeatureGroup)
             );
           }
@@ -805,7 +813,7 @@ let geoconnexApp = new Vue({
     addToMap(
       geojson,
       fit = false,
-      style = { color: this.selectColor, radius: 5 },
+      style = { color: this.featureSelectColor, radius: 5 },
       group = null,
       interactive = true
     ) {
@@ -817,14 +825,14 @@ let geoconnexApp = new Vue({
             popupText += `<a href=${feature["uri"]}>${feature["uri"]}</a></br>`;
             if (
               geoconnexApp.resMode == "Edit" &&
-              style.color == geoconnexApp.searchColor
+              style.color == geoconnexApp.collectionSearchColor
             ) {
               popupText += `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-success map-add-geoconnex" data='${JSON.stringify(
                 feature
               )}'>Add feature to resource metadata</button>`;
             } else if (
               geoconnexApp.resMode == "Edit" &&
-              style.color == geoconnexApp.selectColor
+              style.color == geoconnexApp.featureSelectColor
             ) {
               popupText += `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-danger map-remove-geoconnex" data='${JSON.stringify(
                 feature
@@ -902,7 +910,7 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       geoconnexApp.fetchGeoconnexFeaturesInBbox(
         geoconnexApp.map.getBounds().toBBoxString(),
-        (collections = geoconnexApp.selectedCollections)
+        (collections = geoconnexApp.collectionsSelectedToSearch)
       );
     },
     mapDisplayNoFoundFeatures(bbox) {
@@ -931,7 +939,7 @@ let geoconnexApp = new Vue({
       }
 
       geoconnexApp.hasSearches = false;
-      geoconnexApp.selectedCollections = [];
+      geoconnexApp.collectionsSelectedToSearch = [];
       geoconnexApp.fitMapToFeatures();
       geoconnexApp.layerControl.collapse();
     },
@@ -1014,7 +1022,7 @@ let geoconnexApp = new Vue({
             geoconnexApp.fetchGeoconnexFeaturesContainingPoint(
               loc.lat,
               loc.long,
-              geoconnexApp.selectedCollections
+              geoconnexApp.collectionsSelectedToSearch
             );
           }
         );
@@ -1079,6 +1087,7 @@ let geoconnexApp = new Vue({
       }
       geoconnexApp.showingMap = true;
     },
+
     /* --------------------------------------------------
     Utility Methods
     -------------------------------------------------- */
