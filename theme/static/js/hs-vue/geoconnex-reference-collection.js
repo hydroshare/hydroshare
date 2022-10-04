@@ -42,8 +42,8 @@ let geoconnexApp = new Vue({
       spatialExtentGroup: null,
       searchFeatureGroup: null,
       selectedFeatureGroup: null,
-      searchLayerGroupDictionary: {}, //TODO: dictionary of {collection.id, layerGroup} 
-      selectedLayerGroupDictionary: {}, // dictionary of {feature.uri, leafletLayer.id}
+      searchLayerGroupDictionary: {}, // dictionary of {collection.id, layerGroup}
+      selectedLayerDictionary: {}, // dictionary of {feature.uri, leafletLayer.id}
       largeExtentWarningThreshold: 5e11, // sq meters
       fitBoundsMaxZoom: 7,
       pointLat: 0,
@@ -119,7 +119,7 @@ let geoconnexApp = new Vue({
         );
         try {
           geoconnexApp.selectedFeatureGroup.removeLayer(
-            geoconnexApp.selectedLayerGroupDictionary[remove[0].value]
+            geoconnexApp.selectedLayerDictionary[remove[0].value]
           );
           geoconnexApp.fitMapToFeatures();
         } catch (e) {
@@ -187,14 +187,16 @@ let geoconnexApp = new Vue({
         }
 
         if (newLength) {
-          for (let layer of remove) {
+          for (let collection of remove) {
             geoconnexApp.searchFeatureGroup.removeLayer(
-              geoconnexApp.searchLayerGroupDictionary[layer.id]
+              geoconnexApp.searchLayerGroupDictionary[collection.id]
             );
-            geoconnexApp.searchLayerGroupDictionary[layer.id].clearLayers();
+            geoconnexApp.searchLayerGroupDictionary[
+              collection.id
+            ].clearLayers();
 
             geoconnexApp.layerControl.removeLayer(
-              geoconnexApp.searchLayerGroupDictionary[layer.id]
+              geoconnexApp.searchLayerGroupDictionary[collection.id]
             );
           }
         } else {
@@ -262,7 +264,12 @@ let geoconnexApp = new Vue({
           feature.geometry = geometry.geometry;
         });
       }
-      geoconnexApp.addToMap(feature, fit=false, style=undefined, group=geoconnexApp.selectedFeatureGroup);
+      geoconnexApp.addToMap(
+        feature,
+        (fit = false),
+        (style = undefined),
+        (group = geoconnexApp.selectedFeatureGroup)
+      );
     },
     ajaxSaveFeatureToResMetadata(feature) {
       let geoconnexApp = this;
@@ -330,7 +337,9 @@ let geoconnexApp = new Vue({
 
       // remove all items currently not in the map search
       let keep = [];
-      for (const val of Object.values(geoconnexApp.searchLayerGroupDictionary)) {
+      for (const val of Object.values(
+        geoconnexApp.searchLayerGroupDictionary
+      )) {
         if (!val.uris.includes(undefined)) {
           keep = keep.concat(val.uris);
         }
@@ -739,7 +748,8 @@ let geoconnexApp = new Vue({
           !geoconnexApp.searchLayerGroupDictionary ||
           geoconnexApp.searchLayerGroupDictionary[collection.id] == undefined
         ) {
-          geoconnexApp.searchLayerGroupDictionary[collection.id] = L.layerGroup();
+          geoconnexApp.searchLayerGroupDictionary[collection.id] =
+            L.layerGroup();
           geoconnexApp.searchLayerGroupDictionary[collection.id].uris = [];
           geoconnexApp.layerControl.addOverlay(
             geoconnexApp.searchLayerGroupDictionary[collection.id],
@@ -829,12 +839,8 @@ let geoconnexApp = new Vue({
         });
         leafletLayer.setStyle(style);
         if (geojson.uri && group === geoconnexApp.selectedFeatureGroup) {
-          geoconnexApp.selectedLayerGroupDictionary[geojson.uri] = leafletLayer._leaflet_id;
-        }
-        if (group) {
-          if (!group.hasLayer(leafletLayer)){
-            group.addLayer(leafletLayer);
-          }
+          geoconnexApp.selectedLayerDictionary[geojson.uri] =
+            leafletLayer._leaflet_id;
         }
         if (group === geoconnexApp.searchFeatureGroup) {
           if (!geojson.collection) {
@@ -846,6 +852,9 @@ let geoconnexApp = new Vue({
           geoconnexApp.searchLayerGroupDictionary[geojson.collection].uris.push(
             geojson.uri
           );
+        }
+        if (group && !group.hasLayer(leafletLayer)) {
+          group.addLayer(leafletLayer);
         }
 
         // handle zooming
