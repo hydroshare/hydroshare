@@ -21,13 +21,13 @@
                 <div class="flex">
                     <i class="glyphicon glyphicon-info-sign"></i>
                     <em style="padding-right:20px;">
-                        If this resource is related to other geospatial resources, you can record those relationships by adding the items here.
+                        If this resource is related to other geospatial resources, you can record those relationships by adding the features here.
                         <strong><a href="https://geoconnex.internetofwater.dev/" target="_blank">Geoconnex</a></strong>,
                         a project of the <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
-                        provides collections of reference resources within the United States that might overlap with your resource.
+                        provides collections of reference features within the United States that might overlap with your resource.
                         For example, if this resource has spatial extent contained within an Eight-digit Hydrologic Subbasin, you could search the "HU08" collection <strong><span :style="`color: ${searchColor}`">(step #1)</span></strong>.
                         Once you found the specific related item, you could select it <strong><span :style="`color: ${selectColor}`">(step #2)</span></strong>, adding it to you resource metadata.
-                        A reference can alternatively be created by typing a URL that links to the related geospatial resource.
+                        A reference can alternatively be created by typing a URL that links to the related geospatial feature.
                         If you enter a URL, it will be converted to an active link. Adding these relations improves discoverability of your resource and contributes to
                         <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>.
                     </em>
@@ -36,7 +36,7 @@
             <div v-if="!resSpatialType && resMode=='Edit'" class="alert alert-warning alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                     aria-hidden="true">&times;</span></button>
-                <p>We highly recommend that you add Spatial Coverage to this resource before searching for related geospatial items. Otherwise query times can be excessive.</p>
+                <p>We highly recommend that you add Spatial Coverage to this resource before searching for related geospatial features. Otherwise query times can be excessive.</p>
             </div>
             <div v-if="extentArea > largeExtentWarningThreshold" class="alert alert-dismissible alert-warning" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -120,13 +120,13 @@
                                 </span>
                                 Feature options for step #2 have been limited to the collection ${ selectedCollections.length > 1 ? "s" : "" } you selected here
                             </div>
-                            <div v-show="items.length >= limitNumberOfItemsPerRequest">
+                            <div v-show="features.length >= limitNumberOfFeaturesPerRequest">
                                 <span data-toggle="tooltip" data-placement="auto"
-                                :title="`${ selectedCollections.map(a => a.id).join() } contains more than the limit (${ limitNumberOfItemsPerRequest } items).`"
+                                :title="`${ selectedCollections.map(a => a.id).join() } contains more than the limit (${ limitNumberOfFeaturesPerRequest } features).`"
                                 class="glyphicon glyphicon-info-sign text-muted"
                                 :style="`color: ${messageColor}`">
                                 </span>
-                                "${ selectedCollections.map(a => a.id).join() }" contains too many items. Only ${ limitNumberOfItemsPerRequest } items were mapped.
+                                "${ selectedCollections.map(a => a.id).join() }" contains too many features. Only ${ limitNumberOfFeaturesPerRequest } features were mapped.
                                 We recommend that you reduce your search extent. Or conduct a point search by clicking on the map.
                             </div>
                             <div v-show="searchResultString">
@@ -163,13 +163,13 @@
                             </div>
                         </div>
                         <v-combobox
-                            v-model="selectedReferenceItems"
+                            v-model="selectedReferenceFeatures"
                             :class="{
                                 'col-xs-12 col-md-8': resMode === 'View', 
                                 'col-xs-12': resMode === 'Edit',
-                                'opaque': !hasSearches && selectedReferenceItems.length === 0
+                                'opaque': !hasSearches && selectedReferenceFeatures.length === 0
                             }" 
-                            :items="items"
+                            :items="features"
                             hide-no-data
                             allow-overflow="false"
                             chips
@@ -178,7 +178,7 @@
                             outlined
                             hide-selected
                             :hide-no-data="!itemTypeahead"
-                            label="2. Select related items to add to resource metadata"
+                            label="2. Select related features to add to resource metadata"
                             placeholder="Type to narrow down options or select on the map"
                             :disabled="searchingDescription !==''"
                             :loading="loadingRelations"
@@ -262,9 +262,9 @@
                         </div>
                     </div>
                 {% else %}
-                    <div class="col-xs-12 col-lg-4 info-table-wrapper" v-if="searchingDescription =='' && selectedReferenceItems.length > 0">
+                    <div class="col-xs-12 col-lg-4 info-table-wrapper" v-if="searchingDescription =='' && selectedReferenceFeatures.length > 0">
                         <table class="table hs-table info-table">
-                            <tr v-for="value in selectedReferenceItems" style="padding-bottom: 20px">
+                            <tr v-for="value in selectedReferenceFeatures" style="padding-bottom: 20px">
                                 <td v-if="isUrl(value.value)" class="dataset-details">
                                     <a v-if="isUrl(value.value)" target="_blank" :href="value.value"> ${value.text}</a>
                                     <i class="fa fa-external-link"></i>
@@ -281,7 +281,7 @@
                     :class="{
                         'col-lg-8': resMode === 'View', 
                         'col-lg-6': resMode === 'Edit',
-                        'opaque': !hasSearches && selectedReferenceItems.length === 0
+                        'opaque': !hasSearches && selectedReferenceFeatures.length === 0
                     }" 
                     v-show="showingMap" 
                 >
@@ -294,7 +294,7 @@
                     <div id="geoconnex-leaflet"></div>
                     <div v-if="resMode === 'Edit'" id="geoconnex-leaflet-info" class="small text-muted">
                         <p v-if="searchResultString">Click a point to search for features that overlap with that location.</p>
-                        <p v-if="items.length > 0">Select a feature for more information.</p>
+                        <p v-if="features.length > 0">Select a feature for more information.</p>
                     </div>
                     
                 </div>
