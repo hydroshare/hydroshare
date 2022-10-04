@@ -42,8 +42,8 @@ let geoconnexApp = new Vue({
       spatialExtentGroup: null,
       searchFeatureGroup: null,
       selectedFeatureGroup: null,
-      searchLayerGroupDictionary: {}, //TODO: can we get rid of these?
-      selectedLayerGroupDictionary: {},
+      searchLayerGroupDictionary: {}, //TODO: dictionary of {collection.id, layerGroup} 
+      selectedLayerGroupDictionary: {}, // dictionary of {feature.uri, leafletLayer.id}
       largeExtentWarningThreshold: 5e11, // sq meters
       fitBoundsMaxZoom: 7,
       pointLat: 0,
@@ -829,7 +829,7 @@ let geoconnexApp = new Vue({
         });
         leafletLayer.setStyle(style);
         if (geojson.uri && group === geoconnexApp.selectedFeatureGroup) {
-          geoconnexApp.selectedLayerGroupDictionary[geojson.uri] = leafletLayer;
+          geoconnexApp.selectedLayerGroupDictionary[geojson.uri] = leafletLayer._leaflet_id;
         }
         if (group) {
           if (!group.hasLayer(leafletLayer)){
