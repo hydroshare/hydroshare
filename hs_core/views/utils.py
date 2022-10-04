@@ -734,8 +734,8 @@ def show_relations_section(res_obj):
 
     all_relation_count = res_obj.metadata.relations.count()
     has_part_count = res_obj.metadata.relations.filter(type=RelationTypes.hasPart).count()
-    has_generic_count = res_obj.metadata.relations.filter(type=RelationTypes.inspecificRelation).count()
-    if all_relation_count > (has_part_count + has_generic_count):
+    has_inspecific_count = res_obj.metadata.relations.filter(type=RelationTypes.relation).count()
+    if all_relation_count > (has_part_count + has_inspecific_count):
         return True
     return False
 

@@ -216,7 +216,7 @@ let geoconnexApp = new Vue({
       for (let relation of geoconnexApp.metadataRelations) {
         if (
           this.isUrl(relation.value) &&
-          relation.type === "inspecificRelation" &&
+          relation.type === "relation" &&
           relation.value.indexOf("geoconnex") > -1
         ) {
           promises.push(geoconnexApp.fetchSingleFeature(relation));
@@ -269,9 +269,7 @@ let geoconnexApp = new Vue({
       let geoconnexApp = this;
       let url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/add-metadata/`;
       let data = {
-        // We might later allow user to specify what type of relationship the resource has with the related Geoconnex item
-        // However for now, all relations are encoded into the metadata as "inspecific relations"
-        type: "inspecificRelation",
+        type: "relation",
         value: feature.uri ? feature.uri : feature,
       };
       $.ajax({

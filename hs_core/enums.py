@@ -20,5 +20,7 @@ class RelationTypes(str, enum.Enum):
     references = 'references'
     replaces = 'replaces'
     source = 'source'
-    inspecificRelation = 'inspecificRelation'
     isSimilarTo = 'isSimilarTo'
+    
+    # A "generic" related resource, http://purl.org/dc/terms/relation
+    relation = 'relation'
