@@ -1,0 +1,4 @@
+[submodule "hs_docker_base"]
+	path = hs_docker_base
+	url = https://github.com/hydroshare/hs_docker_base
+	branch = develop
