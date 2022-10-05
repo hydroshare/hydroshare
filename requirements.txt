@@ -1,0 +1,121 @@
+amqp
+# anyjson
+arrow
+autopep8
+bagit
+celery
+cffi
+click
+coreapi
+coverage
+cycler
+# defusedexpat needed
+defusedxml
+Django==3.2
+django-appconf
+django-autocomplete-light
+django-braces
+django-compressor
+django-contrib-comments
+django-cors-headers
+django-crispy-forms
+django-debug-toolbar
+django-freshly
+django-haystack
+django-heartbeat
+django-ipware
+django-jsonfield
+django-modeltranslation
+django-nose
+django-oauth-toolkit
+django-robots
+django-security
+django-test-without-migrations
+django-timedeltafield
+django-widget-tweaks
+djangorestframework
+docker-py
+dominate
+DoubleMetaphone
+drf-haystack
+drf-yasg
+ecdsa
+enum34
+filebrowser-safe
+flake8
+flex
+flower
+# google.foresite-toolkit
+funcsigs
+future
+geojson
+geopy
+gevent
+grappelli-safe
+gunicorn
+html5lib
+inflection
+django-inplaceedit
+isodate
+Jinja2
+jsonpointer
+jsonschema
+# keepalive
+kombu
+# lxml needed
+Markdown
+MarkupSafe
+matplotlib
+mccabe
+Mezzanine
+mock
+nameparser
+netCDF4
+nose
+nose-timer
+numpy
+oauthlib
+OWSLib
+paramiko
+pbr
+pep8
+prettytable
+probablepeople
+# psycopg2 needed
+ipaddress
+pyasn1
+pycodestyle
+PyCRS
+pyflakes
+pylint
+pyproj
+pysolr
+# pysqlite3
+pytest-django
+python-crfsuite
+python-dateutil
+python-irodsclient
+pytz
+PyYAML
+rcssmin
+rdflib
+redis
+requests
+rfc3987
+robot-detection
+selenium
+# suds-jurko
+timeago
+uritemplate
+virtualenv
+xmltodict
+
+# from dockerfile
+# https://github.com/hydroshare/hydroshare/blob/develop/Dockerfile
+deepdiff
+pytest-coverage
+git+https://github.com/hydroshare/hsmodels.git@0.5.3#egg=hsmodels
+sorl-thumbnail
+
+# added
+flake8
