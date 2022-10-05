@@ -480,7 +480,7 @@ class Party(AbstractMetaDataElement):
         party_type = self.get_class_term()
         party = BNode()
         graph.add((subject, party_type, party))
-        for field_term, field_value in self.get_field_terms_and_values(['identifiers']):
+        for field_term, field_value in self.get_field_terms_and_values(['identifiers', 'is_active_user']):
             # TODO: remove this once we are no longer concerned with backwards compatibility
             if field_term == HSTERMS.hydroshare_user_id:
                 graph.add((party, HSTERMS.description, field_value))
