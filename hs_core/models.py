@@ -450,6 +450,11 @@ class Party(AbstractMetaDataElement):
     address = models.CharField(max_length=250, null=True, blank=True)
     phone = models.CharField(max_length=25, null=True, blank=True)
     homepage = models.URLField(null=True, blank=True)
+
+    # flag to track if a creator/contributor is an active hydroshare user
+    # this flag is set by the system based on the field 'hydoshare_user_id'
+    is_active_user = models.BooleanField(default=False)
+
     # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default={})
@@ -536,6 +541,10 @@ class Party(AbstractMetaDataElement):
             identifiers = cls.validate_identifiers(identifiers)
             kwargs['identifiers'] = identifiers
 
+        hs_user_id = kwargs.get('hydroshare_user_id', '')
+        if hs_user_id:
+            validate_hydroshare_user_id(hs_user_id)
+
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
         if element_name == 'Creator':
@@ -560,10 +569,13 @@ class Party(AbstractMetaDataElement):
 
             if 'order' not in kwargs or kwargs['order'] is None:
                 kwargs['order'] = creator_order
-            party = super(Party, cls).create(**kwargs)
-        else:
-            party = super(Party, cls).create(**kwargs)
 
+        party = super(Party, cls).create(**kwargs)
+
+        if party.hydroshare_user_id:
+            user = User.objects.get(id=party.hydroshare_user_id)
+            party.is_active_user = user.is_active
+            party.save()
         return party
 
     @classmethod
@@ -571,11 +583,16 @@ class Party(AbstractMetaDataElement):
         """Define custom update method for Party model."""
         element_name = cls.__name__
         creator_order = None
+        set_active_user_flag = False
         if 'hydroshare_user_id' in kwargs:
             party = cls.objects.get(id=element_id)
             if party.hydroshare_user_id is not None and kwargs['hydroshare_user_id'] is not None:
                 if party.hydroshare_user_id != kwargs['hydroshare_user_id']:
                     raise ValidationError("HydroShare user identifier can't be changed.")
+
+            if (party.hydroshare_user_id is None and kwargs['hydroshare_user_id'] is not None) or \
+                    (party.hydroshare_user_id is not None and kwargs['hydroshare_user_id'] is None):
+                set_active_user_flag = True
 
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
@@ -589,6 +606,13 @@ class Party(AbstractMetaDataElement):
             kwargs['identifiers'] = identifiers
 
         party = super(Party, cls).update(element_id, **kwargs)
+        if set_active_user_flag:
+            if party.hydroshare_user_id is not None:
+                user = User.objects.get(id=party.hydroshare_user_id)
+                party.is_active_user = user.is_active
+            else:
+                party.is_active_user = False
+            party.save()
 
         if isinstance(party, Creator) and creator_order is not None:
             if party.order != creator_order:
@@ -617,12 +641,7 @@ class Party(AbstractMetaDataElement):
 
     @property
     def is_active(self):
-        from hs_core.hydroshare.utils import user_from_id
-        try:
-            user = user_from_id(self.hydroshare_user_id, raise404=False)
-            return user.is_active
-        except ObjectDoesNotExist:
-            return False
+        return self.is_active_user
 
     @classmethod
     def remove(cls, element_id):
