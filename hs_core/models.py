@@ -123,7 +123,9 @@ def validate_hydroshare_user_id(value):
     """Validate that a hydroshare_user_id is valid for a hydroshare user."""
     err_message = '%s is not a valid id for hydroshare user' % value
     if value:
-        if not isinstance(value, int):
+        try:
+            value = int(value)
+        except ValueError:
             raise ValidationError(err_message)
 
         # check the user exists for the provided user id
