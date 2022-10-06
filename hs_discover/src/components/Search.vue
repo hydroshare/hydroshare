@@ -11,6 +11,7 @@
                   v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></span>
             <span id="search-glass" class="fa fa-search inside-left"></span>
             <p class="table-message" v-if="noMatches()">No resource matches</p>
+            <a href="https://help.hydroshare.org/discovering-resources/discovering-data-and-models-from-hydroshare-users/field-based-search-in-discover/" target="_blank">Advanced search help</a>
         </div>
       </div>
     </div>

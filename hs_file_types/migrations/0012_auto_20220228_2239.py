@@ -15,47 +15,41 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.SeparateDatabaseAndState(
-            state_operations=[
-                migrations.CreateModel(
-                    name='OriginalCoverage',
-                    fields=[
-                        ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                        ('object_id', models.PositiveIntegerField()),
-                        ('_value', models.CharField(max_length=1024, null=True)),
-                        ('projection_string_type', models.CharField(choices=[('', '---------'), ('WKT String', 'WKT String'), ('Proj4 String', 'Proj4 String')], max_length=20, null=True)),
-                        ('projection_string_text', models.TextField(blank=True, null=True)),
-                        ('datum', models.CharField(blank=True, max_length=300)),
-                        ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='hs_file_types_originalcoverage_related', to='contenttypes.ContentType')),
-                    ],
-                    bases=(models.Model, hs_core.hs_rdf.RDF_Term_MixIn),
-                ),
-                migrations.CreateModel(
-                    name='Variable',
-                    fields=[
-                        ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                        ('object_id', models.PositiveIntegerField()),
-                        ('name', models.CharField(max_length=1000)),
-                        ('unit', models.CharField(max_length=1000)),
-                        ('type', models.CharField(choices=[('Char', 'Char'), ('Byte', 'Byte'), ('Short', 'Short'), ('Int', 'Int'), ('Float', 'Float'), ('Double', 'Double'), ('Int64', 'Int64'), ('Unsigned Byte', 'Unsigned Byte'), ('Unsigned Short', 'Unsigned Short'), ('Unsigned Int', 'Unsigned Int'), ('Unsigned Int64', 'Unsigned Int64'), ('String', 'String'), ('User Defined Type', 'User Defined Type'), ('Unknown', 'Unknown')], max_length=1000)),
-                        ('shape', models.CharField(max_length=1000)),
-                        ('descriptive_name', models.CharField(blank=True, max_length=1000, null=True, verbose_name='long name')),
-                        ('method', models.TextField(blank=True, null=True, verbose_name='comment')),
-                        ('missing_value', models.CharField(blank=True, max_length=1000, null=True)),
-                        ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='hs_file_types_variable_related', to='contenttypes.ContentType')),
-                    ],
-                    options={
-                        'abstract': False,
-                    },
-                    bases=(models.Model, hs_core.hs_rdf.RDF_Term_MixIn),
-                ),
-                migrations.AlterUniqueTogether(
-                    name='originalcoverage',
-                    unique_together=set([('content_type', 'object_id')]),
-                ),
-            ],
-            # prevent creating tables in DB - we will using the existing tables originally created for netcdf
-            # resource app
-            database_operations=[]
-        )
-    ]
+            migrations.CreateModel(
+                name='OriginalCoverage',
+                fields=[
+                    ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                    ('object_id', models.PositiveIntegerField()),
+                    ('_value', models.CharField(max_length=1024, null=True)),
+                    ('projection_string_type', models.CharField(choices=[('', '---------'), ('WKT String', 'WKT String'), ('Proj4 String', 'Proj4 String')], max_length=20, null=True)),
+                    ('projection_string_text', models.TextField(blank=True, null=True)),
+                    ('datum', models.CharField(blank=True, max_length=300)),
+                    ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='hs_file_types_originalcoverage_related', to='contenttypes.ContentType')),
+                ],
+                bases=(models.Model, hs_core.hs_rdf.RDF_Term_MixIn),
+            ),
+            migrations.CreateModel(
+                name='Variable',
+                fields=[
+                    ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                    ('object_id', models.PositiveIntegerField()),
+                    ('name', models.CharField(max_length=1000)),
+                    ('unit', models.CharField(max_length=1000)),
+                    ('type', models.CharField(choices=[('Char', 'Char'), ('Byte', 'Byte'), ('Short', 'Short'), ('Int', 'Int'), ('Float', 'Float'), ('Double', 'Double'), ('Int64', 'Int64'), ('Unsigned Byte', 'Unsigned Byte'), ('Unsigned Short', 'Unsigned Short'), ('Unsigned Int', 'Unsigned Int'), ('Unsigned Int64', 'Unsigned Int64'), ('String', 'String'), ('User Defined Type', 'User Defined Type'), ('Unknown', 'Unknown')], max_length=1000)),
+                    ('shape', models.CharField(max_length=1000)),
+                    ('descriptive_name', models.CharField(blank=True, max_length=1000, null=True, verbose_name='long name')),
+                    ('method', models.TextField(blank=True, null=True, verbose_name='comment')),
+                    ('missing_value', models.CharField(blank=True, max_length=1000, null=True)),
+                    ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='hs_file_types_variable_related', to='contenttypes.ContentType')),
+                ],
+                options={
+                    'abstract': False,
+                },
+                bases=(models.Model, hs_core.hs_rdf.RDF_Term_MixIn),
+            ),
+            migrations.AlterUniqueTogether(
+                name='originalcoverage',
+                unique_together=set([('content_type', 'object_id')]),
+            ),
+        ]
+

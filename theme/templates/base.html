@@ -40,7 +40,12 @@
 <script type="text/javascript" src="{% static 'js/bootstrap.3.0.2.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/bootstrap-extras.js' %}"></script>
 
-{% block extra_js %}{% endblock %}
+{% block extra_js %}
+<script>
+    const ROUTE_NAME = "{{ request.resolver_match.url_name|default_if_none:'' }}";
+</script>
+{% endblock %}
+
 {% endcompress %}
 {% include 'autocomplete_light/static.html' %}
 
