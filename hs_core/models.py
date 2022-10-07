@@ -585,16 +585,11 @@ class Party(AbstractMetaDataElement):
         """Define custom update method for Party model."""
         element_name = cls.__name__
         creator_order = None
-        set_active_user_flag = False
         if 'hydroshare_user_id' in kwargs:
             party = cls.objects.get(id=element_id)
             if party.hydroshare_user_id is not None and kwargs['hydroshare_user_id'] is not None:
                 if party.hydroshare_user_id != kwargs['hydroshare_user_id']:
                     raise ValidationError("HydroShare user identifier can't be changed.")
-
-            if (party.hydroshare_user_id is None and kwargs['hydroshare_user_id'] is not None) or \
-                    (party.hydroshare_user_id is not None and kwargs['hydroshare_user_id'] is None):
-                set_active_user_flag = True
 
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
@@ -608,13 +603,13 @@ class Party(AbstractMetaDataElement):
             kwargs['identifiers'] = identifiers
 
         party = super(Party, cls).update(element_id, **kwargs)
-        if set_active_user_flag:
-            if party.hydroshare_user_id is not None:
-                user = User.objects.get(id=party.hydroshare_user_id)
-                party.is_active_user = user.is_active
-            else:
-                party.is_active_user = False
-            party.save()
+
+        if party.hydroshare_user_id is not None:
+            user = User.objects.get(id=party.hydroshare_user_id)
+            party.is_active_user = user.is_active
+        else:
+            party.is_active_user = False
+        party.save()
 
         if isinstance(party, Creator) and creator_order is not None:
             if party.order != creator_order:
