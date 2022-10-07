@@ -6,6 +6,7 @@ let geoconnexApp = new Vue({
   vuetify: new Vuetify(),
   data() {
     return {
+      isLoading: false,
       // Geoconnex collection and feature data structures
       collections: null,
       features: [],
@@ -1183,7 +1184,8 @@ let geoconnexApp = new Vue({
   },
   async mounted() {
     // TODO: artifacts / bits of text/elements are shown during initial load of page (less than 1 sec)
-    let geoconnexApp = this;
+    const geoconnexApp = this;
+    geoconnexApp.isLoading = true
     if (geoconnexApp.resMode == "Edit") {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       geoconnexApp.initializeLeafletMap();
@@ -1192,7 +1194,7 @@ let geoconnexApp = new Vue({
       geoconnexApp.loadResourceMetadataRelations();
 
       // wait for spatial coverage map to load before getting extent
-      geoconnexApp
+      await geoconnexApp
         .until((_) => coverageMap)
         .then(() => {
           geoconnexApp.updateAppWithResSpatialExtent();
@@ -1206,5 +1208,6 @@ let geoconnexApp = new Vue({
       await geoconnexApp.loadResourceMetadataRelations();
       geoconnexApp.loadingCollections = false;
     }
+    geoconnexApp.isLoading = false
   },
 });

@@ -33,7 +33,7 @@
                     </em>
                 </div>
             </div>
-            <div v-if="!resSpatialType && resMode=='Edit'" class="alert alert-warning alert-dismissible mb-1" role="alert">
+            <div v-if="!isLoading && !resSpatialType && resMode=='Edit'" class="alert alert-warning alert-dismissible mb-1" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                     aria-hidden="true">&times;</span></button>
                 <p>We highly recommend that you add Spatial Coverage to this resource before searching for related geospatial features. Otherwise query times can be excessive.</p>
@@ -69,11 +69,13 @@
                         <v-autocomplete
                             :menu-props="{closeOnClick: true, closeOnContentClick: true}"
                             :readonly="lockCollectionsInput"
+                            class="mb-4"
                             v-model="collectionsSelectedToSearch"
                             :items="collections"
                             :item-text="item => item.description"
                             :hide-no-data="!collectionTypeahead"
                             multiple
+                            :loading="isLoading"
                             placeholder="Type to narrow down options or select from the list"
                             :label="limitToSingleCollection ? '1. Choose a collection to search' : '1. Choose collections to search'"
                             :disabled="loadingCollections || searchingDescription !==''"
@@ -111,12 +113,9 @@
                                     <span v-show="!loadingCollections && searchingDescription==''" @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
                                     </v-chip>
                                 </template>
-                                <template v-slot:message>
-                                    
-                                </template>
                         </v-autocomplete>
 
-                        <div class="small text-muted mt-2 my-4" :style="`color: ${collectionMessageColor}`">
+                        <div v-if="!isLoading" class="small text-muted mt-2 my-4" :style="`color: ${collectionMessageColor}`">
                             <div v-show="hasSearches && !searchResultString && searchingDescription ==''">
                                 <span data-toggle="tooltip" data-placement="auto"
                                 :title="`Feature options for step #2 have been limited to the collection ${ collectionsSelectedToSearch.length > 1 ? 's' : '' } you selected here.`"
@@ -167,8 +166,10 @@
                                 ${ message }
                             </div>
                         </div>
+
                         <v-combobox
                             v-model="selectedReferenceFeatures"
+                            class="my-8"
                             :class="{
                                 'col-xs-12 col-md-8': resMode === 'View', 
                                 'col-xs-12': resMode === 'Edit',
@@ -183,6 +184,7 @@
                             outlined
                             hide-selected
                             :hide-no-data="!itemTypeahead"
+                            :loading="isLoading"
                             label="2. Select related features to add to resource metadata"
                             placeholder="Type to narrow down options or select on the map"
                             :disabled="searchingDescription !==''"
@@ -231,6 +233,7 @@
                                 </div>
                             </template>
                         </v-combobox>
+
                         <div id="geoconnex-controls" class="flex">
                             <div v-show="!showingMap">
                                 <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>
@@ -305,7 +308,7 @@
 {% endif %}
 
 {% block extra_js %}
-    <script defer src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
-    <script defer src="https://unpkg.com/vuetify@2.6.4/dist/vuetify.min.js"></script>
-    <script defer type="text/javascript" src="{% static 'js/hs-vue/geoconnex-reference-collection.js' %}"></script>
+    <script src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/vuetify@2.6.4/dist/vuetify.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/hs-vue/geoconnex-reference-collection.js' %}"></script>
 {% endblock %}
