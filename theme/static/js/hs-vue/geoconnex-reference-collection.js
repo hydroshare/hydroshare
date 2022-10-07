@@ -811,21 +811,21 @@ let geoconnexApp = new Vue({
         let leafletLayer = L.geoJSON(geojson, {
           onEachFeature: function (feature, layer) {
             let popupText = `<h4>${feature.text}</h4>`;
-            popupText += `<a href=${feature["uri"]}>${feature["uri"]}</a></br>`;
+            popupText += `<a href=${feature["uri"]}>${feature["uri"]}</a></br></br>`;
             if (
               geoconnexApp.resMode == "Edit" &&
               style.color == geoconnexApp.collectionSearchColor
             ) {
               popupText += `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-success map-add-geoconnex" data='${JSON.stringify(
                 feature
-              )}'>Add feature to resource metadata</button>`;
+              )}'><i class="fa fa-plus"></i> Add Feature</button>`;
             } else if (
               geoconnexApp.resMode == "Edit" &&
               style.color == geoconnexApp.featureSelectColor
             ) {
               popupText += `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-danger map-remove-geoconnex" data='${JSON.stringify(
                 feature
-              )}'>Remove feature from resource metadata</button>`;
+              )}'>Remove Feature</button>`;
             }
             layer.bindPopup(popupText, { maxWidth: 400 });
           },

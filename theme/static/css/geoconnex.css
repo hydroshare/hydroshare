@@ -4,8 +4,8 @@
   gap: 2rem;
 }
 
-#app-geoconnex div.v-application {
-  margin-top: 20px;
+#geoconnex-message-wrapper {
+  margin-bottom: 1rem;
 }
 
 #app-geoconnex .v-application--wrap {
@@ -30,12 +30,7 @@
   flex-direction: row;
 }
 
-.negative-top {
-  margin-top: -3rem;
-  margin-bottom: 3rem;
-}
-
-#app-geoconnex .opaque {
+#app-geoconnex .opaque #geoconnex-leaflet {
   opacity: 0.4;
   filter: alpha(opacity=40);
   pointer-events: none;
@@ -62,6 +57,8 @@
 
 #geoconnex-leaflet {
   height: 400px;
+  border: 1px solid #DDD;
+  margin-bottom: 1rem;
 }
 
 .leaflet-control-container,
