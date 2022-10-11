@@ -989,10 +989,11 @@ let geoconnexApp = new Vue({
       var popup = L.popup({ maxWidth: 400 });
 
       function onMapClick(e) {
+        if (! geoconnexApp.hasSearches ) return;
         let loc = { lat: e.latlng.lat, long: e.latlng.lng };
         let content = `<button class="btn btn-default leaflet-point-search" style="border-color:${geoconnexApp.collectionSearchColor}" data='${JSON.stringify(
           loc
-        )}'><i class="fa fa-search"></i>Search for features containing this point</button>`;
+        )}'><i class="fa fa-search"></i>Find features containing this point</button>`;
         popup.setLatLng(e.latlng).setContent(content).openOn(geoconnexApp.map);
       }
 
