@@ -267,7 +267,7 @@
                         <p v-if="searchResultString">Click a point to search for features that overlap with that location.</p>
                         <p v-if="features.length > 0">Select a feature for more information.</p>
                     </div>
-                    <div id="geoconnex-controls" class="flex">
+                    <div v-if="resMode === 'Edit'" id="geoconnex-controls" class="flex">
                         <div v-show="!showingMap">
                             <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>
                                 <i class="fa fa-globe"></i>Select With Map

@@ -662,12 +662,11 @@ let geoconnexApp = new Vue({
       let overlayMaps = {
         "Selected Features": geoconnexApp.selectedFeatureGroup,
       };
+      overlayMaps["Resource Spatial Extent"] = geoconnexApp.spatialExtentGroup;
+      geoconnexApp.map.addLayer(geoconnexApp.spatialExtentGroup);
       if (geoconnexApp.resMode == "Edit") {
         overlayMaps["Search (all features)"] = geoconnexApp.searchFeatureGroup;
-        overlayMaps["Resource Spatial Extent"] =
-          geoconnexApp.spatialExtentGroup;
         geoconnexApp.map.addLayer(geoconnexApp.searchFeatureGroup);
-        geoconnexApp.map.addLayer(geoconnexApp.spatialExtentGroup);
       }
       L.control
         .zoom({
@@ -935,12 +934,11 @@ let geoconnexApp = new Vue({
     },
     updateSpatialExtentType() {
       let geoconnexApp = this;
+      geoconnexApp.resSpatialType = null;
       let spatial_coverage_drawing = $("#coverageMap .leaflet-interactive");
       if (spatial_coverage_drawing.size() > 0) {
         let checked = $("#div_id_type input:checked").val();
-        geoconnexApp.resSpatialType = checked;
-      } else {
-        geoconnexApp.resSpatialType = null;
+        geoconnexApp.resSpatialType = checked || spatial_coverage_type
       }
     },
     updateAppWithResSpatialExtent() {
@@ -963,10 +961,10 @@ let geoconnexApp = new Vue({
         geoconnexApp.showSpatialExtent();
       } else if (geoconnexApp.resSpatialType == "box") {
         geoconnexApp.log("Setting box spatial extent");
-        geoconnexApp.northLat = $("#id_northlimit").val();
-        geoconnexApp.eastLong = $("#id_eastlimit").val();
-        geoconnexApp.southLat = $("#id_southlimit").val();
-        geoconnexApp.westLong = $("#id_westlimit").val();
+        geoconnexApp.northLat = $("#id_northlimit").val() || parseFloat($('#cov_northlimit').text().replace(/[^\d.-]/g, ''));
+        geoconnexApp.eastLong = $("#id_eastlimit").val() || parseFloat($('#cov_eastlimit').text().replace(/[^\d.-]/g, ''));
+        geoconnexApp.southLat = $("#id_southlimit").val() || parseFloat($('#cov_southlimit').text().replace(/[^\d.-]/g, ''));
+        geoconnexApp.westLong = $("#id_westlimit").val() || parseFloat($('#cov_westlimit').text().replace(/[^\d.-]/g, ''));
 
         geoconnexApp.bBox = [
           geoconnexApp.eastLong,
@@ -1186,15 +1184,14 @@ let geoconnexApp = new Vue({
   async mounted() {
     // TODO: change formatting for the "multiple" collections -- use a standard dropdown? No Chip + extend selection?
     // TODO: change the marker for point coverage
-    // TODO: spatial extent not showing in view mode
 
     const geoconnexApp = this;
     geoconnexApp.isLoading = true
-    if (geoconnexApp.resMode == "Edit") {
+    if (geoconnexApp.resMode == "Edit" || geoconnexApp.metadataRelations.length > 0) {
       geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
       geoconnexApp.initializeLeafletMap();
 
-      geoconnexApp.fetchCollections(false);
+      geoconnexApp.resMode == "Edit" && geoconnexApp.fetchCollections(false);
       geoconnexApp.loadResourceMetadataRelations();
 
       // wait for spatial coverage map to load before getting extent
@@ -1203,14 +1200,6 @@ let geoconnexApp = new Vue({
         .then(() => {
           geoconnexApp.updateAppWithResSpatialExtent();
         });
-    } else if (
-      geoconnexApp.resMode == "View" &&
-      geoconnexApp.metadataRelations.length > 0
-    ) {
-      geoconnexApp.geoCache = await caches.open(geoconnexApp.cacheName);
-      geoconnexApp.initializeLeafletMap();
-      await geoconnexApp.loadResourceMetadataRelations();
-      geoconnexApp.loadingCollections = false;
     }
     geoconnexApp.isLoading = false
   },
