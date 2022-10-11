@@ -290,9 +290,17 @@ $(document).ready(function () {
     $("#agree-chk-download-bag").on('click', function(e) {
         e.stopImmediatePropagation();
         if (e.currentTarget.checked)
-            $('#download-bag-btn').removeAttr('disabled');
+            $('#download-bag-btn').removeClass("disabled");
         else
-            $('#download-bag-btn').attr('disabled', 'disabled');
+            $('#download-bag-btn').toggleClass("disabled", true);
+    });
+
+    $("#download-bag-cancel").on('click', function(e) {
+        $('#btn-download-all').removeClass('disabled');
+        $("#btn-download-all").css("cursor", "auto");
+        $(".download-spinner").remove();
+        $("#agree-chk-download-bag").prop( "checked", false );
+        $("#download-bag-btn").addClass('disabled');
     });
 
     $("#agree-chk-download-file").on('click', function(e) {

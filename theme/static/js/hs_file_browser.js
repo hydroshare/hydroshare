@@ -1794,21 +1794,20 @@ $(document).ready(function () {
         }
         $(event.currentTarget).toggleClass("disabled", true);
         const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
-
-        if (!bagUrl) {
-            return; // If no url, it means download will be triggered from Agreement modal
+        const dataAgree = $("#btn-download-all").attr("data-toggle") === "modal";
+        if (dataAgree && event.currentTarget.id !== "download-bag-btn") {
+            return; // download will be triggered from Agreement modal
         }
-
         $.ajax({
             type: "GET",
             url: bagUrl,
-            success: function (task) {
-                notificationsApp.registerTask(task);
-                notificationsApp.show();
-                $(event.currentTarget).toggleClass("disabled", false);
-                $("#btn-download-all").css("cursor", "auto");
-                $(".download-spinner").remove();
-            }
+        }).done(function (task) {
+            notificationsApp.registerTask(task);
+            notificationsApp.show();
+        }).always((event)=>{
+            $("#btn-download-all").toggleClass("disabled", false);
+            $("#btn-download-all").css("cursor", "auto");
+            $(".download-spinner").remove();
         });
     });
     if (!$("#hs-file-browser").length) {
