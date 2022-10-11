@@ -94,11 +94,11 @@ let geoconnexApp = new Vue({
 
       // UI "theme"
       stringLengthLimit: 30, // after which ellipse...
-      collectionMessageColor: "#c09853",
-      mappedPointFillColor: "yellow",
+      collectionMessageColor: "orange",
+      mappedPointFillColor: "orange",
       collectionSearchColor: "orange",
-      featureSelectColor: "purple",
-      spatialExtentColor: "red",
+      featureSelectColor: "black",
+      spatialExtentColor: "blue",
     };
   },
   watch: {
@@ -990,9 +990,9 @@ let geoconnexApp = new Vue({
 
       function onMapClick(e) {
         let loc = { lat: e.latlng.lat, long: e.latlng.lng };
-        let content = `<button type="button" class="white--text text-none v-btn v-btn--has-bg theme--light v-size--small btn btn-success leaflet-point-search" data='${JSON.stringify(
+        let content = `<button class="btn btn-default leaflet-point-search" style="border-color:${geoconnexApp.collectionSearchColor}" data='${JSON.stringify(
           loc
-        )}'>Search for features containing this point</button>`;
+        )}'><i class="fa fa-search"></i>Search for features containing this point</button>`;
         popup.setLatLng(e.latlng).setContent(content).openOn(geoconnexApp.map);
       }
 
@@ -1184,8 +1184,8 @@ let geoconnexApp = new Vue({
   },
   async mounted() {
     // TODO: change formatting for the "multiple" collections -- use a standard dropdown? No Chip + extend selection?
-    // TODO: collors gray/black and then green? for the layers
     // TODO: change the marker for point coverage
+    // TODO: spatial extent not showing in view mode
 
     const geoconnexApp = this;
     geoconnexApp.isLoading = true
