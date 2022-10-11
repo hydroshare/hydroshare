@@ -49,6 +49,7 @@ let geoconnexApp = new Vue({
       layerControl: null, // Leaflet layerControl
       largeExtentWarningThreshold: 5e11, // square meter area above which warning is provided
       fitBoundsMaxZoom: 7,
+      expandLayerControlOnAdd: false,
       pointLat: 0,
       pointLong: 0,
       northLat: null,
@@ -773,7 +774,8 @@ let geoconnexApp = new Vue({
             geoconnexApp.searchLayerGroupDictionary[collection.id],
             geoconnexApp.trimString(collection.description)
           );
-          geoconnexApp.layerControl.expand();
+          
+          geoconnexApp.expandLayerControlOnAdd && geoconnexApp.layerControl.expand();
         }
         geoconnexApp.map.addLayer(
           geoconnexApp.searchLayerGroupDictionary[collection.id]
@@ -1206,8 +1208,6 @@ let geoconnexApp = new Vue({
     this.setCustomFeatureRules();
   },
   async mounted() {
-    // TODO: change formatting for the "multiple" collections -- use a standard dropdown? No Chip + extend selection?
-
     const geoconnexApp = this;
     geoconnexApp.isLoading = true
     if (geoconnexApp.resMode == "Edit" || geoconnexApp.metadataRelations.length > 0) {

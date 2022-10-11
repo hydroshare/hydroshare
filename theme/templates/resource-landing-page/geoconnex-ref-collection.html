@@ -71,7 +71,7 @@
                             :readonly="lockCollectionsInput"
                             v-model="collectionsSelectedToSearch"
                             :items="collections"
-                            :item-text="item => item.description"
+                            :item-text="item => `${item.description} (${item.id})`"
                             :hide-no-data="!collectionTypeahead"
                             multiple
                             :loading="isLoading"
@@ -105,13 +105,29 @@
                                     </v-list-item>
                                 </template>
                                 <template v-slot:selection="{ attrs, item, parent, selected }">
-                                    <v-chip v-bind="attrs" :input-value="selected" :color="collectionSearchColor" label outlined large>
-                                        <span class="text-truncate">
-                                            ${ item.description }
+                                    <div v-if="limitToSingleCollection" :style="`color: ${collectionSearchColor}`" class="text-truncate">
+                                        <span v-bind="attrs" :input-value="selected" class="text-truncate" :color="collectionSearchColor">
+                                            ${ item.description } (${item.id})
                                         </span>
-                                    <span v-show="!loadingCollections && searchingDescription==''" @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
+                                    </div>
+                                    <v-chip v-else v-bind="attrs" :input-value="selected" :color="collectionSearchColor" label outlined large>
+                                        <span class="text-truncate" :color="collectionSearchColor">
+                                            ${ item.description } (${item.id})
+                                        </span>
+                                    <span v-show="!loadingCollections && searchingDescription==''" @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle"></span>
                                     </v-chip>
                                 </template>
+                                <template v-if="limitToSingleCollection && hasSearches" v-slot:append>
+                                    <v-slide-x-reverse-transition
+                                      mode="out-in"
+                                    >
+                                      <span
+                                        :key="`icon-${hasSearches}`"
+                                        v-show="!loadingCollections && searchingDescription==''"
+                                        @click="clearMapOfSearches" class="glyphicon glyphicon-remove-circle text-muted"
+                                      ></span>
+                                    </v-slide-x-reverse-transition>
+                                  </template>
                         </v-autocomplete>
 
                         <div v-if="!isLoading" class="small text-muted mt-2 my-4" :style="`color: ${collectionMessageColor}`">
@@ -218,7 +234,7 @@
                                     <span class="text-truncate">
                                         ${ item.text }
                                     </span>
-                                    <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle text-muted"></span>
+                                    <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle"></span>
                                 </v-chip>
                             </template>
                             <template v-slot:message="rulesMessage">

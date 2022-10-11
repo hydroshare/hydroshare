@@ -24,6 +24,15 @@
   font-size: 1.5rem;
 }
 
+#app-geoconnex .glyphicon-remove-circle{
+  color: rgb(217, 83, 79);
+  cursor: pointer;
+}
+
+#app-geoconnex .glyphicon-remove-circle.text-muted{
+  color: #999;
+}
+
 #geoconnex-controls {
   justify-content: flex-start !important;
   flex-wrap: wrap;
