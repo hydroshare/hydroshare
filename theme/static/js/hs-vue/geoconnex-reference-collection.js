@@ -1184,11 +1184,8 @@ let geoconnexApp = new Vue({
   },
   async mounted() {
     // TODO: change formatting for the "multiple" collections -- use a standard dropdown? No Chip + extend selection?
-    // TODO: only show "search within map bounds" when there is spatial coverage?
-    // TODO: update the button text so that it is shorter (remove collection name)
     // TODO: collors gray/black and then green? for the layers
     // TODO: change the marker for point coverage
-    // TODO: move button below map
 
     const geoconnexApp = this;
     geoconnexApp.isLoading = true

@@ -69,7 +69,6 @@
                         <v-autocomplete
                             :menu-props="{closeOnClick: true, closeOnContentClick: true}"
                             :readonly="lockCollectionsInput"
-                            class="mb-4"
                             v-model="collectionsSelectedToSearch"
                             :items="collections"
                             :item-text="item => item.description"
@@ -169,7 +168,7 @@
 
                         <v-combobox
                             v-model="selectedReferenceFeatures"
-                            class="my-8"
+                            class="mt-8"
                             :class="{
                                 'col-xs-12 col-md-8': resMode === 'View', 
                                 'col-xs-12': resMode === 'Edit',
@@ -233,36 +232,6 @@
                                 </div>
                             </template>
                         </v-combobox>
-
-                        <div id="geoconnex-controls" class="flex">
-                            <div v-show="!showingMap">
-                                <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>
-                                    <i class="fa fa-globe"></i>Select With Map
-                                </button>
-                                <span data-toggle="tooltip" data-placement="auto"
-                                title='Shows additional map that you can use to query and view related geospatial features'
-                                class="glyphicon glyphicon-info-sign text-muted">
-                                </span>
-                            </div>
-                            <div v-show="showingMap && hasSearches && searchingDescription ==''">
-                                <button @click="searchForFeaturesUsingVisibleMapBounds" class="btn btn-default" :style="`border-color:${collectionSearchColor}`" depressed small>
-                                    <i class="fa fa-search"></i>Search "${ collectionsSelectedToSearch.map(a => a.id).join() }" using visible map bounds
-                                </button>
-                                <span data-toggle="tooltip" data-placement="auto"
-                                    title="Search within the visible boundaries of the map, instead of using spatial extent. Zooming in will reduce the search area."
-                                    class="glyphicon glyphicon-info-sign text-muted"
-                                ></span>
-                            </div>
-                            <!-- <div v-show="hasSearches && searchingDescription ==''">
-                                <button @click="clearMapOfSearches" class="btn btn-default" :style="`border-color:${collectionSearchColor}`" depressed small>
-                                    <i class="fa fa-search-minus"></i>Clear Search
-                                </button>
-                                <span data-toggle="tooltip" data-placement="auto"
-                                    title="Clear unselected spatial features"
-                                    class="glyphicon glyphicon-info-sign text-muted"
-                                ></span>
-                            </div> -->
-                        </div>
                     </div>
                 {% else %}
                     <div class="col-xs-12 col-lg-4 info-table-wrapper" v-if="searchingDescription =='' && selectedReferenceFeatures.length > 0">
@@ -285,22 +254,53 @@
                         'col-lg-8': resMode === 'View', 
                         'col-lg-6': resMode === 'Edit',
                         'opaque': !hasSearches && selectedReferenceFeatures.length === 0
-                    }" 
-                    v-show="showingMap">
+                    }" >
                     <v-progress-linear
+                        v-show="showingMap"
                         :active="true"
                         v-if="searchingDescription !==''"
                         indeterminate
                         :color="collectionSearchColor"
                     ></v-progress-linear>
-                    <div id="geoconnex-leaflet"></div>
-                    <div v-if="resMode === 'Edit'" id="geoconnex-leaflet-info" class="small text-muted">
+                    <div v-show="showingMap" id="geoconnex-leaflet"></div>
+                    <div v-if="resMode === 'Edit' && showingMap" id="geoconnex-leaflet-info" class="small text-muted">
                         <p v-if="searchResultString">Click a point to search for features that overlap with that location.</p>
                         <p v-if="features.length > 0">Select a feature for more information.</p>
                     </div>
-                    <button @click="toggleMapVisibility" class="btn btn-default">
-                        <i class="fa fa-minus"></i>Hide Map
-                    </button>
+                    <div id="geoconnex-controls" class="flex">
+                        <div v-show="!showingMap">
+                            <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>
+                                <i class="fa fa-globe"></i>Select With Map
+                            </button>
+                            <span data-toggle="tooltip" data-placement="auto"
+                            title='Shows additional map that you can use to query and view related geospatial features'
+                            class="glyphicon glyphicon-info-sign text-muted">
+                            </span>
+                        </div>
+                        <div v-show="showingMap">
+                            <button @click="toggleMapVisibility" class="btn btn-default">
+                                <i class="fa fa-minus"></i>Hide Map
+                            </button>
+                        </div>
+                        <div v-show="resSpatialType && showingMap && hasSearches && searchingDescription ==''">
+                            <button @click="searchForFeaturesUsingVisibleMapBounds" class="btn btn-default" :style="`border-color:${collectionSearchColor}`" depressed small>
+                                <i class="fa fa-search"></i>Search using visible map bounds
+                            </button>
+                            <span data-toggle="tooltip" data-placement="auto"
+                                title="Search within the visible boundaries of the map, instead of using spatial extent. Zooming in will reduce the search area."
+                                class="glyphicon glyphicon-info-sign text-muted"
+                            ></span>
+                        </div>
+                        <!-- <div v-show="hasSearches && searchingDescription ==''">
+                            <button @click="clearMapOfSearches" class="btn btn-default" :style="`border-color:${collectionSearchColor}`" depressed small>
+                                <i class="fa fa-search-minus"></i>Clear Search
+                            </button>
+                            <span data-toggle="tooltip" data-placement="auto"
+                                title="Clear unselected spatial features"
+                                class="glyphicon glyphicon-info-sign text-muted"
+                            ></span>
+                        </div> -->
+                    </div>
                 </div>
             </div>
         </v-app>
