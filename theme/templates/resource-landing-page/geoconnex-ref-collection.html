@@ -65,7 +65,7 @@
         <v-app>
             <div class="row">
                 {% if resource_edit_mode %}
-                    <div class="col-xs-12" :class="{'col-lg-6': showingMap}" id="geoconnex-controls-wrapper">
+                    <div class="col-xs-12" :class="{'col-lg-4': showingMap}" id="geoconnex-controls-wrapper">
                         <v-autocomplete
                             :menu-props="{closeOnClick: true, closeOnContentClick: true}"
                             :readonly="lockCollectionsInput"
@@ -265,10 +265,8 @@
 
                 <div 
                     id="geoconnex-map-wrapper"
-                    class="col-xs-12"
+                    class="col-xs-12 col-lg-8"
                     :class="{
-                        'col-lg-8': resMode === 'View', 
-                        'col-lg-6': resMode === 'Edit',
                         'opaque': !hasSearches && selectedReferenceFeatures.length === 0
                     }" >
                     <v-progress-linear
