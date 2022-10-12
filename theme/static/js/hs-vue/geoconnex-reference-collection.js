@@ -1,4 +1,5 @@
 //TODO: we decided to not render any features if there are too many seems this stops at 5000 which I think is confusing, seeing a have rendered map?
+//TODO: ensure new styles aren't breaking bootstrap width etc
 const limitNumberOfFeaturesPerRequest = 5000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
 let geoconnexApp = new Vue({
