@@ -50,9 +50,10 @@ let geoconnexApp = new Vue({
       selectedLayerDictionary: {}, // dictionary of {feature.uri, leafletLayer.id} for layers in selectedFeatureGroup
       layerControl: null, // Leaflet layerControl
       largeExtentWarningThreshold: 5e11, // square meter area above which warning is provided
-      fitBoundsMaxZoom: 7,
+      fitBoundsMaxZoom: 9,
       expandLayerControlOnAdd: false,
-      shouldFitMap: false,
+      shouldFitMapAfterAddingLayers: true,
+      onlyZoomInNotOutAfterLayerAddition: true,
       pointLat: 0,
       pointLong: 0,
       northLat: null,
@@ -895,7 +896,7 @@ let geoconnexApp = new Vue({
     },
     fitMapToFeatures(group = null, overrideShouldFit=false) {
       let geoconnexApp = this;
-      if(!geoconnexApp.shouldFitMap && !overrideShouldFit) return;
+      if(!geoconnexApp.shouldFitMapAfterAddingLayers && !overrideShouldFit) return;
       try {
         if (group) {
           geoconnexApp.map.fitBounds(group.getBounds());
@@ -908,6 +909,9 @@ let geoconnexApp = new Vue({
           geoconnexApp.searchFeatureGroup &&
             bounds.extend(geoconnexApp.selectedFeatureGroup.getBounds());
           if (bounds.isValid()) {
+            // check to see if already zoomed within bounds -- in which case dont re-zoom
+            let alreadyZoomed = bounds.contains(geoconnexApp.map.getBounds())
+            if (alreadyZoomed && onlyZoomInNotOutAfterLayerAddition) return;
             geoconnexApp.map.fitBounds(bounds, {
               maxZoom: geoconnexApp.fitBoundsMaxZoom,
             });
