@@ -7,7 +7,7 @@
 {% if resource_edit_mode or inspecific_relations %}
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
-        <label>This HydroShare resource is related to the following geospatial features
+        <label>This HydroShare resource is linked to the following geospatial features
             <span v-show="resMode=='Edit'" data-toggle="tooltip" data-placement="auto"
             title='Use this section to add persistent identifiers pointing at related geospatial features.'
             class="glyphicon glyphicon-info-sign text-muted">
@@ -27,8 +27,8 @@
                         provides collections of reference features within the United States that might overlap with your resource.
                         For example, if this resource has spatial extent contained within an Eight-digit Hydrologic Subbasin, you could search the "HU08" collection <strong><span :style="`color: ${collectionSearchColor}`">(step #1)</span></strong>.
                         Once you found the specific related item, you could select it <strong><span :style="`color: ${featureSelectColor}`">(step #2)</span></strong>, adding it to you resource metadata.
-                        A reference can alternatively be created by typing a URL that links to the related geospatial feature.
-                        If you enter a URL, it will be converted to an active link. Adding these relations improves discoverability of your resource and contributes to
+                        A link can alternatively be created by typing a URL that directs to a related geospatial feature not yet in the Geoconnex collections.
+                        If you enter a URL, it will be converted to an active hyperlink. Adding these relations improves discoverability of your resource and contributes to
                         <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>.
                     </em>
                 </div>

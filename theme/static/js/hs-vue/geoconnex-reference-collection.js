@@ -1,12 +1,8 @@
 //TODO: ensure new styles aren't breaking bootstrap width etc + Width of content
-// Buttons silver and blue
-// RELATED -> "Linked" geospatial(not in the title, but in the other parts)
-// shorter description
 // error if api is down: contact CUAHSI
 // frontend notification service or note into popup
 // github notify PR on geoconnex repo change
 // add selenium tests
-// This HydroShare resource is related to the following geospatial features => linked
 
 const limitNumberOfFeaturesPerRequest = 1000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
