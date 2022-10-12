@@ -1,5 +1,5 @@
-//TODO: we decided to not render any features if there are too many seems this stops at 5000 which I think is confusing, seeing a have rendered map?
 //TODO: ensure new styles aren't breaking bootstrap width etc
+// TODO: const let geoconnexApp = this;
 const limitNumberOfFeaturesPerRequest = 5000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
 let geoconnexApp = new Vue({
@@ -24,8 +24,8 @@ let geoconnexApp = new Vue({
       // Fetching and cacheing
       geoCache: null,
       cacheName: "geoconnexCache",
-      cacheDuration: 6.048e8, // one week in milliseconds
-      enforceCacheDuration: false,
+      cacheDuration: 0, // one week in milliseconds
+      enforceCacheDuration: true,
       geoconnexUrl: "https://reference.geoconnex.us/collections",
       limitNumberOfFeaturesPerRequest: limitNumberOfFeaturesPerRequest,
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
@@ -64,7 +64,7 @@ let geoconnexApp = new Vue({
       resSpatialExtentArea: null,
 
       // Messages and logging
-      debug: false, // modifies log verbosity
+      debug: true, // modifies log verbosity
       searchingDescription: "",
       searchResultString: "",
       appMessages: [], // notifications displayed at top of App
@@ -105,6 +105,12 @@ let geoconnexApp = new Vue({
       featureSelectColor: "black",
       spatialExtentColor: "blue",
     };
+  },
+  computed: {
+    hasSearchesWithouIssues() {
+      let geoconnexApp = this;
+      return geoconnexApp.hasSearches && !geoconnexApp.searchResultString && geoconnexApp.searchingDescription ==''
+    }
   },
   watch: {
     async collectionsSelectedToSearch(newValue, oldValue) {
@@ -397,6 +403,13 @@ let geoconnexApp = new Vue({
 
         const promises = [];
         for (collection of collections) {
+          const featureCount = await geoconnexApp.countFeaturesFromSingleCollectionInBbox(collection, bbox);
+          if (featureCount >= limitNumberOfFeaturesPerRequest){
+            geoconnexApp.searchResultString = `Your search in ${ collection.id } returned too many features.
+            The limit is ${limitNumberOfFeaturesPerRequest} so no geometries were mapped.
+            We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds`;
+            return;
+          };
           promises.push(
             geoconnexApp.fetchFeaturesFromSingleCollectionInBbox(
               collection,
@@ -448,6 +461,23 @@ let geoconnexApp = new Vue({
           feature.collection = collection;
         });
       return response ? response.features : null;
+    },
+    async countFeaturesFromSingleCollectionInBbox(
+      collection,
+      bbox = null,
+      refresh = false
+    ) {
+      let geoconnexApp = this;
+      let response = {};
+      let propertiesParameter = "&properties=fid"
+      let query = `${geoconnexApp.geoconnexUrl}/${
+        collection.id
+      }/${geoconnexBaseURLQueryParam}${propertiesParameter}&skipGeometry=true&bbox=${bbox.toString()}`;
+      response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
+        query,
+        refresh
+      );
+      return response ? response.features.length : 0;
     },
     async fetchGeometryForSingleFeature(geoconnexObj, refresh = false) {
       let geoconnexApp = this;
