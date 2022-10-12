@@ -105,10 +105,11 @@
                                     </v-list-item>
                                 </template>
                                 <template v-slot:selection="{ attrs, item, parent, selected }">
-                                    <div v-if="limitToSingleCollection" :style="`color: ${collectionSearchColor}`" class="text-truncate">
-                                        <span v-bind="attrs" :input-value="selected" class="text-truncate" :color="collectionSearchColor">
+                                    <div 
+                                        v-if="limitToSingleCollection"
+                                        :style="`color: ${collectionSearchColor}`"
+                                        v-bind="attrs" :input-value="selected">
                                             ${ item.description } (${item.id})
-                                        </span>
                                     </div>
                                     <v-chip v-else v-bind="attrs" :input-value="selected" :color="collectionSearchColor" label outlined large>
                                         <span class="text-truncate" :color="collectionSearchColor">

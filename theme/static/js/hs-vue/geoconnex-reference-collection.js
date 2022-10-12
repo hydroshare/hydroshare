@@ -1,6 +1,5 @@
 //TODO: fix spatial coverage bootstrap breakpoints
 //TODO: we decided to not render any features if there are too many seems this stops at 5000 which I think is confusing, seeing a have rendered map?
-//TODO: fix word wrap for long collection names
 //TODO: catch features missing name ex https://reference.geoconnex.us/collections/dams/items/1015061
 const limitNumberOfFeaturesPerRequest = 5000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
