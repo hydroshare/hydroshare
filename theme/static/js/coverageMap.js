@@ -207,13 +207,20 @@ function initMap() {
             polygon: false,
             circle: false,
             circlemarker: false,
-            polyline: false
+            polyline: false,
+            toolbar: {
+                buttons: {
+                    rectangle: "Add box coverage",
+                    marker: "Add point coverage"
+                }
+            }
         },
         edit: {
             featureGroup: leafletMarkers,
             remove: false
         }
       });
+    // TODO: on radio change "box" or "point", start draw edit unless geom already exists
       if(RESOURCE_MODE === 'Edit'){
         coverageMap.addControl(drawControl);
       }

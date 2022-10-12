@@ -1,8 +1,6 @@
 //TODO: fix spatial coverage bootstrap breakpoints
-//TODO: buttons feel disconnected from the map mine appear not below but to the right maybe should go on top of the map if there is room
 //TODO: action button in "spatial" areas are blue, should we do the same color scheme, again for consistency
 //TODO: we decided to not render any features if there are too many seems this stops at 5000 which I think is confusing, seeing a have rendered map?
-//TODO: tooltip for target zoom is not visible on hover + broken
 //TODO: fix word wrap for long collection names
 //TODO: catch features missing name ex https://reference.geoconnex.us/collections/dams/items/1015061
 const limitNumberOfFeaturesPerRequest = 5000;
@@ -725,8 +723,6 @@ let geoconnexApp = new Vue({
             "div",
             "leaflet-bar leaflet-control"
           );
-          recenterButton.setAttribute("data-toggle", "tooltip");
-          recenterButton.setAttribute("data-placement", "right");
           recenterButton.setAttribute("title", "Recenter");
 
           recenterButton.innerHTML = `<a role="button"><i class="fa fa-dot-circle-o fa-2x" style="padding-top:3px"></i></a>`;

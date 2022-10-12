@@ -269,19 +269,7 @@
                     :class="{
                         'opaque': !hasSearches && selectedReferenceFeatures.length === 0
                     }" >
-                    <v-progress-linear
-                        v-show="showingMap"
-                        :active="true"
-                        v-if="searchingDescription !==''"
-                        indeterminate
-                        :color="collectionSearchColor"
-                    ></v-progress-linear>
-                    <div v-show="showingMap" id="geoconnex-leaflet"></div>
-                    <div v-if="resMode === 'Edit' && showingMap" id="geoconnex-leaflet-info" class="small text-muted">
-                        <p v-if="searchResultString">Click a point to search for features that overlap with that location.</p>
-                        <p v-if="features.length > 0">Select a feature for more information.</p>
-                    </div>
-                    <div v-if="resMode === 'Edit'" id="geoconnex-controls" class="flex">
+                    <div v-if="resMode === 'Edit'" id="geoconnex-controls" class="flex mb-2">
                         <div v-show="!showingMap">
                             <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>
                                 <i class="fa fa-globe"></i>Select With Map
@@ -314,6 +302,18 @@
                                 class="glyphicon glyphicon-info-sign text-muted"
                             ></span>
                         </div> -->
+                    </div>
+                    <v-progress-linear
+                        v-show="showingMap"
+                        :active="true"
+                        v-if="searchingDescription !==''"
+                        indeterminate
+                        :color="collectionSearchColor"
+                    ></v-progress-linear>
+                    <div v-show="showingMap" id="geoconnex-leaflet"></div>
+                    <div v-if="resMode === 'Edit' && showingMap" id="geoconnex-leaflet-info" class="small text-muted">
+                        <p v-if="searchResultString">Click a point to search for features that overlap with that location.</p>
+                        <p v-if="features.length > 0">Select a feature for more information.</p>
                     </div>
                 </div>
             </div>
