@@ -1,6 +1,6 @@
 // Recommend subscribing to notifications for PRs to https://github.com/internetofwater/geoconnex.us/
 // This is a form of notification about new Geoconnex collection submissions
-// TODO: padding is fubar
+//TODO: ensure new styles aren't breaking bootstrap width etc + Width of content
 // delay after click, before showing "pending" bar
 
 const limitNumberOfFeaturesPerRequest = 1000;
