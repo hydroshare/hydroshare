@@ -1,5 +1,4 @@
 //TODO: ensure new styles aren't breaking bootstrap width etc + Width of content
-// For long name on chips, ellipse, and mouseover should have the full text
 // Buttons silver and blue
 // RELATED -> "Linked" geospatial(not in the title, but in the other parts)
 // shorter description
@@ -73,7 +72,6 @@ const geoconnexApp = new Vue({
       resSpatialExtentArea: null,
 
       // Messages and logging
-      debug: false, // modifies log verbosity
       searchingDescription: "",
       searchResultString: "",
       appMessages: [], // notifications displayed at top of App
@@ -107,7 +105,7 @@ const geoconnexApp = new Vue({
       featureRules: null,
 
       // UI "theme"
-      stringLengthLimit: 30, // after which ellipse...
+      stringLengthLimit: 40, // after which ellipse...
       collectionMessageColor: "orange",
       mappedPointFillColor: "rgba(255, 165, 0, 0.32)",
       collectionSearchColor: "orange",
@@ -815,7 +813,7 @@ const geoconnexApp = new Vue({
           geoconnexApp.searchLayerGroupDictionary[collection.id].uris = [];
           geoconnexApp.layerControl.addOverlay(
             geoconnexApp.searchLayerGroupDictionary[collection.id],
-            geoconnexApp.trimString(collection.description)
+            geoconnexApp.trimString(collection.description, ` (${collection.id})`)
           );
 
           geoconnexApp.expandLayerControlOnAdd &&
@@ -1230,9 +1228,9 @@ const geoconnexApp = new Vue({
       }
       return true;
     },
-    trimString(longString) {
-      return longString.length > geoconnexApp.stringLengthLimit
-        ? `${longString.substring(0, geoconnexApp.stringLengthLimit)}...`
+    trimString(longString, append="") {
+      return longString.length + append.length > geoconnexApp.stringLengthLimit
+        ? `${longString.substring(0, geoconnexApp.stringLengthLimit - append.length)}...${append}`
         : longString;
     },
     until(conditionFunction) {

@@ -226,7 +226,7 @@
                             </template>
                             <template v-slot:selection="{ attrs, item, parent, selected }">
                                 <v-chip v-bind="attrs" :input-value="selected" :color=featureSelectColor outlined>
-                                    <span class="text-truncate">
+                                    <span class="text-truncate" :title="item.text.length > stringLengthLimit ? item.text : ''">
                                         ${ item.text }
                                     </span>
                                     <span @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle"></span>
