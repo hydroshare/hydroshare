@@ -1,5 +1,4 @@
 //TODO: fix spatial coverage bootstrap breakpoints
-//TODO: action button in "spatial" areas are blue, should we do the same color scheme, again for consistency
 //TODO: we decided to not render any features if there are too many seems this stops at 5000 which I think is confusing, seeing a have rendered map?
 //TODO: fix word wrap for long collection names
 //TODO: catch features missing name ex https://reference.geoconnex.us/collections/dams/items/1015061
@@ -1059,7 +1058,7 @@ let geoconnexApp = new Vue({
       function onMapClick(e) {
         if (!geoconnexApp.hasSearches) return;
         let loc = { lat: e.latlng.lat, long: e.latlng.lng };
-        let content = `<button class="btn btn-default leaflet-point-search" style="border-color:${
+        let content = `<button class="btn btn-primary leaflet-point-search" style="border-color:${
           geoconnexApp.collectionSearchColor
         }" data='${JSON.stringify(
           loc

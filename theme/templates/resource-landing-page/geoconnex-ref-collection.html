@@ -271,7 +271,7 @@
                     }" >
                     <div v-if="resMode === 'Edit'" id="geoconnex-controls" class="flex mb-2">
                         <div v-show="!showingMap">
-                            <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-default" depressed small>
+                            <button :loading="searchingDescription" @click="toggleMapVisibility" class="btn btn-primary" depressed small>
                                 <i class="fa fa-globe"></i>Select With Map
                             </button>
                             <span data-toggle="tooltip" data-placement="auto"
@@ -280,12 +280,12 @@
                             </span>
                         </div>
                         <div v-show="showingMap">
-                            <button @click="toggleMapVisibility" class="btn btn-default">
+                            <button @click="toggleMapVisibility" class="btn btn-primary">
                                 <i class="fa fa-minus"></i>Hide Map
                             </button>
                         </div>
                         <div v-show="resSpatialType && showingMap && hasSearches && searchingDescription ==''">
-                            <button @click="searchForFeaturesUsingVisibleMapBounds" class="btn btn-default" :style="`border-color:${collectionSearchColor}`" depressed small>
+                            <button @click="searchForFeaturesUsingVisibleMapBounds" class="btn btn-primary" :style="`border-color:${collectionSearchColor}`" depressed small>
                                 <i class="fa fa-search"></i>Search using visible map bounds
                             </button>
                             <span data-toggle="tooltip" data-placement="auto"
@@ -293,15 +293,15 @@
                                 class="glyphicon glyphicon-info-sign text-muted"
                             ></span>
                         </div>
-                        <!-- <div v-show="hasSearches && searchingDescription ==''">
-                            <button @click="clearMapOfSearches" class="btn btn-default" :style="`border-color:${collectionSearchColor}`" depressed small>
+                        <div v-show="hasSearches && searchingDescription ==''">
+                            <button @click="clearMapOfSearches" class="btn btn-primary" :style="`border-color:${collectionSearchColor}`" depressed small>
                                 <i class="fa fa-search-minus"></i>Clear Search
                             </button>
                             <span data-toggle="tooltip" data-placement="auto"
                                 title="Clear unselected spatial features"
                                 class="glyphicon glyphicon-info-sign text-muted"
                             ></span>
-                        </div> -->
+                        </div>
                     </div>
                     <v-progress-linear
                         v-show="showingMap"
