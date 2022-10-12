@@ -782,7 +782,7 @@ const geoconnexApp = new Vue({
 
           L.DomEvent.on(recenterButton, "click", (e) => {
             e.stopPropagation();
-            geoconnexApp.fitMapToFeatures();
+            geoconnexApp.fitMapToFeatures(group=null, overrideShouldFit=true);
           });
 
           return recenterButton;
@@ -953,8 +953,7 @@ const geoconnexApp = new Vue({
     },
     fitMapToFeatures(group = null, overrideShouldFit = false) {
       const geoconnexApp = this;
-      if (!geoconnexApp.shouldFitMapAfterAddingLayers && !overrideShouldFit)
-        return;
+      if (!geoconnexApp.shouldFitMapAfterAddingLayers && !overrideShouldFit) return;
       try {
         if (group) {
           geoconnexApp.map.fitBounds(group.getBounds());
