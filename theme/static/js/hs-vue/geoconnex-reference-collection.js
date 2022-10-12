@@ -1,4 +1,4 @@
-const limitNumberOfFeaturesPerRequest = 5000;
+const limitNumberOfFeaturesPerRequest = 50000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
 let geoconnexApp = new Vue({
   el: "#app-geoconnex",
@@ -50,6 +50,7 @@ let geoconnexApp = new Vue({
       largeExtentWarningThreshold: 5e11, // square meter area above which warning is provided
       fitBoundsMaxZoom: 7,
       expandLayerControlOnAdd: false,
+      shouldFitMap: false,
       pointLat: 0,
       pointLong: 0,
       northLat: null,
@@ -238,7 +239,7 @@ let geoconnexApp = new Vue({
         };
         geoconnexApp.selectedReferenceFeatures.push(featureValues);
       }
-      geoconnexApp.fitMapToFeatures();
+      geoconnexApp.fitMapToFeatures(group=null, overrideShouldFit=true);
       geoconnexApp.loadingRelations = false;
     },
     addSelectedFeatureToResMetadata(feature) {
@@ -631,7 +632,7 @@ let geoconnexApp = new Vue({
           message: `${error} while attempting to show spatial extent.`,
         });
       }
-      geoconnexApp.fitMapToFeatures();
+      geoconnexApp.fitMapToFeatures(group=null, overrideShouldFit=true);
     },
     initializeLeafletMap() {
       let geoconnexApp = this;
@@ -897,8 +898,9 @@ let geoconnexApp = new Vue({
         });
       }
     },
-    fitMapToFeatures(group = null) {
+    fitMapToFeatures(group = null, overrideShouldFit=false) {
       let geoconnexApp = this;
+      if(!geoconnexApp.shouldFitMap && !overrideShouldFit) return;
       try {
         if (group) {
           geoconnexApp.map.fitBounds(group.getBounds());
