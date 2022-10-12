@@ -1,6 +1,5 @@
-//TODO: ensure new styles aren't breaking bootstrap width etc + Width of content
-// github notify PR on geoconnex repo change
-// add selenium tests
+// Recommend subscribing to notifications for PRs to https://github.com/internetofwater/geoconnex.us/
+// This is a form of notification about new Geoconnex collection submissions
 
 const limitNumberOfFeaturesPerRequest = 1000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
