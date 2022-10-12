@@ -1289,6 +1289,10 @@ def create_folder(res_id, folder_path, migrating_resource=False):
         raise ValidationError("Folder creation is not allowed here. "
                               "The target folder seems to contain aggregation(s)")
 
+    folder_name = os.path.basename(folder_path)
+    if not ResourceFile.is_folder_name_compliant(folder_name):
+        raise ValidationError(f"Folder name ({folder_name}) is not compliant with Hydroshare requirements")
+
     # check for duplicate folder path
     if istorage.exists(coll_path):
         raise ValidationError("Folder already exists")
@@ -1375,6 +1379,20 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
             raise ValidationError("File/folder move/rename is not allowed.")
 
+    _, src_file_name = os.path.split(src_full_path)
+    _, tgt_file_name = os.path.split(tgt_full_path)
+    _, src_ext = os.path.splitext(src_file_name)
+    if src_ext and src_file_name != tgt_file_name:
+        if not ResourceFile.is_filename_compliant(tgt_file_name):
+            raise ValidationError("Filename is not compliant with Hydroshare requirements")
+    else:
+        src_folder_name = os.path.basename(src_full_path)
+        tgt_folder_name = os.path.basename(tgt_full_path)
+        if src_folder_name != tgt_folder_name:
+            # renaming a folder
+            if not ResourceFile.is_folder_name_compliant(tgt_folder_name):
+                raise ValidationError(f"Folder name ({tgt_folder_name}) is not compliant with Hydroshare requirements")
+
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
     if resource.resource_type == "CompositeResource":
@@ -1420,6 +1438,21 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
             raise ValidationError("File rename is not allowed. "
                                   "File seems to be part of an aggregation")
+
+    _, src_file_name = os.path.split(src_full_path)
+    _, tgt_file_name = os.path.split(tgt_full_path)
+    _, src_ext = os.path.splitext(src_file_name)
+    if src_ext and src_file_name != tgt_file_name:
+        # renaming a file
+        if not ResourceFile.is_filename_compliant(tgt_file_name):
+            raise ValidationError(f"Filename ({tgt_file_name}) is not compliant with Hydroshare requirements")
+    else:
+        src_folder_name = os.path.basename(src_full_path)
+        tgt_folder_name = os.path.basename(tgt_full_path)
+        if src_folder_name != tgt_folder_name:
+            # renaming a folder
+            if not ResourceFile.is_folder_name_compliant(tgt_folder_name):
+                raise ValidationError(f"Folder name ({tgt_folder_name}) is not compliant with Hydroshare requirements")
 
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)

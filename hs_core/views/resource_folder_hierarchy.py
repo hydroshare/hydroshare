@@ -811,7 +811,7 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except DRF_ValidationError as ex:
+    except (DRF_ValidationError, ValidationError) as ex:
         return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
