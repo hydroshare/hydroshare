@@ -1,8 +1,18 @@
-//TODO: ensure new styles aren't breaking bootstrap width etc
-// TODO: const let geoconnexApp = this;
-const limitNumberOfFeaturesPerRequest = 5000;
+//TODO: ensure new styles aren't breaking bootstrap width etc + Width of content
+// For long name on chips, ellipse, and mouseover should have the full text
+// Buttons silver and blue
+// RELATED -> "Linked" geospatial(not in the title, but in the other parts)
+// remove the "clear search " button unless there are multiple searches allowed
+// shorter description
+// error if api is down: contact CUAHSI
+// frontend notification service or note into popup
+// github notify PR on geoconnex repo change
+// add selenium tests
+// This HydroShare resource is related to the following geospatial features => linked
+
+const limitNumberOfFeaturesPerRequest = 1000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
-let geoconnexApp = new Vue({
+const geoconnexApp = new Vue({
   el: "#app-geoconnex",
   delimiters: ["${", "}"],
   vuetify: new Vuetify(),
@@ -35,7 +45,7 @@ let geoconnexApp = new Vue({
         principal_aq: "AQ_NAME",
         dams: "name",
         gages: "name",
-        mainstems: "name_at_outlet",
+        mainstems: "name_at_outconst",
         sec_hydrg_reg: "SHR",
         ua10: "NAME10",
       },
@@ -108,15 +118,19 @@ let geoconnexApp = new Vue({
   },
   computed: {
     hasSearchesWithouIssues() {
-      let geoconnexApp = this;
-      return geoconnexApp.hasSearches && !geoconnexApp.searchResultString && geoconnexApp.searchingDescription ==''
-    }
+      const geoconnexApp = this;
+      return (
+        geoconnexApp.hasSearches &&
+        !geoconnexApp.searchResultString &&
+        geoconnexApp.searchingDescription == ""
+      );
+    },
   },
   watch: {
     async collectionsSelectedToSearch(newValue, oldValue) {
-      let geoconnexApp = this;
-      let oldLength = oldValue ? oldValue.length : 0;
-      let newLength = newValue ? newValue.length : 0;
+      const geoconnexApp = this;
+      const oldLength = oldValue ? oldValue.length : 0;
+      const newLength = newValue ? newValue.length : 0;
 
       if (geoconnexApp.limitToSingleCollection) {
         newLength == 1 && (geoconnexApp.lockCollectionsInput = true);
@@ -127,7 +141,7 @@ let geoconnexApp = new Vue({
 
       if (newLength > oldLength) {
         geoconnexApp.hasSearches = true;
-        let newCollection = newValue.at(-1);
+        const newCollection = newValue.at(-1);
         if (geoconnexApp.resSpatialType) {
           geoconnexApp.fetchGeoconnexFeaturesInBbox(geoconnexApp.bbox, [
             newCollection,
@@ -186,9 +200,9 @@ let geoconnexApp = new Vue({
       }
     },
     selectedReferenceFeatures(newValue, oldValue) {
-      let geoconnexApp = this;
-      let oldLength = oldValue ? oldValue.length : 0;
-      let newLength = newValue ? newValue.length : 0;
+      const geoconnexApp = this;
+      const oldLength = oldValue ? oldValue.length : 0;
+      const newLength = newValue ? newValue.length : 0;
       if (newLength > oldLength) {
         geoconnexApp.addSelectedFeatureToResMetadata(newValue.pop());
       } else if (newLength < oldLength) {
@@ -223,7 +237,7 @@ let geoconnexApp = new Vue({
     Resource Metadata Modification Methods
     -------------------------------------------------- */
     async loadResourceMetadataRelations() {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       const promises = [];
       for (let relation of geoconnexApp.metadataRelations) {
         if (
@@ -235,24 +249,24 @@ let geoconnexApp = new Vue({
         }
       }
       let results = await Promise.all(promises);
-      let features = results.flat().filter(Boolean);
+      features = results.flat().filter(Boolean);
       for (let feature of features) {
         feature = geoconnexApp.getFeatureProperties(feature);
         feature.disabled = true;
         geoconnexApp.features.push(feature);
         geoconnexApp.addSelectedFeatureToMap(feature);
-        let featureValues = {
+        const featureValues = {
           id: feature.relationId,
           text: feature.text,
           value: feature.uri,
         };
         geoconnexApp.selectedReferenceFeatures.push(featureValues);
       }
-      geoconnexApp.fitMapToFeatures(group=null, overrideShouldFit=true);
+      geoconnexApp.fitMapToFeatures((group = null), (overrideShouldFit = true));
       geoconnexApp.loadingRelations = false;
     },
     addSelectedFeatureToResMetadata(feature) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.addSelectedFeatureToMap(feature);
       geoconnexApp.ajaxSaveFeatureToResMetadata(feature);
 
@@ -264,7 +278,7 @@ let geoconnexApp = new Vue({
       });
     },
     addSelectedFeatureToMap(feature) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       if (!feature.geometry) {
         geoconnexApp.fetchGeometryForSingleFeature(feature).then((geometry) => {
           feature.geometry = geometry.geometry;
@@ -278,9 +292,9 @@ let geoconnexApp = new Vue({
       );
     },
     ajaxSaveFeatureToResMetadata(feature) {
-      let geoconnexApp = this;
-      let url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/add-metadata/`;
-      let data = {
+      const geoconnexApp = this;
+      const url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/add-metadata/`;
+      const data = {
         type: "relation",
         value: feature.uri ? feature.uri : feature,
       };
@@ -310,10 +324,10 @@ let geoconnexApp = new Vue({
       });
     },
     ajaxRemoveFeatureFromResMetadata(relations) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       for (let relation of relations) {
         if (relation.id) {
-          let url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/${relation.id}/delete-metadata/`;
+          const url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/${relation.id}/delete-metadata/`;
           $.ajax({
             type: "POST",
             url: url,
@@ -336,14 +350,12 @@ let geoconnexApp = new Vue({
       }
     },
     limitSelectableFeaturesToSearch() {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.loadingRelations = true;
 
       // remove all features currently not in the map search
       let keep = [];
-      for (const val of Object.values(
-        geoconnexApp.searchLayerGroupDictionary
-      )) {
+      for (let val of Object.values(geoconnexApp.searchLayerGroupDictionary)) {
         if (!val.uris.includes(undefined)) {
           keep = keep.concat(val.uris);
         }
@@ -358,7 +370,7 @@ let geoconnexApp = new Vue({
     Fetch Request Methods
     -------------------------------------------------- */
     async fetchCollections(forceFresh = false) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.loadingCollections = true;
       try {
         let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
@@ -382,18 +394,18 @@ let geoconnexApp = new Vue({
       long = null,
       collections = null
     ) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       long = typeof long == "number" ? long : geoconnexApp.pointLong;
       lat = typeof lat == "number" ? lat : geoconnexApp.pointLat;
       geoconnexApp.map.closePopup();
 
-      let bbox = [long, lat, long + 10e-12, lat + 10e-12];
+      const bbox = [long, lat, long + 10e-12, lat + 10e-12];
       geoconnexApp.fetchGeoconnexFeaturesInBbox(bbox, collections);
     },
     async fetchGeoconnexFeaturesInBbox(bbox, collections = null) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.bBox;
-      let features = [];
+      features = [];
       geoconnexApp.map.closePopup();
       try {
         if (!collections || collections.length === 0) {
@@ -403,13 +415,17 @@ let geoconnexApp = new Vue({
 
         const promises = [];
         for (collection of collections) {
-          const featureCount = await geoconnexApp.countFeaturesFromSingleCollectionInBbox(collection, bbox);
-          if (featureCount >= limitNumberOfFeaturesPerRequest){
-            geoconnexApp.searchResultString = `Your search in ${ collection.id } returned too many features.
+          const featureCount =
+            await geoconnexApp.countFeaturesFromSingleCollectionInBbox(
+              collection,
+              bbox
+            );
+          if (featureCount >= limitNumberOfFeaturesPerRequest) {
+            geoconnexApp.searchResultString = `Your search in ${collection.id} returned too many features.
             The limit is ${limitNumberOfFeaturesPerRequest} so no geometries were mapped.
             We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds`;
             return;
-          };
+          }
           promises.push(
             geoconnexApp.fetchFeaturesFromSingleCollectionInBbox(
               collection,
@@ -440,13 +456,13 @@ let geoconnexApp = new Vue({
       bbox = null,
       refresh = false
     ) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.searchingDescription = collection.description;
       let response = {};
-      let propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(
+      const propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(
         collection.id
       )}`;
-      let query = `${geoconnexApp.geoconnexUrl}/${
+      const query = `${geoconnexApp.geoconnexUrl}/${
         collection.id
       }/${geoconnexBaseURLQueryParam}${propertiesParameter}&bbox=${bbox.toString()}`;
       response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
@@ -467,10 +483,10 @@ let geoconnexApp = new Vue({
       bbox = null,
       refresh = false
     ) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       let response = {};
-      let propertiesParameter = "&properties=fid"
-      let query = `${geoconnexApp.geoconnexUrl}/${
+      const propertiesParameter = "&properties=fid";
+      const query = `${geoconnexApp.geoconnexUrl}/${
         collection.id
       }/${geoconnexBaseURLQueryParam}${propertiesParameter}&skipGeometry=true&bbox=${bbox.toString()}`;
       response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
@@ -480,10 +496,10 @@ let geoconnexApp = new Vue({
       return response ? response.features.length : 0;
     },
     async fetchGeometryForSingleFeature(geoconnexObj, refresh = false) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.searchingDescription = geoconnexObj.collection;
       if (refresh || !geoconnexObj.geometry) {
-        let query = `${geoconnexApp.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
+        const query = `${geoconnexApp.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
         let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
           query,
           refresh
@@ -494,13 +510,13 @@ let geoconnexApp = new Vue({
       return geoconnexObj;
     },
     async fetchSingleFeature(relation) {
-      let geoconnexApp = this;
-      let uri = relation.value;
+      const geoconnexApp = this;
+      const uri = relation.value;
       geoconnexApp.searchingDescription = uri;
-      let relative_id = uri.split("ref/").pop();
-      let collection = relative_id.split("/")[0];
-      let id = relative_id.split("/")[1];
-      let query = `${geoconnexApp.geoconnexUrl}/${collection}/items/${id}?f=json`;
+      const relative_id = uri.split("ref/").pop();
+      const collection = relative_id.split("/")[0];
+      const id = relative_id.split("/")[1];
+      const query = `${geoconnexApp.geoconnexUrl}/${collection}/items/${id}?f=json`;
       let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(query);
       geoconnexApp.searchingDescription = "";
       response.relationId = relation.id;
@@ -511,8 +527,8 @@ let geoconnexApp = new Vue({
       forceFresh = false,
       skipGeometry = true
     ) {
-      let geoconnexApp = this;
-      let propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(
+      const geoconnexApp = this;
+      const propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(
         collection.id
       )}`;
       const url = `${geoconnexApp.geoconnexUrl}/${
@@ -530,7 +546,7 @@ let geoconnexApp = new Vue({
       forceFresh = false,
       collection = null
     ) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       let data = {};
       if (!("caches" in window)) {
         geoconnexApp.log(
@@ -560,7 +576,7 @@ let geoconnexApp = new Vue({
     },
     async fetchURLFromGeoconnex(url) {
       let fetchData = {};
-      let geoconnexApp = this;
+      const geoconnexApp = this;
 
       geoconnexApp.log(
         "Fetching + adding to cache, geoconnex data from:\n" + url
@@ -573,10 +589,10 @@ let geoconnexApp = new Vue({
             fetch_resp
           );
         } else {
-          let copy = fetch_resp.clone();
-          let headers = new Headers(copy.headers);
+          const copy = fetch_resp.clone();
+          const headers = new Headers(copy.headers);
           headers.append("fetched-on", new Date().getTime());
-          let body = await copy.blob();
+          const body = await copy.blob();
           geoconnexApp.geoCache.put(
             url,
             new Response(body, {
@@ -608,17 +624,17 @@ let geoconnexApp = new Vue({
     Mapping Methods
     -------------------------------------------------- */
     showSpatialExtent(bbox = null, fromPoint = false) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.bBox;
       try {
-        let rect = L.rectangle(
+        const rect = L.rectangle(
           [
             [bbox[1], bbox[0]],
             [bbox[3], bbox[2]],
           ],
           { interactive: false }
         );
-        let poly = rect.toGeoJSON();
+        const poly = rect.toGeoJSON();
         poly.text = "Resource Spatial Extent";
         geoconnexApp.addGeojsonToMap(
           poly,
@@ -636,7 +652,7 @@ let geoconnexApp = new Vue({
         ); //sq meters
         if (fromPoint) {
           // the bbox is just a tiny box generated by a point
-          let geojson = {
+          const geojson = {
             type: "Point",
             coordinates: [geoconnexApp.pointLong, geoconnexApp.pointLat],
             text: "Resource Spatial Extent",
@@ -644,7 +660,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.addGeojsonToMap(
             geojson,
             (fit = false),
-            (style={}),
+            (style = {}),
             (group = geoconnexApp.spatialExtentGroup),
             (interactive = false),
             (marker = true)
@@ -660,10 +676,10 @@ let geoconnexApp = new Vue({
           message: `${error} while attempting to show spatial extent.`,
         });
       }
-      geoconnexApp.fitMapToFeatures(group=null, overrideShouldFit=true);
+      geoconnexApp.fitMapToFeatures((group = null), (overrideShouldFit = true));
     },
     initializeLeafletMap() {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.selectedFeatureGroup = L.featureGroup();
       geoconnexApp.searchFeatureGroup = L.featureGroup();
       !geoconnexApp.spatialExtentGroup &&
@@ -678,7 +694,7 @@ let geoconnexApp = new Vue({
         maxBoundsViscosity: 1.0,
       });
 
-      let terrain = L.tileLayer(
+      const terrain = L.tileLayer(
         "https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg",
         {
           attribution:
@@ -687,7 +703,7 @@ let geoconnexApp = new Vue({
         }
       );
 
-      let streets = L.tileLayer(
+      const streets = L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
           attribution:
@@ -696,7 +712,7 @@ let geoconnexApp = new Vue({
         }
       );
 
-      let googleSat = L.tileLayer(
+      const googleSat = L.tileLayer(
         "http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
         {
           maxZoom: 20,
@@ -704,13 +720,13 @@ let geoconnexApp = new Vue({
         }
       );
 
-      let baseMaps = {
+      const baseMaps = {
         Streets: streets,
         Terrain: terrain,
         Satelite: googleSat,
       };
 
-      let overlayMaps = {
+      const overlayMaps = {
         "Selected Features": geoconnexApp.selectedFeatureGroup,
       };
       overlayMaps["Resource Spatial Extent"] = geoconnexApp.spatialExtentGroup;
@@ -741,8 +757,9 @@ let geoconnexApp = new Vue({
         .addTo(geoconnexApp.map);
 
       L.Control.GeoconnexRecenterButton = L.Control.extend({
+        // TODO change wording on recenter button
         onAdd: function (map) {
-          let recenterButton = L.DomUtil.create(
+          const recenterButton = L.DomUtil.create(
             "div",
             "leaflet-bar leaflet-control"
           );
@@ -786,7 +803,7 @@ let geoconnexApp = new Vue({
     addSearchFeaturesToMap(features, collectionOverride = null) {
       for (let feature of features) {
         // deal with collection first
-        let collection = collectionOverride
+        const collection = collectionOverride
           ? collectionOverride
           : feature.collection;
         // check if layergroup exists in the "dictionary"
@@ -810,7 +827,7 @@ let geoconnexApp = new Vue({
         );
 
         // second deal with the actual item
-        let alreadySelected = geoconnexApp.selectedReferenceFeatures.find(
+        const alreadySelected = geoconnexApp.selectedReferenceFeatures.find(
           (obj) => {
             return obj.value && obj.value === feature.properties.uri;
           }
@@ -858,9 +875,9 @@ let geoconnexApp = new Vue({
       interactive = true,
       marker = false
     ) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       try {
-        let leafletLayer = L.geoJSON(geojson, {
+        const leafletLayer = L.geoJSON(geojson, {
           onEachFeature: function (feature, layer) {
             let popupText = `<h4>${feature.text}</h4>`;
             if (feature.uri) {
@@ -924,14 +941,15 @@ let geoconnexApp = new Vue({
         });
       }
     },
-    fitMapToFeatures(group = null, overrideShouldFit=false) {
-      let geoconnexApp = this;
-      if(!geoconnexApp.shouldFitMapAfterAddingLayers && !overrideShouldFit) return;
+    fitMapToFeatures(group = null, overrideShouldFit = false) {
+      const geoconnexApp = this;
+      if (!geoconnexApp.shouldFitMapAfterAddingLayers && !overrideShouldFit)
+        return;
       try {
         if (group) {
           geoconnexApp.map.fitBounds(group.getBounds());
         } else {
-          let bounds = L.latLngBounds();
+          const bounds = L.latLngBounds();
           geoconnexApp.spatialExtentGroup &&
             bounds.extend(geoconnexApp.spatialExtentGroup.getBounds());
           geoconnexApp.searchFeatureGroup &&
@@ -940,8 +958,12 @@ let geoconnexApp = new Vue({
             bounds.extend(geoconnexApp.selectedFeatureGroup.getBounds());
           if (bounds.isValid()) {
             // check to see if already zoomed within bounds -- in which case dont re-zoom
-            let alreadyZoomed = bounds.contains(geoconnexApp.map.getBounds())
-            if (alreadyZoomed && onlyZoomInNotOutAfterLayerAddition) return;
+            const alreadyZoomed = bounds.contains(geoconnexApp.map.getBounds());
+            if (
+              alreadyZoomed &&
+              geoconnexApp.onlyZoomInNotOutAfterLayerAddition
+            )
+              return;
             geoconnexApp.map.fitBounds(bounds, {
               maxZoom: geoconnexApp.fitBoundsMaxZoom,
             });
@@ -956,20 +978,19 @@ let geoconnexApp = new Vue({
       }
     },
     searchForFeaturesUsingVisibleMapBounds() {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.fetchGeoconnexFeaturesInBbox(
         geoconnexApp.map.getBounds().toBBoxString(),
         (collections = geoconnexApp.collectionsSelectedToSearch)
       );
     },
     mapDisplayNoFoundFeatures(bbox) {
-      let poly = L.rectangle([
+      const poly = L.rectangle([
         [bbox[1], bbox[0]],
         [bbox[3], bbox[2]],
       ]);
-      let loc = poly.getBounds().getCenter();
-      // let loc = { lat: lat, lng: lng };
-      let content = `<div data='${JSON.stringify(
+      const loc = poly.getBounds().getCenter();
+      const content = `<div data='${JSON.stringify(
         loc
       )}'>No features found for your search.</div>`;
       L.popup({ maxWidth: 400, autoClose: true })
@@ -978,7 +999,7 @@ let geoconnexApp = new Vue({
         .openOn(geoconnexApp.map);
     },
     clearMapOfSearches() {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.searchFeatureGroup.clearLayers();
       for (let key in geoconnexApp.searchLayerGroupDictionary) {
         geoconnexApp.layerControl.removeLayer(
@@ -993,16 +1014,16 @@ let geoconnexApp = new Vue({
       geoconnexApp.layerControl.collapse();
     },
     updateSpatialExtentType() {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.resSpatialType = null;
       let spatial_coverage_drawing = $("#coverageMap .leaflet-interactive");
       if (spatial_coverage_drawing.size() > 0) {
-        let checked = $("#div_id_type input:checked").val();
+        const checked = $("#div_id_type input:checked").val();
         geoconnexApp.resSpatialType = checked || spatial_coverage_type;
       }
     },
     updateAppWithResSpatialExtent() {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.updateSpatialExtentType();
       geoconnexApp.spatialExtentGroup.clearLayers();
       if (geoconnexApp.resSpatialType == "point") {
@@ -1074,18 +1095,18 @@ let geoconnexApp = new Vue({
       }
     },
     fillCoordinatesFromClickedCoordinates(lat, long) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.pointLat = lat;
       geoconnexApp.pointLong = long;
     },
     setMapEvents() {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       var popup = L.popup({ maxWidth: 400 });
 
       function onMapClick(e) {
         if (!geoconnexApp.hasSearches) return;
-        let loc = { lat: e.latlng.lat, long: e.latlng.lng };
-        let content = `<button class="btn btn-primary leaflet-point-search" style="border-color:${
+        const loc = { lat: e.latlng.lat, long: e.latlng.lng };
+        const content = `<button class="btn btn-primary leaflet-point-search" style="border-color:${
           geoconnexApp.collectionSearchColor
         }" data='${JSON.stringify(
           loc
@@ -1119,8 +1140,8 @@ let geoconnexApp = new Vue({
           "button.map-add-geoconnex",
           function (e) {
             e.stopPropagation();
-            let data = JSON.parse($(this).attr("data"));
-            let alreadySelected = geoconnexApp.selectedReferenceFeatures.find(
+            const data = JSON.parse($(this).attr("data"));
+            const alreadySelected = geoconnexApp.selectedReferenceFeatures.find(
               (obj) => {
                 return obj.value === data.uri;
               }
@@ -1137,7 +1158,7 @@ let geoconnexApp = new Vue({
           "button.map-remove-geoconnex",
           function (e) {
             e.stopPropagation();
-            let data = JSON.parse($(this).attr("data"));
+            const data = JSON.parse($(this).attr("data"));
             geoconnexApp.selectedReferenceFeatures =
               geoconnexApp.selectedReferenceFeatures.filter(
                 (s) => s.value !== data.uri
@@ -1161,7 +1182,7 @@ let geoconnexApp = new Vue({
         });
     },
     toggleMapVisibility() {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.showingMap = !geoconnexApp.showingMap;
       if (geoconnexApp.showingMap && geoconnexApp.map == null) {
         geoconnexApp.initializeLeafletMap();
@@ -1178,17 +1199,17 @@ let geoconnexApp = new Vue({
       };
     },
     setFeatureName(feature) {
-      let geoconnexApp = this;
-      let nameField = geoconnexApp.getFeatureNameField(feature.collection);
+      const geoconnexApp = this;
+      const nameField = geoconnexApp.getFeatureNameField(feature.collection);
       feature.NAME = feature.properties[nameField] || "";
     },
     getFeatureNameField(collectionName) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       // This could also be accomplished by flattening json-ld for the feature and searching for the "https://schema.org/name"
       return geoconnexApp.featureNameFieldMap[collectionName] || "NAME";
     },
     getFeatureProperties(feature) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       // Account for some oddities in the Geoconnex API schema
       feature.relative_id = feature.properties.uri.split("ref/").pop();
       feature.collection = feature.relative_id.split("/")[0];
@@ -1228,7 +1249,7 @@ let geoconnexApp = new Vue({
       return new Promise(poll);
     },
     isCacheValid(response) {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       if (!response || !response.ok) return false;
       if (geoconnexApp.enforceCacheDuration) {
         var fetched = response.headers.get("fetched-on");
@@ -1244,10 +1265,10 @@ let geoconnexApp = new Vue({
       return true;
     },
     setCustomFeatureRules() {
-      let geoconnexApp = this;
+      const geoconnexApp = this;
       geoconnexApp.featureRules = [
         function (v) {
-          let invalid = [];
+          const invalid = [];
           for (let item of v) {
             try {
               url = new URL(item.value);
