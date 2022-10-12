@@ -9,6 +9,8 @@ from uuid import uuid4
 
 import arrow
 from dateutil import parser
+import pathvalidate
+
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -2892,6 +2894,9 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
+            if not ResourceFile.is_filename_compliant(file.name):
+                raise ValidationError("Filename is not compliant as per Hydroshare requirements")
+
             if resource.is_federated:
                 kwargs['resource_file'] = None
                 kwargs['fed_resource_file'] = file
@@ -2936,6 +2941,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
         # otherwise, the copy must precede this step.
+
         return ResourceFile.objects.create(**kwargs)
 
     # TODO: automagically handle orphaned logical files
@@ -3196,6 +3202,63 @@ class ResourceFile(ResourceFileIRODSMixin):
         return folder, base
 
     # classmethods do things that query or affect all files.
+
+    @classmethod
+    def is_filename_compliant(cls, filename):
+        """Checks if the uploaded file has filename that complies to the hydroshare requirements
+        :param  filename: Name of the file to check
+        """
+        return cls._is_folder_file_name_compliant(name_to_check=filename)
+
+    @classmethod
+    def is_folder_name_compliant(cls, folder_name):
+        """Checks if the folder name complies to the hydroshare requirements
+        :param  folder_name: Name of the folder to check
+        """
+        return cls._is_folder_file_name_compliant(name_to_check=folder_name, file=False)
+
+    @classmethod
+    def _is_folder_file_name_compliant(cls, name_to_check, file=True):
+        """Helper method to check if a file/folder name is compliant with hydroshare requirements
+        :param  name_to_check: Name of the file or folder to check
+        :param  file: A flag to indicate if name_to_check is the filename
+        """
+
+        _ALLOWED_SYMBOLS_IN_FILENAME = [".", "-", "_"]
+        _ALLOWED_SYMBOLS_IN_FOLDER_NAME = ["-", "_"]
+
+        # space at the start or at the end is not allowed
+        if len(name_to_check.strip()) != len(name_to_check):
+            return False
+
+        # check for symbols
+        if file:
+            sanitized_name = pathvalidate.replace_symbol(text=name_to_check,
+                                                         exclude_symbols=_ALLOWED_SYMBOLS_IN_FILENAME)
+        else:
+            sanitized_name = pathvalidate.replace_symbol(text=name_to_check,
+                                                         exclude_symbols=_ALLOWED_SYMBOLS_IN_FOLDER_NAME)
+        if len(name_to_check) != len(sanitized_name):
+            # one or more symbols that are not allowed was found
+            return False
+
+        if file:
+            if name_to_check.startswith(".") or name_to_check.endswith("."):
+                return False
+            if '..' in name_to_check:
+                return False
+
+        for char in name_to_check:
+            if char.isalpha() or char.isdigit():
+                continue
+            if file:
+                if char in _ALLOWED_SYMBOLS_IN_FILENAME:
+                    continue
+            else:
+                if char in _ALLOWED_SYMBOLS_IN_FOLDER_NAME:
+                    continue
+            return False
+        return True
 
     @classmethod
     def get(cls, resource, file, folder=''):
