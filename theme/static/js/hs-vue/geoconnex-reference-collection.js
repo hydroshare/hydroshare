@@ -55,7 +55,7 @@ const geoconnexApp = new Vue({
       largeExtentWarningThreshold: 5e11, // square meter area above which warning is provided
       fitBoundsMaxZoom: 9,
       expandLayerControlOnAdd: false,
-      shouldFitMapAfterAddingLayers: true,
+      shouldFitMapAfterAddingLayers: false,
       onlyZoomInNotOutAfterLayerAddition: true,
       pointLat: 0,
       pointLong: 0,
@@ -966,8 +966,9 @@ const geoconnexApp = new Vue({
     },
     fitMapToFeatures(group = null, overrideShouldFit = false) {
       const geoconnexApp = this;
-      if (!geoconnexApp.shouldFitMapAfterAddingLayers && !overrideShouldFit)
+      if (!geoconnexApp.shouldFitMapAfterAddingLayers && !overrideShouldFit){
         return;
+      }
       try {
         if (group) {
           geoconnexApp.map.fitBounds(group.getBounds());
