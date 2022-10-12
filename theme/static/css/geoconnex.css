@@ -1,6 +1,6 @@
 #app-geoconnex .flex {
   flex-direction: row;
-  /* justify-content: space-around; */
+  /* justify-content: space-between; */
   gap: 2rem;
 }
 
@@ -34,7 +34,7 @@
 }
 
 #geoconnex-controls {
-  justify-content: flex-start !important;
+  justify-content: space-between;
   flex-wrap: wrap;
   flex-direction: row;
 }

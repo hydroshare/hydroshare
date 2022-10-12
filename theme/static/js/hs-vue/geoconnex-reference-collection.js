@@ -2,7 +2,6 @@
 // For long name on chips, ellipse, and mouseover should have the full text
 // Buttons silver and blue
 // RELATED -> "Linked" geospatial(not in the title, but in the other parts)
-// remove the "clear search " button unless there are multiple searches allowed
 // shorter description
 // error if api is down: contact CUAHSI
 // frontend notification service or note into popup
@@ -34,8 +33,8 @@ const geoconnexApp = new Vue({
       // Fetching and cacheing
       geoCache: null,
       cacheName: "geoconnexCache",
-      cacheDuration: 0, // one week in milliseconds
-      enforceCacheDuration: true,
+      cacheDuration: 0,
+      enforceCacheDuration: false,
       geoconnexUrl: "https://reference.geoconnex.us/collections",
       limitNumberOfFeaturesPerRequest: limitNumberOfFeaturesPerRequest,
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
@@ -74,7 +73,7 @@ const geoconnexApp = new Vue({
       resSpatialExtentArea: null,
 
       // Messages and logging
-      debug: true, // modifies log verbosity
+      debug: false, // modifies log verbosity
       searchingDescription: "",
       searchResultString: "",
       appMessages: [], // notifications displayed at top of App
@@ -1106,11 +1105,9 @@ const geoconnexApp = new Vue({
       function onMapClick(e) {
         if (!geoconnexApp.hasSearches) return;
         const loc = { lat: e.latlng.lat, long: e.latlng.lng };
-        const content = `<button class="btn btn-primary leaflet-point-search" style="border-color:${
-          geoconnexApp.collectionSearchColor
-        }" data='${JSON.stringify(
+        const content = `<button class="btn btn-info leaflet-point-search" data='${JSON.stringify(
           loc
-        )}'><i class="fa fa-search"></i>Find features containing this point</button>`;
+        )}'><i class="fa fa-map-marker"></i>Find features containing this point</button>`;
         popup.setLatLng(e.latlng).setContent(content).openOn(geoconnexApp.map);
       }
 
