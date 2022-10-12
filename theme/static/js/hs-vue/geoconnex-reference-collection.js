@@ -1,6 +1,4 @@
-//TODO: fix spatial coverage bootstrap breakpoints
 //TODO: we decided to not render any features if there are too many seems this stops at 5000 which I think is confusing, seeing a have rendered map?
-//TODO: catch features missing name ex https://reference.geoconnex.us/collections/dams/items/1015061
 const limitNumberOfFeaturesPerRequest = 5000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
 let geoconnexApp = new Vue({
@@ -100,7 +98,7 @@ let geoconnexApp = new Vue({
       // UI "theme"
       stringLengthLimit: 30, // after which ellipse...
       collectionMessageColor: "orange",
-      mappedPointFillColor: "orange",
+      mappedPointFillColor: "rgba(255, 165, 0, 0.32)",
       collectionSearchColor: "orange",
       featureSelectColor: "black",
       spatialExtentColor: "blue",
@@ -614,12 +612,7 @@ let geoconnexApp = new Vue({
           geoconnexApp.addGeojsonToMap(
             geojson,
             (fit = false),
-            {
-              color: geoconnexApp.spatialExtentColor,
-              radius: 5,
-              fillColor: geoconnexApp.mappedPointFillColor,
-              fillOpacity: 0.8,
-            },
+            (style={}),
             (group = geoconnexApp.spatialExtentGroup),
             (interactive = false),
             (marker = true)
@@ -1152,7 +1145,7 @@ let geoconnexApp = new Vue({
     setFeatureName(feature) {
       let geoconnexApp = this;
       let nameField = geoconnexApp.getFeatureNameField(feature.collection);
-      feature.NAME = feature.properties[nameField];
+      feature.NAME = feature.properties[nameField] || "";
     },
     getFeatureNameField(collectionName) {
       let geoconnexApp = this;
