@@ -131,15 +131,20 @@ const geoconnexApp = new Vue({
         geoconnexApp.hasSearches = true;
         const newCollection = newValue.at(-1);
         if (geoconnexApp.resSpatialType) {
-          geoconnexApp.fetchGeoconnexFeaturesInBbox(geoconnexApp.bbox, [
-            newCollection,
-          ]);
+          geoconnexApp.fetchGeoconnexFeaturesInBbox(
+            {
+              bbox: geoconnexApp.bbox,
+              collections: [newCollection]
+            }
+          );
         } else {
           geoconnexApp.searchingDescription = newCollection.description;
           const featureCount =
             await geoconnexApp.countFeaturesFromSingleCollectionInBbox(
-              newCollection,
-              (bbox = null)
+              {
+                collection: newCollection,
+                bbox: null
+              }
             );
           if (featureCount >= limitNumberOfFeaturesPerRequest) {
             geoconnexApp.searchResultString = `Your search in ${newCollection.id} returned too many features.
@@ -149,9 +154,11 @@ const geoconnexApp = new Vue({
             return;
           }
           let featureCollection = await geoconnexApp.fetchFeaturesInCollection(
-            newCollection,
-            (forceFresh = false),
-            (skipGeometry = false)
+            {
+              collection: newCollection,
+              forceFresh: false,
+              skipGeometry: false
+            }
           );
           if (featureCollection.features) {
             geoconnexApp.addSearchFeaturesToMap(
@@ -249,9 +256,9 @@ const geoconnexApp = new Vue({
           }
         }
         let results = await Promise.all(promises);
-        features = results.flat().filter(Boolean);
+        let features = results.flat().filter(Boolean);
         if (!features) {
-          throw "No features returned from fetch";
+          throw "No features returned from fetch"; //TODO:
         }
         for (let feature of features) {
           feature = geoconnexApp.getFeatureProperties(feature);
@@ -266,8 +273,10 @@ const geoconnexApp = new Vue({
           geoconnexApp.selectedReferenceFeatures.push(featureValues);
         }
         geoconnexApp.fitMapToFeatures(
-          (group = null),
-          (overrideShouldFit = true)
+          {
+            "group": null,
+            "overrideShouldFit": true
+          }
         );
         geoconnexApp.loadingRelations = false;
       } catch (e) {
@@ -297,10 +306,12 @@ const geoconnexApp = new Vue({
         });
       }
       geoconnexApp.addGeojsonToMap(
-        feature,
-        (fit = false),
-        (style = undefined),
-        (group = geoconnexApp.selectedFeatureGroup)
+        {
+          geojson: feature,
+          fit: false,
+          style: undefined,
+          group: geoconnexApp.selectedFeatureGroup
+        }
       );
     },
     ajaxSaveFeatureToResMetadata(feature) {
@@ -391,7 +402,6 @@ const geoconnexApp = new Vue({
         });
       } catch (e) {
         const message = "Error while loading collections:";
-        // geoconnexApp.generateAppMessage(`${message} ${e.message}`);
         geoconnexApp.error(message, e);
       }
       geoconnexApp.loadingCollections = false;
@@ -407,12 +417,12 @@ const geoconnexApp = new Vue({
       geoconnexApp.map.closePopup();
 
       const bbox = [long, lat, long + 10e-12, lat + 10e-12];
-      geoconnexApp.fetchGeoconnexFeaturesInBbox(bbox, collections);
+      geoconnexApp.fetchGeoconnexFeaturesInBbox({bbox: bbox, collections: collections});
     },
-    async fetchGeoconnexFeaturesInBbox(bbox, collections = null) {
+    async fetchGeoconnexFeaturesInBbox({bbox=null, collections = null}) {
       const geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.bBox;
-      features = [];
+      let features = [];
       geoconnexApp.map.closePopup();
       try {
         if (!collections || collections.length === 0) {
@@ -421,11 +431,14 @@ const geoconnexApp = new Vue({
         }
 
         const promises = [];
-        for (collection of collections) {
+        for (let collection of collections) {
           const featureCount =
             await geoconnexApp.countFeaturesFromSingleCollectionInBbox(
-              collection,
-              bbox
+              {
+                collection: collection,
+                bbox: bbox
+              }
+
             );
           if (featureCount >= limitNumberOfFeaturesPerRequest) {
             geoconnexApp.searchResultString = `Your search in ${collection.id} returned too many features.
@@ -470,9 +483,10 @@ const geoconnexApp = new Vue({
       const propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(
         collection.id
       )}`;
+      const bboxParameter = bbox ? `&bbox=${bbox.toString()}` : "";
       const query = `${geoconnexApp.geoconnexUrl}/${
         collection.id
-      }/${geoconnexBaseURLQueryParam}${propertiesParameter}&bbox=${bbox.toString()}`;
+      }/${geoconnexBaseURLQueryParam}${propertiesParameter}${bboxParameter}`;
       response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
         query,
         refresh
@@ -487,9 +501,11 @@ const geoconnexApp = new Vue({
       return response ? response.features : null;
     },
     async countFeaturesFromSingleCollectionInBbox(
-      collection,
-      bbox = null,
-      refresh = false
+      {
+        collection = null,
+        bbox = null,
+        refresh = false
+      }
     ) {
       const geoconnexApp = this;
       let response = {};
@@ -536,9 +552,11 @@ const geoconnexApp = new Vue({
       }
     },
     async fetchFeaturesInCollection(
-      collection,
-      forceFresh = false,
-      skipGeometry = true
+      {
+        collection = {},
+        forceFresh = false,
+        skipGeometry = true
+      }
     ) {
       const geoconnexApp = this;
       const propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(
@@ -555,6 +573,7 @@ const geoconnexApp = new Vue({
       return featureCollection;
     },
     async fetchURLFromCacheOrGeoconnex(
+      // TODO
       url,
       forceFresh = false,
       collection = null
@@ -658,15 +677,18 @@ const geoconnexApp = new Vue({
         const poly = rect.toGeoJSON();
         poly.text = "Resource Spatial Extent";
         geoconnexApp.addGeojsonToMap(
-          poly,
-          (fit = false),
           {
-            color: geoconnexApp.spatialExtentColor,
-            fillColor: geoconnexApp.spatialExtentColor,
-            fillOpacity: 0.1,
-          },
-          (group = geoconnexApp.spatialExtentGroup),
-          (interactive = false)
+            geojson: poly,
+            fit: false,
+            style: 
+              {
+                color: geoconnexApp.spatialExtentColor,
+                fillColor: geoconnexApp.spatialExtentColor,
+                fillOpacity: 0.1,
+              },
+            group: geoconnexApp.spatialExtentGroup,
+            interactive: false
+          }
         );
         geoconnexApp.resSpatialExtentArea = L.GeometryUtil.geodesicArea(
           rect.getLatLngs()[0]
@@ -679,20 +701,21 @@ const geoconnexApp = new Vue({
             text: "Resource Spatial Extent",
           };
           geoconnexApp.addGeojsonToMap(
-            geojson,
-            (fit = false),
-            (style = {}),
-            (group = geoconnexApp.spatialExtentGroup),
-            (interactive = false),
-            (marker = true)
+            {
+              geojson: geojson,
+              fit: false,
+              style: {},
+              group: geoconnexApp.spatialExtentGroup,
+              interactive: false,
+              marker: true
+            }
           );
         }
       } catch (e) {
         const message = "Error attempting to show spatial extent:";
-        // geoconnexApp.generateAppMessage(`${message} ${e.message}`);
         geoconnexApp.error(message, e);
       }
-      geoconnexApp.fitMapToFeatures((group = null), (overrideShouldFit = true));
+      geoconnexApp.fitMapToFeatures({group: null, overrideShouldFit: true});
     },
     initializeLeafletMap() {
       const geoconnexApp = this;
@@ -785,8 +808,10 @@ const geoconnexApp = new Vue({
           L.DomEvent.on(recenterButton, "click", (e) => {
             e.stopPropagation();
             geoconnexApp.fitMapToFeatures(
-              (group = null),
-              (overrideShouldFit = true)
+              {
+                "group": null,
+                "overrideShouldFit": true
+              }
             );
           });
 
@@ -859,22 +884,27 @@ const geoconnexApp = new Vue({
           geoconnexApp.getFeatureProperties(feature);
           if (feature.geometry.type.includes("Point")) {
             geoconnexApp.addGeojsonToMap(
-              feature,
-              (fit = false),
               {
-                color: geoconnexApp.collectionSearchColor,
-                radius: 5,
-                fillColor: geoconnexApp.mappedPointFillColor,
-                fillOpacity: 0.8,
-              },
-              (group = geoconnexApp.searchFeatureGroup)
+                geojson: feature,
+                fit: false,
+                style:
+                  {
+                    color: geoconnexApp.collectionSearchColor,
+                    radius: 5,
+                    fillColor: geoconnexApp.mappedPointFillColor,
+                    fillOpacity: 0.8,
+                  },
+                group: geoconnexApp.searchFeatureGroup
+              }
             );
           } else {
             geoconnexApp.addGeojsonToMap(
-              feature,
-              (fit = false),
-              { color: geoconnexApp.collectionSearchColor },
-              (group = geoconnexApp.searchFeatureGroup)
+              {
+                geojson: feature,
+                fit: false,
+                style: { color: geoconnexApp.collectionSearchColor },
+                group: geoconnexApp.searchFeatureGroup
+              }
             );
           }
         }
@@ -889,12 +919,14 @@ const geoconnexApp = new Vue({
       }
     },
     addGeojsonToMap(
-      geojson,
-      fit = false,
-      style = { color: this.featureSelectColor, radius: 5 },
-      group = null,
-      interactive = true,
-      marker = false
+      {
+        geojson = {},
+        fit = false,
+        style = { color: this.featureSelectColor, radius: 5 },
+        group = null,
+        interactive = true,
+        marker = false
+      }
     ) {
       const geoconnexApp = this;
       try {
@@ -961,7 +993,7 @@ const geoconnexApp = new Vue({
         );
       }
     },
-    fitMapToFeatures(group = null, overrideShouldFit = false) {
+    fitMapToFeatures({group = null, overrideShouldFit = false} = {}) {
       const geoconnexApp = this;
       if (!geoconnexApp.shouldFitMapAfterAddingLayers && !overrideShouldFit){
         return;
@@ -1004,8 +1036,10 @@ const geoconnexApp = new Vue({
       const geoconnexApp = this;
       geoconnexApp.searchingDescription = `${geoconnexApp.collectionsSelectedToSearch.at(-1).description}`;
       geoconnexApp.fetchGeoconnexFeaturesInBbox(
-        geoconnexApp.map.getBounds().toBBoxString(),
-        (collections = geoconnexApp.collectionsSelectedToSearch)
+        {
+          bbox: geoconnexApp.map.getBounds().toBBoxString(),
+          collections: geoconnexApp.collectionsSelectedToSearch
+        }
       ).then(()=>{
         geoconnexApp.searchingDescription = "";
       });
