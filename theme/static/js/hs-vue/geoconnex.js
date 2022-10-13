@@ -1,4 +1,3 @@
-// TODO: \(.*=.*\)
 // Recommend subscribing to notifications for PRs to https://github.com/internetofwater/geoconnex.us/
 const limitNumberOfFeaturesPerRequest = 1000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
@@ -395,8 +394,10 @@ const geoconnexApp = new Vue({
       geoconnexApp.loadingCollections = true;
       try {
         let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
-          `${geoconnexApp.geoconnexUrl}?f=json&skipGeometry=true`,
-          forceFresh
+          {
+            url: `${geoconnexApp.geoconnexUrl}?f=json&skipGeometry=true`,
+            forceFresh: forceFresh
+          }
         );
         geoconnexApp.collections = response.collections.filter((col) => {
           return !geoconnexApp.ignoredCollections.includes(col.id);
@@ -489,8 +490,10 @@ const geoconnexApp = new Vue({
         collection.id
       }/${geoconnexBaseURLQueryParam}${propertiesParameter}${bboxParameter}`;
       response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
-        query,
-        refresh
+        {
+          url: query,
+          forceFresh: refresh
+        }
       );
       geoconnexApp.searchingDescription = "";
 
@@ -514,8 +517,10 @@ const geoconnexApp = new Vue({
       const bboxParameter = bbox ? `&bbox=${bbox.toString()}` : "";
       const query = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}${propertiesParameter}&skipGeometry=true${bboxParameter}`;
       response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
-        query,
-        refresh
+        {
+          url: query,
+          forceFresh: refresh
+        }
       );
       return response ? response.features.length : 0;
     },
@@ -525,8 +530,10 @@ const geoconnexApp = new Vue({
       if (refresh || !geoconnexObj.geometry) {
         const query = `${geoconnexApp.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
         let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
-          query,
-          refresh
+          {
+            url: query,
+            forceFresh: refresh
+          }
         );
         geoconnexObj.geometry = response.geometry;
       }
@@ -567,17 +574,20 @@ const geoconnexApp = new Vue({
         collection.id
       }/${geoconnexBaseURLQueryParam}${propertiesParameter}&skipGeometry=${skipGeometry.toString()}`;
       let featureCollection = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
-        url,
-        forceFresh
+        {
+          url: url,
+          forceFresh: forceFresh
+        }
       );
       featureCollection.collection = collection;
       return featureCollection;
     },
     async fetchURLFromCacheOrGeoconnex(
-      // TODO
-      url,
-      forceFresh = false,
-      collection = null
+      {
+        url,
+        forceFresh = false,
+        collection = null
+      }
     ) {
       const geoconnexApp = this;
       let data = {};
@@ -664,7 +674,7 @@ const geoconnexApp = new Vue({
     /* --------------------------------------------------
     Mapping Methods
     -------------------------------------------------- */
-    showSpatialExtent(bbox = null, fromPoint = false) {
+    showSpatialExtent({bbox = null, fromPoint = false} = {}) {
       const geoconnexApp = this;
       if (!bbox) bbox = geoconnexApp.bBox;
       try {
@@ -1112,7 +1122,7 @@ const geoconnexApp = new Vue({
           geoconnexApp.pointLong + 1e-12,
           geoconnexApp.pointLat + 1e-12,
         ];
-        geoconnexApp.showSpatialExtent((bbox = null), (fromPoint = true));
+        geoconnexApp.showSpatialExtent({bbox: null, fromPoint: true});
       } else if (geoconnexApp.resSpatialType == "box") {
         geoconnexApp.log("Setting box spatial extent");
         geoconnexApp.northLat =
