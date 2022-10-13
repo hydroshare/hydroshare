@@ -1,7 +1,6 @@
 // Recommend subscribing to notifications for PRs to https://github.com/internetofwater/geoconnex.us/
 // This is a form of notification about new Geoconnex collection submissions
-//TODO: ensure new styles aren't breaking bootstrap width etc + Width of content
-// delay after click, before showing "pending" bar
+// TODO: ensure new styles aren't breaking bootstrap width etc + Width of content
 
 const limitNumberOfFeaturesPerRequest = 1000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
@@ -435,6 +434,7 @@ const geoconnexApp = new Vue({
             geoconnexApp.searchResultString = `Your search in ${collection.id} returned too many features.
             The limit is ${limitNumberOfFeaturesPerRequest} so no geometries were mapped.
             We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds`;
+            // 
             return;
           }
           promises.push(
@@ -1005,10 +1005,13 @@ const geoconnexApp = new Vue({
     },
     searchForFeaturesUsingVisibleMapBounds() {
       const geoconnexApp = this;
+      geoconnexApp.searchingDescription = `${geoconnexApp.collectionsSelectedToSearch.at(-1).description}`;
       geoconnexApp.fetchGeoconnexFeaturesInBbox(
         geoconnexApp.map.getBounds().toBBoxString(),
         (collections = geoconnexApp.collectionsSelectedToSearch)
-      );
+      ).then(()=>{
+        geoconnexApp.searchingDescription = "";
+      });
     },
     mapDisplayNoFoundFeatures(bbox) {
       const poly = L.rectangle([
