@@ -2,10 +2,10 @@
  * Created by Mauriel on 2/9/2016.
  */
 // Map js
-var coverageMap;
-var leafletMarkers;
-var allOverlays = [];
-var drawingManager;
+let coverageMap;
+let leafletMarkers;
+let allOverlays = [];
+let drawingManager;
 
 $(document).ready(function () {
     // Draw marker on text change
@@ -18,8 +18,8 @@ $(document).ready(function () {
     $("#id_southlimit").bind('input', drawRectangleOnTextChange);
     $("#id_westlimit").bind('input', drawRectangleOnTextChange);
 
-    var $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
-    var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+    let $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
+    let $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
     // Set initial coverage fields state
     if ($radioBox.is(':checked')) { //box type coverage
         $("#div_id_north").hide();
@@ -42,14 +42,14 @@ $(document).ready(function () {
 
 async function drawInitialShape() {
     // This field is populated if the page is in view mode
-    var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+    let shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
 
-    var resourceType = $("#resource-type").val();
+    let resourceType = $("#resource-type").val();
     // Center the map
     if (shapeType || resourceType === "Time Series") {
         leafletMarkers.clearLayers();
         if (shapeType == "point" || (resourceType === "Time Series" && spatial_coverage_type == "point")) {
-            var myLatLng;
+            let myLatLng;
             if (shapeType == "point") {
                 // resource view mode
                 myLatLng = {
@@ -74,7 +74,7 @@ async function drawInitialShape() {
             drawMarker(L.latLng(myLatLng.lat, myLatLng.lng));
         }
         else if (shapeType == "box" || (resourceType === "Time Series" && spatial_coverage_type == "box")) {
-            var bounds;
+            let bounds;
             if (shapeType == "box") {
                 //resource view mode
                 bounds = {
@@ -105,7 +105,7 @@ async function drawInitialShape() {
         }
     }
     else {
-        var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+        let $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
         if ($radioBox.is(":checked")) {
             drawRectangleOnTextChange();
         }
@@ -184,13 +184,13 @@ function initMap() {
         subdomains:['mt0','mt1','mt2','mt3']
     });
 
-      var baseMaps = {
+      let baseMaps = {
         "Streets": streets,
         "Terrain": terrain,
         "Satelite": googleSat
       };
 
-      var overlayMaps = {
+      let overlayMaps = {
         "Spatial Extent": leafletMarkers,
       };
 
@@ -201,7 +201,7 @@ function initMap() {
       let layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'topright'});
       layerControl.addTo(coverageMap);
 
-      var drawControl = new L.Control.Draw({
+      let drawControl = new L.Control.Draw({
         draw: {
             featureGroup: leafletMarkers,
             polygon: false,
@@ -226,7 +226,7 @@ function initMap() {
       }
         coverageMap.on(L.Draw.Event.CREATED, function (e) {
             let coordinates;
-            var type = e.layerType,
+            let type = e.layerType,
                 layer = e.layer;
             leafletMarkers.addLayer(layer);
 
@@ -243,7 +243,7 @@ function initMap() {
         });
 
         coverageMap.on(L.Draw.Event.EDITED, function (e) {
-            var layers = e.layers;
+            let layers = e.layers;
             layers.eachLayer(function (layer) {
                 let coordinates;
                 let type = "rectangle";
@@ -311,10 +311,10 @@ function initMap() {
 function drawMarkerOnTextChange(){
     let north = parseFloat($("#id_north").val());
     let east = parseFloat($("#id_east").val());
-    var myLatLng = {lat: north, lng: east};
+    let myLatLng = {lat: north, lng: east};
 
     // Bounds validation
-    var badInput = false;
+    let badInput = false;
 
     if (isNaN(north) || isNaN(east)){
         return;
@@ -335,7 +335,7 @@ function drawMarkerOnTextChange(){
         return;
     }
     leafletMarkers.clearLayers();
-    var latlng = L.latLng(north, east);
+    let latlng = L.latLng(north, east);
     // Define the marker.
     drawMarker(latlng);
 
@@ -358,7 +358,7 @@ function drawMarker(latLng){
 }
 
 function drawRectangleOnTextChange(){
-    var bounds = {
+    let bounds = {
         north: parseFloat($("#id_northlimit").val()),
         south: parseFloat($("#id_southlimit").val()),
         east: parseFloat($("#id_eastlimit").val()),
@@ -368,7 +368,7 @@ function drawRectangleOnTextChange(){
     leafletMarkers.clearLayers();
     // deleteAllOverlays();
     // Bounds validation
-    var badInput = false;
+    let badInput = false;
     // North
     if (bounds.north > 90 || bounds.north < -90) {
         $("#id_northlimit").addClass("invalid-input");
@@ -407,14 +407,9 @@ function drawRectangleOnTextChange(){
 
     // Define the rectangle and set its editable property to true.
     drawRectangle(bounds);
-
-    // zoomCoverageMap(bounds);
-    // $("#coverageMap").on("click", "#resetZoomBtn", function () {
-    //     zoomCoverageMap(bounds);
-    // });
 }
 function drawRectangle(bounds){
-    var rectangle = L.rectangle([[bounds.north, bounds.east], [bounds.south, bounds.west]]);
+    let rectangle = L.rectangle([[bounds.north, bounds.east], [bounds.south, bounds.west]]);
     leafletMarkers.addLayer(rectangle);
 
     rectangle.addTo(coverageMap)
@@ -426,7 +421,7 @@ function processDrawing(coordinates, shape){
     $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').show();
 
     if (shape === "rectangle"){
-        var $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+        let $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
         $radioBox.prop("checked", true);
         $("#div_id_north").hide();
         $("#div_id_east").hide();
@@ -437,7 +432,7 @@ function processDrawing(coordinates, shape){
         $("#div_id_westlimit").show();
         $("#div_id_uplimit").show();
         $("#div_id_downlimit").show();
-        var bounds = {
+        let bounds = {
             north: parseFloat(coordinates.getNorthEast().lat),
             south: parseFloat(coordinates.getSouthWest().lat),
             east: parseFloat(coordinates.getNorthEast().lng),
@@ -453,12 +448,9 @@ function processDrawing(coordinates, shape){
         $("#id_eastlimit").removeClass("invalid-input");
         $("#id_southlimit").removeClass("invalid-input");
         $("#id_westlimit").removeClass("invalid-input");
-        $("#coverageMap").on("click", "#resetZoomBtn", function () {
-            // zoomCoverageMap(bounds);
-        });
     }
     else {
-        var $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
+        let $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
         $radioPoint.prop("checked", true);
         $("#div_id_north").show();
         $("#div_id_east").show();
@@ -474,8 +466,5 @@ function processDrawing(coordinates, shape){
         // Remove red borders
         $("#id_east").removeClass("invalid-input");
         $("#id_north").removeClass("invalid-input");
-        // $("#coverageMap").on("click", "#resetZoomBtn", function () {
-        //     coverageMap.setCenter(coordinates);
-        // });
     }
 }
