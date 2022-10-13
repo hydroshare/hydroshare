@@ -1,7 +1,4 @@
 // Recommend subscribing to notifications for PRs to https://github.com/internetofwater/geoconnex.us/
-// This is a form of notification about new Geoconnex collection submissions
-// TODO: ensure new styles aren't breaking bootstrap width etc + Width of content
-
 const limitNumberOfFeaturesPerRequest = 1000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
 const geoconnexApp = new Vue({
