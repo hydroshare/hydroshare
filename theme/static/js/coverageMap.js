@@ -5,7 +5,6 @@
 let coverageMap;
 let leafletMarkers;
 let allOverlays = [];
-let drawingManager;
 
 $(document).ready(function () {
     // Draw marker on text change
@@ -201,29 +200,33 @@ function initMap() {
       let layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'topright'});
       layerControl.addTo(coverageMap);
 
-      let drawControl = new L.Control.Draw({
+      let coverageDrawControl = new L.Control.Draw({
         draw: {
             featureGroup: leafletMarkers,
             polygon: false,
             circle: false,
             circlemarker: false,
             polyline: false,
-            toolbar: {
-                buttons: {
-                    rectangle: "Add box coverage",
-                    marker: "Add point coverage"
-                }
-            }
         },
         edit: {
             featureGroup: leafletMarkers,
             remove: false
         }
       });
-    // TODO: on radio change "box" or "point", start draw edit unless geom already exists
+
+      L.drawLocal.edit.toolbar.buttons.edit = "Edit drawn coverage" 
+      L.drawLocal.draw.toolbar.buttons.rectangle = "Add box coverage"
+      L.drawLocal.draw.toolbar.buttons.marker = "Add point coverage"
+
+      L.drawLocal.edit.toolbar.actions.save.text = "Finish"
+      L.drawLocal.edit.toolbar.actions.save.title = "Complete edit"
       if(RESOURCE_MODE === 'Edit'){
-        coverageMap.addControl(drawControl);
+        coverageMap.addControl(coverageDrawControl);
       }
+        coverageMap.on(L.Draw.Event.EDITSTART, function (e) {
+            $("#spatial-coverage-save").hide();
+        });
+        
         coverageMap.on(L.Draw.Event.CREATED, function (e) {
             let coordinates;
             let type = e.layerType,
@@ -235,6 +238,7 @@ function initMap() {
             }else{
                 coordinates = layer.getLatLng();
             }
+            $("#spatial-coverage-save").show();
             processDrawing(coordinates, type);
         });
 
@@ -255,7 +259,7 @@ function initMap() {
                 }
                 processDrawing(coordinates, type);
             });
-            $("#coverage-spatial").find(".btn-primary").not('#btn-update-resource-spatial-coverage').trigger('click');
+            $("#spatial-coverage-save").show();
         });
 
       L.control.fullscreen({
@@ -309,6 +313,8 @@ function initMap() {
 }
 
 function drawMarkerOnTextChange(){
+    $('.leaflet-draw-draw-marker').show();
+    $('.leaflet-draw-draw-rectangle').hide();
     let north = parseFloat($("#id_north").val());
     let east = parseFloat($("#id_east").val());
     let myLatLng = {lat: north, lng: east};
@@ -349,15 +355,15 @@ function drawMarker(latLng){
     let marker = L.marker(latLng);
     leafletMarkers.addLayer(marker);
     
-    marker.addTo(coverageMap)
-        // .bindPopup('TODO: add res link and lat/long');
-        // .openPopup();
+    marker.addTo(coverageMap);
 
     // Center map at new marker
     coverageMap.fitBounds(leafletMarkers.getBounds(), {"maxZoom": 7})
 }
 
 function drawRectangleOnTextChange(){
+    $('.leaflet-draw-draw-marker').hide();
+    $('.leaflet-draw-draw-rectangle').show()
     let bounds = {
         north: parseFloat($("#id_northlimit").val()),
         south: parseFloat($("#id_southlimit").val()),
