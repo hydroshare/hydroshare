@@ -121,7 +121,7 @@ function drawPickerMarker(latLng){
     marker.addTo(coordinatesPicker);
 
     // Center map at new marker
-    coordinatesPicker.fitBounds(marker.getBounds(), {"maxZoom": 7})
+    coordinatesPicker.fitBounds(leafletFeatureGroup.getBounds(), {"maxZoom": 7})
     processDrawingFileType(marker.getLatLng(), "marker");
 }
 
@@ -201,6 +201,9 @@ function initMapFileType() {
       if(RESOURCE_MODE === 'Edit'){
         coordinatesPicker.addControl(drawControl);
       }
+      coordinatesPicker.on(L.Draw.Event.EDITSTART, function (e) {
+        $("#btn-confirm-coordinates").hide();
+      });
         coordinatesPicker.on(L.Draw.Event.CREATED, function (e) {
             let coordinates;
             var type = e.layerType,
@@ -212,6 +215,7 @@ function initMapFileType() {
             }else{
                 coordinates = layer.getLatLng();
             }
+            $("#btn-confirm-coordinates").show();
             processDrawingFileType(coordinates, type);
         });
 
@@ -232,7 +236,7 @@ function initMapFileType() {
                 }
                 processDrawingFileType(coordinates, type);
             });
-            $("#btn-confirm-coordinates").trigger('click');
+            $("#btn-confirm-coordinates").show();
         });
 
       L.control.fullscreen({

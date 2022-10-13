@@ -313,8 +313,8 @@ function initMap() {
 }
 
 function drawMarkerOnTextChange(){
-    $('.leaflet-draw-draw-marker').show();
-    $('.leaflet-draw-draw-rectangle').hide();
+    $('#coverageMap .leaflet-draw-draw-marker').show();
+    $('#coverageMap .leaflet-draw-draw-rectangle').hide();
     let north = parseFloat($("#id_north").val());
     let east = parseFloat($("#id_east").val());
     let myLatLng = {lat: north, lng: east};
@@ -362,8 +362,8 @@ function drawMarker(latLng){
 }
 
 function drawRectangleOnTextChange(){
-    $('.leaflet-draw-draw-marker').hide();
-    $('.leaflet-draw-draw-rectangle').show()
+    $('#coverageMap .leaflet-draw-draw-marker').hide();
+    $('#coverageMap .leaflet-draw-draw-rectangle').show()
     let bounds = {
         north: parseFloat($("#id_northlimit").val()),
         south: parseFloat($("#id_southlimit").val()),
