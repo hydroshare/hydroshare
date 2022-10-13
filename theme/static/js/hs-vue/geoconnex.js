@@ -1,3 +1,4 @@
+// TODO: \(.*=.*\)
 // Recommend subscribing to notifications for PRs to https://github.com/internetofwater/geoconnex.us/
 const limitNumberOfFeaturesPerRequest = 1000;
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
@@ -224,7 +225,7 @@ const geoconnexApp = new Vue({
         } catch (e) {
           geoconnexApp.error(e.message);
           const message = "Error while attempting to remove related feature";
-          geoconnexApp.generateAppMessage(`${message} ${e.message}`);
+          geoconnexApp.generateAppMessage(`${message}: ${e.message}`);
           geoconnexApp.error(message, e);
         }
         geoconnexApp.ajaxRemoveFeatureFromResMetadata(remove);
@@ -258,7 +259,7 @@ const geoconnexApp = new Vue({
         let results = await Promise.all(promises);
         let features = results.flat().filter(Boolean);
         if (!features) {
-          throw "No features returned from fetch"; //TODO:
+          throw new Error("No features returned from fetch");
         }
         for (let feature of features) {
           feature = geoconnexApp.getFeatureProperties(feature);
@@ -281,9 +282,9 @@ const geoconnexApp = new Vue({
         geoconnexApp.loadingRelations = false;
       } catch (e) {
         const message =
-          "Error while attempting to load related features from metadata:";
+          "Error while attempting to load related features from metadata";
         geoconnexApp.error(message, e);
-        geoconnexApp.generateAppMessage(`${message} ${e}`);
+        geoconnexApp.generateAppMessage(`${message}: ${e.message}`);
       }
     },
     addSelectedFeatureToResMetadata(feature) {
@@ -338,9 +339,9 @@ const geoconnexApp = new Vue({
           });
         },
         error: function (request, status, error) {
-          const message = "Error while attempting to save related feature:";
+          const message = "Error while attempting to save related feature";
           geoconnexApp.error(message, error);
-          geoconnexApp.generateAppMessage(`${message} ${error}`);
+          geoconnexApp.generateAppMessage(`${message}: ${error}`);
         },
       });
     },
@@ -361,9 +362,9 @@ const geoconnexApp = new Vue({
             },
             error: function (request, status, error) {
               const message =
-                "Error while attempting to remove related feature:";
+                "Error while attempting to remove related feature";
               geoconnexApp.error(message, error);
-              geoconnexApp.generateAppMessage(`${message} ${error}`);
+              geoconnexApp.generateAppMessage(`${message}: ${error.message}`);
             },
           });
         }
@@ -401,7 +402,7 @@ const geoconnexApp = new Vue({
           return !geoconnexApp.ignoredCollections.includes(col.id);
         });
       } catch (e) {
-        const message = "Error while loading collections:";
+        const message = "Error while loading collections";
         geoconnexApp.error(message, e);
       }
       geoconnexApp.loadingCollections = false;
@@ -468,7 +469,7 @@ const geoconnexApp = new Vue({
         }
       } catch (e) {
         geoconnexApp.error(
-          `Error while attempting to find intersecting geometries: ${e.message}`
+          "Error while attempting to find intersecting geometries", e
         );
       }
     },
@@ -541,13 +542,13 @@ const geoconnexApp = new Vue({
         const collection = relative_id.split("/")[0];
         const id = relative_id.split("/")[1];
         const query = `${geoconnexApp.geoconnexUrl}/${collection}/items/${id}?f=json`;
-        let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(query);
+        let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex({url: query});
         geoconnexApp.searchingDescription = "";
         response.relationId = relation.id;
         return response;
       } catch (e) {
-        const message = `Error fetching Geoconnex feature:`;
-        geoconnexApp.generateAppMessage(`${message} ${e.message}`);
+        const message = `Error fetching Geoconnex feature`;
+        geoconnexApp.generateAppMessage(`${message}: ${e.message}`);
         geoconnexApp.error(message, e);
       }
     },
@@ -587,8 +588,8 @@ const geoconnexApp = new Vue({
           );
           let fetch_resp = await fetch(url);
           if (!fetch_resp.ok) {
-            const message = "Error while attempting to fetch:";
-            geoconnexApp.generateAppMessage(`${message} ${e.message}`);
+            const message = "Error while attempting to fetch data from Geoconnex";
+            geoconnexApp.generateAppMessage(`${message}: ${fetch_resp.statusText}`);
             geoconnexApp.error(message, fetch_resp);
           } else {
             data = await fetch_resp.json();
@@ -607,8 +608,8 @@ const geoconnexApp = new Vue({
         }
         return data;
       } catch (e) {
-        const message = `Error while attempting to fetch Geoconnex relations:`;
-        geoconnexApp.generateAppMessage(`${message} ${e.message}`);
+        const message = `Error while attempting to fetch Geoconnex relations`;
+        geoconnexApp.generateAppMessage(`${message}: ${e.message}`);
         geoconnexApp.error(message, e);
       }
     },
@@ -623,9 +624,9 @@ const geoconnexApp = new Vue({
         let fetch_resp = await fetch(url);
         if (!fetch_resp.ok) {
           const message =
-            "Error while attempting to fetch Geoconnex relations:";
+            "Error while attempting to fetch Geoconnex relations";
           geoconnexApp.generateAppMessage(
-            `${message} ${fetch_resp.statusText}`
+            `${message}: ${fetch_resp.statusText}`
           );
           geoconnexApp.error(message, fetch_resp);
         } else {
@@ -649,7 +650,7 @@ const geoconnexApp = new Vue({
           .match(url)
           .then(function (response) {
             geoconnexApp.error(
-              "Geoconnex API fetch error. Falling back to old cached version."
+              "Geoconnex API fetch error. Falling back to old cached version"
             );
             return response.data;
           })
@@ -712,7 +713,7 @@ const geoconnexApp = new Vue({
           );
         }
       } catch (e) {
-        const message = "Error attempting to show spatial extent:";
+        const message = "Error attempting to show spatial extent";
         geoconnexApp.error(message, e);
       }
       geoconnexApp.fitMapToFeatures({group: null, overrideShouldFit: true});
@@ -989,7 +990,7 @@ const geoconnexApp = new Vue({
       } catch (e) {
         geoconnexApp.error(e.message);
         geoconnexApp.generateAppMessage(
-          `${e.message} while attempting to add item to map.`
+          `Error while attempting to add item to map: ${e.message}`
         );
       }
     },
