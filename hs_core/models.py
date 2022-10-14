@@ -2894,7 +2894,8 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
-            if not ResourceFile.is_filename_compliant(file.name):
+            filename = os.path.basename(file.name)
+            if not ResourceFile.is_filename_compliant(filename):
                 raise ValidationError("Filename is not compliant as per Hydroshare requirements")
 
             if resource.is_federated:
@@ -3224,39 +3225,44 @@ class ResourceFile(ResourceFileIRODSMixin):
         :param  file: A flag to indicate if name_to_check is the filename
         """
 
-        _ALLOWED_SYMBOLS_IN_FILENAME = [".", "-", "_"]
-        _ALLOWED_SYMBOLS_IN_FOLDER_NAME = ["-", "_"]
+        _ALLOWED_SYMBOLS = [".", "-", "_"]
 
         # space at the start or at the end is not allowed
         if len(name_to_check.strip()) != len(name_to_check):
             return False
 
         # check for symbols
-        if file:
-            sanitized_name = pathvalidate.replace_symbol(text=name_to_check,
-                                                         exclude_symbols=_ALLOWED_SYMBOLS_IN_FILENAME)
-        else:
-            sanitized_name = pathvalidate.replace_symbol(text=name_to_check,
-                                                         exclude_symbols=_ALLOWED_SYMBOLS_IN_FOLDER_NAME)
+        sanitized_name = pathvalidate.replace_symbol(text=name_to_check,
+                                                     exclude_symbols=_ALLOWED_SYMBOLS)
+
         if len(name_to_check) != len(sanitized_name):
             # one or more symbols that are not allowed was found
             return False
 
         if file:
+            # checking for filename
             if name_to_check.startswith(".") or name_to_check.endswith("."):
                 return False
-            if '..' in name_to_check:
+        else:
+            # checking for folder name
+            # allow folder name to start with char "."
+            if name_to_check.find(".") > 0:
                 return False
 
+        if '..' in name_to_check:
+            return False
+
+        if file:
+            # checking for filename
+            _, file_ext = os.path.splitext(name_to_check)
+            if file_ext:
+                file_ext = file_ext[1:]
+                if not any(char.isalpha() for char in file_ext):
+                    return False
+
         for char in name_to_check:
-            if char.isalpha() or char.isdigit():
+            if char.isalpha() or char.isdigit() or char in _ALLOWED_SYMBOLS:
                 continue
-            if file:
-                if char in _ALLOWED_SYMBOLS_IN_FILENAME:
-                    continue
-            else:
-                if char in _ALLOWED_SYMBOLS_IN_FOLDER_NAME:
-                    continue
             return False
         return True
 
