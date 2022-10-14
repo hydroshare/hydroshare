@@ -1379,13 +1379,13 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
             raise ValidationError("File/folder move/rename is not allowed.")
 
-    _, src_file_name = os.path.split(src_full_path)
-    _, tgt_file_name = os.path.split(tgt_full_path)
-    _, src_ext = os.path.splitext(src_file_name)
-    if src_ext and src_file_name != tgt_file_name:
-        if not ResourceFile.is_filename_compliant(tgt_file_name):
+    tgt_base_name = os.path.basename(tgt_full_path)
+    _, tgt_ext = os.path.splitext(tgt_base_name)
+    if istorage.isFile(src_full_path) and tgt_ext:
+        # renaming a file - need to validate the new file name
+        if not ResourceFile.is_filename_compliant(tgt_base_name):
             raise ValidationError("Filename is not compliant with Hydroshare requirements")
-    else:
+    elif istorage.isDir(src_full_path):
         src_folder_name = os.path.basename(src_full_path)
         tgt_folder_name = os.path.basename(tgt_full_path)
         if src_folder_name != tgt_folder_name:
