@@ -1,11 +1,12 @@
 /**
  * Created by Mauriel on 3/28/2017.
+ * Updated by Devin on 10/14/2022.
  */
 
 var coordinatesPicker;
 var currentInstance;   // Keeps track of the instance to work with
 var allOverlaysFileType = [];
-var leafletFeatureGroup;
+let leafletFeatureGroup;
 
 (function( $ ){
     $.fn.coordinatesPicker = function () {
@@ -41,12 +42,6 @@ var leafletFeatureGroup;
                 '</span>');
 
             item.toggleClass("form-control", true);
-            // Delete previous drawings
-            // for (var i = 0; i < allOverlaysFileType.length; i++) {
-            //     allOverlaysFileType[i].overlay.setMap(null);
-            // }
-
-            // allOverlaysFileType = [];
 
             // Reset Leaflet size on modal popup
             $('#coordinates-picker-modal').on('shown.bs.modal', function () {
@@ -78,9 +73,6 @@ var leafletFeatureGroup;
                     };
                     if(myLatLng.lat && myLatLng.lng) {
                         drawPickerMarker(L.latLng(myLatLng.lat, myLatLng.lng));
-                        // $("#resetZoomBtn").click(function () {
-                        //     coordinatesPicker.setCenter(marker.getPosition());
-                        // });
                     }
                 }
                 else if (type === "rectangle") {
@@ -92,9 +84,6 @@ var leafletFeatureGroup;
                     };
                     if (bounds.north && bounds.south && bounds.east && bounds.west) {
                         drawPickerRectangle(bounds);
-                        // $("#resetZoomBtn").click(function () {
-                        //     zoomCoverageMap(bounds);
-                        // });
                     }
                 }
 
@@ -115,7 +104,7 @@ var leafletFeatureGroup;
 })( jQuery );
 
 function drawPickerMarker(latLng){
-    let marker = L.marker(latLng);
+    const marker = L.marker(latLng);
     leafletFeatureGroup.addLayer(marker);
     
     marker.addTo(coordinatesPicker);
@@ -126,7 +115,7 @@ function drawPickerMarker(latLng){
 }
 
 function drawPickerRectangle(bounds){
-    var rectangle = L.rectangle([[bounds.north, bounds.east], [bounds.south, bounds.west]]);
+    const rectangle = L.rectangle([[bounds.north, bounds.east], [bounds.south, bounds.west]]);
     leafletFeatureGroup.addLayer(rectangle);
 
     rectangle.addTo(coordinatesPicker);
@@ -154,38 +143,38 @@ function initMapFileType() {
     // coordinatesPicker.setView([41.850033, -87.6500523], 3);
     coordinatesPicker.setView([30, 0], 1);
 
-    let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
+    const terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
         attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
         maxZoom: 18,
     });
 
-    let streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 18,
     });
 
-    let googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+    const googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
         maxZoom: 20,
         subdomains:['mt0','mt1','mt2','mt3']
       });
 
-      var baseMaps = {
+      const baseMaps = {
         "Streets": streets,
         "Terrain": terrain,
         "Satelite": googleSat
       };
 
-      var overlayMaps = {
+      const overlayMaps = {
         "Extent": leafletFeatureGroup,
       };
       L.control.zoom({
         position: 'bottomright'
       }).addTo(coordinatesPicker);
 
-      let layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'topright'});
+      const layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'topright'});
       layerControl.addTo(coordinatesPicker);
 
-      let drawControl = new L.Control.Draw({
+      const drawControl = new L.Control.Draw({
         draw: {
             featureGroup: leafletFeatureGroup,
             polygon: false,
@@ -206,7 +195,7 @@ function initMapFileType() {
       });
         coordinatesPicker.on(L.Draw.Event.CREATED, function (e) {
             let coordinates;
-            var type = e.layerType,
+            const type = e.layerType,
                 layer = e.layer;
             leafletFeatureGroup.addLayer(layer);
 
@@ -224,7 +213,7 @@ function initMapFileType() {
         });
 
         coordinatesPicker.on(L.Draw.Event.EDITED, function (e) {
-            var layers = e.layers;
+            const layers = e.layers;
             layers.eachLayer(function (layer) {
                 let coordinates;
                 let type = "rectangle";
@@ -251,7 +240,6 @@ function initMapFileType() {
       // show the default layers at start
       coordinatesPicker.addLayer(streets);
       coordinatesPicker.addLayer(leafletFeatureGroup);
-    //   drawInitialShape();
 
 
     $(".has-coordinates-picker").each(function() {
@@ -262,7 +250,7 @@ function initMapFileType() {
 
 function processDrawingFileType(coordinates, shape) {
     if (shape === "rectangle") {
-        var bounds = {
+        const bounds = {
             north: parseFloat(coordinates.getNorthEast().lat),
             south: parseFloat(coordinates.getSouthWest().lat),
             east: parseFloat(coordinates.getNorthEast().lng),

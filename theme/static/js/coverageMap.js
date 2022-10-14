@@ -345,11 +345,6 @@ function drawMarkerOnTextChange(){
     let latlng = L.latLng(north, east);
     // Define the marker.
     drawMarker(latlng);
-
-    // Set onClick event for recenter button
-    // $("#coverageMap").on("click", "#resetZoomBtn", function () {
-    //     coverageMap.setCenter(marker.getPosition());
-    // });
 }
 
 function drawMarker(latLng){
@@ -373,7 +368,6 @@ function drawRectangleOnTextChange(){
     };
     // Delete previous drawings
     leafletMarkers.clearLayers();
-    // deleteAllOverlays();
     // Bounds validation
     let badInput = false;
     // North

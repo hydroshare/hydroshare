@@ -145,7 +145,7 @@ const geoconnexApp = new Vue({
             geoconnexApp.searchingDescription = "";
             return;
           }
-          let featureCollection = await geoconnexApp.fetchFeaturesInCollection(
+          const featureCollection = await geoconnexApp.fetchFeaturesInCollection(
             {
               collection: newCollection,
               forceFresh: false,
@@ -174,7 +174,7 @@ const geoconnexApp = new Vue({
         }
 
         if (newLength) {
-          for (let collection of remove) {
+          for (const collection of remove) {
             geoconnexApp.searchFeatureGroup.removeLayer(
               geoconnexApp.searchLayerGroupDictionary[collection.id]
             );
@@ -191,7 +191,7 @@ const geoconnexApp = new Vue({
         }
         geoconnexApp.fitMapToFeatures();
 
-        for (let collection of remove) {
+        for (const collection of remove) {
           geoconnexApp.features = geoconnexApp.features.filter((item) => {
             return collection.id !== item.collection;
           });
@@ -205,7 +205,7 @@ const geoconnexApp = new Vue({
       if (newLength > oldLength) {
         geoconnexApp.addSelectedFeatureToResMetadata(newValue.pop());
       } else if (newLength < oldLength) {
-        let remove = oldValue.filter((obj) =>
+        const remove = oldValue.filter((obj) =>
           newValue.every((s) => s.id !== obj.id)
         );
         try {
@@ -237,7 +237,7 @@ const geoconnexApp = new Vue({
       const geoconnexApp = this;
       try {
         const promises = [];
-        for (let relation of geoconnexApp.metadataRelations) {
+        for (const relation of geoconnexApp.metadataRelations) {
           if (
             this.isUrl(relation.value) &&
             relation.type === "relation" &&
@@ -246,8 +246,8 @@ const geoconnexApp = new Vue({
             promises.push(geoconnexApp.fetchSingleFeature(relation));
           }
         }
-        let results = await Promise.all(promises);
-        let features = results.flat().filter(Boolean);
+        const results = await Promise.all(promises);
+        const features = results.flat().filter(Boolean);
         if (!features) {
           throw new Error("No features returned from fetch");
         }
@@ -337,7 +337,7 @@ const geoconnexApp = new Vue({
     },
     ajaxRemoveFeatureFromResMetadata(relations) {
       const geoconnexApp = this;
-      for (let relation of relations) {
+      for (const relation of relations) {
         if (relation.id) {
           const url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/${relation.id}/delete-metadata/`;
           $.ajax({
@@ -366,7 +366,7 @@ const geoconnexApp = new Vue({
 
       // remove all features currently not in the map search
       let keep = [];
-      for (let val of Object.values(geoconnexApp.searchLayerGroupDictionary)) {
+      for (const val of Object.values(geoconnexApp.searchLayerGroupDictionary)) {
         if (!val.uris.includes(undefined)) {
           keep = keep.concat(val.uris);
         }
@@ -384,7 +384,7 @@ const geoconnexApp = new Vue({
       const geoconnexApp = this;
       geoconnexApp.loadingCollections = true;
       try {
-        let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
+        const response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
           {
             url: `${geoconnexApp.geoconnexUrl}?f=json&skipGeometry=true`,
             forceFresh: forceFresh
@@ -449,7 +449,7 @@ const geoconnexApp = new Vue({
             geoconnexApp.collectionsSelectedToSearch.push(collection);
           }
         }
-        let results = await Promise.all(promises);
+        const results = await Promise.all(promises);
         features = results.flat().filter(Boolean);
         if (features.length > 0) {
           geoconnexApp.searchResultString = "";
@@ -519,7 +519,7 @@ const geoconnexApp = new Vue({
       geoconnexApp.searchingDescription = geoconnexObj.collection;
       if (refresh || !geoconnexObj.geometry) {
         const query = `${geoconnexApp.geoconnexUrl}/${geoconnexObj.collection}/items/${geoconnexObj.id}?f=json`;
-        let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
+        const response = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
           {
             url: query,
             forceFresh: refresh
@@ -539,7 +539,7 @@ const geoconnexApp = new Vue({
         const collection = relative_id.split("/")[0];
         const id = relative_id.split("/")[1];
         const query = `${geoconnexApp.geoconnexUrl}/${collection}/items/${id}?f=json`;
-        let response = await geoconnexApp.fetchURLFromCacheOrGeoconnex({url: query});
+        const response = await geoconnexApp.fetchURLFromCacheOrGeoconnex({url: query});
         geoconnexApp.searchingDescription = "";
         response.relationId = relation.id;
         return response;
@@ -563,7 +563,7 @@ const geoconnexApp = new Vue({
       const url = `${geoconnexApp.geoconnexUrl}/${
         collection.id
       }/${geoconnexBaseURLQueryParam}${propertiesParameter}&skipGeometry=${skipGeometry.toString()}`;
-      let featureCollection = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
+      const featureCollection = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
         {
           url: url,
           forceFresh: forceFresh
@@ -586,7 +586,7 @@ const geoconnexApp = new Vue({
           geoconnexApp.log(
             "Cache API not available. Fetching geoconnex data from:\n" + url
           );
-          let fetch_resp = await fetch(url);
+          const fetch_resp = await fetch(url);
           if (!fetch_resp.ok) {
             const message = "Error while attempting to fetch data from Geoconnex";
             geoconnexApp.generateAppMessage(`${message}: ${fetch_resp.statusText}`);
@@ -595,7 +595,7 @@ const geoconnexApp = new Vue({
             data = await fetch_resp.json();
           }
         } else {
-          let cache_resp = await geoconnexApp.geoCache.match(url);
+          const cache_resp = await geoconnexApp.geoCache.match(url);
           if (geoconnexApp.isCacheValid(cache_resp) && !forceFresh) {
             geoconnexApp.log("Using Geoconnex from cache for:\n" + url);
             data = await cache_resp.json();
@@ -621,7 +621,7 @@ const geoconnexApp = new Vue({
         "Fetching + adding to cache, geoconnex data from:\n" + url
       );
       try {
-        let fetch_resp = await fetch(url);
+        const fetch_resp = await fetch(url);
         if (!fetch_resp.ok) {
           const message =
             "Error while attempting to fetch Geoconnex relations";
@@ -844,7 +844,7 @@ const geoconnexApp = new Vue({
       geoconnexApp.fitMapToFeatures();
     },
     addSearchFeaturesToMap(features, collectionOverride = null) {
-      for (let feature of features) {
+      for (const feature of features) {
         // deal with collection first
         const collection = collectionOverride
           ? collectionOverride
@@ -1061,7 +1061,7 @@ const geoconnexApp = new Vue({
     clearMapOfSearches() {
       const geoconnexApp = this;
       geoconnexApp.searchFeatureGroup.clearLayers();
-      for (let key in geoconnexApp.searchLayerGroupDictionary) {
+      for (const key in geoconnexApp.searchLayerGroupDictionary) {
         geoconnexApp.layerControl.removeLayer(
           geoconnexApp.searchLayerGroupDictionary[key]
         );
@@ -1076,7 +1076,7 @@ const geoconnexApp = new Vue({
     updateSpatialExtentType() {
       const geoconnexApp = this;
       geoconnexApp.resSpatialType = null;
-      let spatial_coverage_drawing = $("#coverageMap .leaflet-interactive");
+      const spatial_coverage_drawing = $("#coverageMap .leaflet-interactive");
       if (spatial_coverage_drawing.size() > 0) {
         const checked = $("#div_id_type input:checked").val();
         geoconnexApp.resSpatialType = checked || spatial_coverage_type;
@@ -1337,7 +1337,7 @@ const geoconnexApp = new Vue({
       geoconnexApp.featureRules = [
         function (v) {
           const invalid = [];
-          for (let item of v) {
+          for (const item of v) {
             try {
               url = new URL(item.value);
             } catch (_) {
