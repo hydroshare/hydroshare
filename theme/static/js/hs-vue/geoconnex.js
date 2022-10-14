@@ -83,7 +83,7 @@ const geoconnexApp = new Vue({
         "color: white; background:blue;"
       ),
 
-      // State
+      // State// Delete previous drawings
       loadingRelations: true,
       loadingCollections: true,
       lockCollectionsInput: false,

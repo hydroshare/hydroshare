@@ -17,8 +17,8 @@ $(document).ready(function () {
     $("#id_southlimit").bind('input', drawRectangleOnTextChange);
     $("#id_westlimit").bind('input', drawRectangleOnTextChange);
 
-    let $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
-    let $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+    const $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
+    const $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
     // Set initial coverage fields state
     if ($radioBox.is(':checked')) { //box type coverage
         $("#div_id_north").hide();
@@ -41,9 +41,9 @@ $(document).ready(function () {
 
 async function drawInitialShape() {
     // This field is populated if the page is in view mode
-    let shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+    const shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
 
-    let resourceType = $("#resource-type").val();
+    const resourceType = $("#resource-type").val();
     // Center the map
     if (shapeType || resourceType === "Time Series") {
         leafletMarkers.clearLayers();
@@ -168,28 +168,28 @@ function initMap() {
 
     // https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html#l-draw
     
-    let terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
+    const terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
         attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
         maxZoom: 18,
     });
 
-    let streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 18,
     });
 
-    let googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+    const googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
         maxZoom: 20,
         subdomains:['mt0','mt1','mt2','mt3']
     });
 
-      let baseMaps = {
+    const baseMaps = {
         "Streets": streets,
         "Terrain": terrain,
         "Satelite": googleSat
       };
 
-      let overlayMaps = {
+      const overlayMaps = {
         "Spatial Extent": leafletMarkers,
       };
 
@@ -197,10 +197,10 @@ function initMap() {
         position: 'bottomright'
       }).addTo(coverageMap);
 
-      let layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'topright'});
+      const layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'topright'});
       layerControl.addTo(coverageMap);
 
-      let coverageDrawControl = new L.Control.Draw({
+      const coverageDrawControl = new L.Control.Draw({
         draw: {
             featureGroup: leafletMarkers,
             polygon: false,
