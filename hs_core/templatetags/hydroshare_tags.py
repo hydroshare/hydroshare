@@ -116,7 +116,7 @@ def resource_first_author(content):
             break
 
     if first_creator:
-        if first_creator.name and first_creator.relative_uri:
+        if first_creator.name and first_creator.relative_uri and first_creator.is_active_user:
             return format_html('<a href="{desc}">{name}</a>',
                                desc=first_creator.relative_uri,
                                name=first_creator.name)

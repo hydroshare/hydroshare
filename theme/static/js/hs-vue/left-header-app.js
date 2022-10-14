@@ -287,7 +287,7 @@ Vue.component('add-author-modal', {
                         // Person specific fields
                         if (vue.authorType === vue.authorTypes.OTHER_PERSON) {
                             newAuthor.name = author.name;
-                            newAuthor.identifiers = author.identifiers,
+                            newAuthor.identifiers = author.identifiers;
                             newAuthor.profileUrl = null;
                         }
 

@@ -14,6 +14,7 @@ class UserCreationFormExtended(UserCreationForm):
         self.fields['email'] = forms.EmailField(label=_("E-mail"), max_length=75)
 
 UserAdmin.add_form = UserCreationFormExtended
+UserAdmin.readonly_fields = ('username',)
 UserAdmin.add_fieldsets = (
     (None, {
         'classes': ('wide',),

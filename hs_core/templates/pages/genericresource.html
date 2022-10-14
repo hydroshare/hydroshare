@@ -1059,7 +1059,7 @@
                 "homepage": "{{ author.homepage|default:"" }}",
                 "profileUrl": "{{ author.relative_uri|default:'' }}",
                 "order": "{{ author.order }}",
-                "is_active": "{{ author.is_active|default:"" }}",
+                "is_active": "{{ author.is_active_user|default:"" }}",
             },
           {% endfor %}
       ];
