@@ -1,5 +1,6 @@
 // Recommend subscribing to notifications for PRs to https://github.com/internetofwater/geoconnex.us/
 const limitNumberOfFeaturesPerRequest = 1000;
+const geoconnexAppVerbose = false; // set true to increase console verbosity
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
 const geoconnexApp = new Vue({
   el: "#app-geoconnex",
@@ -67,16 +68,6 @@ const geoconnexApp = new Vue({
       searchResultString: "",
       appMessages: [], // notifications displayed at top of App
       collectionMessages: [], // notifications displayed below "Collection" autoselect
-      log: console.log.bind(
-        window.console,
-        "%cGeoconnex:",
-        "color: white; background:blue;"
-      ),
-      warn: console.warn.bind(
-        window.console,
-        "%cGeoconnex warning:",
-        "color: white; background:blue;"
-      ),
       error: console.error.bind(
         window.console,
         "%cGeoconnex error:",
@@ -223,7 +214,6 @@ const geoconnexApp = new Vue({
           );
           geoconnexApp.fitMapToFeatures();
         } catch (e) {
-          geoconnexApp.error(e.message);
           const message = "Error while attempting to remove related feature";
           geoconnexApp.generateAppMessage(`${message}: ${e.message}`);
           geoconnexApp.error(message, e);
@@ -404,8 +394,7 @@ const geoconnexApp = new Vue({
           return !geoconnexApp.ignoredCollections.includes(col.id);
         });
       } catch (e) {
-        const message = "Error while loading collections";
-        geoconnexApp.error(message, e);
+        geoconnexApp.error("Error while loading collections", e);
       }
       geoconnexApp.loadingCollections = false;
     },
@@ -724,8 +713,7 @@ const geoconnexApp = new Vue({
           );
         }
       } catch (e) {
-        const message = "Error attempting to show spatial extent";
-        geoconnexApp.error(message, e);
+        geoconnexApp.error("Error attempting to show spatial extent", e);
       }
       geoconnexApp.fitMapToFeatures({group: null, overrideShouldFit: true});
     },
@@ -1163,7 +1151,7 @@ const geoconnexApp = new Vue({
         ];
         geoconnexApp.showSpatialExtent();
       } else {
-        geoconnexApp.warn("Resource spatial extent isn't set");
+        geoconnexApp.log("Resource spatial extent isn't set");
       }
     },
     fillCoordinatesFromClickedCoordinates(lat, long) {
@@ -1376,6 +1364,19 @@ const geoconnexApp = new Vue({
         },
       ];
     },
+    configureLogging(){
+      const geoconnexApp = this;
+      if (geoconnexAppVerbose){
+        geoconnexApp.log = 
+        console.log.bind(
+         window.console,
+         "%cGeoconnex:",
+         "color: white; background:blue;"
+       )
+      }else{
+        geoconnexApp.log = function () {};
+      }
+    }
   },
   beforeMount() {
     this.setCustomFeatureRules();
@@ -1383,6 +1384,7 @@ const geoconnexApp = new Vue({
   async mounted() {
     const geoconnexApp = this;
     geoconnexApp.isLoading = true;
+    geoconnexApp.configureLogging();
     if (
       geoconnexApp.resMode == "Edit" ||
       geoconnexApp.metadataRelations.length > 0
