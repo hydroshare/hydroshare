@@ -24,12 +24,12 @@
   font-size: 1.5rem;
 }
 
-#app-geoconnex .glyphicon-remove-circle{
+#app-geoconnex .glyphicon-remove-circle {
   color: rgb(217, 83, 79);
   cursor: pointer;
 }
 
-#app-geoconnex .glyphicon-remove-circle.text-muted{
+#app-geoconnex .glyphicon-remove-circle.text-muted {
   color: #999;
 }
 
@@ -66,7 +66,7 @@
 
 #geoconnex-leaflet {
   height: 400px;
-  border: 1px solid #DDD;
+  border: 1px solid #ddd;
   margin-bottom: 1rem;
 }
 
