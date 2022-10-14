@@ -1787,17 +1787,21 @@ function onUploadSuccess(file, response) {
 $(document).ready(function () {
     // Download All method
     $("#btn-download-all, #download-bag-btn").click(function (event) {
-        if (event.currentTarget.id === "btn-download-all") {
-            let btnDownloadAll = $("#btn-download-all");
-            btnDownloadAll.prepend('<i class="fa fa-spinner fa-pulse fa-lg download-spinner" style="z-index: 1; position: absolute;"></i>');
+        let btnDownloadAll = $("#btn-download-all");
+        let initialClass = btnDownloadAll.children("span:first-of-type").attr("class");
+        const dataAgreeRequired = btnDownloadAll.attr("data-toggle") === "modal";
+        if (event.currentTarget.id === "download-bag-btn" || !dataAgreeRequired) {
+            btnDownloadAll.children("span:first-of-type").attr("class", "")
+            btnDownloadAll.prepend('<i class="fa fa-spinner fa-pulse fa-lg download-spinner"></i>');
             btnDownloadAll.css("cursor", "wait");
         }
-        $(event.currentTarget).toggleClass("disabled", true);
-        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
-        const dataAgree = $("#btn-download-all").attr("data-toggle") === "modal";
-        if (dataAgree && event.currentTarget.id !== "download-bag-btn") {
+        
+        if (dataAgreeRequired && event.currentTarget.id !== "download-bag-btn") {
             return; // download will be triggered from Agreement modal
         }
+
+        $(event.currentTarget).toggleClass("disabled", true);
+        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
         $.ajax({
             type: "GET",
             url: bagUrl,
@@ -1805,9 +1809,11 @@ $(document).ready(function () {
             notificationsApp.registerTask(task);
             notificationsApp.show();
         }).always((event)=>{
-            $("#btn-download-all").toggleClass("disabled", false);
-            $("#btn-download-all").css("cursor", "auto");
+            let btnDownloadAll = $("#btn-download-all");
+            btnDownloadAll.toggleClass("disabled", false);
+            btnDownloadAll.css("cursor", "auto");
             $(".download-spinner").remove();
+            btnDownloadAll.children("span:first-of-type").attr("class", initialClass)
         });
     });
     if (!$("#hs-file-browser").length) {
