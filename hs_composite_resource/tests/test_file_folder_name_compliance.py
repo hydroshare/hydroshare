@@ -186,8 +186,8 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         with self.assertRaises(DRF_ValidationError):
             ResourceFile.create_folder(self.res, new_folder)
 
-        # folder name contains symbol not allowed (allowed symbols are: '-' and '_') - non-compliant
-        new_folder = "my.folder"
+        # folder name contains symbol not allowed (allowed symbols are: '-', '.', and '_') - non-compliant
+        new_folder = "my>folder"
         with self.assertRaises(DRF_ValidationError):
             ResourceFile.create_folder(self.res, new_folder)
 
@@ -209,6 +209,9 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         multiple_folder_path = "folder-1/folder-2"
         ResourceFile.create_folder(self.res, multiple_folder_path)
 
+        multiple_folder_path = "folder-1/.folder-2"
+        ResourceFile.create_folder(self.res, multiple_folder_path)
+
     def test_folder_rename_non_compliant(self):
         """Here we are testing that when we try to rename a folder of a resource using a non-compliant folder name,
         the renaming of folder should fail.
@@ -224,7 +227,24 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
-        # folder name has a symbol which is not allowed - non-compliant
+        # folder name has a symbol which is not allowed (allowed symbols are: '-', '.', and '_') - non-compliant
+        tgt_path = f'data/contents/my=folder'
+        with self.assertRaises(DRF_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+
+        # folder name has a symbol which is not allowed (allowed symbols are: '-', '.', and '_') - non-compliant
+        # symbol '.' is allowed only as the start character
         tgt_path = f'data/contents/my.folder'
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+
+        tgt_path = f'data/contents/.my_folder'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+
+        src_path = tgt_path
+        tgt_path = f'data/contents/my_folder'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+
+        src_path = tgt_path
+        tgt_path = f'data/contents/my-folder'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
