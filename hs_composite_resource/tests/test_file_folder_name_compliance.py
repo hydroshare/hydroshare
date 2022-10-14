@@ -217,34 +217,35 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         the renaming of folder should fail.
         """
 
+        base_path = "data/contents"
         new_folder = "my-folder"
         ResourceFile.create_folder(self.res, new_folder)
 
         # now rename the folder with non-compliant folder name - which should fail
-        src_path = f'data/contents/{new_folder}'
+        src_path = f'{base_path}/{new_folder}'
         # folder name has a space - non-compliant
-        tgt_path = f'data/contents/my folder'
+        tgt_path = f'{base_path}/my folder'
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
         # folder name has a symbol which is not allowed (allowed symbols are: '-', '.', and '_') - non-compliant
-        tgt_path = f'data/contents/my=folder'
+        tgt_path = f'{base_path}/my=folder'
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
         # folder name has a symbol which is not allowed (allowed symbols are: '-', '.', and '_') - non-compliant
         # symbol '.' is allowed only as the start character
-        tgt_path = f'data/contents/my.folder'
+        tgt_path = f'{base_path}/my.folder'
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
-        tgt_path = f'data/contents/.my_folder'
+        tgt_path = f'{base_path}/.my_folder'
         move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
         src_path = tgt_path
-        tgt_path = f'data/contents/my_folder'
+        tgt_path = f'{base_path}/my_folder'
         move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
         src_path = tgt_path
-        tgt_path = f'data/contents/my-folder'
+        tgt_path = f'{base_path}/my-folder'
         move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
