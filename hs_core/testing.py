@@ -10,7 +10,6 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.files.uploadedfile import UploadedFile
 from django.test import TestCase, RequestFactory
 
-from hs_core.models import ResourceFile
 from hs_core.hydroshare import add_file_to_resource, add_resource_files
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder
