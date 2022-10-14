@@ -1813,7 +1813,7 @@ $(document).ready(function () {
         }).always((event) => {
             const btnDownloadAll = $("#btn-download-all");
             btnDownloadAll.toggleClass("disabled", false);
-            btnDownloadAll.css("cursor", "auto");
+            btnDownloadAll.css("cursor", "");
             icon.attr("class", initialClass)
         });
     });
