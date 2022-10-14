@@ -98,10 +98,11 @@ const geoconnexApp = new Vue({
       // UI "theme"
       stringLengthLimit: 40, // after which ellipse...
       collectionMessageColor: "orange",
+      collectionMessageColorDarker: "orange",
       mappedPointFillColor: "rgba(255, 165, 0, 0.32)",
       collectionSearchColor: "orange",
-      featureSelectColor: "black",
-      spatialExtentColor: "blue",
+      featureSelectColor: "rgba(0,0,0,.87)",
+      spatialExtentColor: "rgb(51, 136, 255)",
     };
   },
   computed: {
@@ -695,7 +696,7 @@ const geoconnexApp = new Vue({
               {
                 color: geoconnexApp.spatialExtentColor,
                 fillColor: geoconnexApp.spatialExtentColor,
-                fillOpacity: 0.1,
+                fillOpacity: 0.15,
               },
             group: geoconnexApp.spatialExtentGroup,
             interactive: false

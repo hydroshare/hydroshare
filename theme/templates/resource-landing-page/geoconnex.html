@@ -7,12 +7,13 @@
 {% if resource_edit_mode or inspecific_relations %}
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
-        <label>This HydroShare resource is linked to the following geospatial features
+        <p>
+            <i>This HydroShare resource is linked to the following geospatial features</i>
             <span v-show="resMode=='Edit'" data-toggle="tooltip" data-placement="auto"
             title='Use this section to add persistent identifiers pointing at related geospatial features.'
             class="glyphicon glyphicon-info-sign text-muted">
             </span>
-        </label>
+        </p>
         <div id="geoconnex-message-wrapper" v-if="resMode=='Edit'">
             <div class="alert alert-info alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -25,8 +26,8 @@
                         <strong><a href="https://geoconnex.internetofwater.dev/" target="_blank">Geoconnex</a></strong>,
                         a project of the <strong><a href="https://internetofwater.org/" target="_blank">Internet of Water</a></strong>,
                         provides collections of reference features within the United States that might overlap with your resource.
-                        For example, if this resource has spatial extent contained within an Eight-digit Hydrologic Subbasin, you could search the "HU08" collection <strong><span :style="`color: ${collectionSearchColor}`">(step #1)</span></strong>.
-                        Once you found the specific related item, you could select it <strong><span :style="`color: ${featureSelectColor}`">(step #2)</span></strong>, adding it to you resource metadata.
+                        For example, if this resource has spatial extent contained within an Eight-digit Hydrologic Subbasin, you could search the "HU08" collection <strong>(step #1)</strong>.
+                        Once you found the specific related item, you could select it <strong>(step #2)</strong>, adding it to you resource metadata.
                         A link can alternatively be created by typing a URL that directs to a related geospatial feature not yet in the Geoconnex collections.
                         If you enter a URL, it will be converted to an active hyperlink. Adding these relations improves discoverability of your resource and contributes to
                         <strong><a href="https://www.go-fair.org/fair-principles/" target="_blank">FAIR Data</a></strong>.
@@ -76,12 +77,12 @@
                             multiple
                             :loading="isLoading"
                             placeholder="Type to narrow down options or select from the list"
-                            :label="limitToSingleCollection ? '1. Choose a collection to search' : '1. Choose collections to search'"
+                            :label="limitToSingleCollection ? '1. Choose a collection to search...' : '1. Choose collections to search...'"
                             :disabled="loadingCollections || searchingDescription !==''"
                             :loading="loadingCollections || searchingDescription !==''"
                             outlined
                             hide-details
-                            :color="collectionSearchColor"
+                            :color="collectionMessageColor"
                             :item-color="collectionSearchColor"
                             :search-input.sync="collectionTypeahead"
                             return-object="true">
@@ -107,12 +108,11 @@
                                 <template v-slot:selection="{ attrs, item, parent, selected }">
                                     <div 
                                         v-if="limitToSingleCollection"
-                                        :style="`color: ${collectionSearchColor}`"
                                         v-bind="attrs" :input-value="selected">
                                             ${ item.description } (${item.id})
                                     </div>
-                                    <v-chip v-else v-bind="attrs" :input-value="selected" :color="collectionSearchColor" label outlined large>
-                                        <span class="text-truncate" :color="collectionSearchColor">
+                                    <v-chip v-else v-bind="attrs" :input-value="selected" label outlined large>
+                                        <span class="text-truncate">
                                             ${ item.description } (${item.id})
                                         </span>
                                     <span v-show="!loadingCollections && searchingDescription==''" @click.stop="parent.selectItem(item)" class="glyphicon glyphicon-remove-circle"></span>
@@ -131,44 +131,39 @@
                                   </template>
                         </v-autocomplete>
 
-                        <div v-if="!isLoading" class="small text-muted mt-2 my-4" :style="`color: ${collectionMessageColor}`">
+                        <div v-if="!isLoading" class="small text-muted mt-2 my-4">
                             <div v-show="hasSearchesWithouIssues">
                                 <span data-toggle="tooltip" data-placement="auto"
                                 :title="`Feature options for step #2 have been limited to the collection ${ collectionsSelectedToSearch.length > 1 ? 's' : '' } you selected here.`"
-                                class="glyphicon glyphicon-info-sign text-muted"
-                                :style="`color: ${collectionMessageColor}`">
+                                class="glyphicon glyphicon-info-sign text-muted">
                                 </span>
                                 Feature options for step #2 have been limited to the collection ${ collectionsSelectedToSearch.length > 1 ? "s" : "" } you selected here
                             </div>
                             <div v-show="searchResultString">
                                 <span data-toggle="tooltip" data-placement="auto"
                                 :title="searchResultString"
-                                class="glyphicon glyphicon-info-sign text-muted"
-                                :style="`color: ${collectionMessageColor}`">
+                                class="glyphicon glyphicon-info-sign text-muted">
                                 </span>
                                 ${ searchResultString }
                             </div>
                             <div v-show="loadingCollections">
                                 <span data-toggle="tooltip" data-placement="auto"
                                 title="Loading Geoconnex relations"
-                                class="glyphicon glyphicon-info-sign text-muted"
-                                :style="`color: ${collectionMessageColor}`">
+                                class="glyphicon glyphicon-info-sign text-muted">
                                 </span>
                                 Loading Geoconnex relations...
                             </div>
                             <div v-show="searchingDescription">
                                 <span data-toggle="tooltip" data-placement="auto"
                                 title="Searching Geoconnex"
-                                class="glyphicon glyphicon-info-sign text-muted"
-                                :style="`color: ${collectionMessageColor}`">
+                                class="glyphicon glyphicon-info-sign text-muted">
                                 </span>
                                 <b>Searching Geoconnex collection:</b> ${searchingDescription}
                             </div>
                             <div v-for="message in collectionMessages">
                                 <span data-toggle="tooltip" data-placement="auto"
                                     :title="message"
-                                    class="glyphicon glyphicon-info-sign text-muted"
-                                    :style="`color: ${collectionMessageColor}`">
+                                    class="glyphicon glyphicon-info-sign text-muted">
                                 </span>
                                 ${ message }
                             </div>
@@ -196,7 +191,6 @@
                             placeholder="Type to narrow down options or select on the map"
                             :disabled="searchingDescription !==''"
                             :loading="loadingRelations"
-                            :color=featureSelectColor
                             :search-input.sync="itemTypeahead"
                             :rules="featureRules"
                             return-object="true">
@@ -219,13 +213,13 @@
                                     <v-list-item-content>
                                         <v-list-item-title>
                                             No results matching "<strong>${ itemTypeahead }</strong>". 
-                                            Press <kbd>enter</kbd> to add <v-chip :color=featureSelectColor outlined><strong>${ itemTypeahead }</strong></v-chip> as a custom item.
+                                            Press <kbd>enter</kbd> to add <v-chip outlined><strong>${ itemTypeahead }</strong></v-chip> as a custom item.
                                         </v-list-item-title>
                                     </v-list-item-content>
                                 </v-list-item>
                             </template>
                             <template v-slot:selection="{ attrs, item, parent, selected }">
-                                <v-chip v-bind="attrs" :input-value="selected" :color=featureSelectColor outlined>
+                                <v-chip v-bind="attrs" :input-value="selected" outlined>
                                     <span class="text-truncate" :title="item.text.length > stringLengthLimit ? item.text : ''">
                                         ${ item.text }
                                     </span>
