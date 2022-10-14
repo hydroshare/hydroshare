@@ -1,5 +1,6 @@
 /**
  * Created by Mauriel on 2/9/2016.
+ * Updated by Devin on 10/14/2022.
  */
 // Map js
 let coverageMap;
@@ -112,7 +113,7 @@ async function drawInitialShape() {
             drawMarkerOnTextChange();
         }
     }
-    $("#id-coverage-spatial input:radio").change(function () {
+    $("#div_id_type input:radio").change(function () {
         if ($(this).val() == "point") {
             $("#div_id_north").show();
             $("#div_id_east").show();
