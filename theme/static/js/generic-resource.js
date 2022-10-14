@@ -298,7 +298,7 @@ $(document).ready(function () {
     $("#download-bag-cancel").on('click', function(e) {
         $('#btn-download-all').removeClass('disabled');
         $("#btn-download-all").css("cursor", "auto");
-        $(".download-spinner").remove();
+        $("#btn-download-all .download-spinner").remove();
         $("#agree-chk-download-bag").prop( "checked", false );
         $("#download-bag-btn").addClass('disabled');
     });

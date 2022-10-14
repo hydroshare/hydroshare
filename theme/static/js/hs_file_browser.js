@@ -1787,12 +1787,13 @@ function onUploadSuccess(file, response) {
 $(document).ready(function () {
     // Download All method
     $("#btn-download-all, #download-bag-btn").click(function (event) {
-        let btnDownloadAll = $("#btn-download-all");
-        let initialClass = btnDownloadAll.children("span:first-of-type").attr("class");
+        const btnDownloadAll = $("#btn-download-all");
+        const icon = $('#btn-download-all > span:first-child');
+        const initialClass = icon.attr("class");
         const dataAgreeRequired = btnDownloadAll.attr("data-toggle") === "modal";
+
         if (event.currentTarget.id === "download-bag-btn" || !dataAgreeRequired) {
-            btnDownloadAll.children("span:first-of-type").attr("class", "")
-            btnDownloadAll.prepend('<i class="fa fa-spinner fa-pulse fa-lg download-spinner"></i>');
+            icon.attr("class", "fa fa-spinner fa-pulse fa-lg download-spinner");
             btnDownloadAll.css("cursor", "wait");
         }
         
@@ -1800,22 +1801,23 @@ $(document).ready(function () {
             return; // download will be triggered from Agreement modal
         }
 
-        $(event.currentTarget).toggleClass("disabled", true);
+        btnDownloadAll.toggleClass("disabled", true);
         const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
+
         $.ajax({
             type: "GET",
             url: bagUrl,
         }).done(function (task) {
             notificationsApp.registerTask(task);
             notificationsApp.show();
-        }).always((event)=>{
-            let btnDownloadAll = $("#btn-download-all");
+        }).always((event) => {
+            const btnDownloadAll = $("#btn-download-all");
             btnDownloadAll.toggleClass("disabled", false);
             btnDownloadAll.css("cursor", "auto");
-            $(".download-spinner").remove();
-            btnDownloadAll.children("span:first-of-type").attr("class", initialClass)
+            icon.attr("class", initialClass)
         });
     });
+
     if (!$("#hs-file-browser").length) {
         return;
     }

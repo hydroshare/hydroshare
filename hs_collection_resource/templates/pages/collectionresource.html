@@ -127,22 +127,18 @@
             <hr>
             {% block download_bag %}
                 <div>
-                    <div>
-                        <button id="btn-download-all" class="btn btn-default row-selector space-bottom"
-                            {% if cm.raccess.require_download_agreement %}
-                                data-target="#license-agree-dialog-bag" data-toggle="modal"
-                                data-placement="auto"
-                            {% endif %}
-                            data-bag-url="{{ cm.bag_url }}">
-                                <span class="glyphicon glyphicon-download-alt">
-                                    <span title='Download All Content as Zipped BagIt Archive'
-                                          class="button-label">Download All Content as Zipped BagIt Archive</span>
-                                </span>
-                        </button>
-                    </div>
-                    <div>
-                        <a target="_blank" href="https://help.hydroshare.org/creating-and-managing-resources/view-and-download-a-resource">Learn more about the BagIt download</a>
-                    </div>
+                    <button id="btn-download-all" class="btn btn-default row-selector space-bottom"
+                        {% if cm.raccess.require_download_agreement %}
+                            data-target="#license-agree-dialog-bag" data-toggle="modal"
+                            data-placement="auto"
+                        {% endif %}
+                        data-bag-url="{{ cm.bag_url }}">
+                        <span class="glyphicon glyphicon-download-alt"></span>
+                        <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
+                    </button>
+                </div>
+                <div>
+                    <a target="_blank" href="https://help.hydroshare.org/creating-and-managing-resources/view-and-download-a-resource">Learn more about the BagIt download</a>
                 </div>
             {% endblock %}
         </div>
