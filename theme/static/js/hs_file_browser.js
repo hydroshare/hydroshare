@@ -1787,30 +1787,37 @@ function onUploadSuccess(file, response) {
 $(document).ready(function () {
     // Download All method
     $("#btn-download-all, #download-bag-btn").click(function (event) {
-        if (event.currentTarget.id === "btn-download-all") {
-            let btnDownloadAll = $("#btn-download-all");
-            btnDownloadAll.prepend('<i class="fa fa-spinner fa-pulse fa-lg download-spinner" style="z-index: 1; position: absolute;"></i>');
+        const btnDownloadAll = $("#btn-download-all");
+        const icon = $('#btn-download-all > span:first-child');
+        const initialClass = icon.attr("class");
+        const dataAgreeRequired = btnDownloadAll.attr("data-toggle") === "modal";
+
+        if (event.currentTarget.id === "download-bag-btn" || !dataAgreeRequired) {
+            icon.attr("class", "fa fa-spinner fa-pulse fa-lg download-spinner");
             btnDownloadAll.css("cursor", "wait");
         }
-        $(event.currentTarget).toggleClass("disabled", true);
-        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
-
-        if (!bagUrl) {
-            return; // If no url, it means download will be triggered from Agreement modal
+        
+        if (dataAgreeRequired && event.currentTarget.id !== "download-bag-btn") {
+            return; // download will be triggered from Agreement modal
         }
+
+        btnDownloadAll.toggleClass("disabled", true);
+        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
 
         $.ajax({
             type: "GET",
             url: bagUrl,
-            success: function (task) {
-                notificationsApp.registerTask(task);
-                notificationsApp.show();
-                $(event.currentTarget).toggleClass("disabled", false);
-                $("#btn-download-all").css("cursor", "auto");
-                $(".download-spinner").remove();
-            }
+        }).done(function (task) {
+            notificationsApp.registerTask(task);
+            notificationsApp.show();
+        }).always((event) => {
+            const btnDownloadAll = $("#btn-download-all");
+            btnDownloadAll.toggleClass("disabled", false);
+            btnDownloadAll.css("cursor", "");
+            icon.attr("class", initialClass)
         });
     });
+
     if (!$("#hs-file-browser").length) {
         return;
     }
