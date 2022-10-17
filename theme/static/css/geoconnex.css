@@ -58,12 +58,8 @@
   flex: 2 1 500px;
 }
 
-.leaflet-container {
+#geoconnex-leaflet{
   z-index: 2;
-}
-
-.leaflet-pane{
-  z-index: unset;
 }
 
 #geoconnex-controls-wrapper {
