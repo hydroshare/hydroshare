@@ -191,6 +191,8 @@ class TestCaseCommonUtilities(object):
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/' + file_name_list[1],
                                       'data/contents/sub_test_dir/' + file_name_list[1])
+        # in preparation to test folder overwriting file with the same name
+        create_folder(res.short_id, f'data/contents/sub_test_dir/new_{file_name_list[2]}')
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
             updated_res_file_names.append(rf.short_path)
@@ -198,19 +200,15 @@ class TestCaseCommonUtilities(object):
         self.assertIn('new_' + file_name_list[2], updated_res_file_names,
                       msg="resource does not contain the updated file new_" + file_name_list[2])
         self.assertNotIn(file_name_list[2], updated_res_file_names,
-                         msg='resource still contains the old file ' + file_name_list[2] +
-                             ' after renaming')
+                         msg='resource still contains the old file ' + file_name_list[2] + ' after renaming')
         self.assertIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain ' + file_name_list[0] + ' moved to a folder')
         self.assertNotIn(file_name_list[0], updated_res_file_names,
-                         msg='resource still contains the old ' + file_name_list[0] +
-                             'after moving to a folder')
+                         msg='resource still contains the old ' + file_name_list[0] + 'after moving to a folder')
         self.assertIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
-                      msg='resource does not contain ' + file_name_list[1] +
-                          'moved to a new folder')
+                      msg='resource does not contain ' + file_name_list[1] + 'moved to a new folder')
         self.assertNotIn(file_name_list[1], updated_res_file_names,
-                         msg='resource still contains the old ' + file_name_list[1] +
-                             ' after moving to a folder')
+                         msg='resource still contains the old ' + file_name_list[1] + ' after moving to a folder')
 
         # zip the folder
         output_zip_fname, size = \
@@ -236,14 +234,26 @@ class TestCaseCommonUtilities(object):
             # TODO: Why isn't this a method of resource?
             add_resource_files(res.short_id, self.test_file_1)
 
-        # TODO: use ResourceFile.create_folder, which doesn't require data/contents prefix
+        # create a subfolder with the same name as a file name in the zip file to make sure an exception will be raised
+        # when unzipping without overwriting
+        create_folder(res.short_id, f'data/contents/sub_test_dir/{file_name_list[0]}')
+        # should raise FileOverrideException
+        with self.assertRaises(FileOverrideException):
+            unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
+        # remove the subfolder with conflicting name with a file name in the zip file
+        remove_folder(user, res.short_id, f'data/contents/sub_test_dir')
+        # unzip should succeed after the conflicting subfolder is removed
+        unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
+
+        # remove all files in sub_test_dir created by unzip, and then create an empty sub_test_dir
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
         create_folder(res.short_id, 'data/contents/sub_test_dir')
 
         # TODO: use ResourceFile.rename, which doesn't require data/contents prefix
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/' + file_name_list[0],
                                       'data/contents/sub_test_dir/' + file_name_list[0])
-        # Now resource should contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
+        # Now resource should contain three files: new_file3.txt, sub_test_dir.zip, and file1.txt
         self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
 
         # should raise FileOverrideException
@@ -253,18 +263,33 @@ class TestCaseCommonUtilities(object):
         # Resource should still contain 3 files: file3_new.txt, sub_test_dir.zip,
         # and file1.txt since unzip raised an exception without really overriding files
         file_cnt = res.files.all().count()
-        self.assertEqual(file_cnt, 3, msg="resource file count didn't match - " +
-                                          str(file_cnt) + " != 3")
+        self.assertEqual(file_cnt, 3, msg="resource file count didn't match - " + str(file_cnt) + " != 3")
 
         # remove all files except the zippped file
         remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
 
-        # Now resource should contain two files: file3_new.txt sub_test_dir.zip
+        # Now resource should contain two files: new_file3.txt sub_test_dir.zip
         file_cnt = res.files.all().count()
-        self.assertEqual(file_cnt, 2, msg="resource file count didn't match - " +
-                                          str(file_cnt) + " != 2")
+        self.assertEqual(file_cnt, 2, msg="resource file count didn't match - " + str(file_cnt) + " != 2")
+        # move new_file3.txt to sub_test_dir to test folder overriding file with the same name will raise exception
+        move_or_rename_file_or_folder(user, res.short_id,
+                                      f'data/contents/new_{file_name_list[2]}',
+                                      f'data/contents/sub_test_dir/new_{file_name_list[2]}')
+        # should raise FileOverrideException since folder overriding file with the same name is not allowed without
+        # overwriting
+        with self.assertRaises(FileOverrideException):
+            unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
+        # move new_file3.txt back from sub_test_dir
+        move_or_rename_file_or_folder(user, res.short_id,
+                                      f'data/contents/sub_test_dir/new_{file_name_list[2]}',
+                                      f'data/contents/new_{file_name_list[2]}')
+
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
+
+        # unzipping should succeed with original zip file removed
         unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', True)
-        # Now resource should contain three files: file1.txt, file2.txt, and file3_new.txt
+
+        # Now resource should contain three files: file1.txt, file2.txt, and new_file3.txt
         self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
@@ -287,17 +312,13 @@ class TestCaseCommonUtilities(object):
             updated_res_file_names.append(rf.short_path)
 
         self.assertNotIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
-                         msg='resource still contains ' + file_name_list[0] +
-                             ' in the old folder after renaming')
+                         msg='resource still contains ' + file_name_list[0] + ' in the old folder after renaming')
         self.assertIn('sub_dir/' + file_name_list[0], updated_res_file_names,
-                      msg='resource does not contain ' + file_name_list[0] +
-                          ' in the new folder after renaming')
+                      msg='resource does not contain ' + file_name_list[0] + ' in the new folder after renaming')
         self.assertNotIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
-                         msg='resource still contains ' + file_name_list[1] +
-                             ' in the old folder after renaming')
+                         msg='resource still contains ' + file_name_list[1] + ' in the old folder after renaming')
         self.assertIn('sub_dir/' + file_name_list[1], updated_res_file_names,
-                      msg='resource does not contain ' + file_name_list[1] +
-                          ' in the new folder after renaming')
+                      msg='resource does not contain ' + file_name_list[1] + ' in the new folder after renaming')
 
         # remove a folder
         # TODO: utilize ResourceFile.remove_folder instead. Takes a short path.

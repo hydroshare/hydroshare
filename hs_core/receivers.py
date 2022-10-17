@@ -1,5 +1,6 @@
 """Signal receivers for the hs_core app."""
-
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
@@ -7,12 +8,31 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
     post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change, \
     post_delete_file_from_resource
 from hs_core.tasks import update_web_services
-from hs_core.models import GenericResource, Party
+from hs_core.models import GenericResource, Creator, Contributor, Party
 from django.conf import settings
 from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
     CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm
+
+
+@receiver(post_save, sender=User)
+def update_party_instance(sender, instance, created, **kwargs):
+    """Updates party (creator/contributor) db record when an associated user record gets updated"""
+
+    user = instance
+
+    def update_active_user_flag(party):
+        if party.is_active_user != user.is_active:
+            party.is_active_user = user.is_active
+            party.save()
+
+    if not created:
+        for creator in Creator.objects.filter(hydroshare_user_id=user.id).all():
+            update_active_user_flag(creator)
+
+        for contributor in Contributor.objects.filter(hydroshare_user_id=user.id).all():
+            update_active_user_flag(contributor)
 
 
 @receiver(pre_metadata_element_create, sender=GenericResource)
