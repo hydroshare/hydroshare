@@ -722,7 +722,7 @@ const geoconnexApp = new Vue({
         "https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg",
         {
           attribution:
-            'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+            'Map tiles by <a href="http://stamen.com" target="_blank">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0" target="_blank">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org" target="_blank">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright" target="_blank">ODbL</a>.',
           maxZoom: 18,
         }
       );
@@ -731,7 +731,7 @@ const geoconnexApp = new Vue({
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
           attribution:
-            'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            'Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
           maxZoom: 18,
         }
       );
@@ -749,6 +749,8 @@ const geoconnexApp = new Vue({
         Terrain: terrain,
         Satelite: googleSat,
       };
+
+      geoconnexApp.map.attributionControl.setPrefix('<a href="https://leafletjs.com/" target="blank">Leaflet</a>');
 
       const overlayMaps = {
         "Selected Features": geoconnexApp.selectedFeatureGroup,
@@ -913,7 +915,7 @@ const geoconnexApp = new Vue({
           onEachFeature: function (feature, layer) {
             let popupText = `<h4>${feature.text}</h4>`;
             if (feature.uri) {
-              popupText += `<a href=${feature["uri"]}>${feature["uri"]}</a></br></br>`;
+              popupText += `<a href=${feature["uri"]} target="_blank">${feature["uri"]}</a></br></br>`;
             }
             if (
               geoconnexApp.resMode == "Edit" &&

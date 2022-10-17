@@ -183,7 +183,7 @@ function initMap() {
     "https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg",
     {
       attribution:
-        'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.',
+        'Map tiles by <a href="http://stamen.com" target="_blank">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0" target="_blank">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org" target="_blank">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright" target="_blank">ODbL</a>.',
       maxZoom: 18,
     }
   );
@@ -192,7 +192,7 @@ function initMap() {
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     {
       attribution:
-        'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        'Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
       maxZoom: 18,
     }
   );
@@ -204,6 +204,8 @@ function initMap() {
       subdomains: ["mt0", "mt1", "mt2", "mt3"],
     }
   );
+  coverageMap.attributionControl.setPrefix('<a href="https://leafletjs.com/" target="blank">Leaflet</a>');
+
 
   const baseMaps = {
     Streets: streets,
