@@ -9,28 +9,19 @@ const geoconnexApp = new Vue({
   data() {
     return {
       isLoading: false,
-      // Geoconnex collection and feature data structures
+      ////// Geoconnex collection & feature data structures + configuration //////
       collections: null,
       features: [],
       collectionsSelectedToSearch: [],
       selectedReferenceFeatures: [],
-
-      // Resource-level data
-      resShortId: SHORT_ID,
-      metadataRelations: RELATIONS,
-      resMode: RESOURCE_MODE,
-      resSpatialType: null,
-
-      // Fetching and cacheing
-      geoCache: null,
-      cacheName: "geoconnexCache",
-      cacheDuration: 0,
-      enforceCacheDuration: false,
-      geoconnexUrl: "https://reference.geoconnex.us/collections",
-      limitNumberOfFeaturesPerRequest: limitNumberOfFeaturesPerRequest,
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
+      // collection: features that will not be mapped or allowed for list selection
+      ignoredFeatures: {
+        "nat_aq": ["N9999OTHER"],
+        "principal_aq": [999]
+      },
+      // Geoconnex features have different "name" fields depending on which collection the belong to
       featureNameFieldMap: {
-        // Geoconnex features have different "name" fields depending on which collection the belong to
         nat_aq: "AQ_NAME",
         principal_aq: "AQ_NAME",
         dams: "name",
@@ -40,7 +31,21 @@ const geoconnexApp = new Vue({
         ua10: "NAME10",
       },
 
-      // Mapping
+      ////// Resource-level data //////
+      resShortId: SHORT_ID,
+      metadataRelations: RELATIONS,
+      resMode: RESOURCE_MODE,
+      resSpatialType: null,
+
+      ////// Fetching and cacheing //////
+      geoCache: null,
+      cacheName: "geoconnexCache",
+      cacheDuration: 0,
+      enforceCacheDuration: false,
+      geoconnexUrl: "https://reference.geoconnex.us/collections",
+      limitNumberOfFeaturesPerRequest: limitNumberOfFeaturesPerRequest,
+
+      ////// Mapping //////
       showingMap: true,
       map: null,
       spatialExtentGroup: null,
@@ -63,7 +68,7 @@ const geoconnexApp = new Vue({
       bBox: null,
       resSpatialExtentArea: null,
 
-      // Messages and logging
+      ////// Messages and logging //////
       searchingDescription: "",
       searchResultString: "",
       appMessages: [], // notifications displayed at top of App
@@ -74,19 +79,19 @@ const geoconnexApp = new Vue({
         "color: white; background:blue;"
       ),
 
-      // State// Delete previous drawings
+      ////// State //////
       loadingRelations: true,
       loadingCollections: true,
       lockCollectionsInput: false,
       limitToSingleCollection: true,
       hasSearches: false,
 
-      // VUE utility
+      ////// VUE utility //////
       collectionTypeahead: null,
       itemTypeahead: null,
       featureRules: null,
 
-      // UI "theme"
+      ////// UI "theme" //////
       stringLengthLimit: 40, // after which ellipse...
       collectionMessageColor: "orange",
       collectionMessageColorDarker: "orange",
@@ -364,8 +369,9 @@ const geoconnexApp = new Vue({
           keep = keep.concat(val.uris);
         }
       }
-      geoconnexApp.features = geoconnexApp.features.filter((s) =>
-        keep.includes(s.uri)
+      geoconnexApp.features = geoconnexApp.features.filter((s) =>{
+        return keep.includes(s.uri) && !geoconnexApp.ignoredFeatures[s.collection].includes(s.id);
+      }
       );
       geoconnexApp.loadingRelations = false;
     },
@@ -427,7 +433,6 @@ const geoconnexApp = new Vue({
             geoconnexApp.searchResultString = `Your search in ${collection.id} returned too many features.
             The limit is ${limitNumberOfFeaturesPerRequest} so no geometries were mapped.
             We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds`;
-            //
             return;
           }
           promises.push(
@@ -825,6 +830,9 @@ const geoconnexApp = new Vue({
         const collection = collectionOverride
           ? collectionOverride
           : feature.collection;
+
+        if(geoconnexApp.ignoredFeatures[collection.id].includes(feature.id)) return;
+
         // check if layergroup exists in the "dictionary"
         if (
           !geoconnexApp.searchLayerGroupDictionary ||
