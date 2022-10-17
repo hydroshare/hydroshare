@@ -628,17 +628,18 @@ const geoconnexApp = new Vue({
         }
       } catch (e) {
         geoconnexApp.error(e.message);
-        geoconnexApp.geoCache
-          .match(url)
-          .then(function (response) {
-            geoconnexApp.error(
-              "Geoconnex API fetch error. Falling back to old cached version"
-            );
-            return response.data;
-          })
-          .catch(function (e) {
-            geoconnexApp.error(e.message);
-          });
+        const response = await geoconnexApp.geoCache.match(url);
+        if (response){
+          geoconnexApp.log(
+            "Geoconnex API fetch error. Falling back to old cached version"
+          );
+          return response.data;
+        }else{
+          geoconnexApp.error(e.message);
+          geoconnexApp.generateAppMessage(
+            `Error while attempting to fetch Geoconnex items: ${e.message}`
+          );
+        }
       }
       return fetchData;
     },
