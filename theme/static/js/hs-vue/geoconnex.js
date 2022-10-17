@@ -370,7 +370,9 @@ const geoconnexApp = new Vue({
         }
       }
       geoconnexApp.features = geoconnexApp.features.filter((s) =>{
-        return keep.includes(s.uri) && !geoconnexApp.ignoredFeatures[s.collection].includes(s.id);
+        const ignoredDict = geoconnexApp.ignoredFeatures[s.collection];
+        if (ignoredDict && ignoredDict.includes(s.id)) return false;
+        return keep.includes(s.uri);
       }
       );
       geoconnexApp.loadingRelations = false;
@@ -831,7 +833,7 @@ const geoconnexApp = new Vue({
           ? collectionOverride
           : feature.collection;
 
-        if(geoconnexApp.ignoredFeatures[collection.id].includes(feature.id)) return;
+        if(geoconnexApp.ignoredFeatures[collection.id] && geoconnexApp.ignoredFeatures[collection.id].includes(feature.id)) return;
 
         // check if layergroup exists in the "dictionary"
         if (
