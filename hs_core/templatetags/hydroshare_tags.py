@@ -77,7 +77,7 @@ def app_on_open_with_list(content, arg):
 @register.filter
 def published_date(res_obj):
     if res_obj.raccess.published:
-        return res_obj.metadata.dates.all().filter(type='published').first().start_date
+        return res_obj.metadata.dates.all().filter(type='published').first().start_date or ''
     else:
         return ''
 
