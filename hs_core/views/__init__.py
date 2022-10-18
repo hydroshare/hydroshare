@@ -499,14 +499,17 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         except ValidationError as exp:
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session['validation_error'] = err_msg
+                            logger.warn(err_msg)
                         except Error as exp:
                             # some database error occurred
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session['validation_error'] = err_msg
+                            logger.warn(err_msg)
                         except Exception as exp:
                             # some other error occurred
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session['validation_error'] = err_msg
+                            logger.warn(err_msg)
 
                     if is_add_success:
                         resource_modified(res, request.user, overwrite_bag=False)
@@ -613,10 +616,12 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 except ValidationError as exp:
                     err_msg = err_msg.format(element_name, str(exp))
                     request.session['validation_error'] = err_msg
+                    logger.warn(err_msg)
                 except Error as exp:
                     # some database error occurred
                     err_msg = err_msg.format(element_name, str(exp))
                     request.session['validation_error'] = err_msg
+                    logger.warn(err_msg)
                 # TODO: it's brittle to embed validation logic at this level.
                 if element_name == 'title':
                     res.update_public_and_discoverable()
@@ -720,6 +725,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
         hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     except ValidationError as err:
         request.session['validation_error'] = str(err)
+        logger.warn(str(err))
     finally:
         request.session['resource-mode'] = 'edit'
 
@@ -743,6 +749,7 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
         except ValidationError as err:
             request.session['resource-mode'] = 'edit'
             request.session['validation_error'] = str(err)
+            logger.warn(str(err))
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
@@ -799,6 +806,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             return HttpResponseRedirect('/my-resources/')
         except ValidationError as ex:
             request.session['validation_error'] = str(ex)
+            logger.warn(str(ex))
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -923,6 +931,7 @@ def publish(request, shortkey, *args, **kwargs):
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session['validation_error'] = str(exp)
+        logger.error(str(exp))
     else:
         request.session['just_published'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
