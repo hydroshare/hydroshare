@@ -1573,7 +1573,54 @@
         {% endif %}
 
         {% if page.perms.delete and cm.can_be_published %}
-            <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
+            <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="submit-for-publication-title">Metadata Minimum</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>
+                                
+                            </p>
+                            <p>
+                                Please confirm that you accept the Minimum Metadata for published resources shown below.
+                            </p>
+                            <div class="iframe-border">
+                                {% md2html %}
+                                    #### Required:
+                                    **Title:** 
+                                    Minimum 30 characters
+                                    
+                                    **Abstract:** 
+                                    Minimum 150 characters
+                                    
+                                    **Subject Keywords:**
+                                    Minimum 3 subject keywords, including geographic location keywords
+                                    
+                                    
+                                    ### Recommended but Not Required:
+                                    **Funding Agency:**
+                                    At least 1 funding agency
+                                    
+                                    **Readme File:**
+                                    All variables, abbreviations/acronyms, and non-standard file formats should be defined in the ReadMe file. 
+                                    If the folder structure within the resource is complicated, it can be described in the ReadMe file as well. 
+                                    
+                                    **Geographic Coverage:**
+                                    Coverage that describes locations that are related to the dataset in whatever capacity the depositor finds most relevant
+                                {% endmd2html %}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button class="btn btn-danger" data-toggle="modal" data-dismiss="modal" data-target="#submit-for-publication-dialog-2">Okay</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="submit-for-publication-dialog-2" tabindex="-1" role="dialog"
                  aria-labelledby="myModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -1596,13 +1643,13 @@
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button class="btn btn-danger" id="publish-btn" data-toggle="modal" data-dismiss="modal" data-target="#submit-for-publication-dialog-2" disabled>Publish</button>
+                            <button class="btn btn-danger" id="publish-btn" data-toggle="modal" data-dismiss="modal" data-target="#submit-for-publication-dialog-3" disabled>Publish</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="modal fade" id="submit-for-publication-dialog-2" tabindex="-1" role="dialog"
+            <div class="modal fade" id="submit-for-publication-dialog-3" tabindex="-1" role="dialog"
                  aria-labelledby="myModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">

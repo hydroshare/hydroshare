@@ -7,6 +7,10 @@ from django.conf import settings
 
 from mezzanine import template
 
+from django import template as dj_template
+import markdown
+from inspect import cleandoc
+
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.search_indexes import normalize_name
 from hs_access_control.models.privilege import PrivilegeCodes
@@ -381,3 +385,20 @@ def param_replace(context, **kwargs):
     for k in [k for k, v in d.items() if not v]:
         del d[k]
     return d.urlencode()
+
+
+class MdNode(dj_template.Node):
+    def __init__(self, nodelist):
+        self.nodelist = nodelist
+
+    def render(self, context):
+        output = self.nodelist.render(context)
+        return markdown.markdown(cleandoc(output))
+
+
+def md2html(parser, token):
+    nodelist = parser.parse(('endmd2html',))
+    parser.delete_first_token()
+    return MdNode(nodelist)
+
+register.tag('md2html', md2html)
