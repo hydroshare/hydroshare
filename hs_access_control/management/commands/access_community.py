@@ -188,7 +188,7 @@ class Command(BaseCommand):
                 if options['description'] is not None:
                     description = options['description']
                 else:
-                    description = "No description"
+                    description = ""
                 purpose = options['purpose']
 
                 print("creating community '{}' with owner '{}' and description '{}'"

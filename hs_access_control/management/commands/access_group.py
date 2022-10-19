@@ -151,7 +151,7 @@ class Command(BaseCommand):
                 if options['description'] is not None:
                     description = options['description']
                 else:
-                    description = "No description"
+                    description = ""
 
                 if options['purpose'] is not None:
                     purpose = options['purpose']

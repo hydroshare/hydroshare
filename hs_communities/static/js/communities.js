@@ -1,5 +1,5 @@
 $(document).ready(function () {
-  let CommunityApp = new Vue({
+  const CommunityApp = new Vue({
     el: "#communities-app",
     delimiters: ['${', '}'],
     data: {
@@ -16,7 +16,7 @@ $(document).ready(function () {
       isInviting: {},
     },
     mounted: function () {
-      let groupIds = {};
+      const groupIds = {};
 
       $('#groups-list li').each(function () {
         const groupId = parseInt($(this).attr('id'));
