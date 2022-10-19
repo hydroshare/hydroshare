@@ -312,8 +312,8 @@ class PendingCommunityRequests(TemplateView):
         pending_requests = RequestCommunity.objects.none()
         if self.request.user.is_superuser:
             pending_requests = RequestCommunity.pending_requests(include_rejects=True)
-
-        return {'pending_requests': pending_requests}
+            pending_requests = list(pending_requests)  # force QuerySet evaluation
+        return {'pending_requests': mark_safe(escapejs(json.dumps(pending_requests)))}
 
 
 @method_decorator(login_required, name='dispatch')

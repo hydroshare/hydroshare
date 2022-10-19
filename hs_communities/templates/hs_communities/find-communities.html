@@ -35,9 +35,7 @@
             {% if not communities_list %}
                 <div class="col-sm-12"><i>No communities have been created yet.</i></div>
             {% endif %}
-            {# Pabitra: added these 2 span elements to show how to access pending requests and if the current user is admin #}
-            <span>Pending requests: {{ pending_requests.count }}</span>
-            <span>User is admin: {{ user_is_admin }}</span>
+
             {% for community in communities_list %}
                 <div class="group-container">
                     <div class="group-thumbnail contribution">
