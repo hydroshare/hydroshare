@@ -8,7 +8,7 @@
                   {% if user_is_admin %}
                   <div class="spacer"></div>
                   <a href="{% url "manage_requests" %}" class="collaborate-nav-item{% if active == 'manage_requests' %} active{% endif %}">
-                    <i class="fa fa-lock" aria-hidden="true"></i> Manage Requests <span class="badge">{{ pending_requests.count }}</span>
+                    <i class="fa fa-lock" aria-hidden="true"></i> Manage Requests <span class="badge">{{ pending_requests|length }}</span>
                   </a>
                   {% endif %}
               </div>

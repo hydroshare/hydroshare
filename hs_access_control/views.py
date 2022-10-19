@@ -17,18 +17,17 @@ logger = logging.getLogger(__name__)
 def user_json(user):
     """ JSON format for user data suitable for UI """
     if user is not None:
-        picture = None
         user.viewable_contributions = user.uaccess.can_view_resources_owned_by(user)
+
+        picture = None
         if user.userprofile.picture:
             picture = user.userprofile.picture.url
+
         return {
-            # "user_type": "user",
-            # "access": user_access,
             "id": user.id,
             "pictureUrl": picture or "",
             "best_name": best_name(user),
             "user_name": user.username,
-            # "can_undo": user.can_undo,
             # Data used to populate profile badge:
             "email": user.email,
             "organization": user.userprofile.organization,
@@ -42,7 +41,6 @@ def user_json(user):
             "joined": user.date_joined.strftime("%d %b, %Y"),
             "is_active": 1 if user.is_active else 0
         }
-        
     else:
         return {}
 
