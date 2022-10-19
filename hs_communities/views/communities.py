@@ -317,7 +317,7 @@ class PendingCommunityRequests(TemplateView):
     def get_context_data(self, **kwargs):
         pending_requests = []
         if self.request.user.is_superuser:
-            for request in RequestCommunity.pending_requests(include_rejects=True):
+            for request in RequestCommunity.pending_requests(include_rejects=True).order_by('date_requested'):
                 pending_requests.append(pending_community_request_json(request))
 
         return {

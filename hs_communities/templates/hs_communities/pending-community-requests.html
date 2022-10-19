@@ -6,20 +6,46 @@
 
 {% block main %}
     {% include 'hs_communities/communities-nav.html' with active='manage_requests' %}
+    {# Needs to be included first so it's available before other instances initialize #}
+    {% include "includes/profile-card.html" %}
     <div id="pending-community-requests-app" class="container">
         <div class="row">
             <div class="col-sm-12">
-                <h2 class="page-title">Pending Community Requests</h2>
+                <h2 class="page-title">New Community Requests</h2>
             </div>
         </div>
        <div class="row">
             <div class="col-sm-12">
                 <div v-if="!pendingRequests.length">No pending requests</div>
                 <template v-else>
-                    <div v-for="request of pendingRequests">
+                    <table class="table-hover table-striped resource-custom-table">
+                        <thead>
+                            <tr>
+                                <th>Community Name</th>
+                                <th>Submission Date</th>
+                                <th>Submitted By</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="request of pendingRequests">
+                                <td>${ request.community_to_approve.name }</td>
+                                <td>${ request.date_requested }</td>
+                                <td>
+                                    <profile-link
+                                        :user="request.requested_by" :key="request.requested_by.id" @load-card="onLoadOwnerCard($event)">
+                                    </profile-link>
+                                    <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
+                                    <!-- ${ request.requested_by.username } -->
+                                </td>
+                                <td>${ request.status }</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- <div v-for="request of pendingRequests">
                         <div>${ request.requested_by.username }</div>
                         <div>${ !!request.approved }</div>
-                    </div>
+                    </div> -->
                 </template>
                     <!-- <p>Requests by: {{ pcr.requested_by.username }}</p>
                     <p>Community name: {{ pcr.community_to_approve.name }}</p>
@@ -43,4 +69,5 @@
         const PENDING_REQUESTS = {{ pending_requests|safe }}
     </script>
     <script type="text/javascript" src="{% static 'js/pending-community-requests.js' %}"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
 {% endblock %}

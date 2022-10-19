@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import F
 from django.http import JsonResponse
 from django.views.generic import View
+from hs_core.templatetags.hydroshare_tags import best_name
 from rest_framework import status
 
 from hs_access_control.models import Community, GroupCommunityRequest, PrivilegeCodes
@@ -16,13 +17,32 @@ logger = logging.getLogger(__name__)
 def user_json(user):
     """ JSON format for user data suitable for UI """
     if user is not None:
+        picture = None
+        user.viewable_contributions = user.uaccess.can_view_resources_owned_by(user)
+        if user.userprofile.picture:
+            picture = user.userprofile.picture.url
         return {
-            'type': 'User',
-            'username': user.username,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email': user.email
+            # "user_type": "user",
+            # "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture or "",
+            "best_name": best_name(user),
+            "user_name": user.username,
+            # "can_undo": user.can_undo,
+            # Data used to populate profile badge:
+            "email": user.email,
+            "organization": user.userprofile.organization,
+            "title": user.userprofile.title,
+            "contributions": len(user.uaccess.owned_resources) if user.is_active else None,
+            "viewable_contributions": user.viewable_contributions if user.is_active else None,
+            "subject_areas": user.userprofile.subject_areas,
+            "identifiers": user.userprofile.identifiers,
+            "state": user.userprofile.state,
+            "country": user.userprofile.country,
+            "joined": user.date_joined.strftime("%d %b, %Y"),
+            "is_active": 1 if user.is_active else 0
         }
+        
     else:
         return {}
 
@@ -88,7 +108,7 @@ def pending_community_request_json(pending_request):
             'community_to_approve': community_json(pending_request.community_to_approve),
             'date_requested': pending_request.date_requested.strftime("%m/%d/%Y, %H:%M:%S"),
             'date_processed': 0 if pending_request.approved is None else pending_request.date_processed.strftime("%m/%d/%Y, %H:%M:%S"), 
-            'approved': 1 if pending_request.approved is True else 0,
+            'status': 'Approved' if pending_request.approved is True else 'Submitted' if pending_request.approved is None else 'Rejected',
         }
     else:
         return {}

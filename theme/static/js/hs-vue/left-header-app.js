@@ -444,8 +444,8 @@ let leftHeaderApp = new Vue({
     },
     methods: {
         onLoadOwnerCard: function(data) {
-            let el = $(data.event.target);
-            let cardWidth = 350;
+            const el = $(data.event.target);
+            const cardWidth = 350;
 
             this.userCardSelected = data.user;
             this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
