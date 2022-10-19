@@ -11,7 +11,7 @@ from django.views.generic import TemplateView
 
 from hs_access_control.models import Community, GroupCommunityRequest, RequestCommunity
 from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
-from hs_access_control.views import community_json, gcr_json, group_json, user_json
+from hs_access_control.views import community_json, gcr_json, group_json, user_json, pending_community_request_json
 from hs_communities.models import Topic
 
 logger = logging.getLogger(__name__)
@@ -315,13 +315,13 @@ class PendingCommunityRequests(TemplateView):
         return super(PendingCommunityRequests, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        pending_requests = RequestCommunity.objects.none()
+        pending_requests = []
         if self.request.user.is_superuser:
-            pending_requests = RequestCommunity.pending_requests(include_rejects=True)
-            pending_requests = list(pending_requests)  # force QuerySet evaluation
+            for request in RequestCommunity.pending_requests(include_rejects=True):
+                pending_requests.append(pending_community_request_json(request))
 
         return {
-          'pending_requests': mark_safe(escapejs(json.dumps(pending_requests))),
+          'pending_requests': pending_requests,
           'user_is_admin': self.request.user.is_superuser
         }
 

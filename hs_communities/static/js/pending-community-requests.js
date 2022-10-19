@@ -5,7 +5,11 @@ $(document).ready(function () {
     data: {
       pendingRequests: PENDING_REQUESTS || []
     },
-    mounted: function () {
+    created() {
+      console.log(this.pendingRequests[0])
+    },
+    mounted() {
+      
     },
     methods: {
       removeOwner: async function(owner) {

@@ -80,6 +80,19 @@ def community_json(community):
     else:
         return {}
 
+def pending_community_request_json(pending_request):
+    """ JSON format for pending community creation request data suitable for UI """
+    if pending_request is not None:
+        return {
+            'requested_by': user_json(pending_request.requested_by),
+            'community_to_approve': community_json(pending_request.community_to_approve),
+            'date_requested': pending_request.date_requested.strftime("%m/%d/%Y, %H:%M:%S"),
+            'date_processed': 0 if pending_request.approved is None else pending_request.date_processed.strftime("%m/%d/%Y, %H:%M:%S"), 
+            'approved': 1 if pending_request.approved is True else 0,
+        }
+    else:
+        return {}
+
 
 def gcr_json(request):
     """ JSON format for request data suitable for UI """

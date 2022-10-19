@@ -18,7 +18,7 @@
                 <template v-else>
                     <div v-for="request of pendingRequests">
                         <div>${ request.requested_by.username }</div>
-                        <div>${ request.approved }</div>
+                        <div>${ !!request.approved }</div>
                     </div>
                 </template>
                     <!-- <p>Requests by: {{ pcr.requested_by.username }}</p>
