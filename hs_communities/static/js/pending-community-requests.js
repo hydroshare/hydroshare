@@ -3,6 +3,7 @@ $(document).ready(function () {
     el: "#pending-community-requests-app",
     delimiters: ['${', '}'],
     data: {
+      pendingRequests: PENDING_REQUESTS || []
     },
     mounted: function () {
     },

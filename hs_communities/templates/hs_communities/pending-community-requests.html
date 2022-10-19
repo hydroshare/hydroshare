@@ -5,6 +5,7 @@
 {% block meta_title %} Pending Community Requests {% endblock %}
 
 {% block main %}
+    {% include 'hs_communities/communities-nav.html' with active='manage_requests' %}
     <div id="pending-community-requests-app" class="container">
         <div class="row">
             <div class="col-sm-12">
@@ -13,6 +14,13 @@
         </div>
        <div class="row">
             <div class="col-sm-12">
+                <div v-if="!pendingRequests.length">No pending requests</div>
+                <template v-else>
+                    <div v-for="request of pendingRequests">
+                        <div>${ request.requested_by.username }</div>
+                        <div>${ request.approved }</div>
+                    </div>
+                </template>
                     <!-- <p>Requests by: {{ pcr.requested_by.username }}</p>
                     <p>Community name: {{ pcr.community_to_approve.name }}</p>
                     <p>Community ID: {{ pcr.community_to_approve.id }}</p>
@@ -33,6 +41,6 @@
     <script type="text/javascript">
         // Constants here
         const PENDING_REQUESTS = {{ pending_requests|safe }}
-      </script>
+    </script>
     <script type="text/javascript" src="{% static 'js/pending-community-requests.js' %}"></script>
 {% endblock %}

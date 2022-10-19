@@ -267,35 +267,41 @@ class MyCommunitiesView(TemplateView):
                 return community
 
     def get_context_data(self, **kwargs):
-        grps_member_of = []
-        u = User.objects.get(pk=self.request.user.id)
+        groups_member_of = []
+        user = self.request.user
         groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
         communities = Community.objects.all()
         # for each group set group dynamic attributes
-        for g in groups:
-            g.is_user_member = u in g.gaccess.members
-            if g.is_user_member:
-                grps_member_of.append(g)
-            g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
-            g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-            g.join_request = None
-            if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+        for group in groups:
+            group.is_user_member = user in group.gaccess.members
+            if group.is_user_member:
+                groups_member_of.append(group)
+            group.join_request_waiting_owner_action = group.gaccess.group_membership_requests.filter(request_from=user).exists()
+            group.join_request_waiting_user_action = group.gaccess.group_membership_requests.filter(invitation_to=user).exists()
+            group.join_request = None
+            if group.join_request_waiting_owner_action or group.join_request_waiting_user_action:
+                group.join_request = group.gaccess.group_membership_requests.filter(request_from=user).first() or \
+                                 group.gaccess.group_membership_requests.filter(invitation_to=user).first()
 
-        comms_member_of = [self.group_to_community(g, Community.objects.all()) for g in grps_member_of]
+        communities_member_of = [self.group_to_community(g, Community.objects.all()) for g in groups_member_of]
 
         # Also list communities that the user owns
-        for c in communities:
-            is_owner = u in c.owners
-            if is_owner and c not in comms_member_of:
-                comms_member_of.append(c)
+        for community in communities:
+            is_owner = user in community.owners
+            if is_owner and community not in communities_member_of:
+                communities_member_of.append(community)
 
         # get the list of any pending community create requests by this user
-        pending_requests = u.uaccess.pending_community_requests()
+        pending_requests = user.uaccess.pending_community_requests()
+
+        user_is_admin = False
+        if user:
+            user_is_admin = user.is_authenticated() and user.is_superuser
+
         return {
-            'communities_list': [c for c in comms_member_of if c is not None],
+            'communities_list': [c for c in communities_member_of if c is not None],
             'pending_requests': pending_requests,
+            'user_is_admin': user_is_admin,
         }
 
 
@@ -313,7 +319,11 @@ class PendingCommunityRequests(TemplateView):
         if self.request.user.is_superuser:
             pending_requests = RequestCommunity.pending_requests(include_rejects=True)
             pending_requests = list(pending_requests)  # force QuerySet evaluation
-        return {'pending_requests': mark_safe(escapejs(json.dumps(pending_requests)))}
+
+        return {
+          'pending_requests': mark_safe(escapejs(json.dumps(pending_requests))),
+          'user_is_admin': self.request.user.is_superuser
+        }
 
 
 @method_decorator(login_required, name='dispatch')
