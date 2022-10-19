@@ -1037,11 +1037,11 @@ class Relation(AbstractMetaDataElement):
         return dict(self.SOURCE_TYPES)[self.type]
 
     def rdf_triples(self, subject, graph):
-        relation_node = BNode()
         if self.type == RelationTypes.relation.value:
             # avoid creating empty nodes for "relations" that only contain a URI
             graph.add((subject, self.get_class_term(), URIRef(self.value)))
         else:
+            relation_node = BNode()
             graph.add((subject, self.get_class_term(), relation_node))
             if self.type in self.HS_RELATION_TERMS:
                 graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
