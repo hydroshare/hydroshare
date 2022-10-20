@@ -72,13 +72,9 @@ class FileOverrideException(Exception):
         super(FileOverrideException, self).__init__(self, error_message)
 
 
-class TaskFailure(TaskError):
-    pass
-
-
 def check_if_periodic_tasks_disabled():
     if (hasattr(settings, 'DISABLE_PERIODIC_TASKS') and settings.DISABLE_PERIODIC_TASKS):
-        raise TaskFailure('Attempted to run a periodic task within an environment that has disabled them.')
+        raise TaskError('Attempted to run a periodic task within an environment that has disabled them.')
 
 
 # Currently there are two different cleanups scheduled.
