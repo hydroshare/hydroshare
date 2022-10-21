@@ -916,6 +916,7 @@ def create_new_version_resource_public(request, pk):
 
 
 def publish(request, shortkey, *args, **kwargs):
+    # TODO: only HIL admin approver should be able to publish, not even the owner
     # only resource owners are allowed to change resource flags (e.g published)
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
@@ -923,6 +924,19 @@ def publish(request, shortkey, *args, **kwargs):
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session['validation_error'] = str(exp)
+    else:
+        request.session['just_published'] = True
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+def submit_for_review(request, shortkey, *args, **kwargs):
+    # only resource owners are allowed to submit for review
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+
+    try:
+        hydroshare.submit_resource_for_review(request.user, shortkey)
+    except ValidationError as exp:
+        request.session['validation_error'] = str(exp)
+        logger.warn(str(exp))
     else:
         request.session['just_published'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -1573,6 +1587,7 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
+            # 
             send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
                                       group=group_to_join, membership_request=membership_request,
                                       explanation=explanation)

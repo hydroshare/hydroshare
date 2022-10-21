@@ -1,5 +1,6 @@
 {% load i18n %}
 {% block main %}
+<!-- TODO: email template -->
     {% if group_owner %}
         <p>{% trans "Dear " %}{{ group_owner.first_name }} {{ group_owner.last_name }},</p>
         <p>{% trans "User " %}{{ user.first_name }} {{ user.last_name }} 

@@ -40,6 +40,8 @@ class ResourceAccess(models.Model):
     shareable = models.BooleanField(default=True,
                                     help_text='whether resource can be shared by non-owners')
     # these are for resources only
+    review_pending = models.BooleanField(default=False,
+                                         help_text='whether resource is under metadata review')
     published = models.BooleanField(default=False,
                                     help_text='whether resource has been published')
     immutable = models.BooleanField(default=False,
