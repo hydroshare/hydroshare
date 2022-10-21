@@ -70,7 +70,7 @@ urlpatterns = [
     url(r'^_internal/group_membership/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/(?P<membership_request_id>[0-9]+)/',
         views.group_membership,
         name='group_membership'),
-    url(r'^_internal/metadata_review/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/(?P<action>[a-z]+)/',
+    url(r'^_internal/metadata_review/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/(?P<shortkey>[0-9a-f-]+)/(?P<action>[a-z]+)/',
         views.metadata_review,
         name='metadata_review'),
     url(r'^_internal/get-user-or-group-data/(?P<user_or_group_id>[0-9]+)/(?P<is_group>[a-z]+)$',

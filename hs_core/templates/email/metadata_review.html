@@ -14,9 +14,8 @@
     {% if user_from.userprofile.title %}User Title: {{ user_from.userprofile.title }}<br>{% endif %}
     
     <!-- TODO: drc add resource metadata info -->
-    <p>Click on the link below to accept this request.</p>
-
-    <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ action_url }}">{{ request.scheme }}://{{ request.get_host }}{{ action_url}}</a></p>
+    <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ action_url }}">Click here to accept this request.</a></p>
+    <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ reject_url }}">Click here to reject this request.</a></p>
 
         <p>{% trans "Thanks, The HydroShare Team" %}</p>
 {% endblock %}

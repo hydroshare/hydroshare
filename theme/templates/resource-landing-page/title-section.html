@@ -13,7 +13,7 @@
 {% endif %}
 
 {# ======= Resource Submitted for Minimum Metadata Check Pre Publication =======#}
-{% if cm.raccess.review_pending and resource_edit_mode %}
+{% if cm.raccess.review_pending %}
     <div class="col-xs-12">
         <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>

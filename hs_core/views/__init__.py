@@ -1659,8 +1659,7 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
             return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
     return redirect("/")
 
-def metadata_review(request, uidb36, token, action, **kwargs):
-    accept_request = action == 'accept'
+def metadata_review(request, uidb36, token, shortkey, action, **kwargs):
     """
     View for the link in the verification email that was sent to a user
     when they request publication/metadata review.
@@ -1691,7 +1690,16 @@ def metadata_review(request, uidb36, token, action, **kwargs):
         # messages.info(request, message)
         # redirect to group profile page
         # return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
-        pass
+
+        if action == "approve":
+            hydroshare.publish_resource(user, shortkey)
+            res = get_resource_by_shortkey(shortkey)
+            res.raccess.review_pending = False
+            res.raccess.save()
+        else:
+            # TODO: drc email to requester informing rejected.
+            # TODO: drc reset resource to public
+            pass
     return redirect("/")
 
 

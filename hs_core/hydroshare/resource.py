@@ -1052,7 +1052,7 @@ def submit_resource_for_review(request, pk):
 
     # utils.resource_modified(resource, user, overwrite_bag=False)
 
-    # TODO: store this as an enum or in settings?
+    # TODO: drc store this as an enum or in settings?
     email = "help@cuahsi.org"
     username_or_email = Q(username__iexact=email) | Q(email__iexact=email)
     try:

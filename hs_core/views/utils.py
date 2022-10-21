@@ -712,12 +712,15 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     elif action_type == 'metadata_review':
         context['user_from'] = kwargs.get('user_from', None)
         email_to = kwargs.get('email_to', user)
-        context['resource'] = kwargs.pop('resource')
+        resource = kwargs.pop('resource')
+        context['resource'] = resource
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(user.id),
-            "action": "approve", #TODO: drc also need to add the opposite
+            "shortkey": resource.short_id,
+            "action": "approve",
             "token": without_login_date_token_generator.make_token(email_to),
         }) + "?next=" + (next_url(request) or "/")
+        context['reject_url'] = action_url.replace("approve", "reject")
     else:
         email_to = kwargs.get('group_owner', user)
         action_url = reverse(action_type, kwargs={
