@@ -36,9 +36,8 @@
                                         :user="request.requested_by" :key="request.requested_by.id" @load-card="onLoadOwnerCard($event)">
                                     </profile-link>
                                     <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
-                                    <!-- ${ request.requested_by.username } -->
                                 </td>
-                                <td>${ request.status }</td>
+                                <td :class="{ 'text-success': request.status === 'Approved', 'text-danger': request.status === 'Rejected' }">${ request.status }</td>
                             </tr>
                         </tbody>
                     </table>
@@ -53,7 +52,7 @@
     {{ block.super }}
     <script type="text/javascript">
         // Constants here
-        const PENDING_REQUESTS = {{ pending_requests|safe }}
+        const PENDING_REQUESTS = {{ admin_all_requests|safe }}
     </script>
     <script type="text/javascript" src="{% static 'js/pending-community-requests.js' %}"></script>
     <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>

@@ -233,19 +233,27 @@ class FindCommunitiesView(TemplateView):
         return super(FindCommunitiesView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        context = {}
         user = self.request.user
         user_is_admin = False
         if user:
             user_is_admin = user.is_authenticated() and user.is_superuser
 
         # get the list of any pending community create requests by this user
-        pending_requests = user.uaccess.pending_community_requests()
+        user_pending_requests = user.uaccess.pending_community_requests()
 
-        return {
-            'communities_list': Community.objects.filter(active=True),
-            'pending_requests': pending_requests,
-            'user_is_admin': user_is_admin
-        }
+        if user_is_admin:
+            admin_all_requests = []
+            for request in RequestCommunity.all_requests().order_by('-date_requested'):
+                admin_all_requests.append(cr_json(request))
+            context['admin_all_requests'] = admin_all_requests
+            context['admin_pending_requests'] = RequestCommunity.pending_requests().count()
+
+        context['communities_list'] = Community.objects.filter(active=True)
+        context['user_pending_requests'] = user_pending_requests
+        context['user_is_admin'] = user_is_admin
+
+        return context
 
 
 @method_decorator(login_required, name='dispatch')
@@ -267,6 +275,7 @@ class MyCommunitiesView(TemplateView):
                 return community
 
     def get_context_data(self, **kwargs):
+        context = {}
         groups_member_of = []
         user = self.request.user
         groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
@@ -292,17 +301,24 @@ class MyCommunitiesView(TemplateView):
                 communities_member_of.append(community)
 
         # get the list of any pending community create requests by this user
-        pending_requests = user.uaccess.pending_community_requests()
+        user_pending_requests = user.uaccess.pending_community_requests()
 
         user_is_admin = False
         if user:
             user_is_admin = user.is_authenticated() and user.is_superuser
 
-        return {
-            'communities_list': [c for c in communities_member_of if c is not None],
-            'pending_requests': pending_requests,
-            'user_is_admin': user_is_admin,
-        }
+        if user_is_admin:
+            admin_all_requests = []
+            for request in RequestCommunity.all_requests().order_by('-date_requested'):
+                admin_all_requests.append(cr_json(request))
+            context['admin_all_requests'] = admin_all_requests
+            context['admin_pending_requests'] = RequestCommunity.pending_requests().count()
+
+        context['communities_list'] = [c for c in communities_member_of if c is not None]
+        context['user_pending_requests'] = user_pending_requests
+        context['user_is_admin'] = user_is_admin
+
+        return context
 
 
 class CommunityCreationRequests(TemplateView):
@@ -332,12 +348,13 @@ class CommunityCreationRequests(TemplateView):
         denied = self.hydroshare_denied()
 
         if denied == "":
-            pending_requests = []
-            for request in RequestCommunity.pending_requests(include_rejects=True).order_by('date_requested'):
-                pending_requests.append(cr_json(request))
+            admin_all_requests = []
+            for request in RequestCommunity.all_requests().order_by('-date_requested'):
+                admin_all_requests.append(cr_json(request))
 
             return {
-                'pending_requests': pending_requests,
+                'admin_all_requests': admin_all_requests,
+                'admin_pending_requests': RequestCommunity.pending_requests().count(),
                 'user_is_admin': self.request.user.is_superuser
             }
         else:
@@ -388,15 +405,17 @@ class CommunityCreationRequest(TemplateView):
         if denied == "" and rid is not None:
             req = RequestCommunity.objects.get(id=int(rid))
             context['community_request'] = cr_json(req)
+
+            admin_all_requests = []
+            for request in RequestCommunity.all_requests().order_by('-date_requested'):
+                admin_all_requests.append(cr_json(request))
+
+            context['admin_all_requests'] = admin_all_requests
+            context['admin_pending_requests'] = RequestCommunity.pending_requests().count()
         else:
             context['denied'] = denied
             logger.error(denied)
 
-        pending_requests = []
-        for request in RequestCommunity.pending_requests(include_rejects=True).order_by('date_requested'):
-            pending_requests.append(cr_json(request))
-
-        context['pending_requests'] = pending_requests
         context['user_is_admin'] = self.request.user.is_superuser
 
         return context
