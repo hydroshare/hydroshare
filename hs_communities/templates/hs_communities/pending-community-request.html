@@ -26,7 +26,17 @@
 
                 <br>
 
-                {% include 'hs_communities/pending-community-request-form.html' %}
+                <template v-if="request.status === 'Approved'">
+                    <div class="alert alert-success">This request has been approved.</div>
+                </template>
+        
+                <template v-else-if="request.status === 'Rejected'">
+                    <div class="alert alert-success">This request has been rejected.</div>
+                </template>
+                
+                <template>
+                    {% include 'hs_communities/pending-community-request-form.html' %}
+                </template>
             </div>
         </div>
     </div>

@@ -4,6 +4,10 @@ $(document).ready(function () {
     delimiters: ['${', '}'],
     data: {
       request: REQUEST || null,
+      isEditMode: false,
+      isSaving: false,
+      isApproving: false,
+      isRejecting: false,
       userCardSelected: {
         user_type: null,
         access: null,
@@ -34,7 +38,7 @@ $(document).ready(function () {
 
     },
     methods: {
-      onLoadOwnerCard: function(data) {
+      onLoadOwnerCard(data) {
         const el = $(data.event.target);
         const cardWidth = 350;
 
@@ -42,6 +46,81 @@ $(document).ready(function () {
         this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
         this.cardPosition.top = el.position().top + 30;
       },
+      async onApprove() {
+        this.isApproving = true
+        const url = `/access/_internal/crequest/approve/${this.request.id}/`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            // Do not set content-type header. The browser will set it for you.
+            // https://muffinman.io/blog/uploading-files-using-fetch-multipart-form-data/
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        });
+
+        if (response.status === 200) {
+          this.$set(this.request.community_to_approve, 'status', 'Approved');
+          // Redirect to requests page
+          window.location.href = "/communities/manage-requests/";
+        }
+        this.isApproving = false
+      },
+      async onReject() {
+        this.isRejecting = true
+        const url = `/access/_internal/crequest/decline/${this.request.id}/`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            // Do not set content-type header. The browser will set it for you.
+            // https://muffinman.io/blog/uploading-files-using-fetch-multipart-form-data/
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        });
+
+        if (response.status === 200) {
+          this.$set(this.request.community_to_approve, 'status', 'Rejected');
+          // Redirect to requests page
+          window.location.href = "/communities/manage-requests/";
+        }
+        this.isRejecting = false
+      },
+      async onUpdate() {
+        this.isSaving = true;
+        const url = `/access/_internal/crequest/update/${this.request.id}/`;
+        const formData = new FormData();
+        const fields = ['name', 'description', 'purpose', 'email', 'url'];
+
+        for (let field of fields) {
+          formData.append(field, this.$refs[field].value)
+        }
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            // Do not set content-type header. The browser will set it for you.
+            // https://muffinman.io/blog/uploading-files-using-fetch-multipart-form-data/
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: formData
+        });
+        
+        if (response.status === 200) {
+          for (let field of fields) {
+            this.$set(this.request.community_to_approve, field, formData.get(field));
+          }
+          this.isEditMode = false
+        }
+        else {
+          // show error
+        }
+
+        this.isSaving = false
+      },
+      onCancel() {
+        // restore to original values
+        this.isEditMode = false
+        console.log(this.request.community_to_approve.name)
+      }
     }
   });
 });

@@ -11,12 +11,12 @@
     <div id="pending-community-requests-app" class="container">
         <div class="row">
             <div class="col-sm-12">
-                <h2 class="page-title">New Community Requests</h2>
+                <h2 class="page-title">Admin: New Community Requests</h2>
             </div>
         </div>
        <div class="row">
             <div class="col-sm-12">
-                <div v-if="!pendingRequests.length">No pending requests</div>
+                <div v-if="!pendingRequests.length">No pending requests.</div>
                 <template v-else>
                     <table class="table-hover table-striped resource-custom-table">
                         <thead>
@@ -42,21 +42,8 @@
                             </tr>
                         </tbody>
                     </table>
-                    <!-- <div v-for="request of pendingRequests">
-                        <div>${ request.requested_by.username }</div>
-                        <div>${ !!request.approved }</div>
-                    </div> -->
+                    <br>
                 </template>
-                    <!-- <p>Requests by: {{ pcr.requested_by.username }}</p>
-                    <p>Community name: {{ pcr.community_to_approve.name }}</p>
-                    <p>Community ID: {{ pcr.community_to_approve.id }}</p>
-                    {% if pcr.approved == None %}
-                        <p>Status: Pending</p>
-                    {% elif pcr.approved %}
-                        <p>Status: Approved</p>
-                     {% else %}
-                        <p>Status: Rejected</p>
-                    {% endif %} -->
             </div>
         </div>
     </div>
