@@ -150,6 +150,14 @@ class CommunityView(TemplateView):
                                   .order_by('name'):
                 context['groups'].append(group_json(g))
 
+            # groups that have shared resources with the community
+            raw_groups = community.groups_with_public_resources()
+            shared_by_groups = []
+            for g in raw_groups:
+                res_count = len([r for r in community_resources if r.group_name == g.name])
+                shared_by_groups.append({'id': str(g.id), 'name': str(g.name), 'res_count': str(res_count)})
+            context['shared_by_groups'] = shared_by_groups
+
             context['pending'] = []
             for r in GroupCommunityRequest.objects.filter(
                     community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
@@ -189,42 +197,6 @@ class CommunityView(TemplateView):
             context['denied'] = denied
             logger.error(denied)
             return context
-
-    # TODO: cleanup this commented code
-    # def get_context_data(self, **kwargs):
-    #     grpfilter = self.request.GET.get('grp')
-
-    #     community = community_from_name_or_id(kwargs['cid'])
-    #     community_resources = community.public_resources.distinct()
-    #     raw_groups = community.groups_with_public_resources()
-    #     groups = []
-
-    #     for g in raw_groups:
-    #         res_count = len([r for r in community_resources if r.group_name == g.name])
-    #         groups.append({'id': str(g.id), 'name': str(g.name), 'res_count': str(res_count)})
-
-    #     groups = sorted(groups, key=lambda key: key['name'])
-
-    #     try:
-    #         u = User.objects.get(pk=self.request.user.id)
-    #         # user must own the community to get admin privilege
-    #         is_admin = UserCommunityPrivilege.objects.filter(user=u,
-    #                                                          community=community,
-    #                                                          privilege=PrivilegeCodes.OWNER)\
-    #                                                  .exists()
-    #     except:
-    #         is_admin = False
-
-    #     return {
-    #         'cid': community.id,
-    #         'community': community,
-    #         'community_resources': community_resources,
-    #         'groups': groups,
-    #         'grpfilter': grpfilter,
-    #         'is_admin': is_admin,
-    #         'czo_community': "CZO National" in community.name,
-    #     }
-
 
 class FindCommunitiesView(TemplateView):
     template_name = 'hs_communities/find-communities.html'

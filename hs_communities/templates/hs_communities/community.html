@@ -111,14 +111,14 @@
                                             <div class="list-group">
                                                 <div id="groups-list">
                                                     <!-- this id=groups-list is used to construct the VueJS group name to id map -->
-                                                    {% if not groups %}
+                                                    {% if not shared_by_groups %}
                                                         <div style="margin: 1rem 0;">
                                                             <i class="list-group-item no-items-found">No resources have been
                                                             shared with this community yet.</i>
                                                         </div>
                                                     {% else %}
                                                         <ul class="list-group inputs-group">
-                                                            {% for g in groups %}
+                                                            {% for g in shared_by_groups %}
                                                                 <li class="list-group-item" id="{{ g.id }}">
                                                                     <span data-facet="none"
                                                                           class="badge">{{ g.res_count }}</span>
