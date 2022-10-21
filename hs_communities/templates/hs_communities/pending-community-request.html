@@ -1,0 +1,32 @@
+{% extends "pages/page.html" %}
+
+{% load hydroshare_tags thumbnail %}
+
+{% block meta_title %} Pending Community Request {% endblock %}
+
+{% block main %}
+    {% include 'hs_communities/communities-nav.html' with active='manage_requests' %}
+    {# Needs to be included first so it's available before other instances initialize #}
+    {% include "includes/profile-card.html" %}
+    <div id="pending-community-request-app" class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <h2 class="page-title">Community Requests</h2>
+            </div>
+        </div>
+       <div class="row">
+            <div class="col-sm-12">
+        
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript">
+        // Constants here
+        const REQUEST = {{ community_request|safe }}
+    </script>
+    <script type="text/javascript" src="{% static 'js/pending-community-request.js' %}"></script>
+{% endblock %}

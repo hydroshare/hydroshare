@@ -102,6 +102,7 @@ def pending_community_request_json(pending_request):
     """ JSON format for pending community creation request data suitable for UI """
     if pending_request is not None:
         return {
+            'id': pending_request.id,
             'requested_by': user_json(pending_request.requested_by),
             'community_to_approve': community_json(pending_request.community_to_approve),
             'date_requested': pending_request.date_requested.strftime("%m/%d/%Y, %H:%M:%S"),

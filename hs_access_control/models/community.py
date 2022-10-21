@@ -259,59 +259,59 @@ class Community(models.Model):
         else:
             return None
 
+# deprecated by RequestCommunity
+# class CommunityRequest(models.Model):
+#     """ application for creating a community """
+#     name = models.TextField(null=False, blank=False)
+#     description = models.TextField(null=False, blank=False)
+#     email = models.TextField(null=True, blank=True)
+#     url = models.TextField(null=True, blank=True)
+#     purpose = models.TextField(null=True, blank=True)
+#     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
+#     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
+#     date_processed = models.DateTimeField(editable=False, null=True)
+#     picture = models.ImageField(upload_to='community', null=True, blank=True)
+#     # whether community is available to be joined
+#     closed = models.BooleanField(null=False, default=True, blank=False, editable=False)
+#     # user requesting community
+#     owner = models.ForeignKey(User, null=True, editable=False)
+#     # approval information: null means undecided
+#     approved = models.NullBooleanField(null=True, default=None, blank=False, editable=False)
 
-class CommunityRequest(models.Model):
-    """ application for creating a community """
-    name = models.TextField(null=False, blank=False)
-    description = models.TextField(null=False, blank=False)
-    email = models.TextField(null=True, blank=True)
-    url = models.TextField(null=True, blank=True)
-    purpose = models.TextField(null=True, blank=True)
-    auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
-    date_requested = models.DateTimeField(editable=False, auto_now_add=True)
-    date_processed = models.DateTimeField(editable=False, null=True)
-    picture = models.ImageField(upload_to='community', null=True, blank=True)
-    # whether community is available to be joined
-    closed = models.BooleanField(null=False, default=True, blank=False, editable=False)
-    # user requesting community
-    owner = models.ForeignKey(User, null=True, editable=False)
-    # approval information: null means undecided
-    approved = models.NullBooleanField(null=True, default=None, blank=False, editable=False)
+#     def __str__(self):
+#         return self.name
 
-    def __str__(self):
-        return self.name
+#     def approve(self):
+#         from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
+#         c = Community.objects.create(
+#            name=self.name,
+#            description=self.description,
+#            email=self.email,
+#            url=self.url,
+#            purpose=self.purpose,
+#            closed=self.closed)
 
-    def approve(self):
-        from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
-        c = Community.objects.create(
-           name=self.name,
-           description=self.description,
-           email=self.email,
-           url=self.url,
-           purpose=self.purpose,
-           closed=self.closed)
+#         self.approved = True
+#         self.date_processed = datetime.now()
+#         self.save()
 
-        self.approved = True
-        self.date_processed = datetime.now()
-        self.save()
+#         # Must bootstrap access control system initially
+#         # * Set the initial owner as given.
+#         # * grantor is always admin.
+#         admin = User.objects.get(username='admin')
+#         owner = User.objects.get(username=self.owner)
+#         UserCommunityPrivilege.share(community=c,
+#                                      user=owner,
+#                                      grantor=admin,
+#                                      privilege=PrivilegeCodes.OWNER)
 
-        # Must bootstrap access control system initially
-        # * Set the initial owner as given.
-        # * grantor is always admin.
-        admin = User.objects.get(username='admin')
-        owner = User.objects.get(username=self.owner)
-        UserCommunityPrivilege.share(community=c,
-                                     user=owner,
-                                     grantor=admin,
-                                     privilege=PrivilegeCodes.OWNER)
+#         return "community '{}' approved and created.".format(self.name)
 
-        return "community '{}' approved and created.".format(self.name)
-
-    def decline(self):
-        self.approved = False
-        self.date_processed = datetime.now()
-        self.save()
-        return "community '{}' declined and not created.".format(self.name)
+#     def decline(self):
+#         self.approved = False
+#         self.date_processed = datetime.now()
+#         self.save()
+#         return "community '{}' declined and not created.".format(self.name)
 
 
 class RequestCommunity(models.Model):

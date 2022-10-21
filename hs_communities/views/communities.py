@@ -305,25 +305,94 @@ class MyCommunitiesView(TemplateView):
         }
 
 
-class PendingCommunityRequests(TemplateView):
-    """A view to serve all pending community requests"""
+class CommunityCreationRequests(TemplateView):
+    """A view to serve all pending community creation requests"""
 
     template_name = 'hs_communities/pending-community-requests.html'
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
-        return super(PendingCommunityRequests, self).dispatch(*args, **kwargs)
+        return super(CommunityCreationRequests, self).dispatch(*args, **kwargs)
+
+    def hydroshare_denied(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            message = "You must be logged in to access this function."
+            logger.error(message)
+            return message
+
+        if not user.is_superuser:
+            message = "user with id {} is not a superuser".format(user.id)
+            logger.error(message)
+            return message
+
+        return ""
 
     def get_context_data(self, **kwargs):
-        pending_requests = []
-        if self.request.user.is_superuser:
+        denied = self.hydroshare_denied()
+
+        if denied == "":
+            pending_requests = []
             for request in RequestCommunity.pending_requests(include_rejects=True).order_by('date_requested'):
                 pending_requests.append(pending_community_request_json(request))
 
-        return {
-          'pending_requests': pending_requests,
-          'user_is_admin': self.request.user.is_superuser
-        }
+            return {
+                'pending_requests': pending_requests,
+                'user_is_admin': self.request.user.is_superuser
+            }
+        else:
+            logger.error(denied)
+            return { "denied": denied }
+
+
+class CommunityCreationRequest(TemplateView):
+    """A view to serve a pending community creation request"""
+
+    template_name = 'hs_communities/pending-community-request.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(CommunityCreationRequest, self).dispatch(*args, **kwargs)
+
+    def hydroshare_denied(self, rid = None):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            message = "You must be logged in to access this function."
+            logger.error(message)
+            return message
+
+        if not user.is_superuser:
+            message = "user with id {} is not a superuser".format(user.id)
+            logger.error(message)
+            return message
+
+        if rid is not None:
+            try:
+                RequestCommunity.objects.get(id=rid)
+            except RequestCommunity.DoesNotExist:
+                message = "community request id {} not found".format(rid)
+                logger.error(message)
+                return message
+
+        return ""
+    
+    def get_context_data(self, **kwargs):
+        context = {}
+        if 'rid' in kwargs:
+            rid = int(kwargs['rid'])
+        else:
+            rid = None
+
+        denied = self.hydroshare_denied(rid)
+
+        if denied == "" and rid is not None:
+            req = RequestCommunity.objects.get(id=int(rid))
+            context['community_request'] = pending_community_request_json(req)
+        else:
+            context['denied'] = denied
+            logger.error(denied)
+
+        return context
 
 
 @method_decorator(login_required, name='dispatch')

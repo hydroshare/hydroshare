@@ -29,7 +29,7 @@
                         </thead>
                         <tbody>
                             <tr v-for="request of pendingRequests">
-                                <td>${ request.community_to_approve.name }</td>
+                                <td><a :href="`{% url "manage_requests" %}${request.id}`">${ request.community_to_approve.name }</a></td>
                                 <td>${ request.date_requested }</td>
                                 <td>
                                     <profile-link

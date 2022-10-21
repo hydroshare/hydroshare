@@ -1,9 +1,9 @@
 $(document).ready(function () {
-  const CommunityCreationRequestsApp = new Vue({
-    el: "#pending-community-requests-app",
+  const CommunityCreationRequestApp = new Vue({
+    el: "#pending-community-request-app",
     delimiters: ['${', '}'],
     data: {
-      pendingRequests: PENDING_REQUESTS || [],
+      request: REQUEST || null,
       userCardSelected: {
         user_type: null,
         access: null,
@@ -28,7 +28,7 @@ $(document).ready(function () {
       }
     },
     created() {
-      console.log(this.pendingRequests[0])
+      console.log(this.request)
     },
     mounted() {
 
