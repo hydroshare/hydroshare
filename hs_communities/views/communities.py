@@ -11,7 +11,7 @@ from django.views.generic import TemplateView
 
 from hs_access_control.models import Community, GroupCommunityRequest, RequestCommunity
 from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
-from hs_access_control.views import community_json, gcr_json, group_json, user_json, pending_community_request_json
+from hs_access_control.views import community_json, gcr_json, group_json, user_json, cr_json
 from hs_communities.models import Topic
 
 logger = logging.getLogger(__name__)
@@ -334,7 +334,7 @@ class CommunityCreationRequests(TemplateView):
         if denied == "":
             pending_requests = []
             for request in RequestCommunity.pending_requests(include_rejects=True).order_by('date_requested'):
-                pending_requests.append(pending_community_request_json(request))
+                pending_requests.append(cr_json(request))
 
             return {
                 'pending_requests': pending_requests,
@@ -387,10 +387,17 @@ class CommunityCreationRequest(TemplateView):
 
         if denied == "" and rid is not None:
             req = RequestCommunity.objects.get(id=int(rid))
-            context['community_request'] = pending_community_request_json(req)
+            context['community_request'] = cr_json(req)
         else:
             context['denied'] = denied
             logger.error(denied)
+
+        pending_requests = []
+        for request in RequestCommunity.pending_requests(include_rejects=True).order_by('date_requested'):
+            pending_requests.append(cr_json(request))
+
+        context['pending_requests'] = pending_requests
+        context['user_is_admin'] = self.request.user.is_superuser
 
         return context
 

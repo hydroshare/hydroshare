@@ -98,20 +98,6 @@ def community_json(community):
     else:
         return {}
 
-def pending_community_request_json(pending_request):
-    """ JSON format for pending community creation request data suitable for UI """
-    if pending_request is not None:
-        return {
-            'id': pending_request.id,
-            'requested_by': user_json(pending_request.requested_by),
-            'community_to_approve': community_json(pending_request.community_to_approve),
-            'date_requested': pending_request.date_requested.strftime("%m/%d/%Y, %H:%M:%S"),
-            'date_processed': 0 if pending_request.approved is None else pending_request.date_processed.strftime("%m/%d/%Y, %H:%M:%S"), 
-            'status': 'Approved' if pending_request.approved is True else 'Submitted' if pending_request.approved is None else 'Rejected',
-        }
-    else:
-        return {}
-
 
 def gcr_json(request):
     """ JSON format for request data suitable for UI """
@@ -135,32 +121,13 @@ def gcr_json(request):
 def cr_json(cr):
     """ JSON format for community request data suitable for UI """
     if cr is not None:
-        community = cr.community_to_approve
-        try:
-            picture_url = community.picture.url
-        except ValueError:
-            picture_url = ""
-        try:
-            banner_url = community.banner.url
-        except ValueError:
-            banner_url = ""
-
         return {
             'id': cr.id,
-            'type': 'CommunityRequest',
-            'name': community.name,
-            'url': community.url,
-            'email': community.email,
-            'description': community.description or '',
-            'purpose': community.purpose or '',
-            'auto_approve_resource': community.auto_approve_resource,
-            'auto_approve_group': community.auto_approve_group,
-            'date_requested': cr.date_requested,
-            'date_processed': cr.date_processed,
-            'picture_url': picture_url,
-            'banner_url': banner_url,
-            'closed': community.closed,
-            'owner': user_json(cr.requested_by)
+            'requested_by': user_json(cr.requested_by),
+            'community_to_approve': community_json(cr.community_to_approve),
+            'date_requested': cr.date_requested.strftime("%m/%d/%Y, %H:%M:%S"),
+            'date_processed': 0 if cr.approved is None else cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S"), 
+            'status': 'Approved' if cr.approved is True else 'Submitted' if cr.approved is None else 'Rejected',
         }
     else:
         return {}

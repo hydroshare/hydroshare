@@ -11,12 +11,22 @@
     <div id="pending-community-request-app" class="container">
         <div class="row">
             <div class="col-sm-12">
-                <h2 class="page-title">Community Requests</h2>
+                <h2 class="page-title">Admin: New Community Request</h2>
             </div>
         </div>
        <div class="row">
             <div class="col-sm-12">
-        
+                <p>Submission Date: ${ request.date_requested }</p>
+                <p>Submitted by: 
+                    <profile-link
+                        :user="request.requested_by" :key="request.requested_by.id" @load-card="onLoadOwnerCard($event)">
+                    </profile-link>
+                    <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
+                </p>
+
+                <br>
+
+                {% include 'hs_communities/pending-community-request-form.html' %}
             </div>
         </div>
     </div>
