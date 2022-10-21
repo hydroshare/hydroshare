@@ -24,19 +24,19 @@
             {% endif %}
         </td>
     </tr>
-    {% if cm.raccess.published or cm.raccess.review_pending %}
+    {% if "pending" in cm.doi or "failure" in cm.doi or cm.raccess.review_pending %}
             <tr>
                 <th>Publication Status: </th>
                 <td>
-                    {% if "pending" in cm.doi or "failure" in cm.doi %}
-                    <div>Pending Publication</div>
-                    <div class="small text-muted">
-                        Note that the DOI will not be available until it has been registered and activated.
-                    </div>
-                    {% else %}
+                    {% if cm.raccess.review_pending %}
                     <div>Pending Metadata Review</div>
                     <div class="small text-muted">
                         Note that you sould receive an email within 24hrs of starting the review process
+                    </div>
+                    {% else %}
+                    <div>Pending Publication</div>
+                    <div class="small text-muted">
+                        Note that the DOI will not be available until it has been registered and activated.
                     </div>
                     {% endif %}
                 </td>
