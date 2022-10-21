@@ -30,11 +30,11 @@ def user_json(user):
             "user_name": user.username,
             # Data used to populate profile badge:
             "email": user.email,
-            "organization": user.userprofile.organization,
-            "title": user.userprofile.title,
+            "organization": user.userprofile.organization or '',
+            "title": user.userprofile.title or '',
             "contributions": len(user.uaccess.owned_resources) if user.is_active else None,
             "viewable_contributions": user.viewable_contributions if user.is_active else None,
-            "subject_areas": user.userprofile.subject_areas,
+            "subject_areas": user.userprofile.subject_areas or '',
             "identifiers": user.userprofile.identifiers,
             "state": user.userprofile.state,
             "country": user.userprofile.country,
@@ -83,7 +83,7 @@ def community_json(community):
         return {
             'id': community.id,
             'type': 'Community',
-            'name': community.name,
+            'name': community.name or '',
             'url': community.url or '',
             'email': community.email or '',
             'description': community.description or '',
