@@ -916,7 +916,7 @@ def create_new_version_resource_public(request, pk):
 
 
 def publish(request, shortkey, *args, **kwargs):
-    # TODO: only HIL admin approver should be able to publish, not even the owner
+    # TODO: drc only HIL admin approver should be able to publish, not even the owner!
     # only resource owners are allowed to change resource flags (e.g published)
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
@@ -933,7 +933,7 @@ def submit_for_review(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
     try:
-        hydroshare.submit_resource_for_review(request.user, shortkey)
+        hydroshare.submit_resource_for_review(request, shortkey)
     except ValidationError as exp:
         request.session['validation_error'] = str(exp)
         logger.warn(str(exp))
@@ -1657,6 +1657,41 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
             messages.info(request, message)
             # redirect to group profile page
             return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
+    return redirect("/")
+
+def metadata_review(request, uidb36, token, action, **kwargs):
+    accept_request = action == 'accept'
+    """
+    View for the link in the verification email that was sent to a user
+    when they request publication/metadata review.
+    User is logged in and the request for review is approved. Then the user is redirected to the resource landing page
+    for the resource that they just approved.
+
+    :param uidb36: ID of the user to whom the email was sent (part of the link in the email)
+    :param token: token that was part of the link in the email
+    """
+    user = authenticate(uidb36=uidb36, token=token, is_active=True)
+    if user is None:
+        messages.error(request, "The link you clicked has expired. Please manually navigate to the resouce "
+                                "to complete the metadata review.")
+    else:
+        # TODO: drc, allow if request.user.is_superuser
+        # TODO: drc actually publish the resource and send emai notifying requestor
+        # user.uaccess.act_on_group_membership_request(membership_request, accept_request=True)
+        # auth_login(request, user)
+
+        # # send email to notify membership acceptance
+        # _send_email_on_group_membership_acceptance(membership_request)
+        # if membership_request.invitation_to is not None:
+        #     message = "You just joined the group '{}'".format(membership_request.group_to_join.name)
+        # else:
+        #     message = "User '{}' just joined the group '{}'".format(membership_request.request_from.first_name,
+        #                                                             membership_request.group_to_join.name)
+
+        # messages.info(request, message)
+        # redirect to group profile page
+        # return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
+        pass
     return redirect("/")
 
 

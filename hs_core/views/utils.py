@@ -694,9 +694,9 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     instance of Group are expected to
     be passed into this function
     """
-    email_to = kwargs.get('group_owner', user)
     context = {'request': request, 'user': user, 'explanation': kwargs.get('explanation', None)}
     if action_type == 'group_membership':
+        email_to = kwargs.get('group_owner', user)
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
@@ -706,9 +706,20 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
 
         context['group'] = kwargs.pop('group')
     elif action_type == 'group_auto_membership':
+        email_to = kwargs.get('group_owner', user)
         context['group'] = kwargs.pop('group')
         action_url = ''
+    elif action_type == 'metadata_review':
+        context['user_from'] = kwargs.get('user_from', None)
+        email_to = kwargs.get('email_to', user)
+        context['resource'] = kwargs.pop('resource')
+        action_url = reverse(action_type, kwargs={
+            "uidb36": int_to_base36(user.id),
+            "action": "approve", #TODO: drc also need to add the opposite
+            "token": without_login_date_token_generator.make_token(email_to),
+        }) + "?next=" + (next_url(request) or "/")
     else:
+        email_to = kwargs.get('group_owner', user)
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
             "token": without_login_date_token_generator.make_token(email_to)

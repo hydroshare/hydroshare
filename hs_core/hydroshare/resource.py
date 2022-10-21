@@ -12,6 +12,7 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
+from django.db.models import Q
 from django.contrib.auth.models import User
 
 from rest_framework import status
@@ -20,6 +21,7 @@ from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
+
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
@@ -1000,7 +1002,7 @@ def deposit_res_metadata_with_crossref(res):
     return response
 
 
-def submit_resource_for_review(user, pk):
+def submit_resource_for_review(request, pk):
     """
     Submits a resource for minimum metadata review, prior to publishing.
     The user must be an owner of a resource or an administrator to perform this action.
@@ -1050,7 +1052,16 @@ def submit_resource_for_review(user, pk):
 
     # utils.resource_modified(resource, user, overwrite_bag=False)
 
-    # TODO: send email to reviewer
+    # TODO: store this as an enum or in settings?
+    email = "help@cuahsi.org"
+    username_or_email = Q(username__iexact=email) | Q(email__iexact=email)
+    try:
+        user_to = User.objects.get(username_or_email)
+    except User.DoesNotExist:
+        user_to = None
+    user_to = User.objects.get(username__iexact="admin")
+    from hs_core.views.utils import send_action_to_take_email
+    send_action_to_take_email(request, user=user_to, user_from=request.user, action_type='metadata_review', resource=resource)
 
     return pk
 

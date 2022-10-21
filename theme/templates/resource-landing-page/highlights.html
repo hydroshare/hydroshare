@@ -24,6 +24,7 @@
             {% endif %}
         </td>
     </tr>
+    <!-- TODO: drc email_to will be help@cuahsi but we should also add a button so that any admin can approve the metadata -->
     {% if "pending" in cm.doi or "failure" in cm.doi or cm.raccess.review_pending %}
             <tr>
                 <th>Publication Status: </th>
