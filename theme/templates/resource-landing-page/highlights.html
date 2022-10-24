@@ -24,16 +24,26 @@
             {% endif %}
         </td>
     </tr>
-    <!-- TODO: drc email_to will be help@cuahsi but we should also add a button so that any admin can approve the metadata -->
     {% if "pending" in cm.doi or "failure" in cm.doi or cm.raccess.review_pending %}
             <tr>
                 <th>Publication Status: </th>
                 <td>
                     {% if cm.raccess.review_pending %}
                     <div>Pending Metadata Review</div>
-                    <div class="small text-muted">
-                        Note that you sould receive an email within 24hrs of starting the review process
-                    </div>
+                        {% if user.is_superuser %}
+                        <a id="metadata_approve" href="/hsapi/_internal/metadata_review/{{ cm.short_id }}/approve/">
+                            <span 
+                                data-toggle="tooltip"
+                                data-placement="bottom"
+                                title="Approve metadata for publication"
+                                class="glyphicon glyphicon-globe icon-button icon-blue">
+                            </span>
+                        </a>
+                        {% else %}
+                        <div class="small text-muted">
+                            Note that you sould receive an email within 24hrs of starting the review process
+                        </div>
+                        {% endif %}
                     {% else %}
                     <div>Pending Publication</div>
                     <div class="small text-muted">

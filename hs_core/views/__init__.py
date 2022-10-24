@@ -1657,7 +1657,7 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
             return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
     return redirect("/")
 
-def metadata_review(request, uidb36, token, shortkey, action, **kwargs):
+def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs):
     """
     View for the link in the verification email that was sent to a user
     when they request publication/metadata review.
@@ -1667,22 +1667,24 @@ def metadata_review(request, uidb36, token, shortkey, action, **kwargs):
     :param uidb36: ID of the user to whom the email was sent (part of the link in the email)
     :param token: token that was part of the link in the email
     """
-    user = authenticate(uidb36=uidb36, token=token, is_active=True)
-    auth_login(request, user)
-    if user is None:
-        messages.error(request, "The link you clicked has expired. Please manually navigate to the resouce "
-                                "to complete the metadata review.")
+    if uidb36:
+        user = authenticate(uidb36=uidb36, token=token, is_active=True)
+        if user is None:
+            messages.error(request, "The link you clicked has expired. Please manually navigate to the resouce "
+                            "to complete the metadata review.")
     else:
-        res = get_resource_by_shortkey(shortkey)
-        res.raccess.review_pending = False
-        res.raccess.save()
-        if action == "approve":
-            hydroshare.publish_resource(user, shortkey)
-            
-            _send_email_on_metadata_acceptance(request, shortkey)
-            flash_message = "Publication request was accepted. An email has been sent notifiying the resource owner."
-        else:
-            flash_message = f"Publication request was rejected. Please send an email to the resource owner indicating why."
+        user = request.user
+    # auth_login(request, user)
+
+    res = get_resource_by_shortkey(shortkey)
+    res.raccess.review_pending = False
+    res.raccess.save()
+    if action == "approve":
+        hydroshare.publish_resource(user, shortkey)
+        _send_email_on_metadata_acceptance(request, shortkey)
+        flash_message = "Publication request was accepted. An email has been sent notifiying the resource owner."
+    else:
+        flash_message = f"Publication request was rejected. Please send an email to the resource owner indicating why."
     messages.info(request, flash_message)
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 

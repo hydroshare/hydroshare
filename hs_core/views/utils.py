@@ -710,16 +710,16 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         email_to = kwargs.get('group_owner', user)
         context['group'] = kwargs.pop('group')
         action_url = ''
-    elif action_type == 'metadata_review':
+    elif action_type == 'metadata_review_link':
         user_from = kwargs.get('user_from', None)
         context['user_from'] = user_from
         email_to = kwargs.get('email_to', user)
         resource = kwargs.pop('resource')
         context['resource'] = resource
         action_url = reverse(action_type, kwargs={
-            "uidb36": int_to_base36(user.id),
             "shortkey": resource.short_id,
             "action": "approve",
+            "uidb36": int_to_base36(user.id),
             "token": without_login_date_token_generator.make_token(email_to),
         }) + "?next=" + (next_url(request) or "/")
         context['spatial_coverage'] = get_coverage_data_dict(resource)
