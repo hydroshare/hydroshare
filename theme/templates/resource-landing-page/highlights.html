@@ -32,16 +32,17 @@
                     <div>Pending Metadata Review</div>
                         {% if user.is_superuser %}
                         <a id="metadata_approve" href="/hsapi/_internal/metadata_review/{{ cm.short_id }}/approve/">
-                            <span 
+                            <button
+                                class="btn btn-info btn-xs"
                                 data-toggle="tooltip"
                                 data-placement="bottom"
-                                title="Approve metadata for publication"
-                                class="glyphicon glyphicon-globe icon-button icon-blue">
-                            </span>
+                                title="Approve metadata review and submit for publication">
+                                Approve metadata for publication
+                            </button>
                         </a>
                         {% else %}
                         <div class="small text-muted">
-                            Note that you sould receive an email within 24hrs of starting the review process
+                            This resource is being assessed for minimum metadata prior to publication
                         </div>
                         {% endif %}
                     {% else %}
