@@ -126,7 +126,7 @@ def cr_json(cr):
             'requested_by': user_json(cr.requested_by),
             'community_to_approve': community_json(cr.community_to_approve),
             'date_requested': cr.date_requested.strftime("%m/%d/%Y, %H:%M:%S"),
-            'date_processed': 0 if cr.approved is None else cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S"), 
+            'date_processed': 0 if cr.approved is None else cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S"),
             'status': 'Approved' if cr.approved is True else 'Submitted' if cr.approved is None else 'Rejected',
         }
     else:

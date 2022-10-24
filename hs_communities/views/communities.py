@@ -198,6 +198,7 @@ class CommunityView(TemplateView):
             logger.error(denied)
             return context
 
+
 class FindCommunitiesView(TemplateView):
     template_name = 'hs_communities/find-communities.html'
 
@@ -257,8 +258,10 @@ class MyCommunitiesView(TemplateView):
             group.is_user_member = user in group.gaccess.members
             if group.is_user_member:
                 groups_member_of.append(group)
-            group.join_request_waiting_owner_action = group.gaccess.group_membership_requests.filter(request_from=user).exists()
-            group.join_request_waiting_user_action = group.gaccess.group_membership_requests.filter(invitation_to=user).exists()
+            group.join_request_waiting_owner_action = group.gaccess.group_membership_requests.filter(
+                request_from=user).exists()
+            group.join_request_waiting_user_action = group.gaccess.group_membership_requests.filter(
+                invitation_to=user).exists()
             group.join_request = None
             if group.join_request_waiting_owner_action or group.join_request_waiting_user_action:
                 group.join_request = group.gaccess.group_membership_requests.filter(request_from=user).first() or \
@@ -331,7 +334,7 @@ class CommunityCreationRequests(TemplateView):
             }
         else:
             logger.error(denied)
-            return { "denied": denied }
+            return {"denied": denied}
 
 
 class CommunityCreationRequest(TemplateView):
@@ -343,7 +346,7 @@ class CommunityCreationRequest(TemplateView):
     def dispatch(self, *args, **kwargs):
         return super(CommunityCreationRequest, self).dispatch(*args, **kwargs)
 
-    def hydroshare_denied(self, rid = None):
+    def hydroshare_denied(self, rid=None):
         user = self.request.user
         if not user or not user.is_authenticated:
             message = "You must be logged in to access this function."
@@ -364,7 +367,7 @@ class CommunityCreationRequest(TemplateView):
                 return message
 
         return ""
-    
+
     def get_context_data(self, **kwargs):
         context = {}
         if 'rid' in kwargs:
