@@ -936,7 +936,11 @@ def submit_for_review(request, shortkey, *args, **kwargs):
         request.session['validation_error'] = str(exp)
         logger.warn(str(exp))
     else:
-        request.session['just_published'] = True
+        message = """Congratulations!
+                Your resource is under review for appropriate minimum metadata and to ensure that it adheres to community guidelines.
+                The review process will likely be complete within 1 business day, but not exceed 2 business days.
+                You will receive a notifcation via email once the review process has concluded."""
+        messages.success(request, message)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
