@@ -1668,6 +1668,7 @@ def metadata_review(request, uidb36, token, shortkey, action, **kwargs):
     :param token: token that was part of the link in the email
     """
     user = authenticate(uidb36=uidb36, token=token, is_active=True)
+    auth_login(request, user)
     if user is None:
         messages.error(request, "The link you clicked has expired. Please manually navigate to the resouce "
                                 "to complete the metadata review.")
@@ -1677,22 +1678,13 @@ def metadata_review(request, uidb36, token, shortkey, action, **kwargs):
         res.raccess.save()
         if action == "approve":
             hydroshare.publish_resource(user, shortkey)
-            # TODO: drc email to requestor confirming?
-            # user.uaccess.act_on_group_membership_request(membership_request, accept_request=True)
-            # auth_login(request, user)
-
-            # # send email to notify membership acceptance
-            # _send_email_on_group_membership_acceptance(membership_request)
-            # if membership_request.invitation_to is not None:
-            #     message = "You just joined the group '{}'".format(membership_request.group_to_join.name)
-            # else:
-            #     message = "User '{}' just joined the group '{}'".format(membership_request.request_from.first_name,
-            #                                                             membership_request.group_to_join.name)
-
-            # messages.info(request, message)
-            # redirect to group profile page
-            # return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
-    return redirect("/")
+            
+            _send_email_on_metadata_acceptance(request, shortkey)
+            flash_message = "Publication request was accepted. An email has been sent notifiying the resource owner."
+        else:
+            flash_message = f"Publication request was rejected. Please send an email to the resource owner indicating why."
+    messages.info(request, flash_message)
+    return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 
 
 @login_required
@@ -1846,6 +1838,29 @@ def _send_email_on_group_membership_acceptance(membership_request):
               html_message=email_msg,
               from_email=settings.DEFAULT_FROM_EMAIL,
               recipient_list=[membership_request.request_from.email])
+
+def _send_email_on_metadata_acceptance(request, shortkey):
+    """
+    Sends email notification of metadata acceptance for publication
+
+    :param shortkey: a resource UUID
+    :return:
+    """
+
+    resource = get_resource_by_shortkey(shortkey)
+    email_msg = f"""Dear Resource Owners,
+    <p>Your publication request for the following resource has been accepted:</p>
+    <p><a href="{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }">{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }</a></p>
+    
+    <p>Thank you</p>
+    <p>The HydroShare Team</p>
+    """
+
+    send_mail(subject="HydroShare resource approved for publication",
+              message=email_msg,
+              html_message=email_msg,
+              from_email=settings.DEFAULT_FROM_EMAIL,
+              recipient_list=[o.email for o in resource.raccess.owners.all()])
 
 
 def _share_resource_with_user(request, frm, resource, requesting_user, privilege):
