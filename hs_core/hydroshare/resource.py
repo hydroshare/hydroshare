@@ -1034,34 +1034,18 @@ def submit_resource_for_review(request, pk):
                               "metadata or content files, or this resource contains referenced "
                               "content, or this resource type is not allowed for publication.")
 
-    # append pending to the doi field to indicate DOI is not activated yet. Upon successful
-    # activation, "pending" will be removed from DOI field
-    # resource.doi = get_resource_doi(pk, 'pending')
-    # resource.save()
-
-    # resource.set_public(True)  # also sets discoverable to True
-    # resource.raccess.published = True
-    # resource.raccess.save()
     resource.raccess.review_pending = True
     resource.raccess.save()
 
-    # add doi to "Identifier" element of science metadata
-    # md_args = {'name': 'doi',
-    #            'url': get_activated_doi(resource.doi)}
-    # resource.metadata.create_element('Identifier', **md_args)
-
-    # utils.resource_modified(resource, user, overwrite_bag=False)
-
-    # TODO: drc store this as an enum or in settings?
-    email = "help@cuahsi.org"
-    username_or_email = Q(username__iexact=email) | Q(email__iexact=email)
     try:
-        user_to = User.objects.get(username_or_email)
+        # we assume that there is a user associated with the "default_from_email"
+        user_to = User.objects.filter(email__iexact=settings.DEFAULT_FROM_EMAIL).first()
     except User.DoesNotExist:
         user_to = None
     user_to = User.objects.get(username__iexact="admin")
     from hs_core.views.utils import send_action_to_take_email
-    send_action_to_take_email(request, user=user_to, user_from=request.user, action_type='metadata_review_link', resource=resource)
+    send_action_to_take_email(request, user=user_to, user_from=request.user,
+                                action_type='metadata_review_link', resource=resource)
 
     return pk
 
