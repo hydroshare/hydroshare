@@ -710,7 +710,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         email_to = kwargs.get('group_owner', user)
         context['group'] = kwargs.pop('group')
         action_url = ''
-    elif action_type == 'metadata_review_link':
+    elif action_type == 'metadata_review':
         user_from = kwargs.get('user_from', None)
         context['user_from'] = user_from
         email_to = kwargs.get('email_to', user)

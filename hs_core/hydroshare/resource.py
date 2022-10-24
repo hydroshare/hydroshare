@@ -1046,7 +1046,7 @@ def submit_resource_for_review(request, pk):
     user_to = User.objects.get(username__iexact="admin")
     from hs_core.views.utils import send_action_to_take_email
     send_action_to_take_email(request, user=user_to, user_from=request.user,
-                                action_type='metadata_review_link', resource=resource)
+                                action_type='metadata_review', resource=resource)
 
     return pk
 
