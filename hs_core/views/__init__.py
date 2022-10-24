@@ -1678,15 +1678,15 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
 
     res = get_resource_by_shortkey(shortkey)
     res.raccess.review_pending = False
-    res.raccess.immuable = False
+    res.raccess.immutable = False
     res.raccess.save()
     if action == "approve":
         hydroshare.publish_resource(user, shortkey)
         _send_email_on_metadata_acceptance(request, shortkey)
         flash_message = "Publication request was accepted. An email has been sent notifiying the resource owner."
     else:
-        flash_message = f"Publication request was rejected. Please send an email to the resource owner indicating why."
-    messages.info(request, flash_message)
+        flash_message = "Publication request was rejected. Please send an email to the resource owner indicating why."
+    messages.success(request, flash_message)
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 
 

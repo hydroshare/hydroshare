@@ -12,7 +12,6 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
-from django.db.models import Q
 from django.contrib.auth.models import User
 
 from rest_framework import status
@@ -21,7 +20,6 @@ from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
-
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
@@ -1035,8 +1033,7 @@ def submit_resource_for_review(request, pk):
                               "content, or this resource type is not allowed for publication.")
 
     resource.raccess.review_pending = True
-    # TODO: drc, seems like the resource can still be edited
-    resource.raccess.immuable = True
+    resource.raccess.immutable = True
     resource.raccess.save()
 
     try:
