@@ -1589,7 +1589,7 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
-            # 
+
             send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
                                       group=group_to_join, membership_request=membership_request,
                                       explanation=explanation)

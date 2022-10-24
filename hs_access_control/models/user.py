@@ -79,6 +79,7 @@ class UserAccess(models.Model):
     ##########################################
     # PUBLIC METHODS: groups
     ##########################################
+
     def create_group_membership_request(self, this_group, this_user=None, explanation=None):
         """
         User request/invite to join a group
