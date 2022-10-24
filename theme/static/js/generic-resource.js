@@ -273,34 +273,47 @@ $(document).ready(function () {
 
     $("#agree-chk").on('click', function(e) {
         e.stopImmediatePropagation();
-        if (e.currentTarget.checked)
+        if (e.currentTarget.checked) {
             $('#publish-btn').removeAttr('disabled');
-        else
+        }
+        else {
             $('#publish-btn').attr('disabled', 'disabled');
+        }
     });
 
     $("#agree-chk-copy").on('click', function(e) {
         e.stopImmediatePropagation();
-        if (e.currentTarget.checked)
+        if (e.currentTarget.checked) {
             $('#copy-btn').removeAttr('disabled');
-        else
+        }
+        else {
             $('#copy-btn').attr('disabled', 'disabled');
+        }
     });
 
     $("#agree-chk-download-bag").on('click', function(e) {
         e.stopImmediatePropagation();
-        if (e.currentTarget.checked)
-            $('#download-bag-btn').removeAttr('disabled');
-        else
-            $('#download-bag-btn').attr('disabled', 'disabled');
+        if (e.currentTarget.checked) {
+            $('#download-bag-btn').removeClass("disabled");
+        }
+        else {
+            $('#download-bag-btn').toggleClass("disabled", true);
+        }
+    });
+
+    $("#download-bag-cancel").on('click', function(e) {
+        $("#agree-chk-download-bag").prop( "checked", false );
+        $("#download-bag-btn").addClass('disabled');
     });
 
     $("#agree-chk-download-file").on('click', function(e) {
         e.stopImmediatePropagation();
-        if (e.currentTarget.checked)
+        if (e.currentTarget.checked) {
             $('#download-file-btn').removeAttr('disabled');
-        else
+        }
+        else {
             $('#download-file-btn').attr('disabled', 'disabled');
+        }
     });
 
     $("#copy-btn").on('click', function(e) {

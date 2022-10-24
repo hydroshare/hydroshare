@@ -119,7 +119,7 @@ function drawInitialShape() {
             rectangle.setMap(coverageMap);
             allShapes.push(rectangle);
             zoomCoverageMap(bounds);
-             $("#coverageMap").on("click", "#resetZoomBtn", function () {
+            $("#coverageMap").on("click", "#resetZoomBtn", function () {
                 zoomCoverageMap(bounds);
             });
         }
@@ -455,5 +455,9 @@ function deleteAllShapes(){
 }
 
 function zoomCoverageMap(bounds) {
+    // Known bug in google maps while calling `fitBounds` while the map is using the `restriction` option.
+    // https://stackoverflow.com/questions/54712021/map-fitbounds-works-weird-when-map-has-restriction-option-set
+    // Only reliable workaround is to call it twice
+    coverageMap.fitBounds(bounds);
     coverageMap.fitBounds(bounds);
 }
