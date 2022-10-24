@@ -1690,16 +1690,12 @@ def metadata_review(request, uidb36, token, shortkey, action, **kwargs):
         # messages.info(request, message)
         # redirect to group profile page
         # return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
-
+        res = get_resource_by_shortkey(shortkey)
+        res.raccess.review_pending = False
+        res.raccess.save()
         if action == "approve":
             hydroshare.publish_resource(user, shortkey)
-            res = get_resource_by_shortkey(shortkey)
-            res.raccess.review_pending = False
-            res.raccess.save()
-        else:
-            # TODO: drc email to requester informing rejected.
-            # TODO: drc reset resource to public
-            pass
+            # TODO: email to requestor confirming?
     return redirect("/")
 
 

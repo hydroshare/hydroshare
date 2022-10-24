@@ -9,6 +9,7 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+from urllib import parse
 from uuid import uuid4
 
 import paramiko
@@ -710,7 +711,8 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         context['group'] = kwargs.pop('group')
         action_url = ''
     elif action_type == 'metadata_review':
-        context['user_from'] = kwargs.get('user_from', None)
+        user_from = kwargs.get('user_from', None)
+        context['user_from'] = user_from
         email_to = kwargs.get('email_to', user)
         resource = kwargs.pop('resource')
         context['resource'] = resource
@@ -720,21 +722,16 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
             "action": "approve",
             "token": without_login_date_token_generator.make_token(email_to),
         }) + "?next=" + (next_url(request) or "/")
-        context['reject_url'] = action_url.replace("approve", "reject")
+        context['spatial_coverage'] = get_coverage_data_dict(resource)
 
-        spatial_coverage = resource.metadata.spatial_coverage
-        if spatial_coverage:
-            spatial_coverage_data_dict = {}
-            spatial_coverage_data_dict['type'] = spatial_coverage.type
-            if spatial_coverage.type == 'point':
-                spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
-                spatial_coverage_data_dict['north'] = spatial_coverage.value['north']
-            else:
-                spatial_coverage_data_dict['northlimit'] = spatial_coverage.value['northlimit']
-                spatial_coverage_data_dict['eastlimit'] = spatial_coverage.value['eastlimit']
-                spatial_coverage_data_dict['southlimit'] = spatial_coverage.value['southlimit']
-                spatial_coverage_data_dict['westlimit'] = spatial_coverage.value['westlimit']
-            context['spatial_coverage'] = spatial_coverage_data_dict
+        context['reject_url'] = action_url.replace("approve", "reject")
+        reject_subject = parse.quote("Publication Request Rejected")
+        reject_body = parse.quote("Your Publication Request for the following resource was rejected: ")
+        href_for_mailto_reject = (
+            f"mailto:{user_from.email}?subject={ reject_subject }&body={ reject_body }"
+            f'{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }'
+        )
+        context['href_for_mailto_reject'] = href_for_mailto_reject
     else:
         email_to = kwargs.get('group_owner', user)
         action_url = reverse(action_type, kwargs={
