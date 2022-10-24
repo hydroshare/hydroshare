@@ -721,6 +721,20 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
             "token": without_login_date_token_generator.make_token(email_to),
         }) + "?next=" + (next_url(request) or "/")
         context['reject_url'] = action_url.replace("approve", "reject")
+
+        spatial_coverage = resource.metadata.spatial_coverage
+        if spatial_coverage:
+            spatial_coverage_data_dict = {}
+            spatial_coverage_data_dict['type'] = spatial_coverage.type
+            if spatial_coverage.type == 'point':
+                spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
+                spatial_coverage_data_dict['north'] = spatial_coverage.value['north']
+            else:
+                spatial_coverage_data_dict['northlimit'] = spatial_coverage.value['northlimit']
+                spatial_coverage_data_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+                spatial_coverage_data_dict['southlimit'] = spatial_coverage.value['southlimit']
+                spatial_coverage_data_dict['westlimit'] = spatial_coverage.value['westlimit']
+            context['spatial_coverage'] = spatial_coverage_data_dict
     else:
         email_to = kwargs.get('group_owner', user)
         action_url = reverse(action_type, kwargs={
