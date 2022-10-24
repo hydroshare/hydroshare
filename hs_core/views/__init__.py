@@ -1678,6 +1678,7 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
 
     res = get_resource_by_shortkey(shortkey)
     res.raccess.review_pending = False
+    res.raccess.immuable = False
     res.raccess.save()
     if action == "approve":
         hydroshare.publish_resource(user, shortkey)

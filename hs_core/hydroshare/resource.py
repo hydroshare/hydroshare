@@ -1035,6 +1035,7 @@ def submit_resource_for_review(request, pk):
                               "content, or this resource type is not allowed for publication.")
 
     resource.raccess.review_pending = True
+    resource.raccess.immuable = True
     resource.raccess.save()
 
     try:
