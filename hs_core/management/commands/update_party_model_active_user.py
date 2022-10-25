@@ -14,6 +14,14 @@ class Command(BaseCommand):
             record_count = 0
             model_class_name = model_class.__name__
             for party in model_class.objects.exclude(hydroshare_user_id__isnull=True).iterator():
+                # check for metadata object associated with party meta object to skip any dangling party object
+                try:
+                    party.metadata
+                except Exception as err:
+                    err_msg = f"{model_class_name} object (id={party.id}) is missing metadata object. Error:{str(err)}"
+                    print(err_msg, flush=True)
+                    # no need to update this dangling party object
+                    continue
                 try:
                     user = User.objects.get(id=party.hydroshare_user_id)
                     party.is_active_user = user.is_active
