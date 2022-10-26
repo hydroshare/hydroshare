@@ -324,6 +324,7 @@ class RequestCommunity(models.Model):
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     date_processed = models.DateTimeField(editable=False, null=True)
     approved = models.NullBooleanField(null=True, default=None, blank=False)
+    decline_reason = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ['date_requested']
