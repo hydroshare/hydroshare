@@ -316,7 +316,7 @@ def update_user_profile(request, profile_user_id):
                     send_mail(subject="Change of HydroShare email address.",
                               message=message,
                               html_message=message,
-                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email],
+                              from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email],
                               fail_silently=True)
             else:
                 errors = {}

@@ -34,6 +34,7 @@ from rest_framework.decorators import api_view
 from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from django_irods.icommands import SessionException
+from hs_access_control.enums import CommunityRequestEvents
 from hs_access_control.forms import RequestNewCommunityForm, UpdateCommunityForm
 from hs_access_control.models import Community, GroupCommunityRequest, GroupMembershipRequest, GroupResourcePrivilege, \
     PrivilegeCodes
@@ -2100,6 +2101,9 @@ def request_new_community(request, *args, **kwargs):
             new_community_name = new_community_request.community_to_approve.name
             msg = f"New community ({new_community_name}) request was successful."
             messages.success(request, msg)
+            # send email to hydroshare support
+            # TODO: probably need to send this to a specific admin email once we figure out that email
+            new_community_request.send_email(request_event=CommunityRequestEvents.CREATED)
             return HttpResponseRedirect(reverse('my_communities'))
         except PermissionDenied:
             err_msg = f"You don't have permission to request new community"

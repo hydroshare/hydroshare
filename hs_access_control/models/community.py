@@ -3,12 +3,15 @@ from datetime import datetime
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Exists, F, OuterRef, Q
+from mezzanine.conf import settings
 from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from hs_core.models import BaseResource
 from theme.utils import get_upload_path_community
+from ..enums import CommunityRequestEvents
 
 
 ###################################
@@ -259,7 +262,7 @@ class Community(models.Model):
         else:
             return None
 
-# deprecated by RequestCommunity
+# deprecated by RequestCommunity (TODO: need to clean up this commented code)
 # class CommunityRequest(models.Model):
 #     """ application for creating a community """
 #     name = models.TextField(null=False, blank=False)
@@ -332,11 +335,20 @@ class RequestCommunity(models.Model):
     @classmethod
     def create_request(cls, request):
         """Helper to create a request for a new community"""
+
+        # TODO: currently this method is not used for creating a community request.
+        #  see hs_core/views/__init__.py view function 'request_new_community()' that is used for creating community
+        #  If Mauriel ends of using this, then remove the view function 'request_new_community()'. Otherwise, this
+        #  class method needs to be removed.
+
         from ..forms import RequestNewCommunityForm
 
         community_form = RequestNewCommunityForm(request.POST, request.FILES)
         if community_form.is_valid():
             new_community_request = community_form.save(request)
+            # send email to hydroshare support (TODO: need to send it a designated admin email once
+            #   we know the admin email)
+            new_community_request.send_email(request_event=CommunityRequestEvents.CREATED)
             return new_community_request
 
         err_msg = f"Failed to make a request for a new community. Errors: {community_form.errors.as_json}"
@@ -354,19 +366,26 @@ class RequestCommunity(models.Model):
         self.community_to_approve.active = True
         self.community_to_approve.save()
         self.save()
+        self.send_email(request_event=CommunityRequestEvents.APPROVED)
 
-    def decline(self):
+    def decline(self, reason):
         """Helper to reject a request to create a new community
+        :param reason: reason for rejecting the request to create a community
         Note: The caller of this function needs to check authorization for approval
         """
         assert self.approved is None
+        reason = reason.strip()
+        if not reason:
+            raise ValidationError("No reason for rejecting the request was provided")
 
         self.date_processed = datetime.now()
         self.approved = False
+        self.decline_reason = reason
         # upon approval the request the associated community is set to active
         self.community_to_approve.active = False
         self.community_to_approve.save()
         self.save()
+        self.send_email(request_event=CommunityRequestEvents.DECLINED)
 
     def remove(self):
         assert not self.community_to_approve.active
@@ -408,12 +427,56 @@ class RequestCommunity(models.Model):
             community_to_update.banner = img
             community_to_update.save()
 
+    def send_email(self, request_event):
+        if request_event == CommunityRequestEvents.CREATED:
+            recipient_emails = [settings.DEFAULT_SUPPORT_EMAIL]
+            subject = "New HydroShare Community Create Request"
+            message = f"""Dear HydroShare Admin,
+            <p>User {self.requested_by.first_name} is requesting creation of the following community. 
+            Please click on the link below to review this request.
+            <p><a href="{self.get_absolute_url()}">{self.community_to_approve.name}</a></p>
+            <p>HydroShare Team</p>
+            """
+        elif request_event == CommunityRequestEvents.DECLINED:
+            recipient_emails = [self.requested_by.email]
+            subject = "HydroShare Community Create Request Declined"
+            message = f"""Dear {self.requested_by.first_name},
+            <p>Sorry to inform you that your request to create the community 
+            <a href="{self.get_absolute_url()}">{self.community_to_approve.name}</a> was not approved due to
+            the reason stated below:</p>
+            <p>{self.decline_reason}</p>
+            <p>HydroShare Team</p> 
+            """
+        else:
+            # community request approved event
+            recipient_emails = [self.requested_by.email]
+            subject = "HydroShare Community Create Request Approved"
+            message = f"""Dear {self.requested_by.first_name},
+            <p>Glad to inform you that your request to create the community 
+            <a href="{self.get_absolute_url(request=False)}">{self.community_to_approve.name}</a> has been approved.</p> 
+            <p>HydroShare Team</p>
+            """
+        send_mail(subject=subject, message=message, html_message=message, from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=recipient_emails, fail_silently=True)
+
+    def get_absolute_url(self, request=True):
+        from hs_core.hydroshare import current_site_url
+        site_domain = current_site_url()
+        if request:
+            # get the url for the community request
+            absolute_url = f"{site_domain}/communities/manage-requests/{self.id}"
+        else:
+            # get the url for the community
+            absolute_url = f"{site_domain}/communities/{self.community_to_approve.id}"
+
+        return absolute_url
+
     @classmethod
-    def all_requests(cls, include_rejects=False):
+    def all_requests(cls):
         """Gets a queryset of all community requests"""
         return cls.objects.select_related('community_to_approve')
 
     @classmethod
-    def pending_requests(cls, include_rejects=False):
+    def pending_requests(cls):
         """Gets a queryset of all pending community requests"""
         return cls.objects.filter(Q(approved=None)).select_related('community_to_approve')
