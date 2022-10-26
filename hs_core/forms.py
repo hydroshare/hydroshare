@@ -438,6 +438,12 @@ class RelationValidationForm(forms.Form):
     value = forms.CharField()
 
 
+class GeospatialRelationValidationForm(RelationValidationForm):
+    """Validate GeospatialRelationForm 'text' and 'value' CharFields."""
+
+    text = forms.CharField(max_length=100)
+
+
 class IdentifierFormSetHelper(FormHelper):
     """Render layout for Identifier form including HTML5 valdiation and errors."""
 

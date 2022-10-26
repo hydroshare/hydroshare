@@ -33,7 +33,7 @@ const geoconnexApp = new Vue({
 
       ////// Resource-level data //////
       resShortId: SHORT_ID,
-      metadataRelations: RELATIONS,
+      metadataRelations: GEOSPATIAL_RELATIONS,
       resMode: RESOURCE_MODE,
       resSpatialType: null,
 
@@ -240,7 +240,6 @@ const geoconnexApp = new Vue({
         for (const relation of geoconnexApp.metadataRelations) {
           if (
             this.isUrl(relation.value) &&
-            relation.type === "relation" &&
             relation.value.indexOf("geoconnex") > -1
           ) {
             promises.push(geoconnexApp.fetchSingleFeature(relation));
@@ -303,39 +302,47 @@ const geoconnexApp = new Vue({
     },
     ajaxSaveFeatureToResMetadata(feature) {
       const geoconnexApp = this;
-      const url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/add-metadata/`;
+      const url = `/hsapi/_internal/${geoconnexApp.resShortId}/geospatialrelation/add-metadata/`;
       const data = {
-        type: "relation",
+        text: feature.text || "",
         value: feature.uri ? feature.uri : feature,
+        type: "relation"
       };
+      let ajaxResult;
       $.ajax({
         type: "POST",
         url: url,
         data: data,
         success: function (result) {
-          geoconnexApp.log(
-            `Added ${
-              feature.text ? feature.text : feature
-            } to resource metadata`
-          );
-          geoconnexApp.selectedReferenceFeatures.push({
-            id: result.element_id,
-            value: feature.uri ? feature.uri : feature,
-            text: feature.text ? feature.text : feature,
-          });
+          // hsapi returns 200 even if the metadata creation fails
+          ajaxResult = result
         },
-        error: function (request, status, error) {
-          const message = "Error while attempting to save related feature";
-          geoconnexApp.error(message, error);
-          geoconnexApp.generateAppMessage(`${message}: ${error}`);
-        },
+        complete: function (jqXHR, status) {
+          const statusObj = JSON.parse(jqXHR.responseText);
+          if (statusObj.status === "error"){
+            const message = "Error while attempting to save related feature";
+            geoconnexApp.error(message, statusObj.message);
+            geoconnexApp.generateAppMessage(`${message}: ${statusObj.message}`);
+          }else{
+            geoconnexApp.log(
+              `Added ${
+                feature.text ? feature.text : feature
+              } to resource metadata`
+            );
+            geoconnexApp.selectedReferenceFeatures.push({
+              id: ajaxResult.element_id,
+              value: feature.uri ? feature.uri : feature,
+              text: feature.text ? feature.text : feature,
+            });
+          }
+        }
       });
     },
     ajaxRemoveFeatureFromResMetadata(relations) {
       const geoconnexApp = this;
       for (const relation of relations) {
         if (relation.id) {
-          const url = `/hsapi/_internal/${geoconnexApp.resShortId}/relation/${relation.id}/delete-metadata/`;
+          const url = `/hsapi/_internal/${geoconnexApp.resShortId}/geospatialrelation/${relation.id}/delete-metadata/`;
           $.ajax({
             type: "POST",
             url: url,
@@ -350,7 +357,7 @@ const geoconnexApp = new Vue({
               const message =
                 "Error while attempting to remove related feature";
               geoconnexApp.error(message, error);
-              geoconnexApp.generateAppMessage(`${message}: ${error.message}`);
+              geoconnexApp.generateAppMessage(`${message}: ${error}`);
             },
           });
         }

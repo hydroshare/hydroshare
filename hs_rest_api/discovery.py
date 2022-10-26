@@ -7,6 +7,7 @@ from drf_haystack.fields import HaystackCharField, HaystackDateField, HaystackMu
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
 from rest_framework import serializers
+# TODO: [#4808] add geoconnex metadata to search index
 
 
 class DiscoveryResourceSerializer(HaystackSerializer):

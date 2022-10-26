@@ -1008,8 +1008,8 @@ class Relation(AbstractMetaDataElement):
         (RelationTypes.references.value, 'The content of this resource references'),
         (RelationTypes.replaces.value, 'This resource replaces'),
         (RelationTypes.source.value, 'The content of this resource is derived from'),
-        (RelationTypes.relation.value, 'The content of this resource is related to'),
-        (RelationTypes.isSimilarTo.value, 'The content of this resource is similar to')
+        (RelationTypes.isSimilarTo.value, 'The content of this resource is similar to'),
+        (RelationTypes.relation.value, 'The content of this resource is related to')
     )
 
     # these are hydroshare custom terms that are not Dublin Core terms
@@ -1037,19 +1037,16 @@ class Relation(AbstractMetaDataElement):
         return dict(self.SOURCE_TYPES)[self.type]
 
     def rdf_triples(self, subject, graph):
-        if self.type == RelationTypes.relation.value:
-            # avoid creating empty nodes for "relations" that only contain a URI
-            graph.add((subject, self.get_class_term(), URIRef(self.value)))
+        relation_node = BNode()
+        graph.add((subject, self.get_class_term(), relation_node))
+        if self.type in self.HS_RELATION_TERMS:
+            graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
         else:
-            relation_node = BNode()
-            graph.add((subject, self.get_class_term(), relation_node))
-            if self.type in self.HS_RELATION_TERMS:
-                graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
-            else:
-                graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
+            graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
+        # TODO: 4808 do we need to alter ingest function to account for blank nodes?
         for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
             for _, p, o in graph.triples((relation_node, None, None)):
                 type_term = p
@@ -1076,7 +1073,7 @@ class Relation(AbstractMetaDataElement):
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
 
         # avoid creating duplicate element (same type and same value)
-        if Relation.objects.filter(type=kwargs['type'],
+        if cls.objects.filter(type=kwargs['type'],
                                    value=kwargs['value'],
                                    object_id=metadata_obj.id,
                                    content_type=metadata_type).exists():
@@ -1097,10 +1094,10 @@ class Relation(AbstractMetaDataElement):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
         # avoid changing this relation to an existing relation of same type and same value
-        rel = Relation.objects.get(id=element_id)
+        rel = cls.objects.get(id=element_id)
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
-        qs = Relation.objects.filter(type=kwargs['type'],
+        qs = cls.objects.filter(type=kwargs['type'],
                                      value=kwargs['value'],
                                      object_id=metadata_obj.id,
                                      content_type=metadata_type)
@@ -1110,6 +1107,16 @@ class Relation(AbstractMetaDataElement):
             raise ValidationError('A relation element of the same type and value already exists.')
 
         super(Relation, cls).update(element_id, **kwargs)
+
+
+@rdf_terms(DC.relation)
+class GeospatialRelation(Relation):
+    text = models.TextField()
+
+    def rdf_triples(self, subject, graph):
+        if self.type == RelationTypes.relation.value:
+            # avoid creating empty nodes for "relations" that only contain a URI
+            graph.add((subject, self.get_class_term(), URIRef(self.value)))
 
 
 @rdf_terms(DC.identifier)
@@ -3896,6 +3903,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     _language = GenericRelation(Language)
     subjects = GenericRelation(Subject)
     relations = GenericRelation(Relation)
+    geospatialrelations = GenericRelation(GeospatialRelation)
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
     _publisher = GenericRelation(Publisher)
@@ -4097,6 +4105,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 'Language',
                 'Subject',
                 'Relation',
+                'GeospatialRelation',
                 'Publisher',
                 'FundingAgency']
 
@@ -4638,6 +4647,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     def create_element(self, element_model_name, **kwargs):
         """Create any supported metadata element."""
+        # TODO: 4808
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()

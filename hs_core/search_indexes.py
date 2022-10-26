@@ -623,6 +623,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return None
 
+    # TODO: [#4808] add geoconnex metadata to search index
     def prepare_relation(self, obj):
         """Return resource relations if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata') and \

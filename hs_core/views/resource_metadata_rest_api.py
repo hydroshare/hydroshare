@@ -10,7 +10,7 @@ from rest_framework import serializers
 
 from hs_core import hydroshare
 from hs_core.models import Contributor, CoreMetaData, Coverage, Creator, Date, \
-    Format, FundingAgency, Identifier, Subject, Relation
+    Format, FundingAgency, Identifier, Subject, Relation, GeospatialRelation
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
@@ -105,6 +105,13 @@ class RelationSerializer(serializers.Serializer):
         model = Relation
 
 
+class GeospatialRelationSerializer(RelationSerializer):
+    text = serializers.CharField(required=False)
+
+    class Meta:
+        model = GeospatialRelation
+
+
 class CoreMetaDataSerializer(serializers.Serializer):
     title = serializers.CharField(required=False)
     creators = CreatorSerializer(required=False, many=True)
@@ -121,6 +128,7 @@ class CoreMetaDataSerializer(serializers.Serializer):
     publisher = serializers.CharField(required=False)
     subjects = SubjectSerializer(required=False, many=True)
     relations = RelationSerializer(required=False, many=True)
+    geospatialrelations = GeospatialRelationSerializer(required=False, many=True)
 
     class Meta:
         model = CoreMetaData
