@@ -14,8 +14,6 @@ from xml.etree import ElementTree
 import requests
 from celery import shared_task
 from celery.schedules import crontab
-from celery.task import periodic_task
-from celery.exceptions import TaskError
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.sites.models import Site
@@ -80,7 +78,8 @@ def setup_periodic_tasks(sender, **kwargs):
     else:
         sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
         sender.add_periodic_task(crontab(minute=0, hour=0), manage_task_nightly.s())
-        sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'), send_over_quota_emails.s())
+        sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
+                                    send_over_quota_emails.s())
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
         sender.add_periodic_task(crontab(day_of_month=1), monthly_group_membership_requests_cleanup.s())
         sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
