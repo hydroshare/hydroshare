@@ -72,19 +72,18 @@ class FileOverrideException(Exception):
         super(FileOverrideException, self).__init__(self, error_message)
 
 
-def check_if_periodic_tasks_disabled():
-    if (hasattr(settings, 'DISABLE_PERIODIC_TASKS') and settings.DISABLE_PERIODIC_TASKS):
-        raise TaskError('Attempted to run a periodic task within an environment that has disabled them.')
-
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
-    sender.add_periodic_task(crontab(minute=0, hour=0), manage_task_nightly.s())
-    sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'), send_over_quota_emails.s())
-    sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
-    sender.add_periodic_task(crontab(day_of_month=1), monthly_group_membership_requests_cleanup.s())
-    sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
-    sender.add_periodic_task(crontab(day_of_week=1), task_notification_cleanup.s())
+    if (hasattr(settings, 'DISABLE_PERIODIC_TASKS') and settings.DISABLE_PERIODIC_TASKS):
+        logger.debug("Periodic tasks are disabled in SETTINGS")
+    else:
+        sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=0), manage_task_nightly.s())
+        sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'), send_over_quota_emails.s())
+        sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
+        sender.add_periodic_task(crontab(day_of_month=1), monthly_group_membership_requests_cleanup.s())
+        sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
+        sender.add_periodic_task(crontab(day_of_week=1), task_notification_cleanup.s())
 
 
 # Currently there are two different cleanups scheduled.
@@ -92,7 +91,6 @@ def setup_periodic_tasks(sender, **kwargs):
 # TODO Clean up zipfiles in remote federated storage as well.
 @celery_app.task(ignore_result=True)
 def nightly_zips_cleanup():
-    check_if_periodic_tasks_disabled()
     # delete 2 days ago
     date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
     zips_daily_date = "zips/{daily_date}".format(daily_date=date_folder)
@@ -119,7 +117,6 @@ def nightly_zips_cleanup():
 @celery_app.task(ignore_result=True)
 def manage_task_nightly():
     # The nightly running task do DOI activation check
-    check_if_periodic_tasks_disabled()
 
     # Check DOI activation on failed and pending resources and send email.
     msg_lst = []
@@ -198,7 +195,6 @@ def manage_task_nightly():
 @celery_app.task(ignore_result=True)
 def send_over_quota_emails():
     # check over quota cases and send quota warning emails as needed
-    check_if_periodic_tasks_disabled()
     hs_internal_zone = "hydroshare"
     if not QuotaMessage.objects.exists():
         QuotaMessage.objects.create()
@@ -749,7 +745,6 @@ def daily_odm2_sync():
     """
     ODM2 variables are maintained on an external site this synchronizes data to HydroShare for local caching
     """
-    check_if_periodic_tasks_disabled()
     ODM2Variable.sync()
 
 
@@ -758,7 +753,6 @@ def monthly_group_membership_requests_cleanup():
     """
     Delete expired and redeemed group membership requests
     """
-    check_if_periodic_tasks_disabled()
     two_months_ago = datetime.today() - timedelta(days=60)
     GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
 
@@ -768,7 +762,6 @@ def daily_innactive_group_requests_cleanup():
     """
     Redeem group membership requests for innactive users
     """
-    check_if_periodic_tasks_disabled()
     GroupMembershipRequest.objects.filter(request_from__is_active=False).update(redeemed=True)
     GroupMembershipRequest.objects.filter(invitation_to__is_active=False).update(redeemed=True)
 
@@ -801,6 +794,5 @@ def task_notification_cleanup():
     """
     Delete expired task notifications each week
     """
-    check_if_periodic_tasks_disabled()
     week_ago = datetime.today() - timedelta(days=7)
     TaskNotification.objects.filter(created__lte=week_ago).delete()
