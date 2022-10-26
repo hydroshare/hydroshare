@@ -9,6 +9,7 @@ from hs_access_control.models.community import RequestCommunity
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_access_control.views import user_json
 from hs_core import hydroshare
+from ..enums import CommunityRequestActions
 
 
 class TestViews(TransactionTestCase):
@@ -661,7 +662,7 @@ class TestViews(TransactionTestCase):
         # no community object at this point apart from the pets community
         self.assertEqual(Community.objects.exclude(id=self.pets.id).count(), 0)
 
-        url = reverse("access_manage_crequests", kwargs={"action": "request"})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.REQUEST.value})
         result = self.client.post(url, {
             "name": "Fake news",
             "description": "News that fit for liberals and not for conservatives.",
@@ -694,7 +695,7 @@ class TestViews(TransactionTestCase):
         """ admin edits a request without approval """
         self.client.login(username='dog', password='anotherpassword')
 
-        url = reverse("access_manage_crequests", kwargs={"action": "request"})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.REQUEST.value})
         result = self.client.post(url, {
             "name": "Fake news",
             "description": "News that fit for liberals and not for conservatives.",
@@ -715,7 +716,7 @@ class TestViews(TransactionTestCase):
         crid = json_response['request']['id']
         self.client.login(username='admin', password='passwordsarestupid')
 
-        url = reverse("access_manage_crequests", kwargs={"action": "update", "crid": crid})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.UPDATE.value, "crid": crid})
         result = self.client.post(url, {
             "name": "Real news",
             "description": "News that fit for conservatives.",
@@ -738,7 +739,7 @@ class TestViews(TransactionTestCase):
         self.client.login(username='dog', password='anotherpassword')
 
         # create a request to approve
-        url = reverse("access_manage_crequests", kwargs={"action": "request"})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.REQUEST.value})
         result = self.client.post(url, {
             "name": "Fake news",
             "description": "News that fit for liberals and not for conservatives.",
@@ -770,7 +771,7 @@ class TestViews(TransactionTestCase):
         # now approve the request as admin
         self.client.login(username='admin', password='passwordsarestupid')
 
-        url = reverse("access_manage_crequests", kwargs={"action": "approve", "crid": crid})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.APPROVE.value, "crid": crid})
         result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -796,7 +797,7 @@ class TestViews(TransactionTestCase):
 
         self.assertEqual(RequestCommunity.objects.count(), 0)
         # create a request to approve
-        url = reverse("access_manage_crequests", kwargs={"action": "request"})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.REQUEST.value})
         result = self.client.post(url, {
             "name": "Fake news",
             "description": "News that fit for liberals and not for conservatives.",
@@ -831,7 +832,7 @@ class TestViews(TransactionTestCase):
         # now reject the request as admin
         self.client.login(username='admin', password='passwordsarestupid')
         decline_reason = "The community seems not relevant to hydroshare"
-        url = reverse("access_manage_crequests", kwargs={"action": "decline", "crid": cr_id})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.DECLINE.value, "crid": cr_id})
         result = self.client.post(url, data={"reason": decline_reason})
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -861,7 +862,7 @@ class TestViews(TransactionTestCase):
         self.assertEqual(RequestCommunity.objects.count(), 0)
 
         # create a request to approve; if crid is not specified, it's new
-        url = reverse("access_manage_crequests", kwargs={"action": "request"})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.REQUEST.value})
         result = self.client.post(url, {
             "name": "Fake news",
             "description": "News that fit for liberals and not for conservatives.",
@@ -885,7 +886,7 @@ class TestViews(TransactionTestCase):
         self.assertEqual(RequestCommunity.objects.count(), 1)
 
         # no user switching: removing a request doesn't require admin
-        url = reverse("access_manage_crequests", kwargs={"action": "remove", "crid": crid})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.REQUEST.value, "crid": crid})
         result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)

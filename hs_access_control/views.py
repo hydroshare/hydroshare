@@ -10,6 +10,7 @@ from rest_framework import status
 
 from hs_access_control.models import Community, GroupCommunityRequest, PrivilegeCodes
 from hs_access_control.models.community import RequestCommunity
+from .enums import CommunityRequestActions
 
 logger = logging.getLogger(__name__)
 
@@ -526,6 +527,9 @@ class CommunityRequestView(View):
         return JsonResponse(context)
 
     def get(self, *args, **kwargs):
+        """gets a list of community requests created by given user. If the use is an admin, all community requests
+        are returned
+        """
         user = self.request.user
         denied = self.hydroshare_denied()
         context = {}
@@ -537,6 +541,9 @@ class CommunityRequestView(View):
         return self.get_community_requests(user)
 
     def post(self, *args, **kwargs):
+        """creates a community request or takes a specified action (decline, approve, or delete) on an
+        existing community request
+        """
         message = ''
         cr = None  # no community request yet
         user = self.request.user
@@ -550,7 +557,8 @@ class CommunityRequestView(View):
         action = kwargs['action']
         crid = kwargs.get('crid', '')
         if not crid:
-            if action != 'request':
+            # user is making a request for a new community
+            if action != CommunityRequestActions.REQUEST:
                 denied = "Invalid action requested for community request"
             else:
                 try:
@@ -561,7 +569,8 @@ class CommunityRequestView(View):
             # user taking action on an existing community request
             crid = int(crid)
             action = kwargs['action']
-            if action not in ('update', 'approve', 'decline', 'remove'):
+            allowed_actions = [member.value for member in CommunityRequestActions]
+            if action not in allowed_actions:
                 denied = "Invalid action requested for community request"
 
             if not denied:
@@ -573,7 +582,7 @@ class CommunityRequestView(View):
                     denied = "No request matching that id found"
 
             if not denied:
-                if action == 'update':
+                if action == CommunityRequestActions.UPDATE:
                     # update the community fields from POST data.
                     cr_by_user = cr.requested_by
                     if cr_by_user != user and not user.is_superuser:
@@ -583,7 +592,7 @@ class CommunityRequestView(View):
                             cr.update_request(user, self.request)
                         except ValidationError as err:
                             denied = err.message
-                elif action == 'approve':
+                elif action == CommunityRequestActions.APPROVE:
                     if user.is_superuser:
                         cr.approve()
                         message = "Request approved"
