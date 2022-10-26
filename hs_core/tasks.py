@@ -24,6 +24,7 @@ from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag
+from hydroshare.hydrocelery import app as celery_app
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
 from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref
 from hs_core.task_utils import get_or_create_task_notification
