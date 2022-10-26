@@ -122,7 +122,7 @@ class TestViews(TransactionTestCase):
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-        owners = [x['username'] for x in json_response['community']['owners']]
+        owners = [x['user_name'] for x in json_response['community']['owners']]
         self.assertTrue(is_equal_to_as_set(owners, ['cat', 'dog']))
 
     def test_community_change_owner(self):
@@ -138,7 +138,7 @@ class TestViews(TransactionTestCase):
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-        owners = [x['username'] for x in json_response['community']['owners']]
+        owners = [x['user_name'] for x in json_response['community']['owners']]
         self.assertTrue(is_equal_to_as_set(owners, ['cat', 'dog']))
 
         # now remove self as an owner.
@@ -150,7 +150,7 @@ class TestViews(TransactionTestCase):
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-        owners = [x['username'] for x in json_response['community']['owners']]
+        owners = [x['user_name'] for x in json_response['community']['owners']]
         self.assertTrue(is_equal_to_as_set(owners, ['dog']))
 
     def test_community_remove_sole_owner(self):
@@ -664,7 +664,7 @@ class TestViews(TransactionTestCase):
         url = reverse("access_manage_crequests", kwargs={"action": "request"})
         result = self.client.post(url, {
             "name": "Fake news",
-            "description": "News thats fit for liberals and not for conservatives.",
+            "description": "News that fit for liberals and not for conservatives.",
             "email": "acouch@hydroshare.org",
             "purpose": "To be the opposite of InfoWars.",
             "url": "https://google.com/my-cummunity"
@@ -674,10 +674,9 @@ class TestViews(TransactionTestCase):
 
         self.assertTrue(is_equal_to_as_set(json_response['approved'], []))
         self.assertTrue(is_equal_to_as_set(json_response['declined'], []))
-        self.assertEqual(json_response['request']['name'], "Fake news")
 
-        pending = [x['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ["Fake news"]))
+        pending = [x['id'] for x in json_response['pending']]
+        self.assertFalse(is_equal_to_as_set(pending, []))
 
         # there should be one community request object at this point
         self.assertEqual(RequestCommunity.objects.count(), 1)
@@ -698,33 +697,28 @@ class TestViews(TransactionTestCase):
         url = reverse("access_manage_crequests", kwargs={"action": "request"})
         result = self.client.post(url, {
             "name": "Fake news",
-            "description": "News thats fit for liberals and not for conservatives.",
+            "description": "News that fit for liberals and not for conservatives.",
             "email": "acouch@hydroshare.org",
             "purpose": "To be the opposite of InfoWars."
         })
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
-        pending = [x['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['Fake news']))
-        approved = [x['name'] for x in json_response['approved']]
+        pending = [x['id'] for x in json_response['pending']]
+        self.assertFalse(is_equal_to_as_set(pending, []))
+        approved = [x['id'] for x in json_response['approved']]
         self.assertTrue(is_equal_to_as_set(approved, []))
-        declined = [x['name'] for x in json_response['declined']]
+        declined = [x['id'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
 
-        self.assertEqual(json_response['request']['name'], "Fake news")
-
-        pending = [x['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ["Fake news"]))
-        crid = json_response['request']['id']
-
         # now update the request as admin
+        crid = json_response['request']['id']
         self.client.login(username='admin', password='passwordsarestupid')
 
         url = reverse("access_manage_crequests", kwargs={"action": "update", "crid": crid})
         result = self.client.post(url, {
             "name": "Real news",
-            "description": "News thats fit for conservatives.",
+            "description": "News that fit for conservatives.",
             "email": "acouch@hydroshare.org",
             "purpose": "To be the opposite of InfoWars.",
             "url": "https://google.com"
@@ -732,11 +726,11 @@ class TestViews(TransactionTestCase):
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
-        pending = [x['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['Real news']))
-        approved = [x['name'] for x in json_response['approved']]
+        pending = [x['id'] for x in json_response['pending']]
+        self.assertFalse(is_equal_to_as_set(pending, []))
+        approved = [x['id'] for x in json_response['approved']]
         self.assertTrue(is_equal_to_as_set(approved, []))
-        declined = [x['name'] for x in json_response['declined']]
+        declined = [x['id'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
 
     def test_community_approve_request(self):
@@ -747,29 +741,26 @@ class TestViews(TransactionTestCase):
         url = reverse("access_manage_crequests", kwargs={"action": "request"})
         result = self.client.post(url, {
             "name": "Fake news",
-            "description": "News thats fit for liberals and not for conservatives.",
+            "description": "News that fit for liberals and not for conservatives.",
             "email": "acouch@hydroshare.org",
             "purpose": "To be the opposite of InfoWars."
-
         })
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
-        pending = [x['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['Fake news']))
-        approved = [x['name'] for x in json_response['approved']]
+        pending = [x['id'] for x in json_response['pending']]
+        self.assertFalse(is_equal_to_as_set(pending, []))
+        approved = [x['id'] for x in json_response['approved']]
         self.assertTrue(is_equal_to_as_set(approved, []))
-        declined = [x['name'] for x in json_response['declined']]
+        declined = [x['id'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
-
-        self.assertEqual(json_response['request']['name'], "Fake news")
 
         # This is the request to be approved.
         crid = json_response['request']['id']
-
         self.assertEqual(RequestCommunity.objects.count(), 1)
         cr = RequestCommunity.objects.first()
         self.assertEqual(cr.approved, None)
+        self.assertEqual(cr.id, crid)
 
         # There should be a community now that is not active
         self.assertEqual(Community.objects.filter(name='Fake news').count(), 1)
@@ -790,12 +781,13 @@ class TestViews(TransactionTestCase):
         self.assertTrue(new_community.active)
         cr = RequestCommunity.objects.first()
         self.assertEqual(cr.approved, True)
+        self.assertEqual(cr.id, crid)
 
-        pending = [x['name'] for x in json_response['pending']]
+        pending = [x['id'] for x in json_response['pending']]
         self.assertTrue(is_equal_to_as_set(pending, []))
-        approved = [x['name'] for x in json_response['approved']]
-        self.assertTrue(is_equal_to_as_set(approved, ["Fake news"]))
-        declined = [x['name'] for x in json_response['declined']]
+        approved = [x['id'] for x in json_response['approved']]
+        self.assertFalse(is_equal_to_as_set(approved, []))
+        declined = [x['id'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
 
     def test_community_decline_request(self):
@@ -805,10 +797,9 @@ class TestViews(TransactionTestCase):
         self.assertEqual(RequestCommunity.objects.count(), 0)
         # create a request to approve
         url = reverse("access_manage_crequests", kwargs={"action": "request"})
-        # url = reverse("access_manage_crequests_create")
         result = self.client.post(url, {
             "name": "Fake news",
-            "description": "News thats fit for liberals and not for conservatives.",
+            "description": "News that fit for liberals and not for conservatives.",
             "email": "acouch@hydroshare.org",
             "purpose": "To be the opposite of InfoWars."
 
@@ -816,11 +807,12 @@ class TestViews(TransactionTestCase):
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
-        pending = [x['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['Fake news']))
-        approved = [x['name'] for x in json_response['approved']]
+        cr_id = json_response['pending'][0]['id']
+        pending = [x['id'] for x in json_response['pending']]
+        self.assertFalse(is_equal_to_as_set(pending, []))
+        approved = [x['id'] for x in json_response['approved']]
         self.assertTrue(is_equal_to_as_set(approved, []))
-        declined = [x['name'] for x in json_response['declined']]
+        declined = [x['id'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
 
         # there should be one community request object at this point
@@ -828,36 +820,38 @@ class TestViews(TransactionTestCase):
         cr = RequestCommunity.objects.first()
         self.assertEqual(cr.approved, None)
         self.assertEqual(cr.requested_by, self.dog)
+        self.assertEqual(cr.id, cr_id)
 
         # There should be a community now.
         self.assertEqual(Community.objects.filter(name='Fake news').count(), 1)
 
         # To act, we need this ID.
-        crid = json_response['request']['id']
+        cr_id = json_response['request']['id']
 
         # now reject the request as admin
         self.client.login(username='admin', password='passwordsarestupid')
-
-        url = reverse("access_manage_crequests", kwargs={"action": "decline", "crid": crid})
-        result = self.client.post(url)
+        decline_reason = "The community seems not relevant to hydroshare"
+        url = reverse("access_manage_crequests", kwargs={"action": "decline", "crid": cr_id})
+        result = self.client.post(url, data={"reason": decline_reason})
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
         self.assertEqual(RequestCommunity.objects.count(), 1)
         cr = RequestCommunity.objects.first()
         self.assertEqual(cr.approved, False)
+        self.assertEqual(cr.id, cr_id)
 
         # There should be still the community in inactive state.
         self.assertEqual(Community.objects.filter(name='Fake news').count(), 1)
         new_community = Community.objects.filter(name='Fake news').first()
         self.assertFalse(new_community.active)
 
-        pending = [x['name'] for x in json_response['pending']]
+        pending = [x['id'] for x in json_response['pending']]
         self.assertTrue(is_equal_to_as_set(pending, []))
-        approved = [x['name'] for x in json_response['approved']]
+        approved = [x['id'] for x in json_response['approved']]
         self.assertTrue(is_equal_to_as_set(approved, []))
-        declined = [x['name'] for x in json_response['declined']]
-        self.assertTrue(is_equal_to_as_set(declined, ['Fake news']))
+        declined = [x['id'] for x in json_response['declined']]
+        self.assertFalse(is_equal_to_as_set(declined, []))
 
     def test_community_delete_request(self):
         """ remove a request from a regular user """
@@ -870,7 +864,7 @@ class TestViews(TransactionTestCase):
         url = reverse("access_manage_crequests", kwargs={"action": "request"})
         result = self.client.post(url, {
             "name": "Fake news",
-            "description": "News thats fit for liberals and not for conservatives.",
+            "description": "News that fit for liberals and not for conservatives.",
             "email": "acouch@hydroshare.org",
             "purpose": "To be the opposite of InfoWars.",
             "url": "http://usu.edu/waterlab"
@@ -878,11 +872,11 @@ class TestViews(TransactionTestCase):
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
 
-        pending = [x['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['Fake news']))
-        approved = [x['name'] for x in json_response['approved']]
+        pending = [x['id'] for x in json_response['pending']]
+        self.assertFalse(is_equal_to_as_set(pending, []))
+        approved = [x['id'] for x in json_response['approved']]
         self.assertTrue(is_equal_to_as_set(approved, []))
-        declined = [x['name'] for x in json_response['declined']]
+        declined = [x['id'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
 
         # To act, we need this ID.
@@ -903,9 +897,9 @@ class TestViews(TransactionTestCase):
         self.assertEqual(Community.objects.filter(name='Fake news').count(), 0)
         self.assertEqual(RequestCommunity.objects.count(), 0)
 
-        pending = [x['name'] for x in json_response['pending']]
+        pending = [x['id'] for x in json_response['pending']]
         self.assertTrue(is_equal_to_as_set(pending, []))
-        approved = [x['name'] for x in json_response['approved']]
+        approved = [x['id'] for x in json_response['approved']]
         self.assertTrue(is_equal_to_as_set(approved, []))
-        declined = [x['name'] for x in json_response['declined']]
+        declined = [x['id'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
