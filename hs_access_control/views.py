@@ -590,8 +590,12 @@ class CommunityRequestView(View):
                     else:
                         denied = "You are not allowed to approve community requests."
                 elif action == 'decline':  # decline a request to create a community
-                    if user.is_superuser:
-                        cr.decline()
+                    decline_reason = self.request.POST.get('reason', '')
+                    decline_reason = decline_reason.strip()
+                    if not decline_reason:
+                        denied = "Reason for declining community request must be provided"
+                    elif user.is_superuser:
+                        cr.decline(reason=decline_reason)
                         message = "Request declined"
                     else:
                         denied = "You are not allowed to decline community requests"
