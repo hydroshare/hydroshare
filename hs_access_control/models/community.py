@@ -432,7 +432,7 @@ class RequestCommunity(models.Model):
             recipient_emails = [settings.DEFAULT_SUPPORT_EMAIL]
             subject = "New HydroShare Community Create Request"
             message = f"""Dear HydroShare Admin,
-            <p>User {self.requested_by.first_name} is requesting creation of the following community. 
+            <p>User {self.requested_by.first_name} is requesting creation of the following community.
             Please click on the link below to review this request.
             <p><a href="{self.get_absolute_url()}">{self.community_to_approve.name}</a></p>
             <p>HydroShare Team</p>
@@ -441,19 +441,19 @@ class RequestCommunity(models.Model):
             recipient_emails = [self.requested_by.email]
             subject = "HydroShare Community Create Request Declined"
             message = f"""Dear {self.requested_by.first_name},
-            <p>Sorry to inform you that your request to create the community 
+            <p>Sorry to inform you that your request to create the community
             <a href="{self.get_absolute_url()}">{self.community_to_approve.name}</a> was not approved due to
             the reason stated below:</p>
             <p>{self.decline_reason}</p>
-            <p>HydroShare Team</p> 
+            <p>HydroShare Team</p>
             """
         else:
             # community request approved event
             recipient_emails = [self.requested_by.email]
             subject = "HydroShare Community Create Request Approved"
             message = f"""Dear {self.requested_by.first_name},
-            <p>Glad to inform you that your request to create the community 
-            <a href="{self.get_absolute_url(request=False)}">{self.community_to_approve.name}</a> has been approved.</p> 
+            <p>Glad to inform you that your request to create the community
+            <a href="{self.get_absolute_url(request=False)}">{self.community_to_approve.name}</a> has been approved.</p>
             <p>HydroShare Team</p>
             """
         send_mail(subject=subject, message=message, html_message=message, from_email=settings.DEFAULT_FROM_EMAIL,
