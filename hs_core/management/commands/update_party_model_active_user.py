@@ -10,6 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         active_users = User.objects.filter(is_active=True)
+
         def update_party_active_flag(model_class):
             model_class_name = model_class.__name__
             update_rec_count = model_class.objects.exclude(hydroshare_user_id__isnull=True).filter(
