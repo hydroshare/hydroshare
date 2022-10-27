@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
+from django.db.models import Subquery
 
 from hs_core.models import Contributor, Creator
 
@@ -9,31 +9,13 @@ class Command(BaseCommand):
     help = "Sets the is_active_user field of all creators and contributors"
 
     def handle(self, *args, **options):
-
+        active_users = User.objects.filter(is_active=True)
         def update_party_active_flag(model_class):
-            record_count = 0
             model_class_name = model_class.__name__
-            for party in model_class.objects.exclude(hydroshare_user_id__isnull=True).iterator():
-                # check for metadata object associated with party meta object to skip any dangling party object
-                try:
-                    party.metadata
-                except Exception as err:
-                    err_msg = f"{model_class_name} object (id={party.id}) is missing metadata object. Error:{str(err)}"
-                    print(err_msg, flush=True)
-                    # no need to update this dangling party object
-                    continue
-                try:
-                    user = User.objects.get(id=party.hydroshare_user_id)
-                    party.is_active_user = user.is_active
-                except ObjectDoesNotExist:
-                    party.is_active_user = False
-                    err_msg = f"No user was found for user id:{party.hydroshare_user_id} for " \
-                              f"{model_class_name} record id:{party.id}"
-                    print(err_msg, flush=True)
-
-                party.save()
-                record_count += 1
-                print(f"{record_count}. Updated {model_class_name} record id:{party.id}", flush=True)
+            update_rec_count = model_class.objects.exclude(hydroshare_user_id__isnull=True).filter(
+                hydroshare_user_id__in=Subquery(active_users.values('id'))).update(is_active_user=True)
+            msg = f"Updated {update_rec_count} {model_class_name} records with 'is_active_user' set to True'"
+            print(msg, flush=True)
 
         msg = f"Total creators (as hydroshare user) " \
               f"found:{Creator.objects.exclude(hydroshare_user_id__isnull=True).count()}"
