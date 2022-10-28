@@ -455,7 +455,7 @@ class Party(AbstractMetaDataElement):
 
     # flag to track if a creator/contributor is an active hydroshare user
     # this flag is set by the system based on the field 'hydoshare_user_id'
-    is_active_user = models.BooleanField(default=False)
+    is_active_user = models.NullBooleanField(default=False, null=True, blank=True)
 
     # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
     # each identifier is stored as a key/value pair {name:link}
@@ -577,7 +577,9 @@ class Party(AbstractMetaDataElement):
         if party.hydroshare_user_id:
             user = User.objects.get(id=party.hydroshare_user_id)
             party.is_active_user = user.is_active
-            party.save()
+        else:
+            party.is_active_user = False
+        party.save()
         return party
 
     @classmethod

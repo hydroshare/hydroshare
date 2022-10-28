@@ -22,12 +22,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='contributor',
             name='is_active_user',
-            field=models.BooleanField(default=False),
+            field=models.NullBooleanField(default=False, null=True),
         ),
         migrations.AddField(
             model_name='creator',
             name='is_active_user',
-            field=models.BooleanField(default=False),
+            field=models.NullBooleanField(default=False, null=True),
         ),
         migrations.RunPython(code=set_creator_contributor_active_user_default, reverse_code=migrations.RunPython.noop)
     ]
