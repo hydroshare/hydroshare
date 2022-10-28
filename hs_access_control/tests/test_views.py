@@ -832,7 +832,8 @@ class TestViews(TransactionTestCase):
         # now reject the request as admin
         self.client.login(username='admin', password='passwordsarestupid')
         decline_reason = "The community seems not relevant to hydroshare"
-        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.DECLINE.value, "crid": cr_id})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.DECLINE.value,
+                                                         "crid": cr_id})
         result = self.client.post(url, data={"reason": decline_reason})
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
