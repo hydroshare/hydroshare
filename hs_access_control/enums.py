@@ -13,3 +13,14 @@ class CommunityRequestActions(str, enum.Enum):
     APPROVE = 'approve'
     DECLINE = 'decline'
     REMOVE = 'remove'
+
+
+class CommunityActions(str, enum.Enum):
+    OWNER = 'owner'
+    INVITE = 'invite'
+    APPROVE = 'approve'
+    DECLINE = 'decline'
+    REMOVE = 'remove'
+    RETRACT = 'retract'
+    DEACTIVATE = 'deactivate'
+    ADD = 'add'

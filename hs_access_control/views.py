@@ -10,7 +10,7 @@ from rest_framework import status
 
 from hs_access_control.models import Community, GroupCommunityRequest, PrivilegeCodes
 from hs_access_control.models.community import RequestCommunity
-from .enums import CommunityRequestActions
+from .enums import CommunityActions, CommunityRequestActions
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +167,6 @@ class GroupView(View):
             return message
 
     def get(self, *args, **kwargs):
-        context = {}
         message = ''
 
         if 'gid' in kwargs:
@@ -288,197 +287,224 @@ class CommunityView(View):
 
     def hydroshare_denied(self, cid, gid=None):
         user = self.request.user
+        no_error = ""
         if not user or not user.is_authenticated:
-            message = "You must be logged in to access this function."
-            return message
+            err_message = "You must be logged in to access this function."
+            return err_message
 
         try:
             community = Community.objects.get(id=cid)
         except Community.DoesNotExist:
-            message = "community id {} not found".format(cid)
-            return message
+            err_message = "community id {} not found".format(cid)
+            return err_message
 
         if user.uaccess.owns_community(community):
             if gid is None:
-                return ""
+                return no_error
             else:
-                group = Group.objects.filter(id=gid)
-                if group.count() < 1:
-                    message = "group id {} not found".format(gid)
-                    return message
-                else:
-                    return ""
-
+                try:
+                    Group.objects.get(id=gid)
+                except Group.DoesNotExist:
+                    err_message = "group id {} not found".format(gid)
+                    return err_message
+                return no_error
         else:
-            message = "user '{}' does not own community '{}'"\
+            err_message = "user '{}' does not own community '{}'"\
                       .format(user.username, community.name)
-            return message
+            return err_message
+
+    def validate_request_parameters(self, kwargs):
+        action = kwargs.get('action', None)
+        req_params = {}
+        err_msg = ''
+        allowed_actions = [action.value for action in CommunityActions]
+        if action is not None and action not in allowed_actions:
+            err_msg = "unknown action for community: '{}'".format(action)
+            return err_msg, req_params
+
+        if action is not None:
+            req_params['action'] = action
+        cid = kwargs.get('cid', None)
+        if cid is None:
+            err_msg = f"id for the community is not provided"
+            return err_msg, req_params
+        else:
+            cid = int(cid)
+        req_params['cid'] = cid
+
+        gid = kwargs.get('gid', None)
+        if gid is None and action != CommunityActions.OWNER and action is not None:
+            err_msg = f"id for the group is not provided"
+            return err_msg, req_params
+
+        if gid is not None:
+            gid = int(gid)
+            req_params['gid'] = gid
+
+        uid = kwargs.get('uid', None)
+        if uid is None and action == CommunityActions.OWNER and action is not None:
+            err_msg = f"id for the community owner is not provided"
+            return err_msg, req_params
+        req_params['uid'] = uid
+
+        addrem = kwargs.get('addrem', None)
+        if addrem is None and action == CommunityActions.OWNER:
+            err_msg = f"action related to ownership of the community is not provided"
+            return err_msg, req_params
+        if addrem is not None and addrem not in (CommunityActions.ADD.value, CommunityActions.REMOVE.value):
+            err_msg = f"provided action is not a valid action related to ownership of the community"
+            return err_msg, req_params
+
+        if addrem is not None:
+            req_params['addrem'] = addrem
+
+        return err_msg, req_params
+
+    def error_response(self, err_message):
+        context = {'denied': err_message}
+        logger.error(err_message)
+        return JsonResponse(context, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, *args, **kwargs):
         message = ''
-        context = {}
+        validation_err_msg, req_params = self.validate_request_parameters(kwargs)
+        if validation_err_msg:
+            return self.error_response(validation_err_msg)
 
-        if 'cid' in kwargs:
-            cid = int(kwargs['cid'])
-        else:
-            cid = None
-
-        if 'gid' in kwargs:
-            gid = int(kwargs['gid'])
-        else:
-            gid = None
-
-        if 'action' in kwargs:
-            action = kwargs['action']
-        else:
-            action = None
-
-        if 'uid' in kwargs:
-            uid = kwargs['uid']
-        else:
-            uid = None
-
-        if 'addrem' in kwargs:
-            addrem = kwargs['addrem']
-        else:
-            addrem = None
+        cid = req_params['cid']
+        gid = req_params.get('gid', None)
+        uid = req_params.get('uid', None)
+        action = req_params.get('action', None)
+        addrem = req_params.get('addrem', None)
 
         denied = self.hydroshare_denied(cid, gid)
-        if denied == "":
-            # these are needed for every request
-            user = self.request.user
-            community = Community.objects.get(id=int(cid))
-            if action == 'approve':  # approve a request from a group
-                group = Group.objects.get(id=int(gid))
-                gcr = GroupCommunityRequest.objects.get(
-                    community=community, group=group)
-                if gcr.redeemed:  # make it possible to approve a formerly declined request
-                    gcr.reset(responder=user)
-                message, worked = gcr.approve(responder=user)
+        if denied:
+            return self.error_response(denied)
 
-            elif action == 'decline':  # decline a request from a group
-                group = Group.objects.get(id=int(gid))
-                gcr = GroupCommunityRequest.objects.get(
-                    community__id=int(cid),
-                    group__id=int(kwargs['gid']))
-                message, worked = gcr.decline(responder=user)
+        # user and community are needed for every request
+        user = self.request.user
+        community = Community.objects.get(id=cid)
+        if action == CommunityActions.DEACTIVATE:  # deactivate a community
+            community.active = False
+            community.save()
+            context = {'denied': ''}  # community is gone now
+            return JsonResponse(context)
 
-            elif action == 'invite':
-                group = Group.objects.get(id=int(gid))
-                try:
-                    message, worked = GroupCommunityRequest.create_or_update(
-                        requester=user, group=group, community=community)
-                except Exception as e:
-                    logger.debug(e)
-
-            elif action == 'remove':  # remove a group from this community
-                group = Group.objects.get(id=int(gid))
-                message, worked = GroupCommunityRequest.remove(
+        if action == CommunityActions.APPROVE:  # approve a request from a group
+            group = Group.objects.get(id=gid)
+            gcr = GroupCommunityRequest.objects.get(community=community, group=group)
+            if gcr.redeemed:  # make it possible to approve a formerly declined request
+                gcr.reset(responder=user)
+            message, worked = gcr.approve(responder=user)
+            if not worked:
+                denied = message
+        elif action == CommunityActions.DECLINE:  # decline a request from a group
+            group = Group.objects.get(id=gid)
+            gcr = GroupCommunityRequest.objects.get(community__id=cid, group__id=group.id)
+            message, worked = gcr.decline(responder=user)
+            if not worked:
+                denied = message
+        elif action == CommunityActions.INVITE:
+            group = Group.objects.get(id=gid)
+            try:
+                message, _ = GroupCommunityRequest.create_or_update(
                     requester=user, group=group, community=community)
-
-            elif action == 'retract':  # remove a pending request
-                group = Group.objects.get(id=int(gid))
-                message, worked = GroupCommunityRequest.retract(
-                     requester=user, group=group, community=community)
-
-            elif action == 'deactivate':  # deactivate a community
-                group = Group.objects.get(id=int(gid))
-                community.active = False
-                community.save()
-                context = {'denied': ''}  # community is gone now
-                return JsonResponse(context)
-
-            elif action == 'owner':  # add or remove an owner.
-                # look up proposed user id
-                try:
-                    newuser = User.objects.get(username=uid)
-                    if addrem == 'add':
-                        if not newuser.uaccess.owns_community(community):
-                            user.uaccess.share_community_with_user(
-                                community, newuser, PrivilegeCodes.OWNER)
-                        else:
-                            denied = "user '{}' already owns community".format(uid)
-                    elif addrem == 'remove':
-                        if not newuser.uaccess.owns_community(community):
-                            denied = "user '{}' does not own community".format(uid)
-                        elif community.owners.count() == 1:
-                            denied = "Cannot remove last owner '{}' of community".format(uid)
-                        else:
-                            user.uaccess.unshare_community_with_user(
-                                community, newuser)
+            except Exception as e:
+                logger.debug(str(e))
+                denied = str(e)
+        elif action == CommunityActions.REMOVE:  # remove a group from this community
+            group = Group.objects.get(id=gid)
+            message, worked = GroupCommunityRequest.remove(
+                requester=user, group=group, community=community)
+            if not worked:
+                denied = message
+        elif action == CommunityActions.RETRACT:  # remove a pending request
+            group = Group.objects.get(id=gid)
+            message, worked = GroupCommunityRequest.retract(
+                 requester=user, group=group, community=community)
+            if not worked:
+                denied = message
+        elif action == CommunityActions.OWNER:  # add or remove an owner.
+            # look up proposed user id
+            try:
+                newuser = User.objects.get(username=uid)
+                if addrem == CommunityActions.ADD:
+                    if not newuser.uaccess.owns_community(community):
+                        user.uaccess.share_community_with_user(
+                            community, newuser, PrivilegeCodes.OWNER)
                     else:
-                        denied = "unknown user action {}".format(addrem)
-                except User.DoesNotExist:
-                    denied = "user id '{}' does not exist.".format(uid)
+                        denied = "user '{}' already owns community".format(uid)
+                elif addrem == CommunityActions.REMOVE:
+                    if not newuser.uaccess.owns_community(community):
+                        denied = "user '{}' does not own community".format(uid)
+                    elif community.owners.count() == 1:
+                        denied = "Cannot remove last owner '{}' of community".format(uid)
+                    else:
+                        user.uaccess.unshare_community_with_user(
+                            community, newuser)
+                else:
+                    denied = "unknown user action {}".format(addrem)
+            except User.DoesNotExist:
+                denied = "user id '{}' does not exist.".format(uid)
 
-            elif action is not None:
-                denied = "unknown action '{}'".format(action)
+        elif action is not None:
+            denied = "unknown action '{}'".format(action)
 
-            if denied == '':
-                # build a JSON object that contains the results of the query
-                context = {}
-
-                context['denied'] = denied
-                context['message'] = message
-                context['user'] = user_json(user)
-                context['community'] = community_json(community)
-
-                # groups that can be invited are those that are not already invited or members.
-                context['groups'] = []
-                for g in Group.objects.filter(gaccess__active=True)\
-                                      .exclude(invite_g2gcr__community=community)\
-                                      .exclude(g2gcp__community=community)\
-                                      .order_by('name'):
-                    context['groups'].append(group_json(g))
-
-                context['pending'] = []
-                for r in GroupCommunityRequest.objects.filter(
-                        community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
-                    context['pending'].append(gcr_json(r))
-
-                # requests that were declined by us
-                context['we_declined'] = []
-                for r in GroupCommunityRequest.objects.filter(
-                        community=community, redeemed=True, approved=False,
-                        when_group__lt=F('when_community')).order_by('group__name'):
-                    context['we_declined'].append(gcr_json(r))
-
-                # requests that were declined by others
-                context['they_declined'] = []
-                for r in GroupCommunityRequest.objects.filter(
-                        community=community, redeemed=True, approved=False,
-                        when_group__gt=F('when_community')).order_by('group__name'):
-                    context['they_declined'].append(gcr_json(r))
-
-                # group requests to be approved
-                context['approvals'] = []
-                for r in GroupCommunityRequest.objects.filter(
-                        community=Community.objects.get(id=int(cid)),
-                        group__gaccess__active=True,
-                        community_owner__isnull=True,
-                        redeemed=False).order_by('group__name'):
-                    context['approvals'].append(gcr_json(r))
-
-                # group members of community
-                context['members'] = []
-                for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
-                    context['members'].append(group_json(g))
-
-                return JsonResponse(context)
-            else:  # non-empty denied means an error.
-                context = {}
-                context['denied'] = denied
-                logger.error(denied)
-                return JsonResponse(context, status=404)
-        else:  # non-empty denied means an error.
+        if not denied:
+            # build a JSON object that contains the results of the query
             context = {}
             context['denied'] = denied
-            logger.error(denied)
-            return JsonResponse(context, status=404)
+            context['message'] = message
+            context['user'] = user_json(user)
+            context['community'] = community_json(community)
+
+            # groups that can be invited are those that are not already invited or members.
+            context['groups'] = []
+            for g in Group.objects.filter(gaccess__active=True)\
+                                  .exclude(invite_g2gcr__community=community)\
+                                  .exclude(g2gcp__community=community)\
+                                  .order_by('name'):
+                context['groups'].append(group_json(g))
+
+            context['pending'] = []
+            for r in GroupCommunityRequest.objects.filter(
+                    community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
+                context['pending'].append(gcr_json(r))
+
+            # requests that were declined by us
+            context['we_declined'] = []
+            for r in GroupCommunityRequest.objects.filter(
+                    community=community, redeemed=True, approved=False,
+                    when_group__lt=F('when_community')).order_by('group__name'):
+                context['we_declined'].append(gcr_json(r))
+
+            # requests that were declined by others
+            context['they_declined'] = []
+            for r in GroupCommunityRequest.objects.filter(
+                    community=community, redeemed=True, approved=False,
+                    when_group__gt=F('when_community')).order_by('group__name'):
+                context['they_declined'].append(gcr_json(r))
+
+            # group requests to be approved
+            context['approvals'] = []
+            for r in GroupCommunityRequest.objects.filter(
+                    community=Community.objects.get(id=int(cid)),
+                    group__gaccess__active=True,
+                    community_owner__isnull=True,
+                    redeemed=False).order_by('group__name'):
+                context['approvals'].append(gcr_json(r))
+
+            # group members of community
+            context['members'] = []
+            for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
+                context['members'].append(group_json(g))
+
+            return JsonResponse(context)
+        else:  # non-empty denied means an error.
+            return self.error_response(denied)
 
 
 class CommunityRequestView(View):
-
     """ View for creating or acting on a pending request to create a community. """
 
     def hydroshare_denied(self):
@@ -493,36 +519,38 @@ class CommunityRequestView(View):
     def get_community_requests(self, user, context=None):
         if context is None:
             context = {}
-        # approved requests
+
+        context['approved'] = []
+        context['declined'] = []
+        context['pending'] = []
         if user.is_superuser:  # privileged user sees all
-            context['approved'] = []
-            for r in RequestCommunity.objects.filter(approved=True):
-                context['approved'].append(cr_json(r))
+            # approved requests
+            approved_qs = RequestCommunity.objects.filter(approved=True)
 
             # declined requests
-            context['declined'] = []
-            for r in RequestCommunity.objects.filter(approved=False):
-                context['declined'].append(cr_json(r))
+            declined_qs = RequestCommunity.objects.filter(approved=False)
 
             # pending requests
-            context['pending'] = []
-            for r in RequestCommunity.objects.filter(approved__isnull=True):
-                context['pending'].append(cr_json(r))
+            pending_qs = RequestCommunity.objects.filter(approved__isnull=True)
 
         else:  # just for current user
-            context['approved'] = []
-            for r in RequestCommunity.objects.filter(approved=True, requested_by=user):
-                context['approved'].append(cr_json(r))
+            # approved requests
+            approved_qs = RequestCommunity.objects.filter(approved=True, requested_by=user)
 
             # declined requests
-            context['declined'] = []
-            for r in RequestCommunity.objects.filter(approved=False, requested_by=user):
-                context['declined'].append(cr_json(r))
+            declined_qs = RequestCommunity.objects.filter(approved=False, requested_by=user)
 
             # pending requests
-            context['pending'] = []
-            for r in RequestCommunity.objects.filter(approved__isnull=True, requested_by=user):
-                context['pending'].append(cr_json(r))
+            pending_qs = RequestCommunity.objects.filter(approved__isnull=True, requested_by=user)
+
+        for a_cr in approved_qs:
+            context['approved'].append(cr_json(a_cr))
+
+        for d_cr in declined_qs:
+            context['declined'].append(cr_json(d_cr))
+
+        for p_cr in pending_qs:
+            context['pending'].append(cr_json(p_cr))
 
         return JsonResponse(context)
 
