@@ -80,7 +80,7 @@ class TestViews(TransactionTestCase):
         """ try using the system unauthenticated """
         url = reverse('access_manage_community', kwargs={'cid': self.pets.id})
         result = self.client.get(url)
-        self.assertEqual(result.status_code, 404)
+        self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
         self.assertEqual(json_response['denied'],
                          "You must be logged in to access this function.")
@@ -90,7 +90,7 @@ class TestViews(TransactionTestCase):
         self.client.login(username='dog', password='anotherpassword')
         url = reverse('access_manage_community', kwargs={'cid': self.pets.id})
         result = self.client.get(url)
-        self.assertEqual(result.status_code, 404)
+        self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
         self.assertEqual(json_response['denied'],
                          "user 'dog' does not own community 'all kinds of pets'")
@@ -163,7 +163,7 @@ class TestViews(TransactionTestCase):
                               'action': 'owner',
                               'addrem': 'remove'})
         result = self.client.get(url)
-        self.assertEqual(result.status_code, 404)
+        self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
         self.assertEqual(json_response['denied'], "Cannot remove last owner 'cat' of community")
 
@@ -176,7 +176,7 @@ class TestViews(TransactionTestCase):
                               'action': 'owner',
                               'addrem': 'add'})
         result = self.client.get(url)
-        self.assertEqual(result.status_code, 404)
+        self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
         self.assertEqual(json_response['denied'], "user 'cat' already owns community")
 
@@ -249,7 +249,7 @@ class TestViews(TransactionTestCase):
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
-        self.assertEqual(result.status_code, 404)
+        self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
         self.assertEqual(json_response['denied'],
                          "user 'dog' does not own community 'all kinds of pets'")
