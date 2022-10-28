@@ -29,5 +29,7 @@ class Migration(migrations.Migration):
             name='is_active_user',
             field=models.BooleanField(default=False),
         ),
+        migrations.RunSQL("ALTER TABLE hs_core_creator ALTER COLUMN is_active_user SET DEFAULT FALSE;"),
+        migrations.RunSQL("ALTER TABLE hs_core_contributor ALTER COLUMN is_active_user SET DEFAULT FALSE;"),
         migrations.RunPython(code=set_creator_contributor_active_user_default, reverse_code=migrations.RunPython.noop)
     ]
