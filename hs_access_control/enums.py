@@ -16,7 +16,7 @@ class CommunityGroupEvents(enum.Enum):
     INVITED = enum.auto()
     REMOVED = enum.auto()
     JOIN_REQUESTED = enum.auto()
-   
+
 
 class CommunityRequestActions(str, enum.Enum):
     """Enum object for naming all allowed actions on a request to create a new community"""
