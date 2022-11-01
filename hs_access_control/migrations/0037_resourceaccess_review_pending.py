@@ -17,4 +17,5 @@ class Migration(migrations.Migration):
             name='review_pending',
             field=models.BooleanField(default=False, help_text='whether resource is under metadata review'),
         ),
+        migrations.RunSQL("ALTER TABLE hs_access_control_resourceaccess ALTER COLUMN review_pending SET DEFAULT FALSE;"),
     ]
