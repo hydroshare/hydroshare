@@ -1,13 +1,25 @@
 import enum
 
 
-class CommunityRequestEvents(str, enum.Enum):
-    CREATED = "created"
-    DECLINED = "declined"
-    APPROVED = "approved"
+class CommunityRequestEvents(enum.Enum):
+    """Enum object for naming various events related to request for creating a new community"""
+    CREATED = enum.auto()
+    DECLINED = enum.auto()
+    APPROVED = enum.auto()
 
+
+class CommunityGroupEvents(enum.Enum):
+    """Enum object for naming various events related to actions on a group requesting to join a group"""
+    CREATED = enum.auto()
+    DECLINED = enum.auto()
+    APPROVED = enum.auto()
+    INVITED = enum.auto()
+    REMOVED = enum.auto()
+    JOIN_REQUESTED = enum.auto()
+   
 
 class CommunityRequestActions(str, enum.Enum):
+    """Enum object for naming all allowed actions on a request to create a new community"""
     REQUEST = 'request'
     UPDATE = 'update'
     APPROVE = 'approve'
@@ -16,6 +28,7 @@ class CommunityRequestActions(str, enum.Enum):
 
 
 class CommunityActions(str, enum.Enum):
+    """Enum object for naming all allowed actions related to group joining a community"""
     OWNER = 'owner'
     INVITE = 'invite'
     APPROVE = 'approve'
@@ -24,3 +37,5 @@ class CommunityActions(str, enum.Enum):
     RETRACT = 'retract'
     DEACTIVATE = 'deactivate'
     ADD = 'add'
+    JOIN = 'join'
+    LEAVE = 'leave'
