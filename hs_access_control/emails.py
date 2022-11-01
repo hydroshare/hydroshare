@@ -57,7 +57,7 @@ class CommunityGroupEmailNotification:
                 message = f"""Dear {self.group_community_request.group_owner.first_name},
                 <p>Sorry to inform that your request for group <a href="{group_url}">
                 {self.group_community_request.group.name}</a> to join the community
-                <a href="{community_url}">{self.group_community_request.community.name}</a> was declined.</p>                         
+                <a href="{community_url}">{self.group_community_request.community.name}</a> was declined.</p>
                 <p>HydroShare Team</p>
                 """
             else:
