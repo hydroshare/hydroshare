@@ -2103,8 +2103,7 @@ def request_new_community(request, *args, **kwargs):
             msg = f"New community ({new_community_name}) request was successful."
             messages.success(request, msg)
             # send email to hydroshare support
-            # TODO: probably need to send this to a specific admin email once we figure out that email
-            CommunityRequestEmailNotification(community_request=new_community_request,
+            CommunityRequestEmailNotification(request=request, community_request=new_community_request,
                                               on_event=CommunityRequestEvents.CREATED).send()
             return HttpResponseRedirect(reverse('my_communities'))
         except PermissionDenied:

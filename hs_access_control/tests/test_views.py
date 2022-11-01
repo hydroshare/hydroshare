@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group
 from django.test import Client, TransactionTestCase
 from django.urls import reverse
 
-from hs_access_control.models import Community
+from hs_access_control.models import Community, GroupCommunityRequest
 from hs_access_control.models.community import RequestCommunity
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_access_control.views import user_json
@@ -120,7 +120,7 @@ class TestViews(TransactionTestCase):
                               'uid': self.dog.username,
                               'action': CommunityActions.OWNER.value,
                               'addrem': CommunityActions.ADD.value})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
         owners = [x['user_name'] for x in json_response['community']['owners']]
@@ -136,7 +136,7 @@ class TestViews(TransactionTestCase):
                               'uid': self.dog.username,
                               'action': CommunityActions.OWNER.value,
                               'addrem': CommunityActions.ADD.value})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
         owners = [x['user_name'] for x in json_response['community']['owners']]
@@ -148,7 +148,7 @@ class TestViews(TransactionTestCase):
                               'uid': self.cat.username,
                               'action': CommunityActions.OWNER.value,
                               'addrem': CommunityActions.REMOVE.value})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
         owners = [x['user_name'] for x in json_response['community']['owners']]
@@ -162,7 +162,7 @@ class TestViews(TransactionTestCase):
                               'uid': self.cat.username,
                               'action': CommunityActions.OWNER.value,
                               'addrem': CommunityActions.REMOVE.value})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
         self.assertEqual(json_response['denied'], "Cannot remove last owner 'cat' of community")
@@ -175,7 +175,7 @@ class TestViews(TransactionTestCase):
                               'uid': self.cat.username,
                               'action': CommunityActions.OWNER.value,
                               'addrem': CommunityActions.ADD.value})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
         self.assertEqual(json_response['denied'], "user 'cat' already owns community")
@@ -190,11 +190,15 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.INVITE.value,
                               "gid": self.cats.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-        members = [x['name'] for x in json_response['members']]
-        self.assertTrue(is_equal_to_as_set(members, ['cats']))
+        self.assertEqual(json_response['denied'], '')
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.cats.id)
+        # check request for the group to join community got approved
+        self.assertEqual(gcr.approved, True)
+        self.assertEqual(gcr.community.active, True)
 
     def test_community_add_group_and_remove(self):
         """ add a group automatically to a community """
@@ -205,38 +209,49 @@ class TestViews(TransactionTestCase):
                       kwargs={"cid": self.pets.id,
                               "action": CommunityActions.INVITE.value,
                               "gid": self.cats.id})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-        members = [x['name'] for x in json_response['members']]
-        self.assertTrue(is_equal_to_as_set(members, ['cats']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertNotEqual(json_response['message'], '')
+        self.assertNotEqual(json_response['community'], {})
+        self.assertEqual(json_response['community']['id'], self.pets.id)
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
 
         # now remove the group from the community
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
                               "action": CommunityActions.REMOVE.value,
                               "gid": self.cats.id})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-        members = [x['name'] for x in json_response['members']]
-        self.assertTrue(is_equal_to_as_set(members, []))
+        self.assertEqual(json_response['denied'], '')
+        self.assertNotEqual(json_response['message'], '')
+        self.assertNotEqual(json_response['community'], {})
+        # check request got deleted
+        self.assertEqual(GroupCommunityRequest.objects.count(), 0)
 
     def test_community_invite_group_deferred(self):
         """ invite a group to a community with deferral """
         self.client.login(username='cat', password='adumbpassword')
 
+        self.assertEqual(GroupCommunityRequest.objects.count(), 0)
         # cat owns community but not group: deferred and queued.
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
                               "action": CommunityActions.INVITE.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-        pending = [x['group']['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['dogs']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, False)
+        self.assertEqual(gcr.redeemed, False)
 
     def test_community_invite_group_not_owner(self):
         """ prohibit invitations from non-owners """
@@ -248,9 +263,10 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.INVITE.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
+        self.assertEqual(GroupCommunityRequest.objects.count(), 0)
         self.assertEqual(json_response['denied'],
                          "user 'dog' does not own community 'all kinds of pets'")
 
@@ -264,11 +280,15 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.INVITE.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-        pending = [x['group']['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['dogs']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, False)
+        self.assertEqual(gcr.redeemed, False)
 
         # now retract the invitation
         url = reverse("access_manage_community",
@@ -276,11 +296,11 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.RETRACT.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-        pending = [x['group']['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, []))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 0)
 
     def test_community_invite_group_and_accept(self):
         """ invite a group to a community and group accepts """
@@ -291,12 +311,15 @@ class TestViews(TransactionTestCase):
                       kwargs={"cid": self.pets.id,
                               "action": CommunityActions.INVITE.value,
                               "gid": self.dogs.id})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
-
         json_response = json.loads(result.content)
-        pending = [x['group']['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['dogs']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, False)
+        self.assertEqual(gcr.redeemed, False)
 
         # become the owner of dogs
         self.client.login(username='dog', password='anotherpassword')
@@ -320,16 +343,17 @@ class TestViews(TransactionTestCase):
                       kwargs={"cid": self.pets.id,
                               "action": CommunityActions.APPROVE.value,
                               "gid": self.dogs.id})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        # nothing is pending
-        approvals = [x['community']['name'] for x in json_response['approvals']]
-        self.assertTrue(is_equal_to_as_set(approvals, []))
-        # we joined the community
-        joined = [x['name'] for x in json_response['joined']]
-        self.assertTrue(is_equal_to_as_set(joined, ['all kinds of pets']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, True)
+        self.assertEqual(gcr.redeemed, True)
+        community = gcr.community
+        self.assertIn(self.dogs, community.member_groups.all())
 
     def test_community_invite_group_and_decline(self):
         """ invite a group to a community and group accepts """
@@ -340,12 +364,12 @@ class TestViews(TransactionTestCase):
                       kwargs={"cid": self.pets.id,
                               "action": CommunityActions.INVITE.value,
                               "gid": self.dogs.id})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
 
         json_response = json.loads(result.content)
-        pending = [x['group']['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['dogs']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
 
         # become the owner of dogs
         self.client.login(username='dog', password='anotherpassword')
@@ -369,21 +393,17 @@ class TestViews(TransactionTestCase):
                       kwargs={"cid": self.pets.id,
                               "action": CommunityActions.DECLINE.value,
                               "gid": self.dogs.id})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        # nothing is pending
-        approvals = [x['community']['name'] for x in json_response['approvals']]
-        self.assertTrue(is_equal_to_as_set(approvals, []))
-
-        # we did not join the community
-        joined = [x['name'] for x in json_response['joined']]
-        self.assertTrue(is_equal_to_as_set(joined, []))
-
-        # we declined this invitation
-        we_declined = [x['community']['name'] for x in json_response['we_declined']]
-        self.assertTrue(is_equal_to_as_set(we_declined, ['all kinds of pets']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, False)
+        self.assertEqual(gcr.redeemed, True)
+        community = gcr.community
+        self.assertNotIn(self.dogs, community.member_groups.all())
 
     #######################
     # group management
@@ -434,12 +454,17 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.JOIN.value,
                               "gid": self.cats.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        joined = [x['name'] for x in json_response['joined']]
-        self.assertTrue(is_equal_to_as_set(joined, ['all kinds of pets']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.cats.id)
+        self.assertEqual(gcr.approved, True)
+        self.assertEqual(gcr.redeemed, True)
+        community = gcr.community
+        self.assertIn(self.cats, community.member_groups.all())
 
     def test_group_add_community_and_remove(self):
         """ add a group automatically to a community """
@@ -450,24 +475,28 @@ class TestViews(TransactionTestCase):
                       kwargs={"cid": self.pets.id,
                               "action": CommunityActions.JOIN.value,
                               "gid": self.cats.id})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        joined = [x['name'] for x in json_response['joined']]
-        self.assertTrue(is_equal_to_as_set(joined, ['all kinds of pets']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.cats.id)
+        self.assertEqual(gcr.approved, True)
+        self.assertEqual(gcr.redeemed, True)
+        community = gcr.community
+        self.assertIn(self.cats, community.member_groups.all())
 
         # now leave the community
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
                               "action": CommunityActions.LEAVE.value,
                               "gid": self.cats.id})
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        joined = [x['name'] for x in json_response['joined']]
-        self.assertTrue(is_equal_to_as_set(joined, []))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 0)
 
     def test_group_join_community_deferred(self):
         """ request joining a community with deferral """
@@ -479,12 +508,17 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.JOIN.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        pending = [x['community']['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['all kinds of pets']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, False)
+        self.assertEqual(gcr.redeemed, False)
+        community = gcr.community
+        self.assertNotIn(self.dogs, community.member_groups.all())
 
     def test_group_join_community_deferred_and_accept(self):
         """ request joining a community with deferral and accept """
@@ -496,12 +530,17 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.JOIN.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        pending = [x['community']['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['all kinds of pets']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, False)
+        self.assertEqual(gcr.redeemed, False)
+        community = gcr.community
+        self.assertNotIn(self.dogs, community.member_groups.all())
 
         # login as community owner
         self.client.login(username='cat', password='adumbpassword')
@@ -523,15 +562,15 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.APPROVE.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        approvals = [x['community']['name'] for x in json_response['approvals']]
-        self.assertTrue(is_equal_to_as_set(approvals, []))
-
-        members = [x['name'] for x in json_response['members']]
-        self.assertTrue(is_equal_to_as_set(members, ['dogs']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, True)
+        self.assertEqual(gcr.community.active, True)
 
     def test_group_join_community_deferred_and_decline(self):
         """ request joining a community with deferral and decline"""
@@ -543,11 +582,17 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.JOIN.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-        pending = [x['community']['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['all kinds of pets']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, False)
+        self.assertEqual(gcr.redeemed, False)
+        community = gcr.community
+        self.assertNotIn(self.dogs, community.member_groups.all())
 
         # login as community owner
         self.client.login(username='cat', password='adumbpassword')
@@ -569,18 +614,15 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.DECLINE.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        approvals = [x['community']['name'] for x in json_response['approvals']]
-        self.assertTrue(is_equal_to_as_set(approvals, []))
-
-        we_declined = [x['community']['name'] for x in json_response['we_declined']]
-        self.assertTrue(is_equal_to_as_set(we_declined, ['all kinds of pets']))
-
-        members = [x['name'] for x in json_response['members']]
-        self.assertTrue(is_equal_to_as_set(members, []))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, False)
+        self.assertEqual(gcr.redeemed, True)
 
     def test_group_join_community_deferred_and_retract(self):
         """ request joining a community with deferral and retract the request """
@@ -592,27 +634,28 @@ class TestViews(TransactionTestCase):
                               "action": CommunityActions.JOIN.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        pending = [x['community']['name'] for x in json_response['pending']]
-        self.assertTrue(is_equal_to_as_set(pending, ['all kinds of pets']))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 1)
+        gcr = GroupCommunityRequest.objects.first()
+        self.assertEqual(gcr.group.id, self.dogs.id)
+        self.assertEqual(gcr.approved, False)
+        self.assertEqual(gcr.redeemed, False)
+        community = gcr.community
+        self.assertNotIn(self.dogs, community.member_groups.all())
 
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
                               "action": CommunityActions.RETRACT.value,
                               "gid": self.dogs.id})
 
-        result = self.client.get(url)
+        result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
-
-        approvals = [x['community']['name'] for x in json_response['approvals']]
-        self.assertTrue(is_equal_to_as_set(approvals, []))
-
-        joined = [x['name'] for x in json_response['joined']]
-        self.assertTrue(is_equal_to_as_set(joined, []))
+        self.assertEqual(json_response['denied'], '')
+        self.assertEqual(GroupCommunityRequest.objects.count(), 0)
 
     #######################
     # community creation
