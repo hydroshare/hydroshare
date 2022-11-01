@@ -1,8 +1,9 @@
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
+from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
 from django.db.models import Q
-from django.core.exceptions import PermissionDenied
 from django.utils import timezone
+
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes
 
@@ -83,6 +84,20 @@ class GroupCommunityRequest(models.Model):
                 self.when_community = timezone.now()
         return super(GroupCommunityRequest, self).save(*args, **kwargs)
 
+    @property
+    def group_absolute_url(self):
+        from hs_core.hydroshare import current_site_url
+        site_domain = current_site_url()
+        url = f"{site_domain}/group/{self.group.id}"
+        return url
+
+    @property
+    def community_absolute_url(self):
+        from hs_core.hydroshare import current_site_url
+        site_domain = current_site_url()
+        url = f"{site_domain}/community/{self.community.id}"
+        return url
+
     @classmethod
     def create_or_update(cls, **kwargs):
 
@@ -141,7 +156,7 @@ class GroupCommunityRequest(models.Model):
                 .format(group.name, community.name)
             return message, True
 
-        # requester owns both.
+        # requester owns both community and group
         if requester.uaccess.owns_community(community) and requester.uaccess.owns_group(group):
             community_owner = requester
             group_owner = requester
@@ -179,6 +194,7 @@ class GroupCommunityRequest(models.Model):
             return message, approved
 
         elif requester.uaccess.owns_community(community):
+            # requester owns community (this must be an invite)
             community_owner = requester
 
             if 'privilege' in kwargs:  # only set by community owner
@@ -381,12 +397,13 @@ class GroupCommunityRequest(models.Model):
             self.when_community = None
             self.approved = False
             self.redeemed = False
-            self.save()
         elif responder.uaccess.owns_group(self.group):
             self.group_owner = None
             self.when_group = None
             self.approved = False
             self.redeemed = False
+
+        self.save()
 
     def approve(self, responder, privilege=PrivilegeCodes.VIEW):
         ''' approve a request as the owner of the other side of the transaction '''
@@ -410,29 +427,29 @@ class GroupCommunityRequest(models.Model):
             else:
                 message = "You do not own the community and cannot approve this request."
                 return message, False
-        else:  # if self.group_owner is None:
-            if responder.uaccess.owns_group(self.group):
-                self.group_owner = responder
-                self.redeemed = True
-                self.approved = True
-                self.when_group = timezone.now()
-                self.save()
-                message = "Request to connect group '{}' to community '{}' approved."\
-                    .format(self.group.name, self.community.name)
-                self.community_owner.uaccess.share_community_with_group(
-                    self.community, self.group, self.privilege)
-                return message, True
-            else:
-                message = "You do not own the group and cannot approve this request."
-                return message, False
+        elif responder.uaccess.owns_group(self.group):
+            self.group_owner = responder
+            self.redeemed = True
+            self.approved = True
+            self.when_group = timezone.now()
+            self.save()
+            message = "Request to connect group '{}' to community '{}' approved."\
+                .format(self.group.name, self.community.name)
+            self.community_owner.uaccess.share_community_with_group(
+                self.community, self.group, self.privilege)
+            return message, True
+        else:
+            message = "You do not own the group and cannot approve this request."
+            return message, False
 
     def decline(self, responder):
-        ''' decline a request, as the owner of the other side of the transaction '''
+        """ decline a request, as the owner of the other side of the transaction """
         assert(isinstance(responder, User))
         if self.redeemed:
             message = "Request is completed and cannot be declined."
             return message, False
         if self.community_owner is None:
+            # the request for a group join a community was created by a group owner
             if responder.uaccess.owns_community(self.community):
                 self.community_owner = responder
                 self.privilege = PrivilegeCodes.VIEW
@@ -446,19 +463,19 @@ class GroupCommunityRequest(models.Model):
             else:
                 message = "You do not own the community and cannot decline this request."
                 return message, False
-        else:  # if self.group_owner is None:
-            if responder.uaccess.owns_group(self.group):
-                self.group_owner = responder
-                self.redeemed = True
-                self.approved = False
-                self.when_group = timezone.now()
-                self.save()
-                message = "Request to connect group '{}' to community '{}' declined."\
-                    .format(self.group.name, self.community.name)
-                return message, True
-            else:
-                message = "You do not own the group and cannot decline this request."
-                return message, False
+        elif responder.uaccess.owns_group(self.group):
+            # this request (self) is an invitation made by a community owner to a group to join the community
+            self.group_owner = responder
+            self.redeemed = True
+            self.approved = False
+            self.when_group = timezone.now()
+            self.save()
+            message = "Request to connect group '{}' to community '{}' declined."\
+                .format(self.group.name, self.community.name)
+            return message, True
+        else:
+            message = "You do not own the group and cannot decline this request."
+            return message, False
 
     @classmethod
     def remove(cls, requester, **kwargs):
@@ -560,6 +577,7 @@ class GroupCommunityRequest(models.Model):
             message = "Request to put group '{}' into community '{}' does not exist."\
                 .format(group.name, community.name)
             return message, True
+
 
 # TODO: we need some kind of user feedback about what happened when something is denied.
 # TODO: it would be nice to know why something's declined.
