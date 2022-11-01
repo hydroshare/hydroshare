@@ -939,7 +939,7 @@ def submit_for_review(request, shortkey, *args, **kwargs):
         message = """Congratulations!
                 Your resource is under review for appropriate minimum metadata and to ensure that it adheres to community guidelines.
                 The review process will likely be complete within 1 business day, but not exceed 2 business days.
-                You will receive a notifcation via email once the review process has concluded."""
+                You will receive a notification via email once the review process has concluded."""
         messages.success(request, message)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -1678,7 +1678,6 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
                             "to complete the metadata review.")
     else:
         user = request.user
-    # auth_login(request, user)
 
     res = get_resource_by_shortkey(shortkey)
     res.raccess.review_pending = False

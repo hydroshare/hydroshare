@@ -493,3 +493,7 @@ class ResourceAccess(models.Model):
             return opriv[0].user
         else:
             return None
+
+    @property
+    def published_or_review_pending(self):
+        return self.published or self.review_pending

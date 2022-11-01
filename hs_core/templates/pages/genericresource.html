@@ -448,7 +448,7 @@
                   {% endif %}
                 </h3>
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                    {% if publication_or_superuser %}
+                    {% if cm.raccess.published_or_review_pending or current_user.is_superuser  %}
                         <div class="alert alert-info alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
@@ -483,7 +483,7 @@
                 </div>
 
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                    {% if publication_or_superuser %}
+                    {% if cm.raccess.published_or_review_pending or current_user.is_superuser  %}
                         <div id="fb-alerts">
                             <div class="alert alert-warning alert-dismissible" role="alert">
                                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -654,7 +654,7 @@
                                     <div class="row">
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                                                {% if publication_or_superuser %}
+                                                {% if cm.raccess.published_or_review_pending or current_user.is_superuser  %}
                                                     <a type="button" data-fb-action="uploadFiles"
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
@@ -757,7 +757,7 @@
                                             {% endif %}
 
                                             {% if page.perms.change and resource_edit_mode %}
-                                                {% if publication_or_superuser %}
+                                                {% if cm.raccess.published_or_review_pending or current_user.is_superuser  %}
                                                     <button id="fb-delete" data-fb-action="delete"
                                                             class="disabled fb-space-right"
                                                             title="Delete" data-toggle="modal"
@@ -829,9 +829,9 @@
                             <div class="fb-content-wrapper">
                                 <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
                                     <form id="hsDropzone"
-                                          class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and publication_or_superuser %}dropzone{% endif %}"
-                                          action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
-                                          method="POST">
+                                        class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and cm.raccess.published_or_review_pending or current_user.is_superuser %}dropzone{% endif %}"
+                                        action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
+                                        method="POST">
                                         {% csrf_token %}
 
                                         <div id="flag-uploading" class="hidden">
@@ -856,7 +856,7 @@
                                     </form>
 
                                     {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                                        {% if publication_or_superuser %}
+                                        {% if cm.raccess.published_or_review_pending or current_user.is_superuser  %}
                                             <div class="fb-upload-caption ">
                                                 <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
                                                 smaller than 1GB in size by dragging & dropping, or click <a
@@ -896,7 +896,7 @@
                             </div>
 
                             {% if page.perms.change and resource_edit_mode %}
-                                {% if publication_or_superuser %}
+                                {% if cm.raccess.published_or_review_pending or current_user.is_superuser  %}
                                     <form id="fb-delete-files-form" class="hidden" enctype="multipart/form-data">
                                         {% csrf_token %}
                                         <input type="hidden" name="file_ids" value=""/>
