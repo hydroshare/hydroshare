@@ -18,7 +18,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
     2. The class sent to this is a subclass of BaseResource, or another class. 
     3. Thus, we want to capture cases in which it is an appropriate instance, and respond. 
     """
-    
+
     def handle_save(self, sender, instance, **kwargs):
         """
         Given an individual model instance, determine which backends the

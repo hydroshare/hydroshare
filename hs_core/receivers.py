@@ -110,7 +110,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     repeatable_elements = {'creator': CreatorValidationForm,
                            'contributor': ContributorValidationForm,
                            'relation': RelationValidationForm,
-                           'geospatialrelation': RelationValidationForm
+                           'geospatialrelation': GeospatialRelationValidationForm
                            }
     if element_name == 'title':
         element_form = TitleValidationForm(request.POST)
