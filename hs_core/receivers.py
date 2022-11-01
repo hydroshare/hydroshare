@@ -109,9 +109,9 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     request = kwargs['request']
     repeatable_elements = {'creator': CreatorValidationForm,
                            'contributor': ContributorValidationForm,
-                           'relation': RelationValidationForm
+                           'relation': RelationValidationForm,
+                           'geospatialrelation': RelationValidationForm
                            }
-
     if element_name == 'title':
         element_form = TitleValidationForm(request.POST)
     elif element_name == "description":   # abstract

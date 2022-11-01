@@ -64,7 +64,6 @@
     "creator": {{ creators | creator_json_ld_element | safe }},
     {# There is discussion about adding more linked data fields for referenced items #} 
     {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
-    {# TODO: 4808 inspecific relations add text #}
     {% if geospatial_relations %}
     "about": [
     {% for inspecific_relation in geospatial_relations %}{% if inspecific_relation.value|is_url %}

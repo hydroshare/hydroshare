@@ -1046,7 +1046,6 @@ class Relation(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        # TODO: 4808 do we need to alter ingest function to account for blank nodes?
         for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
             for _, p, o in graph.triples((relation_node, None, None)):
                 type_term = p
@@ -4088,6 +4087,10 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             for relation in metadata.pop('relations'):
                 parsed_metadata.append({"relation": relation})
 
+        if 'geospatialrelations' in keys_to_update:
+            for relation in metadata.pop('geospatialrelations'):
+                parsed_metadata.append({"geospatialrelation": relation})
+
     @classmethod
     def get_supported_element_names(cls):
         """Return a list of supported metadata element names."""
@@ -4647,7 +4650,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     def create_element(self, element_model_name, **kwargs):
         """Create any supported metadata element."""
-        # TODO: 4808
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()

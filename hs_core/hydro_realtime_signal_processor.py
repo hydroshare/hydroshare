@@ -18,7 +18,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
     2. The class sent to this is a subclass of BaseResource, or another class. 
     3. Thus, we want to capture cases in which it is an appropriate instance, and respond. 
     """
-    # TODO: [#4808] add geoconnex metadata to search index
     
     def handle_save(self, sender, instance, **kwargs):
         """
@@ -43,7 +42,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                     # test whether the object should be exposed.
                     if instance.show_in_discover:
                         try:
-                            # TODO: 4808
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.update_object(newbase, using=using)
                         except NotHandled:
@@ -74,7 +72,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 self.handle_save(BaseResource, newbase)
             except Exception:
                 logger.exception("{} exception: {}".format(type(instance), e))
-        # TODO: 4808
         elif isinstance(instance, AbstractMetaDataElement):
             if isinstance(instance.metadata, AbstractFileMetaData):
                 try:

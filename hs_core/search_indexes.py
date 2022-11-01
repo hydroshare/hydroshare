@@ -197,6 +197,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     identifier = indexes.MultiValueField(stored=False)
     language = indexes.CharField(stored=False)
     relation = indexes.MultiValueField(stored=False)
+    geospatialrelations = indexes.MultiValueField(stored=False)
     resource_type = indexes.FacetCharField()
     content_type = indexes.FacetMultiValueField()
     content_exts = indexes.FacetMultiValueField()
@@ -623,13 +624,21 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return None
 
-    # TODO: [#4808] add geoconnex metadata to search index
     def prepare_relation(self, obj):
         """Return resource relations if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata') and \
                 obj.metadata is not None and \
                 obj.metadata.relations is not None:
             return [relation.value.strip() for relation in obj.metadata.relations.all()]
+        else:
+            return []
+
+    def prepare_geospatialrelation(self, obj):
+        """Return resource geospatialrelations if exists, otherwise return empty array."""
+        if hasattr(obj, 'metadata') and \
+                obj.metadata is not None and \
+                obj.metadata.geospatialrelations is not None:
+            return [relation.text.strip() for relation in obj.metadata.geospatialrelations.all()]
         else:
             return []
 
