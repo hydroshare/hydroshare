@@ -50,7 +50,7 @@
                     <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
                     <li v-else v-for="k in resKeywords">
                         {% if resource_edit_mode %}
-                            {% if cm.raccess.published  %}
+                            {% if cm.raccess.published %}
                                 <span v-if="resKeywords.length" class="tag">
                                     ${ k }<span v-if="resKeywords.length > 1"
                                         @click="removeKeyword('{{ cm.short_id }}', k )"
