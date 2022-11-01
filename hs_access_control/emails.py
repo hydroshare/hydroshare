@@ -25,7 +25,7 @@ class CommunityGroupEmailNotification:
             message = f"""Dear Community owners,
             <p>{self.group_community_request.group_owner.first_name} is requesting group <a href="{group_url}">
             {self.group_community_request.group.name}</a> to join your community <a href="{community_url}">
-            {self.group_community_request.community.name}</a></p>.        
+            {self.group_community_request.community.name}</a></p>.
             <p>HydroShare Team</p>
             """
         elif self.on_event == CommunityGroupEvents.INVITED:
@@ -43,8 +43,8 @@ class CommunityGroupEmailNotification:
             recipient_emails = [com_owner.email for com_owner in self.group_community_request.community.owners]
             subject = "Group wants join your Community"
             message = f"""Dear Community owners,
-           <p>Our group <a href="{group_url}">{self.group_community_request.group.name}</a> would like to 
-           join your community <a href="{community_url}">
+           <p>Our group <a href="{group_url}">{self.group_community_request.group.name}</a>
+            would like to join your community <a href="{community_url}">
            {self.group_community_request.community.name}</a></p>.
            <p>HydroShare Team</p>
            """
@@ -57,7 +57,7 @@ class CommunityGroupEmailNotification:
                 message = f"""Dear {self.group_community_request.group_owner.first_name},
                 <p>Sorry to inform that your request for group <a href="{group_url}">
                 {self.group_community_request.group.name}</a> to join the community
-                <a href="{community_url}">{self.group_community_request.community.name}</a> was declined.</p>                           
+                <a href="{community_url}">{self.group_community_request.community.name}</a> was declined.</p>                         
                 <p>HydroShare Team</p>
                 """
             else:
@@ -69,7 +69,7 @@ class CommunityGroupEmailNotification:
                 <p>Sorry to inform that your invitation to group <a href="{group_url}">
                 {self.group_community_request.group.name}</a> to join the community
                 <a href="{community_url}">
-                {self.group_community_request.community.name}</a> was declined.</p>       
+                {self.group_community_request.community.name}</a> was declined.</p>
                 <p>HydroShare Team</p>
                 """
         else:
@@ -82,7 +82,7 @@ class CommunityGroupEmailNotification:
                 message = f"""Dear {self.group_community_request.group_owner.first_name},
                 <p>Glad to inform that request for your group <a href="{group_url}">
                 {self.group_community_request.group.name}</a> to join the community <a href="{community_url}">
-                {self.group_community_request.community.name}</a> was approved.</p>            
+                {self.group_community_request.community.name}</a> was approved.</p>
                 <p>HydroShare Team</p>
                 """
             else:
@@ -92,7 +92,7 @@ class CommunityGroupEmailNotification:
                 message = f"""Dear {self.group_community_request.community_owner.first_name},
                 <p>Your invitation for group <a href="{group_url}">
                 {self.group_community_request.group.name}</a> to join the community <a href="{community_url}">
-                {self.group_community_request.community.name}</a> was accepted.</p>         
+                {self.group_community_request.community.name}</a> was accepted.</p>
                 <p>HydroShare Team</p>
                 """
 
