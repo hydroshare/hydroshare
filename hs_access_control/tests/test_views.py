@@ -9,7 +9,7 @@ from hs_access_control.models.community import RequestCommunity
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_access_control.views import user_json
 from hs_core import hydroshare
-from ..enums import CommunityRequestActions
+from ..enums import CommunityActions, CommunityRequestActions
 
 
 class TestViews(TransactionTestCase):
@@ -118,8 +118,8 @@ class TestViews(TransactionTestCase):
         url = reverse('access_manage_community',
                       kwargs={'cid': self.pets.id,
                               'uid': self.dog.username,
-                              'action': 'owner',
-                              'addrem': 'add'})
+                              'action': CommunityActions.OWNER.value,
+                              'addrem': CommunityActions.ADD.value})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -134,8 +134,8 @@ class TestViews(TransactionTestCase):
         url = reverse('access_manage_community',
                       kwargs={'cid': self.pets.id,
                               'uid': self.dog.username,
-                              'action': 'owner',
-                              'addrem': 'add'})
+                              'action': CommunityActions.OWNER.value,
+                              'addrem': CommunityActions.ADD.value})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -146,8 +146,8 @@ class TestViews(TransactionTestCase):
         url = reverse('access_manage_community',
                       kwargs={'cid': self.pets.id,
                               'uid': self.cat.username,
-                              'action': 'owner',
-                              'addrem': 'remove'})
+                              'action': CommunityActions.OWNER.value,
+                              'addrem': CommunityActions.REMOVE.value})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
@@ -160,8 +160,8 @@ class TestViews(TransactionTestCase):
         url = reverse('access_manage_community',
                       kwargs={'cid': self.pets.id,
                               'uid': self.cat.username,
-                              'action': 'owner',
-                              'addrem': 'remove'})
+                              'action': CommunityActions.OWNER.value,
+                              'addrem': CommunityActions.REMOVE.value})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
@@ -173,8 +173,8 @@ class TestViews(TransactionTestCase):
         url = reverse('access_manage_community',
                       kwargs={'cid': self.pets.id,
                               'uid': self.cat.username,
-                              'action': 'owner',
-                              'addrem': 'add'})
+                              'action': CommunityActions.OWNER.value,
+                              'addrem': CommunityActions.ADD.value})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
@@ -187,7 +187,7 @@ class TestViews(TransactionTestCase):
         # cat owns group and community; automatically approved
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "invite",
+                              "action": CommunityActions.INVITE.value,
                               "gid": self.cats.id})
 
         result = self.client.get(url)
@@ -203,7 +203,7 @@ class TestViews(TransactionTestCase):
         # cat owns group and community; automatically approved
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "invite",
+                              "action": CommunityActions.INVITE.value,
                               "gid": self.cats.id})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
@@ -214,7 +214,7 @@ class TestViews(TransactionTestCase):
         # now remove the group from the community
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "remove",
+                              "action": CommunityActions.REMOVE.value,
                               "gid": self.cats.id})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
@@ -229,7 +229,7 @@ class TestViews(TransactionTestCase):
         # cat owns community but not group: deferred and queued.
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "invite",
+                              "action": CommunityActions.INVITE.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -245,7 +245,7 @@ class TestViews(TransactionTestCase):
         # cat owns group and community; automatically approved
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "invite",
+                              "action": CommunityActions.INVITE.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -261,7 +261,7 @@ class TestViews(TransactionTestCase):
         # cat owns community but not group: deferred and queued.
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "invite",
+                              "action": CommunityActions.INVITE.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -273,7 +273,7 @@ class TestViews(TransactionTestCase):
         # now retract the invitation
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "retract",
+                              "action": CommunityActions.RETRACT.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -289,7 +289,7 @@ class TestViews(TransactionTestCase):
         # cat owns community but not group: deferred and queued.
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "invite",
+                              "action": CommunityActions.INVITE.value,
                               "gid": self.dogs.id})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
@@ -318,7 +318,7 @@ class TestViews(TransactionTestCase):
         # now accept the invitation
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
-                              "action": "approve",
+                              "action": CommunityActions.APPROVE.value,
                               "gid": self.dogs.id})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
@@ -338,7 +338,7 @@ class TestViews(TransactionTestCase):
         # cat owns community but not group: deferred and queued.
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "invite",
+                              "action": CommunityActions.INVITE.value,
                               "gid": self.dogs.id})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
@@ -367,7 +367,7 @@ class TestViews(TransactionTestCase):
         # now decline the invitation
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
-                              "action": "decline",
+                              "action": CommunityActions.DECLINE.value,
                               "gid": self.dogs.id})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
@@ -392,7 +392,7 @@ class TestViews(TransactionTestCase):
         """ try using the system unauthenticated on a group """
         url = reverse('access_manage_group', kwargs={'gid': self.cats.id})
         result = self.client.get(url)
-        self.assertEqual(result.status_code, 404)
+        self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
         self.assertEqual(json_response['denied'],
                          "You must be logged in to access this function.")
@@ -402,7 +402,7 @@ class TestViews(TransactionTestCase):
         self.client.login(username='dog', password='anotherpassword')
         url = reverse('access_manage_group', kwargs={'gid': self.cats.id})
         result = self.client.get(url)
-        self.assertEqual(result.status_code, 404)
+        self.assertEqual(result.status_code, 400)
         json_response = json.loads(result.content)
         self.assertEqual(json_response['denied'],
                          "user 'dog' does not own group 'cats'")
@@ -431,7 +431,7 @@ class TestViews(TransactionTestCase):
         # cat owns group and community; automatically approved
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
-                              "action": "join",
+                              "action": CommunityActions.JOIN.value,
                               "gid": self.cats.id})
 
         result = self.client.get(url)
@@ -448,7 +448,7 @@ class TestViews(TransactionTestCase):
         # cat owns group and community; automatically approved
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
-                              "action": "join",
+                              "action": CommunityActions.JOIN.value,
                               "gid": self.cats.id})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
@@ -460,7 +460,7 @@ class TestViews(TransactionTestCase):
         # now leave the community
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
-                              "action": "leave",
+                              "action": CommunityActions.LEAVE.value,
                               "gid": self.cats.id})
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
@@ -476,7 +476,7 @@ class TestViews(TransactionTestCase):
         # dog owns group but not community: deferred and queued.
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
-                              "action": "join",
+                              "action": CommunityActions.JOIN.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -493,7 +493,7 @@ class TestViews(TransactionTestCase):
         # dog owns group but not community: deferred and queued.
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
-                              "action": "join",
+                              "action": CommunityActions.JOIN.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -520,7 +520,7 @@ class TestViews(TransactionTestCase):
         # approve that request
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "approve",
+                              "action": CommunityActions.APPROVE.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -540,7 +540,7 @@ class TestViews(TransactionTestCase):
         # dog owns group but not community: deferred and queued.
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
-                              "action": "join",
+                              "action": CommunityActions.JOIN.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -566,7 +566,7 @@ class TestViews(TransactionTestCase):
         # decline that request
         url = reverse("access_manage_community",
                       kwargs={"cid": self.pets.id,
-                              "action": "decline",
+                              "action": CommunityActions.DECLINE.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -589,7 +589,7 @@ class TestViews(TransactionTestCase):
         # dog owns group but not community: deferred and queued.
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
-                              "action": "join",
+                              "action": CommunityActions.JOIN.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -601,7 +601,7 @@ class TestViews(TransactionTestCase):
 
         url = reverse("access_manage_group",
                       kwargs={"cid": self.pets.id,
-                              "action": "retract",
+                              "action": CommunityActions.RETRACT.value,
                               "gid": self.dogs.id})
 
         result = self.client.get(url)
@@ -887,7 +887,7 @@ class TestViews(TransactionTestCase):
         self.assertEqual(RequestCommunity.objects.count(), 1)
 
         # no user switching: removing a request doesn't require admin
-        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.REQUEST.value, "crid": crid})
+        url = reverse("access_manage_crequests", kwargs={"action": CommunityRequestActions.REMOVE.value, "crid": crid})
         result = self.client.post(url)
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
