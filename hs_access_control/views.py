@@ -128,7 +128,7 @@ def cr_json(cr):
             'requested_by': user_json(cr.requested_by),
             'community_to_approve': community_json(cr.community_to_approve),
             'date_requested': cr.date_requested.strftime("%m/%d/%Y, %H:%M:%S"),
-            'date_processed': 0 if cr.approved is None else cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S"),
+            'date_processed': 0 if cr.pending_approval else cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S"),
             'status': 'Approved' if cr.approved is True else 'Submitted' if cr.approved is None else 'Rejected',
             # 'decline_reason': cr.decline_reason if cr.decline_reason is not None else '',
         }
@@ -540,7 +540,7 @@ class CommunityView(View):
                 CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
                                                 on_event=CommunityGroupEvents.INVITED).send()
             except Exception as e:
-                logger.debug(str(e))
+                logger.error(str(e))
                 denied = str(e)
         elif action == CommunityActions.REMOVE:  # remove a group from this community
             group = Group.objects.get(id=gid)
@@ -642,25 +642,27 @@ class CommunityRequestView(View):
         context['approved'] = []
         context['declined'] = []
         context['pending'] = []
-        if user.is_superuser:  # privileged user sees all
+
+        # privileged (super user) user sees all
+
+        # approved requests
+        approved_qs = RequestCommunity.objects.filter(pending_approval=False, declined=False)
+
+        # declined requests
+        declined_qs = RequestCommunity.objects.filter(declined=True)
+
+        # pending requests
+        pending_qs = RequestCommunity.objects.filter(pending_approval=True)
+
+        if not user.is_superuser:  # just for current user
             # approved requests
-            approved_qs = RequestCommunity.objects.filter(approved=True)
+            approved_qs = approved_qs.filter(requested_by=user)
 
             # declined requests
-            declined_qs = RequestCommunity.objects.filter(approved=False)
+            declined_qs = declined_qs.filter(requested_by=user)
 
             # pending requests
-            pending_qs = RequestCommunity.objects.filter(approved__isnull=True)
-
-        else:  # just for current user
-            # approved requests
-            approved_qs = RequestCommunity.objects.filter(approved=True, requested_by=user)
-
-            # declined requests
-            declined_qs = RequestCommunity.objects.filter(approved=False, requested_by=user)
-
-            # pending requests
-            pending_qs = RequestCommunity.objects.filter(approved__isnull=True, requested_by=user)
+            pending_qs = pending_qs.filter(requested_by=user)
 
         for a_cr in approved_qs:
             context['approved'].append(cr_json(a_cr))

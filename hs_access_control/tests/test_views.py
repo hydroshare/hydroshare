@@ -169,6 +169,7 @@ class TestViews(TransactionTestCase):
 
     def test_community_add_existing_owner(self):
         """ try to add an owner who already owns the community """
+
         self.client.login(username='cat', password='adumbpassword')
         url = reverse('access_manage_community',
                       kwargs={'cid': self.pets.id,
@@ -725,7 +726,8 @@ class TestViews(TransactionTestCase):
         # there should be one community request object at this point
         self.assertEqual(RequestCommunity.objects.count(), 1)
         cr = RequestCommunity.objects.first()
-        self.assertEqual(cr.approved, None)
+        self.assertEqual(cr.approved, False)
+        self.assertEqual(cr.pending_approval, True)
         self.assertEqual(cr.requested_by, self.dog)
 
         # there should be one community object at this point that is in active state
@@ -803,7 +805,8 @@ class TestViews(TransactionTestCase):
         crid = json_response['request']['id']
         self.assertEqual(RequestCommunity.objects.count(), 1)
         cr = RequestCommunity.objects.first()
-        self.assertEqual(cr.approved, None)
+        self.assertEqual(cr.approved, False)
+        self.assertEqual(cr.pending_approval, True)
         self.assertEqual(cr.id, crid)
 
         # There should be a community now that is not active
@@ -825,6 +828,7 @@ class TestViews(TransactionTestCase):
         self.assertTrue(new_community.active)
         cr = RequestCommunity.objects.first()
         self.assertEqual(cr.approved, True)
+        self.assertEqual(cr.pending_approval, False)
         self.assertEqual(cr.id, crid)
 
         pending = [x['id'] for x in json_response['pending']]
@@ -862,7 +866,8 @@ class TestViews(TransactionTestCase):
         # there should be one community request object at this point
         self.assertEqual(RequestCommunity.objects.count(), 1)
         cr = RequestCommunity.objects.first()
-        self.assertEqual(cr.approved, None)
+        self.assertEqual(cr.approved, False)
+        self.assertEqual(cr.pending_approval, True)
         self.assertEqual(cr.requested_by, self.dog)
         self.assertEqual(cr.id, cr_id)
 
@@ -884,6 +889,7 @@ class TestViews(TransactionTestCase):
         self.assertEqual(RequestCommunity.objects.count(), 1)
         cr = RequestCommunity.objects.first()
         self.assertEqual(cr.approved, False)
+        self.assertEqual(cr.pending_approval, False)
         self.assertEqual(cr.id, cr_id)
 
         # There should be still the community in inactive state.

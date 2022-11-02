@@ -269,11 +269,16 @@ class RequestCommunity(models.Model):
     requested_by = models.ForeignKey(User, related_name='u2crequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     date_processed = models.DateTimeField(editable=False, null=True)
-    approved = models.NullBooleanField(null=True, default=None, blank=False)
+    pending_approval = models.BooleanField(default=True)
+    declined = models.BooleanField(default=False)
     decline_reason = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ['date_requested']
+
+    @property
+    def approved(self):
+        return not self.declined and not self.pending_approval
 
     @classmethod
     def create_request(cls, request):
@@ -298,10 +303,11 @@ class RequestCommunity(models.Model):
         """Helper to approve a request to create a new community
         Note: The caller of this function needs to check authorization for approval
         """
-        assert self.approved is None
+        assert self.pending_approval is True
+        assert self.declined is False
 
         self.date_processed = datetime.now()
-        self.approved = True
+        self.pending_approval = False
         # upon approval the request the associated community is set to active
         self.community_to_approve.active = True
         self.community_to_approve.save()
@@ -312,13 +318,16 @@ class RequestCommunity(models.Model):
         :param reason: reason for rejecting the request to create a community
         Note: The caller of this function needs to check authorization for approval
         """
-        assert self.approved is None
+        assert self.pending_approval is True
+        assert self.declined is False
+
         reason = reason.strip()
         if not reason:
             raise ValidationError("No reason for rejecting the request was provided")
 
         self.date_processed = datetime.now()
-        self.approved = False
+        self.pending_approval = False
+        self.declined = True
         self.decline_reason = reason
         # upon approval the request the associated community is set to active
         self.community_to_approve.active = False
@@ -334,7 +343,7 @@ class RequestCommunity(models.Model):
         """Updates data for a community that is waiting for approval"""
         from ..forms import CommunityForm
 
-        if self.approved is not None:
+        if not self.pending_approval:
             raise ValidationError("Can't update this community request")
 
         community_to_update = self.community_to_approve
@@ -385,4 +394,4 @@ class RequestCommunity(models.Model):
     @classmethod
     def pending_requests(cls):
         """Gets a queryset of all pending community requests"""
-        return cls.objects.filter(Q(approved=None)).select_related('community_to_approve')
+        return cls.objects.filter(pending_approval=True).select_related('community_to_approve')
