@@ -176,7 +176,7 @@
 {% block main %}
     {% keywords_for page as kws %}
     {% set_page_permissions page %}
-    {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
+    {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending %}
     {% csrf_token %}
     {% endif %}
 
@@ -239,7 +239,7 @@
                     <li id="open-separator" role="separator" class="divider"></li>
                 {% endif %}
 
-                {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending %}
                     {% if cm.resource_type == "CompositeResource" %}
                         <li id="btn-cut" data-menu-name="cut" data-fb-action="cut">
                             <span class="fa fa-scissors icon-blue"></span>
@@ -402,7 +402,7 @@
 
             {# POPUP MENU - Right clicking empty space in file browser #}
             <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
-                {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending %}
                     {% if cm.resource_type == "CompositeResource" %}
                         <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                             data-fb-action="createFolder"
@@ -553,7 +553,7 @@
                     {# ======= Modal window ends =======#}
 
                     <div id="hs-file-browser" data-current-path=""
-                         {% if page.perms.change and resource_edit_mode %}
+                         {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending %}
                              data-mode="edit"
                          {% else %}
                             data-mode="view"
@@ -698,7 +698,7 @@
                                                 {% endif %}
                                             {% endif %}
 
-                                            {% if page.perms.change and resource_edit_mode and not cm.raccess.published and not cm.raccess.review_pending or current_user.is_superuser %}
+                                            {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending or current_user.is_superuser %}
                                                 {% if cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-create-folder" class="disabled"
                                                             data-fb-action="createFolder" data-toggle="modal"
@@ -950,7 +950,7 @@
                     <h3>Resource Specific</h3>
                     <div id="resourceSpecificTab">
                         <div class="row">
-                            {% if not resource_edit_mode or cm.raccess.published %}
+                            {% if not resource_edit_mode or not cm.raccess.published_or_review_pending %}
                                 {% block extended_metadata %}{% endblock %}
                             {% else %}
                                 {% crispy metadata_form %}
@@ -974,11 +974,7 @@
         {% include "resource-landing-page/credits.html" %}
 
         {# ======= Citation ======= #}
-        {% if resource_edit_mode and not cm.raccess.published %}
-            {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
-        {% else %}
-            {% include "resource-landing-page/citation.html" with resource_mode="view" %}
-        {% endif %}
+        {% include "resource-landing-page/citation.html" %}
 
         {# ======= Comments ======= #}
         {% include "resource-landing-page/comments.html" %}
@@ -1011,7 +1007,7 @@
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
       const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
-      const RESOURCE_PUBLISHED = "{{ cm.raccess.published }}" === "True";
+      const RESOURCE_PUBLISHED_OR_UNDER_REVIEW = "{{ cm.raccess.published_or_review_pending }}" === "True";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};

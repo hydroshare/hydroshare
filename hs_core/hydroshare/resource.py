@@ -1036,12 +1036,8 @@ def submit_resource_for_review(request, pk):
     resource.raccess.immutable = True
     resource.raccess.save()
 
-    try:
-        # we assume that there is a user associated with the "default_from_email"
-        user_to = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
-    except User.DoesNotExist:
-        user_to = None
-    user_to = User.objects.get(username__iexact="admin")
+    # we assume that there is a user associated with the "default_from_email"
+    user_to = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
     from hs_core.views.utils import send_action_to_take_email
     send_action_to_take_email(request, user=user_to, user_from=request.user,
                                 action_type='metadata_review', resource=resource)

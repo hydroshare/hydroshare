@@ -255,7 +255,7 @@
         <script src="{% static 'js/dual-listbox.js' %}"></script>
 
 
-        {% if not cm.raccess.published and not cm.raccess.review_pending %}
+        {% if not cm.raccess.published_or_review_pending %}
             <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
                   id="id-title" method="post">
                 {% csrf_token %}

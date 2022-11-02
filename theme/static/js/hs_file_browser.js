@@ -1065,7 +1065,7 @@ function showFileTypeMetadata(file_type_time_series, url){
         return;
     }
     resource_mode = resource_mode.toLowerCase();
-    if(RESOURCE_PUBLISHED) {
+    if(RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
         resource_mode = 'view';
     }
     var $url;
@@ -1675,7 +1675,7 @@ function refreshFileBrowser(name) {
         }).complete(function(res) {
             if (res.responseText) {
                 let extRefs = JSON.parse(res.responseText).filenames
-                if (extRefs.length && RESOURCE_MODE === 'Edit') {
+                if (extRefs.length && RESOURCE_MODE === 'Edit' && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
                     document.getElementById('edit-citation-control').style.display = 'block'
                 } else {
                     document.getElementById('edit-citation-control').style.display = 'none'
@@ -1870,7 +1870,7 @@ $(document).ready(function () {
     var mode = $("#hs-file-browser").attr("data-mode");
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
-    if (mode === "edit" && !RESOURCE_PUBLISHED) {
+    if (mode === "edit" && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
         no_metadata_alert +=
         '<div class="text-center">' +
             '<a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">' +
