@@ -8,6 +8,12 @@
     <link href="{% static 'css/toolresource.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/modal-vue.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/hs-file-icons.css' %}" rel="stylesheet"/>
+    <link rel='stylesheet' type='text/css' href="{% static 'css/vuetify.2.64.min.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+    integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+    crossorigin=""/>
+    <link rel="stylesheet" href="{% static 'css/Leaflet.fullscreen.min.css' %}" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 
 {% if not page|is_debug %}
 {# ======= JSON-LD Structure ======= #}
@@ -56,10 +62,26 @@
     ],
     {% endif %}
     "creator": {{ creators | creator_json_ld_element | safe }},
+    {# There is discussion about adding more linked data fields for referenced items #} 
+    {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
+    {% if inspecific_relations %}
+    "about": [
+    {% for inspecific_relation in inspecific_relations %}{% if inspecific_relation.value|is_url %}
+      {
+        "@id": "{{ inspecific_relation.value | escapejs }}",
+        {# We might eventually want to encode related features with more specificity than generic https://schema.org/Place #}
+        {# Examples include https://schema.org/Landform and https://schema.org/BodyOfWater #}
+        "@type": "Place",
+        "url": "{{ inspecific_relation.value | escapejs }}"
+      }{%if not forloop.last%},{%endif%}
+    {% endif %}{% endfor %}
+    ],
+    {% endif %}
     {% if temporal_coverage %}
     "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
     {% endif %}
     {% if spatial_coverage.exists %}
+    {# Could include specific properties https://schema.org/GeospatialGeometry for related features #}
     "spatialCoverage": {
         "@type": "Place",
         {% if spatial_coverage.name %}
@@ -967,6 +989,9 @@
         {# ======= Additional Metadata ======= #}
         {% include "resource-landing-page/additional-metadata.html" %}
 
+        {# ======= Geoconnex ======= #}
+        {% include "resource-landing-page/geoconnex.html" %}
+
         {# ======= References ======= #}
         {% include "resource-landing-page/references.html" %}
 
@@ -1037,6 +1062,15 @@
             },
           {% endfor %}
       ];
+      const RELATIONS = [
+        {% for relation in inspecific_relations %}
+            {
+                "value": "{{ relation.value| escapejs}}",
+                "type": "{{ relation.type }}",
+                "id": "{{ relation.id }}"
+            },
+        {% endfor %}
+      ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
       {% if show_manage_access %}
@@ -1055,8 +1089,13 @@
 
     </script>
 
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+        integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+        crossorigin="">
+    </script>
+    <script src="{% static 'js/hs-vue/Leaflet.fullscreen.min.js' %}"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script type="text/javascript" src="{% static 'js/coverageMap.js' %}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs-file-icons.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs_file_browser.js' %}"></script>
