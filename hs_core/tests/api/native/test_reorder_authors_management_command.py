@@ -143,8 +143,6 @@ class TestReorderAuthorsCommand(TestCase):
         lisa.save()
         last_author.save()
 
-        cit_original = self.res.get_citation()
-
         # run  update command to fix author order
         self.run_management_command()
 
@@ -168,8 +166,6 @@ class TestReorderAuthorsCommand(TestCase):
         last_author.order = 4
         lisa.save()
         last_author.save()
-
-        cit_original = self.res.get_citation()
 
         # run  update command to fix author order
         self.run_management_command()
