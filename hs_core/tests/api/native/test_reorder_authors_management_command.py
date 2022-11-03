@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from django.contrib.auth.models import Group, User
 from django.core.management import call_command
+from django.core.management.base import CommandError
 
 from hs_core.models import GenericResource, Creator
 from hs_core import hydroshare
@@ -45,7 +46,8 @@ class TestReorderAuthorsCommand(TestCase):
             self.res.short_id, "creator", name="Mark Miller"
         )
 
-        self.update_command = "reorder_authors"
+    def run_management_command(self):
+        call_command("reorder_authors", f"--resource_id={self.res.short_id}")
 
     def tearDown(self):
         super(TestReorderAuthorsCommand, self).tearDown()
@@ -65,7 +67,7 @@ class TestReorderAuthorsCommand(TestCase):
             self.assertEqual(index, creator.order)
 
         # run  update command to fix author order
-        call_command(self.update_command)
+        self.run_management_command()
 
         self.assertEqual(self.res.get_citation(), citation_original)
         for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
@@ -85,7 +87,7 @@ class TestReorderAuthorsCommand(TestCase):
         self.assertEqual(john.order, lisa.order)
 
         # run  update command to fix author order
-        call_command(self.update_command)
+        self.run_management_command()
 
         for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
             self.assertEqual(index, creator.order)
@@ -107,7 +109,7 @@ class TestReorderAuthorsCommand(TestCase):
         self.assertIsNone(self.res.metadata.creators.filter(order=1).first())
 
         # run  update command to fix author order
-        call_command(self.update_command)
+        self.run_management_command()
 
         for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
             self.assertEqual(index, creator.order)
@@ -144,12 +146,10 @@ class TestReorderAuthorsCommand(TestCase):
         cit_original = self.res.get_citation()
 
         # run  update command to fix author order
-        call_command(self.update_command)
+        self.run_management_command()
 
         for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
             self.assertEqual(index, creator.order)
-
-        self.assertEqual(self.res.get_citation(), cit_original)
 
     def test_command_fixes_triplicate_authors(self):
         """
@@ -172,12 +172,10 @@ class TestReorderAuthorsCommand(TestCase):
         cit_original = self.res.get_citation()
 
         # run  update command to fix author order
-        call_command(self.update_command)
+        self.run_management_command()
 
         for index, creator in enumerate(self.res.metadata.creators.all(), start=1):
             self.assertEqual(index, creator.order)
-
-        self.assertEqual(self.res.get_citation(), cit_original)
 
     def test_command_maintains_citations(self):
         """
@@ -195,7 +193,7 @@ class TestReorderAuthorsCommand(TestCase):
         cit_original = self.res.get_citation()
 
         # run  update command to fix author order
-        call_command(self.update_command)
+        self.run_management_command()
 
         self.assertEqual(self.res.get_citation(), cit_original)
 
@@ -224,7 +222,8 @@ class TestReorderAuthorsCommand(TestCase):
         cit_pub = self.res.get_citation()
 
         # run  update command to fix author order
-        call_command(self.update_command)
+        with self.assertRaises(CommandError):
+            self.run_management_command()
 
         self.assertEqual(self.res.get_citation(), cit_pub)
 
