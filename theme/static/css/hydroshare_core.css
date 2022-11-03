@@ -841,7 +841,6 @@ li.account p{
 	text-overflow: ellipsis;
 }
 
-
 #relatedResourcesTab{
     overflow:hidden;
 }
@@ -2396,8 +2395,9 @@ div#coverage-spatial .coordinates-label-addon {
 }
 
 #coverageMap {
-	height:350px;
-	border:1px solid #DDD;
+	height: 350px;
+	border: 1px solid #DDD;
+	z-index: 2;
 }
 
 .coverage-container {

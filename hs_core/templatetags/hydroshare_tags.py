@@ -4,6 +4,8 @@ from json import dumps
 
 from django.utils.html import format_html
 from django.conf import settings
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 from mezzanine import template
 
@@ -72,6 +74,19 @@ def app_on_open_with_list(content, arg):
     res_obj = content
     result = res_obj.rlabels.is_open_with_app(user_obj)
     return result
+
+
+@register.filter
+def is_url(content):
+    """
+    Check whether the content is a valid URL
+    """
+    validator = URLValidator()
+    try:
+        validator(content)
+    except ValidationError:
+        return False
+    return True
 
 
 @register.filter

@@ -1181,7 +1181,7 @@
                         <div class="form-group">
                             {% csrf_token %}
                             <fieldset>
-                                <div id="div_id_type" class="control-group space-bottom">
+                                <div id="div_id_edit_type" class="control-group space-bottom">
                                     <label for="id_type" class="control-label requiredField">
                                     Relation type<span class="asteriskField">*</span></label>
 
@@ -1372,14 +1372,16 @@
                         <div class="form-group">
                             {% csrf_token %}
                             <fieldset>
-                                <div id="div_id_type" class="control-group space-bottom">
+                                <div id="div_id_add_type" class="control-group space-bottom">
                                     <label for="id_type" class="control-label requiredField">
                                     Type of relationship<span class="asteriskField">*</span></label>
 
                                     <div class="controls">
                                         <select class="form-control input-sm select" id="id_type" name="type">
                                             {% for type_value, type_display in relation_source_types %}
-                                                <option value={{ type_value }}>{{ type_display }}</option>
+                                                {% if type_value != "relation" %}
+                                                    <option value={{ type_value }}>{{ type_display }}</option>
+                                                {% endif %}
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -1737,9 +1739,9 @@
                 </label>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="download-bag-btn"
-                   data-bag-url="{{ cm.bag_url }}" disabled>Download</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="download-bag-cancel">Cancel</button>
+                <button type="button" class="btn btn-success disabled" id="download-bag-btn"
+                   data-bag-url="{{ cm.bag_url }}">Download</button>
             </div>
         </div>
     </div>
