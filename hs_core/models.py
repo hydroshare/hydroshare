@@ -476,7 +476,6 @@ class Party(AbstractMetaDataElement):
 
         abstract = True
 
-    # TODO: 4808, store geoconnex metadata as k/v pairs
     def rdf_triples(self, subject, graph):
         party_type = self.get_class_term()
         party = BNode()
@@ -1038,9 +1037,11 @@ class Relation(AbstractMetaDataElement):
         return dict(self.SOURCE_TYPES)[self.type]
 
     def rdf_triples(self, subject, graph):
-        # TODO: 4808 figure out a better way to check this
-        if self.type == RelationTypes.relation.value:
+        try:
+            _ = self.geospatialrelation
             return
+        except GeospatialRelation.DoesNotExist:
+            pass
         relation_node = BNode()
         graph.add((subject, self.get_class_term(), relation_node))
         if self.type in self.HS_RELATION_TERMS:
@@ -1055,8 +1056,7 @@ class Relation(AbstractMetaDataElement):
                 type_term = p
                 value = o
                 break
-            # TODO: 4808 find a better way to detect if this is a geospatial relation
-            if type_term and type_term != RelationTypes.relation.value:
+            if type_term:
                 type = type_term.split('/')[-1]
                 value = str(value)
                 Relation.create(type=type, value=value, content_object=content_object)
