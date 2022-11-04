@@ -1038,7 +1038,7 @@ class Relation(AbstractMetaDataElement):
 
     def rdf_triples(self, subject, graph):
         try:
-            _ = self.geospatialrelation
+            self.geospatialrelation
             return
         except GeospatialRelation.DoesNotExist:
             pass
