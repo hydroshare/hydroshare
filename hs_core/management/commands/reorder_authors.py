@@ -24,6 +24,8 @@ class Command(BaseCommand):
             raise CommandError('resource_id argument is required')
         res_id = options['resource_id']
         res = BaseResource.objects.filter(short_id=res_id).first()
+        if not res:
+            raise CommandError('No resource found for the provided resource_id')
         if res.raccess.published:
             raise CommandError(f"Resource id: {res_id} is already published--can't update author order.")
         if res.metadata is not None:
