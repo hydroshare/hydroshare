@@ -20,6 +20,7 @@
 <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css">
 
 {% compress css %}
+<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.3.0.2.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'css/elements.css' %}">
 <link rel='stylesheet' type='text/css' href="{% static 'css/jquery-ui/smoothness/jquery-ui.css' %}">
@@ -44,7 +45,12 @@
 <script type="text/javascript" src="{% static 'js/bootstrap.3.0.2.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/bootstrap-extras.js' %}"></script>
 
-{% block extra_js %}{% endblock %}
+{% block extra_js %}
+<script>
+    const ROUTE_NAME = "{{ request.resolver_match.url_name|default_if_none:'' }}";
+</script>
+{% endblock %}
+
 {% endcompress %}
 {% include 'autocomplete_light/static.html' %}
 

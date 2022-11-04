@@ -1,5 +1,5 @@
 postgis:
-  image: postgis/postgis:14-3.3
+  image: postgis/postgis:15-3.3
   environment:
       POSTGRES_PASSWORD: 'postgres'
   container_name: postgis

@@ -56,6 +56,8 @@ CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 CELERY_ROUTES = ('hs_core.router.HSTaskRouter',)
 
+DISABLE_PERIODIC_TASKS = False
+
 # Docker settings
 DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'

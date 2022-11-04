@@ -8,6 +8,12 @@
     <link href="{% static 'css/toolresource.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/modal-vue.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/hs-file-icons.css' %}" rel="stylesheet"/>
+    <link rel='stylesheet' type='text/css' href="{% static 'css/vuetify.2.64.min.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+    integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+    crossorigin=""/>
+    <link rel="stylesheet" href="{% static 'css/Leaflet.fullscreen.min.css' %}" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 
 {% if not page|is_debug %}
 {# ======= JSON-LD Structure ======= #}
@@ -56,10 +62,26 @@
     ],
     {% endif %}
     "creator": {{ creators | creator_json_ld_element | safe }},
+    {# There is discussion about adding more linked data fields for referenced items #} 
+    {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
+    {% if inspecific_relations %}
+    "about": [
+    {% for inspecific_relation in inspecific_relations %}{% if inspecific_relation.value|is_url %}
+      {
+        "@id": "{{ inspecific_relation.value | escapejs }}",
+        {# We might eventually want to encode related features with more specificity than generic https://schema.org/Place #}
+        {# Examples include https://schema.org/Landform and https://schema.org/BodyOfWater #}
+        "@type": "Place",
+        "url": "{{ inspecific_relation.value | escapejs }}"
+      }{%if not forloop.last%},{%endif%}
+    {% endif %}{% endfor %}
+    ],
+    {% endif %}
     {% if temporal_coverage %}
     "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
     {% endif %}
     {% if spatial_coverage.exists %}
+    {# Could include specific properties https://schema.org/GeospatialGeometry for related features #}
     "spatialCoverage": {
         "@type": "Place",
         {% if spatial_coverage.name %}
@@ -276,6 +298,11 @@
                     <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
                         <span class="fa fa-file-archive-o icon-blue"></span>
                         <span>Unzip here</span>
+                    </li>
+
+                    <li id="btn-unzip-to-folder" data-menu-name="unzip-to-folder" data-fb-action="unzipToFolder">
+                        <span class="fa fa-file-archive-o icon-blue"></span>
+                        <span>Unzip to folder</span>
                     </li>
 
                     <li role="separator" class="divider"></li>
@@ -701,7 +728,6 @@
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
                                                     </button>
-                                                    {% if cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-add-reference" class="fb-space-right"
                                                             data-fb-action="createFolder"
                                                             data-toggle="modal"
@@ -709,7 +735,6 @@
                                                         title="Add content from the web">
                                                     <span class="fa fa-external-link icon-blue"></span>
                                                     </button>
-                                                    {% endif %}
                                                     <button id="fb-cut" data-fb-action="cut"
                                                             class="disabled"
                                                             title="Cut">
@@ -742,6 +767,11 @@
                                                     <button id="fb-unzip" data-fb-action="unzip"
                                                             class="disabled fb-space-right"
                                                             title="Unzip here">
+                                                        <span class="fa fa-file-archive-o icon-blue"></span>
+                                                    </button>
+                                                    <button id="fb-unzip-to-folder" data-fb-action="unzipToFolder"
+                                                            class="disabled fb-space-right"
+                                                            title="Unzip to folder">
                                                         <span class="fa fa-file-archive-o icon-blue"></span>
                                                     </button>
                                                 {% endif %}
@@ -801,9 +831,8 @@
                                                 {% if cm.raccess.require_download_agreement %}
                                                 data-target="#license-agree-dialog-bag" data-toggle="modal"
                                                 data-placement="auto"
-                                                {% else %}
-                                                data-bag-url="{{ cm.bag_url }}"
-                                                {% endif %}>
+                                                {% endif %}
+                                                data-bag-url="{{ cm.bag_url }}">
                                                 <span class="fa fa-briefcase icon-blue"></span>
                                             </button>
                                             <a class="small" target="_blank"
@@ -960,6 +989,9 @@
         {# ======= Additional Metadata ======= #}
         {% include "resource-landing-page/additional-metadata.html" %}
 
+        {# ======= Geoconnex ======= #}
+        {% include "resource-landing-page/geoconnex.html" %}
+
         {# ======= References ======= #}
         {% include "resource-landing-page/references.html" %}
 
@@ -1026,9 +1058,18 @@
                 "homepage": "{{ author.homepage|default:"" }}",
                 "profileUrl": "{{ author.relative_uri|default:'' }}",
                 "order": "{{ author.order }}",
-                "is_active": "{{ author.is_active|default:"" }}",
+                "is_active": "{{ author.is_active_user|default:"" }}",
             },
           {% endfor %}
+      ];
+      const RELATIONS = [
+        {% for relation in inspecific_relations %}
+            {
+                "value": "{{ relation.value| escapejs}}",
+                "type": "{{ relation.type }}",
+                "id": "{{ relation.id }}"
+            },
+        {% endfor %}
       ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
@@ -1048,8 +1089,13 @@
 
     </script>
 
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+        integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+        crossorigin="">
+    </script>
+    <script src="{% static 'js/hs-vue/Leaflet.fullscreen.min.js' %}"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script type="text/javascript" src="{% static 'js/coverageMap.js' %}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs-file-icons.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs_file_browser.js' %}"></script>

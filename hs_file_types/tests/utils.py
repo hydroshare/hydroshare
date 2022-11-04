@@ -719,7 +719,6 @@ def get_path_with_no_file_extension(path):
 
 def get_number_of_decimal_places(number):
     """A helper to find the number of decimal places in the specified number that's used for rounding the number
-    This function returns the number of decimal places as one less than the total number of decimal places in the number
     """
     _, decimal_str = str(number).split('.')
-    return len(decimal_str) - 1
+    return len(decimal_str)
