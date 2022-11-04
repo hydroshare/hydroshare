@@ -1038,6 +1038,9 @@ class Relation(AbstractMetaDataElement):
         return dict(self.SOURCE_TYPES)[self.type]
 
     def rdf_triples(self, subject, graph):
+        # TODO: 4808 figure out a better way to check this
+        if self.type == RelationTypes.relation.value:
+            return
         relation_node = BNode()
         graph.add((subject, self.get_class_term(), relation_node))
         if self.type in self.HS_RELATION_TERMS:
@@ -1110,30 +1113,31 @@ class Relation(AbstractMetaDataElement):
         super(Relation, cls).update(element_id, **kwargs)
 
 
-@rdf_terms("test")
-# @rdf_terms(HSTERMS.relation, text=HSTERMS.relation_name)
+@rdf_terms(HSTERMS.geospatialRelation, text=HSTERMS.relation_name)
 class GeospatialRelation(Relation):
     text = models.TextField()
 
     def rdf_triples(self, subject, graph):
+        # TODO: 4808 figure out a better way to check this
+        if self.type != RelationTypes.relation.value:
+            return
         relation_node = BNode()
         graph.add((subject, self.get_class_term(), relation_node))
-        graph.add((relation_node, getattr(HSTERMS, self.type), URIRef(self.value)))
+        graph.add((relation_node, getattr(DCTERMS, self.type), URIRef(self.value)))
         graph.add((relation_node, HSTERMS.relation_name, Literal(self.text)))
-        graph.add((relation_node, Literal(self.text), Literal("test")))
-
-    # TODO: 4808, add text to metadata out
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        for _, p, o in graph.triples((subject, cls.get_class_term(), None)):
-            type_term = p
-            value = o
-            # TODO: 4808, add text to metadata in
-            if type_term and type_term == RelationTypes.relation.value:
-                type = type_term.split('/')[-1]
-                value = str(value)
-                GeospatialRelation.create(type=type, value=value, content_object=content_object)
+        for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
+            type = value = name = None
+            for _, p, o in graph.triples((relation_node, None, None)):
+                if p == HSTERMS.relation_name:
+                    name = o
+                else:
+                    type = p.split('/')[-1]
+                    value = str(o)
+            if name and value and type:
+                GeospatialRelation.create(type=type, value=value, text=name, content_object=content_object)
 
 
 @rdf_terms(DC.identifier)
@@ -4003,7 +4007,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         return [Format]
 
     def ingest_metadata(self, graph):
-        # TODO 4808
         super(CoreMetaData, self).ingest_metadata(graph)
         subject = self.rdf_subject_from_graph(graph)
         extra_metadata = {}
