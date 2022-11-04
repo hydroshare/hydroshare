@@ -4,7 +4,7 @@
     <span id="citation" class="page-anchor"></span>
     <h3>
       <span>How to Cite</span>
-      {% if resource_edit_mode %}
+      {% if resource_edit_mode and not cm.raccess.published_or_review_pending %}
       <a data-toggle="tooltip" data-placement="auto"
           href="https://www.youtube.com/watch?v=jSeveop01Hk" target="_blank"
           title='How to: Publishing'
@@ -34,7 +34,7 @@
               }).complete(function(res) {
                 if (res.responseText) {
                   const fn = JSON.parse(res.responseText).filenames.length
-                  if (fn > 0 && RESOURCE_MODE === 'Edit') {
+                  if (fn > 0 && RESOURCE_MODE === 'Edit' && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
                     document.getElementById('edit-citation-control').style.display = "block"
                   }
                 }
@@ -55,7 +55,7 @@
             <br />
 
             {# ======= Sharing ======= #}
-            {% if not resource_edit_mode or cm.raccess.published %}
+            {% if not resource_edit_mode and not cm.raccess.published_or_review_pending %}
                 {% if rights.statement or rights.url %}
                     <div id="rights">
                         {% if rights.statement %}
@@ -150,7 +150,7 @@
             {% endif %}
         </div>
 
-        {% if resource_edit_mode and not cm.raccess.published %}
+        {% if resource_edit_mode and not cm.raccess.published_or_review_pending %}
         <div class="col-xs-12">
             {# Require license agreement for file download #}
             {% if self_access_level == 'owner' %}
