@@ -440,7 +440,8 @@ class RelationValidationForm(forms.Form):
 
 class GeospatialRelationValidationForm(RelationValidationForm):
     """Validate GeospatialRelationForm 'text' and 'value' CharFields."""
-
+    type = forms.CharField(max_length=100)
+    value = forms.CharField()
     text = forms.CharField(max_length=100)
 
 

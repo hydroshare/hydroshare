@@ -106,6 +106,8 @@ class RelationSerializer(serializers.Serializer):
 
 
 class GeospatialRelationSerializer(RelationSerializer):
+    type = serializers.CharField(required=False)
+    value = serializers.CharField(required=False)
     text = serializers.CharField(required=False)
 
     class Meta:

@@ -986,37 +986,9 @@ class Date(AbstractMetaDataElement):
         dt.delete()
 
 
-@rdf_terms(DC.relation)
-class Relation(AbstractMetaDataElement):
-    """Define Relation custom metadata model."""
-
-    SOURCE_TYPES = (
-        (RelationTypes.isPartOf.value, 'The content of this resource is part of'),
-        (RelationTypes.hasPart.value, 'This resource includes'),
-        (RelationTypes.isExecutedBy.value, 'The content of this resource can be executed by'),
-        (RelationTypes.isCreatedBy.value,
-         'The content of this resource was created by a related App or software program'),
-        (RelationTypes.isVersionOf.value, 'This resource updates and replaces a previous version'),
-        (RelationTypes.isReplacedBy.value, 'This resource has been replaced by a newer version'),
-        (RelationTypes.isDescribedBy.value, 'This resource is described by'),
-        (RelationTypes.conformsTo.value, 'This resource conforms to established standard described by'),
-        (RelationTypes.hasFormat.value, 'This resource has a related resource in another format'),
-        (RelationTypes.isFormatOf.value, 'This resource is a different format of'),
-        (RelationTypes.isRequiredBy.value, 'This resource is required by'),
-        (RelationTypes.requires.value, 'This resource requires'),
-        (RelationTypes.isReferencedBy.value, 'This resource is referenced by'),
-        (RelationTypes.references.value, 'The content of this resource references'),
-        (RelationTypes.replaces.value, 'This resource replaces'),
-        (RelationTypes.source.value, 'The content of this resource is derived from'),
-        (RelationTypes.isSimilarTo.value, 'The content of this resource is similar to'),
-        (RelationTypes.relation.value, 'The content of this resource is related to')
-    )
-
-    # these are hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = (RelationTypes.isExecutedBy, RelationTypes.isCreatedBy, RelationTypes.isDescribedBy,
-                         RelationTypes.isSimilarTo)
-    NOT_USER_EDITABLE = (RelationTypes.isVersionOf, RelationTypes.isReplacedBy,
-                         RelationTypes.isPartOf, RelationTypes.hasPart, RelationTypes.replaces)
+class AbstractRelation(AbstractMetaDataElement):
+    """Define Abstract Relation class."""
+    SOURCE_TYPES = ()
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.TextField()
@@ -1035,31 +1007,6 @@ class Relation(AbstractMetaDataElement):
 
     def type_description(self):
         return dict(self.SOURCE_TYPES)[self.type]
-
-    def rdf_triples(self, subject, graph):
-        try:
-            self.geospatialrelation
-            return
-        except GeospatialRelation.DoesNotExist:
-            pass
-        relation_node = BNode()
-        graph.add((subject, self.get_class_term(), relation_node))
-        if self.type in self.HS_RELATION_TERMS:
-            graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
-        else:
-            graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
-
-    @classmethod
-    def ingest_rdf(cls, graph, subject, content_object):
-        for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
-            for _, p, o in graph.triples((relation_node, None, None)):
-                type_term = p
-                value = o
-                break
-            if type_term:
-                type = type_term.split('/')[-1]
-                value = str(value)
-                Relation.create(type=type, value=value, content_object=content_object)
 
     @classmethod
     def create(cls, **kwargs):
@@ -1084,7 +1031,7 @@ class Relation(AbstractMetaDataElement):
             raise ValidationError('Relation element of the same type '
                                   'and value already exists.')
 
-        return super(Relation, cls).create(**kwargs)
+        return super(AbstractRelation, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -1110,17 +1057,80 @@ class Relation(AbstractMetaDataElement):
             # this update will create a duplicate relation element
             raise ValidationError('A relation element of the same type and value already exists.')
 
-        super(Relation, cls).update(element_id, **kwargs)
+        super(AbstractRelation, cls).update(element_id, **kwargs)
+
+    class Meta:
+        abstract = True
+
+
+@rdf_terms(DC.relation)
+class Relation(AbstractRelation):
+    """Define Relation custom metadata model."""
+
+    SOURCE_TYPES = (
+        (RelationTypes.isPartOf.value, 'The content of this resource is part of'),
+        (RelationTypes.hasPart.value, 'This resource includes'),
+        (RelationTypes.isExecutedBy.value, 'The content of this resource can be executed by'),
+        (RelationTypes.isCreatedBy.value,
+         'The content of this resource was created by a related App or software program'),
+        (RelationTypes.isVersionOf.value, 'This resource updates and replaces a previous version'),
+        (RelationTypes.isReplacedBy.value, 'This resource has been replaced by a newer version'),
+        (RelationTypes.isDescribedBy.value, 'This resource is described by'),
+        (RelationTypes.conformsTo.value, 'This resource conforms to established standard described by'),
+        (RelationTypes.hasFormat.value, 'This resource has a related resource in another format'),
+        (RelationTypes.isFormatOf.value, 'This resource is a different format of'),
+        (RelationTypes.isRequiredBy.value, 'This resource is required by'),
+        (RelationTypes.requires.value, 'This resource requires'),
+        (RelationTypes.isReferencedBy.value, 'This resource is referenced by'),
+        (RelationTypes.references.value, 'The content of this resource references'),
+        (RelationTypes.replaces.value, 'This resource replaces'),
+        (RelationTypes.source.value, 'The content of this resource is derived from'),
+        (RelationTypes.isSimilarTo.value, 'The content of this resource is similar to')
+    )
+
+    # these are hydroshare custom terms that are not Dublin Core terms
+    HS_RELATION_TERMS = (RelationTypes.isExecutedBy, RelationTypes.isCreatedBy, RelationTypes.isDescribedBy,
+                         RelationTypes.isSimilarTo)
+    NOT_USER_EDITABLE = (RelationTypes.isVersionOf, RelationTypes.isReplacedBy,
+                         RelationTypes.isPartOf, RelationTypes.hasPart, RelationTypes.replaces)
+    term = 'Relation'
+    type = models.CharField(max_length=100, choices=SOURCE_TYPES)
+    value = models.TextField()
+
+    def rdf_triples(self, subject, graph):
+        relation_node = BNode()
+        graph.add((subject, self.get_class_term(), relation_node))
+        if self.type in self.HS_RELATION_TERMS:
+            graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+        else:
+            graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
+            for _, p, o in graph.triples((relation_node, None, None)):
+                type_term = p
+                value = o
+                break
+            if type_term:
+                type = type_term.split('/')[-1]
+                value = str(value)
+                Relation.create(type=type, value=value, content_object=content_object)
 
 
 @rdf_terms(HSTERMS.geospatialRelation, text=HSTERMS.relation_name)
-class GeospatialRelation(Relation):
-    text = models.TextField()
+class GeospatialRelation(AbstractRelation):
+
+    SOURCE_TYPES = (
+        (RelationTypes.relation.value, 'The content of this resource is related to'),
+    )
+
+    term = 'GeospatialRelation'
+    type = models.CharField(max_length=100, choices=SOURCE_TYPES)
+    value = models.TextField()
+    text = models.TextField(max_length=100)
 
     def rdf_triples(self, subject, graph):
-        # TODO: 4808 figure out a better way to check this
-        if self.type != RelationTypes.relation.value:
-            return
         relation_node = BNode()
         graph.add((subject, self.get_class_term(), relation_node))
         graph.add((relation_node, getattr(DCTERMS, self.type), URIRef(self.value)))
