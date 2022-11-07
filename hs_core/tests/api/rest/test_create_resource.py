@@ -99,6 +99,7 @@ class TestCreateResource(HSRESTTestCase):
 
     @skip("TODO: was not running before python3 upgrade")
     def test_resource_create_with_core_metadata(self):
+        # TODO: 4808 add geospatial relation
         """
         The followings are the core metadata elements that can be passed as part of the
         'metadata' parameter when creating a resource:

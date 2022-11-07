@@ -181,6 +181,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
     def test_put_scimeta_composite_resource_with_core_metadata(self):
         # testing bulk metadata update that includes only core metadata
+        # TODO 4808 add geospatial relations
 
         # create a composite resource
         self._create_resource(resource_type="CompositeResource")

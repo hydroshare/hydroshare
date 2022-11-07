@@ -7,6 +7,21 @@ import django.db.models.deletion
 import hs_core.hs_rdf
 
 
+def migrate_relations_to_geoconnex(apps, schema_editor):
+    Relation = apps.get_model("hs_core", "Relation")
+    BaseResource = apps.get_model("hs_core", "BaseResource")
+    for relation in Relation.objects.filter(type="relation"):
+        res = BaseResource.objects.get(object_id=relation.object_id)
+        if "geoconnex" in relation.value:
+            print(f"Creating new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
+            res.metadata.create_element('geospatialrelation',
+                                        type='relation',
+                                        value=relation.value)
+            relation.delete()
+        else:
+            print(f"Encountered resource with non geoconnex generic 'relation' type. Res_id:{res.short_id}")
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -30,6 +45,7 @@ class Migration(migrations.Migration):
             },
             bases=(models.Model, hs_core.hs_rdf.RDF_Term_MixIn),
         ),
+        migrations.RunPython(migrate_relations_to_geoconnex),
         migrations.AlterField(
             model_name='relation',
             name='type',

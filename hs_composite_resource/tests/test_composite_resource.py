@@ -473,6 +473,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 1 relation element
         self.assertEqual(self.composite_resource.metadata.relations.count(), 1)
 
+        # TODO: 4808 add tests for Geospatial Relations
         # add 2 subject elements
         metadata.create_element('subject', value='sub-1')
         metadata.create_element('subject', value='sub-2')

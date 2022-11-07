@@ -1292,6 +1292,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # at this point there should not be any relation elements
         self.assertEqual(self.res.metadata.relations.all().count(), 0,
                          msg="Resource has relation element(s) after deleting all.")
+    
+    # TODO: 4808 add geospatial relation tests
 
     def test_funding_agency(self):
         # at this point there should not be any funding agency elements

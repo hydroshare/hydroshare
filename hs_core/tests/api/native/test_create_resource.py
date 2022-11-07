@@ -152,6 +152,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             {'coverage': {'type': 'point', 'value': {'name': 'Name for point coverage', 'east': '56.45678',
                                                      'north': '12.6789', 'units': 'deg'}}},
             {'identifier': {'name': 'someIdentifier', 'url':"http://some.org/001"}},
+            # TODO 4808: add geospatial relations
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
             {'rights': {'statement': 'This is the rights statement for this resource',
                         'url': 'http://rights.org/001'}},
