@@ -291,7 +291,6 @@ INSTALLED_APPS = (
     "django.contrib.gis",
     "django.contrib.postgres",
     "django.contrib.messages",
-    # "inplaceeditform",
     "django_nose",
     "django_irods",
     "drf_yasg",

@@ -34,9 +34,6 @@ from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import subject_template, send_mail_template
 
 from autocomplete_light import shortcuts as autocomplete_light
-# TODO: clean up for django 3.2 upgrade
-# from inplaceeditform.commons import get_dict_from_obj, apply_filters
-# from inplaceeditform.views import _get_http_response, _get_adaptor
 
 from django_irods.icommands import SessionException
 
@@ -1169,41 +1166,6 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
         ajax_response_data['message'] = str(exp)
 
     return JsonResponse(ajax_response_data)
-
-# TODO: clean up for django 3.2 upgrade
-# view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
-# def save_ajax(request):
-#     if not request.method == 'POST':
-#         return _get_http_response({'errors': 'It is not a POST request'})
-#     adaptor = _get_adaptor(request, 'POST')
-#     if not adaptor:
-#         return _get_http_response({'errors': 'Params insufficient'})
-#     if not adaptor.can_edit():
-#         return _get_http_response({'errors': 'You can not edit this content'})
-#     value = adaptor.loads_to_post(request)
-#     new_data = get_dict_from_obj(adaptor.obj)
-#     form_class = adaptor.get_form_class()
-#     field_name = adaptor.field_name
-#     new_data['in_menus'] = ''
-#     form = form_class(data=new_data, instance=adaptor.obj)
-#     try:
-#         value_edit = adaptor.get_value_editor(value)
-#         value_edit_with_filter = apply_filters(value_edit, adaptor.filters_to_edit)
-#         new_data[field_name] = value_edit_with_filter
-#         new_data[field_name] = value_edit_with_filter
-#         if form.is_valid():
-#             adaptor.save(value_edit_with_filter)
-#             return _get_http_response({'errors': False,
-#                                         'value': adaptor.render_value_edit()})
-#         messages = [] # The error is for another field that you are editing
-#         for field_name_error, errors_field in list(form.errors.items()):
-#             for error in errors_field:
-#                 messages.append("%s: %s" % (field_name_error, str(error)))
-#         message_i18n = ','.join(messages)
-#         return _get_http_response({'errors': message_i18n})
-#     except ValidationError as error: # The error is for a field that you are editing
-#         message_i18n = ', '.join(["%s" % m for m in error.messages])
-#         return _get_http_response({'errors': message_i18n})
 
 
 def verify_account(request, *args, **kwargs):
