@@ -173,13 +173,13 @@ function getFileIcons() {
     // This is for any single file associated with ModelProgramLogicalFile. Note "MP" is not a file extension
     fileIcons.MP =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/img/resource-icons/modelprogram48x48.png' " +
+        "<img src='/static/static/img/resource-icons/modelprogram48x48.png' " +
         "alt='Model Program Aggregation Icon'/></span>";
 
     // This is for any single file associated with ModelInstanceLogicalFile. Note "MI" is not a file extension
     fileIcons.MI =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/img/resource-icons/modelinstance48x48.png' " +
+        "<img src='/static/static/img/resource-icons/modelinstance48x48.png' " +
         "alt='Model Instance Aggregation Icon'/></span>";
 
     fileIcons.DEFAULT =
