@@ -67,7 +67,7 @@ server {
     client_max_body_size 4096m;
 
     location /static/ {
-        alias /hydroshare/hydroshare/static/static/;
+        alias /hydroshare/hydroshare/static/;
     }
 
     location /media/ {
