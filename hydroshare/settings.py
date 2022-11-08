@@ -533,6 +533,7 @@ TEMP_FILE_DIR = '/hs_tmp'
 
 OAUTH2_PROVIDER = {
     'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,  # 30 days
+    'PKCE_REQUIRED': False,
 }
 
 ####################
