@@ -5,18 +5,23 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 import django.db.models.deletion
 import hs_core.hs_rdf
+from hs_core.models import Relation, BaseResource
 
 
 def migrate_relations_to_geoconnex(apps, schema_editor):
-    Relation = apps.get_model("hs_core", "Relation")
-    BaseResource = apps.get_model("hs_core", "BaseResource")
     for relation in Relation.objects.filter(type="relation"):
         res = BaseResource.objects.get(object_id=relation.object_id)
         if "geoconnex" in relation.value:
-            print(f"Creating new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
-            res.metadata.create_element('geospatialrelation',
-                                        type='relation',
-                                        value=relation.value)
+            print(f"Attempting to create new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
+            try:
+                # TODO: 4808 still need to have a task that fetches the geoconnex text and updates it
+                res.metadata.create_element('geospatialrelation',
+                                            type='relation',
+                                            value=relation.value)
+            except AttributeError as ex:
+                print(f"Metadata object missing for res_id:{res.short_id}, value:{relation.value}. Skipping.")
+                print(ex)
+                continue
             relation.delete()
         else:
             print(f"Encountered resource with non geoconnex generic 'relation' type. Res_id:{res.short_id}")
