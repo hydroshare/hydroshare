@@ -51,11 +51,6 @@
 {% endcompress %}
 {% include 'autocomplete_light/static.html' %}
 
-{# Pabitra: It seems we have not been using inplace editing even before upgrading to django 3.2 #}
-{#{% load inplace_edit %}#}
-{#{% inplace_static %}#}
-
-
 {% block extra_head %}{% endblock %}
 {% if not page|is_debug %}
 <script type="text/javascript">
