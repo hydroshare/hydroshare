@@ -344,7 +344,6 @@ OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 APPS_TO_NOT_RUN = (
     'rest_framework',
     'django_nose',
-    'inplaceeditform',
     'grappelli_safe',
     'django_irods',
     'crispy_forms',
