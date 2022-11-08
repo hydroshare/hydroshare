@@ -14,7 +14,6 @@ def migrate_relations_to_geoconnex(apps, schema_editor):
         if "geoconnex" in relation.value:
             print(f"Attempting to create new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
             try:
-                # TODO: 4808 still need to have a task that fetches the geoconnex text and updates it
                 res.metadata.create_element('geospatialrelation',
                                             type='relation',
                                             value=relation.value)

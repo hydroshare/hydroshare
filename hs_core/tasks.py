@@ -19,6 +19,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.management import call_command
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -175,6 +176,12 @@ def manage_task_nightly():
         subject = 'Notification of pending DOI deposition/activation of published resources'
         # send email for people monitoring and follow-up as needed
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=1))
+def update_from_geoconnex_task():
+    # Nightly task to update from Geoconnex API
+    call_command('update_relations_from_geoconnex')
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=15, hour=0, day_of_week=1,

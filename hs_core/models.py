@@ -5,6 +5,7 @@ import logging
 import os.path
 import re
 import unicodedata
+import urllib
 from uuid import uuid4
 
 import arrow
@@ -1149,6 +1150,57 @@ class GeospatialRelation(AbstractRelation):
             if name and value and type:
                 GeospatialRelation.create(type=type, value=value, text=name, content_object=content_object)
 
+    @classmethod
+    def sync_all(cls):
+        relations = cls.objects.all()
+        for relation in relations:
+            relative_id = relation.value.split("ref/").pop()
+            collection = relative_id.split("/")[0]
+            id = relative_id.split("/")[1]
+            uri = f"https://reference.geoconnex.us/collections/{collection}/items/{id}?f=json&lang=en-US&skipGeometry=true"
+
+            response = urllib.request.urlopen(uri)
+            str = response.read()
+            data = json.loads(str)
+            properties = data['properties']
+            # TODO: 4808 have to parse name independently...
+            name = properties['NAME']
+            text = f"{name} [{relative_id}]"
+            if relation.text != text:
+                print(f"Updating {relation.value}, '{relation.text}' to '{text}'")
+                relation.text = text
+                relation.save()
+            else:
+                print(f"Relation '{relation.value}' not changed")
+
+    def sync(uri='http://vocabulary.odm2.org/api/v1/variablename/?format:json'):
+        response = urllib.request.urlopen(uri)
+        str = response.read()
+        data = json.loads(str)
+        for d in data['objects']:
+            try:
+                record = ODM2Variable.objects.get(id=int(d['vocabulary_id']))
+                if d['vocabulary_status'] == 'Current':
+                    if d['name'] != record.name or \
+                       d['definition'] != record.definition or \
+                       d['resource_uri'] != record.resource_uri or \
+                       d['provenance_uri'] != record.provenance_uri:
+                        record.name = d['name']
+                        record.definition = d['definition']
+                        record.resource_uri = d['resource_uri']
+                        record.provenance_uri = d['provenance_uri']
+                        record.save()
+                else:
+                    record.delete()  # stale record
+            except ODM2Variable.DoesNotExist:
+                if d['vocabulary_status'] == 'Current':
+                    record = ODM2Variable()
+                    record.name = d['name']
+                    record.definition = d['definition']
+                    record.resource_uri = d['resource_uri']
+                    record.provenance_uri = d['provenance_uri']
+                    record.id = int(d['vocabulary_id'])
+                    record.save()
 
 @rdf_terms(DC.identifier)
 class Identifier(AbstractMetaDataElement):
