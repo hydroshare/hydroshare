@@ -33,9 +33,6 @@
 {% endcompress %}
 
 {% compress js %}
-{# Pabitra: commenting the use of mezzanine supplied jquery js file as it's using a newer version which breaks lot of custom js code #}
-{#<script type="text/javascript" src="{% static 'mezzanine/js/'|add:settings.JQUERY_FILENAME %}"></script>#}
-{# using jquery 1.8.3 - this is the version used by mezzanine before the mezzanine upgrade to 5.x #}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/vue-2.6.10-min.js' %}"></script>
