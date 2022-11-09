@@ -35,10 +35,10 @@ class Command(BaseCommand):
                 if relations:
                     for relation in relations:
                         print(f"UPDATING RELATIONS FOR RESOURCE {rid}, {relation}")
-                        relation.sync()
+                        relation.check_text()
                 else:
                     print(f"RESOURCE {rid} HAS NO GEOSPATIAL RELATIONS")
 
         else:  # check all resources
             print("UPDATING RELATIONS FOR ALL RESOURCES")
-            GeospatialRelation.sync_all()
+            GeospatialRelation.sync_all_text()

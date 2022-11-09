@@ -37,6 +37,7 @@ from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.pages.managers import PageManager
 from mezzanine.pages.models import Page
+from pyld import jsonld
 from rdflib import Literal, BNode, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 
@@ -1137,6 +1138,36 @@ class GeospatialRelation(AbstractRelation):
         graph.add((relation_node, getattr(DCTERMS, self.type), URIRef(self.value)))
         graph.add((relation_node, HSTERMS.relation_name, Literal(self.text)))
 
+    def check_text(relation):
+        relative_id = relation.value.split("ref/").pop()
+        collection = relative_id.split("/")[0]
+        id = relative_id.split("/")[1]
+        url = f"https://reference.geoconnex.us/collections/{collection}/items/{id}?f=jsonld&lang=en-US&skipGeometry=true"
+
+        response = urllib.request.urlopen(url)
+        str_response = response.read()
+        str_response = json.loads(str_response)
+        contexts = str_response['@context']
+        for context in contexts:
+            compacted = jsonld.compact(str_response, context)
+            try:
+                name = compacted['schema:name']
+            except KeyError:
+                continue
+            text = f"{name} [{relative_id}]"
+            if relation.text != text:
+                print(f"Updating {relation.value}, '{relation.text}' to '{text}'.")
+                relation.text = text
+                relation.save()
+            else:
+                print(f"Not updating relation '{relation.value}'--text unchanged.")
+
+    @classmethod
+    def sync_all_text(cls):
+        relations = cls.objects.all()
+        for relation in relations:
+            relation.check_text()
+
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
         for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
@@ -1150,62 +1181,6 @@ class GeospatialRelation(AbstractRelation):
             if name and value and type:
                 GeospatialRelation.create(type=type, value=value, text=name, content_object=content_object)
 
-    @classmethod
-    def sync_all(cls):
-        relations = cls.objects.all()
-        for relation in relations:
-            relative_id = relation.value.split("ref/").pop()
-            collection = relative_id.split("/")[0]
-            id = relative_id.split("/")[1]
-            uri = f"https://reference.geoconnex.us/collections/{collection}/items/{id}?f=jsonld&lang=en-US&skipGeometry=true"
-
-            response = urllib.request.urlopen(uri)
-            str_response = response.read()
-            from pyld import jsonld
-            context = {
-                "schema": "https://schema.org/",
-                "type": "@type",
-                "gsp": "http://www.opengis.net/ont/geosparql#"
-            }
-            str_response = json.loads(str_response)
-            compacted = jsonld.compact(str_response, context)
-            name = compacted['schema:name']
-            text = f"{name} [{relative_id}]"
-            if relation.text != text:
-                print(f"Updating {relation.value}, '{relation.text}' to '{text}'")
-                relation.text = text
-                relation.save()
-            else:
-                print(f"Relation '{relation.value}' not changed")
-
-    def sync(uri='http://vocabulary.odm2.org/api/v1/variablename/?format:json'):
-        response = urllib.request.urlopen(uri)
-        str = response.read()
-        data = json.loads(str)
-        for d in data['objects']:
-            try:
-                record = ODM2Variable.objects.get(id=int(d['vocabulary_id']))
-                if d['vocabulary_status'] == 'Current':
-                    if d['name'] != record.name or \
-                       d['definition'] != record.definition or \
-                       d['resource_uri'] != record.resource_uri or \
-                       d['provenance_uri'] != record.provenance_uri:
-                        record.name = d['name']
-                        record.definition = d['definition']
-                        record.resource_uri = d['resource_uri']
-                        record.provenance_uri = d['provenance_uri']
-                        record.save()
-                else:
-                    record.delete()  # stale record
-            except ODM2Variable.DoesNotExist:
-                if d['vocabulary_status'] == 'Current':
-                    record = ODM2Variable()
-                    record.name = d['name']
-                    record.definition = d['definition']
-                    record.resource_uri = d['resource_uri']
-                    record.provenance_uri = d['provenance_uri']
-                    record.id = int(d['vocabulary_id'])
-                    record.save()
 
 @rdf_terms(DC.identifier)
 class Identifier(AbstractMetaDataElement):

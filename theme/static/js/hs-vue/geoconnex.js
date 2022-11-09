@@ -394,7 +394,6 @@ const geoconnexApp = new Vue({
       try {
         const response = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
           url: `${geoconnexApp.geoconnexUrl}?f=json&skipGeometry=true`,
-          // TODO: 4808
           forceFresh: forceFresh,
         });
         geoconnexApp.collections = response.collections.filter((col) => {
