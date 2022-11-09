@@ -152,7 +152,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             {'coverage': {'type': 'point', 'value': {'name': 'Name for point coverage', 'east': '56.45678',
                                                      'north': '12.6789', 'units': 'deg'}}},
             {'identifier': {'name': 'someIdentifier', 'url':"http://some.org/001"}},
-            # TODO 4808: add geospatial relations
+            {'geospatialrelation': {'type': 'relation', 'value': 'https://geoconnex.us/ref/dams/1083460'}},
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
             {'rights': {'statement': 'This is the rights statement for this resource',
                         'url': 'http://rights.org/001'}},
@@ -214,6 +214,9 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         self.assertEqual(res.metadata.relations.all().count(), 1,
                          msg="Number of relation elements is not equal to 1")
+        
+        self.assertEqual(res.metadata.geospatialrelations.all().count(), 1,
+                         msg="Number of geospatialrelation elements is not equal to 1")
 
         self.assertEqual(res.metadata.rights.statement, 'This is the rights statement for this resource',
                          msg="Statement of rights did not match.")

@@ -98,6 +98,16 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                     "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
                 }
             ],
+            "geospatialrelations": [
+                {
+                    "type": "relation",
+                    "value": "https://geoconnex.us/ref/dams/1083460"
+                },
+                {
+                    "type": "relation",
+                    "value": "https://geoconnex.us/ref/dams/1083461"
+                }
+            ],
             "funding_agencies": [
                  {
                      "agency_name": "NSF",
@@ -117,6 +127,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
+        self.assertEqual(self.resource.metadata.geospatialrelations.all().count(), 2)
         self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
         self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
         self.assertEqual(str(self.resource.metadata.language), "fre")
@@ -181,7 +192,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
 
     def test_put_scimeta_composite_resource_with_core_metadata(self):
         # testing bulk metadata update that includes only core metadata
-        # TODO 4808 add geospatial relations
 
         # create a composite resource
         self._create_resource(resource_type="CompositeResource")
@@ -227,6 +237,16 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                     "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
                 }
             ],
+            "geospatialrelations": [
+                {
+                    "type": "relation",
+                    "value": "https://geoconnex.us/ref/dams/1083460"
+                },
+                {
+                    "type": "relation",
+                    "value": "https://geoconnex.us/ref/dams/1083461"
+                }
+            ],
             "funding_agencies": [
                  {
                      "agency_name": "NSF",
@@ -246,6 +266,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
+        self.assertEqual(self.resource.metadata.geospatialrelations.all().count(), 2)
         self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
         self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
         self.assertEqual(str(self.resource.metadata.language), "fre")

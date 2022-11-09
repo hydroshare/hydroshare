@@ -47,7 +47,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
             {'identifier': {'name': 'someIdentifier', 'url': "http://some.org/002"}},
             {'identifier': {'name': 'hydroShareIdentifier', 'url': "http://hydroshare.org/001"}},   # will be ignored
             {'language': {'code': 'fre'}},
-            # TODO 4808 add geospatial relation metadata
+            {'geospatialrelation': {'type': 'relation', 'value': 'https://geoconnex.us/ref/dams/1083460'}},
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
             {'rights': {'statement': 'This is the rights statement for this resource', 'url': 'http://rights.ord/001'}},
             {'subject': {'value': 'sub-1'}},
@@ -140,6 +140,11 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
                          msg="Number of source elements is not equal to 1")
         relation = self.res.metadata.relations.filter(type='isPartOf').first()
         self.assertEqual(relation.value, 'http://hydroshare.org/resource/001')
+
+        self.assertEqual(self.res.metadata.geospatialrelations.all().count(), 1,
+                         msg="Number of geospatialrelation elements is not equal to 1")
+        geospatialrelation = self.res.metadata.geospatialrelations.filter(type='relation').first()
+        self.assertEqual(geospatialrelation.value, 'https://geoconnex.us/ref/dams/1083460')
 
         self.assertEqual(self.res.metadata.rights.statement, 'This is the rights statement for this resource',
                          msg="Statement of rights did not match.")
