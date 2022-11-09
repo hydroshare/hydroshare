@@ -18,7 +18,6 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.core.management import call_command
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -33,7 +32,7 @@ from theme.models import UserQuota, QuotaMessage, User
 from django_irods.icommands import SessionException
 from celery.result import states
 
-from hs_core.models import BaseResource, TaskNotification
+from hs_core.models import BaseResource, TaskNotification, GeospatialRelation
 from hs_core.enums import RelationTypes
 from theme.utils import get_quota_message
 from hs_collection_resource.models import CollectionDeletedResource
@@ -79,7 +78,7 @@ def setup_periodic_tasks(sender, **kwargs):
     else:
         sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
         sender.add_periodic_task(crontab(minute=0, hour=0), manage_task_nightly.s())
-        sender.add_periodic_task(crontab(minute=0, hour=1, day_of_week=1), update_from_geoconnex_task.s())
+        sender.add_periodic_task(crontab(minute=0, hour=1, day_of_month=1), update_from_geoconnex_task.s())
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
                                     send_over_quota_emails.s())
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
@@ -196,8 +195,8 @@ def manage_task_nightly():
 
 @celery_app.task(ignore_result=True)
 def update_from_geoconnex_task():
-    # Weekly task to update from Geoconnex API
-    call_command('update_relations_from_geoconnex')
+    # Task to update from Geoconnex API
+    GeospatialRelation.sync_all_text()
 
 
 @celery_app.task(ignore_result=True)
