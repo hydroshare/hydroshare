@@ -475,7 +475,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 1 relation element
         self.assertEqual(self.composite_resource.metadata.relations.count(), 1)
 
-        # add a geospatial relation element 
+        # add a geospatial relation element
         metadata.create_element('geospatialrelation', type='relation',
                                 value='https://geoconnex.us/ref/dams/1083460')
         # there should be 1 geospatial relation element
@@ -977,7 +977,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # add a relation element of uri type
         metadata.create_element('relation', type='isPartOf',
                                 value='http://hydroshare.org/resource/001')
-        # add a geospatial relation element 
+        # add a geospatial relation element
         metadata.create_element('geospatialrelation', type='relation',
                                 value='https://geoconnex.us/ref/dams/1083460')
 

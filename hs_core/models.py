@@ -1142,7 +1142,8 @@ class GeospatialRelation(AbstractRelation):
         relative_id = relation.value.split("ref/").pop()
         collection = relative_id.split("/")[0]
         id = relative_id.split("/")[1]
-        url = f"https://reference.geoconnex.us/collections/{collection}/items/{id}?f=jsonld&lang=en-US&skipGeometry=true"
+        url = f"https://reference.geoconnex.us/collections/{collection}/items/{id}?" \
+               "f=jsonld&lang=en-US&skipGeometry=true"
 
         response = urllib.request.urlopen(url)
         str_response = response.read()

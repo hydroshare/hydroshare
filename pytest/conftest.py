@@ -84,8 +84,7 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
 
     # geospatialrelation
     metadata.append({'geospatialrelation': {'type': 'relation',
-                                  'value': 'https://geoconnex.us/ref/dams/1083460'}})
-
+                                            'value': 'https://geoconnex.us/ref/dams/1083460'}})
 
     # identifier
     # metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})
