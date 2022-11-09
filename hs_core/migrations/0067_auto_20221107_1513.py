@@ -6,6 +6,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 import hs_core.hs_rdf
 from hs_core.models import Relation, BaseResource
+from django.core.management import call_command
 
 
 def migrate_relations_to_geoconnex(apps, schema_editor):
@@ -55,4 +56,5 @@ class Migration(migrations.Migration):
             name='type',
             field=models.CharField(choices=[('isPartOf', 'The content of this resource is part of'), ('hasPart', 'This resource includes'), ('isExecutedBy', 'The content of this resource can be executed by'), ('isCreatedBy', 'The content of this resource was created by a related App or software program'), ('isVersionOf', 'This resource updates and replaces a previous version'), ('isReplacedBy', 'This resource has been replaced by a newer version'), ('isDescribedBy', 'This resource is described by'), ('conformsTo', 'This resource conforms to established standard described by'), ('hasFormat', 'This resource has a related resource in another format'), ('isFormatOf', 'This resource is a different format of'), ('isRequiredBy', 'This resource is required by'), ('requires', 'This resource requires'), ('isReferencedBy', 'This resource is referenced by'), ('references', 'The content of this resource references'), ('replaces', 'This resource replaces'), ('source', 'The content of this resource is derived from'), ('isSimilarTo', 'The content of this resource is similar to')], max_length=100),
         ),
+        migrations.RunPython(call_command('update_relations_from_geoconnex'))
     ]
