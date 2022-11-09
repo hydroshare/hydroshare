@@ -178,9 +178,9 @@ def manage_task_nightly():
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=1))
+@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=1, day_of_week=1))
 def update_from_geoconnex_task():
-    # Nightly task to update from Geoconnex API
+    # Weekly task to update from Geoconnex API
     call_command('update_relations_from_geoconnex')
 
 

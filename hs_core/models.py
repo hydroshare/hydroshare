@@ -1160,7 +1160,7 @@ class GeospatialRelation(AbstractRelation):
                 relation.text = text
                 relation.save()
             else:
-                print(f"Not updating relation '{relation.value}'--text unchanged.")
+                print(f"Not updating relation '{relation.value}'. Geoconnex API matches HS.")
 
     @classmethod
     def sync_all_text(cls):

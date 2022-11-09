@@ -34,11 +34,11 @@ class Command(BaseCommand):
                 relations = resource.metadata.geospatialrelations.all()
                 if relations:
                     for relation in relations:
-                        print(f"UPDATING RELATIONS FOR RESOURCE {rid}, {relation}")
+                        print(f"CHECKING RELATION '{relation.text}' FOR RESOURCE '{rid}', ")
                         relation.check_text()
                 else:
                     print(f"RESOURCE {rid} HAS NO GEOSPATIAL RELATIONS")
 
         else:  # check all resources
-            print("UPDATING RELATIONS FOR ALL RESOURCES")
+            print("CHECKING RELATIONS FOR ALL RESOURCES")
             GeospatialRelation.sync_all_text()
