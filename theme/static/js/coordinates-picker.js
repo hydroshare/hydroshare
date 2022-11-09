@@ -143,6 +143,8 @@ function drawPickerRectangle(bounds) {
 }
 
 function initMapFileType() {
+  if (coordinatesPicker) return; // already initialized
+
   // Initialize Map
   leafletFeatureGroup = L.featureGroup();
 
