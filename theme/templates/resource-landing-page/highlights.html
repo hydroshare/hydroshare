@@ -24,18 +24,35 @@
             {% endif %}
         </td>
     </tr>
-    {% if cm.raccess.published %}
-        {% if "pending" in cm.doi or "failure" in cm.doi %}
+    {% if "pending" in cm.doi or "failure" in cm.doi or cm.raccess.review_pending %}
             <tr>
                 <th>Publication Status: </th>
                 <td>
+                    {% if cm.raccess.review_pending %}
+                    <div>Pending Metadata Review</div>
+                        {% if user.is_superuser %}
+                        <a id="metadata_approve" href="/hsapi/_internal/metadata_review/{{ cm.short_id }}/approve/">
+                            <button
+                                class="btn btn-info btn-xs"
+                                data-toggle="tooltip"
+                                data-placement="bottom"
+                                title="Approve metadata review and submit for publication">
+                                Approve metadata for publication
+                            </button>
+                        </a>
+                        {% else %}
+                        <div class="small text-muted">
+                            This resource is being assessed for minimum metadata prior to publication
+                        </div>
+                        {% endif %}
+                    {% else %}
                     <div>Pending Publication</div>
                     <div class="small text-muted">
                         Note that the DOI will not be available until it has been registered and activated.
                     </div>
+                    {% endif %}
                 </td>
             </tr>
-        {% endif %}
     {% endif %}
     <tr>
         <th>Views: </th>

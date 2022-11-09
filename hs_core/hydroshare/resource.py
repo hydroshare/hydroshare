@@ -1000,6 +1000,49 @@ def deposit_res_metadata_with_crossref(res):
     return response
 
 
+def submit_resource_for_review(request, pk):
+    """
+    Submits a resource for minimum metadata review, prior to publishing.
+    The user must be an owner of a resource or an administrator to perform this action.
+
+    Parameters:
+        user - requesting user to publish the resource who must be one of the owners of the resource
+        pk - Unique HydroShare identifier for the resource to be formally published.
+
+    Returns:    The id of the resource that was published
+
+    Return Type:    string
+
+    Raises:
+    Exceptions.NotAuthorized - The user is not authorized
+    Exceptions.NotFound - The resource identified by pid does not exist
+    Exception.ServiceFailure - The service is unable to process the request
+    and other general exceptions
+
+    """
+    resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        raise ValidationError("This resource is already published")
+
+    if resource.raccess.review_pending:
+        raise ValidationError("Metadata review has already been initiated")
+
+    if not resource.can_be_published:
+        raise ValidationError("This resource cannot be published since it does not have required "
+                              "metadata or content files, or this resource contains referenced "
+                              "content, or this resource type is not allowed for publication.")
+
+    resource.raccess.review_pending = True
+    resource.raccess.immutable = True
+    resource.raccess.save()
+
+    # we assume that there is a user associated with the "default_from_email"
+    user_to = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
+    from hs_core.views.utils import send_action_to_take_email
+    send_action_to_take_email(request, user=user_to, user_from=request.user,
+                                action_type='metadata_review', resource=resource)
+
+
 def publish_resource(user, pk):
     """
     Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource,

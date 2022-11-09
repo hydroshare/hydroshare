@@ -12,6 +12,24 @@
     </div>
 {% endif %}
 
+{# ======= Resource Submitted for Minimum Metadata Check Pre Publication =======#}
+{% if cm.raccess.review_pending and resource_edit_mode %}
+    <div class="col-xs-12">
+        <div class="alert alert-warning alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <span><strong>This resource is under review</strong> for appropriate minimum metadata and to ensure that it adheres to community guidelines.
+                The review process will likely be complete within 1 business day, but not exceed 2 business days.
+                During this time, you can edit some of the metadata elements for published resources, but you cannot change the following:
+            </span>
+            <ul>
+                <li>Title</li>
+                <li>Authors</li>
+                <li>Content files</li>
+            </ul>
+        </div>
+    </div>
+{% endif %}
+
 {# ======= Published resource edit notification =======#}
 {% if cm.raccess.published and resource_edit_mode %}
     <div class="col-xs-12">
@@ -237,7 +255,7 @@
         <script src="{% static 'js/dual-listbox.js' %}"></script>
 
 
-        {% if not cm.raccess.published %}
+        {% if not cm.raccess.published_or_review_pending %}
             <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
                   id="id-title" method="post">
                 {% csrf_token %}

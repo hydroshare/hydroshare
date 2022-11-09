@@ -344,10 +344,18 @@ def assert_geofeature_file_type_metadata(self, expected_folder_name):
                      'unknown')
     self.assertGreater(len(logical_file.metadata.originalcoverage.projection_string), 0)
     self.assertEqual(logical_file.metadata.originalcoverage.unit, 'unknown')
-    self.assertEqual(float(logical_file.metadata.originalcoverage.eastlimit), -66.9692712587578)
-    self.assertEqual(float(logical_file.metadata.originalcoverage.northlimit), 71.406235393967)
-    self.assertEqual(float(logical_file.metadata.originalcoverage.southlimit), 18.921786345087)
-    self.assertEqual(float(logical_file.metadata.originalcoverage.westlimit), -178.217598362366)
+    expected_elimit = -66.9692712587578
+    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.eastlimit), expected_elimit,
+                           places=get_number_of_decimal_places(expected_elimit))
+    expected_nlimit = 71.406235393967
+    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.northlimit), expected_nlimit,
+                           places=get_number_of_decimal_places(expected_nlimit))
+    expected_slimit = 18.921786345087
+    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.southlimit), expected_slimit,
+                           places=get_number_of_decimal_places(expected_slimit))
+    expected_wlimit = -178.217598362366
+    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.westlimit), expected_wlimit,
+                           places=get_number_of_decimal_places(expected_wlimit))
 
 
 def assert_ref_time_series_file_type_metadata(self):
@@ -672,3 +680,10 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
 def get_path_with_no_file_extension(path):
     path_no_ext, _ = os.path.splitext(path)
     return path_no_ext
+
+
+def get_number_of_decimal_places(number):
+    """A helper to find the number of decimal places in the specified number that's used for rounding the number
+    """
+    _, decimal_str = str(number).split('.')
+    return len(decimal_str)

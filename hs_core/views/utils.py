@@ -9,6 +9,7 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+from urllib import parse
 from uuid import uuid4
 
 import paramiko
@@ -694,9 +695,9 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     instance of Group are expected to
     be passed into this function
     """
-    email_to = kwargs.get('group_owner', user)
     context = {'request': request, 'user': user, 'explanation': kwargs.get('explanation', None)}
     if action_type == 'group_membership':
+        email_to = kwargs.get('group_owner', user)
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
@@ -706,9 +707,33 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
 
         context['group'] = kwargs.pop('group')
     elif action_type == 'group_auto_membership':
+        email_to = kwargs.get('group_owner', user)
         context['group'] = kwargs.pop('group')
         action_url = ''
+    elif action_type == 'metadata_review':
+        user_from = kwargs.get('user_from', None)
+        context['user_from'] = user_from
+        email_to = kwargs.get('email_to', user)
+        resource = kwargs.pop('resource')
+        context['resource'] = resource
+        action_url = reverse(action_type, kwargs={
+            "shortkey": resource.short_id,
+            "action": "approve",
+            "uidb36": int_to_base36(user.id),
+            "token": without_login_date_token_generator.make_token(email_to),
+        }) + "?next=" + (next_url(request) or "/")
+        context['spatial_coverage'] = get_coverage_data_dict(resource)
+
+        context['reject_url'] = action_url.replace("approve", "reject")
+        reject_subject = parse.quote("Publication Request Rejected")
+        reject_body = parse.quote("Your Publication Request for the following resource was rejected: ")
+        href_for_mailto_reject = (
+            f"mailto:{user_from.email}?subject={ reject_subject }&body={ reject_body }"
+            f'{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }'
+        )
+        context['href_for_mailto_reject'] = href_for_mailto_reject
     else:
+        email_to = kwargs.get('group_owner', user)
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
             "token": without_login_date_token_generator.make_token(email_to)
