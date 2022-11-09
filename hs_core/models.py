@@ -1157,14 +1157,19 @@ class GeospatialRelation(AbstractRelation):
             relative_id = relation.value.split("ref/").pop()
             collection = relative_id.split("/")[0]
             id = relative_id.split("/")[1]
-            uri = f"https://reference.geoconnex.us/collections/{collection}/items/{id}?f=json&lang=en-US&skipGeometry=true"
+            uri = f"https://reference.geoconnex.us/collections/{collection}/items/{id}?f=jsonld&lang=en-US&skipGeometry=true"
 
             response = urllib.request.urlopen(uri)
-            str = response.read()
-            data = json.loads(str)
-            properties = data['properties']
-            # TODO: 4808 have to parse name independently...
-            name = properties['NAME']
+            str_response = response.read()
+            from pyld import jsonld
+            context = {
+                "schema": "https://schema.org/",
+                "type": "@type",
+                "gsp": "http://www.opengis.net/ont/geosparql#"
+            }
+            str_response = json.loads(str_response)
+            compacted = jsonld.compact(str_response, context)
+            name = compacted['schema:name']
             text = f"{name} [{relative_id}]"
             if relation.text != text:
                 print(f"Updating {relation.value}, '{relation.text}' to '{text}'")
