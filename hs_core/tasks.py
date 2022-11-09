@@ -185,7 +185,7 @@ def manage_task_nightly():
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))
 
-    if msg_lst and not settings.DEBUG and "beta" not in Site.objects.get_current().domain:
+    if msg_lst and not settings.DISABLE_TASK_EMAILS:
         email_msg = '\n'.join(msg_lst)
         subject = 'Notification of pending DOI deposition/activation of published resources'
         # send email for people monitoring and follow-up as needed
@@ -237,7 +237,7 @@ def send_over_quota_emails():
 
                 msg_str += '\n\nHydroShare Support'
                 subject = 'Quota warning'
-                if settings.DEBUG or "beta" in Site.objects.get_current().domain:
+                if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
                     logger.info("quota warning email not sent out on debug server but logged instead: "
                                 "{}".format(msg_str))
                 else:
