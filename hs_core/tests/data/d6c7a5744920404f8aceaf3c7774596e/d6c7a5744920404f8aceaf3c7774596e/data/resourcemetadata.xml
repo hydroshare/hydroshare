@@ -40,7 +40,6 @@
     <dc:creator>
       <rdf:Description>
         <hsterms:email>email@email.com</hsterms:email>
-        <hsterms:hydroshare_user_id rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">18</hsterms:hydroshare_user_id>
         <hsterms:name>user, cz</hsterms:name>
         <hsterms:organization>asdf</hsterms:organization>
         <hsterms:creatorOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</hsterms:creatorOrder>

@@ -4,6 +4,8 @@ from json import dumps
 
 from django.utils.html import format_html
 from django.conf import settings
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 from mezzanine import template
 
@@ -75,6 +77,19 @@ def app_on_open_with_list(content, arg):
 
 
 @register.filter
+def is_url(content):
+    """
+    Check whether the content is a valid URL
+    """
+    validator = URLValidator()
+    try:
+        validator(content)
+    except ValidationError:
+        return False
+    return True
+
+
+@register.filter
 def published_date(res_obj):
     if res_obj.raccess.published:
         return res_obj.metadata.dates.all().filter(type='published').first().start_date
@@ -101,7 +116,7 @@ def resource_first_author(content):
             break
 
     if first_creator:
-        if first_creator.name and first_creator.relative_uri:
+        if first_creator.name and first_creator.relative_uri and first_creator.is_active_user:
             return format_html('<a href="{desc}">{name}</a>',
                                desc=first_creator.relative_uri,
                                name=first_creator.name)

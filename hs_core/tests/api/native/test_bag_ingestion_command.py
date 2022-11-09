@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
+import os
+import zipfile
 from unittest import TestCase
 
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 
 from hs_composite_resource.models import CompositeResource
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
-from django.core.management import call_command
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.tests.api.utils import zip_up
-import os
-import zipfile
 
 
 class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
@@ -38,9 +38,10 @@ class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
 
     def tearDown(self):
         super(TestIngestBag, self).tearDown()
+        for res in CompositeResource.objects.all():
+            res.delete()
         self.user.delete()
         self.hs_group.delete()
-        CompositeResource.objects.all().delete()
         os.remove('hs_core/tests/data/d6c7a5744920404f8aceaf3c7774596e.zip')
 
     def test_bag_ingestion_command(self):

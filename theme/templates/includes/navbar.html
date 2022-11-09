@@ -224,7 +224,7 @@
             <div id="app-notifications">
                 <div class="notifications--header">
                     <h4>Notifications <span v-if="tasks.length">(${tasks.length})</span></h4>
-                    <a id="btn-notifications-clear" v-on:click="clear">Clear</a>
+                    <a role="button" id="btn-notifications-clear" v-on:click="clear">Clear</a>
                 </div>
 
                 <div v-if="loading" class="default-content">
