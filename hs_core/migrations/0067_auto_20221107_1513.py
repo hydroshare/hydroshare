@@ -5,15 +5,14 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 import django.db.models.deletion
 import hs_core.hs_rdf
-from hs_core.models import Relation, BaseResource
-from django.core.management import call_command
+from hs_core.models import Relation, BaseResource, GeospatialRelation
 
 
 def migrate_relations_to_geoconnex(apps, schema_editor):
     for relation in Relation.objects.filter(type="relation"):
         res = BaseResource.objects.get(object_id=relation.object_id)
         if "geoconnex" in relation.value:
-            print(f"Attempting to create new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
+            print(f"\nAttempting to create new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
             try:
                 res.metadata.create_element('geospatialrelation',
                                             type='relation',
@@ -25,6 +24,10 @@ def migrate_relations_to_geoconnex(apps, schema_editor):
             relation.delete()
         else:
             print(f"Encountered resource with non geoconnex generic 'relation' type. Res_id:{res.short_id}")
+
+
+def get_geoconnex_text(apps, schema_editor):
+    GeospatialRelation.sync_all_text()
 
 
 class Migration(migrations.Migration):
@@ -56,5 +59,5 @@ class Migration(migrations.Migration):
             name='type',
             field=models.CharField(choices=[('isPartOf', 'The content of this resource is part of'), ('hasPart', 'This resource includes'), ('isExecutedBy', 'The content of this resource can be executed by'), ('isCreatedBy', 'The content of this resource was created by a related App or software program'), ('isVersionOf', 'This resource updates and replaces a previous version'), ('isReplacedBy', 'This resource has been replaced by a newer version'), ('isDescribedBy', 'This resource is described by'), ('conformsTo', 'This resource conforms to established standard described by'), ('hasFormat', 'This resource has a related resource in another format'), ('isFormatOf', 'This resource is a different format of'), ('isRequiredBy', 'This resource is required by'), ('requires', 'This resource requires'), ('isReferencedBy', 'This resource is referenced by'), ('references', 'The content of this resource references'), ('replaces', 'This resource replaces'), ('source', 'The content of this resource is derived from'), ('isSimilarTo', 'The content of this resource is similar to')], max_length=100),
         ),
-        migrations.RunPython(call_command('update_relations_from_geoconnex'))
+        migrations.RunPython(get_geoconnex_text)
     ]
