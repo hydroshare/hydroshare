@@ -1324,9 +1324,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                           'geospatialrelation', type='relation'))
 
         # test update geospatialrelation type raises exception
-        rel_to_update = self.res.metadata.geospatialrelations.all().filter(type='relation').first()
+        rel_to_update = self.res.metadata.geospatialrelations.first()
         self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'geospatialrelation', rel_to_update.id,
-                                         type='relation', value="dummy value 2"))
+                                                                              type='isVersionOf', value="dummy value 2"))
 
         # test update geospatialrelation value
         rel_to_update = self.res.metadata.geospatialrelations.all().filter(type='relation').first()
@@ -1364,9 +1364,13 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # at this point there should not be any geospatialrelation elements
         self.assertEqual(self.res.metadata.geospatialrelations.all().count(), 0,
                          msg="Resource has geospatialrelation element(s) after deleting all.")
+        
+        # add a geospatialrelation element
+        resource.create_metadata_element(self.res.short_id,'geospatialrelation', type='relation',
+                                         value='https://geoconnex.us/ref/dams/001')
 
         # test update geospatialrelation value
-        rel_to_update = self.res.metadata.geospatialrelations.all().filter(type='relation').first()
+        rel_to_update = self.res.metadata.geospatialrelations.first()
         resource.update_metadata_element(self.res.short_id, 'geospatialrelation', rel_to_update.id, type='relation',
                                          value='Another VALUE')
         self.assertIn('relation', [rel.type for rel in self.res.metadata.geospatialrelations.all()],

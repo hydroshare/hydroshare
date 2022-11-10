@@ -158,7 +158,8 @@ class TestCreateResource(HSRESTTestCase):
 
         # geospatialrelation
         metadata.append({'geospatialrelation': {'type': 'relation',
-                                                'value': 'https://geoconnex.us/ref/dams/1083460'}})
+                                                'value': 'https://geoconnex.us/ref/dams/1083460',
+                                                'text': 'Bonnie Meade [dams/1083460]}})
 
         # identifier
         metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})
@@ -226,6 +227,7 @@ class TestCreateResource(HSRESTTestCase):
         geospatialrelation = resource.metadata.geospatialrelations.all().first()
         self.assertEqual(geospatialrelation.type, 'relation')
         self.assertEqual(geospatialrelation.value, 'https://geoconnex.us/ref/dams/1083460')
+        self.assertEqual(geospatialrelation.text, 'Bonnie Meade [dams/1083460]')
 
         # there should be 2 identifiers
         self.assertEqual(resource.metadata.identifiers.all().count(), 2)

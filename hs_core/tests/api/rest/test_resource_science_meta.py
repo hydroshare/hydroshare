@@ -127,6 +127,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
+        # TODO 4808 broken test
         self.assertEqual(self.resource.metadata.geospatialrelations.all().count(), 2)
         self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
         self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
@@ -266,6 +267,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
+        # TODO 4808 broken test
         self.assertEqual(self.resource.metadata.geospatialrelations.all().count(), 2)
         self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
         self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
