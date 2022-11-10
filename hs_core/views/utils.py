@@ -1095,6 +1095,13 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
+    # validate file/folder names in the zip file - checking for banned character
+    folder_path, file_name = os.path.split(zip_with_rel_path[len('data/contents/'):])
+    res_zip_file = ResourceFile.get(resource=resource, folder=folder_path, file=file_name)
+    if not ResourceFile.is_zip_file_valid(res_zip_file):
+        err_msg = "Zip file contains files/folders that have character(s) in file/folder name that are not allowed."
+        raise ValidationError(err_msg)
+
     unzip_path = None
     try:
         if unzip_to_folder:
