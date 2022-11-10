@@ -266,7 +266,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                  }
             ]
         }
-        # response = self.client.put(sysmeta_url, put_data, format='json')
+        response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
