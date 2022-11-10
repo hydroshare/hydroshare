@@ -3,12 +3,15 @@ import unittest
 
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import SuspiciousFileOperation
+from django.core.files.uploadedfile import UploadedFile
+from rest_framework.exceptions import ValidationError
 
+from hs_core.hydroshare import add_file_to_resource
 from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.hydroshare.users import create_account
 from hs_core.models import ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_core.views.utils import move_or_rename_file_or_folder
+from hs_core.views.utils import move_or_rename_file_or_folder, unzip_file
 from ..models import CompositeResource
 
 
@@ -30,6 +33,13 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
                                    owner=self.user,
                                    title='Test Resource',
                                    metadata=[], )
+
+        self.zip_file_name = 'test.zip'
+        self.zip_file_valid = 'hs_composite_resource/tests/data/{}'.format(self.zip_file_name)
+        self.zip_file_bad_folder_name = 'bad-folder.zip'
+        self.zip_file_bad_folder = 'hs_composite_resource/tests/data/{}'.format(self.zip_file_bad_folder_name)
+        self.zip_file_bad_file_name = 'bad-file.zip'
+        self.zip_file_bad_file = 'hs_composite_resource/tests/data/{}'.format(self.zip_file_bad_file_name)
 
         # create files - filenames are compliant
         self.compliant_file_name_1 = "test 1.txt"
@@ -332,3 +342,46 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         self.assertIn(non_preferred_folders, non_preferred_paths)
         non_preferred_folders = f"{parent_folder}/{child_folder}"
         self.assertIn(non_preferred_folders, non_preferred_paths)
+
+    def test_unzip_zipfile_validation(self):
+        """here we are testing unzipping of a resource file where the zip file contains files that have names with
+        banned characters as result the unzipping should fail"""
+
+        # this zip file has no files or folders that have banned character in file/folder name - unzip should work
+        file_to_upload = UploadedFile(file=open(self.zip_file_valid, 'rb'),
+                                      name=os.path.basename(self.zip_file_valid))
+
+        res_zip_file = add_file_to_resource(self.res, file_to_upload, check_target_folder=True)
+        self.assertEqual(self.res.files.count(), 1)
+        self.assertTrue(ResourceFile.is_zip_file_valid(res_zip_file))
+        zip_file_rel_path = os.path.join('data', 'contents', res_zip_file.short_path)
+        unzip_file(self.user, self.res.short_id, zip_file_rel_path, bool_remove_original=False)
+        for res_file in self.res.files.all():
+            res_file.delete()
+
+        # this zip file has a folder that contains the character '|' (one of the banned characters)
+        file_to_upload = UploadedFile(file=open(self.zip_file_bad_folder, 'rb'),
+                                      name=os.path.basename(self.zip_file_bad_folder_name))
+
+        res_zip_file = add_file_to_resource(self.res, file_to_upload, check_target_folder=True)
+        self.assertEqual(self.res.files.count(), 1)
+        # zip file validation should fail
+        self.assertFalse(ResourceFile.is_zip_file_valid(res_zip_file))
+        zip_file_rel_path = os.path.join('data', 'contents', res_zip_file.short_path)
+        # unzip should fail
+        with self.assertRaises(ValidationError):
+            unzip_file(self.user, self.res.short_id, zip_file_rel_path, bool_remove_original=False)
+
+        # this zip file has a file and this filename contains the character '?' (one of the banned characters)
+        file_to_upload = UploadedFile(file=open(self.zip_file_bad_file, 'rb'),
+                                      name=os.path.basename(self.zip_file_bad_file_name))
+
+        res_zip_file = add_file_to_resource(self.res, file_to_upload, check_target_folder=True)
+        self.assertEqual(self.res.files.count(), 2)
+        # zip file validation should fail
+        self.assertFalse(ResourceFile.is_zip_file_valid(res_zip_file))
+
+        # unzip should fail
+        zip_file_rel_path = os.path.join('data', 'contents', res_zip_file.short_path)
+        with self.assertRaises(ValidationError):
+            unzip_file(self.user, self.res.short_id, zip_file_rel_path, bool_remove_original=False)
