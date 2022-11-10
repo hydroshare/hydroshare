@@ -1000,6 +1000,7 @@ const geoconnexApp = new Vue({
             ) {
               return;
             }
+            // TODO: 4820
             geoconnexApp.map.fitBounds(bounds, {
               maxZoom: geoconnexApp.fitBoundsMaxZoom,
             });
