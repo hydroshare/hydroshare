@@ -6,8 +6,9 @@ import os.path
 import re
 import unicodedata
 from uuid import uuid4
-
+import zipfile
 import arrow
+import shutil
 from dateutil import parser
 import pathvalidate
 
@@ -3276,6 +3277,36 @@ class ResourceFile(ResourceFileIRODSMixin):
                     return False
 
         return True
+
+    @classmethod
+    def is_zip_file_valid(cls, res_zipfile):
+        """Validates file/folder name of all files/folders contained in the specified zip file to check if any of them
+        contains any of the banned characters.
+        :param res_zipfile: a resource file that's a zip file
+        """
+
+        from .hydroshare import get_file_from_irods
+        zip_temp_file_path = get_file_from_irods(resource=res_zipfile.resource, file_path=res_zipfile.storage_path)
+        temp_dir = os.path.dirname(zip_temp_file_path)
+        with zipfile.ZipFile(zip_temp_file_path, 'r') as zip_file:
+            is_valid = True
+            for filepath in zip_file.namelist():
+                dir_path, file_name = os.path.split(filepath)
+                if not cls.is_filename_valid(file_name):
+                    is_valid = False
+                    break
+                if dir_path:
+                    folders = dir_path.split("/")
+                    for folder in folders:
+                        if not cls.is_folder_name_valid(folder):
+                            is_valid = False
+                            break
+                if not is_valid:
+                    break
+
+        if os.path.isdir(temp_dir):
+            shutil.rmtree(temp_dir)
+        return is_valid
 
     @classmethod
     def get(cls, resource, file, folder=''):
