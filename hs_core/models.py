@@ -3909,6 +3909,35 @@ class BaseResource(Page, AbstractResource):
             self.setAVU("bag_modified", True)
             self.setAVU("metadata_dirty", True)
 
+    def get_non_preferred_path_names(self):
+        """Returns a list of file/folder paths that do not meet hydroshare file/folder preferred naming convention"""
+
+        def find_non_preferred_folder_paths(dir_path):
+            if not dir_path.startswith(self.file_path):
+                dir_path = os.path.join(self.file_path, dir_path)
+
+            folders, _, _ = istorage.listdir(dir_path)
+            for folder in folders:
+                if folder not in not_preferred_paths and not ResourceFile.check_for_preferred_name(folder):
+                    folder_path = os.path.join(dir_path, folder)
+                    folder_path = folder_path[len(self.file_path) + 1:]
+                    not_preferred_paths.append(folder_path)
+                subdir_path = os.path.join(dir_path, folder)
+                find_non_preferred_folder_paths(subdir_path)
+
+        not_preferred_paths = []
+        istorage = self.get_irods_storage()
+        # check for non-conforming file names
+        for res_file in self.files.all():
+            short_path = res_file.short_path
+            _, file_name = os.path.split(short_path)
+            if not ResourceFile.check_for_preferred_name(file_name):
+                not_preferred_paths.append(short_path)
+
+        # check for non-conforming folder names
+        find_non_preferred_folder_paths(self.file_path)
+        return not_preferred_paths
+
 
 # TODO Deprecated
 class GenericResource(BaseResource):
