@@ -7,6 +7,8 @@ var coordinatesPicker;
 var currentInstance; // Keeps track of the instance to work with
 var allOverlaysFileType = [];
 let leafletFeatureGroup;
+const coordPickerBoxMaxZoom = 18;
+const coordPickerPointMaxZoom = 7;
 
 (function ($) {
   $.fn.coordinatesPicker = function () {
@@ -123,7 +125,7 @@ function drawPickerMarker(latLng) {
   marker.addTo(coordinatesPicker);
 
   // Center map at new marker
-  coordinatesPicker.fitBounds(leafletFeatureGroup.getBounds(), { maxZoom: 7 });
+  coordinatesPicker.fitBounds(leafletFeatureGroup.getBounds(), { maxZoom: coordPickerPointMaxZoom });
   processDrawingFileType(marker.getLatLng(), "marker");
 }
 
@@ -136,11 +138,13 @@ function drawPickerRectangle(bounds) {
 
   rectangle.addTo(coordinatesPicker);
 
-  coordinatesPicker.fitBounds(rectangle.getBounds(), { maxZoom: 7 });
+  coordinatesPicker.fitBounds(rectangle.getBounds(), { maxZoom: coordPickerBoxMaxZoom });
   processDrawingFileType(rectangle.getBounds(), "rectangle");
 }
 
 function initMapFileType() {
+  if (coordinatesPicker) return; // already initialized
+
   // Initialize Map
   leafletFeatureGroup = L.featureGroup();
 
@@ -163,7 +167,7 @@ function initMapFileType() {
     {
       attribution:
         'Map tiles by <a href="http://stamen.com" target="_blank">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0" target="_blank">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org" target="_blank">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright" target="_blank">ODbL</a>.',
-      maxZoom: 18,
+      maxZoom: coordPickerBoxMaxZoom,
     }
   );
 
@@ -172,14 +176,14 @@ function initMapFileType() {
     {
       attribution:
         'Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
-      maxZoom: 18,
+      maxZoom: coordPickerBoxMaxZoom,
     }
   );
 
   const googleSat = L.tileLayer(
     "http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
     {
-      maxZoom: 20,
+      maxZoom: coordPickerBoxMaxZoom,
       subdomains: ["mt0", "mt1", "mt2", "mt3"],
     }
   );

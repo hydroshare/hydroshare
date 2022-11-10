@@ -6,6 +6,8 @@
 let coverageMap;
 let leafletMarkers;
 let allOverlays = [];
+const coverageMapBoxMaxZoom = 18;
+const coverageMapPointMaxZoom = 7;
 
 $(document).ready(function () {
   // Draw marker on text change
@@ -184,7 +186,7 @@ function initMap() {
     {
       attribution:
         'Map tiles by <a href="http://stamen.com" target="_blank">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0" target="_blank">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org" target="_blank">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright" target="_blank">ODbL</a>.',
-      maxZoom: 18,
+      maxZoom: coverageMapBoxMaxZoom,
     }
   );
 
@@ -193,14 +195,14 @@ function initMap() {
     {
       attribution:
         'Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
-      maxZoom: 18,
+      maxZoom: coverageMapBoxMaxZoom,
     }
   );
 
   const googleSat = L.tileLayer(
     "http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
     {
-      maxZoom: 20,
+      maxZoom: coverageMapBoxMaxZoom,
       subdomains: ["mt0", "mt1", "mt2", "mt3"],
     }
   );
@@ -316,7 +318,14 @@ function initMap() {
       L.DomEvent.on(recenterButton, "click", (e) => {
         e.stopPropagation();
         try {
-          coverageMap.fitBounds(leafletMarkers.getBounds(), { maxZoom: 7 });
+          const checked = $("#div_id_type input:checked").val();
+          const spatialType = checked || spatial_coverage_type;
+          coverageMap.fitBounds(leafletMarkers.getBounds(), {
+            maxZoom:
+              spatialType === "point"
+                ? coverageMapPointMaxZoom
+                : coverageMapBoxMaxZoom,
+          });
         } catch (error) {
           coverageMap.setView([30, 0], 1);
         }
@@ -387,7 +396,7 @@ function drawMarker(latLng) {
   marker.addTo(coverageMap);
 
   // Center map at new marker
-  coverageMap.fitBounds(leafletMarkers.getBounds(), { maxZoom: 7 });
+  coverageMap.fitBounds(leafletMarkers.getBounds(), { maxZoom: coverageMapPointMaxZoom });
 }
 
 function drawRectangleOnTextChange() {
@@ -452,7 +461,7 @@ function drawRectangle(bounds) {
   leafletMarkers.addLayer(rectangle);
 
   rectangle.addTo(coverageMap);
-  coverageMap.fitBounds(rectangle.getBounds(), { maxZoom: 7 });
+  coverageMap.fitBounds(rectangle.getBounds(), { maxZoom: coverageMapBoxMaxZoom });
 }
 
 function processDrawing(coordinates, shape) {
