@@ -2856,6 +2856,11 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.resource_file.name
 
     @classmethod
+    def banned_symbols(cls):
+        """returns a list of banned characters for file/folder name"""
+        return r'\/:*?"<>|'
+
+    @classmethod
     def create(cls, resource, file, folder='', source=None):
         """Create custom create method for ResourceFile model.
 
@@ -2900,8 +2905,8 @@ class ResourceFile(ResourceFileIRODSMixin):
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
             filename = os.path.basename(file.name)
-            if not ResourceFile.is_filename_compliant(filename):
-                raise ValidationError("Filename is not compliant as per Hydroshare requirements")
+            if not ResourceFile.is_filename_valid(filename):
+                raise SuspiciousFileOperation("Filename is not compliant with Hydroshare requirements")
 
             if resource.is_federated:
                 kwargs['resource_file'] = None
@@ -3210,65 +3215,66 @@ class ResourceFile(ResourceFileIRODSMixin):
     # classmethods do things that query or affect all files.
 
     @classmethod
-    def is_filename_compliant(cls, filename):
+    def check_for_preferred_name(cls, file_folder_name):
+        """Checks if the file or folder name meets the preferred name requirements"""
+
+        _ALLOWED_SYMBOLS = [".", "-", "_"]
+        # check for symbols
+        sanitized_name = pathvalidate.replace_symbol(text=file_folder_name,
+                                                     exclude_symbols=_ALLOWED_SYMBOLS)
+
+        if len(file_folder_name) != len(sanitized_name):
+            # one or more symbols that are not allowed was found
+            return False
+        for char in file_folder_name:
+            if char.isalpha() or char.isdigit() or char in _ALLOWED_SYMBOLS:
+                continue
+            return False
+        return True
+
+    @classmethod
+    def is_filename_valid(cls, filename):
         """Checks if the uploaded file has filename that complies to the hydroshare requirements
         :param  filename: Name of the file to check
         """
-        return cls._is_folder_file_name_compliant(name_to_check=filename)
+        return cls._is_folder_file_name_valid(name_to_check=filename)
 
     @classmethod
-    def is_folder_name_compliant(cls, folder_name):
+    def is_folder_name_valid(cls, folder_name):
         """Checks if the folder name complies to the hydroshare requirements
         :param  folder_name: Name of the folder to check
         """
-        return cls._is_folder_file_name_compliant(name_to_check=folder_name, file=False)
+        return cls._is_folder_file_name_valid(name_to_check=folder_name, file=False)
 
     @classmethod
-    def _is_folder_file_name_compliant(cls, name_to_check, file=True):
+    def _is_folder_file_name_valid(cls, name_to_check, file=True):
         """Helper method to check if a file/folder name is compliant with hydroshare requirements
         :param  name_to_check: Name of the file or folder to check
         :param  file: A flag to indicate if name_to_check is the filename
         """
 
-        _ALLOWED_SYMBOLS = [".", "-", "_"]
-
         # space at the start or at the end is not allowed
         if len(name_to_check.strip()) != len(name_to_check):
             return False
 
-        # check for symbols
-        sanitized_name = pathvalidate.replace_symbol(text=name_to_check,
-                                                     exclude_symbols=_ALLOWED_SYMBOLS)
-
-        if len(name_to_check) != len(sanitized_name):
-            # one or more symbols that are not allowed was found
-            return False
-
-        if file:
-            # checking for filename
-            if name_to_check.startswith(".") or name_to_check.endswith("."):
-                return False
-        else:
-            # checking for folder name
-            # allow folder name to start with char "."
-            if name_to_check.find(".") > 0:
+        # check for banned symbols
+        for symbol in cls.banned_symbols():
+            if symbol in name_to_check:
                 return False
 
-        if '..' in name_to_check:
+        if name_to_check in (".", ".."):
+            # these represents special meaning in linux - current (.) dir and parent dir (..)
             return False
 
-        if file:
-            # checking for filename
-            _, file_ext = os.path.splitext(name_to_check)
-            if file_ext:
-                file_ext = file_ext[1:]
-                if not any(char.isalpha() for char in file_ext):
+        if not file:
+            folders = name_to_check.split("/")
+            for folder in folders:
+                if len(folder.strip()) != len(folder):
+                    return False
+                if folder in (".", ".."):
+                    # these represents special meaning in linux - current (.) dir and parent dir (..)
                     return False
 
-        for char in name_to_check:
-            if char.isalpha() or char.isdigit() or char in _ALLOWED_SYMBOLS:
-                continue
-            return False
         return True
 
     @classmethod
