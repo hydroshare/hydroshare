@@ -263,10 +263,6 @@ const geoconnexApp = new Vue({
           };
           geoconnexApp.selectedReferenceFeatures.push(featureValues);
         }
-        geoconnexApp.fitMapToFeatures({
-          group: null,
-          overrideShouldFit: true,
-        });
         geoconnexApp.loadingRelations = false;
       } catch (e) {
         const message =
@@ -700,7 +696,6 @@ const geoconnexApp = new Vue({
       } catch (e) {
         geoconnexApp.error("Error attempting to show spatial extent", e);
       }
-      geoconnexApp.fitMapToFeatures({ group: null, overrideShouldFit: true });
     },
     initializeLeafletMap() {
       const geoconnexApp = this;
@@ -826,7 +821,6 @@ const geoconnexApp = new Vue({
       // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
       geoconnexApp.map.setView([30, 0], 1);
       geoconnexApp.setMapEvents();
-      geoconnexApp.fitMapToFeatures();
     },
     addSearchFeaturesToMap(features, collectionOverride = null) {
       for (const feature of features) {
@@ -1000,7 +994,6 @@ const geoconnexApp = new Vue({
             ) {
               return;
             }
-            // TODO: 4820
             geoconnexApp.map.fitBounds(bounds, {
               maxZoom: geoconnexApp.fitBoundsMaxZoom,
             });
@@ -1376,14 +1369,17 @@ const geoconnexApp = new Vue({
       geoconnexApp.initializeLeafletMap();
 
       geoconnexApp.resMode == "Edit" && geoconnexApp.fetchCollections(false);
-      geoconnexApp.loadResourceMetadataRelations();
+      await geoconnexApp.loadResourceMetadataRelations();
 
-      // wait for spatial coverage map to load before getting extent
-      await geoconnexApp
+      if (geoconnexApp.resMode == "Edit"){
+        // wait for spatial coverage map to load before getting extent
+        await geoconnexApp
         .until((_) => coverageMap)
         .then(() => {
           geoconnexApp.updateAppWithResSpatialExtent();
         });
+      }
+      geoconnexApp.fitMapToFeatures({ group: null, overrideShouldFit: true });
     }
     geoconnexApp.isLoading = false;
   },
