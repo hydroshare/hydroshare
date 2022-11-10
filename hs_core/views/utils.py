@@ -1303,25 +1303,31 @@ def create_folder(res_id, folder_path, migrating_resource=False):
     :return:
     """
     if __debug__:
-        assert(folder_path.startswith("data/contents/"))
+        assert folder_path.startswith("data/contents/")
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not migrating_resource:
         raise ValidationError("Folder creation is not allowed for a published resource")
     istorage = resource.get_irods_storage()
-    coll_path = os.path.join(resource.root_path, folder_path)
-
+    # reconstruct the folder_path by stripping each of the folders in the path and then joining them back
+    folders = [folder.strip() for folder in folder_path[len("data/contents/"):].split("/")]
+    folder_path = os.path.join(*folders)
+    coll_path = os.path.join(resource.file_path, folder_path)
     if not resource.supports_folder_creation(coll_path):
         raise ValidationError("Folder creation is not allowed here. "
                               "The target folder seems to contain aggregation(s)")
 
-    folder_name = os.path.basename(folder_path)
-    if not ResourceFile.is_folder_name_compliant(folder_name):
-        raise ValidationError(f"Folder name ({folder_name}) is not compliant with Hydroshare requirements")
-
     # check for duplicate folder path
+    folder_path = coll_path[len(resource.file_path) + 1:]
     if istorage.exists(coll_path):
-        raise ValidationError("Folder already exists")
+        if any(["/./" in coll_path, "/../" in coll_path, coll_path.endswith("/."), coll_path.endswith("/..")]):
+            raise SuspiciousFileOperation(f"Folder path ({folder_path}) is not compliant with Hydroshare requirements")
+        raise ValidationError(f"Folder ({coll_path}) already exists")
+
+    for folder in folders:
+        if not ResourceFile.is_folder_name_valid(folder):
+            raise SuspiciousFileOperation(f"Folder name ({folder}) is not compliant with Hydroshare requirements")
+
     istorage.session.run("imkdir", None, '-p', coll_path)
 
 
@@ -1409,15 +1415,16 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     _, tgt_ext = os.path.splitext(tgt_base_name)
     if istorage.isFile(src_full_path) and tgt_ext:
         # renaming a file - need to validate the new file name
-        if not ResourceFile.is_filename_compliant(tgt_base_name):
-            raise ValidationError("Filename is not compliant with Hydroshare requirements")
+        if not ResourceFile.is_filename_valid(tgt_base_name):
+            raise SuspiciousFileOperation("Filename is not compliant with Hydroshare requirements")
     elif istorage.isDir(src_full_path):
         src_folder_name = os.path.basename(src_full_path)
         tgt_folder_name = os.path.basename(tgt_full_path)
         if src_folder_name != tgt_folder_name:
             # renaming a folder
-            if not ResourceFile.is_folder_name_compliant(tgt_folder_name):
-                raise ValidationError(f"Folder name ({tgt_folder_name}) is not compliant with Hydroshare requirements")
+            if not ResourceFile.is_folder_name_valid(tgt_folder_name):
+                err_msg = f"Folder name ({tgt_folder_name}) is not compliant with Hydroshare requirements"
+                raise SuspiciousFileOperation(err_msg)
 
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
@@ -1470,14 +1477,14 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     _, src_ext = os.path.splitext(src_file_name)
     if src_ext and src_file_name != tgt_file_name:
         # renaming a file
-        if not ResourceFile.is_filename_compliant(tgt_file_name):
+        if not ResourceFile.is_filename_valid(tgt_file_name):
             raise ValidationError(f"Filename ({tgt_file_name}) is not compliant with Hydroshare requirements")
     else:
         src_folder_name = os.path.basename(src_full_path)
         tgt_folder_name = os.path.basename(tgt_full_path)
         if src_folder_name != tgt_folder_name:
             # renaming a folder
-            if not ResourceFile.is_folder_name_compliant(tgt_folder_name):
+            if not ResourceFile.is_folder_name_valid(tgt_folder_name):
                 raise ValidationError(f"Folder name ({tgt_folder_name}) is not compliant with Hydroshare requirements")
 
     istorage.moveFile(src_full_path, tgt_full_path)
