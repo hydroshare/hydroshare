@@ -159,7 +159,7 @@ class TestCreateResource(HSRESTTestCase):
         # geospatialrelation
         metadata.append({'geospatialrelation': {'type': 'relation',
                                                 'value': 'https://geoconnex.us/ref/dams/1083460',
-                                                'text': 'Bonnie Meade [dams/1083460]}})
+                                                'text': 'Bonnie Meade [dams/1083460]'}})
 
         # identifier
         metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})

@@ -4309,7 +4309,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """
         from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
             RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
-            RelationValidationForm, FundingAgencyValidationForm
+            RelationValidationForm, GeospatialRelationValidationForm, FundingAgencyValidationForm
 
         validation_forms_mapping = {'title': TitleValidationForm,
                                     'description': AbstractValidationForm,
@@ -4318,6 +4318,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                                     'creator': CreatorValidationForm,
                                     'contributor': ContributorValidationForm,
                                     'relation': RelationValidationForm,
+                                    'geospatialrelation': GeospatialRelationValidationForm,
                                     'fundingagency': FundingAgencyValidationForm
                                     }
         # updating non-repeatable elements
@@ -4332,7 +4333,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                             raise ValidationError(err_string)
                 self.update_non_repeatable_element(element_name, metadata)
             for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation',
-                                 'subject'):
+                                 'geospatialrelation', 'subject'):
                 subjects = []
                 for dict_item in metadata:
                     if element_name in dict_item:

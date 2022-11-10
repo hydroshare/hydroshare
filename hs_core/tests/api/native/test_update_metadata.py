@@ -141,7 +141,6 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         relation = self.res.metadata.relations.filter(type='isPartOf').first()
         self.assertEqual(relation.value, 'http://hydroshare.org/resource/001')
 
-        # TODO: 4808 broken test
         self.assertEqual(self.res.metadata.geospatialrelations.all().count(), 1,
                          msg="Number of geospatialrelation elements is not equal to 1")
         geospatialrelation = self.res.metadata.geospatialrelations.first()
