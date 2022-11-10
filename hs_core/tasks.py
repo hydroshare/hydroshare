@@ -16,7 +16,6 @@ from celery import shared_task
 from celery.schedules import crontab
 from django.conf import settings
 from django.core.mail import send_mail
-from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
