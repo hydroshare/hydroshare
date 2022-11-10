@@ -2,8 +2,7 @@ import os
 import unittest
 
 from django.contrib.auth.models import Group, User
-from django.core.exceptions import ValidationError
-from rest_framework.exceptions import ValidationError as DRF_ValidationError
+from django.core.exceptions import SuspiciousFileOperation
 
 from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.hydroshare.users import create_account
@@ -33,14 +32,24 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
                                    metadata=[], )
 
         # create files - filenames are compliant
-        self.compliant_file_name_1 = "test-1.txt"
+        self.compliant_file_name_1 = "test 1.txt"
         self.compliant_file_name_2 = "tes-2.txt"
         self.compliant_non_english_file_name = "résumé-2.txt"
+        self.bad_files = []
+        for banned_symbol in ResourceFile.banned_symbols():
+            if banned_symbol == '/':
+                continue
+            bad_file_name = f"my-test{banned_symbol}.txt"
+            test_file = open(bad_file_name, 'w')
+            test_file.write("Test text file name contains banned characters")
+            test_file.close()
+            test_file = open(bad_file_name, 'rb')
+            self.bad_files.append(test_file)
 
-        # filename contains a space
-        self.non_compliant_file_name_1 = "test 1.txt"
-        # filename contains a characters '(' and ')'
-        self.non_compliant_file_name_2 = "test-(2).txt"
+        # filename contains a space at the start
+        self.non_compliant_file_name_1 = " test-1.txt"
+        # filename contains a space at the end
+        self.non_compliant_file_name_2 = "test-2.txt "
 
         test_file = open(self.compliant_file_name_1, 'w')
         test_file.write("Test text file in test-1.txt")
@@ -91,7 +100,11 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         self.non_compliant_file_2.close()
         os.remove(self.non_compliant_file_2.name)
 
-    def test_add_complianct_files(self):
+        for bad_file in self.bad_files:
+            bad_file.close()
+            os.remove(bad_file.name)
+
+    def test_add_compliant_files(self):
         """Here we are adding files that have filename that meets hydroshare file naming constraints
          These files should be successfully added to the resource
          """
@@ -105,10 +118,12 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         # add each file of resource to list
         file_list = []
         for f in self.res.files.all():
-            file_list.append(f.resource_file.name.split('/')[-1])
+            file_list.append(f.short_path)
+            print(f"added res filename:{f.short_path}")
 
         # check if the file name is in the list of files
-        self.assertTrue(self.compliant_file_name_1 in file_list, f"{self.compliant_file_name_1} has not been added")
+        sanitized_file_name = self.compliant_file_name_1.replace(" ", "_")
+        self.assertTrue(sanitized_file_name in file_list, f"{self.compliant_file_name_1} has not been added")
         self.assertTrue(self.compliant_file_name_2 in file_list, f"{self.compliant_file_name_2} has not been added")
         self.assertTrue(self.compliant_non_english_file_name in file_list,
                         f"{self.compliant_non_english_file_name} has not been added")
@@ -119,41 +134,48 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         """
         # resource should have no files
         self.assertEqual(self.res.files.all().count(), 0)
-
-        # add one file that is not compliant
-        with self.assertRaises(ValidationError):
-            add_resource_files(self.res.short_id, self.non_compliant_file_1)
+        self.assertGreater(len(self.bad_files), 0)
+        for bad_test_file in self.bad_files:
+            with self.assertRaises(SuspiciousFileOperation):
+                add_resource_files(self.res.short_id, bad_test_file)
 
         # resource should have no files
         self.assertEqual(self.res.files.all().count(), 0)
 
         # add one file that is not compliant and another file that is compliant
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(SuspiciousFileOperation):
             add_resource_files(self.res.short_id, self.non_compliant_file_1, self.compliant_file_2)
 
         # resource should have no files
         self.assertEqual(self.res.files.all().count(), 0)
 
+        # test adding each of the bad file should fail
+        for bad_test_file in (self.non_compliant_file_1, self.non_compliant_file_2):
+            with self.assertRaises(SuspiciousFileOperation):
+                add_resource_files(self.res.short_id, bad_test_file)
+
         # add 2 files - both non compliant
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(SuspiciousFileOperation):
             add_resource_files(self.res.short_id, self.non_compliant_file_1, self.non_compliant_file_2)
 
         # resource should have no files
         self.assertEqual(self.res.files.all().count(), 0)
 
     def test_create_resource_with_non_compliant_files(self):
-        """Here we are creating a resource with a file that has non-compliant file name.
-        Resource creation should fail.
+        """Here we are creating a resource with a file that has non-compliant file name (name with
+        at least one banned character). Resource creation should fail.
         """
         self.assertEqual(CompositeResource.objects.count(), 1)
 
         # create a resource with a non-compliant file upload - should fail
-        with self.assertRaises(ValidationError):
-            create_resource(resource_type='CompositeResource',
-                            owner=self.user,
-                            title='Test Resource',
-                            files=[self.non_compliant_file_1],
-                            metadata=[], )
+        self.assertGreater(len(self.bad_files), 0)
+        for bad_test_file in self.bad_files:
+            with self.assertRaises(SuspiciousFileOperation):
+                create_resource(resource_type='CompositeResource',
+                                owner=self.user,
+                                title='Test Resource',
+                                files=[bad_test_file],
+                                metadata=[], )
 
         self.assertEqual(CompositeResource.objects.count(), 1)
 
@@ -170,9 +192,11 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
         # now rename the file with non-compliant file name - which should fail
         src_path = f'data/contents/{res_file.file_name}'
-        tgt_path = f'data/contents/{self.non_compliant_file_name_1}'
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+        self.assertGreater(len(self.bad_files), 0)
+        for bad_test_file in self.bad_files:
+            tgt_path = f'data/contents/{bad_test_file.name}'
+            with self.assertRaises(SuspiciousFileOperation):
+                move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
         res_file = self.res.files.all().first()
         self.assertNotEqual(res_file.file_name, self.non_compliant_file_name_1)
@@ -181,36 +205,35 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         """Here we are testing when we try to create a folder with a name that doesn't meet hydroshare requirements,
         the folder creation should fail.
         """
-        # folder name contains space - non-compliant
-        new_folder = "my folder"
-        with self.assertRaises(DRF_ValidationError):
-            ResourceFile.create_folder(self.res, new_folder)
+        # folder name contains any of these banned characters - non-compliant
+        for banned_char in ResourceFile.banned_symbols():
+            if banned_char == "/":
+                continue
+            new_folder = f"my{banned_char}folder"
+            with self.assertRaises(SuspiciousFileOperation):
+                ResourceFile.create_folder(self.res, new_folder)
 
-        # folder name contains symbol not allowed (allowed symbols are: '-', '.', and '_') - non-compliant
-        new_folder = "my>folder"
-        with self.assertRaises(DRF_ValidationError):
-            ResourceFile.create_folder(self.res, new_folder)
+        # folder name either is either '.' or '..' - non-compliant
+        for new_folder in ("my folder/.", "another folder/.."):
+            with self.assertRaises(SuspiciousFileOperation):
+                ResourceFile.create_folder(self.res, new_folder)
 
-        # folder name contains space at the start - non-compliant
-        new_folder = " my-folder"
-        with self.assertRaises(DRF_ValidationError):
-            ResourceFile.create_folder(self.res, new_folder)
-
-        # folder name contains space at the end - non-compliant
-        new_folder = "my-folder "
-        with self.assertRaises(DRF_ValidationError):
-            ResourceFile.create_folder(self.res, new_folder)
-
-        # folder path contains space - non-compliant
-        multiple_folder_path = "folder-1/folder 2"
-        with self.assertRaises(DRF_ValidationError):
-            ResourceFile.create_folder(self.res, multiple_folder_path)
-
-        multiple_folder_path = "folder-1/folder-2"
+        multiple_folder_path = ".folder-1/folder-2"
         ResourceFile.create_folder(self.res, multiple_folder_path)
 
         multiple_folder_path = "folder-1/.folder-2"
         ResourceFile.create_folder(self.res, multiple_folder_path)
+        # folder name contains space at the start - still compliant
+        new_folder = " my-folder-1"
+        ResourceFile.create_folder(self.res, new_folder)
+
+        # folder name contains space at the end - still compliant
+        new_folder = "my-folder-2 "
+        ResourceFile.create_folder(self.res, new_folder)
+
+        # folder name contains space at the start and end - still compliant (system will trim the space)
+        new_folder = " my-folder-3 "
+        ResourceFile.create_folder(self.res, new_folder)
 
     def test_folder_rename_non_compliant(self):
         """Here we are testing that when we try to rename a folder of a resource using a non-compliant folder name,
@@ -223,21 +246,19 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
         # now rename the folder with non-compliant folder name - which should fail
         src_path = f'{base_path}/{new_folder}'
-        # folder name has a space - non-compliant
-        tgt_path = f'{base_path}/my folder'
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+        # folder name has banned characters - non-compliant
+        for banned_char in ResourceFile.banned_symbols():
+            if banned_char == "/":
+                continue
+            tgt_path = f'{base_path}/my{banned_char}folder'
+            with self.assertRaises(SuspiciousFileOperation):
+                move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
-        # folder name has a symbol which is not allowed (allowed symbols are: '-', '.', and '_') - non-compliant
-        tgt_path = f'{base_path}/my=folder'
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
-
-        # folder name has a symbol which is not allowed (allowed symbols are: '-', '.', and '_') - non-compliant
-        # symbol '.' is allowed only as the start character
-        tgt_path = f'{base_path}/my.folder'
-        with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+        # rename folder name is either '.' or '..' - non-compliant
+        for rename_folder in (".", ".."):
+            tgt_path = f'{base_path}/{rename_folder}'
+            with self.assertRaises(SuspiciousFileOperation):
+                move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
         tgt_path = f'{base_path}/.my_folder'
         move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
@@ -249,3 +270,65 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         src_path = tgt_path
         tgt_path = f'{base_path}/my-folder'
         move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+
+    def test_meets_preferred_naming_for_files_and_folders(self):
+        """here we are testing the function check_for_preferred_path_name() of the resource class which gets
+        a list of file/folder paths that do not meet the hydroshare preferred file/folder name convention"""
+
+        base_path = "data/contents"
+        add_resource_files(self.res.short_id, self.compliant_file_1)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        res_file = self.res.files.first()
+        self.assertEqual(non_preferred_paths, [])
+        # now rename file to have a space - non preferred char
+        src_path = f'{base_path}/{res_file.file_name}'
+        file_name_with_space = 'my file.txt'
+        tgt_path = f'{base_path}/{file_name_with_space}'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        self.assertNotEqual(non_preferred_paths, [])
+        self.assertEqual(len(non_preferred_paths), 1)
+        self.assertIn(file_name_with_space, non_preferred_paths)
+        res_file = self.res.files.first()
+        src_path = f'{base_path}/{res_file.file_name}'
+        file_name_with_no_space = 'my_file.txt'
+        tgt_path = f'{base_path}/{file_name_with_no_space}'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        self.assertEqual(non_preferred_paths, [])
+        # create a folder with preferred chars
+        preferred_folder = "test-folder"
+        ResourceFile.create_folder(resource=self.res, folder=preferred_folder)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        self.assertEqual(non_preferred_paths, [])
+        # rename folder to be non preferred
+        src_path = f'{base_path}/{preferred_folder}'
+        non_preferred_folder = preferred_folder.replace('-', ' ')
+        tgt_path = f'{base_path}/{non_preferred_folder}'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        self.assertNotEqual(non_preferred_paths, [])
+        self.assertEqual(len(non_preferred_paths), 1)
+        self.assertIn(non_preferred_folder, non_preferred_paths)
+        # test sub folders for non preferred folder names
+        parent_folder = 'parent folder'
+        child_folder = 'child folder'
+        non_preferred_folders = f"{parent_folder}/{child_folder}"
+        ResourceFile.create_folder(resource=self.res, folder=non_preferred_folders)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        self.assertNotEqual(non_preferred_paths, [])
+        self.assertEqual(len(non_preferred_paths), 3)
+        self.assertIn(non_preferred_folder, non_preferred_paths)
+        self.assertIn(parent_folder, non_preferred_paths)
+        self.assertIn(non_preferred_folders, non_preferred_paths)
+        grand_child_folder = 'grand child-folder'
+        non_preferred_folders = f"{parent_folder}/{child_folder}/{grand_child_folder}"
+        ResourceFile.create_folder(resource=self.res, folder=non_preferred_folders)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        self.assertNotEqual(non_preferred_paths, [])
+        self.assertEqual(len(non_preferred_paths), 4)
+        self.assertIn(non_preferred_folder, non_preferred_paths)
+        self.assertIn(parent_folder, non_preferred_paths)
+        self.assertIn(non_preferred_folders, non_preferred_paths)
+        non_preferred_folders = f"{parent_folder}/{child_folder}"
+        self.assertIn(non_preferred_folders, non_preferred_paths)
