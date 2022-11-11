@@ -118,6 +118,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     topics = list(topics)  # force QuerySet evaluation
     content_model.update_relation_meta()
     creators = content_model.metadata.creators.all()
+    content_model.non_preferred_path_names = content_model.get_non_preferred_path_names()
 
     # user requested the resource in READONLY mode
     if not resource_edit:
