@@ -290,27 +290,52 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         non_preferred_paths = self.res.get_non_preferred_path_names()
         res_file = self.res.files.first()
         self.assertEqual(non_preferred_paths, [])
+
         # now rename file to have a space - non preferred char
         src_path = f'{base_path}/{res_file.file_name}'
-        file_name_with_space = 'my file.txt'
-        tgt_path = f'{base_path}/{file_name_with_space}'
+        file_name_non_preferred = 'my file.txt'
+        tgt_path = f'{base_path}/{file_name_non_preferred}'
         move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
         non_preferred_paths = self.res.get_non_preferred_path_names()
         self.assertNotEqual(non_preferred_paths, [])
         self.assertEqual(len(non_preferred_paths), 1)
-        self.assertIn(file_name_with_space, non_preferred_paths)
+        self.assertIn(file_name_non_preferred, non_preferred_paths)
+
+        # rename file back to preferred characters
         res_file = self.res.files.first()
         src_path = f'{base_path}/{res_file.file_name}'
-        file_name_with_no_space = 'my_file.txt'
-        tgt_path = f'{base_path}/{file_name_with_no_space}'
+        file_name_preferred = 'my_File-1.txt'
+        tgt_path = f'{base_path}/{file_name_preferred}'
         move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
         non_preferred_paths = self.res.get_non_preferred_path_names()
         self.assertEqual(non_preferred_paths, [])
+
+        # now rename file to have a double dots ('..') - non preferred char
+        res_file = self.res.files.first()
+        src_path = f'{base_path}/{res_file.file_name}'
+        file_name_non_preferred = 'my..file.txt'
+        tgt_path = f'{base_path}/{file_name_non_preferred}'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        self.assertNotEqual(non_preferred_paths, [])
+        self.assertEqual(len(non_preferred_paths), 1)
+        self.assertIn(file_name_non_preferred, non_preferred_paths)
+
+        # rename file back to preferred characters
+        res_file = self.res.files.first()
+        src_path = f'{base_path}/{res_file.file_name}'
+        file_name_preferred = 'my_File-1.txt'
+        tgt_path = f'{base_path}/{file_name_preferred}'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        self.assertEqual(non_preferred_paths, [])
+
         # create a folder with preferred chars
         preferred_folder = "test-folder"
         ResourceFile.create_folder(resource=self.res, folder=preferred_folder)
         non_preferred_paths = self.res.get_non_preferred_path_names()
         self.assertEqual(non_preferred_paths, [])
+
         # rename folder to be non preferred
         src_path = f'{base_path}/{preferred_folder}'
         non_preferred_folder = preferred_folder.replace('-', ' ')
@@ -320,6 +345,25 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         self.assertNotEqual(non_preferred_paths, [])
         self.assertEqual(len(non_preferred_paths), 1)
         self.assertIn(non_preferred_folder, non_preferred_paths)
+
+        # rename back to preferred folder name
+        src_path = f'{base_path}/{non_preferred_folder}'
+        tgt_path = f'{base_path}/{preferred_folder}'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        self.assertEqual(non_preferred_paths, [])
+        self.assertEqual(len(non_preferred_paths), 0)
+
+        # rename folder to be non preferred - folder name contains ('..')
+        src_path = f'{base_path}/{preferred_folder}'
+        non_preferred_folder = preferred_folder.replace('-', '..')
+        tgt_path = f'{base_path}/{non_preferred_folder}'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+        non_preferred_paths = self.res.get_non_preferred_path_names()
+        self.assertNotEqual(non_preferred_paths, [])
+        self.assertEqual(len(non_preferred_paths), 1)
+        self.assertIn(non_preferred_folder, non_preferred_paths)
+
         # test sub folders for non preferred folder names
         parent_folder = 'parent folder'
         child_folder = 'child folder'

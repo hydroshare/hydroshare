@@ -3227,6 +3227,10 @@ class ResourceFile(ResourceFileIRODSMixin):
         if len(file_folder_name) != len(sanitized_name):
             # one or more symbols that are not allowed was found
             return False
+
+        if '..' in file_folder_name:
+            return False
+
         for char in file_folder_name:
             if char.isalpha() or char.isdigit() or char in _ALLOWED_SYMBOLS:
                 continue
