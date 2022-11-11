@@ -1092,6 +1092,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         raise ValidationError("Unzipping of file is not allowed for a published resource.")
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
+    if not istorage.exists(zip_with_full_path):
+        raise ValidationError("Zip file was not found.")
+
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
