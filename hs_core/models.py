@@ -3286,6 +3286,9 @@ class ResourceFile(ResourceFileIRODSMixin):
         from .hydroshare import get_file_from_irods
         zip_temp_file_path = get_file_from_irods(resource=res_zipfile.resource, file_path=res_zipfile.storage_path)
         temp_dir = os.path.dirname(zip_temp_file_path)
+        if not zipfile.is_zipfile(zip_temp_file_path):
+            return False
+
         with zipfile.ZipFile(zip_temp_file_path, 'r') as zip_file:
             is_valid = True
             for filepath in zip_file.namelist():
