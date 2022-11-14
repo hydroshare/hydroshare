@@ -10,7 +10,6 @@ RUN pip install pytest-cov
 RUN pip install --upgrade rdflib==5.0.0
 RUN pip install -e git+https://github.com/hydroshare/hsmodels.git@0.5.3#egg=hsmodels
 RUN pip install sorl-thumbnail==12.8.0
-RUN pip install pathvalidate==2.5.2
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en

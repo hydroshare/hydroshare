@@ -10,7 +10,6 @@ import zipfile
 import arrow
 import shutil
 from dateutil import parser
-import pathvalidate
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -30,6 +29,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.utils.timezone import now
+
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 from lxml import etree
 from markdown import markdown
@@ -3219,10 +3219,8 @@ class ResourceFile(ResourceFileIRODSMixin):
     def check_for_preferred_name(cls, file_folder_name):
         """Checks if the file or folder name meets the preferred name requirements"""
 
-        _ALLOWED_SYMBOLS = [".", "-", "_"]
-        # check for symbols
-        sanitized_name = pathvalidate.replace_symbol(text=file_folder_name,
-                                                     exclude_symbols=_ALLOWED_SYMBOLS)
+        # remove anything that is not an alphanumeric, dash, underscore, or dot
+        sanitized_name = re.sub(r'(?u)[^-\w.]', '', file_folder_name)
 
         if len(file_folder_name) != len(sanitized_name):
             # one or more symbols that are not allowed was found
@@ -3231,10 +3229,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         if '..' in file_folder_name:
             return False
 
-        for char in file_folder_name:
-            if char.isalpha() or char.isdigit() or char in _ALLOWED_SYMBOLS:
-                continue
-            return False
         return True
 
     @classmethod
