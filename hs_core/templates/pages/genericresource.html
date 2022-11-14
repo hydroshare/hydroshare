@@ -312,14 +312,27 @@
                     <span class="glyphicon glyphicon-eye-open icon-blue"></span>
                     <span>Preview</span>
                 </li>
-                <li id="btn-download" data-menu-name="download" data-fb-action="download">
-                    <span class="glyphicon glyphicon-download icon-blue"></span>
-                    <span>Download</span>
-                </li>
-                <li data-menu-name="download" data-fb-action="downloadZipped" data-zipped="true">
-                    <span class="fa fa-download icon-blue"></span>
-                    <span>Download zipped</span>
-                </li>
+                {% if current_user and current_user.is_authenticated %}
+                    <li id="btn-download" data-menu-name="download" data-fb-action="download">
+                        <span class="glyphicon glyphicon-download icon-blue"></span>
+                        <span>Download</span>
+                    </li>
+                    <li data-menu-name="download" data-fb-action="downloadZipped" data-zipped="true">
+                        <span class="fa fa-download icon-blue"></span>
+                        <span>Download zipped</span>
+                    </li>
+                {% else %}
+                    <li id="btn-download" data-menu-name="download" data-target="#authenticate-dialog" data-toggle="modal"
+                    data-placement="auto">
+                        <span class="glyphicon glyphicon-download icon-blue"></span>
+                        <span>Download</span>
+                    </li>
+                    <li data-menu-name="download" data-target="#authenticate-dialog" data-toggle="modal"
+                    data-placement="auto">
+                        <span class="fa fa-download icon-blue"></span>
+                        <span>Download zipped</span>
+                    </li>
+                {% endif %}
                 <li id="btn-get-link" data-menu-name="get-link"
                     data-fb-action="getLink" data-toggle="modal"
                     data-target="#get-file-url-dialog">
@@ -524,7 +537,7 @@
                                 </div>
                             </div>
                         </div>
-                   {% endif %}
+                    {% endif %}
                 {% endif %}
 
                 {% if page.perms.change and resource_edit_mode %}
@@ -799,22 +812,46 @@
                                             </button>
 
                                             <button id="fb-get-link" data-toggle="modal" data-fb-action="getLink"
-                                                    class="disabled" data-target="#get-file-url-dialog"
-                                                    title="Get file URL">
+                                                class="disabled" data-target="#get-file-url-dialog"
+                                                title="Get file URL">
                                                 <span class="fa fa-link icon-blue"></span>
                                             </button>
+                                            
+                                            {% if current_user and current_user.is_authenticated %}
 
-                                            <button id="fb-download"
-                                                    class="disabled" data-fb-action="download"
+
+                                                <button id="fb-download"
+                                                        class="disabled" data-fb-action="download"
+                                                        title="Download">
+
+                                                    <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                </button>
+
+                                                <button class="disabled" data-fb-action="downloadZipped"
+                                                        title="Download zipped">
+                                                    <span class="fa fa-download icon-blue"></span>
+                                                </button>
+                                            {% else %}
+                                                <button id="fb-download"
+                                                    data-fb-action="download"
+                                                    data-target="#authenticate-dialog"
+                                                    data-toggle="modal"
+                                                    data-placement="auto"
+                                                    class="disabled"
                                                     title="Download">
+                                                    <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                </button>
 
-                                                <span class="glyphicon glyphicon-download icon-blue"></span>
-                                            </button>
-
-                                            <button class="disabled" data-fb-action="downloadZipped"
+                                                <button
+                                                    data-fb-action="downloadZipped"
+                                                    data-target="#authenticate-dialog"
+                                                    data-toggle="modal"
+                                                    data-placement="auto"
+                                                    class="disabled"
                                                     title="Download zipped">
-                                                <span class="fa fa-download icon-blue"></span>
-                                            </button>
+                                                    <span class="fa fa-download icon-blue"></span>
+                                                </button>
+                                            {% endif %}
 
                                             {% if user_zone_account_exist %}
                                                 <a id="rep-res-bag" type="button"
@@ -828,9 +865,12 @@
 
                                             <button id="btn-download-all"
                                                 title="Download all content as Zipped BagIt Archive"
-                                                {% if cm.raccess.require_download_agreement %}
-                                                data-target="#license-agree-dialog-bag" data-toggle="modal"
-                                                data-placement="auto"
+                                                {% if not current_user or not current_user.is_authenticated %}
+                                                    data-target="#authenticate-dialog" data-toggle="modal"
+                                                    data-placement="auto"
+                                                {% elif cm.raccess.require_download_agreement %}
+                                                    data-target="#license-agree-dialog-bag" data-toggle="modal"
+                                                    data-placement="auto"
                                                 {% endif %}
                                                 data-bag-url="{{ cm.bag_url }}">
                                                 <span class="fa fa-briefcase icon-blue"></span>

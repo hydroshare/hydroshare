@@ -1716,6 +1716,34 @@
     {% endif %}
 {% endif %}
 
+<div class="modal fade" id="authenticate-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="license-agree-title">Sign In to Download</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    To download content from HydroShare you need to
+                    <a href="{% url 'login' %}?next={{ next }}"><span
+                        class="glyphicon glyphicon-log-in"></span> Sign In.
+                    </a>
+                </p>
+                {% with request.path as next %}
+                    <p>If you don't have an account you can <a href="/sign-up/?next={{ next }}">join HydroShare</a> now.</p>
+                {% endwith %}
+            </div>
+            <div class="modal-footer">
+                HydroShare is operated using funding from the U.S. National Science Foundation (NSF).
+                The NSF requires CUAHSI to document and report on the community using HydroShare resources and the user information from your account will be used in aggregate form for this reporting.
+                No personally identifiable information will be included in NSF reporting.
+                See <a href="/terms-of-use">Terms Of Use</a> and <a href="/privacy">Statement of Privacy</a>.
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="license-agree-dialog-bag" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

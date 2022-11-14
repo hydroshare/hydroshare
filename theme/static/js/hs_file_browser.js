@@ -1534,8 +1534,16 @@ function startDownload(zipFiles) {
             else {
                 let frameID = "download-frame-" + i;
                 console.log(url);
-                $("body").append("<iframe class='temp-download-frame' id='"
+                $.ajax({
+                    url : url
+                })
+                .success(function() {
+                    $("body").append("<iframe class='temp-download-frame' id='"
                     + frameID + "' style='display:none;' src='" + url + "'></iframe>");
+                })
+                .error(function(xhr, errmsg, err){
+                    $('#authenticate-dialog').modal('show');
+                })
             }
         }
     }
