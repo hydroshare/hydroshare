@@ -60,7 +60,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
         logger.debug("request path is {}".format(path))
 
     if not request.user.is_authenticated:
-        raise PermissionDenied
+        raise PermissionDenied("Requesting user must be authenticated to download")
 
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':
