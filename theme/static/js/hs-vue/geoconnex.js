@@ -1,6 +1,6 @@
 // Recommend subscribing to notifications for PRs to https://github.com/internetofwater/geoconnex.us/
 const limitNumberOfFeaturesPerRequest = 1000;
-const geoconnexAppVerbose = false; // set true to increase console verbosity
+const geoconnexAppVerbose = true; // set true to increase console verbosity
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
 const geoconnexApp = new Vue({
   el: "#app-geoconnex",
@@ -277,6 +277,8 @@ const geoconnexApp = new Vue({
     },
     addSelectedFeatureToResMetadata(feature) {
       const geoconnexApp = this;
+      // TODO: #4830 actually use this name feature function
+      geoconnexApp.getFeatureName(feature);
       geoconnexApp.addSelectedFeatureToMap(feature);
       geoconnexApp.ajaxSaveFeatureToResMetadata(feature);
 
@@ -1251,10 +1253,28 @@ const geoconnexApp = new Vue({
       const nameField = geoconnexApp.getFeatureNameField(feature.collection);
       feature.NAME = feature.properties[nameField] || "";
     },
-    getFeatureNameField(collectionName) {
+    async getFeatureNameField(collectionName) {
       const geoconnexApp = this;
-      // This could also be accomplished by flattening json-ld for the feature and searching for the "https://schema.org/name"
-      return geoconnexApp.featureNameFieldMap[collectionName] || "NAME";
+      const url = `${geoconnexApp.geoconnexUrl}/${collectionName}/items?f=jsonld&lang=en-US&skipGeometry=true&limit=1`;
+      const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({url: url});
+      let array = featureJsonLd['@context']
+      let nameField = "NAME";
+      for (let context of array){
+        nameField = Object.keys(context).find(key => context[key] === "schema:name") || "NAME";
+      }
+      return nameField;
+    },
+    async getFeatureName(feature) {
+      const geoconnexApp = this;
+      const url = `${geoconnexApp.geoconnexUrl}/${feature.collection}/items/${feature.id}?f=jsonld&lang=en-US&skipGeometry=true`;
+      const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({url: url});
+      let name = "";
+      featureJsonLd['@context'].forEach(async (context)=>{
+        const compacted = await jsonld.compact(featureJsonLd, context);
+        name = compacted['schema:name'] || ""
+      })
+      feature.NAME = name;
+      return name;
     },
     getFeatureProperties(feature) {
       const geoconnexApp = this;
@@ -1385,5 +1405,6 @@ const geoconnexApp = new Vue({
         });
     }
     geoconnexApp.isLoading = false;
+    geoconnexApp.getFeatureNameField2("nat_aq")
   },
 });
