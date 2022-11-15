@@ -21,6 +21,173 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
 
         self.res = hydroshare.create_resource('GenericResource', self.user, 'Test Resource')
 
+    def test_resource_metadata_update(self):
+        # add  metadata elements
+        metadata_dict = [
+            {'title': {'value': 'Resource Title'}},
+            {'description': {'abstract': 'Resource Abstract'}},
+            {'date': {'type': 'valid', 'start_date': '1/26/2016', 'end_date': '12/31/2016'}},
+            {'creator': {'name': 'John Smith', 'email': 'jsmith@gmail.com'}},
+            {'creator': {'name': 'Lisa Molley', 'email': 'lmolley@gmail.com'}},
+            {'contributor': {'name': 'Kelvin Marshal', 'email': 'kmarshal@yahoo.com',
+                             'organization': 'Utah State University',
+                             'identifiers': {'ORCID': 'https://orcid.org/john',
+                                             'ResearchGateID': 'https://www.researchgate.net/john'}
+                             }},
+            {'coverage': {'type': 'period', 'value': {'name': 'Name for period coverage', 'start': '1/1/2000',
+                                                      'end': '12/12/2012'}}},
+            {'coverage': {'type': 'point', 'value': {'name': 'Name for point coverage', 'east': '56.45678',
+                                                     'north': '12.6789', 'units': 'decimal deg'}}},
+            {'format': {'value': 'txt/csv'}},   # will be ignored without error
+            {'format': {'value': 'zip'}},   # will be ignored without error
+            {'identifier': {'name': 'someIdentifier', 'url': "http://some.org/002"}},
+            {'identifier': {'name': 'hydroShareIdentifier', 'url': "http://hydroshare.org/001"}},   # will be ignored
+            {'language': {'code': 'fre'}},
+            {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
+            {'rights': {'statement': 'This is the rights statement for this resource', 'url': 'http://rights.ord/001'}},
+            {'subject': {'value': 'sub-1'}},
+            {'subject': {'value': 'sub-2'}},
+        ]
+
+        hydroshare.update_science_metadata(pk=self.res.short_id, metadata=metadata_dict,
+                                           user=self.user)
+
+        # check that the title element got updated
+        metadata = []
+        metadata.append({'title': {'value': 'Updated Resource Title 2'}})
+        self.res.metadata.update(metadata, self.user)
+        self.assertEqual(self.res.metadata.title.value, 'Updated Resource Title 2', msg='Resource title did not match')
+        del metadata[:]
+
+        # check that description element (abstract) got updated
+        metadata.append({'description': {'abstract': 'Updated Resource Abstract'}})
+        self.res.metadata.update(metadata, self.user)
+        self.assertEqual(self.res.metadata.description.abstract, 'Updated Resource Abstract',
+                         msg='Resource abstract did not match')
+        del metadata[:]
+
+        # check that date got updated
+        metadata.append({'date': {'type': 'valid', 'start_date': '2/20/2016', 'end_date': '11/10/2016'}})
+        self.res.metadata.update(metadata, self.user)
+        valid_date = self.res.metadata.dates.filter(type='valid').first()
+        self.assertEqual(valid_date.start_date.date(), parser.parse('2/20/2016').date())
+        self.assertEqual(valid_date.end_date.date(), parser.parse('11/10/2016').date())
+        del metadata[:]
+
+        # check that creators got updated
+        metadata.append({'creator': {'name': 'Sohn Jmith', 'email': 'sjmith@gmail.com'}})
+        metadata.append({'creator': {'name': 'Misa Lolley', 'email': 'mlolley@gmail.com'}})
+        self.res.metadata.update(metadata, self.user)
+        self.assertIn('Sohn Jmith', [cr.name for cr in self.res.metadata.creators.all()],
+                      msg="Creator 'Sohn Jmith' was not found")
+        self.assertIn('Misa Lolley', [cr.name for cr in self.res.metadata.creators.all()],
+                      msg="Creator 'Misa Lolley' was not found")
+
+        self.assertIn('sjmith@gmail.com', [cr.email for cr in self.res.metadata.creators.all()],
+                      msg="Creator email 'sjmith@gmail.com' was not found")
+        self.assertIn('mlolley@gmail.com', [cr.email for cr in self.res.metadata.creators.all()],
+                      msg="Creator email 'mlolley@gmail.com' was not found")
+        # number of creators at this point should be 2 (the original creator of the resource get deleted as part of
+        # this update)
+        self.assertEqual(self.res.metadata.creators.all().count(), 2, msg='Number of creators not equal to 2')
+        del metadata[:]
+
+        # check that contributors got updated
+        identifiers = {'ORCID': 'https://orcid.org/melvin', 'ResearchGateID': 'https://www.researchgate.net/melvin'}
+        details = {
+                'name': 'Melvin Karshal',
+                'email': 'mkarshal@yahoo.com',
+                'organization': 'Utah University',
+                'identifiers': identifiers
+                }
+        metadata.append({'contributor': details})
+        self.res.metadata.update(metadata, self.user)
+        # number of contributors at this point should be 1
+        self.assertEqual(self.res.metadata.contributors.all().count(), 1, msg='Number of contributors not equal to 1')
+        contributor = self.res.metadata.contributors.first()
+        self.assertEqual(contributor.name, 'Melvin Karshal')
+        self.assertEqual(contributor.email, 'mkarshal@yahoo.com')
+        self.assertEqual(contributor.organization, 'Utah University')
+        for name, link in list(contributor.identifiers.items()):
+            self.assertIn(name, ['ResearchGateID', 'ORCID'])
+            self.assertIn(link, ['https://orcid.org/melvin', 'https://www.researchgate.net/melvin'])
+        del metadata[:]
+
+        # test period coverage got updated
+        period_value = {'name': 'New name for period coverage', 'start': '1/2/2000', 'end': '12/11/2012'}
+        metadata.append({'coverage': {'type': 'period', 'value': period_value}})
+        self.res.metadata.update(metadata, self.user)
+
+        # there should 1 coverage element of type 'period'
+        self.assertEqual(self.res.metadata.coverages.filter(type='period').count(), 1,
+                          msg="Number of coverage elements of type 'period is not equal to 1")
+
+        cov_period = self.res.metadata.coverages.filter(type='period').first()
+        self.assertEqual(cov_period.value['name'], 'New name for period coverage')
+        self.assertEqual(parser.parse(cov_period.value['start']).date(), parser.parse('1/2/2000').date())
+        self.assertEqual(parser.parse(cov_period.value['end']).date(), parser.parse('12/11/2012').date())
+        del metadata[:]
+
+        # test point coverage got updated
+        point_value = {'name': 'New name for point coverage', 'east': '55.45678', 'north': '11.6789', 'units': 'radians'}
+        metadata.append({'coverage': {'type': 'point', 'value': point_value}})
+        self.res.metadata.update(metadata, self.user)
+
+        # there should 1 coverage element of type 'point'
+        self.assertEqual(self.res.metadata.coverages.filter(type='point').count(), 1,
+                          msg="Number of coverage elements of type 'point' is not equal to 1")
+
+        cov_point = self.res.metadata.coverages.filter(type='point').first()
+        self.assertEqual(cov_point.value['name'], 'New name for point coverage')
+        self.assertEqual(cov_point.value['east'], 55.45678)
+        self.assertEqual(cov_point.value['north'], 11.6789)
+        self.assertEqual(cov_point.value['units'], 'radians')
+        del metadata[:]
+
+        # test identifier elements got updated
+        metadata.append({'identifier': {'name': 'newsomeIdentifier', 'url': "http://some.org/004"}})
+        metadata.append({'identifier': {'name': 'newhydroShareIdentifier', 'url': "http://hydroshare.org/003"}})
+        self.res.metadata.update(metadata, self.user)
+
+        # there should be now 4 identifier elements
+        self.assertEqual(self.res.metadata.identifiers.all().count(), 4,
+                         msg="Number of identifier elements not equal to 4.")
+        some_identifier = self.res.metadata.identifiers.filter(name='newsomeIdentifier').first()
+        self.assertEqual(some_identifier.url, "http://some.org/004")
+        hs_identifier = self.res.metadata.identifiers.filter(name='newhydroShareIdentifier').first()
+        self.assertEqual(hs_identifier.url, "http://hydroshare.org/003")
+        del metadata[:]
+
+        # test relation elements got updated
+        metadata.append({'relation': {'type': 'hasPart', 'value': 'http://hydroshare.org/resource/002'}})
+        self.res.metadata.update(metadata, self.user)
+
+        self.assertEqual(self.res.metadata.relations.all().count(), 1,
+                         msg="Number of source elements is not equal to 1")
+        relation = self.res.metadata.relations.filter(type='hasPart').first()
+        self.assertEqual(relation.value, 'http://hydroshare.org/resource/002')
+        del metadata[:]
+
+        # test rights got updated
+        metadata.append({'rights': {'statement': 'This is the new rights statement for this resource', 'url': 'http://rights.ord/002'}})
+        self.res.metadata.update(metadata, self.user)
+        
+        self.assertEqual(self.res.metadata.rights.statement, 'This is the new rights statement for this resource',
+                         msg="Statement of rights did not match.")
+        self.assertEqual(self.res.metadata.rights.url, 'http://rights.ord/002', msg="URL of rights did not match.")
+        del metadata[:]
+
+        # test subject got updated
+        metadata.append({'subject': {'value': 'sub-4'}})
+        metadata.append({'subject': {'value': 'sub-3'}})
+        self.res.metadata.update(metadata, self.user)
+        # there should be 2 subject elements for this resource
+        self.assertEqual(self.res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 2.")
+        self.assertIn('sub-3', [sub.value for sub in self.res.metadata.subjects.all()],
+                      msg="Subject element with value of %s does not exist." % 'sub-3')
+        self.assertIn('sub-4', [sub.value for sub in self.res.metadata.subjects.all()],
+                      msg="Subject element with value of %s does not exist." % 'sub-4')
+
     def test_update_science_metadata(self):
         # add these new metadata elements
         metadata_dict = [
@@ -78,7 +245,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # number of creators at this point should be 2 (the original creator of the resource get deleted as part of
         # this update)
-        self.assertEqual(self.res.metadata.creators.all().count(), 2, msg='Number of creators not equal to 3')
+        self.assertEqual(self.res.metadata.creators.all().count(), 2, msg='Number of creators not equal to 2')
         self.assertIn('John Smith', [cr.name for cr in self.res.metadata.creators.all()],
                       msg="Creator 'John Smith' was not found")
         self.assertIn('Lisa Molley', [cr.name for cr in self.res.metadata.creators.all()],
@@ -127,7 +294,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         # there should be now 2 identifier elements ( 1 we are creating her + 1 auto generated at the time of
         # resource creation)
         self.assertEqual(self.res.metadata.identifiers.all().count(), 2,
-                         msg="Number of identifier elements not equal to 1.")
+                         msg="Number of identifier elements not equal to 2.")
 
         # this the one we added as part of the update
         some_identifier = self.res.metadata.identifiers.filter(name='someIdentifier').first()
@@ -145,7 +312,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.rights.url, 'http://rights.ord/001', msg="URL of rights did not match.")
 
         # there should be 2 subject elements for this resource
-        self.assertEqual(self.res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 1.")
+        self.assertEqual(self.res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 2.")
         self.assertIn('sub-1', [sub.value for sub in self.res.metadata.subjects.all()],
                       msg="Subject element with value of %s does not exist." % 'sub-1')
         self.assertIn('sub-2', [sub.value for sub in self.res.metadata.subjects.all()],

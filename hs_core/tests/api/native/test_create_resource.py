@@ -206,7 +206,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # there should be now 2 identifier elements (one was created from the supplied metadat and the
         # other one was auto generated at the time of resource creation)
-        self.assertEqual(res.metadata.identifiers.all().count(), 2, msg="Number of identifier elements not equal to 1.")
+        self.assertEqual(res.metadata.identifiers.all().count(), 2, msg="Number of identifier elements not equal to 2.")
 
         # Language element created based on supplied metadata
         self.assertEqual(res.metadata.language.code, 'fre', msg="Resource has a language that is not French.")
@@ -219,7 +219,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res.metadata.rights.url, 'http://rights.org/001', msg="URL of rights did not match.")
 
         # there should be 2 subject elements for this resource
-        self.assertEqual(res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 1.")
+        self.assertEqual(res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 2.")
         self.assertIn('sub-1', [sub.value for sub in res.metadata.subjects.all()],
                       msg="Subject element with value of %s does not exist." % 'sub-1')
         self.assertIn('sub-2', [sub.value for sub in res.metadata.subjects.all()],

@@ -1399,7 +1399,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         resource.create_metadata_element(self.res.short_id,'subject', value='sub-2')
 
         # there should be 2 subject elements for this resource
-        self.assertEqual(self.res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 1.")
+        self.assertEqual(self.res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 2.")
         self.assertIn('sub-1', [sub.value for sub in self.res.metadata.subjects.all()],
                       msg="Subject element with value of %s does not exist." % 'sub-1')
         self.assertIn('sub-2', [sub.value for sub in self.res.metadata.subjects.all()],
