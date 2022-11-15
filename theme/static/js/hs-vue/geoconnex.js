@@ -1,6 +1,6 @@
 // Recommend subscribing to notifications for PRs to https://github.com/internetofwater/geoconnex.us/
 const limitNumberOfFeaturesPerRequest = 1000;
-const geoconnexAppVerbose = true; // set true to increase console verbosity
+const geoconnexAppVerbose = false; // set true to increase console verbosity
 const geoconnexBaseURLQueryParam = `items?f=json&limit=${limitNumberOfFeaturesPerRequest}`;
 const geoconnexApp = new Vue({
   el: "#app-geoconnex",
@@ -252,7 +252,7 @@ const geoconnexApp = new Vue({
           throw new Error("No features returned from fetch");
         }
         for (let feature of features) {
-          feature = geoconnexApp.getFeatureProperties(feature);
+          feature = await geoconnexApp.getFeatureProperties(feature);
           feature.disabled = true;
           geoconnexApp.features.push(feature);
           geoconnexApp.addSelectedFeatureToMap(feature);
@@ -277,8 +277,6 @@ const geoconnexApp = new Vue({
     },
     addSelectedFeatureToResMetadata(feature) {
       const geoconnexApp = this;
-      // TODO: #4830 actually use this name feature function
-      geoconnexApp.getFeatureName(feature);
       geoconnexApp.addSelectedFeatureToMap(feature);
       geoconnexApp.ajaxSaveFeatureToResMetadata(feature);
 
@@ -473,7 +471,7 @@ const geoconnexApp = new Vue({
       const geoconnexApp = this;
       geoconnexApp.searchingDescription = collection.description;
       let response = {};
-      const propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(
+      const propertiesParameter = `&properties=uri,${await geoconnexApp.getFeatureNameField(
         collection.id
       )}`;
       const bboxParameter = bbox ? `&bbox=${bbox.toString()}` : "";
@@ -548,7 +546,7 @@ const geoconnexApp = new Vue({
       skipGeometry = true,
     }) {
       const geoconnexApp = this;
-      const propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(
+      const propertiesParameter = `&properties=uri,${await geoconnexApp.getFeatureNameField(
         collection.id
       )}`;
       const url = `${geoconnexApp.geoconnexUrl}/${
@@ -830,7 +828,7 @@ const geoconnexApp = new Vue({
       geoconnexApp.setMapEvents();
       geoconnexApp.fitMapToFeatures();
     },
-    addSearchFeaturesToMap(features, collectionOverride = null) {
+    async addSearchFeaturesToMap(features, collectionOverride = null) {
       for (const feature of features) {
         // deal with collection first
         const collection = collectionOverride
@@ -871,7 +869,7 @@ const geoconnexApp = new Vue({
         if (alreadySelected) {
           feature.disabled = true;
         } else {
-          geoconnexApp.getFeatureProperties(feature);
+          await geoconnexApp.getFeatureProperties(feature);
           if (feature.geometry.type.includes("Point")) {
             geoconnexApp.addGeojsonToMap({
               geojson: feature,
@@ -1248,9 +1246,9 @@ const geoconnexApp = new Vue({
         geoconnexApp.appMessages.push({ message: message, level: level });
       }
     },
-    setFeatureName(feature) {
+    async setFeatureName(feature) {
       const geoconnexApp = this;
-      const nameField = geoconnexApp.getFeatureNameField(feature.collection);
+      const nameField = await geoconnexApp.getFeatureNameField(feature.collection);
       feature.NAME = feature.properties[nameField] || "";
     },
     async getFeatureNameField(collectionName) {
@@ -1276,13 +1274,13 @@ const geoconnexApp = new Vue({
       feature.NAME = name;
       return name;
     },
-    getFeatureProperties(feature) {
+    async getFeatureProperties(feature) {
       const geoconnexApp = this;
       // Account for some oddities in the Geoconnex API schema
       feature.relative_id = feature.properties.uri.split("ref/").pop();
       feature.collection = feature.relative_id.split("/")[0];
       feature.uri = feature.properties.uri;
-      geoconnexApp.setFeatureName(feature);
+      await geoconnexApp.setFeatureName(feature);
       feature.text = `${feature.NAME} [${feature.relative_id}]`;
 
       //prevent duplicate selections
@@ -1405,6 +1403,5 @@ const geoconnexApp = new Vue({
         });
     }
     geoconnexApp.isLoading = false;
-    geoconnexApp.getFeatureNameField2("nat_aq")
   },
 });
