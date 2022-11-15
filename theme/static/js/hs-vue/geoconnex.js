@@ -17,8 +17,8 @@ const geoconnexApp = new Vue({
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
       // collection: features that will not be mapped or allowed for list selection
       ignoredFeatures: {
-        "nat_aq": ["N9999OTHER"],
-        "principal_aq": [999]
+        nat_aq: ["N9999OTHER"],
+        principal_aq: [999],
       },
 
       ////// Resource-level data //////
@@ -359,12 +359,11 @@ const geoconnexApp = new Vue({
           keep = keep.concat(val.uris);
         }
       }
-      geoconnexApp.features = geoconnexApp.features.filter((s) =>{
+      geoconnexApp.features = geoconnexApp.features.filter((s) => {
         const ignoredDict = geoconnexApp.ignoredFeatures[s.collection];
         if (ignoredDict && ignoredDict.includes(s.id)) return false;
         return keep.includes(s.uri);
-      }
-      );
+      });
       geoconnexApp.loadingRelations = false;
     },
 
@@ -626,12 +625,12 @@ const geoconnexApp = new Vue({
       } catch (e) {
         geoconnexApp.error(e.message);
         const response = await geoconnexApp.geoCache.match(url);
-        if (response){
+        if (response) {
           geoconnexApp.log(
             "Geoconnex API fetch error. Falling back to old cached version"
           );
           return response.data;
-        }else{
+        } else {
           geoconnexApp.error(e.message);
           geoconnexApp.generateAppMessage(
             `Error while attempting to fetch Geoconnex items: ${e.message}`
@@ -740,7 +739,9 @@ const geoconnexApp = new Vue({
         Satelite: googleSat,
       };
 
-      geoconnexApp.map.attributionControl.setPrefix('<a href="https://leafletjs.com/" target="blank">Leaflet</a>');
+      geoconnexApp.map.attributionControl.setPrefix(
+        '<a href="https://leafletjs.com/" target="blank">Leaflet</a>'
+      );
 
       const overlayMaps = {
         "Selected Features": geoconnexApp.selectedFeatureGroup,
@@ -825,7 +826,11 @@ const geoconnexApp = new Vue({
           ? collectionOverride
           : feature.collection;
 
-        if(geoconnexApp.ignoredFeatures[collection.id] && geoconnexApp.ignoredFeatures[collection.id].includes(feature.id)) return;
+        if (
+          geoconnexApp.ignoredFeatures[collection.id] &&
+          geoconnexApp.ignoredFeatures[collection.id].includes(feature.id)
+        )
+          return;
 
         // check if layergroup exists in the "dictionary"
         if (
@@ -1238,29 +1243,37 @@ const geoconnexApp = new Vue({
     },
     async setFeatureName(feature) {
       const geoconnexApp = this;
-      const nameField = await geoconnexApp.getFeatureNameField(feature.collection);
+      const nameField = await geoconnexApp.getFeatureNameField(
+        feature.collection
+      );
       feature.NAME = feature.properties[nameField] || "";
     },
     async getFeatureNameField(collectionName) {
       const geoconnexApp = this;
       const url = `${geoconnexApp.geoconnexUrl}/${collectionName}/items?f=jsonld&lang=en-US&skipGeometry=true&limit=1`;
-      const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({url: url});
-      let array = featureJsonLd['@context']
+      const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
+        url: url,
+      });
+      let array = featureJsonLd["@context"];
       let nameField = "NAME";
-      for (let context of array){
-        nameField = Object.keys(context).find(key => context[key] === "schema:name") || "NAME";
+      for (let context of array) {
+        nameField =
+          Object.keys(context).find((key) => context[key] === "schema:name") ||
+          "NAME";
       }
       return nameField;
     },
     async getFeatureName(feature) {
       const geoconnexApp = this;
       const url = `${geoconnexApp.geoconnexUrl}/${feature.collection}/items/${feature.id}?f=jsonld&lang=en-US&skipGeometry=true`;
-      const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({url: url});
+      const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
+        url: url,
+      });
       let name = "";
-      featureJsonLd['@context'].forEach(async (context)=>{
+      featureJsonLd["@context"].forEach(async (context) => {
         const compacted = await jsonld.compact(featureJsonLd, context);
-        name = compacted['schema:name'] || ""
-      })
+        name = compacted["schema:name"] || "";
+      });
       feature.NAME = name;
       return name;
     },
