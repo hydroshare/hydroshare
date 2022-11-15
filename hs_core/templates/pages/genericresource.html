@@ -972,7 +972,7 @@
                     <h3>Resource Specific</h3>
                     <div id="resourceSpecificTab">
                         <div class="row">
-                            {% if not resource_edit_mode or not cm.raccess.published_or_review_pending %}
+                            {% if not resource_edit_mode or cm.raccess.published_or_review_pending %}
                                 {% block extended_metadata %}{% endblock %}
                             {% else %}
                                 {% crispy metadata_form %}
