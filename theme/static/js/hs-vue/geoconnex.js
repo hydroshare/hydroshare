@@ -20,16 +20,6 @@ const geoconnexApp = new Vue({
         "nat_aq": ["N9999OTHER"],
         "principal_aq": [999]
       },
-      // Geoconnex features have different "name" fields depending on which collection the belong to
-      featureNameFieldMap: {
-        nat_aq: "AQ_NAME",
-        principal_aq: "AQ_NAME",
-        dams: "name",
-        gages: "name",
-        mainstems: "name_at_outconst",
-        sec_hydrg_reg: "SHR",
-        ua10: "NAME10",
-      },
 
       ////// Resource-level data //////
       resShortId: SHORT_ID,
