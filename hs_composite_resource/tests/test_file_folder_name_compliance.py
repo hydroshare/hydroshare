@@ -5,7 +5,6 @@ import unittest
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.uploadedfile import UploadedFile
-from rest_framework.exceptions import ValidationError
 
 from hs_core.hydroshare import add_file_to_resource
 from hs_core.hydroshare.resource import add_resource_files, create_resource
