@@ -60,7 +60,7 @@ def data_store_structure(request):
     store_path = request.POST.get('store_path', None)
 
     try:
-        store_path = _validate_path(store_path, 'store_path', check_path_empty=False)
+        store_path = _validate_path(store_path, check_path_empty=False)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -265,7 +265,7 @@ def data_store_folder_zip(request, res_id=None):
     input_coll_path = resolve_request(request).get('input_coll_path', None)
 
     try:
-        input_coll_path = _validate_path(input_coll_path, 'input_coll_path')
+        input_coll_path = _validate_path(input_coll_path)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -337,7 +337,7 @@ def zip_aggregation_file(request, res_id=None):
     aggregation_path = resolve_request(request).get('aggregation_path', None)
 
     try:
-        aggregation_path = _validate_path(aggregation_path, 'aggregation_path')
+        aggregation_path = _validate_path(aggregation_path)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -469,7 +469,7 @@ def data_store_folder_unzip(request, **kwargs):
     zip_with_rel_path = request.POST.get('zip_with_rel_path', kwargs.get('zip_with_rel_path'))
 
     try:
-        zip_with_rel_path = _validate_path(zip_with_rel_path, 'zip_with_rel_path')
+        zip_with_rel_path = _validate_path(zip_with_rel_path)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -598,7 +598,7 @@ def data_store_add_reference(request):
     if not ref_url:
         return HttpResponseBadRequest('Must have ref_url included in the POST data')
     try:
-        curr_path = _validate_path(curr_path, 'curr_path', check_path_empty=False)
+        curr_path = _validate_path(curr_path, check_path_empty=False)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -668,7 +668,7 @@ def data_store_edit_reference_url(request):
         return HttpResponseBadRequest('Must have new_ref_url included in the POST data')
 
     try:
-        curr_path = _validate_path(curr_path, 'curr_path', check_path_empty=False)
+        curr_path = _validate_path(curr_path, check_path_empty=False)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -714,7 +714,7 @@ def data_store_create_folder(request):
     folder_path = request.POST.get('folder_path', None)
 
     try:
-        folder_path = _validate_path(folder_path, 'folder_path')
+        folder_path = _validate_path(folder_path)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -758,7 +758,7 @@ def data_store_remove_folder(request):
     folder_path = request.POST.get('folder_path', None)
 
     try:
-        folder_path = _validate_path(folder_path, 'folder_path')
+        folder_path = _validate_path(folder_path)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -802,8 +802,8 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
     src_path = resolve_request(request).get('source_path', None)
     tgt_path = resolve_request(request).get('target_path', None)
     try:
-        src_path = _validate_path(src_path, 'src_path')
-        tgt_path = _validate_path(tgt_path, 'tgt_path')
+        src_path = _validate_path(src_path)
+        tgt_path = _validate_path(tgt_path)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -893,7 +893,7 @@ def data_store_move_to_folder(request, pk=None):
     if not isinstance(file_override, bool):
         file_override = True if str(file_override).lower() == 'true' else False
     try:
-        tgt_path = _validate_path(tgt_path, 'tgt_path', check_path_empty=False)
+        tgt_path = _validate_path(tgt_path, check_path_empty=False)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -911,7 +911,7 @@ def data_store_move_to_folder(request, pk=None):
     # protect against common hacking attacks
     for index, src_path in enumerate(src_paths):
         try:
-            src_paths[index] = _validate_path(src_path, 'src_paths')
+            src_paths[index] = _validate_path(src_path)
         except ValidationError as ex:
             return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -998,22 +998,22 @@ def data_store_rename_file_or_folder(request, pk=None):
     """
     pk = request.POST.get('res_id', pk)
     if pk is None:
-        return HttpResponse('Bad request - resource id is not included',
+        return HttpResponse('Resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
     pk = str(pk).strip()
     try:
         resource, _, user = authorize(request, pk,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except NotFound:
-        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse('Resource not found', status=status.HTTP_400_BAD_REQUEST)
     except PermissionDenied:
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     src_path = resolve_request(request).get('source_path', None)
     tgt_path = resolve_request(request).get('target_path', None)
     try:
-        src_path = _validate_path(src_path, 'src_path')
-        tgt_path = _validate_path(tgt_path, 'tgt_path')
+        src_path = _validate_path(src_path)
+        tgt_path = _validate_path(tgt_path)
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -1040,7 +1040,7 @@ def data_store_rename_file_or_folder(request, pk=None):
         try:  # Django record should exist for each file
             ResourceFile.get(resource, base, folder=folder)
         except ResourceFile.DoesNotExist:
-            return HttpResponse('Object to be renamed does not exist',
+            return HttpResponse('Path to be renamed does not exist',
                                 status=status.HTTP_400_BAD_REQUEST)
 
     # check that the target doesn't exist
@@ -1080,21 +1080,21 @@ def data_store_rename_file_or_folder(request, pk=None):
     )
 
 
-def _validate_path(path, path_param_name, check_path_empty=True):
+def _validate_path(path, check_path_empty=True):
+
     if path is None:
-        raise ValidationError('Bad request - {} is not included in the request'.format(
-            path_param_name))
+        raise ValidationError("A value for path is missing")
 
     # strip trailing slashes (if any)
     path = str(path).strip().rstrip('/')
     if not path and check_path_empty:
-        raise ValidationError('Bad request - {} cannot be empty'.format(path_param_name))
+        raise ValidationError('Path cannot be empty')
 
     if path.startswith('/'):
-        raise ValidationError("Bad request - {} must not start with '/'".format(path_param_name))
+        raise ValidationError(f"Path ({path}) must not start with '/'")
 
     if path.find('/../') >= 0 or path.endswith('/..'):
-        raise ValidationError('Bad request - {} must not contain /../'.format(path_param_name))
+        raise ValidationError(f"Path ({path}) must not contain '/../'")
 
     if not path:
         path = "data/contents"
