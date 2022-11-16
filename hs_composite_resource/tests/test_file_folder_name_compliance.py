@@ -206,6 +206,27 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
         self.assertEqual(CompositeResource.objects.count(), 1)
 
+    def test_file_rename_compliant(self):
+        """Here we are testing that when we try to rename a file of a resource using a compliant filename, the file
+        renaming should work
+        """
+        # add a file
+        add_resource_files(self.res.short_id, self.compliant_file_1)
+
+        # resource should have 1 file
+        self.assertEqual(self.res.files.all().count(), 1)
+        res_file = self.res.files.all().first()
+
+        # now rename the file with compliant file name - which should be successful
+        src_path = f'data/contents/{res_file.file_name}'
+        # renaming the file with no extension
+        new_file_name = 'test file'
+        tgt_path = f'data/contents/{new_file_name}'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+
+        res_file = self.res.files.all().first()
+        self.assertEqual(res_file.file_name, new_file_name)
+
     def test_file_rename_non_compliant(self):
         """Here we are testing that when we try to rename a file of a resource using a non-compliant filename, the file
         renaming should fail
@@ -468,7 +489,7 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         self.assertFalse(ResourceFile.is_zip_file_valid(res_zip_file))
         zip_file_rel_path = os.path.join('data', 'contents', res_zip_file.short_path)
         # unzip should fail
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(SuspiciousFileOperation):
             unzip_file(self.user, self.res.short_id, zip_file_rel_path, bool_remove_original=False)
 
         # this zip file has a file and this filename contains the character '?' (one of the banned characters)
@@ -482,5 +503,9 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
         # unzip should fail
         zip_file_rel_path = os.path.join('data', 'contents', res_zip_file.short_path)
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(SuspiciousFileOperation):
             unzip_file(self.user, self.res.short_id, zip_file_rel_path, bool_remove_original=False)
+
+        self.assertEqual(self.res.files.count(), 2)
+        for res_file in self.res.files.all():
+            self.assertTrue(res_file.short_path.endswith('.zip'))
