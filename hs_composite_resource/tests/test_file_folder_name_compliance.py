@@ -1,4 +1,5 @@
 import os
+import string
 import unittest
 
 from django.contrib.auth.models import Group, User
@@ -44,6 +45,7 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         # create files - filenames are compliant
         self.compliant_file_name_1 = "test 1.txt"
         self.compliant_file_name_2 = "tes-2.txt"
+        self.compliant_file_name_no_ext = "test-3"
         self.compliant_non_english_file_name = "résumé-2.txt"
         self.bad_files = []
         for banned_symbol in ResourceFile.banned_symbols():
@@ -69,6 +71,10 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         test_file.write("Test text file in test-2.txt")
         test_file.close()
 
+        test_file = open(self.compliant_file_name_no_ext, 'w')
+        test_file.write("Test text file in test-3 no file extension")
+        test_file.close()
+
         test_file = open(self.compliant_non_english_file_name, 'w')
         test_file.write("Test text file in résumé-2.txt")
         test_file.close()
@@ -84,6 +90,7 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         # open files for read and upload
         self.compliant_file_1 = open(self.compliant_file_name_1, "rb")
         self.compliant_file_2 = open(self.compliant_file_name_2, "rb")
+        self.compliant_file_no_ext = open(self.compliant_file_name_no_ext, "rb")
         self.compliant_non_english_file = open(self.compliant_non_english_file_name, "rb")
 
         self.non_compliant_file_1 = open(self.non_compliant_file_name_1, "rb")
@@ -102,6 +109,9 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         self.compliant_file_2.close()
         os.remove(self.compliant_file_2.name)
 
+        self.compliant_file_no_ext.close()
+        os.remove(self.compliant_file_no_ext.name)
+
         self.compliant_non_english_file.close()
         os.remove(self.compliant_non_english_file.name)
 
@@ -119,24 +129,31 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
          These files should be successfully added to the resource
          """
         # add files - this is the api we are testing
-        add_resource_files(self.res.short_id, self.compliant_file_1, self.compliant_file_2,
+        add_resource_files(self.res.short_id, self.compliant_file_1, self.compliant_file_2, self.compliant_file_no_ext,
                            self.compliant_non_english_file)
 
-        # resource should have 3 files
-        self.assertEqual(self.res.files.all().count(), 3)
+        # resource should have 4 files
+        self.assertEqual(self.res.files.all().count(), 4)
 
         # add each file of resource to list
         file_list = []
         for f in self.res.files.all():
             file_list.append(f.short_path)
-            print(f"added res filename:{f.short_path}")
 
         # check if the file name is in the list of files
         sanitized_file_name = self.compliant_file_name_1.replace(" ", "_")
         self.assertTrue(sanitized_file_name in file_list, f"{self.compliant_file_name_1} has not been added")
         self.assertTrue(self.compliant_file_name_2 in file_list, f"{self.compliant_file_name_2} has not been added")
+        self.assertTrue(self.compliant_file_name_no_ext in file_list,
+                        f"{self.compliant_file_name_no_ext} has not been added")
         self.assertTrue(self.compliant_non_english_file_name in file_list,
                         f"{self.compliant_non_english_file_name} has not been added")
+
+        # check the filename is in english
+        self.assertTrue(len(self.compliant_file_name_1) == len(self.compliant_file_name_1.encode()))
+        # check the filename ois not in english
+        self.assertFalse(len(self.compliant_non_english_file_name) ==
+                         len(self.compliant_non_english_file_name.encode()))
 
     def test_add_non_compliant_files(self):
         """Here we are testing when a file that has a name which doesn't meet hydroshare requirements is uploaded
@@ -330,13 +347,34 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         non_preferred_paths = self.res.get_non_preferred_path_names()
         self.assertEqual(non_preferred_paths, [])
 
+        skip_symbols = f"._-{ResourceFile.banned_symbols()}"
+        non_preferred_symbols = [symbol for symbol in string.punctuation if symbol not in skip_symbols]
+        for symbol in non_preferred_symbols:
+            res_file = self.res.files.first()
+            src_path = f'{base_path}/{res_file.file_name}'
+            file_name_non_preferred = f'my{symbol}file.txt'
+            tgt_path = f'{base_path}/{file_name_non_preferred}'
+            move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+            non_preferred_paths = self.res.get_non_preferred_path_names()
+            self.assertNotEqual(non_preferred_paths, [])
+            self.assertEqual(len(non_preferred_paths), 1)
+            self.assertIn(file_name_non_preferred, non_preferred_paths)
+            # rename file back to preferred characters
+            res_file = self.res.files.first()
+            src_path = f'{base_path}/{res_file.file_name}'
+            file_name_preferred = 'my_File-1.txt'
+            tgt_path = f'{base_path}/{file_name_preferred}'
+            move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+            non_preferred_paths = self.res.get_non_preferred_path_names()
+            self.assertEqual(non_preferred_paths, [])
+
         # create a folder with preferred chars
         preferred_folder = "test-folder"
         ResourceFile.create_folder(resource=self.res, folder=preferred_folder)
         non_preferred_paths = self.res.get_non_preferred_path_names()
         self.assertEqual(non_preferred_paths, [])
 
-        # rename folder to be non preferred
+        # rename folder to be non preferred - space in folder name
         src_path = f'{base_path}/{preferred_folder}'
         non_preferred_folder = preferred_folder.replace('-', ' ')
         tgt_path = f'{base_path}/{non_preferred_folder}'
@@ -353,6 +391,23 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         non_preferred_paths = self.res.get_non_preferred_path_names()
         self.assertEqual(non_preferred_paths, [])
         self.assertEqual(len(non_preferred_paths), 0)
+
+        for symbol in non_preferred_symbols:
+            src_path = f'{base_path}/{preferred_folder}'
+            non_preferred_folder = f"my{symbol}folder"
+            tgt_path = f'{base_path}/{non_preferred_folder}'
+            move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+            non_preferred_paths = self.res.get_non_preferred_path_names()
+            self.assertNotEqual(non_preferred_paths, [])
+            self.assertEqual(len(non_preferred_paths), 1)
+            self.assertIn(non_preferred_folder, non_preferred_paths)
+            # rename back to preferred folder name
+            src_path = f'{base_path}/{non_preferred_folder}'
+            tgt_path = f'{base_path}/{preferred_folder}'
+            move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+            non_preferred_paths = self.res.get_non_preferred_path_names()
+            self.assertEqual(non_preferred_paths, [])
+            self.assertEqual(len(non_preferred_paths), 0)
 
         # rename folder to be non preferred - folder name contains ('..')
         src_path = f'{base_path}/{preferred_folder}'
