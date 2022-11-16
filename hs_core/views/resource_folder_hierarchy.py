@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import SuspiciousFileOperation, ValidationError
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 
 from rest_framework.decorators import api_view
@@ -722,8 +722,8 @@ def data_store_create_folder(request):
         create_folder(res_id, folder_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except DRF_ValidationError as ex:
-        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+    except (DRF_ValidationError, SuspiciousFileOperation) as ex:
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'new_folder_rel_path': folder_path}
 
