@@ -1102,8 +1102,11 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     folder_path, file_name = os.path.split(zip_with_rel_path[len('data/contents/'):])
     res_zip_file = ResourceFile.get(resource=resource, folder=folder_path, file=file_name)
     if not ResourceFile.is_zip_file_valid(res_zip_file):
-        err_msg = "Zip file contains files/folders that have character(s) in file/folder name that are not allowed."
-        raise ValidationError(err_msg)
+        log_msg = f"Failed to unzip. Zip file ({zip_with_full_path}) has file/folder with name that contains " \
+                  f"one or more prohibited characters."
+        logger.error(log_msg)
+        err_msg = "Zip file has file/folder with name that contains one or more prohibited characters."
+        raise SuspiciousFileOperation(err_msg)
 
     unzip_path = None
     try:
@@ -1336,7 +1339,10 @@ def create_folder(res_id, folder_path, migrating_resource=False):
 
     for folder in folders:
         if not ResourceFile.is_folder_name_valid(folder):
-            raise SuspiciousFileOperation(f"Folder name ({folder}) is not compliant with Hydroshare requirements")
+            folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
+            err_msg = f"Folder name ({folder}) contains one more prohibited characters. "
+            err_msg = f"{err_msg}Prohibited characters are:\n {folder_banned_chars}"
+            raise SuspiciousFileOperation(err_msg)
 
     istorage.session.run("imkdir", None, '-p', coll_path)
 
@@ -1427,11 +1433,15 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
         if istorage.isFile(src_full_path):
             # renaming a file - need to validate the new file name
             if not ResourceFile.is_filename_valid(tgt_base_name):
-                raise SuspiciousFileOperation("Filename is not compliant with Hydroshare requirements")
+                err_msg = f"Filename ({tgt_base_name}) contains one more prohibited characters. "
+                err_msg = f"{err_msg}Prohibited characters are:\n {ResourceFile.banned_symbols()}"
+                raise SuspiciousFileOperation(err_msg)
         else:
             # renaming a folder - need validate the new folder name
             if not ResourceFile.is_folder_name_valid(tgt_base_name):
-                err_msg = f"Folder name ({tgt_base_name}) is not compliant with Hydroshare requirements"
+                folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
+                err_msg = f"Folder name ({tgt_base_name}) contains one more prohibited characters. "
+                err_msg = f"{err_msg}Prohibited characters are:\n {folder_banned_chars}"
                 raise SuspiciousFileOperation(err_msg)
 
     istorage.moveFile(src_full_path, tgt_full_path)
@@ -1483,12 +1493,17 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
         tgt_file_name = os.path.basename(tgt_full_path)
         # renaming a file
         if not ResourceFile.is_filename_valid(tgt_file_name):
-            raise ValidationError(f"Filename ({tgt_file_name}) is not compliant with Hydroshare requirements")
+            err_msg = f"Filename ({tgt_file_name}) contains one more prohibited characters. "
+            err_msg = f"{err_msg}Prohibited characters are:\n {ResourceFile.banned_symbols()}"
+            raise ValidationError(err_msg)
     else:
         # renaming a folder
         tgt_folder_name = os.path.basename(tgt_full_path)
         if not ResourceFile.is_folder_name_valid(tgt_folder_name):
-            raise ValidationError(f"Folder name ({tgt_folder_name}) is not compliant with Hydroshare requirements")
+            folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
+            err_msg = f"Folder name ({tgt_folder_name}) contains one more prohibited characters. "
+            err_msg = f"{err_msg}Prohibited characters are:\n {folder_banned_chars}"
+            raise ValidationError(err_msg)
 
     istorage.moveFile(src_full_path, tgt_full_path)
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
