@@ -3278,35 +3278,39 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @classmethod
     def is_zip_file_valid(cls, res_zipfile):
-        """Validates file/folder name of all files/folders contained in the specified zip file to check if any of them
-        contains any of the banned characters.
-        :param res_zipfile: a resource file that's a zip file
+        """Validates file/folder name of all files/folders contained in the specified zip file to check if any of the
+        files/folders contains any of the banned characters.
+        :param res_zipfile: a resource file an instance of ResourceFile that's a zip file
+        :returns: True or False
         """
 
         from .hydroshare import get_file_from_irods
+
         zip_temp_file_path = get_file_from_irods(resource=res_zipfile.resource, file_path=res_zipfile.storage_path)
         temp_dir = os.path.dirname(zip_temp_file_path)
-        if not zipfile.is_zipfile(zip_temp_file_path):
-            return False
+        try:
+            if not zipfile.is_zipfile(zip_temp_file_path):
+                return False
 
-        with zipfile.ZipFile(zip_temp_file_path, 'r') as zip_file:
-            is_valid = True
-            for filepath in zip_file.namelist():
-                dir_path, file_name = os.path.split(filepath)
-                if not cls.is_filename_valid(file_name):
-                    is_valid = False
-                    break
-                if dir_path:
-                    folders = dir_path.split("/")
-                    for folder in folders:
-                        if not cls.is_folder_name_valid(folder):
-                            is_valid = False
-                            break
-                if not is_valid:
-                    break
+            with zipfile.ZipFile(zip_temp_file_path, 'r') as zip_file:
+                is_valid = True
+                for filepath in zip_file.namelist():
+                    dir_path, file_name = os.path.split(filepath)
+                    if not cls.is_filename_valid(file_name):
+                        is_valid = False
+                        break
+                    if dir_path:
+                        folders = dir_path.split("/")
+                        for folder in folders:
+                            if not cls.is_folder_name_valid(folder):
+                                is_valid = False
+                                break
+                    if not is_valid:
+                        break
+        finally:
+            if os.path.isdir(temp_dir):
+                shutil.rmtree(temp_dir)
 
-        if os.path.isdir(temp_dir):
-            shutil.rmtree(temp_dir)
         return is_valid
 
     @classmethod
