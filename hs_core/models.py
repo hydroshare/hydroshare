@@ -5,6 +5,7 @@ import logging
 import os.path
 import re
 import unicodedata
+import urllib.parse
 from uuid import uuid4
 
 import arrow
@@ -2187,7 +2188,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return self.get_url_of_path('')
 
     def get_url_of_path(self, path):
-        """Return the URL of an arbtrary path in this resource.
+        """Return the URL of an arbitrary path in this resource.
 
         A GET of this URL simply returns the contents of the path.
         This URL is independent of federation.
@@ -2206,7 +2207,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         """
         # must start with a / in order to concat with current_site_url.
-        return '/' + os.path.join('resource', self.short_id, path)
+        url_encoded_path = urllib.parse.quote(path)
+        return '/' + os.path.join('resource', self.short_id, url_encoded_path)
 
     def get_irods_path(self, path, prepend_short_id=True):
         """Return the irods path by which the given path is accessed.
@@ -3371,7 +3373,8 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         This url does NOT depend upon federation status.
         """
-        return '/' + os.path.join('resource', self.public_path)
+        url_encoded_file_path = urllib.parse.quote(self.public_path)
+        return '/' + os.path.join('resource', url_encoded_file_path)
 
     @property
     def public_path(self):
