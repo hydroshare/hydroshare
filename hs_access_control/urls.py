@@ -22,12 +22,6 @@ urlpatterns = [
     url(r'^_internal/group/(?P<gid>[0-9]+)/(?P<action>[a-z_ ]*)/(?P<cid>[0-9]+)/$',
         views.GroupView.as_view(), name='access_manage_group'),
 
-    # Group JSON responders (deprecated)
-    # url(r'^_internal/groupjson/(?P<gid>[0-9]+)/$',
-    #     views.GroupView.as_view()),
-    # url(r'^_internal/groupjson/(?P<gid>[0-9]+)/(?P<action>[a-z_ ]*)/(?P<cid>[0-9]+)/$',
-    #     views.GroupView.as_view()),
-
     # Community request responders also return JSON
     url(r'^_internal/crequest/$',
         views.CommunityRequestView.as_view(), name='access_manage_crequests'),

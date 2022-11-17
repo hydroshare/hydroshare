@@ -10,7 +10,7 @@
         <div class="col-xs-12 content-block">
             <table class="table hs-table info-table">
                 {% for relation in relations %}
-                    {% if relation.type|lower != "haspart" and relation.type|lower != "ispartof" %}
+                    {% if relation.type|lower != "haspart" and relation.type|lower != "ispartof" and relation.type|lower != "relation" %}
                         <tr style="padding-bottom: 20px">
                             <td class="dataset-label" style="min-width: 100px;">
                                 {{ relation.type_description }}
@@ -56,7 +56,7 @@ Click this button to add a relationship to another resource, external website, o
         <table class="table hs-table info-table">
             <tbody>
             {% for relation in relations %}
-                {% if  relation.type|lower != "haspart" and relation.type|lower != "ispartof" %}
+                {% if  relation.type|lower != "haspart" and relation.type|lower != "ispartof" and relation.type|lower != "relation" %}
                     <tr>
                         <td scope="row" class="dataset-label" style="min-width: 100px;">
                             {{ relation.type_description }}

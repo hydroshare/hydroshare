@@ -1008,6 +1008,7 @@ class Relation(AbstractMetaDataElement):
         (RelationTypes.references.value, 'The content of this resource references'),
         (RelationTypes.replaces.value, 'This resource replaces'),
         (RelationTypes.source.value, 'The content of this resource is derived from'),
+        (RelationTypes.relation.value, 'The content of this resource is related to'),
         (RelationTypes.isSimilarTo.value, 'The content of this resource is similar to')
     )
 
@@ -1036,12 +1037,16 @@ class Relation(AbstractMetaDataElement):
         return dict(self.SOURCE_TYPES)[self.type]
 
     def rdf_triples(self, subject, graph):
-        relation_node = BNode()
-        graph.add((subject, self.get_class_term(), relation_node))
-        if self.type in self.HS_RELATION_TERMS:
-            graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+        if self.type == RelationTypes.relation.value:
+            # avoid creating empty nodes for "relations" that only contain a URI
+            graph.add((subject, self.get_class_term(), URIRef(self.value)))
         else:
-            graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
+            relation_node = BNode()
+            graph.add((subject, self.get_class_term(), relation_node))
+            if self.type in self.HS_RELATION_TERMS:
+                graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+            else:
+                graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):

@@ -3,15 +3,12 @@ from datetime import datetime
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Exists, F, OuterRef, Q
-from mezzanine.conf import settings
 from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from hs_core.models import BaseResource
 from theme.utils import get_upload_path_community
-from ..enums import CommunityRequestEvents
 
 
 ###################################
@@ -105,7 +102,7 @@ class Community(models.Model):
         from hs_access_control.models.privilege import PrivilegeCodes
 
         # TODO: propagated resources should be owned by a member of the publishing group,
-        # and not just any group in the community!
+        #  and not just any group in the community!
         if not self.active:
             return BaseResource.objects.none()
         res = BaseResource\
@@ -262,60 +259,6 @@ class Community(models.Model):
         else:
             return None
 
-# deprecated by RequestCommunity (TODO: need to clean up this commented code)
-# class CommunityRequest(models.Model):
-#     """ application for creating a community """
-#     name = models.TextField(null=False, blank=False)
-#     description = models.TextField(null=False, blank=False)
-#     email = models.TextField(null=True, blank=True)
-#     url = models.TextField(null=True, blank=True)
-#     purpose = models.TextField(null=True, blank=True)
-#     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
-#     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
-#     date_processed = models.DateTimeField(editable=False, null=True)
-#     picture = models.ImageField(upload_to='community', null=True, blank=True)
-#     # whether community is available to be joined
-#     closed = models.BooleanField(null=False, default=True, blank=False, editable=False)
-#     # user requesting community
-#     owner = models.ForeignKey(User, null=True, editable=False)
-#     # approval information: null means undecided
-#     approved = models.NullBooleanField(null=True, default=None, blank=False, editable=False)
-
-#     def __str__(self):
-#         return self.name
-
-#     def approve(self):
-#         from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
-#         c = Community.objects.create(
-#            name=self.name,
-#            description=self.description,
-#            email=self.email,
-#            url=self.url,
-#            purpose=self.purpose,
-#            closed=self.closed)
-
-#         self.approved = True
-#         self.date_processed = datetime.now()
-#         self.save()
-
-#         # Must bootstrap access control system initially
-#         # * Set the initial owner as given.
-#         # * grantor is always admin.
-#         admin = User.objects.get(username='admin')
-#         owner = User.objects.get(username=self.owner)
-#         UserCommunityPrivilege.share(community=c,
-#                                      user=owner,
-#                                      grantor=admin,
-#                                      privilege=PrivilegeCodes.OWNER)
-
-#         return "community '{}' approved and created.".format(self.name)
-
-#     def decline(self):
-#         self.approved = False
-#         self.date_processed = datetime.now()
-#         self.save()
-#         return "community '{}' declined and not created.".format(self.name)
-
 
 class RequestCommunity(models.Model):
     """A request to create a new community
@@ -326,11 +269,16 @@ class RequestCommunity(models.Model):
     requested_by = models.ForeignKey(User, related_name='u2crequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     date_processed = models.DateTimeField(editable=False, null=True)
-    approved = models.NullBooleanField(null=True, default=None, blank=False)
+    pending_approval = models.BooleanField(default=True)
+    declined = models.BooleanField(default=False)
     decline_reason = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ['date_requested']
+
+    @property
+    def approved(self):
+        return not self.declined and not self.pending_approval
 
     @classmethod
     def create_request(cls, request):
@@ -346,9 +294,6 @@ class RequestCommunity(models.Model):
         community_form = RequestNewCommunityForm(request.POST, request.FILES)
         if community_form.is_valid():
             new_community_request = community_form.save(request)
-            # send email to hydroshare support (TODO: need to send it a designated admin email once
-            #   we know the admin email)
-            new_community_request.send_email(request_event=CommunityRequestEvents.CREATED)
             return new_community_request
 
         err_msg = f"Failed to make a request for a new community. Errors: {community_form.errors.as_json}"
@@ -358,34 +303,36 @@ class RequestCommunity(models.Model):
         """Helper to approve a request to create a new community
         Note: The caller of this function needs to check authorization for approval
         """
-        assert self.approved is None
+        assert self.pending_approval is True
+        assert self.declined is False
 
         self.date_processed = datetime.now()
-        self.approved = True
+        self.pending_approval = False
         # upon approval the request the associated community is set to active
         self.community_to_approve.active = True
         self.community_to_approve.save()
         self.save()
-        self.send_email(request_event=CommunityRequestEvents.APPROVED)
 
     def decline(self, reason):
         """Helper to reject a request to create a new community
         :param reason: reason for rejecting the request to create a community
         Note: The caller of this function needs to check authorization for approval
         """
-        assert self.approved is None
+        assert self.pending_approval is True
+        assert self.declined is False
+
         reason = reason.strip()
         if not reason:
             raise ValidationError("No reason for rejecting the request was provided")
 
         self.date_processed = datetime.now()
-        self.approved = False
+        self.pending_approval = False
+        self.declined = True
         self.decline_reason = reason
         # upon approval the request the associated community is set to active
         self.community_to_approve.active = False
         self.community_to_approve.save()
         self.save()
-        self.send_email(request_event=CommunityRequestEvents.DECLINED)
 
     def remove(self):
         assert not self.community_to_approve.active
@@ -396,7 +343,7 @@ class RequestCommunity(models.Model):
         """Updates data for a community that is waiting for approval"""
         from ..forms import CommunityForm
 
-        if self.approved is not None:
+        if not self.pending_approval:
             raise ValidationError("Can't update this community request")
 
         community_to_update = self.community_to_approve
@@ -427,38 +374,6 @@ class RequestCommunity(models.Model):
             community_to_update.banner = img
             community_to_update.save()
 
-    def send_email(self, request_event):
-        if request_event == CommunityRequestEvents.CREATED:
-            recipient_emails = [settings.DEFAULT_SUPPORT_EMAIL]
-            subject = "New HydroShare Community Create Request"
-            message = f"""Dear HydroShare Admin,
-            <p>User {self.requested_by.first_name} is requesting creation of the following community.
-            Please click on the link below to review this request.
-            <p><a href="{self.get_absolute_url()}">{self.community_to_approve.name}</a></p>
-            <p>HydroShare Team</p>
-            """
-        elif request_event == CommunityRequestEvents.DECLINED:
-            recipient_emails = [self.requested_by.email]
-            subject = "HydroShare Community Create Request Declined"
-            message = f"""Dear {self.requested_by.first_name},
-            <p>Sorry to inform you that your request to create the community
-            <a href="{self.get_absolute_url()}">{self.community_to_approve.name}</a> was not approved due to
-            the reason stated below:</p>
-            <p>{self.decline_reason}</p>
-            <p>HydroShare Team</p>
-            """
-        else:
-            # community request approved event
-            recipient_emails = [self.requested_by.email]
-            subject = "HydroShare Community Create Request Approved"
-            message = f"""Dear {self.requested_by.first_name},
-            <p>Glad to inform you that your request to create the community
-            <a href="{self.get_absolute_url(request=False)}">{self.community_to_approve.name}</a> has been approved.</p>
-            <p>HydroShare Team</p>
-            """
-        send_mail(subject=subject, message=message, html_message=message, from_email=settings.DEFAULT_FROM_EMAIL,
-                  recipient_list=recipient_emails, fail_silently=True)
-
     def get_absolute_url(self, request=True):
         from hs_core.hydroshare import current_site_url
         site_domain = current_site_url()
@@ -479,4 +394,4 @@ class RequestCommunity(models.Model):
     @classmethod
     def pending_requests(cls):
         """Gets a queryset of all pending community requests"""
-        return cls.objects.filter(Q(approved=None)).select_related('community_to_approve')
+        return cls.objects.filter(pending_approval=True).select_related('community_to_approve')
