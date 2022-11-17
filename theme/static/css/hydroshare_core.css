@@ -3614,7 +3614,9 @@ div.btn-update-picture:hover {
 }
 
 .organization-divider{
-	margin-bottom: .2em;
+	margin-bottom: .3em;
+	border-bottom: 1px solid transparent;
+	border-color: #ddd;
 	width: fit-content;
 	overflow: hidden;
 	text-overflow: ellipsis;
