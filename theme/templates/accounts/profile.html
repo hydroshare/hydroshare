@@ -111,7 +111,7 @@
 
                                 {#        Organization and Title       #}
                                 {% if profile.organization or profile.title %}
-                                    <h4 class="text-muted">
+                                    <h4 id="organization" class="text-muted">
                                         {% if profile.organization %}{{ profile.organization }}{% endif %}
                                         {% if profile.organization and profile.title %} | {% endif %}
                                         {% if profile.title %}{{ profile.title }}{% endif %}

@@ -3613,6 +3613,14 @@ div.btn-update-picture:hover {
 	margin-bottom: 60px;
 }
 
+.organization-divider{
+	margin-bottom: .2em;
+	width: fit-content;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	word-wrap: anywhere;
+  }
+
 .form-invalid {
     border-color: #E96666;
     outline: 0;
