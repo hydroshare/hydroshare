@@ -1330,11 +1330,14 @@ def create_folder(res_id, folder_path, migrating_resource=False):
         raise ValidationError("Folder creation is not allowed here. "
                               "The target folder seems to contain aggregation(s)")
 
-    # check for duplicate folder path
     folder_path = coll_path[len(resource.file_path) + 1:]
+    # folder name can't be '.' or '..'
+    if any(["/./" in coll_path, "/../" in coll_path, coll_path.endswith("/."), coll_path.endswith("/..")]):
+        err_msg = f"Folder path ({folder_path}) contains invalid folder name(s)."
+        raise SuspiciousFileOperation(err_msg)
+
+    # check for duplicate folder path
     if istorage.exists(coll_path):
-        if any(["/./" in coll_path, "/../" in coll_path, coll_path.endswith("/."), coll_path.endswith("/..")]):
-            raise SuspiciousFileOperation(f"Folder path ({folder_path}) is not compliant with Hydroshare requirements")
         raise ValidationError(f"Folder ({coll_path}) already exists")
 
     for folder in folders:
