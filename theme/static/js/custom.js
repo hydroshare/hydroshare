@@ -167,7 +167,7 @@ $(document).ready(function () {
                 + '<strong>' + missing_field_str + '</strong> fields'
                 + ' on the <a href="/user/' + uid + '/">User Profile</a> page';
 
-            customAlert("Profile", message, "info", 10000);
+            customAlert("Profile", message, "info", 10000, true);
     }
 
     $.ajax({
@@ -296,7 +296,7 @@ $(document).ready(function () {
 
 // Alert Types: "error", "success", "info"
 // pass a duration value of -1 for persistent alerts
-function customAlert(alertTitle, alertMessage, alertType, duration) {
+function customAlert(alertTitle, alertMessage, alertType, duration, dismissable=false) {
     alertType = alertType || "success";
     var el = document.createElement("div");
     var top = 200;
@@ -310,6 +310,10 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
     el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
     alertMessage = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
         + alertTitle + '</strong><br>' + alertMessage;
+    if(dismissable){
+        alertMessage = '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button> ' + alertMessage;
+        el.classList.add("alert-dissmissable");
+    }
     el.innerHTML = alertMessage;
     if (duration !== -1) {
         setTimeout(function () {
