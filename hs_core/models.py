@@ -6,9 +6,7 @@ import os.path
 import re
 import unicodedata
 from uuid import uuid4
-import zipfile
 import arrow
-import shutil
 from dateutil import parser
 
 from django.conf import settings
