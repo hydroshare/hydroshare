@@ -315,7 +315,8 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
         src_path = tgt_path
-        tgt_path = f'{base_path}/my-folder'
+        # renaming folder using chinese characters
+        tgt_path = f'{base_path}/山 刀'
         move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
     def test_meets_preferred_naming_for_files_and_folders(self):
