@@ -1099,37 +1099,49 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
-    # validate file/folder names in the zip file - checking for banned character
-    folder_path, file_name = os.path.split(zip_with_rel_path[len('data/contents/'):])
-    res_zip_file = ResourceFile.get(resource=resource, folder=folder_path, file=file_name)
-    if not ResourceFile.is_zip_file_valid(res_zip_file):
-        log_msg = f"Failed to unzip. Zip file ({zip_with_full_path}) has file/folder with name that contains " \
-                  f"one or more prohibited characters."
-        logger.error(log_msg)
-        err_msg = "Zip file has file/folder with name that contains one or more prohibited characters."
-        raise SuspiciousFileOperation(err_msg)
-
-    unzip_path = None
+    unzip_to_folder_path = ''
+    unzip_path_temp = ''
     try:
+        # unzip to a temporary folder first to validate contents of the zip file
+        unzip_path_temp = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+
+        # validate files in the zip file - checking for banned characters
+        unzipped_files = listfiles_recursively(istorage, unzip_path_temp)
+        for file_in_zip in unzipped_files:
+            file_in_zip = os.path.basename(file_in_zip)
+            if not ResourceFile.is_filename_valid(file_in_zip):
+                log_msg = f"Failed to unzip. Zip file ({zip_with_full_path}) has file with name that contains " \
+                          f"one or more prohibited characters."
+                logger.error(log_msg)
+                err_msg = "Zip file has file with name that contains one or more prohibited characters."
+                raise SuspiciousFileOperation(err_msg)
+
+        # validate folders in the zip file - checking for banned characters
+        unzipped_folder_paths = list_folders_recursively(istorage, unzip_path_temp)
+        for folder_in_zip in unzipped_folder_paths:
+            folder_in_zip = os.path.basename(folder_in_zip)
+            if not ResourceFile.is_folder_name_valid(folder_in_zip):
+                log_msg = f"Failed to unzip. Zip file ({zip_with_full_path}) has folder with name that contains " \
+                          f"one or more prohibited characters."
+                logger.error(log_msg)
+                err_msg = "Zip file has folder with name that contains one or more prohibited characters."
+                raise SuspiciousFileOperation(err_msg)
+
         if unzip_to_folder:
             # unzip to the subfolder with zip file base name as the subfolder name. If the subfolder name already
             # exists, a sequential number is appended to the subfolder name to make sure the subfolder name is unique
             unzip_folder = os.path.splitext(os.path.basename(zip_with_full_path))[0].strip()
-            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder)
-            res_files = link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
+            unzip_to_folder_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder)
+            res_files = link_irods_folder_to_django(resource, istorage, unzip_to_folder_path, auto_aggregate)
             if resource.resource_type == 'CompositeResource':
                 # make the newly added files part of an aggregation if needed
                 for res_file in res_files:
                     resource.add_file_to_aggregation(res_file)
         else:
             # unzip to the current folder
-            # unzip to a temporary folder first, then move every file to the current folder
-            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
-            dir_file_list = istorage.listdir(unzip_path)
+            dir_file_list = istorage.listdir(unzip_path_temp)
             unzip_subdir_list = dir_file_list[0]
-            # list all files to be moved into the resource
-            unzipped_files = listfiles_recursively(istorage, unzip_path)
-            unzipped_foldername = os.path.basename(unzip_path)
+            unzipped_foldername = os.path.basename(unzip_path_temp)
             override_tgt_paths = []
             for sub_dir_name in unzip_subdir_list:
                 dest_sub_path = os.path.join(os.path.dirname(zip_with_full_path), sub_dir_name)
@@ -1205,12 +1217,14 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
                 from hs_file_types.utils import ingest_metadata_files
                 ingest_metadata_files(resource, meta_files, map_files)
-            istorage.delete(unzip_path)
-    except Exception:
-        logger.exception("failed to unzip")
-        if unzip_path and istorage.exists(unzip_path):
-            istorage.delete(unzip_path)
+    except Exception as err:
+        logger.exception(f"failed to unzip file:{zip_with_full_path}. Error:{str(err)}")
+        if unzip_to_folder_path and istorage.exists(unzip_to_folder_path):
+            istorage.delete(unzip_to_folder_path)
         raise
+    finally:
+        if unzip_path_temp and istorage.exists(unzip_path_temp):
+            istorage.delete(unzip_path_temp)
 
     if bool_remove_original and not ingest_metadata:  # ingest_metadata deletes the zip by default
         zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
@@ -1293,6 +1307,11 @@ def _get_destination_filename(file, unzipped_foldername):
 
 
 def listfiles_recursively(istorage, path):
+    """Returns a list of all file paths that start with the specified path
+    :param  istorage: an instance of Storage class
+    :param  path: the directory path for which all file paths are needed
+    :returns a list of file paths
+    """
     files = []
     listing = istorage.listdir(path)
     for file in listing[1]:
@@ -1302,7 +1321,25 @@ def listfiles_recursively(istorage, path):
     return files
 
 
+def list_folders_recursively(istorage, path):
+    """Returns a list of all folder paths that start with the specified path
+    :param  istorage: an instance of Storage class
+    :param  path: the directory path for which all sub folder paths are needed
+    :returns a list of directory paths
+    """
+    folders = []
+    for folder in listfolders(istorage, path):
+        folders.append(os.path.join(path, folder))
+        folders.extend(list_folders_recursively(istorage, os.path.join(path, folder)))
+    return folders
+
+
 def listfolders(istorage, path):
+    """Returns a list of all sub folders of the specified path
+    :param  istorage: an instance of Storage class
+    :param  path: the directory path for which all sub folders are needed
+    :returns a list of folder names
+    """
     return istorage.listdir(path)[0]
 
 
