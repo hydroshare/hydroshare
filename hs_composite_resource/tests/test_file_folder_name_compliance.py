@@ -472,7 +472,6 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
         res_zip_file = add_file_to_resource(self.res, file_to_upload, check_target_folder=True)
         self.assertEqual(self.res.files.count(), 1)
-        self.assertTrue(ResourceFile.is_zip_file_valid(res_zip_file))
         zip_file_rel_path = os.path.join('data', 'contents', res_zip_file.short_path)
         unzip_file(self.user, self.res.short_id, zip_file_rel_path, bool_remove_original=False)
         for res_file in self.res.files.all():
@@ -484,8 +483,6 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
         res_zip_file = add_file_to_resource(self.res, file_to_upload, check_target_folder=True)
         self.assertEqual(self.res.files.count(), 1)
-        # zip file validation should fail
-        self.assertFalse(ResourceFile.is_zip_file_valid(res_zip_file))
         zip_file_rel_path = os.path.join('data', 'contents', res_zip_file.short_path)
         # unzip should fail
         with self.assertRaises(SuspiciousFileOperation):
@@ -497,9 +494,6 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
         res_zip_file = add_file_to_resource(self.res, file_to_upload, check_target_folder=True)
         self.assertEqual(self.res.files.count(), 2)
-        # zip file validation should fail
-        self.assertFalse(ResourceFile.is_zip_file_valid(res_zip_file))
-
         # unzip should fail
         zip_file_rel_path = os.path.join('data', 'contents', res_zip_file.short_path)
         with self.assertRaises(SuspiciousFileOperation):
