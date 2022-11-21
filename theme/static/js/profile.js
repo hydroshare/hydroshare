@@ -246,6 +246,9 @@ function getUrlVars()
 }
 
 $(document).ready(function () {
+    // Multiple orgs are a string delimited by ";" --wrap them so we can style them
+    $("#organization").splitAndWrapWithClass(";", "organization-divider");
+    
     $("#btn-create-irods-account").click(create_irods_account);
     $("#btn-delete-irods-account").click(delete_irods_account);
 

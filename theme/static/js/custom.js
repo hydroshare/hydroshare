@@ -292,6 +292,16 @@ $(document).ready(function () {
     jQuery.fn.outerHTML = function () {
         return jQuery('<div />').append(this.eq(0).clone()).html();
     };
+
+    jQuery.fn.splitAndWrapWithClass = function (delimiter, className) {
+        return this.each(function () {
+            let substrings = this.innerHTML.split(delimiter);
+            substrings = substrings.map((string) => {
+                return "<div class=\"" + className + "\">" + string + "</div>";
+            });
+            this.innerHTML = substrings.join("");
+        })
+    };
 });
 
 // Alert Types: "error", "success", "info"
