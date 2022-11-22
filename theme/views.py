@@ -62,7 +62,7 @@ class UserProfileView(TemplateView):
             except:
                 u = User.objects.get(username=self.request.GET['user'])
 
-        elif not self.request.user.is_anonymous():
+        elif not self.request.user.is_anonymous:
             # if the user is logged in and no user is specified, show logged in user
             u = User.objects.get(pk=int(self.request.user.id))
 
