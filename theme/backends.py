@@ -5,7 +5,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.tokens import default_token_generator, PasswordResetTokenGenerator
 from django.db.models import Q
 from django.utils.http import base36_to_int
-from django.utils.six import text_type
+from six import text_type
 
 
 class WithoutLoggedInDateTokenGenerator(PasswordResetTokenGenerator):

@@ -4,6 +4,7 @@
 # Features that are not used have been commented out temporarily
 
 from haystack import indexes
+from haystack import fields
 from hs_core.models import BaseResource
 from datetime import datetime
 from nameparser import HumanName
@@ -164,10 +165,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     title = indexes.FacetCharField()  # so that sorting isn't tokenized
     title_lower = indexes.FacetCharField()  # so that sorting isn't tokenized
     abstract = indexes.CharField()
-    creator = indexes.FacetMultiValueField()
-    contributor = indexes.FacetMultiValueField()
-    subject = indexes.FacetMultiValueField()
-    availability = indexes.FacetMultiValueField()
+    creator = fields.FacetMultiValueField()
+    contributor = fields.FacetMultiValueField()
+    subject = fields.FacetMultiValueField()
+    availability = fields.FacetMultiValueField()
     shareable = indexes.BooleanField()
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField(stored=False)
@@ -198,11 +199,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     language = indexes.CharField(stored=False)
     relation = indexes.MultiValueField(stored=False)
     resource_type = indexes.FacetCharField()
-    content_type = indexes.FacetMultiValueField()
-    content_exts = indexes.FacetMultiValueField()
+    content_type = fields.FacetMultiValueField()
+    content_exts = fields.FacetMultiValueField()
     comment = indexes.MultiValueField(stored=False)
     owner_login = indexes.MultiValueField(stored=False)
-    owner = indexes.FacetMultiValueField()
+    owner = fields.FacetMultiValueField()
     person = indexes.MultiValueField(stored=False)
 
     # non-core metadata

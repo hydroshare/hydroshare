@@ -14,7 +14,7 @@ from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, Gene
 from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH
 from hs_file_types.models.geofeature import FieldInformation, GeometryInformation, OriginalCoverageGeofeature
 from .utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin, \
-    get_path_with_no_file_extension
+    get_path_with_no_file_extension, get_number_of_decimal_places
 
 
 class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -259,10 +259,18 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                          'unknown')
         self.assertGreater(len(logical_file.metadata.originalcoverage.projection_string), 0)
         self.assertEqual(logical_file.metadata.originalcoverage.unit, 'unknown')
-        self.assertEqual(logical_file.metadata.originalcoverage.eastlimit, -66.9692712587578)
-        self.assertEqual(logical_file.metadata.originalcoverage.northlimit, 71.406235393967)
-        self.assertEqual(logical_file.metadata.originalcoverage.southlimit, 18.921786345087)
-        self.assertEqual(logical_file.metadata.originalcoverage.westlimit, -178.217598362366)
+        expected_elimit = -66.9692712587578
+        self.assertAlmostEqual(logical_file.metadata.originalcoverage.eastlimit, expected_elimit,
+                               places=get_number_of_decimal_places(expected_elimit))
+        expected_nlimit = 71.406235393967
+        self.assertAlmostEqual(logical_file.metadata.originalcoverage.northlimit, expected_nlimit,
+                               places=get_number_of_decimal_places(expected_nlimit))
+        expected_slimit = 18.921786345087
+        self.assertAlmostEqual(logical_file.metadata.originalcoverage.southlimit, expected_slimit,
+                               places=get_number_of_decimal_places(expected_slimit))
+        expected_wlimit = -178.217598362366
+        self.assertAlmostEqual(logical_file.metadata.originalcoverage.westlimit, expected_wlimit,
+                               places=get_number_of_decimal_places(expected_wlimit))
 
         # there should not be any file level keywords
         self.assertEqual(logical_file.metadata.keywords, [])

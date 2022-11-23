@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 from django.utils.deconstruct import deconstructible
 from django.conf import settings
 from django.core.files.storage import Storage
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.exceptions import ValidationError
 
 from django_irods import icommands

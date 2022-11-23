@@ -5,7 +5,6 @@ import random
 import shutil
 from uuid import uuid4
 
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from foresite import utils, Aggregation, URIRef, AggregatedResource, RdfLibSerializer
@@ -26,7 +25,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
 
     # metadata schema (in json format) for model instance aggregation
     # metadata for the model instance aggregation is validated based on this schema
-    metadata_schema_json = JSONField(default=dict)
+    metadata_schema_json = models.JSONField(default=dict)
 
     class Meta:
         abstract = True

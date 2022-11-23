@@ -75,7 +75,7 @@ $(document).ready(function () {
     // Smooth scrolling for UI elements page
     // =====================================
 
-    $('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
+    $('a[href*="#buttons"],a[href*="#panels"], a[href*="#info-boards"], a[href*="#navs"], a[href*="#alerts"], a[href*="#thumbnails"], a[href*="#social"], a[href*="#section-header"],a[href*="#page-tip"], a[href*="#block-header"]').bind("click", function (e) {
         var anchor = $(this);
         $('html, body').stop().animate({
             scrollTop: $(anchor.attr('href')).offset().top

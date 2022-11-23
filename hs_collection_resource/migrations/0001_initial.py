@@ -37,11 +37,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='collectiondeletedresource',
             name='collection',
-            field=models.ForeignKey(to='hs_core.BaseResource'),
+            field=models.ForeignKey(on_delete=models.CASCADE, to='hs_core.BaseResource'),
         ),
         migrations.AddField(
             model_name='collectiondeletedresource',
             name='deleted_by',
-            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL),
         ),
     ]

@@ -21,7 +21,7 @@ def landing_page(request, page):
                                                request=request)
     if edit_resource:
         user = request.user
-        if not user.is_authenticated():
+        if not user.is_authenticated:
             return HttpResponseForbidden()
 
         context['collection_res_id'] = content_model.short_id

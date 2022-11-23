@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.contrib.messages import info, error
 from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.mail import send_mail
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.db.models.query import prefetch_related_objects
@@ -21,7 +21,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.utils.http import int_to_base36
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 from mezzanine.accounts.forms import LoginForm
 from mezzanine.conf import settings
@@ -62,7 +62,7 @@ class UserProfileView(TemplateView):
             except:
                 u = User.objects.get(username=self.request.GET['user'])
 
-        elif not self.request.user.is_anonymous():
+        elif not self.request.user.is_anonymous:
             # if the user is logged in and no user is specified, show logged in user
             u = User.objects.get(pk=int(self.request.user.id))
 
@@ -74,7 +74,7 @@ class UserProfileView(TemplateView):
         # if requesting user is not the profile user, then show only resources that the
         # requesting user has access
         if self.request.user != u:
-            if self.request.user.is_authenticated():
+            if self.request.user.is_authenticated:
                 if self.request.user.is_superuser:
                     # admin can see all resources owned by profile user
                     pass
@@ -478,7 +478,7 @@ def send_verification_mail_for_password_reset(request, user):
 
 
 def home_router(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return redirect("dashboard")
     else:
         return render(request, "pages/homepage.html")

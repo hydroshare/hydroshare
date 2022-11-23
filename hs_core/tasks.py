@@ -14,7 +14,6 @@ from xml.etree import ElementTree
 import requests
 from celery import shared_task
 from celery.schedules import crontab
-from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.sites.models import Site
@@ -23,6 +22,7 @@ from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag
+from hydroshare.hydrocelery import app as celery_app
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
 from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref
 from hs_core.task_utils import get_or_create_task_notification
@@ -71,10 +71,25 @@ class FileOverrideException(Exception):
         super(FileOverrideException, self).__init__(self, error_message)
 
 
+@celery_app.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    if (hasattr(settings, 'DISABLE_PERIODIC_TASKS') and settings.DISABLE_PERIODIC_TASKS):
+        logger.debug("Periodic tasks are disabled in SETTINGS")
+    else:
+        sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=0), manage_task_nightly.s())
+        sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
+                                    send_over_quota_emails.s())
+        sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
+        sender.add_periodic_task(crontab(day_of_month=1), monthly_group_membership_requests_cleanup.s())
+        sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
+        sender.add_periodic_task(crontab(day_of_week=1), task_notification_cleanup.s())
+
+
 # Currently there are two different cleanups scheduled.
 # One is 20 minutes after creation, the other is nightly.
 # TODO Clean up zipfiles in remote federated storage as well.
-@periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=23))
+@celery_app.task(ignore_result=True)
 def nightly_zips_cleanup():
     # delete 2 days ago
     date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
@@ -99,7 +114,7 @@ def nightly_zips_cleanup():
                 istorage.delete(zips_daily_date)
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
+@celery_app.task(ignore_result=True)
 def manage_task_nightly():
     # The nightly running task do DOI activation check
 
@@ -177,8 +192,7 @@ def manage_task_nightly():
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=15, hour=0, day_of_week=1,
-                                                     day_of_month='1-7'))
+@celery_app.task(ignore_result=True)
 def send_over_quota_emails():
     # check over quota cases and send quota warning emails as needed
     hs_internal_zone = "hydroshare"
@@ -461,7 +475,7 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new collection will not contain "deleted resources"
-            new_res.resources = ori_res.resources.all()
+            new_res.resources.set(ori_res.resources.all())
 
         # create bag for the new resource
         create_bag(new_res)
@@ -510,7 +524,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new version collection will not contain "deleted resources"
-            new_res.resources = ori_res.resources.all()
+            new_res.resources.set(ori_res.resources.all())
 
         # create bag for the new resource
         create_bag(new_res)
@@ -726,7 +740,7 @@ def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
     return res.get_absolute_url()
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
+@celery_app.task(ignore_result=True)
 def daily_odm2_sync():
     """
     ODM2 variables are maintained on an external site this synchronizes data to HydroShare for local caching
@@ -734,7 +748,7 @@ def daily_odm2_sync():
     ODM2Variable.sync()
 
 
-@periodic_task(ignore_result=True, run_every=crontab(day_of_month=1))
+@celery_app.task(ignore_result=True)
 def monthly_group_membership_requests_cleanup():
     """
     Delete expired and redeemed group membership requests
@@ -743,7 +757,7 @@ def monthly_group_membership_requests_cleanup():
     GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=0))
+@celery_app.task(ignore_result=True)
 def daily_innactive_group_requests_cleanup():
     """
     Redeem group membership requests for innactive users
@@ -775,7 +789,7 @@ def update_task_notification(sender=None, task_id=None, task=None, state=None, r
             logger.warning("Unhandled task state of {} for {}".format(state, task_id))
 
 
-@periodic_task(ignore_result=True, run_every=crontab(day_of_week=1))
+@celery_app.task(ignore_result=True)
 def task_notification_cleanup():
     """
     Delete expired task notifications each week

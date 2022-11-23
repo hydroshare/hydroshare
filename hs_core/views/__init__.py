@@ -23,7 +23,7 @@ from django.core import signing
 from django.db import Error, IntegrityError
 from django import forms
 from django.views.generic import TemplateView
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.forms.models import model_to_dict
 
 from rest_framework import status
@@ -34,8 +34,7 @@ from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import subject_template, send_mail_template
 
 from autocomplete_light import shortcuts as autocomplete_light
-from inplaceeditform.commons import get_dict_from_obj, apply_filters
-from inplaceeditform.views import _get_http_response, _get_adaptor
+
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
@@ -69,7 +68,7 @@ from . import apps
 from hs_core.hydroshare import utils
 
 from hs_core.signals import *
-from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
+from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege
 
 
 logger = logging.getLogger(__name__)
@@ -116,7 +115,7 @@ def get_task(request, task_id):
 
 
 def abort_task(request, task_id):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         if TaskNotification.objects.filter(task_id=task_id, username=request.user.username).exists():
             task_dict = revoke_task_by_id(task_id)
             return JsonResponse(task_dict)
@@ -140,7 +139,7 @@ def dismiss_task(request, task_id):
 
 
 def set_task_delivered(request, task_id):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         if TaskNotification.objects.filter(task_id=task_id, username=request.user.username).exists():
             task_dict = set_task_delivered_by_id(task_id)
             if task_dict:
@@ -211,7 +210,7 @@ def update_quota_usage(request, username):
     if req_user.username != settings.IRODS_SERVICE_ACCOUNT_USERNAME:
         return HttpResponseForbidden('only iRODS service account is authorized to '
                                      'perform this action')
-    if not req_user.is_authenticated():
+    if not req_user.is_authenticated:
         return HttpResponseForbidden('You are not authenticated to perform this action')
 
     try:
@@ -1169,41 +1168,6 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
     return JsonResponse(ajax_response_data)
 
 
-# view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
-def save_ajax(request):
-    if not request.method == 'POST':
-        return _get_http_response({'errors': 'It is not a POST request'})
-    adaptor = _get_adaptor(request, 'POST')
-    if not adaptor:
-        return _get_http_response({'errors': 'Params insufficient'})
-    if not adaptor.can_edit():
-        return _get_http_response({'errors': 'You can not edit this content'})
-    value = adaptor.loads_to_post(request)
-    new_data = get_dict_from_obj(adaptor.obj)
-    form_class = adaptor.get_form_class()
-    field_name = adaptor.field_name
-    new_data['in_menus'] = ''
-    form = form_class(data=new_data, instance=adaptor.obj)
-    try:
-        value_edit = adaptor.get_value_editor(value)
-        value_edit_with_filter = apply_filters(value_edit, adaptor.filters_to_edit)
-        new_data[field_name] = value_edit_with_filter
-        new_data[field_name] = value_edit_with_filter
-        if form.is_valid():
-            adaptor.save(value_edit_with_filter)
-            return _get_http_response({'errors': False,
-                                        'value': adaptor.render_value_edit()})
-        messages = [] # The error is for another field that you are editing
-        for field_name_error, errors_field in list(form.errors.items()):
-            for error in errors_field:
-                messages.append("%s: %s" % (field_name_error, str(error)))
-        message_i18n = ','.join(messages)
-        return _get_http_response({'errors': message_i18n})
-    except ValidationError as error: # The error is for a field that you are editing
-        message_i18n = ', '.join(["%s" % m for m in error.messages])
-        return _get_http_response({'errors': message_i18n})
-
-
 def verify_account(request, *args, **kwargs):
     context = {
             'username' : request.GET['username'],
@@ -1313,6 +1277,24 @@ class GroupUpdateForm(GroupForm):
         self._set_privacy_level(group_to_update, privacy_level)
 
 
+class PatchedChoiceWidget(autocomplete_light.ChoiceWidget):
+    """Patching the render() function of ChoiceWidget class to work with Django 3.2"""
+    def __init__(self, autocomplete=None, widget_js_attributes=None,
+                 autocomplete_js_attributes=None, extra_context=None, registry=None,
+                 widget_template=None, widget_attrs=None, *args,
+                 **kwargs):
+        super(PatchedChoiceWidget, self).__init__(autocomplete, widget_js_attributes,
+                                                  autocomplete_js_attributes, extra_context, registry,
+                                                  widget_template, widget_attrs, *args,
+                                                  **kwargs)
+
+    def render(self, name, value, attrs=None, renderer=None):
+        """Adding the 'renderer' parameter to fix the exception
+        'render() got an unexpected keyword argument 'renderer'"""
+
+        return super(PatchedChoiceWidget, self).render(name, value, attrs)
+
+
 @processor_for(GenericResource)
 def add_generic_context(request, page):
     user = request.user
@@ -1320,23 +1302,27 @@ def add_generic_context(request, page):
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
+                                      widget=PatchedChoiceWidget(autocomplete="UserAutocomplete",
+                                                                 attrs={'id': 'user'}))
 
     class AddUserContriForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'contri'}))
+                                      widget=PatchedChoiceWidget(autocomplete="UserAutocomplete",
+                                                                 attrs={'id': 'user'}))
 
     class AddUserInviteForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'invite'}))
+                                      widget=PatchedChoiceWidget(autocomplete="UserAutocomplete",
+                                                                 attrs={'id': 'user'}))
 
     class AddUserHSForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'hs-user'}))
+                                      widget=PatchedChoiceWidget(autocomplete="UserAutocomplete",
+                                                                 attrs={'id': 'user'}))
 
     class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='Hydroshare Author').all(),
-                                       widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
+        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(
+            name='Hydroshare Author').all(), widget=PatchedChoiceWidget(autocomplete="GroupAutocomplete"))
 
     return {
         'add_view_contrib_user_form': AddUserContriForm(),
@@ -1873,12 +1859,12 @@ class FindGroupsView(TemplateView):
     template_name = 'pages/groups-unauthenticated.html'  # default view is for users not logged in
 
     def dispatch(self, *args, **kwargs):
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             self.template_name = 'pages/groups-authenticated.html'  # update template if user is logged in
         return super(FindGroupsView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             u = User.objects.get(pk=self.request.user.id)
 
             groups = Group.objects.filter(gaccess__active=True).exclude(
@@ -1947,14 +1933,14 @@ class MyGroupsView(TemplateView):
 
 
 class AddUserForm(forms.Form):
-    user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
+    user = forms.ModelChoiceField(User.objects.all(), widget=PatchedChoiceWidget("UserAutocomplete"))
 
 
 class GroupView(TemplateView):
     template_name = 'pages/group-unauthenticated.html'
 
     def dispatch(self, *args, **kwargs):
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             self.template_name = 'pages/group.html'
         return super(GroupView, self).dispatch(*args, **kwargs)
 
@@ -1973,7 +1959,7 @@ class GroupView(TemplateView):
 
         group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
 
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             group_members = g.gaccess.members
             u = User.objects.get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
