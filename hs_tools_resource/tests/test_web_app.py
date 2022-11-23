@@ -300,7 +300,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create 1 ToolIcon obj with required params
         metadata.append(
-            {'toolicon': {'value': 'https://www.hydroshare.org/static/img/logo-sm.png'}})
+            {'toolicon': {'value': 'https://www.hydroshare.org/static/static/img/logo-sm.png'}})
         # do the bulk metadata update
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(ToolIcon.objects.all().count(), 1)
