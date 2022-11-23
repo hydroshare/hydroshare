@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='HomePage',
             fields=[
-                ('page_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='pages.Page')),
+                ('page_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, on_delete=models.CASCADE, to='pages.Page')),
                 ('heading', models.CharField(max_length=100)),
                 ('slide_in_one_icon', models.CharField(max_length=50, blank=True)),
                 ('slide_in_one', models.CharField(max_length=200, blank=True)),
@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(max_length=200)),
                 ('link_text', models.CharField(max_length=100)),
                 ('link', models.CharField(help_text='Optional, if provided clicking the box will go here.', max_length=2000, blank=True)),
-                ('homepage', models.ForeignKey(related_name='boxes', to='theme.HomePage')),
+                ('homepage', models.ForeignKey(related_name='boxes', on_delete=models.CASCADE, to='theme.HomePage')),
             ],
             options={
                 'ordering': ('_order',),
@@ -76,7 +76,7 @@ class Migration(migrations.Migration):
                 ('gplus_link', models.CharField(max_length=2000, blank=True)),
                 ('has_social_network_links', models.BooleanField(default=False)),
                 ('copyright', models.TextField(default='&copy {% now "Y" %} {{ settings.SITE_TITLE }}')),
-                ('site', models.ForeignKey(editable=False, to='sites.Site')),
+                ('site', models.ForeignKey(editable=False, on_delete=models.CASCADE, to='sites.Site')),
             ],
             options={
                 'verbose_name': 'Site Configuration',
@@ -101,7 +101,7 @@ class Migration(migrations.Migration):
                 ('public', models.BooleanField(default=True, help_text='Uncheck to make your profile contact information and details private.')),
                 ('cv', models.FileField(help_text='Upload your Curriculum Vitae if you wish people to be able to download it.', null=True, upload_to='profile', blank=True)),
                 ('details', models.TextField(help_text='Tell the HydroShare community a little about yourself.', null=True, verbose_name='Description', blank=True)),
-                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
             },

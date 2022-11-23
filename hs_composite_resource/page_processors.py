@@ -17,7 +17,7 @@ def landing_page(request, page):
     content_model = page.get_content_model()
 
     # These messages are only relevant to users who can edit the resource
-    if request.user.is_authenticated() and request.user.uaccess.can_change_resource(content_model):
+    if request.user.is_authenticated and request.user.uaccess.can_change_resource(content_model):
         netcdf_logical_files = content_model.get_logical_files('NetCDFLogicalFile')
         for lf in netcdf_logical_files:
             if lf.metadata.is_update_file:

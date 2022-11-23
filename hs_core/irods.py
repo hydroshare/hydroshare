@@ -112,11 +112,11 @@ class ResourceIRODSMixin(models.Model):
 
         # authorize user
         if write:
-            if not user.is_authenticated() or not user.uaccess.can_change_resource(self):
+            if not user.is_authenticated or not user.uaccess.can_change_resource(self):
                 raise PermissionDenied("user {} cannot change resource {}"
                                        .format(user.username, self.short_id))
         else:
-            if not self.raccess.public and (not user.is_authenticated() or
+            if not self.raccess.public and (not user.is_authenticated or
                                             not user.uaccess.can_view_resource(self)):
                 raise PermissionDenied("user {} cannot view resource {}"
                                        .format(user.username, self.short_id))
@@ -253,11 +253,11 @@ class ResourceIRODSMixin(models.Model):
 
         # authorize user
         if write:
-            if not user.is_authenticated() or not user.uaccess.can_change_resource(self):
+            if not user.is_authenticated or not user.uaccess.can_change_resource(self):
                 raise PermissionDenied("user {} cannot delete change ticket {} for {}"
                                        .format(user.username, ticket_id, self.short_id))
         else:
-            if not user.is_authenticated() or not user.uaccess.can_view_resource(self):
+            if not user.is_authenticated or not user.uaccess.can_view_resource(self):
                 raise PermissionDenied("user {} cannot delete view ticket {} for {}"
                                        .format(user.username, ticket_id, self.short_id))
         istorage = self.get_irods_storage()

@@ -202,6 +202,7 @@ DATABASES = {
     }
 }
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 #########
 # PATHS #
@@ -223,7 +224,17 @@ CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = "/static/"
+
+#  Had to change STATIC_URL as required since django 2.2 when running in DEBUG mode
+#  Django does the following check in django =>2.2:
+# if (settings.DEBUG and settings.MEDIA_URL and settings.STATIC_URL and
+# 		settings.MEDIA_URL.startswith(settings.STATIC_URL)):
+# 	raise ImproperlyConfigured(
+# 		"runserver can't serve media if MEDIA_URL is within STATIC_URL."
+# 	)
+# that means path for STATIC_URL can't be a parent directory of path for MEDIA_URL
+# Ref: https://docs.djangoproject.com/en/2.2/ref/settings/#media-root
+STATIC_URL = "/static/static/"
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -239,7 +250,9 @@ STATICFILES_STORAGE = 'hydroshare.storage.ForgivingManifestStaticFilesStorage'
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = STATIC_URL + "media/"
+
+# Note: MEDIA_URL needs to be set to a path so that STATIC_URL is not a parent folder of MEDIA_URL
+MEDIA_URL = "/static/media/"
 
 # Sorl settings for generating thumbnails
 THUMBNAIL_PRESERVE_FORMAT = True
@@ -281,7 +294,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
-    "inplaceeditform",
+    "django.contrib.messages",
     "django_nose",
     "django_irods",
     "drf_yasg",
@@ -335,7 +348,6 @@ OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 APPS_TO_NOT_RUN = (
     'rest_framework',
     'django_nose',
-    'inplaceeditform',
     'grappelli_safe',
     'django_irods',
     'crispy_forms',
@@ -363,7 +375,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            (os.path.join(BASE_DIR, "hs_core", "templates"),)
+            os.path.join(BASE_DIR, "hs_core", "templates")
         ],
         'OPTIONS': {
             'context_processors': [
@@ -386,6 +398,9 @@ TEMPLATES = [
             'builtins': [
                 'django.templatetags.static',
             ],
+            'libraries': {
+                'staticfiles': 'django.templatetags.static',
+            }
         },
     },
 ]
@@ -509,7 +524,7 @@ HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealti
 
 # customized value for password reset token, email verification and group invitation link token
 # to expire in 7 days
-PASSWORD_RESET_TIMEOUT_DAYS = 7
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 
 # customized temporary file path for large files retrieved from iRODS user zone for metadata
 # extraction
@@ -521,6 +536,7 @@ TEMP_FILE_DIR = '/hs_tmp'
 
 OAUTH2_PROVIDER = {
     'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,  # 30 days
+    'PKCE_REQUIRED': False,
 }
 
 ####################

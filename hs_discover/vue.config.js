@@ -3,5 +3,5 @@ module.exports = {
     disableHostCheck: true,
   },
   outputDir: 'templates/hs_discover/',
-  publicPath: '/static',
+  publicPath: '/static/static',
 };

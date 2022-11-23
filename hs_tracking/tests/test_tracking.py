@@ -87,7 +87,7 @@ class ViewTests(TestCase):
                       '?res_id=%s&res_type=%s' % (res_id, res_type)
 
         app_url = urllib.parse.quote(request_url)
-        href = 'url=%s;name=%s' % (app_url, app_name)
+        href = 'url=%s&name=%s' % (app_url, app_name)
         r.GET = QueryDict(href)
 
         # invoke the app logging endpoint

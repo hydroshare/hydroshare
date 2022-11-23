@@ -625,8 +625,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertTrue(json_res_file.has_logical_file)
         logical_file = json_res_file.logical_file
         self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
-        self.assertEqual(logical_file.metadata.json_file_content.encode(),
-                         json_res_file.resource_file.read())
+        self.assertEqual(logical_file.metadata.json_file_content.encode(), json_res_file.resource_file.read())
 
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
