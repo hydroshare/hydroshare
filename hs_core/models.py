@@ -3259,8 +3259,8 @@ class ResourceFile(ResourceFileIRODSMixin):
             if symbol in name_to_check:
                 return False
 
-        if name_to_check in (".", ".."):
-            # these represents special meaning in linux - current (.) dir and parent dir (..)
+        if name_to_check in (".", "..", "/"):
+            # these represents special meaning in linux - current (.) dir, parent dir (..) and dir separator
             return False
 
         if not file:
@@ -3273,6 +3273,28 @@ class ResourceFile(ResourceFileIRODSMixin):
                     return False
 
         return True
+
+    @classmethod
+    def validate_new_path(cls, new_path):
+        """Validates a new file/folder path that will be created for a resource
+        :param  new_path: a file/folder path that is relative to the [res short_id]/data/contents
+        """
+
+        # strip trailing slashes (if any)
+        path = str(new_path).strip().rstrip('/')
+        if not path:
+            raise SuspiciousFileOperation('Path cannot be empty')
+
+        if path.startswith('/'):
+            raise SuspiciousFileOperation(f"Path ({path}) must not start with '/'")
+
+        if path in ('.', '..'):
+            raise SuspiciousFileOperation(f"Path ({path}) must not be '.' or '..")
+
+        if any(["./" in path, "../" in path, " /" in path, "/ " in path, path.endswith("/."), path.endswith("/..")]):
+            raise SuspiciousFileOperation(f"Path ({path}) must not contain './', '../', '/.', or '/..'")
+
+        return path
 
     @classmethod
     def get(cls, resource, file, folder=''):
