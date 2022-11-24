@@ -260,8 +260,8 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
             with self.assertRaises(SuspiciousFileOperation):
                 ResourceFile.create_folder(self.res, new_folder)
 
-        # folder name either is either '.' or '..' - non-compliant
-        for new_folder in ("my folder/.", "another folder/.."):
+        # creating multiple folders where one folder name '.' , '..' or starts with a space - non-compliant
+        for new_folder in ("my folder/.", "another folder/..", "my folder/ folder-1"):
             with self.assertRaises(SuspiciousFileOperation):
                 ResourceFile.create_folder(self.res, new_folder)
 
@@ -301,12 +301,17 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
             with self.assertRaises(SuspiciousFileOperation):
                 move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
-        # rename folder name is either '.' or '..' - non-compliant
-        for rename_folder in (".", ".."):
+        # rename folder name as the following - non-compliant
+        for rename_folder in (".", "..", "/", "/.", "/..", "./", "../"):
             tgt_path = f'{base_path}/{rename_folder}'
             with self.assertRaises(SuspiciousFileOperation):
                 move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
+        # new folder name starts with a space - system wil trim the space
+        tgt_path = f'{base_path}/ my_folder'
+        move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
+
+        src_path = f'{base_path}/my_folder'
         tgt_path = f'{base_path}/.my_folder'
         move_or_rename_file_or_folder(self.user, self.res.short_id, src_path, tgt_path)
 
