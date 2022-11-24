@@ -240,12 +240,12 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     temp_path = istorage.getUniqueTmpPath
 
     prefix_path = 'data/contents'
-    if curr_path != prefix_path and curr_path.startswith(prefix_path):
-        curr_path = curr_path[len(prefix_path) + 1:]
-    if curr_path == prefix_path or not curr_path.startswith(prefix_path):
+    if curr_path == prefix_path:
         folder = ''
-    else:
+    elif curr_path.startswith(prefix_path):
         folder = curr_path[len(prefix_path) + 1:]
+    else:
+        folder = curr_path
 
     # update url in extra_data in url file's logical file object
     f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
