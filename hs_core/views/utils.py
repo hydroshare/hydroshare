@@ -947,6 +947,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         raise ValidationError("Folder zipping is not allowed for a published resource")
     istorage = resource.get_irods_storage()
     res_coll_input = os.path.join(resource.root_path, input_coll_path)
+    if not istorage.exists(res_coll_input):
+        raise ValidationError(f"Specified folder path ({input_coll_path}) doesn't exist.")
 
     # check resource supports zipping of a folder
     if not resource.supports_zip(res_coll_input):
@@ -957,6 +959,9 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         if not resource.supports_delete_folder_on_zip(input_coll_path):
             raise ValidationError("Deleting of original folder is not allowed after "
                                   "zipping of a folder.")
+
+    if not ResourceFile.is_filename_valid(output_zip_fname):
+        raise ValidationError(f"Invalid zip filename ({output_zip_fname}).")
 
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
@@ -1012,6 +1017,13 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     istorage = resource.get_irods_storage()
     if aggregation_name.startswith('data/contents/'):
         _, aggregation_name = aggregation_name.split('data/contents/')
+
+    aggr_storage_path = os.path.join(resource.file_path, aggregation_name)
+    if not istorage.exists(aggr_storage_path):
+        raise ValidationError(f"Specified aggregation path ({aggregation_name}) was not found")
+
+    if not ResourceFile.is_filename_valid(output_zip_fname):
+        raise ValidationError(f"Invalid zip file name ({output_zip_fname})")
 
     if output_zip_fname.lower().endswith('.zip'):
         output_zip_fname = output_zip_fname[:-4]
@@ -1094,7 +1106,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
     if not istorage.exists(zip_with_full_path):
-        raise ValidationError("Zip file was not found.")
+        raise ValidationError(f"Zip file ({zip_with_rel_path}) was not found.")
 
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
@@ -1103,7 +1115,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     unzip_path_temp = ''
     try:
         # unzip to a temporary folder first to validate contents of the zip file
-        unzip_path_temp = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+        unzip_folder_name = uuid4().hex
+        # Note: unzipping using the irods 'ibun' command seems to fail if the zip file contains files that have
+        # non-english characters.
+        unzip_path_temp = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder_name)
 
         # validate files in the zip file - checking for banned characters
         unzipped_files = listfiles_recursively(istorage, unzip_path_temp)
@@ -1218,9 +1233,12 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 from hs_file_types.utils import ingest_metadata_files
                 ingest_metadata_files(resource, meta_files, map_files)
     except Exception as err:
-        logger.exception(f"failed to unzip file:{zip_with_full_path}. Error:{str(err)}")
+        logger.exception(f"Failed to unzip file:{zip_with_full_path}. Error:{str(err)}")
         if unzip_to_folder_path and istorage.exists(unzip_to_folder_path):
             istorage.delete(unzip_to_folder_path)
+        if not unzip_path_temp:
+            unzip_path_temp = os.path.dirname(zip_with_full_path)
+            unzip_path_temp = os.path.join(unzip_path_temp, unzip_folder_name)
         raise
     finally:
         if unzip_path_temp and istorage.exists(unzip_path_temp):
@@ -1237,7 +1255,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
 def ingest_bag(resource, bag_file, user):
     """
-    Ingests a zipped bagit archive of a hydroshare reosource that has been uploaded to the resource
+    Ingests a zipped bagit archive of a hydroshare resource that has been uploaded to the resource
     :param resource: The CompositeResource to ingest the bag into
     :param bag_file: The ResourceFile of the zipped bag in the resource
     :param user: The HydroShare user object to do the action as
@@ -1360,24 +1378,19 @@ def create_folder(res_id, folder_path, migrating_resource=False):
     if resource.raccess.published and not migrating_resource:
         raise ValidationError("Folder creation is not allowed for a published resource")
     istorage = resource.get_irods_storage()
-    # reconstruct the folder_path by stripping each of the folders in the path and then joining them back
-    folders = [folder.strip() for folder in folder_path[len("data/contents/"):].split("/")]
-    folder_path = os.path.join(*folders)
+    input_folder_path = folder_path[len("data/contents/"):]
+    folder_path = ResourceFile.validate_new_path(new_path=input_folder_path)
     coll_path = os.path.join(resource.file_path, folder_path)
     if not resource.supports_folder_creation(coll_path):
         raise ValidationError("Folder creation is not allowed here. "
                               "The target folder seems to contain aggregation(s)")
 
-    folder_path = coll_path[len(resource.file_path) + 1:]
-    # folder name can't be '.' or '..'
-    if any(["/./" in coll_path, "/../" in coll_path, coll_path.endswith("/."), coll_path.endswith("/..")]):
-        err_msg = f"Folder path ({folder_path}) contains invalid folder name(s)."
-        raise SuspiciousFileOperation(err_msg)
-
     # check for duplicate folder path
     if istorage.exists(coll_path):
-        raise ValidationError(f"Folder ({coll_path}) already exists")
+        raise ValidationError(f"Folder ({folder_path}) already exists")
 
+    # validate each of the folders in the specified path
+    folders = [folder for folder in folder_path.split("/")]
     for folder in folders:
         if not ResourceFile.is_folder_name_valid(folder):
             folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
@@ -1405,6 +1418,8 @@ def remove_folder(user, res_id, folder_path):
         raise ValidationError("Folder deletion is not allowed for a published resource")
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
+    if not istorage.exists(coll_path):
+        raise ValidationError(f"Specified folder ({folder_path} was not found")
 
     istorage.delete(coll_path)
 
@@ -1460,16 +1475,17 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
         raise ValidationError("Operations related to file/folder are allowed only for admin user for a "
                               "published resource")
     istorage = resource.get_irods_storage()
-    src_full_path = os.path.join(resource.root_path, src_path)
-    tgt_full_path = os.path.join(resource.root_path, tgt_path)
-
+    src_base_name = src_path[len("data/contents/"):]
+    src_base_name = ResourceFile.validate_new_path(new_path=src_base_name)
+    src_full_path = os.path.join(resource.file_path, src_base_name)
+    tgt_base_name = tgt_path[len("data/contents/"):]
+    tgt_base_name = ResourceFile.validate_new_path(new_path=tgt_base_name)
+    tgt_full_path = os.path.join(resource.file_path, tgt_base_name)
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
             raise ValidationError("File/folder move/rename is not allowed.")
 
-    tgt_base_name = os.path.basename(tgt_full_path)
-    src_base_name = os.path.basename(src_full_path)
     if src_base_name != tgt_base_name:
         if istorage.isFile(src_full_path):
             # renaming a file - need to validate the new file name
@@ -1522,8 +1538,15 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     if resource.raccess.published and not user.is_superuser:
         raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
     istorage = resource.get_irods_storage()
-    src_full_path = os.path.join(resource.root_path, src_path)
-    tgt_full_path = os.path.join(resource.root_path, tgt_path)
+    src_base_name = src_path[len("data/contents/"):]
+    src_base_name = ResourceFile.validate_new_path(new_path=src_base_name)
+    src_full_path = os.path.join(resource.file_path, src_base_name)
+    tgt_base_name = tgt_path[len("data/contents/"):]
+    tgt_base_name = ResourceFile.validate_new_path(new_path=tgt_base_name)
+    tgt_full_path = os.path.join(resource.file_path, tgt_base_name)
+
+    if src_full_path == tgt_full_path:
+        raise ValidationError("File/folder name is not valid.")
 
     if validate_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
@@ -1585,6 +1608,13 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
     istorage = resource.get_irods_storage()
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
+    if not istorage.exists(tgt_full_path):
+        raise ValidationError(f"Target path ({tgt_path}) doesn't exist")
+
+    for src_path in src_paths:
+        src_full_path = os.path.join(resource.root_path, src_path)
+        if not istorage.exists(src_full_path):
+            raise ValidationError(f"Source path ({src_full_path}) doesn't exist")
 
     if validate_move:
         # this must raise ValidationError if move is not allowed by specific resource type

@@ -278,10 +278,6 @@ def data_store_folder_zip(request, res_id=None):
         return HttpResponse('Bad request - output_zip_fname cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    if output_zip_fname.find('/') >= 0:
-        return HttpResponse('Bad request - output_zip_fname cannot contain /',
-                            status=status.HTTP_400_BAD_REQUEST)
-
     remove_original = resolve_request(request).get('remove_original_after_zip', None)
     bool_remove_original = True
     if remove_original is not None:
@@ -348,10 +344,6 @@ def zip_aggregation_file(request, res_id=None):
     output_zip_fname = str(output_zip_fname).strip()
     if not output_zip_fname:
         return HttpResponse('Bad request - output_zip_fname cannot be empty',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if output_zip_fname.find('/') >= 0:
-        return HttpResponse('Bad request - output_zip_fname cannot contain /',
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
@@ -496,7 +488,7 @@ def data_store_folder_unzip(request, **kwargs):
                            "location (e.g., folder) or move or rename the file being overwritten. " \
                            "iRODS error follows: "
             return HttpResponse(specific_msg + ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except DRF_ValidationError as ex:
+        except (DRF_ValidationError, SuspiciousFileOperation) as ex:
             return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
         # this unzipped_path can be used for POST request input to data_store_structure()
@@ -592,7 +584,6 @@ def data_store_add_reference(request):
 
     if not res_id:
         return HttpResponseBadRequest('Must have res_id included in the POST data')
-
     if not ref_name:
         return HttpResponseBadRequest('Must have ref_name included in the POST data')
     if not ref_url:
@@ -811,7 +802,7 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except (DRF_ValidationError, ValidationError) as ex:
+    except (DRF_ValidationError, ValidationError, SuspiciousFileOperation) as ex:
         return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
@@ -1069,8 +1060,8 @@ def data_store_rename_file_or_folder(request, pk=None):
         rename_file_or_folder(user, pk, src_path, tgt_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except DRF_ValidationError as ex:
-        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+    except (DRF_ValidationError, SuspiciousFileOperation) as ex:
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
 
