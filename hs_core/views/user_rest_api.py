@@ -18,7 +18,7 @@ class UserInfo(APIView):
         :param request:
         :return: HttpResponse response containing **user_info**
         '''
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return Response({ "title": "None", "organization": "None", "state": "None", "country": "None",
                               "user_type": "None"})
 

@@ -32,7 +32,7 @@ class AppLaunch(TemplateView):
                 url = url.replace(placeholder, encoded_value)
 
         # log app launch details if user is logged in
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             # get user session and standard fields
             session = Session.objects.for_request(request, request.user)
             fields = get_std_log_fields(request, session)

@@ -37,7 +37,7 @@ def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
         logger.error(err_msg.format(str(ex),
-                     request.user.username if request.user.is_authenticated() else "anonymous",
+                     request.user.username if request.user.is_authenticated else "anonymous",
                      shortkey))
         status = "error"
         msg = str(ex)
@@ -196,7 +196,7 @@ def update_collection(request, shortkey, *args, **kwargs):
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
         logger.error(err_msg.format(str(ex),
-                     request.user.username if request.user.is_authenticated() else "anonymous",
+                     request.user.username if request.user.is_authenticated else "anonymous",
                      shortkey))
         status = "error"
         msg = str(ex)

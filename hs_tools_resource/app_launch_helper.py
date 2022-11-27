@@ -117,7 +117,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
 
 def get_app_dict(user, resource, web_app_resource):
     hs_term_dict_user = {}
-    hs_term_dict_user["HS_USR_NAME"] = user.username if user.is_authenticated() else "anonymous"
+    hs_term_dict_user["HS_USR_NAME"] = user.username if user.is_authenticated else "anonymous"
     hs_term_dict_file = {}
     # HS_JS_AGG_KEY and HS_JS_FILE_KEY are overwritten by jquery to launch the url specific to each
     # file
@@ -143,7 +143,7 @@ def _check_open_with_app(tool_res_obj, request_obj):
 
 
 def _check_webapp_in_user_open_with_list(tool_res_obj, request_obj):
-    if request_obj.user.is_authenticated():
+    if request_obj.user.is_authenticated:
         user_obj = get_user(request_obj)
         return tool_res_obj.rlabels.is_open_with_app(user_obj)
     else:

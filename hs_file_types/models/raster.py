@@ -587,7 +587,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
-    metadata = models.OneToOneField(GeoRasterFileMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(GeoRasterFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
     data_type = "GeographicRaster"
 
     @classmethod

@@ -474,7 +474,7 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new collection will not contain "deleted resources"
-            new_res.resources = ori_res.resources.all()
+            new_res.resources.set(ori_res.resources.all())
 
         # create bag for the new resource
         create_bag(new_res)
@@ -523,7 +523,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new version collection will not contain "deleted resources"
-            new_res.resources = ori_res.resources.all()
+            new_res.resources.set(ori_res.resources.all())
 
         # create bag for the new resource
         create_bag(new_res)

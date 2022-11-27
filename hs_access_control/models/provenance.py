@@ -323,19 +323,19 @@ class UserGroupProvenance(ProvenanceBase):
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    user = models.ForeignKey(User,
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
                              null=False,
                              editable=False,
                              related_name='u2ugq',
                              help_text='user to be granted privilege')
 
-    group = models.ForeignKey(Group,
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,
                               null=False,
                               editable=False,
                               related_name='g2ugq',
                               help_text='group to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=True,
                                 editable=False,
                                 related_name='x2ugq',
@@ -429,19 +429,19 @@ class UserResourceProvenance(ProvenanceBase):
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    user = models.ForeignKey(User,
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
                              null=False,
                              editable=False,
                              related_name='u2urq',
                              help_text='user to be granted privilege')
 
-    resource = models.ForeignKey(BaseResource,
+    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
                                  null=False,
                                  editable=False,
                                  related_name='r2urq',
                                  help_text='resource to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=True,
                                 editable=False,
                                 related_name='x2urq',
@@ -538,19 +538,19 @@ class GroupResourceProvenance(ProvenanceBase):
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    group = models.ForeignKey(Group,
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,
                               null=False,
                               editable=False,
                               related_name='g2grq',
                               help_text='group to be granted privilege')
 
-    resource = models.ForeignKey(BaseResource,
+    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
                                  null=False,
                                  editable=False,
                                  related_name='r2grq',
                                  help_text='resource to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=True,
                                 editable=False,
                                 related_name='x2grq',
@@ -644,19 +644,19 @@ class UserCommunityProvenance(ProvenanceBase):
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    community = models.ForeignKey(Community,
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,
                                   null=False,
                                   editable=False,
                                   related_name='c2ucq',
                                   help_text='community to be granted privilege')
 
-    user = models.ForeignKey(User,
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
                              null=False,
                              editable=False,
                              related_name='u2ucq',
                              help_text='user to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=True,
                                 editable=False,
                                 related_name='x2ucq',
@@ -755,19 +755,19 @@ class GroupCommunityProvenance(ProvenanceBase):
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    community = models.ForeignKey(Community,
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,
                                   null=False,
                                   editable=False,
                                   related_name='c2gcq',
                                   help_text='group to be granted privilege')
 
-    group = models.ForeignKey(Group,
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,
                               null=False,
                               editable=False,
                               related_name='g2gcq',
                               help_text='group to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=True,
                                 editable=False,
                                 related_name='x2gcq',
@@ -866,19 +866,19 @@ class CommunityResourceProvenance(ProvenanceBase):
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    resource = models.ForeignKey(BaseResource,
+    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
                                   null=False,
                                   editable=False,
                                   related_name='r2crq',
                                   help_text='community to be granted privilege')
 
-    community = models.ForeignKey(Community,
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,
                                   null=False,
                                   editable=False,
                                   related_name='c2crq',
                                   help_text='community to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=True,
                                 editable=False,
                                 related_name='x2crq',

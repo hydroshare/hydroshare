@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_save
 from django.template import RequestContext, Template, TemplateSyntaxError
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
 from django.contrib.postgres.fields import HStoreField
@@ -141,7 +141,7 @@ class IconBox(Orderable):
     '''
     An icon box on a HomePage
     '''
-    homepage = models.ForeignKey(HomePage, related_name="boxes")
+    homepage = models.ForeignKey(HomePage, on_delete=models.CASCADE,  related_name="boxes")
     icon = models.CharField(max_length=50,
         help_text="Enter the name of a font awesome icon, i.e. "
                   "fa-eye. A list is available here "
@@ -252,7 +252,7 @@ class UserQuota(models.Model):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     picture = ThumbnailImageField(upload_to=get_upload_path_userprofile, null=True, blank=True)
     middle_name = models.CharField(max_length=1024, null=True, blank=True)
     website = models.URLField(null=True, blank=True)
@@ -311,7 +311,7 @@ class UserProfile(models.Model):
 
     # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
     # each identifier is stored as a key/value pair {name:link}
-    identifiers = HStoreField(default={}, null=True, blank=True)
+    identifiers = HStoreField(default=dict, null=True, blank=True)
 
     email_opt_out = models.BooleanField(default=False)
 

@@ -6,7 +6,7 @@ from hs_core import hydroshare
 from hs_tools_resource.models import RequestUrlBase, RequestUrlBaseFile, \
     RequestUrlBaseAggregation, SupportedFileExtensions
 from hs_core.testing import TestCaseCommonUtilities
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from hs_core.views import add_metadata_element, update_metadata_element
 from rest_framework import status

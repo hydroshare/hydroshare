@@ -29,11 +29,11 @@ $(document).ready(function () {
         }
         else {
             $.each(folder, function(i, v) {
-                $(parent).append("<div class='folder' id='irods_folder_" + v + "' name='" + store + "/" + v + "' style='margin-left:" + margin + "px;'><img src='/static/img/folder.png' width='15' height='15'>&nbsp; " + v + "</div>");
+                $(parent).append("<div class='folder' id='irods_folder_" + v + "' name='" + store + "/" + v + "' style='margin-left:" + margin + "px;'><img src='/static/static/img/folder.png' width='15' height='15'>&nbsp; " + v + "</div>");
             });
 
             $.each(files, function(i, v) {
-                $(parent).append("<div class='file' id='irods_file_" + v + "' name='" + store + "/" + v + "' style='margin-left:" + margin + "px;'><img src='/static/img/file.png' width='15' height='15'>&nbsp; " + v + "</div>")
+                $(parent).append("<div class='file' id='irods_file_" + v + "' name='" + store + "/" + v + "' style='margin-left:" + margin + "px;'><img src='/static/static/img/file.png' width='15' height='15'>&nbsp; " + v + "</div>")
             });
         }
         $('.file').attr('unselectable', 'on'); // disable default browser shift text selection highlighting in IE

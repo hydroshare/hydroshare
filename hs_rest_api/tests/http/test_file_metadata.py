@@ -2,7 +2,7 @@ import os
 import json
 import tempfile
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from rest_framework import status
 
 from hs_core.tests.api.rest.base import HSRESTTestCase

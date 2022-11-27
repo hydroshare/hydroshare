@@ -111,18 +111,34 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     box_coverage = logical_file.metadata.spatial_coverage
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(float(box_coverage.value['northlimit']), 42.0500269597691)
-    self.assertEqual(float(box_coverage.value['eastlimit']), -111.57773718106195)
-    self.assertEqual(float(box_coverage.value['southlimit']), 41.98722286029891)
-    self.assertEqual(float(box_coverage.value['westlimit']), -111.69756293084055)
+    expected_nlimit = 42.0500269597691
+    self.assertAlmostEqual(float(box_coverage.value['northlimit']), expected_nlimit,
+                           places=get_number_of_decimal_places(expected_nlimit))
+    expected_elimit = -111.57773718106195
+    self.assertAlmostEqual(float(box_coverage.value['eastlimit']), expected_elimit,
+                           places=get_number_of_decimal_places(expected_elimit))
+    expected_slimit = 41.98722286029891
+    self.assertAlmostEqual(float(box_coverage.value['southlimit']), expected_slimit,
+                           places=get_number_of_decimal_places(expected_slimit))
+    expected_wlimit = -111.69756293084055
+    self.assertAlmostEqual(float(box_coverage.value['westlimit']), expected_wlimit,
+                           places=get_number_of_decimal_places(expected_wlimit))
 
     # testing extended metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
-    self.assertEqual(float(ori_coverage.value['northlimit']), 4655492.446916306)
-    self.assertEqual(float(ori_coverage.value['eastlimit']), 452144.01909127034)
-    self.assertEqual(float(ori_coverage.value['southlimit']), 4648592.446916306)
-    self.assertEqual(float(ori_coverage.value['westlimit']), 442274.01909127034)
+    expected_nlimit = 4655492.446916306
+    self.assertAlmostEqual(float(ori_coverage.value['northlimit']), expected_nlimit,
+                           places=get_number_of_decimal_places(expected_nlimit))
+    expected_elimit = 452144.01909127034
+    self.assertAlmostEqual(float(ori_coverage.value['eastlimit']), expected_elimit,
+                           places=get_number_of_decimal_places(expected_elimit))
+    expected_slimit = 4648592.446916306
+    self.assertAlmostEqual(float(ori_coverage.value['southlimit']), expected_slimit,
+                           places=get_number_of_decimal_places(expected_slimit))
+    expected_wlimit = 442274.01909127034
+    self.assertAlmostEqual(float(ori_coverage.value['westlimit']), expected_wlimit,
+                           places=get_number_of_decimal_places(expected_wlimit))
     self.assertEqual(ori_coverage.value['units'], 'meter')
     self.assertEqual(ori_coverage.value['projection'],
                      'NAD83 / UTM zone 12N')
@@ -209,10 +225,18 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(float(box_coverage.value['northlimit']), 41.86712640899591)
-    self.assertEqual(float(box_coverage.value['eastlimit']), -111.50594036845686)
-    self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745171)
-    self.assertEqual(float(box_coverage.value['westlimit']), -111.51138807956221)
+    expected_nlimit = 41.86712640899591
+    self.assertAlmostEqual(float(box_coverage.value['northlimit']), expected_nlimit,
+                           places=get_number_of_decimal_places(expected_nlimit))
+    expected_elimit = -111.50594036845686
+    self.assertAlmostEqual(float(box_coverage.value['eastlimit']), expected_elimit,
+                           places=get_number_of_decimal_places(expected_elimit))
+    expected_slimit = 41.8639080745171
+    self.assertAlmostEqual(float(box_coverage.value['southlimit']), expected_slimit,
+                           places=get_number_of_decimal_places(expected_slimit))
+    expected_wlimit = -111.51138807956221
+    self.assertAlmostEqual(float(box_coverage.value['westlimit']), expected_wlimit,
+                           places=get_number_of_decimal_places(expected_wlimit))
 
     temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
         type='period').first()
@@ -256,10 +280,21 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     # metadata extraction)
     spatial_coverage = logical_file.metadata.coverages.filter(type='box').first()
     self.assertIsNotNone(spatial_coverage)
-    self.assertEqual(float(spatial_coverage.value['northlimit']), 41.86712640899591)
-    self.assertEqual(float(spatial_coverage.value['southlimit']), 41.8639080745171)
-    self.assertEqual(float(spatial_coverage.value['eastlimit']), -111.50594036845686)
-    self.assertEqual(float(spatial_coverage.value['westlimit']), -111.51138807956221)
+    expected_nlimit = 41.86712640899591
+    self.assertAlmostEqual(float(spatial_coverage.value['northlimit']), expected_nlimit,
+                           places=get_number_of_decimal_places(expected_nlimit))
+
+    expected_slimit = 41.8639080745171
+    self.assertAlmostEqual(float(spatial_coverage.value['southlimit']), expected_slimit,
+                           places=get_number_of_decimal_places(expected_slimit))
+
+    expected_elimit = -111.50594036845686
+    self.assertAlmostEqual(float(spatial_coverage.value['eastlimit']), expected_elimit,
+                           places=get_number_of_decimal_places(expected_elimit))
+
+    expected_wlimit = -111.51138807956221
+    self.assertAlmostEqual(float(spatial_coverage.value['westlimit']), expected_wlimit,
+                           places=get_number_of_decimal_places(expected_wlimit))
     self.assertEqual(spatial_coverage.value['units'], "Decimal degrees")
     self.assertEqual(spatial_coverage.value['projection'], "WGS 84 EPSG:4326")
 

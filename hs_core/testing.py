@@ -16,7 +16,6 @@ from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zi
 from hs_core.views.utils import run_ssh_command
 from hs_core.tasks import FileOverrideException
 from theme.models import UserProfile
-from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
 
@@ -70,13 +69,13 @@ class TestCaseCommonUtilities(object):
             for out_str in output:
                 if 'ERROR:' in out_str.upper():
                     # irods account failed to create
-                    self.assertRaises(SessionException(-1, out_str, out_str))
+                    self.fail(out_str)
 
             user_profile = UserProfile.objects.filter(user=self.user).first()
             user_profile.create_irods_user_account = True
             user_profile.save()
         except Exception as ex:
-            self.assertRaises(SessionException(-1, str(ex), str(ex)))
+            self.fail(str(ex))
 
     def delete_irods_user_in_user_zone(self):
         """Delete irods test user in user zone."""
@@ -91,14 +90,14 @@ class TestCaseCommonUtilities(object):
                 for out_str in output:
                     if 'ERROR:' in out_str.upper():
                         # there is an error from icommand run, report the error
-                        self.assertRaises(SessionException(-1, out_str, out_str))
+                        self.fail(out_str)
 
             user_profile = UserProfile.objects.filter(user=self.user).first()
             user_profile.create_irods_user_account = False
             user_profile.save()
         except Exception as ex:
             # there is an error from icommand run, report the error
-            self.assertRaises(SessionException(-1, str(ex), str(ex)))
+            self.fail(str(ex))
 
     def save_files_to_user_zone(self, file_name_to_target_name_dict):
         """Save a list of files to iRODS user zone.
