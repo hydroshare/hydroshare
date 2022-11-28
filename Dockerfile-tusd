@@ -1,22 +1,21 @@
-FROM hydroshare/tusd:latest
+FROM tusproject/tusd:latest
 
 USER root:root 
 
-RUN apt-get update \
-    && apt-get install -y ca-certificates jq net-tools procps python3 python3-irodsclient \
-    && addgroup --gid 10000 service-accounts \
-    && adduser --uid 20028 --ingroup service-accounts --shell /bin/sh --disabled-password --no-create-home --gecos 'hydroshare user' hydro-service \
-    && chown hydro-service:service-accounts /srv/tusd-data \
-    && mkdir -p /srv/tusd-hooks \
-    && chown hydro-service:service-accounts /srv/tusd-hooks \
-    && mkdir -p /tusd_tmp \
-    && chown hydro-service:service-accounts /tusd_tmp
+RUN addgroup --gid 10000 service-accounts 
+RUN adduser -u 20028 -s /bin/sh -D -H -g 'hydroshare user' hydro-service service-accounts
+
+# It is important that tusd operate as hydro-service:service-accounts. 
+# Thus all should be owned by those accounts. 
+RUN chown hydro-service:service-accounts /srv/tusd-data \
+ && mkdir -p /srv/tusd-hooks \
+ && chown hydro-service:service-accounts /srv/tusd-hooks \
+ && mkdir -p /tusd_tmp \
+ && chown hydro-service:service-accounts /tusd_tmp
 
 COPY init-tusd /init-tusd
 RUN chown hydro-service:service-accounts /init-tusd
 
-# COPY tusd-hooks/post-finish /srv/tusd-hooks/post-finish
-# RUN chown hydro-service:service-accounts /srv/tusd-hooks/post-finish
-
 # run daemon
-CMD /bin/bash
+ENTRYPOINT [ ]
+CMD /init-tusd

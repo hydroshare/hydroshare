@@ -2,5 +2,4 @@
  
 # implicit directory is /app
 
-chdir /app
-node server.js
+node /app/server.js

@@ -5,8 +5,8 @@ USER root:root
 RUN addgroup --gid HS_SERVICE_GID service-accounts 
 RUN adduser -u HS_SERVICE_UID -s /bin/sh -D -H -g 'hydroshare user' hydro-service service-accounts
 
-COPY init-uppy /init-uppy
-RUN chown node:node /init-uppy
+# COPY init-uppy /init-uppy
+# RUN chown node:node /init-uppy
 RUN mkdir /uppy_tmp
 RUN chmod 777 /uppy_tmp
 RUN chown node:node /uppy_tmp
@@ -18,7 +18,8 @@ WORKDIR /app
 # RUN npm install @uppy/companion
 
 COPY uppy/server.js /app/server.js
+RUN chown node:node /app/server.js
 
 # run daemon
 ENTRYPOINT [ ]
-CMD "sh -c 'node /app/server.js'"
+CMD "node /app/server.js"
