@@ -1263,20 +1263,6 @@ const geoconnexApp = new Vue({
       }
       return nameField;
     },
-    async getFeatureName(feature) {
-      const geoconnexApp = this;
-      const url = `${geoconnexApp.geoconnexUrl}/${feature.collection}/items/${feature.id}?f=jsonld&lang=en-US&skipGeometry=true`;
-      const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
-        url: url,
-      });
-      let name = "";
-      featureJsonLd["@context"].forEach(async (context) => {
-        const compacted = await jsonld.compact(featureJsonLd, context);
-        name = compacted["schema:name"] || "";
-      });
-      feature.NAME = name;
-      return name;
-    },
     async getFeatureProperties(feature) {
       const geoconnexApp = this;
       // Account for some oddities in the Geoconnex API schema
