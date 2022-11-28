@@ -1419,7 +1419,7 @@ def remove_folder(user, res_id, folder_path):
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
     if not istorage.exists(coll_path):
-        raise ValidationError(f"Specified folder ({folder_path} was not found")
+        raise ValidationError(f"Specified folder ({folder_path}) was not found")
 
     istorage.delete(coll_path)
 
@@ -1489,15 +1489,17 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     if src_base_name != tgt_base_name:
         if istorage.isFile(src_full_path):
             # renaming a file - need to validate the new file name
-            if not ResourceFile.is_filename_valid(tgt_base_name):
-                err_msg = f"Filename ({tgt_base_name}) contains one more prohibited characters. "
+            tgt_file_name_new = os.path.basename(tgt_base_name)
+            if not ResourceFile.is_filename_valid(tgt_file_name_new):
+                err_msg = f"Filename ({tgt_file_name_new}) contains one more prohibited characters. "
                 err_msg = f"{err_msg}Prohibited characters are:\n {ResourceFile.banned_symbols()}"
                 raise SuspiciousFileOperation(err_msg)
         else:
             # renaming a folder - need validate the new folder name
-            if not ResourceFile.is_folder_name_valid(tgt_base_name):
+            tgt_folder_name_new = os.path.basename(tgt_base_name)
+            if not ResourceFile.is_folder_name_valid(tgt_folder_name_new):
                 folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
-                err_msg = f"Folder name ({tgt_base_name}) contains one more prohibited characters. "
+                err_msg = f"Folder name ({tgt_folder_name_new}) contains one more prohibited characters. "
                 err_msg = f"{err_msg}Prohibited characters are:\n {folder_banned_chars}"
                 raise SuspiciousFileOperation(err_msg)
 

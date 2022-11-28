@@ -471,8 +471,7 @@ class ToolIcon(AbstractMetaDataElement):
         except Exception as ex:
             raise ValidationError("Failed to read data from given url: {0}".format(str(ex)))
         if response.status_code != 200:
-            raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
-                               format(response.status_code))
+            raise ValidationError("Failed to read data from given url. HTTP_code {0}".format(response.status_code))
         if 'Transfer-Encoding' in response.headers and response.headers["Transfer-Encoding"] == "chunked":
             image_size_mb = len(response.content)
         else:
