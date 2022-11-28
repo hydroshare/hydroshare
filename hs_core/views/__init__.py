@@ -1676,11 +1676,11 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
         user = request.user
 
     res = get_resource_by_shortkey(shortkey)
-    # res.raccess.review_pending = False
-    # res.raccess.immutable = False
-    # res.raccess.save()
+    res.raccess.review_pending = False
+    res.raccess.immutable = False
+    res.raccess.save()
     if action == "approve":
-        # hydroshare.publish_resource(user, shortkey)
+        hydroshare.publish_resource(user, shortkey)
         _send_email_on_metadata_acceptance(request, shortkey)
         flash_message = "Publication request was accepted. An email has been sent notifiying the resource owner."
     else:
