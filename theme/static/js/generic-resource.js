@@ -281,9 +281,9 @@ $(document).ready(function () {
         }
     });
 
-    $("#publish-btn-2").click((e)=>{
-        e.prepend('<i class="fa fa-spinner fa-pulse fa-lg icon-blue" style="z-index: 1; position: absolute;"></i>');
-        e.prop("disabled",true);
+    $("#publish-btn-2").click(()=>{
+        $("#publish-btn-2").prepend('<i class="fa fa-spinner fa-pulse fa-lg icon-blue" style="z-index: 1;"></i>');
+        $("#publish-btn-2").addClass("disabled");
     })
 
     $("#agree-chk-copy").on('click', function(e) {
