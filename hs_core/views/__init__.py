@@ -1676,11 +1676,11 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
         user = request.user
 
     res = get_resource_by_shortkey(shortkey)
-    res.raccess.review_pending = False
-    res.raccess.immutable = False
-    res.raccess.save()
+    # res.raccess.review_pending = False
+    # res.raccess.immutable = False
+    # res.raccess.save()
     if action == "approve":
-        hydroshare.publish_resource(user, shortkey)
+        # hydroshare.publish_resource(user, shortkey)
         _send_email_on_metadata_acceptance(request, shortkey)
         flash_message = "Publication request was accepted. An email has been sent notifiying the resource owner."
     else:
@@ -1850,14 +1850,16 @@ def _send_email_on_metadata_acceptance(request, shortkey):
     """
 
     resource = get_resource_by_shortkey(shortkey)
-    email_msg = f'''Dear Resource Owner,
-    <p>Your resource 
-    <a href="{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }">{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }</a>
-    has been reviewed and determined to meet HydroShare's minimum metadata standards.
-    A publication request has been submitted to <a href="https://www.crossref.org/">Crossref.org</a>.
+    email_msg = f'Dear Resource Owner, '\
+    '<p>The following resource that you submitted: '\
+    f'<a href="{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }">'\
+    f'{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }</a> '\
+    '''has been reviewed and determined to meet HydroShare's minimum metadata standards.
+
+    <p>A publication request has been submitted to <a href="https://www.crossref.org/">Crossref.org</a>.
     These requests typically resolve in less than 24 hours.</p>
-    
-    <p>Thank you</p>
+
+    <p>Thank you,</p>
     <p>The HydroShare Team</p>
     '''
 
