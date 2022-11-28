@@ -56,7 +56,6 @@ class TestFolders(HSRESTTestCase):
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-
     def test_file_in_folder(self):
         rtype = 'GenericResource'
         title = 'My Test resource'

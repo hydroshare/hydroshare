@@ -6,7 +6,6 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.http import HttpResponse
 
 from mezzanine.pages.page_processors import processor_for
 
