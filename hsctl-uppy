@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+# hsctl
+# HydroShare Control Script
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+machine="`uname -s`"
+case "$machine" in
+  Linux*)  export SED_EXT=''   ;;
+  Darwin*) export SED_EXT='""' ;;
+  *)       export SED_EXT=''   ;;
+esac
+
+### Local Config ###
+CONFIG_DIRECTORY='./config'
+CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
+HOME_DIR=${PWD}
+
+# Read hydroshare-config.yaml into environment
+sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE}  | grep -v '^#' | grep -v ^$ > $CONFIG_DIRECTORY/hydroshare-config.sh
+while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
+
+### Docker Variables ###
+HS_DOCKER_CONTAINERS=(hydroshare defaultworker)
+HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker)
+OTHER_DOCKER_CONTAINERS=(postgis rabbitmq solr tusd uppy)
+
+### Pre-flight Variables ###
+DEV_SERVER='runuser -p -u hydro-service -g storage-hydro ./run-server'
+DEV_SSH_COMMAND='runuser -p -u hydro-service -g storage-hydro /usr/sbin/sshd'
+PROD_SERVER='./run-server'
+PROD_SSH_COMMAND='# REMOVED SSH COMPONENT'
+
+USE_LOCAL_IRODS=false
+
+# Generate Dockerfile-uppy: must run as hydro-service
+cp ${HS_PATH}/Dockerfile-uppy.template Dockerfile-uppy 
+sed -i $SED_EXT 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/Dockerfile-uppy
+sed -i $SED_EXT 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/Dockerfile-uppy
+
+docker-compose build uppy
+docker-compose start uppy
