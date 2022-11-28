@@ -827,8 +827,7 @@ const geoconnexApp = new Vue({
           : feature.collection;
 
         if (
-          geoconnexApp.ignoredFeatures[collection.id] &&
-          geoconnexApp.ignoredFeatures[collection.id].includes(feature.id)
+          geoconnexApp.ignoredFeatures[collection.id]?.includes(feature.id)
         )
           return;
 
