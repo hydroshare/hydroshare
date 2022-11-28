@@ -1265,15 +1265,35 @@ def ingest_bag(resource, bag_file, user):
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.file_path, bag_file.short_path)
 
-    # unzip to a temporary folder=
+    # unzip to a temporary folder
     unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
     delete_resource_file(resource.short_id, bag_file.id, user)
 
     # list all files to be moved into the resource
     unzipped_files = listfiles_recursively(istorage, unzip_path)
+    unzipped_folders = list_folders_recursively(istorage, unzip_path)
+    # check folders in the bag file don't contain prohibited characters in folder name
+    for unzipped_folder in unzipped_folders:
+        base_folder = os.path.basename(unzipped_folder)
+        if not ResourceFile.is_folder_name_valid(base_folder):
+            istorage.delete(unzip_path)
+            log_msg = f"Failed to ingest bag. Bag file ({zip_with_full_path}) has folder with name that contains " \
+                      f"one or more prohibited characters."
+            logger.error(log_msg)
+            err_msg = f"Bag file has folder ({base_folder}) with name that contains one or more prohibited characters."
+            raise SuspiciousFileOperation(err_msg)
 
     res_files = []
     for unzipped_file in unzipped_files:
+        base_file = os.path.basename(unzipped_file)
+        # check files in the bag file don't contain prohibited characters in file name
+        if not ResourceFile.is_filename_valid(base_file):
+            istorage.delete(unzip_path)
+            log_msg = f"Failed to ingest bag. Bag file ({zip_with_full_path}) has file with name that contains " \
+                      f"one or more prohibited characters."
+            logger.error(log_msg)
+            err_msg = f"Bag file has file ({base_file}) with name that contains one or more prohibited characters."
+            raise SuspiciousFileOperation(err_msg)
         res_files.append(IrodsFile(unzipped_file, istorage))
     res_files, meta_files, map_files = identify_metadata_files(res_files)
 
