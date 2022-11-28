@@ -4171,6 +4171,31 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         return missing_required_elements
 
+    def check_minimum_metadata_elements(self):
+        """Return a string indicating metadata elements that do not meet 'human in the loop' standards."""
+        missing = []
+        notification = ""
+
+        if not self.resource.raccess.public:
+            raise ValidationError("Minimum metadata should only be checked on public resources")
+
+        if len(self.title.value) < 30:
+            missing.append('the title must be at least 30 characters')
+        if len(self.description.abstract) < 150:
+            missing.append('your abstract must be at least 150 characters')
+        if self.subjects.count() < 3:
+            missing.append('you must include at least 3 keywords')
+
+        if missing:
+            notification = "Your resource doesn't meet the minimum metadata standards for publication: "
+            notification += f"{missing[0]}"
+            for issue in missing[1:-1]:
+                notification += f", {issue}"
+            if len(missing) > 1:
+                notification += f" and {missing[-1]}"
+            notification += ". You can re-submit your request after making edits."
+        return notification
+
     def delete_all_elements(self):
         """Delete all metadata elements.
 

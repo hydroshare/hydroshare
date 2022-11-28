@@ -935,9 +935,13 @@ def publish(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 def submit_for_review(request, shortkey, *args, **kwargs):
-    # TODO #4863
     # only resource owners are allowed to submit for review
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+
+    missing = res.metadata.check_minimum_metadata_elements()
+    if missing:
+        messages.error(request, missing)
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:
         hydroshare.submit_resource_for_review(request, shortkey)
