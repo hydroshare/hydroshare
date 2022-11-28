@@ -281,6 +281,11 @@ $(document).ready(function () {
         }
     });
 
+    $("#publish-btn-2").click((e)=>{
+        e.prepend('<i class="fa fa-spinner fa-pulse fa-lg icon-blue" style="z-index: 1; position: absolute;"></i>');
+        e.prop("disabled",true);
+    })
+
     $("#agree-chk-copy").on('click', function(e) {
         e.stopImmediatePropagation();
         if (e.currentTarget.checked) {
