@@ -1254,9 +1254,9 @@ const geoconnexApp = new Vue({
       const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
         url: url,
       });
-      let array = featureJsonLd["@context"];
+      const contexts = featureJsonLd["@context"];
       let nameField = "NAME";
-      for (let context of array) {
+      for (let context of contexts) {
         nameField =
           Object.keys(context).find((key) => context[key] === "schema:name") ||
           "NAME";
