@@ -1676,6 +1676,8 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
         user = request.user
 
     res = get_resource_by_shortkey(shortkey)
+    if not res.raccess.review_pending:
+        raise ValidationError("This resource does not have a pending metadata review")
     res.raccess.review_pending = False
     res.raccess.immutable = False
     res.raccess.save()
