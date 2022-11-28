@@ -17,6 +17,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 
 from hs_core.hydroshare import hs_bagit
+from hs_core.hydroshare.users import create_account
 from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
@@ -1032,15 +1033,22 @@ def submit_resource_for_review(request, pk):
                               "metadata or content files, or this resource contains referenced "
                               "content, or this resource type is not allowed for publication.")
 
-    resource.raccess.review_pending = True
-    resource.raccess.immutable = True
-    resource.raccess.save()
-
-    # we assume that there is a user associated with the "default_from_email"
-    user_to = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
+    try:
+        user_to = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
+    except User.DoesNotExist:
+        user_to = create_account(
+            email=settings.DEFAULT_FROM_EMAIL,
+            username=settings.DEFAULT_FROM_EMAIL,
+            first_name=settings.DEFAULT_FROM_EMAIL,
+            last_name=settings.DEFAULT_FROM_EMAIL,
+            superuser=True
+        )
     from hs_core.views.utils import send_action_to_take_email
     send_action_to_take_email(request, user=user_to, user_from=request.user,
                                 action_type='metadata_review', resource=resource)
+    resource.raccess.review_pending = True
+    resource.raccess.immutable = True
+    resource.raccess.save()
 
 
 def publish_resource(user, pk):
