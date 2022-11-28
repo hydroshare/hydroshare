@@ -935,6 +935,7 @@ def publish(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 def submit_for_review(request, shortkey, *args, **kwargs):
+    # TODO #4863
     # only resource owners are allowed to submit for review
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
@@ -1849,15 +1850,18 @@ def _send_email_on_metadata_acceptance(request, shortkey):
     """
 
     resource = get_resource_by_shortkey(shortkey)
-    email_msg = f"""Dear Resource Owners,
-    <p>Your publication request for the following resource has been accepted:</p>
-    <p><a href="{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }">{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }</a></p>
+    email_msg = f'''Dear Resource Owner,
+    <p>Your resource 
+    <a href="{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }">{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }</a>
+    has been reviewed and determined to meet HydroShare's minimum metadata standards.
+    A publication request has been submitted to <a href="https://www.crossref.org/">Crossref.org</a>.
+    These requests typically resolve in less than 24 hours.</p>
     
     <p>Thank you</p>
     <p>The HydroShare Team</p>
-    """
+    '''
 
-    send_mail(subject="HydroShare resource approved for publication",
+    send_mail(subject="HydroShare resource metadata review completed",
               message=email_msg,
               html_message=email_msg,
               from_email=settings.DEFAULT_FROM_EMAIL,
