@@ -963,9 +963,22 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
                 $('#create-folder-dialog').modal('hide');
                 $("#txtFolderName").val("");
             }
+            else {
+                $('#create-folder-dialog').modal('hide');
+            }
         },
         error: function(xhr, errmsg, err){
-            display_error_message('Folder Creation Failed', xhr.responseText);
+            let errorMsg = JSON.stringify(xhr.responseText);
+            try {
+                let errorMessageJSON = JSON.parse(xhr.responseText);
+                if (errorMessageJSON.hasOwnProperty("error")) {
+                    errorMsg = errorMessageJSON.error;
+                }
+            } catch (e) {
+
+            }
+            display_error_message('Folder Creation Failed', errorMsg);
+            $('#create-folder-dialog').modal('hide');
         }
     });
 }
