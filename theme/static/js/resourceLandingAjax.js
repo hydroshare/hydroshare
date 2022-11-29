@@ -1139,7 +1139,16 @@ function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
             }
         },
         error: function(xhr, errmsg, err){
-            display_error_message('File/Folder Renaming Failed', xhr.responseText);
+            let errorMsg = JSON.stringify(xhr.responseText);
+            try {
+                let errorMessageJSON = JSON.parse(xhr.responseText);
+                if (errorMessageJSON.hasOwnProperty("error")) {
+                    errorMsg = errorMessageJSON.error;
+                }
+            } catch (e) {
+
+            }
+            display_error_message('File/Folder Renaming Failed', errorMsg);
         }
     });
 }

@@ -691,37 +691,33 @@ def data_store_create_folder(request):
     """
     res_id = request.POST.get('res_id', None)
     if res_id is None:
-        return HttpResponse('Bad request - resource id is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource id was not specified"}, status=status.HTTP_400_BAD_REQUEST)
     res_id = str(res_id).strip()
     try:
         resource, _, _ = authorize(request, res_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except NotFound:
-        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource was not found"}, status=status.HTTP_400_BAD_REQUEST)
     except PermissionDenied:
-        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({"error": "Permission denied"}, status=status.HTTP_401_UNAUTHORIZED)
 
     folder_path = request.POST.get('folder_path', None)
 
     try:
         folder_path = _validate_path(folder_path)
     except ValidationError as ex:
-        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
+        err_msg = ", ".join(ex.args)
+        return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         create_folder(res_id, folder_path)
     except SessionException as ex:
-        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except (DRF_ValidationError, SuspiciousFileOperation) as ex:
-        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
+        err_msg = ", ".join(ex.args)
+        return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
-    return_object = {'new_folder_rel_path': folder_path}
-
-    return HttpResponse(
-        json.dumps(return_object),
-        content_type="application/json"
-    )
+    return JsonResponse({'new_folder_rel_path': folder_path})
 
 
 def data_store_remove_folder(request):
@@ -779,16 +775,15 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
     """
     res_id = request.POST.get('res_id', res_id)
     if res_id is None:
-        return HttpResponse('Bad request - resource id is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource id was not specified"}, status=status.HTTP_400_BAD_REQUEST)
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except NotFound:
-        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource was not found"}, status=status.HTTP_400_BAD_REQUEST)
     except PermissionDenied:
-        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({"error": "Permission denied"}, status=status.HTTP_401_UNAUTHORIZED)
 
     src_path = resolve_request(request).get('source_path', None)
     tgt_path = resolve_request(request).get('target_path', None)
@@ -796,21 +791,19 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         src_path = _validate_path(src_path)
         tgt_path = _validate_path(tgt_path)
     except ValidationError as ex:
-        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
+        err_msg = ", ".join(ex.args)
+        return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
     except SessionException as ex:
-        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except (DRF_ValidationError, ValidationError, SuspiciousFileOperation) as ex:
-        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+        err_msg = ", ".join(ex.args)
+        return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
-    return_object = {'target_rel_path': tgt_path}
+    return JsonResponse({'target_rel_path': tgt_path})
 
-    return HttpResponse(
-        json.dumps(return_object),
-        content_type='application/json'
-    )
 
 rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
 body = openapi.Schema(
@@ -989,16 +982,17 @@ def data_store_rename_file_or_folder(request, pk=None):
     """
     pk = request.POST.get('res_id', pk)
     if pk is None:
-        return HttpResponse('Resource id is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource id was not specified"}, status=status.HTTP_400_BAD_REQUEST)
+
     pk = str(pk).strip()
     try:
         resource, _, user = authorize(request, pk,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except NotFound:
-        return HttpResponse('Resource not found', status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource was not found"}, status=status.HTTP_400_BAD_REQUEST)
+
     except PermissionDenied:
-        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({"error": "Permission denied"}, status=status.HTTP_401_UNAUTHORIZED)
 
     src_path = resolve_request(request).get('source_path', None)
     tgt_path = resolve_request(request).get('target_path', None)
@@ -1012,9 +1006,8 @@ def data_store_rename_file_or_folder(request, pk=None):
     tgt_folder, tgt_base = os.path.split(tgt_path)
 
     if src_folder != tgt_folder:
-        return HttpResponse('Rename: Source and target names must be in same folder',
+        return JsonResponse({"error": "Source and target names must be in same folder"},
                             status=status.HTTP_400_BAD_REQUEST)
-
     istorage = resource.get_irods_storage()
 
     # protect against stale data botches: source files should exist
@@ -1024,51 +1017,45 @@ def data_store_rename_file_or_folder(request, pk=None):
                                                                 src_storage_path,
                                                                 test_exists=True)
     except ValidationError:
-        return HttpResponse('Object to be renamed does not exist',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Object to be renamed does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
     if not irods_path_is_directory(istorage, src_storage_path):
         try:  # Django record should exist for each file
             ResourceFile.get(resource, base, folder=folder)
         except ResourceFile.DoesNotExist:
-            return HttpResponse('Path to be renamed does not exist',
-                                status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": "Path to be renamed does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
     # check that the target doesn't exist
     tgt_storage_path = os.path.join(resource.root_path, tgt_path)
     tgt_short_path = tgt_path[len('data/contents/'):]
     if istorage.exists(tgt_storage_path):
-        return HttpResponse('Desired name is already in use',
-                            status=status.HTTP_400_BAD_REQUEST)
+        err_msg = f"Desired name ({tgt_short_path}) already in use"
+        return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
     try:
         folder, base = ResourceFile.resource_path_is_acceptable(resource,
                                                                 tgt_storage_path,
                                                                 test_exists=False)
     except ValidationError:
-        return HttpResponse('Poorly structured desired name {}'
-                            .format(tgt_short_path),
-                            status=status.HTTP_400_BAD_REQUEST)
+        err_msg = f"Poorly structured desired name: {tgt_short_path}"
+        return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
         ResourceFile.get(resource, base, folder=tgt_short_path)
-        return HttpResponse('Desired name {} is already in use'
-                            .format(tgt_short_path),
-                            status=status.HTTP_400_BAD_REQUEST)
+        err_msg = f"Desired name ({tgt_short_path}) already in use"
+        return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
+
     except ResourceFile.DoesNotExist:
         pass  # correct response
 
     try:
         rename_file_or_folder(user, pk, src_path, tgt_path)
     except SessionException as ex:
-        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except (DRF_ValidationError, SuspiciousFileOperation) as ex:
-        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
+        err_msg = ", ".join(ex.args)
+        return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
-    return_object = {'target_rel_path': tgt_path}
-
-    return HttpResponse(
-        json.dumps(return_object),
-        content_type='application/json'
-    )
+    return JsonResponse({'target_rel_path': tgt_path})
 
 
 def _validate_path(path, check_path_empty=True):

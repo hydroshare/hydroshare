@@ -1415,7 +1415,7 @@ def create_folder(res_id, folder_path, migrating_resource=False):
         if not ResourceFile.is_folder_name_valid(folder):
             folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
             err_msg = f"Folder name ({folder}) contains one more prohibited characters. "
-            err_msg = f"{err_msg}Prohibited characters are:\n {folder_banned_chars}"
+            err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
             raise SuspiciousFileOperation(err_msg)
 
     istorage.session.run("imkdir", None, '-p', coll_path)
@@ -1512,7 +1512,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
             tgt_file_name_new = os.path.basename(tgt_base_name)
             if not ResourceFile.is_filename_valid(tgt_file_name_new):
                 err_msg = f"Filename ({tgt_file_name_new}) contains one more prohibited characters. "
-                err_msg = f"{err_msg}Prohibited characters are:\n {ResourceFile.banned_symbols()}"
+                err_msg = f"{err_msg}Prohibited characters are: {ResourceFile.banned_symbols()}"
                 raise SuspiciousFileOperation(err_msg)
         else:
             # renaming a folder - need validate the new folder name
@@ -1520,7 +1520,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
             if not ResourceFile.is_folder_name_valid(tgt_folder_name_new):
                 folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
                 err_msg = f"Folder name ({tgt_folder_name_new}) contains one more prohibited characters. "
-                err_msg = f"{err_msg}Prohibited characters are:\n {folder_banned_chars}"
+                err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
                 raise SuspiciousFileOperation(err_msg)
 
     istorage.moveFile(src_full_path, tgt_full_path)
@@ -1580,7 +1580,7 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
         # renaming a file
         if not ResourceFile.is_filename_valid(tgt_file_name):
             err_msg = f"Filename ({tgt_file_name}) contains one more prohibited characters. "
-            err_msg = f"{err_msg}Prohibited characters are:\n {ResourceFile.banned_symbols()}"
+            err_msg = f"{err_msg}Prohibited characters are: {ResourceFile.banned_symbols()}"
             raise ValidationError(err_msg)
     else:
         # renaming a folder
@@ -1588,7 +1588,7 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
         if not ResourceFile.is_folder_name_valid(tgt_folder_name):
             folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
             err_msg = f"Folder name ({tgt_folder_name}) contains one more prohibited characters. "
-            err_msg = f"{err_msg}Prohibited characters are:\n {folder_banned_chars}"
+            err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
             raise ValidationError(err_msg)
 
     istorage.moveFile(src_full_path, tgt_full_path)
