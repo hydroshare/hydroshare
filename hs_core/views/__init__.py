@@ -1856,13 +1856,6 @@ def _send_email_on_metadata_acceptance(request, shortkey):
     """
 
     resource = get_resource_by_shortkey(shortkey)
-    email_msg = f"""Dear Resource Owners,
-    <p>Your publication request for the following resource has been accepted:</p>
-    <p><a href="{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }">{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }</a></p>
-    
-    <p>Thank you</p>
-    <p>The HydroShare Team</p>
-    """
     email_msg = f'''Dear Resource Owner,
     <p>The following resource that you submitted:
     <a href="{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }">
