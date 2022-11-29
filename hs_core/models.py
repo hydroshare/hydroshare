@@ -4182,7 +4182,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         if len(self.title.value) < 30:
             missing.append('the title must be at least 30 characters')
         if len(self.description.abstract) < 150:
-            missing.append('your abstract must be at least 150 characters')
+            missing.append('the abstract must be at least 150 characters')
         if self.subjects.count() < 3:
             missing.append('you must include at least 3 keywords')
 
