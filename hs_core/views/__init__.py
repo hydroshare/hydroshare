@@ -938,6 +938,11 @@ def submit_for_review(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to submit for review
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
+    missing = res.metadata.check_minimum_metadata_elements()
+    if missing:
+        messages.error(request, missing)
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
     try:
         hydroshare.submit_resource_for_review(request, shortkey)
     except ValidationError as exp:
@@ -1675,6 +1680,8 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
         user = request.user
 
     res = get_resource_by_shortkey(shortkey)
+    if not res.raccess.review_pending:
+        raise ValidationError("This resource does not have a pending metadata review")
     res.raccess.review_pending = False
     res.raccess.immutable = False
     res.raccess.save()
@@ -1849,15 +1856,20 @@ def _send_email_on_metadata_acceptance(request, shortkey):
     """
 
     resource = get_resource_by_shortkey(shortkey)
-    email_msg = f"""Dear Resource Owners,
-    <p>Your publication request for the following resource has been accepted:</p>
-    <p><a href="{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }">{ request.scheme }://{ request.get_host }/resource/{ resource.short_id }</a></p>
-    
-    <p>Thank you</p>
-    <p>The HydroShare Team</p>
-    """
+    email_msg = f'''Dear Resource Owner,
+    <p>The following resource that you submitted:
+    <a href="{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }">
+    { request.scheme }://{ request.get_host() }/resource/{ resource.short_id }</a>
+    has been reviewed and determined to meet HydroShare's minimum metadata standards.</p>
 
-    send_mail(subject="HydroShare resource approved for publication",
+    <p>A publication request has been submitted to <a href="https://www.crossref.org/">Crossref.org</a>.
+    These requests typically resolve in less than 24 hours.</p>
+
+    <p>Thank you,</p>
+    <p>The HydroShare Team</p>
+    '''
+
+    send_mail(subject="HydroShare resource metadata review completed",
               message=email_msg,
               html_message=email_msg,
               from_email=settings.DEFAULT_FROM_EMAIL,

@@ -76,7 +76,7 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.debug("Periodic tasks are disabled in SETTINGS")
     else:
         sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
-        sender.add_periodic_task(crontab(minute=0, hour=0), manage_task_nightly.s())
+        sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s())
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
                                     send_over_quota_emails.s())
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
@@ -114,8 +114,8 @@ def nightly_zips_cleanup():
 
 
 @celery_app.task(ignore_result=True)
-def manage_task_nightly():
-    # The nightly running task do DOI activation check
+def manage_task_hourly():
+    # The hourly running task do DOI activation check
 
     # Check DOI activation on failed and pending resources and send email.
     msg_lst = []
