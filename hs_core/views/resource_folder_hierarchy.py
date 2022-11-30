@@ -251,31 +251,29 @@ def data_store_folder_zip(request, res_id=None):
     """
     res_id = request.POST.get('res_id', res_id)
     if res_id is None:
-        return HttpResponse('Bad request - resource id is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource id was not provided"}, status=status.HTTP_400_BAD_REQUEST)
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except NotFound:
-        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource was not found"}, status=status.HTTP_400_BAD_REQUEST)
     except PermissionDenied:
-        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({"error": "Permission denied"}, status=status.HTTP_401_UNAUTHORIZED)
 
     input_coll_path = resolve_request(request).get('input_coll_path', None)
 
     try:
         input_coll_path = _validate_path(input_coll_path)
     except ValidationError as ex:
-        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     output_zip_fname = resolve_request(request).get('output_zip_file_name', None)
     if output_zip_fname is None:
-        return HttpResponse('Bad request - output_zip_fname is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Output zip file name was not provided"}, status=status.HTTP_400_BAD_REQUEST)
     output_zip_fname = str(output_zip_fname).strip()
     if not output_zip_fname:
-        return HttpResponse('Bad request - output_zip_fname cannot be empty',
+        return JsonResponse({"error": "Output zip file name can't be be empty string"},
                             status=status.HTTP_400_BAD_REQUEST)
 
     remove_original = resolve_request(request).get('remove_original_after_zip', None)
@@ -289,18 +287,12 @@ def data_store_folder_zip(request, res_id=None):
         output_zip_fname, size = \
             zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_original)
     except SessionException as ex:
-        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
-        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": ex.detail}, status=status.HTTP_400_BAD_REQUEST)
 
-    return_object = {'name': output_zip_fname,
-                     'size': size,
-                     'type': 'zip'}
-
-    return HttpResponse(
-        json.dumps(return_object),
-        content_type="application/json"
-    )
+    return_data = {"name": output_zip_fname, "size": size, "type": "zip"}
+    return JsonResponse(return_data)
 
 
 def zip_aggregation_file(request, res_id=None):
@@ -315,52 +307,43 @@ def zip_aggregation_file(request, res_id=None):
     """
     res_id = request.POST.get('res_id', res_id)
     if res_id is None:
-        return HttpResponse('Bad request - resource id is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource id was not provided"}, status=status.HTTP_400_BAD_REQUEST)
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except NotFound:
-        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource was not found"}, status=status.HTTP_400_BAD_REQUEST)
     except PermissionDenied:
-        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({"error": "Permission denied"}, status=status.HTTP_401_UNAUTHORIZED)
 
     if resource.resource_type != "CompositeResource":
-        return HttpResponse('Bad request - resource is not a Composite Resource type',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource is not of type composite resource"}, status=status.HTTP_400_BAD_REQUEST)
 
     aggregation_path = resolve_request(request).get('aggregation_path', None)
 
     try:
         aggregation_path = _validate_path(aggregation_path)
     except ValidationError as ex:
-        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     output_zip_fname = resolve_request(request).get('output_zip_file_name', None)
     if output_zip_fname is None:
-        return HttpResponse('Bad request - output_zip_fname is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Output zip filename was not provided"}, status=status.HTTP_400_BAD_REQUEST)
     output_zip_fname = str(output_zip_fname).strip()
     if not output_zip_fname:
-        return HttpResponse('Bad request - output_zip_fname cannot be empty',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Output zip filename can't be empty"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         output_zip_fname, size = zip_by_aggregation_file(user, res_id, aggregation_path, output_zip_fname)
     except SessionException as ex:
-        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
-        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": ex.detail}, status=status.HTTP_400_BAD_REQUEST)
 
-    return_object = {'name': output_zip_fname,
-                     'size': size,
-                     'type': 'zip'}
+    return_data = {"name": output_zip_fname, "size": size, "type": "zip"}
+    return JsonResponse(return_data)
 
-    return HttpResponse(
-        json.dumps(return_object),
-        content_type="application/json"
-    )
 
 rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
 body = openapi.Schema(
@@ -447,23 +430,22 @@ def data_store_folder_unzip(request, **kwargs):
     """
     res_id = request.POST.get('res_id', kwargs.get('res_id'))
     if res_id is None:
-        return HttpResponse('Bad request - resource id is not included',
-                            status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource id was not provided"}, status=status.HTTP_400_BAD_REQUEST)
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except NotFound:
-        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Resource was not found"}, status=status.HTTP_400_BAD_REQUEST)
     except PermissionDenied:
-        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({"error": "Permission denied"}, status=status.HTTP_401_UNAUTHORIZED)
 
     zip_with_rel_path = request.POST.get('zip_with_rel_path', kwargs.get('zip_with_rel_path'))
 
     try:
         zip_with_rel_path = _validate_path(zip_with_rel_path)
     except ValidationError as ex:
-        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
     auto_aggregate = request.POST.get('auto_aggregate', 'true').lower() == 'true'  # True by default
@@ -487,18 +469,16 @@ def data_store_folder_unzip(request, **kwargs):
                            "protection from overwriting existing files. Unzip in a different " \
                            "location (e.g., folder) or move or rename the file being overwritten. " \
                            "iRODS error follows: "
-            return HttpResponse(specific_msg + ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            err_msg = specific_msg + ex.stderr
+            return JsonResponse({"error": err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except (DRF_ValidationError, SuspiciousFileOperation) as ex:
-            return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+            err_msg = ex.detail if isinstance(ex, DRF_ValidationError) else str(ex)
+            return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
         # this unzipped_path can be used for POST request input to data_store_structure()
         # to list the folder structure after unzipping
-        return_object = {'unzipped_path': os.path.dirname(zip_with_rel_path)}
-
-        return HttpResponse(
-            json.dumps(return_object),
-            content_type="application/json"
-        )
+        return_data = {'unzipped_path': os.path.dirname(zip_with_rel_path)}
+        return JsonResponse(return_data)
 
 
 @api_view(['POST'])
@@ -714,7 +694,7 @@ def data_store_create_folder(request):
     except SessionException as ex:
         return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except (DRF_ValidationError, SuspiciousFileOperation) as ex:
-        err_msg = ", ".join(ex.args)
+        err_msg = ex.detail if isinstance(ex, DRF_ValidationError) else str(ex)
         return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
     return JsonResponse({'new_folder_rel_path': folder_path})
@@ -791,7 +771,7 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         src_path = _validate_path(src_path)
         tgt_path = _validate_path(tgt_path)
     except ValidationError as ex:
-        err_msg = ", ".join(ex.args)
+        err_msg = str(ex)
         return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
@@ -799,7 +779,7 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
     except SessionException as ex:
         return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except (DRF_ValidationError, ValidationError, SuspiciousFileOperation) as ex:
-        err_msg = ", ".join(ex.args)
+        err_msg = ex.detail if isinstance(ex, DRF_ValidationError) else str(ex)
         return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
     return JsonResponse({'target_rel_path': tgt_path})
@@ -1052,7 +1032,7 @@ def data_store_rename_file_or_folder(request, pk=None):
     except SessionException as ex:
         return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except (DRF_ValidationError, SuspiciousFileOperation) as ex:
-        err_msg = ", ".join(ex.args)
+        err_msg = ex.detail if isinstance(ex, DRF_ValidationError) else str(ex)
         return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
     return JsonResponse({'target_rel_path': tgt_path})
