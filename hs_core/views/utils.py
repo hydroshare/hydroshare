@@ -961,7 +961,9 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
                                   "zipping of a folder.")
 
     if not ResourceFile.is_filename_valid(output_zip_fname):
-        raise ValidationError(f"Invalid zip filename ({output_zip_fname}).")
+        err_msg = f"Invalid zip filename ({output_zip_fname}). Filename can't have any of these " \
+                  f"characters: {ResourceFile.banned_symbols()}"
+        raise ValidationError(err_msg)
 
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
@@ -1023,7 +1025,9 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
         raise ValidationError(f"Specified aggregation path ({aggregation_name}) was not found")
 
     if not ResourceFile.is_filename_valid(output_zip_fname):
-        raise ValidationError(f"Invalid zip file name ({output_zip_fname})")
+        err_msg = f"Invalid zip filename ({output_zip_fname}). Filename can't have any of " \
+                  f"these characters: {ResourceFile.banned_symbols()}"
+        raise ValidationError(err_msg)
 
     if output_zip_fname.lower().endswith('.zip'):
         output_zip_fname = output_zip_fname[:-4]
