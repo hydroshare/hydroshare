@@ -1681,17 +1681,17 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
 
     res = get_resource_by_shortkey(shortkey)
     if not res.raccess.review_pending:
-        raise ValidationError("This resource does not have a pending metadata review")
-    res.raccess.review_pending = False
-    res.raccess.immutable = False
-    res.raccess.save()
-    if action == "approve":
-        hydroshare.publish_resource(user, shortkey)
-        _send_email_on_metadata_acceptance(request, shortkey)
-        flash_message = "Publication request was accepted. An email has been sent notifiying the resource owner."
+        messages.error(request, "This resource does not have a pending metadata review.")
     else:
-        flash_message = "Publication request was rejected. Please send an email to the resource owner indicating why."
-    messages.success(request, flash_message)
+        res.raccess.review_pending = False
+        res.raccess.immutable = False
+        res.raccess.save()
+        if action == "approve":
+            hydroshare.publish_resource(user, shortkey)
+            _send_email_on_metadata_acceptance(request, shortkey)
+            messages.success(request, "Publication request was accepted. An email has been sent notifiying the resource owner.")
+        else:
+            messages.warning(request, "Publication request was rejected. Please send an email to the resource owner indicating why.")
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 
 
