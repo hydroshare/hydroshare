@@ -82,7 +82,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     just_created = False
     just_copied = False
     create_resource_error = None
-    just_published = False
     if request:
         validation_error = check_for_validation(request)
 
@@ -97,10 +96,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         create_resource_error = request.session.get('resource_creation_error', None)
         if 'resource_creation_error' in request.session:
             del request.session['resource_creation_error']
-
-        just_published = request.session.get('just_published', False)
-        if 'just_published' in request.session:
-            del request.session['just_published']
 
     bag_url = content_model.bag_url
 
@@ -197,7 +192,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'file_type_error': file_type_error,
                    'just_created': just_created,
                    'just_copied': just_copied,
-                   'just_published': just_published,
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,

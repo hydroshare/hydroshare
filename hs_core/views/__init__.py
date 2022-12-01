@@ -930,8 +930,6 @@ def publish(request, shortkey, *args, **kwargs):
     except ValidationError as exp:
         request.session['validation_error'] = str(exp)
         logger.warn(str(exp))
-    else:
-        request.session['just_published'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 def submit_for_review(request, shortkey, *args, **kwargs):

@@ -1,17 +1,5 @@
 {% load hydroshare_tags %}
 
-{# ======= Resource Publication just published notification =======#}
-{% if cm.raccess.published and just_published %}
-    <div class="col-xs-12">
-        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <strong>Congratulations! </strong>
-            <span>Your resource has been published. You will see the DOI in the citation for your resource below,
-                but it may take approximately one day for your DOI to become active.</span>
-        </div>
-    </div>
-{% endif %}
-
 {# ======= Resource Submitted for Minimum Metadata Check Pre Publication =======#}
 {% if cm.raccess.review_pending and resource_edit_mode %}
     <div class="col-xs-12">
