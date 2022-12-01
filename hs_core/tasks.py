@@ -76,6 +76,7 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.debug("Periodic tasks are disabled in SETTINGS")
     else:
         sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
+        sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s())
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
                                     send_over_quota_emails.s())
@@ -191,6 +192,34 @@ def manage_task_hourly():
         subject = 'Notification of pending DOI deposition/activation of published resources'
         # send email for people monitoring and follow-up as needed
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+
+
+@celery_app.task(ignore_result=True)
+def nightly_metadata_review_reminder():
+    # The daiy check for resources with active metadata review that has been pending for more than 48hrs
+
+    if settings.DISABLE_TASK_EMAILS:
+        return
+
+    pending_resources = BaseResource.objects.filter(raccess__published=True,
+                                                    doi__contains='pending')
+    for res in pending_resources:
+        if res.metadata.dates.all().filter(type='published'):
+            pub_date = res.metadata.dates.all().filter(type='published')[0]
+            pub_date = pub_date.start_date.strftime('%m/%d/%Y')
+            cutoff_date = datetime.now() - timedelta(days=2)
+            if pub_date < cutoff_date:
+                subject = f"Metadata review pending since { pub_date } for { res.title }"
+                email_msg = f"""
+                Metadata review for { res.get_absolute_url } was requested on { pub_date }.
+
+                This is a reminder to review and approve/reject the publication request.
+                """
+                recipients = [settings.DEFAULT_FROM_EMAIL]
+                # If we have gone 4 days, will also cc support email
+                if pub_date < cutoff_date - timedelta(days=2):
+                    recipients.append(settings.DEFAULT_SUPPORT_EMAIL)
+                send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, recipients)
 
 
 def notify_owners_of_publication_success(resource):
