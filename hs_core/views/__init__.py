@@ -1679,14 +1679,14 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
 
     res = get_resource_by_shortkey(shortkey)
     if not res.raccess.review_pending:
-        messages.error(request, "This resource does not have a pending metadata review.")
+        messages.error(request, f"This resource does not have a pending metadata review for you to { action }.")
     else:
         res.raccess.review_pending = False
         res.raccess.immutable = False
         res.raccess.save()
         if action == "approve":
             hydroshare.publish_resource(user, shortkey)
-            messages.success(request, "Publication request was accepted." \
+            messages.success(request, "Publication request was accepted. " \
                              "An email will be sent notifiying the resource owner(s) once the DOI activates.")
         else:
             messages.warning(request, "Publication request was rejected. Please send an email to the resource owner indicating why.")

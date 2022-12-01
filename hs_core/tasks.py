@@ -9,6 +9,7 @@ import json
 
 from celery.signals import task_postrun
 from datetime import datetime, timedelta, date
+from django.utils import timezone
 from xml.etree import ElementTree
 
 import requests
@@ -20,7 +21,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
-from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag
+from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag, current_site_url
 from hydroshare.hydrocelery import app as celery_app
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
 from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref
@@ -206,15 +207,16 @@ def nightly_metadata_review_reminder():
     for res in pending_resources:
         if res.metadata.dates.all().filter(type='published'):
             pub_date = res.metadata.dates.all().filter(type='published')[0]
-            pub_date = pub_date.start_date.strftime('%m/%d/%Y')
-            cutoff_date = datetime.now() - timedelta(days=2)
+            pub_date = pub_date.start_date
+            cutoff_date = timezone.now() - timedelta(days=2)
             if pub_date < cutoff_date:
-                subject = f"Metadata review pending since { pub_date } for { res.title }"
-                email_msg = f"""
-                Metadata review for { res.get_absolute_url } was requested on { pub_date }.
+                res_url = current_site_url() + res.get_absolute_url()
+                subject = f"Metadata review pending since { pub_date.strftime('%m/%d/%Y') } for { res.title }"
+                email_msg = f'''
+                Metadata review for <a href="{ res_url }">{ res_url }</a> was requested at { pub_date.strftime("%Y-%m-%d %H:%M:%S") }.
 
                 This is a reminder to review and approve/reject the publication request.
-                """
+                '''
                 recipients = [settings.DEFAULT_FROM_EMAIL]
                 # If we have gone 4 days, will also cc support email
                 if pub_date < cutoff_date - timedelta(days=2):
@@ -229,11 +231,12 @@ def notify_owners_of_publication_success(resource):
     :param resource: a resource that has been published
     :return:
     """
+    res_url = current_site_url() + resource.get_absolute_url()
 
     email_msg = f'''Dear Resource Owner,
     <p>The following resource that you submitted:
-    <a href="{ resource.get_absolute_url }">
-    { resource.get_absolute_url }</a>
+    <a href="{ res_url }">
+    { res_url }</a>
     has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
 
     <p>A publication request has been submitted to <a href="https://www.crossref.org/">Crossref.org</a>.
