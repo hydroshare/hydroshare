@@ -13,7 +13,7 @@ function getErrorMessage(xhr) {
             errorMsg = errorMessageJSON.error;
         }
     } catch (e) {
-
+        console.error(e);
     }
     return errorMsg
 }

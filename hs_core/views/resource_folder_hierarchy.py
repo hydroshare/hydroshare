@@ -686,8 +686,7 @@ def data_store_create_folder(request):
     try:
         folder_path = _validate_path(folder_path)
     except ValidationError as ex:
-        err_msg = ", ".join(ex.args)
-        return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         create_folder(res_id, folder_path)
