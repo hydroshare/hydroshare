@@ -1490,51 +1490,9 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
     """
-    if __debug__:
-        assert(src_path.startswith("data/contents/"))
-        assert(tgt_path.startswith("data/contents/"))
 
-    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    if resource.raccess.published and not user.is_superuser:
-        raise ValidationError("Operations related to file/folder are allowed only for admin user for a "
-                              "published resource")
-    istorage = resource.get_irods_storage()
-    src_base_name = src_path[len("data/contents/"):]
-    src_base_name = ResourceFile.validate_new_path(new_path=src_base_name)
-    src_full_path = os.path.join(resource.file_path, src_base_name)
-    tgt_base_name = tgt_path[len("data/contents/"):]
-    tgt_base_name = ResourceFile.validate_new_path(new_path=tgt_base_name)
-    tgt_full_path = os.path.join(resource.file_path, tgt_base_name)
-    if validate_move_rename:
-        # this must raise ValidationError if move/rename is not allowed by specific resource type
-        if not resource.supports_rename_path(src_full_path, tgt_full_path):
-            raise ValidationError("File/folder move/rename is not allowed.")
-
-    if src_base_name != tgt_base_name:
-        if istorage.isFile(src_full_path):
-            # renaming a file - need to validate the new file name
-            tgt_file_name_new = os.path.basename(tgt_base_name)
-            if not ResourceFile.is_filename_valid(tgt_file_name_new):
-                err_msg = f"Filename ({tgt_file_name_new}) contains one more prohibited characters. "
-                err_msg = f"{err_msg}Prohibited characters are: {ResourceFile.banned_symbols()}"
-                raise SuspiciousFileOperation(err_msg)
-        else:
-            # renaming a folder - need validate the new folder name
-            tgt_folder_name_new = os.path.basename(tgt_base_name)
-            if not ResourceFile.is_folder_name_valid(tgt_folder_name_new):
-                folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
-                err_msg = f"Folder name ({tgt_folder_name_new}) contains one more prohibited characters. "
-                err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
-                raise SuspiciousFileOperation(err_msg)
-
-    istorage.moveFile(src_full_path, tgt_full_path)
-    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
-    if resource.resource_type == "CompositeResource":
-        orig_src_path = src_full_path[len(resource.file_path) + 1:]
-        new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
-
-    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+    _path_move_rename(user=user, res_id=res_id, src_path=src_path, tgt_path=tgt_path,
+                      validate_move_rename=validate_move_rename)
 
 
 # TODO: modify this to take short paths not including data/contents
@@ -1556,53 +1514,9 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     Also, this foregoes extensive antibugging of arguments because that is done in the
     REST API.
     """
-    if __debug__:
-        assert(src_path.startswith("data/contents/"))
-        assert(tgt_path.startswith("data/contents/"))
 
-    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    if resource.raccess.published and not user.is_superuser:
-        raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
-    istorage = resource.get_irods_storage()
-    src_base_name = src_path[len("data/contents/"):]
-    src_base_name = ResourceFile.validate_new_path(new_path=src_base_name)
-    src_full_path = os.path.join(resource.file_path, src_base_name)
-    tgt_base_name = tgt_path[len("data/contents/"):]
-    tgt_base_name = ResourceFile.validate_new_path(new_path=tgt_base_name)
-    tgt_full_path = os.path.join(resource.file_path, tgt_base_name)
-
-    if src_full_path == tgt_full_path:
-        raise ValidationError("File/folder name is not valid.")
-
-    if validate_rename:
-        # this must raise ValidationError if move/rename is not allowed by specific resource type
-        if not resource.supports_rename_path(src_full_path, tgt_full_path):
-            raise ValidationError("File rename is not allowed. File seems to be part of an aggregation")
-
-    if istorage.isFile(src_full_path):
-        tgt_file_name = os.path.basename(tgt_full_path)
-        # renaming a file
-        if not ResourceFile.is_filename_valid(tgt_file_name):
-            err_msg = f"Filename ({tgt_file_name}) contains one more prohibited characters. "
-            err_msg = f"{err_msg}Prohibited characters are: {ResourceFile.banned_symbols()}"
-            raise ValidationError(err_msg)
-    else:
-        # renaming a folder
-        tgt_folder_name = os.path.basename(tgt_full_path)
-        if not ResourceFile.is_folder_name_valid(tgt_folder_name):
-            folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
-            err_msg = f"Folder name ({tgt_folder_name}) contains one more prohibited characters. "
-            err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
-            raise ValidationError(err_msg)
-
-    istorage.moveFile(src_full_path, tgt_full_path)
-    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
-    if resource.resource_type == "CompositeResource":
-        orig_src_path = src_full_path[len(resource.file_path) + 1:]
-        new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
-
-    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+    _path_move_rename(user=user, res_id=res_id, src_path=src_path, tgt_path=tgt_path,
+                      validate_move_rename=validate_rename)
 
 
 # TODO: modify this to take short paths not including data/contents
@@ -1659,9 +1573,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         istorage.moveFile(src_full_path, tgt_qual_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
         if resource.resource_type == "CompositeResource":
-            orig_src_path = src_full_path[len(resource.file_path) + 1:]
-            new_tgt_path = tgt_qual_path[len(resource.file_path) + 1:]
-            resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+            resource.set_flag_to_recreate_aggregation_meta_files(orig_path=src_full_path, new_path=tgt_qual_path)
 
     # TODO: should check can_be_public_or_discoverable here
 
@@ -1720,3 +1632,54 @@ def get_coverage_data_dict(source, coverage_type='spatial'):
             temporal_coverage_dict['start'] = start_date.strftime('%m-%d-%Y')
             temporal_coverage_dict['end'] = end_date.strftime('%m-%d-%Y')
         return temporal_coverage_dict
+
+
+def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=True):
+    """helper method for moving/renaming file/folder"""
+
+    if __debug__:
+        assert(src_path.startswith("data/contents/"))
+        assert(tgt_path.startswith("data/contents/"))
+
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    if resource.raccess.published and not user.is_superuser:
+        raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
+    istorage = resource.get_irods_storage()
+    src_base_name = src_path[len("data/contents/"):]
+    src_base_name = ResourceFile.validate_new_path(new_path=src_base_name)
+    src_full_path = os.path.join(resource.file_path, src_base_name)
+    tgt_base_name = tgt_path[len("data/contents/"):]
+    tgt_base_name = ResourceFile.validate_new_path(new_path=tgt_base_name)
+    tgt_full_path = os.path.join(resource.file_path, tgt_base_name)
+
+    if src_full_path == tgt_full_path:
+        raise ValidationError("File/folder name is not valid.")
+
+    if validate_move_rename:
+        # this must raise ValidationError if move/rename is not allowed by specific resource type
+        if not resource.supports_rename_path(src_full_path, tgt_full_path):
+            raise ValidationError("File/folder move/rename is not allowed.")
+
+    if src_base_name != tgt_base_name:
+        if istorage.isFile(src_full_path):
+            # renaming a file - need to validate the new file name
+            tgt_file_name_new = os.path.basename(tgt_base_name)
+            if not ResourceFile.is_filename_valid(tgt_file_name_new):
+                err_msg = f"Filename ({tgt_file_name_new}) contains one more prohibited characters. "
+                err_msg = f"{err_msg}Prohibited characters are: {ResourceFile.banned_symbols()}"
+                raise SuspiciousFileOperation(err_msg)
+        else:
+            # renaming a folder - need validate the new folder name
+            tgt_folder_name_new = os.path.basename(tgt_base_name)
+            if not ResourceFile.is_folder_name_valid(tgt_folder_name_new):
+                folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
+                err_msg = f"Folder name ({tgt_folder_name_new}) contains one more prohibited characters. "
+                err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
+                raise SuspiciousFileOperation(err_msg)
+
+    istorage.moveFile(src_full_path, tgt_full_path)
+    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    if resource.resource_type == "CompositeResource":
+        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=src_full_path, new_path=tgt_full_path)
+
+    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
