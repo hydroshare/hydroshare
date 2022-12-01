@@ -4190,7 +4190,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             missing.append('you must include at least 3 keywords')
 
         if missing:
-            notification = "Your resource doesn't meet the minimum metadata standards for publication: "
+            notification = "Your resource doesn't meet the minimum metadata standards for publication" \
+                " and adherence to community guidelines: "
             notification += f"{missing[0]}"
             for issue in missing[1:-1]:
                 notification += f", {issue}"

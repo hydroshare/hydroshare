@@ -1860,7 +1860,7 @@ def _send_email_on_metadata_acceptance(request, shortkey):
     <p>The following resource that you submitted:
     <a href="{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }">
     { request.scheme }://{ request.get_host() }/resource/{ resource.short_id }</a>
-    has been reviewed and determined to meet HydroShare's minimum metadata standards.</p>
+    has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
 
     <p>A publication request has been submitted to <a href="https://www.crossref.org/">Crossref.org</a>.
     These requests typically resolve in less than 24 hours.</p>
