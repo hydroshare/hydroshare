@@ -27,10 +27,10 @@ logger = logging.getLogger(__name__)
 class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
-    discovery_content_type = 'Composite'  # used during discovery
+    discovery_content_type = 'Resource'  # used during discovery
 
     class Meta:
-        verbose_name = 'Composite Resource'
+        verbose_name = 'Resource'
         proxy = True
 
     @property

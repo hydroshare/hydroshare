@@ -293,9 +293,9 @@ export default {
       countAvailabilities: {},
       availabilityFilter: [],
       resIconName: {
-        'Composite Resource': '/static/static/img/resource-icons/composite48x48.png',
-        'Collection Resource': '/static/static/img/resource-icons/collection48x48.png',
-        'Web App Resource': '/static/static/img/resource-icons/webapp48x48.png',
+        Resource: '/static/static/img/resource-icons/composite48x48.png',
+        Collection: '/static/static/img/resource-icons/collection48x48.png',
+        'Web App Connector': '/static/static/img/resource-icons/webapp48x48.png',
       },
       sortMap: {
         'First Author': 'author',

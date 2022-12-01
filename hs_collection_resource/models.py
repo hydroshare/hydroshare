@@ -14,7 +14,7 @@ class CollectionResource(BaseResource):
 
     class Meta:
         proxy = True
-        verbose_name = 'Collection Resource'
+        verbose_name = 'Collection'
 
     @classmethod
     def get_supported_upload_file_types(cls):

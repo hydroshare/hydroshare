@@ -16,9 +16,9 @@ from hs_access_control.models.privilege import PrivilegeCodes
 
 register = template.Library()
 
-RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Composite Resource",
-                                     "CollectionResource": "Collection Resource",
-                                     "ToolResource": "Web App Resource"
+RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Resource",
+                                     "CollectionResource": "Collection",
+                                     "ToolResource": "Web App Connector"
                                      }
 
 
