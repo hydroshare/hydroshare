@@ -180,6 +180,8 @@ def manage_task_hourly():
                                "data deposited since {pub_date}.".format(res_doi=act_doi,
                                                                          pub_date=pub_date))
                 logger.debug(response.content)
+            else:
+                notify_owners_of_publication_success(res)
         else:
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))
@@ -189,6 +191,37 @@ def manage_task_hourly():
         subject = 'Notification of pending DOI deposition/activation of published resources'
         # send email for people monitoring and follow-up as needed
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+
+
+def notify_owners_of_publication_success(resource):
+    """
+    Sends email notification to user on publication success
+
+    :param resource: a resource that has been published
+    :return:
+    """
+
+    email_msg = f'''Dear Resource Owner,
+    <p>The following resource that you submitted:
+    <a href="{ resource.get_absolute_url }">
+    { resource.get_absolute_url }</a>
+    has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
+
+    <p>A publication request has been submitted to <a href="https://www.crossref.org/">Crossref.org</a>.
+    These requests typically resolve in less than 24 hours.
+    You can check the "Publication Status" for updates,
+    or check your Digital Object Identifier (DOI) at the following URL:
+    https://doi.org/10.4211/hs.{ resource.short_id }</p>
+
+    <p>Thank you,</p>
+    <p>The HydroShare Team</p>
+    '''
+    if not settings.DISABLE_TASK_EMAILS:
+        send_mail(subject="HydroShare resource metadata review completed",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[o.email for o in resource.raccess.owners.all()])
 
 
 @celery_app.task(ignore_result=True)

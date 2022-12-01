@@ -1686,8 +1686,8 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
         res.raccess.save()
         if action == "approve":
             hydroshare.publish_resource(user, shortkey)
-            _send_email_on_metadata_acceptance(request, shortkey)
-            messages.success(request, "Publication request was accepted. An email has been sent notifiying the resource owner.")
+            messages.success(request, "Publication request was accepted." \
+                             "An email will be sent notifiying the resource owner(s) once the DOI activates.")
         else:
             messages.warning(request, "Publication request was rejected. Please send an email to the resource owner indicating why.")
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
@@ -1844,36 +1844,6 @@ def _send_email_on_group_membership_acceptance(membership_request):
               html_message=email_msg,
               from_email=settings.DEFAULT_FROM_EMAIL,
               recipient_list=[membership_request.request_from.email])
-
-def _send_email_on_metadata_acceptance(request, shortkey):
-    """
-    Sends email notification of metadata acceptance for publication
-
-    :param shortkey: a resource UUID
-    :return:
-    """
-
-    resource = get_resource_by_shortkey(shortkey)
-    email_msg = f'''Dear Resource Owner,
-    <p>The following resource that you submitted:
-    <a href="{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }">
-    { request.scheme }://{ request.get_host() }/resource/{ resource.short_id }</a>
-    has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
-
-    <p>A publication request has been submitted to <a href="https://www.crossref.org/">Crossref.org</a>.
-    These requests typically resolve in less than 24 hours.
-    You can check the "Publication Status" for updates, or check your Digital Object Identifier (DOI) at the following URL:
-    https://doi.org/10.4211/hs.{ resource.short_id }</p>
-
-    <p>Thank you,</p>
-    <p>The HydroShare Team</p>
-    '''
-
-    send_mail(subject="HydroShare resource metadata review completed",
-              message=email_msg,
-              html_message=email_msg,
-              from_email=settings.DEFAULT_FROM_EMAIL,
-              recipient_list=[o.email for o in resource.raccess.owners.all()])
 
 
 def _share_resource_with_user(request, frm, resource, requesting_user, privilege):
