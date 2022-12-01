@@ -961,8 +961,9 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
                                   "zipping of a folder.")
 
     if not ResourceFile.is_filename_valid(output_zip_fname):
+        filename_banned_chars = " ".join(ResourceFile.banned_symbols())
         err_msg = f"Invalid zip filename ({output_zip_fname}). Filename can't have any of these " \
-                  f"characters: {ResourceFile.banned_symbols()}"
+                  f"characters: {filename_banned_chars}"
         raise ValidationError(err_msg)
 
     if resource.resource_type == "CompositeResource":
@@ -1025,8 +1026,9 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
         raise ValidationError(f"Specified aggregation path ({aggregation_name}) was not found")
 
     if not ResourceFile.is_filename_valid(output_zip_fname):
+        filename_banned_chars = " ".join(ResourceFile.banned_symbols())
         err_msg = f"Invalid zip filename ({output_zip_fname}). Filename can't have any of " \
-                  f"these characters: {ResourceFile.banned_symbols()}"
+                  f"these characters: {filename_banned_chars}"
         raise ValidationError(err_msg)
 
     if output_zip_fname.lower().endswith('.zip'):
@@ -1418,6 +1420,7 @@ def create_folder(res_id, folder_path, migrating_resource=False):
     for folder in folders:
         if not ResourceFile.is_folder_name_valid(folder):
             folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
+            folder_banned_chars = " ".join(folder_banned_chars)
             err_msg = f"Folder name ({folder}) contains one more prohibited characters. "
             err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
             raise SuspiciousFileOperation(err_msg)
@@ -1665,16 +1668,18 @@ def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=Tru
             # renaming a file - need to validate the new file name
             tgt_file_name_new = os.path.basename(tgt_base_name)
             if not ResourceFile.is_filename_valid(tgt_file_name_new):
+                filename_banned_chars = " ".join(ResourceFile.banned_symbols())
                 err_msg = f"Filename ({tgt_file_name_new}) contains one more prohibited characters. "
-                err_msg = f"{err_msg}Prohibited characters are: {ResourceFile.banned_symbols()}"
+                err_msg = f"{err_msg}Prohibited characters are: {filename_banned_chars}"
                 raise SuspiciousFileOperation(err_msg)
         else:
             # renaming a folder - need validate the new folder name
             tgt_folder_name_new = os.path.basename(tgt_base_name)
             if not ResourceFile.is_folder_name_valid(tgt_folder_name_new):
-                folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
+                foldername_banned_chars = ResourceFile.banned_symbols().replace('/', '')
+                foldername_banned_chars = " ".join(foldername_banned_chars)
                 err_msg = f"Folder name ({tgt_folder_name_new}) contains one more prohibited characters. "
-                err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
+                err_msg = f"{err_msg}Prohibited characters are: {foldername_banned_chars}"
                 raise SuspiciousFileOperation(err_msg)
 
     istorage.moveFile(src_full_path, tgt_full_path)
