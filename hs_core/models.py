@@ -4153,52 +4153,37 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         return True
 
-    def get_required_missing_elements(self):
+    def get_required_missing_elements(self, desired_resource_state='discoverable'):
         """Return a list of required missing metadata elements.
 
         This method needs to be overriden by any subclass of this class
         if they implement additional metadata elements that are required
         """
+
+        resource_states = ('discoverable', 'published')
+        if desired_resource_state not in resource_states:
+            raise ValidationError(f"Desired resource state is not in: {','.join(resource_states)}")
+
         missing_required_elements = []
-
-        if not self.title:
-            missing_required_elements.append('Title')
-        elif self.title.value.lower() == 'untitled resource':
-            missing_required_elements.append('Title')
-        if not self.description:
-            missing_required_elements.append('Abstract')
-        if not self.rights:
-            missing_required_elements.append('Rights')
-        if self.subjects.count() == 0:
-            missing_required_elements.append('Keywords')
-
+        if desired_resource_state == 'discoverable':
+            if not self.title:
+                missing_required_elements.append('Title')
+            elif self.title.value.lower() == 'untitled resource':
+                missing_required_elements.append('Title')
+            if not self.description:
+                missing_required_elements.append('Abstract')
+            if not self.rights:
+                missing_required_elements.append('Rights')
+            if self.subjects.count() == 0:
+                missing_required_elements.append('Keywords')
+        elif desired_resource_state == 'published':
+            if len(self.title.value) < 30:
+                missing_required_elements.append('The title must be at least 30 characters.')
+            if len(self.description.abstract) < 150:
+                missing_required_elements.append('The abstract must be at least 150 characters.')
+            if self.subjects.count() < 3:
+                missing_required_elements.append('You must include at least 3 keywords.')
         return missing_required_elements
-
-    def check_minimum_metadata_elements(self):
-        """Return a string indicating metadata elements that do not meet 'human in the loop' standards."""
-        missing = []
-        notification = ""
-
-        if not self.resource.raccess.public:
-            raise ValidationError("Minimum metadata should only be checked on public resources")
-
-        if len(self.title.value) < 30:
-            missing.append('the title must be at least 30 characters')
-        if len(self.description.abstract) < 150:
-            missing.append('the abstract must be at least 150 characters')
-        if self.subjects.count() < 3:
-            missing.append('you must include at least 3 keywords')
-
-        if missing:
-            notification = "Your resource doesn't meet the minimum metadata standards for publication" \
-                " and adherence to community guidelines: "
-            notification += f"{missing[0]}"
-            for issue in missing[1:-1]:
-                notification += f", {issue}"
-            if len(missing) > 1:
-                notification += f" and {missing[-1]}"
-            notification += ". You can re-submit your request after making edits."
-        return notification
 
     def delete_all_elements(self):
         """Delete all metadata elements.

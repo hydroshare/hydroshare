@@ -161,7 +161,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         abstract = content_model.metadata.description.abstract if \
             content_model.metadata.description else None
 
-        missing_metadata_elements = content_model.metadata.get_required_missing_elements()
+        missing_metadata_elements_for_publication = content_model.metadata.get_required_missing_elements('published')
+        missing_metadata_elements_for_discoverable = content_model.metadata.get_required_missing_elements()
         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
         context = {
@@ -185,7 +186,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'show_relations_section': show_relations_section(content_model),
                    'fundingagencies': content_model.metadata.funding_agencies.all(),
                    'metadata_status': metadata_status,
-                   'missing_metadata_elements': missing_metadata_elements,
+                   'missing_metadata_elements_for_discoverable': missing_metadata_elements_for_discoverable,
+                   'missing_metadata_elements_for_publication': missing_metadata_elements_for_publication,
                    'validation_error': validation_error if validation_error else None,
                    'resource_creation_error': create_resource_error,
                    'tool_homepage_url': tool_homepage_url,
@@ -278,7 +280,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'spatial_coverage': spatial_coverage_data_dict,
                'keywords': keywords,
                'metadata_status': metadata_status,
-               'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
+               'missing_metadata_elements_for_discoverable': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(forceHydroshareURI=False),
                'custom_citation': content_model.get_custom_citation(),
                'citation_id': citation_id,

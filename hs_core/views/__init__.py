@@ -936,9 +936,12 @@ def submit_for_review(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to submit for review
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
-    missing = res.metadata.check_minimum_metadata_elements()
+    missing = res.metadata.get_required_missing_elements('published')
     if missing:
-        messages.error(request, missing)
+        message = f"""This resource doesn't meet the minimum metadata standards for publication
+                and adherence to community guidelines. {' '.join(missing)}
+                """
+        messages.error(request, f" ")
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:

@@ -68,12 +68,12 @@
 
 {# ======= Missing fields notification =======#}
 {% if page.perms.change and not is_replaced_by %}
-    {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
+    {% if missing_metadata_elements_for_discoverable or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
         <div class="col-xs-12">
             <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
-                {% if missing_metadata_elements %}
+                {% if missing_metadata_elements_for_discoverable %}
                     {% if just_created %}
                         This is the landing page for the resource you just created. Add files in the content area below
                         and enter metadata where needed. The following metadata is required for your resource to be
@@ -83,7 +83,7 @@
                             {% if cm.resource_type != 'ToolResource' %}publish the resource or {% endif %}make the resource public or discoverable:</span>
                     {% endif %}
                     <ul>
-                        {% for element in missing_metadata_elements %}
+                        {% for element in missing_metadata_elements_for_discoverable %}
                             <li>{{ element }}</li>
                         {% endfor %}
                         {% if title|stringformat:"s" == "Untitled resource" %}
@@ -93,7 +93,7 @@
                 {%  endif %}
                 {%  if not cm.has_required_content_files %}
                          <br>
-                        <span>You must {% if missing_metadata_elements %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
+                        <span>You must {% if missing_metadata_elements_for_discoverable %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
                 {% endif %}
                 {%  if cm.resource_type|lower == "collectionresource" %}
                     {% if not cm.has_resources%}
