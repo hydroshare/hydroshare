@@ -80,7 +80,7 @@
 
 {# ======= Missing fields notification =======#}
 {% if page.perms.change and not is_replaced_by %}
-    {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files or cm.non_preferred_path_names %}
+    {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
         <div class="col-xs-12">
             <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
@@ -112,12 +112,6 @@
                         <br>
                         <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
                     {% endif %}
-                {% endif %}
-
-                {% if cm.non_preferred_path_names %}
-                    <p>This resource contains some files/folders that have non-preferred characters in their name.
-                        <a href="#" data-toggle="modal" data-target="#non-preferred-paths-dialog">Show non-conforming files/folders.</a>
-                    </p>
                 {% endif %}
 
                 {% if not resource_edit_mode %}
@@ -160,31 +154,42 @@
             </div>
         </div>
     {% endif %}
-    <div class="modal fade" id="non-preferred-paths-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">File/Folders with non preferred characters</h4>
-                    <p>
-                     The following files/folders contain non-preferred characters in their name.
-                     This may result in problems and you are encouraged to change the name to follow the
-                     HydroShare preferred character set. [TODO: link to help page here]
-                    </p>
-                </div>
-                <div class="modal-body">
-                    <ul>
-                    {% for path in cm.non_preferred_path_names %}
-                        <li>{{ path }}</li>
-                    {% endfor %}
-                    </ul>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    {% if cm.non_preferred_path_names %}
+        <div class="col-sm-12">
+            <div id="non-preferred-paths" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+            <p>This resource contains some files/folders that have non-preferred characters in their name.
+                <a href="#" data-toggle="modal" data-target="#non-preferred-paths-dialog">Show non-conforming files/folders.</a>
+            </p>
+            </div>
+        </div>
+        <div class="modal fade" id="non-preferred-paths-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">File/Folders with non preferred characters</h4>
+                        <p>
+                         The following files/folders contain non-preferred characters in their name.
+                         This may result in problems and you are encouraged to change the name to follow the
+                         <a href="https://help.hydroshare.org/hydroshare-resources/special-characters-in-file-folder-names/" target="_blank">HydroShare preferred character set.</a>
+                        </p>
+                    </div>
+                    <div class="modal-body">
+                        <ul>
+                        {% for path in cm.non_preferred_path_names %}
+                            <li>{{ path }}</li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
                 </div>
             </div>
         </div>
- </div>
+    {% endif %}
 {% endif %}
 
 {# ======= Title ======= #}
