@@ -1863,7 +1863,9 @@ def _send_email_on_metadata_acceptance(request, shortkey):
     has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
 
     <p>A publication request has been submitted to <a href="https://www.crossref.org/">Crossref.org</a>.
-    These requests typically resolve in less than 24 hours.</p>
+    These requests typically resolve in less than 24 hours.
+    You can check the "Publication Status" for updates, or check your Digital Object Identifier (DOI) at the following URL:
+    https://doi.org/10.4211/hs.{ resource.short_id }</p>
 
     <p>Thank you,</p>
     <p>The HydroShare Team</p>
