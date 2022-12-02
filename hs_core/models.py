@@ -4185,6 +4185,23 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 missing_required_elements.append('You must include at least 3 keywords.')
         return missing_required_elements
 
+    def get_recommended_missing_elements(self):
+        """Return a list of recommended missing metadata elements.
+
+        This method needs to be overriden by any subclass of this class
+        if they implement additional metadata elements that are required
+        """
+
+        missing_recommended_elements = []
+        if not self.funding_agencies:
+            missing_recommended_elements.append('At least one Funding Agency')
+        if not self.resource.readme_file:
+            missing_recommended_elements.append('Readme file containing variables, '
+                                                'abbreviations/acronyms, and non-standard file formats')
+        if not self.coverages:
+            missing_recommended_elements.append('Coverage that describes locations that are related to the dataset')
+        return missing_recommended_elements
+
     def delete_all_elements(self):
         """Delete all metadata elements.
 

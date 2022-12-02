@@ -110,6 +110,16 @@
                         <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
                     {% endif %}
                 {% endif %}
+                {% if recommended_missing_elements %}
+                    <br>
+                    <br>
+                    <span>The following metadata are recommended but not strictly required:</span>
+                    <ul>
+                        {% for element in recommended_missing_elements %}
+                            <li>{{ element }}</li>
+                        {% endfor %}
+                    </ul>
+                {%  endif %}
                 {% if not resource_edit_mode %}
                     <hr>
                     <span class="glyphicon glyphicon-question-sign"></span>
