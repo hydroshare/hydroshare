@@ -213,7 +213,8 @@ def nightly_metadata_review_reminder():
                 res_url = current_site_url() + res.get_absolute_url()
                 subject = f"Metadata review pending since { pub_date.strftime('%m/%d/%Y') } for { res.title }"
                 email_msg = f'''
-                Metadata review for <a href="{ res_url }">{ res_url }</a> was requested at { pub_date.strftime("%Y-%m-%d %H:%M:%S") }.
+                Metadata review for <a href="{ res_url }">{ res_url }</a>
+                was requested at { pub_date.strftime("%Y-%m-%d %H:%M:%S") }.
 
                 This is a reminder to review and approve/reject the publication request.
                 '''
@@ -225,6 +226,7 @@ def nightly_metadata_review_reminder():
 
 
 def notify_owners_of_publication_success(resource):
+    # #4871
     """
     Sends email notification to user on publication success
 
@@ -234,15 +236,13 @@ def notify_owners_of_publication_success(resource):
     res_url = current_site_url() + resource.get_absolute_url()
 
     email_msg = f'''Dear Resource Owner,
-    <p>The following resource that you submitted:
+    <p>The following resource that you submitted for publication:
     <a href="{ res_url }">
     { res_url }</a>
     has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
 
-    <p>A publication request has been submitted to <a href="https://www.crossref.org/">Crossref.org</a>.
-    These requests typically resolve in less than 24 hours.
-    You can check the "Publication Status" for updates,
-    or check your Digital Object Identifier (DOI) at the following URL:
+    <p>The publication request processed by <a href="https://www.crossref.org/">Crossref.org</a>.
+    The Digital Object Identifier (DOI) for your resource is:
     https://doi.org/10.4211/hs.{ resource.short_id }</p>
 
     <p>Thank you,</p>
