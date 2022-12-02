@@ -11,10 +11,11 @@ class CollectionResource(BaseResource):
     objects = ResourceManager('CollectionResource')
 
     discovery_content_type = 'Collection'  # used during discovery
+    display_name = "Collection"
 
     class Meta:
         proxy = True
-        verbose_name = 'Collection'
+        verbose_name = 'Collection Resource'
 
     @classmethod
     def get_supported_upload_file_types(cls):

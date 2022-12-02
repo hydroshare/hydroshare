@@ -28,9 +28,10 @@ class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
     discovery_content_type = 'Resource'  # used during discovery
+    display_name = "Resource"
 
     class Meta:
-        verbose_name = 'Resource'
+        verbose_name = 'Composite Resource'
         proxy = True
 
     @property

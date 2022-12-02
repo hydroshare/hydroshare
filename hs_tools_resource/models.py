@@ -21,6 +21,7 @@ class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
 
     discovery_content_type = 'Web App Connector'  # used during discovery
+    display_name = 'Web App Connector'
 
     class Meta:
         proxy = True
