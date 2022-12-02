@@ -1028,10 +1028,10 @@ def submit_resource_for_review(request, pk):
     if resource.raccess.review_pending:
         raise ValidationError("Metadata review has already been initiated")
 
-    if not resource.can_be_published:
-        raise ValidationError("This resource cannot be published since it does not have required "
-                              "metadata or content files, or this resource contains referenced "
-                              "content, or this resource type is not allowed for publication.")
+    if not resource.can_be_submitted_for_metadata_review:
+        raise ValidationError("This resource cannot be submitted for metadata review since "
+                              "it does not have required metadata or content files, or it contains "
+                              "reference content, or this resource type is not allowed for publication.")
 
     try:
         user_to = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
@@ -1077,12 +1077,12 @@ def publish_resource(user, pk):
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
 
-    # TODO: whether a resource can be published is not considered in can_be_published
-    # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
-    if not resource.can_be_published:
-        raise ValidationError("This resource cannot be published since it does not have required "
-                              "metadata or content files, or this resource contains referenced "
-                              "content, or this resource type is not allowed for publication.")
+    # TODO: whether a resource can be published is not considered in can_be_submitted_for_metadata_review
+    # TODO: can_be_submitted_for_metadata_review is currently an alias for can_be_public_or_discoverable
+    if not resource.can_be_submitted_for_metadata_review:
+        raise ValidationError("This resource cannot be submitted for metadata review since "
+                              "it does not have required metadata or content files, or it contains "
+                              "reference content, or this resource type is not allowed for publication.")
 
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field

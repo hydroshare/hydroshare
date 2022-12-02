@@ -3675,7 +3675,7 @@ class BaseResource(Page, AbstractResource):
         return self.get_content_model().discovery_content_type
 
     @property
-    def can_be_published(self):
+    def can_be_submitted_for_metadata_review(self):
         """Determine when data and metadata are complete enough for the resource to be published.
 
         The property can be overriden by specific resource type which is not appropriate for

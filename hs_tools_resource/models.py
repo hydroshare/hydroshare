@@ -57,7 +57,7 @@ class ToolResource(BaseResource):
         return ToolMetaData
 
     @property
-    def can_be_published(self):
+    def can_be_submitted_for_metadata_review(self):
         return False
 
 
