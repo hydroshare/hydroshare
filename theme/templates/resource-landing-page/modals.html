@@ -1589,6 +1589,20 @@
                                     Publishing a resource is <strong>final</strong>. The content of published resources 
                                     cannot be changed. Only limited changes can be made to the metadata for published resources.
                                 </p>
+                                {% if recommended_missing_elements %}
+                                    <p>
+                                        This resource meets the
+                                        <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">
+                                            minimum metadata standards</a> but is missing the following recommended elements:
+                                        <ul>
+                                            {% for missing in recommended_missing_elements %}
+                                                <li>{{ missing }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                        You can click <strong>"Cancel"</strong> to edit your resource or continue with your publication request.
+                                    <p>
+                                {% endif %}
+                                <hr>
                                 <p>
                                     Please confirm that you accept the HydroShare Publication Agreement shown below.
                                 </p>
