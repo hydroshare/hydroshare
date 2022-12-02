@@ -28,7 +28,15 @@
                                 <td>
                                     <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.title }}</a></strong></td>
                                 <td>
-                                    {{ res.resource_type }}
+                                    {% if res.resource_type == "CompositeResource" %}
+                                        Resource
+                                    {% elif res.resource_type == "CollectionResource" %}
+                                        Collection
+                                    {% elif res.resource_type == "ToolResource" %}
+                                        Web App Connector
+                                    {% else %}
+                                        {{ res.resource_type }}
+                                    {% endif %}
                                 </td>
                                 {% with res.raccess as raccess %}
                                     <td>

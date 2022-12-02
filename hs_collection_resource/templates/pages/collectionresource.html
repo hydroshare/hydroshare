@@ -55,7 +55,15 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {{ res.resource_type }}
+                                            {% if res.resource_type == "CompositeResource" %}
+                                                Resource
+                                            {% elif res.resource_type == "CollectionResource" %}
+                                                Collection
+                                            {% elif res.resource_type == "ToolResource" %}
+                                                Web App Connector
+                                            {% else %}
+                                                {{ res.resource_type }}
+                                            {% endif %}
                                         </td>
                                         <td>
                                             {% with raccess.owners.all|first as owner %}
@@ -211,7 +219,15 @@
                                       {% endwith %}
                                     </td>
                                     <td>
-                                        {{ res.resource_type }}
+                                        {% if res.resource_type == "CompositeResource" %}
+                                            Resource
+                                        {% elif res.resource_type == "CollectionResource" %}
+                                            Collection
+                                        {% elif res.resource_type == "ToolResource" %}
+                                            Web App Connector
+                                        {% else %}
+                                            {{ res.resource_type }}
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% with res.deleted_by as deleted_by %}

@@ -43,11 +43,6 @@ def landing_page(request, page):
                     if type_name.lower() == class_verbose_list[0].lower():
                         new_supported_res_types_array += [class_verbose_list[1]]
                         break
-            for i, res_type in enumerate(new_supported_res_types_array):
-                if res_type == "Composite Resource":
-                    new_supported_res_types_array[i] = "Resource"
-                elif res_type == "Collection Resource":
-                    new_supported_res_types_array[i] = "Collection"
 
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
 

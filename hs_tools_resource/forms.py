@@ -569,13 +569,7 @@ class SupportedResTypesForm(ModelForm):
                 # NOTE: The following code works for SWAT res type but does not work here!!!
                 # self.fields['supported_res_types'].initial =
                 #   [parameter.description for parameter in supported_res_types]
-                for i, res_type in enumerate(supported_res_types):
-                    if res_type.description == "Composite Resource":
-                        res_type.description = "Resource"
-                        supported_res_types[i] = res_type
-                    elif res_type.description == "Collection Resource":
-                        res_type.description = "Collection"
-                        supported_res_types[i] = res_type
+
                 self.initial['supported_res_types'] = \
                     [parameter.description for parameter in supported_res_types]
             else:
