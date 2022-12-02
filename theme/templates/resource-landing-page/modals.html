@@ -1617,6 +1617,17 @@
                                             <li>{{ missing }}</li>
                                         {% endfor %}
                                     </ul>
+                                </p>
+                                {% if missing_recommended_elements %}
+                                    <p>
+                                        Also, the following items are recommended even though they are not strictly required:
+                                        <ul>
+                                            {% for missing in missing_recommended_elements %}
+                                                <li>{{ missing }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    <p>
+                                {% endif %}
                                     You can submit your publication request after updating the resource metadata.
                                 </p>
                             </div>
