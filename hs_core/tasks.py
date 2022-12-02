@@ -226,7 +226,6 @@ def nightly_metadata_review_reminder():
 
 
 def notify_owners_of_publication_success(resource):
-    # #4871
     """
     Sends email notification to user on publication success
 

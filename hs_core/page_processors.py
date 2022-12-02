@@ -161,10 +161,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         abstract = content_model.metadata.description.abstract if \
             content_model.metadata.description else None
 
-        # TODO: #4871 do we think this is a good approach,
-        # or should we maybe store these missing elements in a dict
-        # with keys indicating the context in which they are missing
-        # eg: {'published': ['title', 'keywords'], 'discoverable':[]}
         missing_metadata_elements_for_publication = content_model.metadata.get_required_missing_elements('published')
         missing_metadata_elements_for_discoverable = content_model.metadata.get_required_missing_elements()
         recommended_missing_elements = content_model.metadata.get_recommended_missing_elements()
