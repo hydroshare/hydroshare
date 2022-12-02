@@ -1618,11 +1618,11 @@
                                         {% endfor %}
                                     </ul>
                                 </p>
-                                {% if missing_recommended_elements %}
+                                {% if recommended_missing_elements %}
                                     <p>
                                         Also, the following items are recommended even though they are not strictly required:
                                         <ul>
-                                            {% for missing in missing_recommended_elements %}
+                                            {% for missing in recommended_missing_elements %}
                                                 <li>{{ missing }}</li>
                                             {% endfor %}
                                         </ul>
