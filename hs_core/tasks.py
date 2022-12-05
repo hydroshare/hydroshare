@@ -202,8 +202,7 @@ def nightly_metadata_review_reminder():
     if settings.DISABLE_TASK_EMAILS:
         return
 
-    pending_resources = BaseResource.objects.filter(raccess__published=True,
-                                                    doi__contains='pending')
+    pending_resources = BaseResource.objects.filter(raccess__review_pending=True)
     for res in pending_resources:
         if res.metadata.dates.all().filter(type='published'):
             pub_date = res.metadata.dates.all().filter(type='published')[0]
