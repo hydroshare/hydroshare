@@ -9,8 +9,7 @@ Update GeospatialRelation objects with text from the geoconnex API
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
-from hs_core.models import GeospatialRelation
-from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.hydroshare.utils import get_resource_by_shortkey, update_geoconnex_texts
 
 
 class Command(BaseCommand):
@@ -41,4 +40,4 @@ class Command(BaseCommand):
 
         else:  # check all resources
             print("CHECKING RELATIONS FOR ALL RESOURCES")
-            GeospatialRelation.sync_all_text()
+            update_geoconnex_texts()

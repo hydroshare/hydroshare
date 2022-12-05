@@ -5,7 +5,6 @@ import logging
 import os.path
 import re
 import unicodedata
-import urllib
 from uuid import uuid4
 
 import arrow
@@ -1138,36 +1137,22 @@ class GeospatialRelation(AbstractRelation):
         graph.add((relation_node, getattr(DCTERMS, self.type), URIRef(self.value)))
         graph.add((relation_node, self.get_field_term("text"), Literal(self.text)))
 
-    def check_text(relation):
-        relative_id = relation.value.split("ref/").pop()
-        collection = relative_id.split("/")[0]
-        id = relative_id.split("/")[1]
-        url = f"https://reference.geoconnex.us/collections/{collection}/items/{id}?" \
-               "f=jsonld&lang=en-US&skipGeometry=true"
-
-        response = urllib.request.urlopen(url)
-        str_response = response.read()
-        str_response = json.loads(str_response)
-        contexts = str_response['@context']
+    def update_from_geoconnex_response(self, json_response):
+        relative_id = self.value.split("ref/").pop()
+        contexts = json_response['@context']
         for context in contexts:
-            compacted = jsonld.compact(str_response, context)
+            compacted = jsonld.compact(json_response, context)
             try:
                 name = compacted['schema:name']
             except KeyError:
                 continue
             text = f"{name} [{relative_id}]"
-            if relation.text != text:
-                print(f"Updating {relation.value}, '{relation.text}' to '{text}'.")
-                relation.text = text
-                relation.save()
+            if self.text != text:
+                print(f"Updating {self.value}, '{self.text}' to '{text}'.")
+                self.text = text
+                self.save()
             else:
-                print(f"Not updating relation '{relation.value}'. Geoconnex API matches HS.")
-
-    @classmethod
-    def sync_all_text(cls):
-        relations = cls.objects.all()
-        for relation in relations:
-            relation.check_text()
+                print(f"Not updating relation '{self.value}'. Geoconnex API matches HS.")
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):

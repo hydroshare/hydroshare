@@ -166,7 +166,6 @@ class RDF_Term_MixIn(object):
             for field in cls._meta.fields:
                 if cls.ignored_fields and field.name in cls.ignored_fields:
                     continue
-                # 
                 field_term = cls.get_field_term(field.name)
                 val = graph.value(subject=metadata_node, predicate=field_term)
                 if val is not None:

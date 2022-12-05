@@ -196,7 +196,7 @@ def manage_task_nightly():
 @celery_app.task(ignore_result=True)
 def update_from_geoconnex_task():
     # Task to update from Geoconnex API
-    GeospatialRelation.sync_all_text()
+    utils.update_geoconnex_texts()
 
 
 @celery_app.task(ignore_result=True)

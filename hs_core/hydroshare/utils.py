@@ -8,6 +8,8 @@ from uuid import uuid4
 from urllib.parse import quote
 import errno
 import urllib
+import aiohttp
+import asyncio
 
 from urllib.request import pathname2url, url2pathname
 
@@ -26,7 +28,7 @@ from mezzanine.conf import settings
 
 from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
     post_add_files_to_resource
-from hs_core.models import AbstractResource, BaseResource, ResourceFile
+from hs_core.models import AbstractResource, BaseResource, ResourceFile, GeospatialRelation
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 from django_irods.icommands import SessionException
@@ -440,6 +442,25 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         # clone contained_res list of original collection and add to new collection
         # note that new collection resource will not contain "deleted resources"
         tgt_res.resources = src_res.resources.all()
+
+
+async def get_jsonld_from_geoconnex(relation):
+    relative_id = relation.value.split("ref/").pop()
+    collection = relative_id.split("/")[0]
+    id = relative_id.split("/")[1]
+    async with aiohttp.ClientSession('https://reference.geoconnex.us/collections') as session:
+        params = {'f': 'jsonld', 'lang': 'en-US', 'skipGeometry': 'true'}
+        async with session.get(f"/{collection}/items/{id}",
+                                params=params) as resp:
+            return await resp.json()
+
+
+def update_geoconnex_texts():
+    # Task to update Relations from Geoconnex API
+    relations = GeospatialRelation.objects.all()
+    for relation in relations:
+        response = asyncio.run(get_jsonld_from_geoconnex(relation))
+        relation.update_from_geoconnex_response(response)
 
 
 def copy_and_create_metadata(src_res, dest_res):

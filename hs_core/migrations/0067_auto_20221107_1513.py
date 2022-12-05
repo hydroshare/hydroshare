@@ -5,7 +5,8 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 import django.db.models.deletion
 import hs_core.hs_rdf
-from hs_core.models import Relation, BaseResource, GeospatialRelation
+from hs_core.models import Relation, BaseResource
+from hs_core.hydroshare.utils import update_geoconnex_texts
 
 
 def migrate_relations_to_geoconnex(apps, schema_editor):
@@ -27,7 +28,7 @@ def migrate_relations_to_geoconnex(apps, schema_editor):
 
 
 def get_geoconnex_text(apps, schema_editor):
-    GeospatialRelation.sync_all_text()
+    update_geoconnex_texts
 
 
 class Migration(migrations.Migration):
