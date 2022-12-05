@@ -122,9 +122,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     content_model.non_preferred_path_names = []
     # whether the user has permission to change the model
     can_change = content_model.can_change(request)
-    if can_change and not content_model.raccess.published_or_review_pending:
-        # display of non-preferred paths is relevant for resource that is not yet published or not under review for
-        # publication
+    if can_change and not content_model.raccess.published:
+        # display of non-preferred paths is relevant for resource that is not yet published
         content_model.non_preferred_path_names = content_model.get_non_preferred_path_names()
 
     # user requested the resource in READONLY mode
