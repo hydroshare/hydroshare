@@ -10,9 +10,9 @@ from hs_core.models import Relation, BaseResource, GeospatialRelation
 
 def migrate_relations_to_geoconnex(apps, schema_editor):
     for relation in Relation.objects.filter(type="relation"):
-        res = BaseResource.objects.get(object_id=relation.object_id)
         if "geoconnex" in relation.value:
             print(f"\nAttempting to create new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
+            res = BaseResource.objects.get(object_id=relation.object_id)
             try:
                 res.metadata.create_element('geospatialrelation',
                                             type='relation',
