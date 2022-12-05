@@ -1615,7 +1615,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button class="btn btn-danger" id="publish-btn" data-toggle="modal" data-dismiss="modal" data-target="#submit-for-publication-dialog-2">Continue</button>
+                                <button class="btn btn-success" id="publish-btn" data-toggle="modal" data-dismiss="modal" data-target="#submit-for-publication-dialog-2">Continue</button>
                             </div>
                         {% else %}
                             <div class="modal-header">
@@ -1648,8 +1648,7 @@
                                 </p>
                             </div>
                             <div class="modal-footer">
-                                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button class="btn btn-danger" data-toggle="modal" data-dismiss="modal" disabled>Continue</button>
+                                <button class="btn btn-default" data-dismiss="modal">Okay</button>
                             </div>
                         {% endif %}
                     </div>
@@ -1674,7 +1673,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <a type="button" id="publish-btn-2" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/submit-for-review/" disabled>Submit For Publication</a>
+                            <a type="button" id="publish-btn-2" class="btn btn-success" href="/hsapi/_internal/{{ cm.short_id }}/submit-for-review/" disabled>Submit For Publication</a>
                         </div>
                     </div>
                 </div>
