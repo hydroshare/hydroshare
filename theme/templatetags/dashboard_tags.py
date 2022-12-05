@@ -56,6 +56,6 @@ class ResourceNameDBToUIMap:
     }
     dict_verbose_name = {
         'CompositeResource': 'Resource',
-        'ToolResource': 'Web App Connector',
+        'ToolResource': 'App Connector',
         'CollectionResource': 'Collection'
     }

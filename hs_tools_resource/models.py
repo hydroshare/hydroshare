@@ -20,12 +20,12 @@ from hs_file_types.utils import get_SupportedAggTypes_choices
 class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
 
-    discovery_content_type = 'Web App Connector'  # used during discovery
-    display_name = 'Web App Connector'
+    discovery_content_type = 'App Connector'  # used during discovery
+    display_name = 'App Connector'
 
     class Meta:
         proxy = True
-        verbose_name = 'Web App Connector'
+        verbose_name = 'Web App Resource'
 
     @classmethod
     def get_approved_apps(cls):

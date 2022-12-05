@@ -932,7 +932,7 @@ function typeQueryStrings () {
             type = "collection";
         }
         else if (type === "web app resource") {
-            type = "web app connector";
+            type = "app connector";
         }
         searchQuery = searchQuery + " [type:" + type + "]";
     }

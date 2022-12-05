@@ -295,7 +295,7 @@ export default {
       resIconName: {
         Resource: '/static/static/img/resource-icons/composite48x48.png',
         Collection: '/static/static/img/resource-icons/collection48x48.png',
-        'Web App Connector': '/static/static/img/resource-icons/webapp48x48.png',
+        'App Connector': '/static/static/img/resource-icons/webapp48x48.png',
       },
       sortMap: {
         'First Author': 'author',
