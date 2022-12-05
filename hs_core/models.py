@@ -3439,6 +3439,7 @@ class BaseResource(Page, AbstractResource):
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
     discovery_content_type = 'Generic Resource'  # used during discovery
+    display_name = "Generic"
 
     class Meta:
         """Define meta properties for BaseResource model."""
