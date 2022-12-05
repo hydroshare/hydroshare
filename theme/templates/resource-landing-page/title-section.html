@@ -79,10 +79,8 @@
                 {% if missing_metadata_elements_for_discoverable %}
                     {% if just_created %}
                         This is the landing page for the resource you just created. Add files in the content area below and enter metadata where needed. 
-                        The following metadata is required for your resource to be made public or discoverable:
-                    {% else %}
-                        <span>The following metadata are still required to make the resource public or discoverable:</span>
                     {% endif %}
+                    <span>We recommend following these minimum metadata requirements before making your resource public or discoverable:</span>
                     <ul>
                         {% for element in missing_metadata_elements_for_discoverable %}
                             <li>{{ element }}</li>
@@ -90,6 +88,11 @@
                         {% if title|stringformat:"s" == "Untitled resource" %}
                            <li>Title: needs to be changed</li>
                         {% endif %}
+                        {% if recommended_missing_elements %}
+                            {% for element in recommended_missing_elements %}
+                                <li>{{ element }}</li>
+                            {% endfor %}
+                    {%  endif %}
                     </ul>
                 {%  endif %}
                 {%  if not cm.has_required_content_files %}
@@ -110,16 +113,6 @@
                         <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
                     {% endif %}
                 {% endif %}
-                {% if recommended_missing_elements %}
-                    <br>
-                    <br>
-                    <span>The following metadata are recommended but not strictly required:</span>
-                    <ul>
-                        {% for element in recommended_missing_elements %}
-                            <li>{{ element }}</li>
-                        {% endfor %}
-                    </ul>
-                {%  endif %}
                 {% if not resource_edit_mode %}
                     <hr>
                     <span class="glyphicon glyphicon-question-sign"></span>

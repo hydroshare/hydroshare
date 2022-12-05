@@ -1267,8 +1267,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 3 required core metadata elements missing at this point
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
-        self.assertIn('Abstract', missing_elements)
-        self.assertIn('Keywords', missing_elements)
+        self.assertIn('Abstract (at least 150 characters)', missing_elements)
+        self.assertIn('Keywords (at least 3)', missing_elements)
 
         # add the above missing elements
         # create abstract
@@ -1296,8 +1296,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertFalse(self.composite_resource.can_be_public_or_discoverable)
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
-        self.assertIn('Abstract', missing_elements)
-        self.assertIn('Keywords', missing_elements)
+        self.assertIn('Abstract (at least 150 characters)', missing_elements)
+        self.assertIn('Keywords (at least 3)', missing_elements)
         # add the above missing elements
         # create abstract
         metadata = self.composite_resource.metadata
@@ -1337,8 +1337,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 3 required core metadata elements missing at this point
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
-        self.assertIn('Abstract', missing_elements)
-        self.assertIn('Keywords', missing_elements)
+        self.assertIn('Abstract (at least 150 characters)', missing_elements)
+        self.assertIn('Keywords (at least 3)', missing_elements)
 
         # add the above missing elements
         # create abstract
@@ -1377,8 +1377,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 3 required core metadata elements missing at this point
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
-        self.assertIn('Abstract', missing_elements)
-        self.assertIn('Keywords', missing_elements)
+        self.assertIn('Abstract (at least 150 characters)', missing_elements)
+        self.assertIn('Keywords (at least 3)', missing_elements)
 
         # add the above missing elements
         # create abstract
@@ -1421,8 +1421,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 2 required core metadata elements missing at this point
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
-        self.assertIn('Abstract', missing_elements)
-        self.assertIn('Keywords', missing_elements)
+        self.assertIn('Abstract (at least 150 characters)', missing_elements)
+        self.assertIn('Keywords (at least 3)', missing_elements)
 
         # add the above missing elements
         # create abstract
