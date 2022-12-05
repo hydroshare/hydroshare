@@ -240,9 +240,9 @@ def notify_owners_of_publication_success(resource):
     { res_url }</a>
     has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
 
-    <p>The publication request processed by <a href="https://www.crossref.org/">Crossref.org</a>.
+    <p>The publication request was processed by <a href="https://www.crossref.org/">Crossref.org</a>.
     The Digital Object Identifier (DOI) for your resource is:
-    https://doi.org/10.4211/hs.{ resource.short_id }</p>
+    <a href="https://doi.org/10.4211/hs.{ resource.short_id }">https://doi.org/10.4211/hs.{ resource.short_id }</a></p>
 
     <p>Thank you,</p>
     <p>The HydroShare Team</p>
