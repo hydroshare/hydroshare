@@ -1136,7 +1136,7 @@ class GeospatialRelation(AbstractRelation):
         relation_node = BNode()
         graph.add((subject, self.get_class_term(), relation_node))
         graph.add((relation_node, getattr(DCTERMS, self.type), URIRef(self.value)))
-        graph.add((relation_node, HSTERMS.relation_name, Literal(self.text)))
+        graph.add((relation_node, self.get_field_term("text"), Literal(self.text)))
 
     def check_text(relation):
         relative_id = relation.value.split("ref/").pop()
@@ -1174,7 +1174,7 @@ class GeospatialRelation(AbstractRelation):
         for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
             type = value = name = None
             for _, p, o in graph.triples((relation_node, None, None)):
-                if p == HSTERMS.relation_name:
+                if p == cls.get_field_term("text"):
                     name = o
                 else:
                     type = p.split('/')[-1]
