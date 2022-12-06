@@ -941,7 +941,7 @@ def submit_for_review(request, shortkey, *args, **kwargs):
         message = f"""This resource doesn't meet the minimum metadata standards for publication
                 and adherence to community guidelines. {' '.join(missing)}
                 """
-        messages.error(request, f" ")
+        messages.error(request, message)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:

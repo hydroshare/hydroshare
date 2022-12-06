@@ -24,7 +24,7 @@ from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag, current_site_url
 from hydroshare.hydrocelery import app as celery_app
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
-from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref
+from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref, get_resource_doi
 from hs_core.task_utils import get_or_create_task_notification
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
@@ -204,8 +204,8 @@ def nightly_metadata_review_reminder():
 
     pending_resources = BaseResource.objects.filter(raccess__review_pending=True)
     for res in pending_resources:
-        if res.metadata.dates.all().filter(type='published'):
-            pub_date = res.metadata.dates.all().filter(type='published')[0]
+        pub_date = res.metadata.dates.all().filter(type='published').first()
+        if pub_date:
             pub_date = pub_date.start_date
             cutoff_date = timezone.now() - timedelta(days=2)
             if pub_date < cutoff_date:
@@ -226,7 +226,7 @@ def nightly_metadata_review_reminder():
 
 def notify_owners_of_publication_success(resource):
     """
-    Sends email notification to user on publication success
+    Sends email notification to resource owners on publication success
 
     :param resource: a resource that has been published
     :return:
@@ -241,7 +241,7 @@ def notify_owners_of_publication_success(resource):
 
     <p>The publication request was processed by <a href="https://www.crossref.org/">Crossref.org</a>.
     The Digital Object Identifier (DOI) for your resource is:
-    <a href="https://doi.org/10.4211/hs.{ resource.short_id }">https://doi.org/10.4211/hs.{ resource.short_id }</a></p>
+    <a href="{ get_resource_doi(resource.short_id) }">https://doi.org/10.4211/hs.{ resource.short_id }</a></p>
 
     <p>Thank you,</p>
     <p>The HydroShare Team</p>

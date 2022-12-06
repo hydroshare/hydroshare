@@ -4177,7 +4177,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             if self.subjects.count() == 0:
                 missing_required_elements.append('Keywords (at least 3)')
         elif desired_resource_state == 'published':
-            if not self.title.value or len(self.title.value) < 30:
+            if not self.title or len(self.title.value) < 30:
                 missing_required_elements.append('The title must be at least 30 characters.')
             if not self.description or len(self.description.abstract) < 150:
                 missing_required_elements.append('The abstract must be at least 150 characters.')
