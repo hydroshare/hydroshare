@@ -10,8 +10,8 @@ class CollectionResource(BaseResource):
 
     objects = ResourceManager('CollectionResource')
 
-    discovery_content_type = 'Collection'  # used during discovery
-    display_name = "Collection"
+    # used during discovery as well as in all other places in UI where resource type is displayed
+    display_name = 'Collection'
 
     class Meta:
         proxy = True

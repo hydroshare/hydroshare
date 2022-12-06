@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
-    discovery_content_type = 'Resource'  # used during discovery
-    display_name = "Resource"
+    # used during discovery as well as in all other places in UI where resource type is displayed
+    display_name = 'Resource'
 
     class Meta:
         verbose_name = 'Composite Resource'

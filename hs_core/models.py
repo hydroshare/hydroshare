@@ -3532,8 +3532,8 @@ class BaseResource(Page, AbstractResource):
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
-    discovery_content_type = 'Generic Resource'  # used during discovery
-    display_name = "Generic"
+    # used during discovery as well as in all other places in UI where resource type is displayed
+    display_name = 'Generic'
 
     class Meta:
         """Define meta properties for BaseResource model."""
@@ -3766,8 +3766,13 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def discovery_content_type(self):
-        """Return verbose name of content type."""
-        return self.get_content_model().discovery_content_type
+        """Return name used for the content type in discovery/solr search."""
+        return self.get_content_model().display_name
+
+    # @property
+    # def display_name(self):
+    #     """Return name used in UI for content type."""
+    #     return self.get_content_model().discovery_content_type
 
     @property
     def can_be_published(self):

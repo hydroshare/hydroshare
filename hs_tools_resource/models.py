@@ -19,7 +19,7 @@ from hs_file_types.utils import get_SupportedAggTypes_choices
 class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
 
-    discovery_content_type = 'App Connector'  # used during discovery
+    # used during discovery as well as in all other places in UI where resource type is displayed
     display_name = 'App Connector'
 
     class Meta:
