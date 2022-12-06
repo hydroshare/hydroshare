@@ -24,7 +24,8 @@ from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag, current_site_url
 from hydroshare.hydrocelery import app as celery_app
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
-from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref, get_resource_doi
+from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref, \
+    get_resource_doi
 from hs_core.task_utils import get_or_create_task_notification
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
