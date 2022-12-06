@@ -91,7 +91,7 @@ server {
 
     location /django_irods/download/ {
         if (-f $document_root/maintenance_on.html) {
-            return 301 /maintenance_on.html;
+            rewrite ^(.*)$ /maintenance_on.html break;
         }
         proxy_pass http://unix:/hs_tmp/gunicorn.sock;
         proxy_set_header X-Django-Reverse-Proxy true;
@@ -99,7 +99,7 @@ server {
 
     location / { 
         if (-f $document_root/maintenance_on.html) {
-            return 301 /maintenance_on.html;
+            rewrite ^(.*)$ /maintenance_on.html break;
         }
         try_files $uri @proxy;
     } 
