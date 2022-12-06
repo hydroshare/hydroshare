@@ -1581,18 +1581,14 @@
                         {% if not missing_metadata_elements_for_publication %}
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
+                                <h4 class="modal-title" id="submit-for-publication-title">Submit resource for permanent publication</h4>
                             </div>
                             <div class="modal-body">
                                 <p>
-                                    <strong>Are you sure you want to formally publish this resource?</strong> You will <strong>NOT</strong>
-                                    be able to edit the content, title, or authorship of your resource once you proceed. Only limited editing
-                                    of other metadata is available for published resources. Formal publication is permanent and should only
-                                    be done when you are finished modifying your resource and you are ready to formally publish it.
-                                </p>
-                                <p>
-                                    If you want to share with specific HydroShare users without formally publishing your resource, click
-                                    <strong>"Cancel"</strong> and use the manage access panel instead.
+                                    <strong>Are you sure you want to permanently publish this resource?</strong> You will <strong>NOT</strong>
+                                    be able to edit the content, title or authorship once this resource is permanently published.
+                                    Limited editing of other metadata will still be possible to add new information, or correct current information.
+                                    This publication is <strong>permanent</strong> and you should only continue when you are finished adding or modifying the content of this resource.
                                 </p>
                                 <hr>
                                 {% if recommended_missing_elements %}
@@ -1636,7 +1632,7 @@
                                 </p>
                                 {% if recommended_missing_elements %}
                                     <p>
-                                        Also, the following items are recommended even though they are not strictly required:
+                                        We also recommend the following items:
                                         <ul>
                                             {% for missing in recommended_missing_elements %}
                                                 <li>{{ missing }}</li>
@@ -1648,7 +1644,7 @@
                                 </p>
                             </div>
                             <div class="modal-footer">
-                                <button class="btn btn-default" data-dismiss="modal">Okay</button>
+                                <button class="btn btn-default" data-dismiss="modal">OK</button>
                             </div>
                         {% endif %}
                     </div>
