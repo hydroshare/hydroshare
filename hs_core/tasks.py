@@ -211,7 +211,7 @@ def nightly_metadata_review_reminder():
             cutoff_date = timezone.now() - timedelta(days=2)
             if pub_date < cutoff_date:
                 res_url = current_site_url() + res.get_absolute_url()
-                subject = f"Metadata review pending since { pub_date.strftime('%m/%d/%Y') } for { res.title }"
+                subject = f"Metadata review pending since { pub_date.strftime('%m/%d/%Y') } for { res.metadata.title }"
                 email_msg = f'''
                 Metadata review for <a href="{ res_url }">{ res_url }</a>
                 was requested at { pub_date.strftime("%Y-%m-%d %H:%M:%S") }.
