@@ -205,7 +205,7 @@ def nightly_metadata_review_reminder():
 
     pending_resources = BaseResource.objects.filter(raccess__review_pending=True)
     for res in pending_resources:
-        pub_date = res.metadata.dates.all().filter(type='published').first()
+        pub_date = res.metadata.dates.all().filter(type='review_started').first()
         if pub_date:
             pub_date = pub_date.start_date
             cutoff_date = timezone.now() - timedelta(days=2)

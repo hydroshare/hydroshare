@@ -867,6 +867,7 @@ class Date(AbstractMetaDataElement):
         ('modified', 'Modified'),
         ('valid', 'Valid'),
         ('available', 'Available'),
+        ('review_started', 'Review Started'),
         ('published', 'Published')
     )
 

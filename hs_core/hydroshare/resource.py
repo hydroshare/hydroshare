@@ -1050,6 +1050,9 @@ def submit_resource_for_review(request, pk):
     resource.raccess.immutable = True
     resource.raccess.save()
 
+    # create review date
+    resource.metadata.create_element('date', type='review_started', start_date=resource.updated)
+
 
 def publish_resource(user, pk):
     """
