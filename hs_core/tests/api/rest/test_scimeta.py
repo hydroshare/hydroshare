@@ -3,6 +3,7 @@ import tempfile
 import shutil
 
 from lxml import etree
+from defusedxml.ElementTree import parse
 
 from hs_core.hydroshare import resource
 from .base import SciMetaTestCase
@@ -39,7 +40,7 @@ class TestScienceMetadata(SciMetaTestCase):
                 for l in response.streaming_content:
                     f.write(l)
 
-            scimeta = etree.parse(sci_meta_orig)
+            scimeta = parse(sci_meta_orig)
             self.getAbstract(scimeta, should_exist=False, rdf_type="hsterms:GenericResource")
 
             # Modify science metadata
@@ -64,7 +65,7 @@ class TestScienceMetadata(SciMetaTestCase):
                 for l in response.streaming_content:
                     f.write(l)
 
-            scimeta = etree.parse(sci_meta_updated)
+            scimeta = parse(sci_meta_updated)
             abstract = self.getAbstract(scimeta, rdf_type="hsterms:GenericResource")
             self.assertEqual(abstract, abstract_text)
 

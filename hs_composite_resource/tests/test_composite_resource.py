@@ -4,7 +4,7 @@ import os
 import shutil
 from zipfile import ZipFile
 
-import pytz
+from dateutil import tz
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
@@ -2624,7 +2624,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.add_file_to_resource(file_to_add=self.generic_file)
 
         # make the original resource locked before versioning
-        self.composite_resource.locked_time = datetime.datetime.now(pytz.utc)
+        self.composite_resource.locked_time = datetime.datetime.now(tz.UTC)
         self.composite_resource.save()
         new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
                                                                   self.user)

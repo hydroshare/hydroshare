@@ -66,6 +66,7 @@ defaultworker:
     POSTGIS_DB: postgres
     PGPASSWORD: postgres
     C_FORCE_ROOT: 1
+    COLUMNS: 80
   ports:
     - "5555:5555"
   volumes_from:
