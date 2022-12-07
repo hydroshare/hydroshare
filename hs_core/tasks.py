@@ -205,22 +205,22 @@ def nightly_metadata_review_reminder():
 
     pending_resources = BaseResource.objects.filter(raccess__review_pending=True)
     for res in pending_resources:
-        pub_date = res.metadata.dates.all().filter(type='review_started').first()
-        if pub_date:
-            pub_date = pub_date.start_date
+        review_date = res.metadata.dates.all().filter(type='review_started').first()
+        if review_date:
+            review_date = review_date.start_date
             cutoff_date = timezone.now() - timedelta(days=2)
-            if pub_date < cutoff_date:
+            if review_date < cutoff_date:
                 res_url = current_site_url() + res.get_absolute_url()
-                subject = f"Metadata review pending since { pub_date.strftime('%m/%d/%Y') } for { res.metadata.title }"
+                subject = f"Metadata review pending since { review_date.strftime('%m/%d/%Y') } for { res.metadata.title }"
                 email_msg = f'''
                 Metadata review for <a href="{ res_url }">{ res_url }</a>
-                was requested at { pub_date.strftime("%Y-%m-%d %H:%M:%S") }.
+                was requested at { review_date.strftime("%Y-%m-%d %H:%M:%S") }.
 
                 This is a reminder to review and approve/reject the publication request.
                 '''
                 recipients = [settings.DEFAULT_FROM_EMAIL]
                 # If we have gone 4 days, will also cc support email
-                if pub_date < cutoff_date - timedelta(days=2):
+                if review_date < cutoff_date - timedelta(days=2):
                     recipients.append(settings.DEFAULT_SUPPORT_EMAIL)
                 send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, recipients)
 

@@ -1693,9 +1693,7 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
                              "An email will be sent notifiying the resource owner(s) once the DOI activates.")
         else:
             messages.warning(request, "Publication request was rejected. Please send an email to the resource owner indicating why.")
-            date = res.metadata.dates.all().filter(type='review_started').first()
-            if date:
-                res.metadata.delete_element('date', date.id)
+            res.metadata.dates.all().filter(type='review_started').delete()
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 
 
