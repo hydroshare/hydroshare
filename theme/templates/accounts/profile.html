@@ -313,7 +313,7 @@
                                                             <span class="text-muted"> shared </span>
                                                             <span><a href="{{ res.get_absolute_url }}">{{ metadata.title }}</a></span>
                                                         </div>
-                                                        <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
+                                                        <h5><span class="text-muted">Type: </span>{{ res|resource_type }}</h5>
                                                         <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
                                                     </div>
                                                     {% with abstract=metadata.description %}
