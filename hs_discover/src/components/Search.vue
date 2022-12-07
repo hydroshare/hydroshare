@@ -25,7 +25,7 @@
                         <div id="headingDate" class="panel-heading">
                             <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
                                 class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">
-                                Temporal Coverage Filter</a>
+                                Temporal Coverage</a>
                             </h4>
                         </div>
                         <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
@@ -52,7 +52,7 @@
                     <div class="panel panel-default">
                         <div id="headingAuthor" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#creator" aria-expanded="true" aria-controls="creator">
-                                Author Filter</a>
+                                Author</a>
                             </h4>
                         </div>
                         <div id="creator" class="facet-list panel-collapse collapse in" aria-labelledby="headingAuthor">
@@ -73,7 +73,7 @@
                     <div class="panel panel-default">
                         <div id="headingOwner" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#owner" aria-expanded="true" aria-controls="owner">
-                                Owner Filter</a>
+                                Owner</a>
                             </h4>
                         </div>
                         <div id="owner" class="facet-list panel-collapse collapse in" aria-labelledby="headingOwner">
@@ -95,7 +95,7 @@
                     <div class="panel panel-default">
                         <div id="headingSubject" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#subject" aria-expanded="true" aria-controls="subject">
-                                Subject Filter</a>
+                                Subject</a>
                             </h4>
                         </div>
                         <div id="subject" class="facet-list panel-collapse collapse in" aria-labelledby="headingSubject">
@@ -117,7 +117,7 @@
                     <div class="panel panel-default">
                         <div id="headingContributor" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#contributor" aria-expanded="true" aria-controls="contributor">
-                                Contributor Filter</a>
+                                Contributor</a>
                             </h4>
                         </div>
                         <div id="contributor" class="facet-list panel-collapse collapse in" aria-labelledby="headingContributor">
@@ -139,7 +139,7 @@
                     <div class="panel panel-default">
                         <div id="headingType" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#type" aria-expanded="true" aria-controls="type">
-                                Type Filter</a>
+                                Content Type</a>
                             </h4>
                         </div>
                         <div id="type" class="facet-list panel-collapse collapse in" aria-labelledby="headingType">
@@ -161,7 +161,7 @@
                     <div class="panel panel-default">
                         <div id="headingAvailability" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#availability" aria-expanded="true" aria-controls="availability">
-                                Availability Filter</a>
+                                Availability</a>
                             </h4>
                         </div>
                         <div id="availability" class="facet-list panel-collapse collapse in" aria-labelledby="headingAvailability">
