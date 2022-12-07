@@ -33,11 +33,14 @@
                         {% if user.is_superuser %}
                         <a id="metadata_approve" href="/hsapi/_internal/metadata_review/{{ cm.short_id }}/approve/">
                             <button
-                                class="btn btn-info btn-xs"
-                                data-toggle="tooltip"
-                                data-placement="bottom"
-                                title="Approve metadata review and submit for publication">
+                                class="btn btn-info btn-xs">
                                 Approve metadata for publication
+                            </button>
+                        </a>
+                        <a id="metadata_reject" href="/hsapi/_internal/metadata_review/{{ cm.short_id }}/reject/">
+                            <button
+                                class="btn btn-warning btn-xs">
+                                Reject metadata for publication
                             </button>
                         </a>
                         {% else %}
