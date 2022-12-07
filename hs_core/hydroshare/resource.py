@@ -1051,7 +1051,11 @@ def submit_resource_for_review(request, pk):
     resource.raccess.save()
 
     # create review date -- must be after review_pending = True
-    resource.metadata.create_element('date', type='review_started', start_date=resource.updated)
+    date = resource.metadata.dates.all().filter(type='review_started').first()
+    if date:
+        resource.metadata.update_element('date', date.id)
+    else:
+        resource.metadata.create_element('date', type='review_started', start_date=resource.updated)
 
 
 def publish_resource(user, pk):
