@@ -8,7 +8,6 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
-import zoneinfo
 from hs_core.models import BaseResource
 from theme.models import UserProfile
 
@@ -34,7 +33,7 @@ def month_year_iter(start, end):
         y, m = divmod(ym, 12)
         m += 1
         d = monthrange(y, m)[1]
-        yield timezone.datetime(y, m, d, tzinfo=zoneinfo.ZoneInfo("UTC"))
+        yield timezone.datetime(y, m, d, tzinfo=timezone.pytz.utc)
 
 
 class Command(BaseCommand):

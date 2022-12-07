@@ -4,7 +4,7 @@ import shutil
 import logging
 import requests
 import datetime
-from dateutil import tz
+import pytz
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -638,7 +638,7 @@ def create_new_version_resource(ori_res, new_res, user):
                                                 'this resource synchronously.')
     # lock the resource to prevent concurrent new version creation since only one new version for an
     # obsoleted resource is allowed
-    ori_res.locked_time = datetime.datetime.now(tz.UTC)
+    ori_res.locked_time = datetime.datetime.now(pytz.utc)
     ori_res.save()
     create_new_version_resource_task(ori_res.short_id, user.username, new_res_id=new_res.short_id)
     # cannot directly return the new_res object being passed in, but rather return the new versioned resource object
