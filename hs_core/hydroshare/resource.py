@@ -1050,7 +1050,7 @@ def submit_resource_for_review(request, pk):
     resource.raccess.immutable = True
     resource.raccess.save()
 
-    # create review date
+    # create review date -- must be after review_pending = True
     resource.metadata.create_element('date', type='review_started', start_date=resource.updated)
 
 
