@@ -274,17 +274,12 @@ $(document).ready(function () {
     $("#agree-chk").on('click', function(e) {
         e.stopImmediatePropagation();
         if (e.currentTarget.checked) {
-            $('#publish-btn').removeAttr('disabled');
+            $('#publish-btn-2').removeAttr('disabled');
         }
         else {
-            $('#publish-btn').attr('disabled', 'disabled');
+            $('#publish-btn-2').attr('disabled', 'disabled');
         }
     });
-
-    $("#publish-btn-2").click(()=>{
-        $("#publish-btn-2").prepend('<i class="fa fa-spinner fa-pulse fa-lg icon-blue" style="z-index: 1;"></i>');
-        $("#publish-btn-2").addClass("disabled");
-    })
 
     $("#agree-chk-copy").on('click', function(e) {
         e.stopImmediatePropagation();

@@ -868,6 +868,7 @@ class Date(AbstractMetaDataElement):
         ('modified', 'Modified'),
         ('valid', 'Valid'),
         ('available', 'Available'),
+        ('review_started', 'Review Started'),
         ('published', 'Published')
     )
 
@@ -925,6 +926,9 @@ class Date(AbstractMetaDataElement):
             if kwargs['type'] == 'published':
                 if not resource.raccess.published:
                     raise ValidationError("Resource is not published yet.")
+            if kwargs['type'] == 'review_started':
+                if not resource.raccess.review_pending:
+                    raise ValidationError("Review is not pending yet.")
             elif kwargs['type'] == 'available':
                 if not resource.raccess.public:
                     raise ValidationError("Resource has not been made public yet.")
@@ -3769,7 +3773,7 @@ class BaseResource(Page, AbstractResource):
         return self.get_content_model().discovery_content_type
 
     @property
-    def can_be_published(self):
+    def can_be_submitted_for_metadata_review(self):
         """Determine when data and metadata are complete enough for the resource to be published.
 
         The property can be overriden by specific resource type which is not appropriate for
@@ -4276,51 +4280,54 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         return True
 
-    def get_required_missing_elements(self):
+    def get_required_missing_elements(self, desired_resource_state='discoverable'):
         """Return a list of required missing metadata elements.
 
         This method needs to be overriden by any subclass of this class
         if they implement additional metadata elements that are required
         """
+
+        resource_states = ('discoverable', 'published')
+        if desired_resource_state not in resource_states:
+            raise ValidationError(f"Desired resource state is not in: {','.join(resource_states)}")
+
         missing_required_elements = []
-
-        if not self.title:
-            missing_required_elements.append('Title')
-        elif self.title.value.lower() == 'untitled resource':
-            missing_required_elements.append('Title')
-        if not self.description:
-            missing_required_elements.append('Abstract')
-        if not self.rights:
-            missing_required_elements.append('Rights')
-        if self.subjects.count() == 0:
-            missing_required_elements.append('Keywords')
-
+        if desired_resource_state == 'discoverable':
+            if not self.title:
+                missing_required_elements.append('Title (at least 30 characters)')
+            elif self.title.value.lower() == 'untitled resource':
+                missing_required_elements.append('Title (at least 30 characters)')
+            if not self.description:
+                missing_required_elements.append('Abstract (at least 150 characters)')
+            if not self.rights:
+                missing_required_elements.append('Rights')
+            if self.subjects.count() == 0:
+                missing_required_elements.append('Keywords (at least 3)')
+        elif desired_resource_state == 'published':
+            if not self.title or len(self.title.value) < 30:
+                missing_required_elements.append('The title must be at least 30 characters.')
+            if not self.description or len(self.description.abstract) < 150:
+                missing_required_elements.append('The abstract must be at least 150 characters.')
+            if self.subjects.count() < 3:
+                missing_required_elements.append('You must include at least 3 keywords.')
         return missing_required_elements
 
-    def check_minimum_metadata_elements(self):
-        """Return a string indicating metadata elements that do not meet 'human in the loop' standards."""
-        missing = []
-        notification = ""
+    def get_recommended_missing_elements(self):
+        """Return a list of recommended missing metadata elements.
 
-        if not self.resource.raccess.public:
-            raise ValidationError("Minimum metadata should only be checked on public resources")
+        This method needs to be overriden by any subclass of this class
+        if they implement additional metadata elements that are required
+        """
 
-        if len(self.title.value) < 30:
-            missing.append('the title must be at least 30 characters')
-        if len(self.description.abstract) < 150:
-            missing.append('the abstract must be at least 150 characters')
-        if self.subjects.count() < 3:
-            missing.append('you must include at least 3 keywords')
-
-        if missing:
-            notification = "Your resource doesn't meet the minimum metadata standards for publication: "
-            notification += f"{missing[0]}"
-            for issue in missing[1:-1]:
-                notification += f", {issue}"
-            if len(missing) > 1:
-                notification += f" and {missing[-1]}"
-            notification += ". You can re-submit your request after making edits."
-        return notification
+        missing_recommended_elements = []
+        if not self.funding_agencies.count():
+            missing_recommended_elements.append('Funding Agency')
+        if not self.resource.readme_file:
+            missing_recommended_elements.append('Readme file containing variables, '
+                                                'abbreviations/acronyms, and non-standard file formats')
+        if not self.coverages.count():
+            missing_recommended_elements.append('Coverage that describes locations that are related to the dataset')
+        return missing_recommended_elements
 
     def delete_all_elements(self):
         """Delete all metadata elements.

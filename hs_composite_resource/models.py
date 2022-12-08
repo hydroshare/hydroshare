@@ -125,9 +125,9 @@ class CompositeResource(BaseResource):
         return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
 
     @property
-    def can_be_published(self):
+    def can_be_submitted_for_metadata_review(self):
         # resource level metadata check
-        if not super(CompositeResource, self).can_be_published:
+        if not super(CompositeResource, self).can_be_submitted_for_metadata_review:
             return False
 
         # logical file level metadata check
