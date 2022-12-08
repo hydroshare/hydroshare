@@ -88,11 +88,11 @@
                 {% if missing_metadata_elements %}
                     {% if just_created %}
                         This is the landing page for the resource you just created. Add files in the content area below
-                        and enter metadata where needed. The following metadata is required for your resource to be
+                        and enter metadata where needed. The following metadata is required for your {{ cm.display_name|lower }} to be
                         {% if cm.resource_type != 'ToolResource' %} published or{% endif %} made public:
                     {% else %}
                         <span>The following metadata are still required to
-                            {% if cm.resource_type != 'ToolResource' %}publish the resource or {% endif %}make the resource public or discoverable:</span>
+                            {% if cm.resource_type != 'ToolResource' %}publish the {{ cm.display_name|lower }} or {% endif %}make the {{ cm.display_name|lower }} public or discoverable:</span>
                     {% endif %}
                     <ul>
                         {% for element in missing_metadata_elements %}
@@ -105,7 +105,7 @@
                 {%  endif %}
                 {%  if not cm.has_required_content_files %}
                          <br>
-                        <span>You must {% if missing_metadata_elements %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
+                        <span>You must {% if missing_metadata_elements %}also {% endif %}add content files to your {{ cm.display_name|lower }} before it can be published, public or discoverable.</span>
                 {% endif %}
                 {%  if cm.resource_type|lower == "collectionresource" %}
                     {% if not cm.has_resources%}
@@ -117,7 +117,7 @@
                 {% if not resource_edit_mode %}
                     <hr>
                     <span class="glyphicon glyphicon-question-sign"></span>
-                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this {{ cm.display_name|lower }}.</small>
                 {% endif %}
             </div>
         </div>
