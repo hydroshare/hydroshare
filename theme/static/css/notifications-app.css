@@ -66,6 +66,10 @@ li.notifications .task .notification--controls .fa {
     padding: 1em;
 }
 
+#btn-notifications-clear {
+  cursor: pointer;
+}
+
 #btn-notifications-clear #btn-file-override {
     cursor: pointer;
 }

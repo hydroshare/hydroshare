@@ -5,10 +5,11 @@ import logging
 import os.path
 import re
 import unicodedata
+import urllib.parse
 from uuid import uuid4
-
 import arrow
 from dateutil import parser
+
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -27,6 +28,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.utils.timezone import now
+
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 from lxml import etree
 from markdown import markdown
@@ -123,7 +125,9 @@ def validate_hydroshare_user_id(value):
     """Validate that a hydroshare_user_id is valid for a hydroshare user."""
     err_message = '%s is not a valid id for hydroshare user' % value
     if value:
-        if not isinstance(value, int):
+        try:
+            value = int(value)
+        except ValueError:
             raise ValidationError(err_message)
 
         # check the user exists for the provided user id
@@ -451,6 +455,11 @@ class Party(AbstractMetaDataElement):
     address = models.CharField(max_length=250, null=True, blank=True)
     phone = models.CharField(max_length=25, null=True, blank=True)
     homepage = models.URLField(null=True, blank=True)
+
+    # flag to track if a creator/contributor is an active hydroshare user
+    # this flag is set by the system based on the field 'hydoshare_user_id'
+    is_active_user = models.BooleanField(default=False)
+
     # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default=dict)
@@ -474,7 +483,7 @@ class Party(AbstractMetaDataElement):
         party_type = self.get_class_term()
         party = BNode()
         graph.add((subject, party_type, party))
-        for field_term, field_value in self.get_field_terms_and_values(['identifiers']):
+        for field_term, field_value in self.get_field_terms_and_values(['identifiers', 'is_active_user']):
             # TODO: remove this once we are no longer concerned with backwards compatibility
             if field_term == HSTERMS.hydroshare_user_id:
                 graph.add((party, HSTERMS.description, field_value))
@@ -537,6 +546,10 @@ class Party(AbstractMetaDataElement):
             identifiers = cls.validate_identifiers(identifiers)
             kwargs['identifiers'] = identifiers
 
+        hs_user_id = kwargs.get('hydroshare_user_id', '')
+        if hs_user_id:
+            validate_hydroshare_user_id(hs_user_id)
+
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
         if element_name == 'Creator':
@@ -561,10 +574,13 @@ class Party(AbstractMetaDataElement):
 
             if 'order' not in kwargs or kwargs['order'] is None:
                 kwargs['order'] = creator_order
-            party = super(Party, cls).create(**kwargs)
-        else:
-            party = super(Party, cls).create(**kwargs)
 
+        party = super(Party, cls).create(**kwargs)
+
+        if party.hydroshare_user_id:
+            user = User.objects.get(id=party.hydroshare_user_id)
+            party.is_active_user = user.is_active
+            party.save()
         return party
 
     @classmethod
@@ -590,6 +606,13 @@ class Party(AbstractMetaDataElement):
             kwargs['identifiers'] = identifiers
 
         party = super(Party, cls).update(element_id, **kwargs)
+
+        if party.hydroshare_user_id is not None:
+            user = User.objects.get(id=party.hydroshare_user_id)
+            party.is_active_user = user.is_active
+        else:
+            party.is_active_user = False
+        party.save()
 
         if isinstance(party, Creator) and creator_order is not None:
             if party.order != creator_order:
@@ -618,12 +641,7 @@ class Party(AbstractMetaDataElement):
 
     @property
     def is_active(self):
-        from hs_core.hydroshare.utils import user_from_id
-        try:
-            user = user_from_id(self.hydroshare_user_id, raise404=False)
-            return user.is_active
-        except ObjectDoesNotExist:
-            return False
+        return self.is_active_user
 
     @classmethod
     def remove(cls, element_id):
@@ -850,6 +868,7 @@ class Date(AbstractMetaDataElement):
         ('modified', 'Modified'),
         ('valid', 'Valid'),
         ('available', 'Available'),
+        ('review_started', 'Review Started'),
         ('published', 'Published')
     )
 
@@ -907,6 +926,9 @@ class Date(AbstractMetaDataElement):
             if kwargs['type'] == 'published':
                 if not resource.raccess.published:
                     raise ValidationError("Resource is not published yet.")
+            if kwargs['type'] == 'review_started':
+                if not resource.raccess.review_pending:
+                    raise ValidationError("Review is not pending yet.")
             elif kwargs['type'] == 'available':
                 if not resource.raccess.public:
                     raise ValidationError("Resource has not been made public yet.")
@@ -993,6 +1015,7 @@ class Relation(AbstractMetaDataElement):
         (RelationTypes.references.value, 'The content of this resource references'),
         (RelationTypes.replaces.value, 'This resource replaces'),
         (RelationTypes.source.value, 'The content of this resource is derived from'),
+        (RelationTypes.relation.value, 'The content of this resource is related to'),
         (RelationTypes.isSimilarTo.value, 'The content of this resource is similar to')
     )
 
@@ -1021,12 +1044,16 @@ class Relation(AbstractMetaDataElement):
         return dict(self.SOURCE_TYPES)[self.type]
 
     def rdf_triples(self, subject, graph):
-        relation_node = BNode()
-        graph.add((subject, self.get_class_term(), relation_node))
-        if self.type in self.HS_RELATION_TERMS:
-            graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+        if self.type == RelationTypes.relation.value:
+            # avoid creating empty nodes for "relations" that only contain a URI
+            graph.add((subject, self.get_class_term(), URIRef(self.value)))
         else:
-            graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
+            relation_node = BNode()
+            graph.add((subject, self.get_class_term(), relation_node))
+            if self.type in self.HS_RELATION_TERMS:
+                graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+            else:
+                graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
@@ -2167,7 +2194,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return self.get_url_of_path('')
 
     def get_url_of_path(self, path):
-        """Return the URL of an arbtrary path in this resource.
+        """Return the URL of an arbitrary path in this resource.
 
         A GET of this URL simply returns the contents of the path.
         This URL is independent of federation.
@@ -2186,7 +2213,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         """
         # must start with a / in order to concat with current_site_url.
-        return '/' + os.path.join('resource', self.short_id, path)
+        url_encoded_path = urllib.parse.quote(path)
+        return '/' + os.path.join('resource', self.short_id, url_encoded_path)
 
     def get_irods_path(self, path, prepend_short_id=True):
         """Return the irods path by which the given path is accessed.
@@ -2834,6 +2862,11 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.resource_file.name
 
     @classmethod
+    def banned_symbols(cls):
+        """returns a list of banned characters for file/folder name"""
+        return r'\/:*?"<>|'
+
+    @classmethod
     def create(cls, resource, file, folder='', source=None):
         """Create custom create method for ResourceFile model.
 
@@ -2877,6 +2910,10 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
+            filename = os.path.basename(file.name)
+            if not ResourceFile.is_filename_valid(filename):
+                raise SuspiciousFileOperation("Filename is not compliant with Hydroshare requirements")
+
             if resource.is_federated:
                 kwargs['resource_file'] = None
                 kwargs['fed_resource_file'] = file
@@ -2921,6 +2958,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
         # otherwise, the copy must precede this step.
+
         return ResourceFile.objects.create(**kwargs)
 
     # TODO: automagically handle orphaned logical files
@@ -3183,6 +3221,89 @@ class ResourceFile(ResourceFileIRODSMixin):
     # classmethods do things that query or affect all files.
 
     @classmethod
+    def check_for_preferred_name(cls, file_folder_name):
+        """Checks if the file or folder name meets the preferred name requirements"""
+
+        # remove anything that is not an alphanumeric, dash, underscore, or dot
+        sanitized_name = re.sub(r'(?u)[^-\w.]', '', file_folder_name)
+
+        if len(file_folder_name) != len(sanitized_name):
+            # one or more symbols that are not allowed was found
+            return False
+
+        if '..' in file_folder_name:
+            return False
+
+        return True
+
+    @classmethod
+    def is_filename_valid(cls, filename):
+        """Checks if the uploaded file has filename that complies to the hydroshare requirements
+        :param  filename: Name of the file to check
+        """
+        return cls._is_folder_file_name_valid(name_to_check=filename)
+
+    @classmethod
+    def is_folder_name_valid(cls, folder_name):
+        """Checks if the folder name complies to the hydroshare requirements
+        :param  folder_name: Name of the folder to check
+        """
+        return cls._is_folder_file_name_valid(name_to_check=folder_name, file=False)
+
+    @classmethod
+    def _is_folder_file_name_valid(cls, name_to_check, file=True):
+        """Helper method to check if a file/folder name is compliant with hydroshare requirements
+        :param  name_to_check: Name of the file or folder to check
+        :param  file: A flag to indicate if name_to_check is the filename
+        """
+
+        # space at the start or at the end is not allowed
+        if len(name_to_check.strip()) != len(name_to_check):
+            return False
+
+        # check for banned symbols
+        for symbol in cls.banned_symbols():
+            if symbol in name_to_check:
+                return False
+
+        if name_to_check in (".", "..", "/"):
+            # these represents special meaning in linux - current (.) dir, parent dir (..) and dir separator
+            return False
+
+        if not file:
+            folders = name_to_check.split("/")
+            for folder in folders:
+                if len(folder.strip()) != len(folder):
+                    return False
+                if folder in (".", ".."):
+                    # these represents special meaning in linux - current (.) dir and parent dir (..)
+                    return False
+
+        return True
+
+    @classmethod
+    def validate_new_path(cls, new_path):
+        """Validates a new file/folder path that will be created for a resource
+        :param  new_path: a file/folder path that is relative to the [res short_id]/data/contents
+        """
+
+        # strip trailing slashes (if any)
+        path = str(new_path).strip().rstrip('/')
+        if not path:
+            raise SuspiciousFileOperation('Path cannot be empty')
+
+        if path.startswith('/'):
+            raise SuspiciousFileOperation(f"Path ({path}) must not start with '/'")
+
+        if path in ('.', '..'):
+            raise SuspiciousFileOperation(f"Path ({path}) must not be '.' or '..")
+
+        if any(["./" in path, "../" in path, " /" in path, "/ " in path, path.endswith("/."), path.endswith("/..")]):
+            raise SuspiciousFileOperation(f"Path ({path}) must not contain './', '../', '/.', or '/..'")
+
+        return path
+
+    @classmethod
     def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
         if resource.resource_federation_path:
@@ -3351,7 +3472,8 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         This url does NOT depend upon federation status.
         """
-        return '/' + os.path.join('resource', self.public_path)
+        url_encoded_file_path = urllib.parse.quote(self.public_path)
+        return '/' + os.path.join('resource', url_encoded_file_path)
 
     @property
     def public_path(self):
@@ -3651,7 +3773,7 @@ class BaseResource(Page, AbstractResource):
         return self.get_content_model().discovery_content_type
 
     @property
-    def can_be_published(self):
+    def can_be_submitted_for_metadata_review(self):
         """Determine when data and metadata are complete enough for the resource to be published.
 
         The property can be overriden by specific resource type which is not appropriate for
@@ -3813,6 +3935,35 @@ class BaseResource(Page, AbstractResource):
         if any([replace_relation_updated, part_of_relation_updated, has_part_relation_updated]):
             self.setAVU("bag_modified", True)
             self.setAVU("metadata_dirty", True)
+
+    def get_non_preferred_path_names(self):
+        """Returns a list of file/folder paths that do not meet hydroshare file/folder preferred naming convention"""
+
+        def find_non_preferred_folder_paths(dir_path):
+            if not dir_path.startswith(self.file_path):
+                dir_path = os.path.join(self.file_path, dir_path)
+
+            folders, _, _ = istorage.listdir(dir_path)
+            for folder in folders:
+                if folder not in not_preferred_paths and not ResourceFile.check_for_preferred_name(folder):
+                    folder_path = os.path.join(dir_path, folder)
+                    folder_path = folder_path[len(self.file_path) + 1:]
+                    not_preferred_paths.append(folder_path)
+                subdir_path = os.path.join(dir_path, folder)
+                find_non_preferred_folder_paths(subdir_path)
+
+        not_preferred_paths = []
+        istorage = self.get_irods_storage()
+        # check for non-conforming file names
+        for res_file in self.files.all():
+            short_path = res_file.short_path
+            _, file_name = os.path.split(short_path)
+            if not ResourceFile.check_for_preferred_name(file_name):
+                not_preferred_paths.append(short_path)
+
+        # check for non-conforming folder names
+        find_non_preferred_folder_paths(self.file_path)
+        return not_preferred_paths
 
 
 # TODO Deprecated
@@ -4129,26 +4280,54 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         return True
 
-    def get_required_missing_elements(self):
+    def get_required_missing_elements(self, desired_resource_state='discoverable'):
         """Return a list of required missing metadata elements.
 
         This method needs to be overriden by any subclass of this class
         if they implement additional metadata elements that are required
         """
+
+        resource_states = ('discoverable', 'published')
+        if desired_resource_state not in resource_states:
+            raise ValidationError(f"Desired resource state is not in: {','.join(resource_states)}")
+
         missing_required_elements = []
-
-        if not self.title:
-            missing_required_elements.append('Title')
-        elif self.title.value.lower() == 'untitled resource':
-            missing_required_elements.append('Title')
-        if not self.description:
-            missing_required_elements.append('Abstract')
-        if not self.rights:
-            missing_required_elements.append('Rights')
-        if self.subjects.count() == 0:
-            missing_required_elements.append('Keywords')
-
+        if desired_resource_state == 'discoverable':
+            if not self.title:
+                missing_required_elements.append('Title (at least 30 characters)')
+            elif self.title.value.lower() == 'untitled resource':
+                missing_required_elements.append('Title (at least 30 characters)')
+            if not self.description:
+                missing_required_elements.append('Abstract (at least 150 characters)')
+            if not self.rights:
+                missing_required_elements.append('Rights')
+            if self.subjects.count() == 0:
+                missing_required_elements.append('Keywords (at least 3)')
+        elif desired_resource_state == 'published':
+            if not self.title or len(self.title.value) < 30:
+                missing_required_elements.append('The title must be at least 30 characters.')
+            if not self.description or len(self.description.abstract) < 150:
+                missing_required_elements.append('The abstract must be at least 150 characters.')
+            if self.subjects.count() < 3:
+                missing_required_elements.append('You must include at least 3 keywords.')
         return missing_required_elements
+
+    def get_recommended_missing_elements(self):
+        """Return a list of recommended missing metadata elements.
+
+        This method needs to be overriden by any subclass of this class
+        if they implement additional metadata elements that are required
+        """
+
+        missing_recommended_elements = []
+        if not self.funding_agencies.count():
+            missing_recommended_elements.append('Funding Agency')
+        if not self.resource.readme_file:
+            missing_recommended_elements.append('Readme file containing variables, '
+                                                'abbreviations/acronyms, and non-standard file formats')
+        if not self.coverages.count():
+            missing_recommended_elements.append('Coverage that describes locations that are related to the dataset')
+        return missing_recommended_elements
 
     def delete_all_elements(self):
         """Delete all metadata elements.

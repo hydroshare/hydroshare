@@ -208,6 +208,7 @@ function updateSelectionMenuContext() {
         "setModelInstanceFileType",
         "subMenuSetContentType",
         "unzip",
+        "unzipToFolder",
         "updateRefUrl",
         "uploadFiles",
         "zip"
@@ -237,6 +238,9 @@ function updateSelectionMenuContext() {
 
         uiActionStates.unzip.disabled = true;
         uiActionStates.unzip.fileMenu.hidden = true;
+
+        uiActionStates.unzipToFolder.disabled = true;
+        uiActionStates.unzipToFolder.fileMenu.hidden = true;
 
         uiActionStates.downloadZipped.disabled = true;
         uiActionStates.downloadZipped.fileMenu.hidden = true;
@@ -291,6 +295,8 @@ function updateSelectionMenuContext() {
         if (selected.hasClass("fb-folder")) {
             uiActionStates.unzip.disabled = true;
             uiActionStates.unzip.fileMenu.hidden = true;
+            uiActionStates.unzipToFolder.disabled = true;
+            uiActionStates.unzipToFolder.fileMenu.hidden = true;
 
             uiActionStates.getRefUrl.disabled = true;
             uiActionStates.getRefUrl.fileMenu.hidden = true;
@@ -361,6 +367,8 @@ function updateSelectionMenuContext() {
             if (!fileName.toUpperCase().endsWith(".ZIP")) {
                 uiActionStates.unzip.disabled = true;
                 uiActionStates.unzip.fileMenu.hidden = true;
+                uiActionStates.unzipToFolder.disabled = true;
+                uiActionStates.unzipToFolder.fileMenu.hidden = true;
             }
 
             if (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile") {
@@ -481,6 +489,7 @@ function updateSelectionMenuContext() {
         uiActionStates.cut.disabled = true;
         uiActionStates.rename.disabled = true;
         uiActionStates.unzip.disabled = true;
+        uiActionStates.unzipToFolder.disabled = true;
         uiActionStates.zip.disabled = true;
         uiActionStates.delete.disabled = true;
         uiActionStates.download.disabled = true;
@@ -585,7 +594,7 @@ function updateSelectionMenuContext() {
 
     $("#open-separator").toggleClass("hidden", uiActionStates.open.fileMenu.hidden);
     $("#content-type-separator").toggleClass("hidden", mode !== "edit" || uiActionStates.removeAggregation.fileMenu.hidden && uiActionStates.subMenuSetContentType.fileMenu.hidden);
-    $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden);
+    $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden && uiActionStates.unzipToFolder.fileMenu.hidden);
 }
 
 // Proxy function when pasting in current directory triggering from menu item or button
@@ -1056,7 +1065,7 @@ function showFileTypeMetadata(file_type_time_series, url){
         return;
     }
     resource_mode = resource_mode.toLowerCase();
-    if(RESOURCE_PUBLISHED) {
+    if(RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
         resource_mode = 'view';
     }
     var $url;
@@ -1666,7 +1675,7 @@ function refreshFileBrowser(name) {
         }).complete(function(res) {
             if (res.responseText) {
                 let extRefs = JSON.parse(res.responseText).filenames
-                if (extRefs.length && RESOURCE_MODE === 'Edit') {
+                if (extRefs.length && RESOURCE_MODE === 'Edit' && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
                     document.getElementById('edit-citation-control').style.display = 'block'
                 } else {
                     document.getElementById('edit-citation-control').style.display = 'none'
@@ -1778,30 +1787,37 @@ function onUploadSuccess(file, response) {
 $(document).ready(function () {
     // Download All method
     $("#btn-download-all, #download-bag-btn").click(function (event) {
-        if (event.currentTarget.id === "btn-download-all") {
-            let btnDownloadAll = $("#btn-download-all");
-            btnDownloadAll.prepend('<i class="fa fa-spinner fa-pulse fa-lg download-spinner" style="z-index: 1; position: absolute;"></i>');
+        const btnDownloadAll = $("#btn-download-all");
+        const icon = $('#btn-download-all > span:first-child');
+        const initialClass = icon.attr("class");
+        const dataAgreeRequired = btnDownloadAll.attr("data-toggle") === "modal";
+
+        if (event.currentTarget.id === "download-bag-btn" || !dataAgreeRequired) {
+            icon.attr("class", "fa fa-spinner fa-pulse fa-lg download-spinner");
             btnDownloadAll.css("cursor", "wait");
         }
-        $(event.currentTarget).toggleClass("disabled", true);
-        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
-
-        if (!bagUrl) {
-            return; // If no url, it means download will be triggered from Agreement modal
+        
+        if (dataAgreeRequired && event.currentTarget.id !== "download-bag-btn") {
+            return; // download will be triggered from Agreement modal
         }
+
+        btnDownloadAll.toggleClass("disabled", true);
+        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
 
         $.ajax({
             type: "GET",
             url: bagUrl,
-            success: function (task) {
-                notificationsApp.registerTask(task);
-                notificationsApp.show();
-                $(event.currentTarget).toggleClass("disabled", false);
-                $("#btn-download-all").css("cursor", "auto");
-                $(".download-spinner").remove();
-            }
+        }).done(function (task) {
+            notificationsApp.registerTask(task);
+            notificationsApp.show();
+        }).always((event) => {
+            const btnDownloadAll = $("#btn-download-all");
+            btnDownloadAll.toggleClass("disabled", false);
+            btnDownloadAll.css("cursor", "");
+            icon.attr("class", initialClass)
         });
     });
+
     if (!$("#hs-file-browser").length) {
         return;
     }
@@ -1854,7 +1870,7 @@ $(document).ready(function () {
     var mode = $("#hs-file-browser").attr("data-mode");
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
-    if (mode === "edit" && !RESOURCE_PUBLISHED) {
+    if (mode === "edit" && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
         no_metadata_alert +=
         '<div class="text-center">' +
             '<a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">' +
@@ -1970,6 +1986,19 @@ $(document).ready(function () {
 
                 // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
                 this.on("error", function (error, errorMessage) {
+                    let errorMsg = JSON.stringify(errorMessage);
+                    try {
+                        let errorMessageJSON = JSON.parse(errorMessage);
+                        if (errorMessageJSON.hasOwnProperty("validation_error")) {
+                            errorMsg = errorMessageJSON.validation_error;
+                        }
+                        else if(errorMessageJSON.hasOwnProperty("file_size_error")) {
+                            errorMsg = errorMessageJSON.file_size_error;
+                        }
+                    } catch (e) {
+
+                    }
+
                     $("#fb-alerts .upload-failed-alert").remove();
                     $("#hsDropzone").toggleClass("glow-blue", false);
 
@@ -1981,7 +2010,7 @@ $(document).ready(function () {
                                     '<strong>File Upload Failed</strong>'+
                                 '</div>'+
                                 '<div>'+
-                                    '<span>' + JSON.stringify(errorMessage) + '</span>' +
+                                    '<span>' + errorMsg + '</span>' +
                                 '</div>'+
                             '</div>').fadeIn(200);
                 });
@@ -2327,7 +2356,7 @@ $(document).ready(function () {
         var calls = [];
         var res_id = $("#unzip_res_id").val();
         var zip_with_rel_path = $("#zip_with_rel_path").val();
-        calls.push(unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite='true'));
+        calls.push(unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite='true', unzip_to_folder='false'));
         // Disable the Cancel button until request has finished
         $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
         function afterDoneRequest() {
@@ -2734,12 +2763,29 @@ $(document).ready(function () {
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/')), overwrite='false');
+            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='false'));
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure
         // don't refresh browser when unzip async task is ongoing since a temporary folder is being created to check
         // whether file override will happen
+        $.when.apply($, calls).fail(function () {
+            refreshFileBrowser();
+        });
+    });
+
+    // Unzip to folder method
+    $("#btn-unzip-to-folder, #fb-unzip-to-folder").click(function () {
+        var files = $("#fb-files-container li.ui-selected");
+        var calls = [];
+        for (let i = 0; i < files.length; i++) {
+            let fileName = $(files[i]).children(".fb-file-name").text();
+            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='true'));
+        }
+
+        // If asynchronous calls for unzipping failed, refresh file browser; otherwise, if it succeeds which triggers
+        // putting unzipping async task in the queue to be executed, there is no need to refresh file browser while
+        // the unzipping async task is scheduled to run
         $.when.apply($, calls).fail(function () {
             refreshFileBrowser();
         });

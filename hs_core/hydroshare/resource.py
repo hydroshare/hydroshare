@@ -17,6 +17,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 
 from hs_core.hydroshare import hs_bagit
+from hs_core.hydroshare.users import create_account
 from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
@@ -1000,6 +1001,60 @@ def deposit_res_metadata_with_crossref(res):
     return response
 
 
+def submit_resource_for_review(request, pk):
+    """
+    Submits a resource for minimum metadata review, prior to publishing.
+    The user must be an owner of a resource or an administrator to perform this action.
+
+    Parameters:
+        user - requesting user to publish the resource who must be one of the owners of the resource
+        pk - Unique HydroShare identifier for the resource to be formally published.
+
+    Returns:    The id of the resource that was published
+
+    Return Type:    string
+
+    Raises:
+    Exceptions.NotAuthorized - The user is not authorized
+    Exceptions.NotFound - The resource identified by pid does not exist
+    Exception.ServiceFailure - The service is unable to process the request
+    and other general exceptions
+
+    """
+    resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        raise ValidationError("This resource is already published")
+
+    if resource.raccess.review_pending:
+        raise ValidationError("Metadata review has already been initiated")
+
+    if not resource.can_be_submitted_for_metadata_review:
+        raise ValidationError("This resource cannot be submitted for metadata review since "
+                              "it does not have required metadata or content files, or it contains "
+                              "reference content, or this resource type is not allowed for publication.")
+
+    try:
+        user_to = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
+    except User.DoesNotExist:
+        user_to = create_account(
+            email=settings.DEFAULT_FROM_EMAIL,
+            username=settings.DEFAULT_FROM_EMAIL,
+            first_name=settings.DEFAULT_FROM_EMAIL,
+            last_name=settings.DEFAULT_FROM_EMAIL,
+            superuser=True
+        )
+    from hs_core.views.utils import send_action_to_take_email
+    send_action_to_take_email(request, user=user_to, user_from=request.user,
+                                action_type='metadata_review', resource=resource)
+    resource.raccess.review_pending = True
+    resource.raccess.immutable = True
+    resource.raccess.save()
+
+    # create review date -- must be after review_pending = True
+    resource.metadata.dates.all().filter(type='review_started').delete()
+    resource.metadata.create_element('date', type='review_started', start_date=datetime.datetime.now(pytz.utc))
+
+
 def publish_resource(user, pk):
     """
     Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource,
@@ -1026,12 +1081,12 @@ def publish_resource(user, pk):
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
 
-    # TODO: whether a resource can be published is not considered in can_be_published
-    # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
-    if not resource.can_be_published:
-        raise ValidationError("This resource cannot be published since it does not have required "
-                              "metadata or content files, or this resource contains referenced "
-                              "content, or this resource type is not allowed for publication.")
+    # TODO: whether a resource can be published is not considered in can_be_submitted_for_metadata_review
+    # TODO: can_be_submitted_for_metadata_review is currently an alias for can_be_public_or_discoverable
+    if not resource.can_be_submitted_for_metadata_review:
+        raise ValidationError("This resource cannot be submitted for metadata review since "
+                              "it does not have required metadata or content files, or it contains "
+                              "reference content, or this resource type is not allowed for publication.")
 
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field

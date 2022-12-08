@@ -13,7 +13,7 @@ from hs_core.hydroshare.utils import current_site_url, resource_modified
 from hs_core.views.utils import get_my_resources_list
 
 logger = logging.getLogger(__name__)
-# RES_LANDING_PAGE_URL_TEMPLATE = current_site_url() + "/resource/{0}/"
+
 CSV_FULL_NAME_TEMPLATE = "collection_list_{0}.csv"
 DELETED_RES_STRING = "Resource Deleted"
 

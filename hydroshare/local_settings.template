@@ -8,6 +8,7 @@ import os
 from kombu import Queue, Exchange
 
 DEBUG = True
+DISABLE_TASK_EMAILS = True
 
 # Make these unique, and don't share it with anybody
 SECRET_KEY = \
@@ -53,6 +54,8 @@ CELERY_DEFAULT_EXCHANGE = 'tasks'
 CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 CELERY_ROUTES = ('hs_core.router.HSTaskRouter',)
+
+DISABLE_PERIODIC_TASKS = False
 
 # Docker settings
 DOCKER_URL = 'unix://docker.sock/'

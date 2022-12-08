@@ -51,12 +51,8 @@ class TestOauthGroup(TestCase):
         }
         response = self.client.post(reverse("oauth2_provider:register"), form_data)
         self.assertEqual(response.status_code, 302)
-        # As part of the upgrade to django 3.2 the new version of django-oauth-toolkit (version 2.1.0) requires
-        # and additional parameter 'code_challenge' to be supplied for authorization
-        # TODO: Need to check if this additional parameter (code_challenge) going to break existing web apps?
         group_authorize = '/o/groupauthorize/{}/?redirect_uri=https://www.google.com&' \
                           'client_id=nfd0fufZtcuNQT2Uzoag19TqTWE6CJtPusKD268B&' \
-                          'code_challenge=XRi41b-5yHtTojvCpXFpsLUnmGFz6xR15c3vpPANAvM&' \
                           'response_type=code'.format(self.testGroup1.pk)
         # check user in group can authenticate
         response = self.client.get(group_authorize, follow=True)

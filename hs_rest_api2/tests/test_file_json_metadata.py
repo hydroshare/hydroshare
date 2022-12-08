@@ -90,6 +90,12 @@ class TestFileBasedJSON(HSRESTTestCase):
         schema_in_instance = schema_in(**expected_json)
         in_json = schema_in_instance.dict(exclude_defaults=True)
 
+        # for hydroshare_user_id, use id of an existing user
+        if 'creators' in in_json:
+            for creator in in_json['creators']:
+                if 'hydroshare_user_id' in creator:
+                    creator['hydroshare_user_id'] = self.user.id
+
         put_response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_json, format="json")
         self.assertEqual(put_response.status_code, status.HTTP_200_OK)
         put_response_json = json.loads(put_response.content.decode())

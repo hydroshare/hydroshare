@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .models import *
 
@@ -14,6 +14,7 @@ class UserCreationFormExtended(UserCreationForm):
         self.fields['email'] = forms.EmailField(label=_("E-mail"), max_length=75)
 
 UserAdmin.add_form = UserCreationFormExtended
+UserAdmin.readonly_fields = ('username',)
 UserAdmin.add_fieldsets = (
     (None, {
         'classes': ('wide',),

@@ -1,7 +1,7 @@
 import requests
 
 from django import forms
-from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.translation import gettext, gettext_lazy as _
 from django_comments.signals import comment_was_posted
 from django_comments.forms import CommentSecurityForm
 from django_comments.models import Comment
@@ -191,7 +191,7 @@ class RatingForm(CommentSecurityForm):
         self.previous = request.COOKIES.get("mezzanine-rating", "").split(",")
         already_rated = self.current in self.previous
         if already_rated and not self.request.user.is_authenticated:
-            raise forms.ValidationError(ugettext("Already rated."))
+            raise forms.ValidationError(gettext("Already rated."))
         return 1
 
     def save(self):

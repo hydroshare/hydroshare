@@ -80,11 +80,11 @@
                             <div data-page-mode="edit">
                                 <hr>
                                 <div class="profile-picture-controls text-center">
-                                    <div><a href="/accounts/update">Change password</a></div>
+                                    <div><a href="/accounts/update">Change HydroShare password</a></div>
 
                                     {#        Account deactivation       #}
-                                    <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
-
+                                    <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate HydroShare account</a></div>
+                                    <hr>
                                     {# Account creation/deletion in iRODS user zone #}
                                     <div id="irods-account-container">
                                         {% if profile.create_irods_user_account %}
@@ -111,7 +111,7 @@
 
                                 {#        Organization and Title       #}
                                 {% if profile.organization or profile.title %}
-                                    <h4 class="text-muted">
+                                    <h4 id="organization" class="text-muted">
                                         {% if profile.organization %}{{ profile.organization }}{% endif %}
                                         {% if profile.organization and profile.title %} | {% endif %}
                                         {% if profile.title %}{{ profile.title }}{% endif %}
@@ -234,7 +234,7 @@
                                             <hr>
                                             <span><a href="{{ profile.cv.url }}" class="btn btn-default"
                                                     target="_blank"><span
-                                                    class="glyphicon glyphicon-file"></span>&nbsp;View CV</a></span>
+                                                    class="glyphicon glyphicon-file"></span>&nbsp;Download CV</a></span>
                                             <button id="btn-delete-cv" class="no-style icon-button btn-remove"
                                                         data-toggle="modal"
                                                         data-target="#delete-cv" title="Delete CV"><span
@@ -264,15 +264,6 @@
                                             </fieldset>
                                         {% endif %}
                                     </div>
-                                </div>
-                            {% endif %}
-
-                            {% if profile.cv and profile.cv.url %}
-                                <div data-page-mode="view">
-                                    <hr>
-                                    <div><a href="{{ profile.cv.url }}" class="btn btn-default"
-                                                                target="_blank"><span
-                                            class="glyphicon glyphicon-file"></span>&nbsp;View CV</a></div>
                                 </div>
                             {% endif %}
                         </div>
@@ -392,6 +383,19 @@
                                                 </tr>
                                                 </tbody>
                                             </table>
+                                            {% if profile.cv and profile.cv.url %}
+                                                <div data-page-mode="view">
+                                                    <hr>
+                                                    <div>
+                                                        <a href="{{ profile.cv.url }}"
+                                                            class="btn btn-default"
+                                                            target="_blank">
+                                                            <span class="glyphicon glyphicon-file"></span>
+                                                            Download CV
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
                                             {% if profile_user.id == user.id or user.is_superuser %}
                                                 <br>
                                                 {% if profile.create_irods_user_account %}
@@ -714,7 +718,7 @@
                                                     <h5><span class="text-muted">Authors: </span>
                                                         {% for creator in metadata.creators.all %}
                                                             {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                            {% if creator.relative_uri and creator.is_active %}
+                                                            {% if creator.relative_uri and creator.is_active_user %}
                                                                 <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
                                                             {% else %}
                                                                 <span>{{ creator.name }}</span>

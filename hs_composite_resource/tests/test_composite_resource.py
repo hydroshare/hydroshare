@@ -1267,8 +1267,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 3 required core metadata elements missing at this point
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
-        self.assertIn('Abstract', missing_elements)
-        self.assertIn('Keywords', missing_elements)
+        self.assertIn('Abstract (at least 150 characters)', missing_elements)
+        self.assertIn('Keywords (at least 3)', missing_elements)
 
         # add the above missing elements
         # create abstract
@@ -1296,8 +1296,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertFalse(self.composite_resource.can_be_public_or_discoverable)
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
-        self.assertIn('Abstract', missing_elements)
-        self.assertIn('Keywords', missing_elements)
+        self.assertIn('Abstract (at least 150 characters)', missing_elements)
+        self.assertIn('Keywords (at least 3)', missing_elements)
         # add the above missing elements
         # create abstract
         metadata = self.composite_resource.metadata
@@ -1307,7 +1307,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         metadata.create_element('subject', value='sub-1')
         # at this point resource can be public or discoverable, but cannot be published
         self.assertTrue(self.composite_resource.can_be_public_or_discoverable)
-        self.assertFalse(self.composite_resource.can_be_published)
+        self.assertFalse(self.composite_resource.can_be_submitted_for_metadata_review)
 
     def test_can_be_public_or_discoverable_with_single_file_aggregation(self):
         """Here we are testing the function 'can_be_public_or_discoverable()'
@@ -1337,8 +1337,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 3 required core metadata elements missing at this point
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
-        self.assertIn('Abstract', missing_elements)
-        self.assertIn('Keywords', missing_elements)
+        self.assertIn('Abstract (at least 150 characters)', missing_elements)
+        self.assertIn('Keywords (at least 3)', missing_elements)
 
         # add the above missing elements
         # create abstract
@@ -1377,8 +1377,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 3 required core metadata elements missing at this point
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
-        self.assertIn('Abstract', missing_elements)
-        self.assertIn('Keywords', missing_elements)
+        self.assertIn('Abstract (at least 150 characters)', missing_elements)
+        self.assertIn('Keywords (at least 3)', missing_elements)
 
         # add the above missing elements
         # create abstract
@@ -1421,8 +1421,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be 2 required core metadata elements missing at this point
         missing_elements = self.composite_resource.metadata.get_required_missing_elements()
         self.assertEqual(len(missing_elements), 2)
-        self.assertIn('Abstract', missing_elements)
-        self.assertIn('Keywords', missing_elements)
+        self.assertIn('Abstract (at least 150 characters)', missing_elements)
+        self.assertIn('Keywords (at least 3)', missing_elements)
 
         # add the above missing elements
         # create abstract
@@ -1434,8 +1434,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # at this point resource can be public or discoverable
         self.assertEqual(self.composite_resource.can_be_public_or_discoverable, True)
 
-    def test_can_be_published_with_model_aggregation(self):
-        """Here we are testing the function 'can_be_published()'
+    def test_can_be_submitted_for_metadata_review_with_model_aggregation(self):
+        """Here we are testing the function 'can_be_submitted_for_metadata_review()'
         We are testing the following scenarios:
         - when the resource contains a model instance aggregation and not linked to any model program aggregation
           In this case resource can be published
@@ -1458,14 +1458,14 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # set file to model instance aggregation type
         ModelInstanceLogicalFile.set_file_type(resource, self.user, res_file.id)
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
-        self.assertFalse(resource.can_be_published)
+        self.assertFalse(resource.can_be_submitted_for_metadata_review)
         # create abstract
         metadata = self.composite_resource.metadata
         # add Abstract (element name is description)
         metadata.create_element('description', abstract='new abstract for the resource')
         # add keywords (element name is subject)
         metadata.create_element('subject', value='sub-1')
-        self.assertTrue(resource.can_be_published)
+        self.assertTrue(resource.can_be_submitted_for_metadata_review)
 
         # create a model program aggregation within the same resource and link it to model instance
         file_to_upload = UploadedFile(file=open(self.zip_file, 'rb'),
@@ -1484,7 +1484,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         mi_aggr.metadata.save()
         # since the 2 linked model aggregations are in the same resource it should be possible
         # to publish this resource
-        self.assertTrue(resource.can_be_published)
+        self.assertTrue(resource.can_be_submitted_for_metadata_review)
 
     def test_supports_folder_creation_non_aggregation_folder(self):
         """Here we are testing the function supports_folder_creation()
@@ -2688,15 +2688,15 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.fail("Exception thrown while renaming a folder.")
 
     def test_unzip_folder_clash(self):
-        """Test that when a zip file gets unzipped a folder with the same
+        """Test that when a zip file gets unzipped here or to a folder and a folder with the same
         name already exists, the existing folder is not overwritten """
 
         self.create_composite_resource()
         # add a zip file that contains only one file
         self.add_file_to_resource(file_to_add=self.zip_file)
-        # resource should have 2 files now
+        # resource should have 1 file now
         self.assertEqual(self.composite_resource.files.count(), 1)
-        # unzip the above zip file  which should add one more file to the resource
+        # unzip the above zip file here in the current folder which should add one more file to the resource
         zip_res_file = ResourceFile.get(self.composite_resource, self.zip_file_name)
         zip_file_rel_path = os.path.join('data', 'contents', zip_res_file.file_name)
         unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
@@ -2712,6 +2712,19 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # ensure files aren't overwriting name clash
         self.assertEqual(self.composite_resource.files.count(), 2)
+
+        # unzip the above zip file again to the sub folder this time which should add a new folder to the resource
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False, unzip_to_folder=True)
+
+        # resource should have 3 files now
+        self.assertEqual(self.composite_resource.files.count(), 3)
+
+        # unzip again should not override previously unzipped file in the sub folder
+        unzip_file(self.user, self.composite_resource.short_id, zip_file_rel_path,
+                   bool_remove_original=False, unzip_to_folder=True)
+        # ensure files aren't overwritten but instead a new file is created in a different sub folder
+        self.assertEqual(self.composite_resource.files.count(), 4)
 
     def test_unzip_folder_clash_overwrite(self):
         """Test that when a zip file gets unzipped a folder with the same

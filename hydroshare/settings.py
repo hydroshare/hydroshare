@@ -132,6 +132,10 @@ LANGUAGES = (
 # production. Best set to ``True`` in local_settings.py
 DEBUG = False
 
+# A boolean that determines whether tasks related emails should be sent.
+# Best set to ``True`` in local_settings.py
+DISABLE_TASK_EMAILS = False
+
 # Whether a user's session cookie expires when the Web browser is closed.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
@@ -291,7 +295,6 @@ INSTALLED_APPS = (
     "django.contrib.gis",
     "django.contrib.postgres",
     "django.contrib.messages",
-    # "inplaceeditform",
     "django_nose",
     "django_irods",
     "drf_yasg",
@@ -345,7 +348,6 @@ OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 APPS_TO_NOT_RUN = (
     'rest_framework',
     'django_nose',
-    'inplaceeditform',
     'grappelli_safe',
     'django_irods',
     'crispy_forms',
@@ -534,6 +536,7 @@ TEMP_FILE_DIR = '/hs_tmp'
 
 OAUTH2_PROVIDER = {
     'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,  # 30 days
+    'PKCE_REQUIRED': False,
 }
 
 ####################

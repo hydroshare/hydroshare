@@ -36,7 +36,6 @@ for collection_res_obj in collection_res_list:
                                                                         counter,
                                                                         collection_count)))
         for contained_res_obj in collection_res_obj.resources.all():
-            # value = RES_LANDING_PAGE_URL_TEMPLATE.format(contained_res_obj.short_id)
             value = get_landing_page_url_template().format(contained_res_obj.short_id)
             add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
                                             relation_type=hasPart, relation_value=value,
