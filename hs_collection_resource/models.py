@@ -51,7 +51,7 @@ class CollectionResource(BaseResource):
         return not self.resources.all().filter(raccess__published=False).exists()
 
     @property
-    def can_be_published(self):
+    def can_be_submitted_for_metadata_review(self):
         if self.raccess.published:
             return False
 

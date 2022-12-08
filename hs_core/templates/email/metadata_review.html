@@ -2,7 +2,7 @@
 {% block main %}
     <p>{% trans "Dear " %}{{ user.first_name }} {{ user.last_name }},</p>
     <p>{% trans "User " %}{{ user_from.first_name }} {{ user_from.last_name }} 
-        (<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}">{{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}</a>), 
+        (<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}">{{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}</a>) 
         has requested publication of the following resource:</p>
         <p><a href="{{ request.scheme }}://{{ request.get_host }}/resource/{{ resource.short_id }}">{{ request.scheme }}://{{ request.get_host }}/resource/{{ resource.short_id }}</a></p>
     
