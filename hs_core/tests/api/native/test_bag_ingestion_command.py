@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
+import os
+import shutil
 from unittest import TestCase
 
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 
 from hs_composite_resource.models import CompositeResource
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
-from django.core.management import call_command
-from hs_core.tests.api.utils import zip_up
-import os
-import zipfile
+from hs_core.testing import MockIRODSTestCaseMixin
 
 
 class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
@@ -33,15 +32,17 @@ class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
         CompositeResource.objects.all().delete()
 
         # zip up the test bag
-        zipf = zipfile.ZipFile('hs_core/tests/data/d6c7a5744920404f8aceaf3c7774596e.zip', 'w')
-        zip_up(zipf, 'hs_core/tests/data/d6c7a5744920404f8aceaf3c7774596e')
+        dir_to_zip = 'hs_core/tests/data/d6c7a5744920404f8aceaf3c7774596e'
+        self.zip_to_file_path = 'hs_core/tests/data/d6c7a5744920404f8aceaf3c7774596e'
+        shutil.make_archive(self.zip_to_file_path, 'zip', dir_to_zip)
 
     def tearDown(self):
         super(TestIngestBag, self).tearDown()
+        for res in CompositeResource.objects.all():
+            res.delete()
         self.user.delete()
         self.hs_group.delete()
-        CompositeResource.objects.all().delete()
-        os.remove('hs_core/tests/data/d6c7a5744920404f8aceaf3c7774596e.zip')
+        os.remove(f"{self.zip_to_file_path}.zip")
 
     def test_bag_ingestion_command(self):
         assert CompositeResource.objects.all().count() == 0

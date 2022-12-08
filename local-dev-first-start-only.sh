@@ -269,8 +269,8 @@ sed -i $SED_EXT 's!SENDFILE_IRODS_USER!'${SENDFILE_IRODS_USER}'!g' nginx/Dockerf
 sed -i $SED_EXT 's!SENDFILE_IRODS_GROUP!'${SENDFILE_IRODS_GROUP}'!g' nginx/Dockerfile-nginx
 
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
-mkdir -p hydroshare/static 2>/dev/null
-mkdir -p hydroshare/media 2>/dev/null
+mkdir -p hydroshare/static/static 2>/dev/null
+mkdir -p hydroshare/static/media 2>/dev/null
 rm -fr log .irods 2>/dev/null
 mkdir -p log/nginx 2>/dev/null
 #chmod -R 777 log 2>/dev/null

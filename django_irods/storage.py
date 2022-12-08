@@ -468,3 +468,13 @@ class IrodsStorage(Storage):
         timestamp = float(stdout.split("\n", 1)[0])
         utc_dt = datetime.fromtimestamp(timestamp, tz.UTC)
         return utc_dt
+
+    def isFile(self, path):
+        try:
+            self.listdir(path)
+            return False
+        except SessionException:
+            return True
+
+    def isDir(self, path):
+        return not self.isFile(path)

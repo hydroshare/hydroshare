@@ -432,9 +432,13 @@ def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, 
     # set file to generic/model instance logical file type (aggregation)
     aggr_cls.set_file_type(res, user, res_file.id)
     assert aggr_cls.objects.count() == 1
-    # moving the logan.vrt file into the mp_mi_folder should fail
+    # moving the logan.vrt file into the mp_folder should fail
     src_path = 'data/contents/{}'.format(single_file_name)
     tgt_path = 'data/contents/{}/{}'.format(mp_folder, single_file_name)
+    with pytest.raises(RF_ValidationError):
+        move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+
+    tgt_path = 'data/contents/{}'.format(mp_folder)
     with pytest.raises(RF_ValidationError):
         move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
 

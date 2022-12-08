@@ -31,7 +31,6 @@ urlpatterns = i18n_patterns(
     url("^admin/", include(admin.site.urls)),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url("^o/groupauthorize/(?P<group_id>[0-9]+)/$", GroupAuthorizationView.as_view(), name="group-authorize"),
-    # url("^inplaceeditform/", include("inplaceeditform.urls")),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', hs_core_views.short_url),
     url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(),
         name='tracking-report-profiles'),

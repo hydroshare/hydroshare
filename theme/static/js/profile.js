@@ -195,10 +195,10 @@ function create_irods_account() {
             }
         },
         error: function(xhr, errmsg, err) {
-            err_info = xhr.status + ": " + xhr.responseText;
             $('#create-irods-account-dialog').modal('hide');
             var irodsContainer = $("#irods-account-container");
-            irodsContainer.append(irods_status_info('alert-danger', xhr.responseText, 'Failure'));
+            const errorText = JSON.parse(xhr.responseText).error
+            errorText && irodsContainer.append(irods_status_info('alert-danger', errorText , 'Failure'));
         }
     });
     return false;
@@ -223,10 +223,10 @@ function delete_irods_account() {
             $('#delete-irods-account-dialog').modal('hide');
         },
         error: function(xhr, errmsg, err) {
-            err_info = xhr.status + ": " + xhr.responseText;
             $('#delete-irods-account-dialog').modal('hide');
             var irodsContainer = $("#irods-account-container");
-            irodsContainer.append(irods_status_info('alert-warning', xhr.responseText, 'Failure'));
+            const errorText = JSON.parse(xhr.responseText).error
+            errorText && irodsContainer.append(irods_status_info('alert-warning', errorText, 'Failure'));
         }
     });
     return false;
@@ -246,6 +246,9 @@ function getUrlVars()
 }
 
 $(document).ready(function () {
+    // Multiple orgs are a string delimited by ";" --wrap them so we can style them
+    $("#organization").splitAndWrapWithClass(";", "organization-divider");
+    
     $("#btn-create-irods-account").click(create_irods_account);
     $("#btn-delete-irods-account").click(delete_irods_account);
 
