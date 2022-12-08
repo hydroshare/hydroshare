@@ -219,10 +219,7 @@ def nightly_metadata_review_reminder():
 
                 This is a reminder to review and approve/reject the publication request.
                 '''
-                recipients = [settings.DEFAULT_FROM_EMAIL]
-                # If we have gone 4 days, will also cc support email
-                if review_date < cutoff_date - timedelta(days=2):
-                    recipients.append(settings.DEFAULT_SUPPORT_EMAIL)
+                recipients = [settings.DEFAULT_SUPPORT_EMAIL]
                 send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, recipients)
 
 
