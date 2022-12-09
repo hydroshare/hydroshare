@@ -1,6 +1,6 @@
 FROM hydroshare/hs_docker_base:release-2.0
 
-# Set the locale. TODO - remove once we have a better alternative worked out
+# TODO - remove once we have a better alternative worked out. Set the locale. 
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
