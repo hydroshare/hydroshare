@@ -1198,7 +1198,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertIn('isPartOf', [rel.type for rel in self.res.metadata.relations.all()],
                       msg="No relation element of type 'isPartOf' was found")
         self.assertIn('isReferencedBy', [rel.type for rel in self.res.metadata.relations.all()],
-                      msg="No relation element of type 'isDataFor' was found")
+                      msg="No relation element of type 'isReferencedBy' was found")
 
         # add another relation element with isHostedBy type
         resource.create_metadata_element(self.res.short_id, 'relation', type='source',
@@ -1212,7 +1212,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertIn('isPartOf', [rel.type for rel in self.res.metadata.relations.all()],
                       msg="No relation element of type 'isPartOf' was found")
         self.assertIn('isReferencedBy', [rel.type for rel in self.res.metadata.relations.all()],
-                      msg="No relation element of type 'isDataFor' was found")
+                      msg="No relation element of type 'isReferencedBy' was found")
 
         # test that cannot create a relation that is identical to an existing one
         # (same type and same value) is not allowed

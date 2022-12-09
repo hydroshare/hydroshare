@@ -32,26 +32,21 @@ class GroupCommunityRequest(models.Model):
     '''
 
     # target
-    group = models.ForeignKey(
-        Group, editable=False, null=False, related_name='invite_g2gcr')
-
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,  editable=False, null=False)
     # source
-    community = models.ForeignKey(
-        Community, editable=False, null=False, related_name='invite_c2gcr')
-
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,  editable=False, null=False)
     # invitee
-    group_owner = models.ForeignKey(
-        User, editable=False, null=True, default=None, related_name='invite_go2gcr')
-
+    group_owner = models.ForeignKey(User, on_delete=models.CASCADE,  editable=False, null=True, default=None,
+                                    related_name='invite_gcg')
     # inviter
-    community_owner = models.ForeignKey(
-        User, editable=False, null=True, related_name='invite_co2gcr')
-
-    # when community action was taken
-    when_community = models.DateTimeField(editable=False, null=True, default=None)
+    community_owner = models.ForeignKey(User, on_delete=models.CASCADE,  editable=False, null=True,
+                                        related_name='invite_gcc')
 
     # when group action was taken
     when_group = models.DateTimeField(editable=False, null=True, default=None)
+
+    # when community action was taken
+    when_community = models.DateTimeField(editable=False, null=True, default=None)
 
     # Privilege with which to share: default is VIEW
     privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,

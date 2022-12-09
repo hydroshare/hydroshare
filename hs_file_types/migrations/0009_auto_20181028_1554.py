@@ -77,7 +77,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='filesetlogicalfile',
             name='metadata',
-            field=models.OneToOneField(related_name='logical_file', to='hs_file_types.FileSetMetaData'),
+            field=models.OneToOneField(related_name='logical_file', on_delete=models.CASCADE, to='hs_file_types.FileSetMetaData'),
         ),
         migrations.AddField(
             model_name='filesetlogicalfile',

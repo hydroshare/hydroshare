@@ -9,6 +9,7 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+from urllib import parse
 from uuid import uuid4
 
 import paramiko
@@ -19,7 +20,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.validators import URLValidator
 from django.db.models import When, Case, Value, BooleanField, Prefetch
 from django.db.models.query import prefetch_related_objects
@@ -239,12 +240,12 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     temp_path = istorage.getUniqueTmpPath
 
     prefix_path = 'data/contents'
-    if curr_path != prefix_path and curr_path.startswith(prefix_path):
-        curr_path = curr_path[len(prefix_path) + 1:]
-    if curr_path == prefix_path or not curr_path.startswith(prefix_path):
+    if curr_path == prefix_path:
         folder = ''
-    else:
+    elif curr_path.startswith(prefix_path):
         folder = curr_path[len(prefix_path) + 1:]
+    else:
+        folder = curr_path
 
     # update url in extra_data in url file's logical file object
     f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
@@ -326,7 +327,7 @@ def rights_allows_copy(res, user):
     :param user: the requesting user to check for whether copy is allowed
     :return: return True if the resource can be copied; otherwise, return False
     """
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         return False
 
     if not user.uaccess.owns_resource(res) and \
@@ -384,9 +385,9 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
     if needed_permission == ACTION_TO_AUTHORIZE.VIEW_METADATA:
         if res.raccess.discoverable or res.raccess.public or res.raccess.allow_private_sharing:
             authorized = True
-        elif user.is_authenticated() and user.is_active:
+        elif user.is_authenticated and user.is_active:
             authorized = user.uaccess.can_view_resource(res)
-    elif user.is_authenticated() and user.is_active:
+    elif user.is_authenticated and user.is_active:
         if needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
             authorized = user.uaccess.can_view_resource(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE:
@@ -659,7 +660,7 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
             is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
                                   then=Value(True, BooleanField()))))
 
-        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created', 'updated')
+        resource_collection = resource_collection.only('short_id', 'resource_type', 'created')
         # we won't hit the DB for each resource to know if it's status is public/private/discoverable
         # etc
         resource_collection = resource_collection.select_related('raccess', 'rlabels')
@@ -670,11 +671,13 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
             # metadata class (e.g., CoreMetaData) - we have to prefetch by content_type as
             # prefetch works only for the same object type (type of 'content_object' in this case)
             res_list = [res for res in resource_collection if res.content_type == ct]
-            # prefetch metadata items - creators, keywords(subjects)
+            # prefetch metadata items - creators, keywords(subjects), dates, and title
             if res_list:
                 prefetch_related_objects(res_list,
                                          Prefetch('content_object__creators'),
                                          Prefetch('content_object__subjects'),
+                                         Prefetch('content_object__dates'),
+                                         Prefetch('content_object___title'),
                                          )
 
     return resource_collection
@@ -694,9 +697,9 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     instance of Group are expected to
     be passed into this function
     """
-    email_to = kwargs.get('group_owner', user)
     context = {'request': request, 'user': user, 'explanation': kwargs.get('explanation', None)}
     if action_type == 'group_membership':
+        email_to = kwargs.get('group_owner', user)
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
@@ -706,9 +709,33 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
 
         context['group'] = kwargs.pop('group')
     elif action_type == 'group_auto_membership':
+        email_to = kwargs.get('group_owner', user)
         context['group'] = kwargs.pop('group')
         action_url = ''
+    elif action_type == 'metadata_review':
+        user_from = kwargs.get('user_from', None)
+        context['user_from'] = user_from
+        email_to = kwargs.get('email_to', user)
+        resource = kwargs.pop('resource')
+        context['resource'] = resource
+        action_url = reverse(action_type, kwargs={
+            "shortkey": resource.short_id,
+            "action": "approve",
+            "uidb36": int_to_base36(user.id),
+            "token": without_login_date_token_generator.make_token(email_to),
+        }) + "?next=" + (next_url(request) or "/")
+        context['spatial_coverage'] = get_coverage_data_dict(resource)
+
+        context['reject_url'] = action_url.replace("approve", "reject")
+        reject_subject = parse.quote("Publication Request Rejected")
+        reject_body = parse.quote("Your Publication Request for the following resource was rejected: ")
+        href_for_mailto_reject = (
+            f"mailto:{user_from.email}?subject={ reject_subject }&body={ reject_body }"
+            f'{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }'
+        )
+        context['href_for_mailto_reject'] = href_for_mailto_reject
     else:
+        email_to = kwargs.get('group_owner', user)
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
             "token": without_login_date_token_generator.make_token(email_to)
@@ -921,6 +948,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         raise ValidationError("Folder zipping is not allowed for a published resource")
     istorage = resource.get_irods_storage()
     res_coll_input = os.path.join(resource.root_path, input_coll_path)
+    if not istorage.exists(res_coll_input):
+        raise ValidationError(f"Specified folder path ({input_coll_path}) doesn't exist.")
 
     # check resource supports zipping of a folder
     if not resource.supports_zip(res_coll_input):
@@ -931,6 +960,12 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         if not resource.supports_delete_folder_on_zip(input_coll_path):
             raise ValidationError("Deleting of original folder is not allowed after "
                                   "zipping of a folder.")
+
+    if not ResourceFile.is_filename_valid(output_zip_fname):
+        filename_banned_chars = " ".join(ResourceFile.banned_symbols())
+        err_msg = f"Invalid zip filename ({output_zip_fname}). Filename can't have any of these " \
+                  f"characters: {filename_banned_chars}"
+        raise ValidationError(err_msg)
 
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
@@ -986,6 +1021,16 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     istorage = resource.get_irods_storage()
     if aggregation_name.startswith('data/contents/'):
         _, aggregation_name = aggregation_name.split('data/contents/')
+
+    aggr_storage_path = os.path.join(resource.file_path, aggregation_name)
+    if not istorage.exists(aggr_storage_path):
+        raise ValidationError(f"Specified aggregation path ({aggregation_name}) was not found")
+
+    if not ResourceFile.is_filename_valid(output_zip_fname):
+        filename_banned_chars = " ".join(ResourceFile.banned_symbols())
+        err_msg = f"Invalid zip filename ({output_zip_fname}). Filename can't have any of " \
+                  f"these characters: {filename_banned_chars}"
+        raise ValidationError(err_msg)
 
     if output_zip_fname.lower().endswith('.zip'):
         output_zip_fname = output_zip_fname[:-4]
@@ -1067,30 +1112,58 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         raise ValidationError("Unzipping of file is not allowed for a published resource.")
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
+    if not istorage.exists(zip_with_full_path):
+        raise ValidationError(f"Zip file ({zip_with_rel_path}) was not found.")
+
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
-    unzip_path = None
+    unzip_to_folder_path = ''
+    unzip_path_temp = ''
     try:
+        # unzip to a temporary folder first to validate contents of the zip file
+        unzip_folder_name = uuid4().hex
+        # Note: unzipping using the irods 'ibun' command seems to fail if the zip file contains files that have
+        # non-english characters.
+        unzip_path_temp = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder_name)
+
+        # validate files in the zip file - checking for banned characters
+        unzipped_files = listfiles_recursively(istorage, unzip_path_temp)
+        for file_in_zip in unzipped_files:
+            file_in_zip = os.path.basename(file_in_zip)
+            if not ResourceFile.is_filename_valid(file_in_zip):
+                log_msg = f"Failed to unzip. Zip file ({zip_with_full_path}) has file with name that contains " \
+                          f"one or more prohibited characters."
+                logger.error(log_msg)
+                err_msg = "Zip file has file with name that contains one or more prohibited characters."
+                raise SuspiciousFileOperation(err_msg)
+
+        # validate folders in the zip file - checking for banned characters
+        unzipped_folder_paths = list_folders_recursively(istorage, unzip_path_temp)
+        for folder_in_zip in unzipped_folder_paths:
+            folder_in_zip = os.path.basename(folder_in_zip)
+            if not ResourceFile.is_folder_name_valid(folder_in_zip):
+                log_msg = f"Failed to unzip. Zip file ({zip_with_full_path}) has folder with name that contains " \
+                          f"one or more prohibited characters."
+                logger.error(log_msg)
+                err_msg = "Zip file has folder with name that contains one or more prohibited characters."
+                raise SuspiciousFileOperation(err_msg)
+
         if unzip_to_folder:
             # unzip to the subfolder with zip file base name as the subfolder name. If the subfolder name already
             # exists, a sequential number is appended to the subfolder name to make sure the subfolder name is unique
             unzip_folder = os.path.splitext(os.path.basename(zip_with_full_path))[0].strip()
-            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder)
-            res_files = link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
+            unzip_to_folder_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder)
+            res_files = link_irods_folder_to_django(resource, istorage, unzip_to_folder_path, auto_aggregate)
             if resource.resource_type == 'CompositeResource':
                 # make the newly added files part of an aggregation if needed
                 for res_file in res_files:
                     resource.add_file_to_aggregation(res_file)
         else:
             # unzip to the current folder
-            # unzip to a temporary folder first, then move every file to the current folder
-            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
-            dir_file_list = istorage.listdir(unzip_path)
+            dir_file_list = istorage.listdir(unzip_path_temp)
             unzip_subdir_list = dir_file_list[0]
-            # list all files to be moved into the resource
-            unzipped_files = listfiles_recursively(istorage, unzip_path)
-            unzipped_foldername = os.path.basename(unzip_path)
+            unzipped_foldername = os.path.basename(unzip_path_temp)
             override_tgt_paths = []
             for sub_dir_name in unzip_subdir_list:
                 dest_sub_path = os.path.join(os.path.dirname(zip_with_full_path), sub_dir_name)
@@ -1166,12 +1239,17 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
                 from hs_file_types.utils import ingest_metadata_files
                 ingest_metadata_files(resource, meta_files, map_files)
-            istorage.delete(unzip_path)
-    except Exception:
-        logger.exception("failed to unzip")
-        if unzip_path and istorage.exists(unzip_path):
-            istorage.delete(unzip_path)
+    except Exception as err:
+        logger.exception(f"Failed to unzip file:{zip_with_full_path}. Error:{str(err)}")
+        if unzip_to_folder_path and istorage.exists(unzip_to_folder_path):
+            istorage.delete(unzip_to_folder_path)
+        if not unzip_path_temp:
+            unzip_path_temp = os.path.dirname(zip_with_full_path)
+            unzip_path_temp = os.path.join(unzip_path_temp, unzip_folder_name)
         raise
+    finally:
+        if unzip_path_temp and istorage.exists(unzip_path_temp):
+            istorage.delete(unzip_path_temp)
 
     if bool_remove_original and not ingest_metadata:  # ingest_metadata deletes the zip by default
         zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
@@ -1184,7 +1262,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
 def ingest_bag(resource, bag_file, user):
     """
-    Ingests a zipped bagit archive of a hydroshare reosource that has been uploaded to the resource
+    Ingests a zipped bagit archive of a hydroshare resource that has been uploaded to the resource
     :param resource: The CompositeResource to ingest the bag into
     :param bag_file: The ResourceFile of the zipped bag in the resource
     :param user: The HydroShare user object to do the action as
@@ -1194,15 +1272,35 @@ def ingest_bag(resource, bag_file, user):
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.file_path, bag_file.short_path)
 
-    # unzip to a temporary folder=
+    # unzip to a temporary folder
     unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
     delete_resource_file(resource.short_id, bag_file.id, user)
 
     # list all files to be moved into the resource
     unzipped_files = listfiles_recursively(istorage, unzip_path)
+    unzipped_folders = list_folders_recursively(istorage, unzip_path)
+    # check folders in the bag file don't contain prohibited characters in folder name
+    for unzipped_folder in unzipped_folders:
+        base_folder = os.path.basename(unzipped_folder)
+        if not ResourceFile.is_folder_name_valid(base_folder):
+            istorage.delete(unzip_path)
+            log_msg = f"Failed to ingest bag. Bag file ({zip_with_full_path}) has folder with name that contains " \
+                      f"one or more prohibited characters."
+            logger.error(log_msg)
+            err_msg = f"Bag file has folder ({base_folder}) with name that contains one or more prohibited characters."
+            raise SuspiciousFileOperation(err_msg)
 
     res_files = []
     for unzipped_file in unzipped_files:
+        base_file = os.path.basename(unzipped_file)
+        # check files in the bag file don't contain prohibited characters in file name
+        if not ResourceFile.is_filename_valid(base_file):
+            istorage.delete(unzip_path)
+            log_msg = f"Failed to ingest bag. Bag file ({zip_with_full_path}) has file with name that contains " \
+                      f"one or more prohibited characters."
+            logger.error(log_msg)
+            err_msg = f"Bag file has file ({base_file}) with name that contains one or more prohibited characters."
+            raise SuspiciousFileOperation(err_msg)
         res_files.append(IrodsFile(unzipped_file, istorage))
     res_files, meta_files, map_files = identify_metadata_files(res_files)
 
@@ -1254,6 +1352,11 @@ def _get_destination_filename(file, unzipped_foldername):
 
 
 def listfiles_recursively(istorage, path):
+    """Returns a list of all file paths that start with the specified path
+    :param  istorage: an instance of Storage class
+    :param  path: the directory path for which all file paths are needed
+    :returns a list of file paths
+    """
     files = []
     listing = istorage.listdir(path)
     for file in listing[1]:
@@ -1263,7 +1366,25 @@ def listfiles_recursively(istorage, path):
     return files
 
 
+def list_folders_recursively(istorage, path):
+    """Returns a list of all folder paths that start with the specified path
+    :param  istorage: an instance of Storage class
+    :param  path: the directory path for which all sub folder paths are needed
+    :returns a list of directory paths
+    """
+    folders = []
+    for folder in listfolders(istorage, path):
+        folders.append(os.path.join(path, folder))
+        folders.extend(list_folders_recursively(istorage, os.path.join(path, folder)))
+    return folders
+
+
 def listfolders(istorage, path):
+    """Returns a list of all sub folders of the specified path
+    :param  istorage: an instance of Storage class
+    :param  path: the directory path for which all sub folders are needed
+    :returns a list of folder names
+    """
     return istorage.listdir(path)[0]
 
 
@@ -1278,21 +1399,33 @@ def create_folder(res_id, folder_path, migrating_resource=False):
     :return:
     """
     if __debug__:
-        assert(folder_path.startswith("data/contents/"))
+        assert folder_path.startswith("data/contents/")
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not migrating_resource:
         raise ValidationError("Folder creation is not allowed for a published resource")
     istorage = resource.get_irods_storage()
-    coll_path = os.path.join(resource.root_path, folder_path)
-
+    input_folder_path = folder_path[len("data/contents/"):]
+    folder_path = ResourceFile.validate_new_path(new_path=input_folder_path)
+    coll_path = os.path.join(resource.file_path, folder_path)
     if not resource.supports_folder_creation(coll_path):
         raise ValidationError("Folder creation is not allowed here. "
                               "The target folder seems to contain aggregation(s)")
 
     # check for duplicate folder path
     if istorage.exists(coll_path):
-        raise ValidationError("Folder already exists")
+        raise ValidationError(f"Folder ({folder_path}) already exists")
+
+    # validate each of the folders in the specified path
+    folders = [folder for folder in folder_path.split("/")]
+    for folder in folders:
+        if not ResourceFile.is_folder_name_valid(folder):
+            folder_banned_chars = ResourceFile.banned_symbols().replace('/', '')
+            folder_banned_chars = " ".join(folder_banned_chars)
+            err_msg = f"Folder name ({folder}) contains one more prohibited characters. "
+            err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
+            raise SuspiciousFileOperation(err_msg)
+
     istorage.session.run("imkdir", None, '-p', coll_path)
 
 
@@ -1313,6 +1446,8 @@ def remove_folder(user, res_id, folder_path):
         raise ValidationError("Folder deletion is not allowed for a published resource")
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
+    if not istorage.exists(coll_path):
+        raise ValidationError(f"Specified folder ({folder_path}) was not found")
 
     istorage.delete(coll_path)
 
@@ -1359,31 +1494,9 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
     """
-    if __debug__:
-        assert(src_path.startswith("data/contents/"))
-        assert(tgt_path.startswith("data/contents/"))
 
-    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    if resource.raccess.published and not user.is_superuser:
-        raise ValidationError("Operations related to file/folder are allowed only for admin user for a "
-                              "published resource")
-    istorage = resource.get_irods_storage()
-    src_full_path = os.path.join(resource.root_path, src_path)
-    tgt_full_path = os.path.join(resource.root_path, tgt_path)
-
-    if validate_move_rename:
-        # this must raise ValidationError if move/rename is not allowed by specific resource type
-        if not resource.supports_rename_path(src_full_path, tgt_full_path):
-            raise ValidationError("File/folder move/rename is not allowed.")
-
-    istorage.moveFile(src_full_path, tgt_full_path)
-    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
-    if resource.resource_type == "CompositeResource":
-        orig_src_path = src_full_path[len(resource.file_path) + 1:]
-        new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
-
-    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+    _path_move_rename(user=user, res_id=res_id, src_path=src_path, tgt_path=tgt_path,
+                      validate_move_rename=validate_move_rename)
 
 
 # TODO: modify this to take short paths not including data/contents
@@ -1405,31 +1518,9 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     Also, this foregoes extensive antibugging of arguments because that is done in the
     REST API.
     """
-    if __debug__:
-        assert(src_path.startswith("data/contents/"))
-        assert(tgt_path.startswith("data/contents/"))
 
-    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    if resource.raccess.published and not user.is_superuser:
-        raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
-    istorage = resource.get_irods_storage()
-    src_full_path = os.path.join(resource.root_path, src_path)
-    tgt_full_path = os.path.join(resource.root_path, tgt_path)
-
-    if validate_rename:
-        # this must raise ValidationError if move/rename is not allowed by specific resource type
-        if not resource.supports_rename_path(src_full_path, tgt_full_path):
-            raise ValidationError("File rename is not allowed. "
-                                  "File seems to be part of an aggregation")
-
-    istorage.moveFile(src_full_path, tgt_full_path)
-    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
-    if resource.resource_type == "CompositeResource":
-        orig_src_path = src_full_path[len(resource.file_path) + 1:]
-        new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
-
-    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+    _path_move_rename(user=user, res_id=res_id, src_path=src_path, tgt_path=tgt_path,
+                      validate_move_rename=validate_rename)
 
 
 # TODO: modify this to take short paths not including data/contents
@@ -1461,6 +1552,13 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
     istorage = resource.get_irods_storage()
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
+    if not istorage.exists(tgt_full_path):
+        raise ValidationError(f"Target path ({tgt_path}) doesn't exist")
+
+    for src_path in src_paths:
+        src_full_path = os.path.join(resource.root_path, src_path)
+        if not istorage.exists(src_full_path):
+            raise ValidationError(f"Source path ({src_full_path}) doesn't exist")
 
     if validate_move:
         # this must raise ValidationError if move is not allowed by specific resource type
@@ -1479,9 +1577,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         istorage.moveFile(src_full_path, tgt_qual_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
         if resource.resource_type == "CompositeResource":
-            orig_src_path = src_full_path[len(resource.file_path) + 1:]
-            new_tgt_path = tgt_qual_path[len(resource.file_path) + 1:]
-            resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+            resource.set_flag_to_recreate_aggregation_meta_files(orig_path=src_full_path, new_path=tgt_qual_path)
 
     # TODO: should check can_be_public_or_discoverable here
 
@@ -1540,3 +1636,56 @@ def get_coverage_data_dict(source, coverage_type='spatial'):
             temporal_coverage_dict['start'] = start_date.strftime('%m-%d-%Y')
             temporal_coverage_dict['end'] = end_date.strftime('%m-%d-%Y')
         return temporal_coverage_dict
+
+
+def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=True):
+    """helper method for moving/renaming file/folder"""
+
+    if __debug__:
+        assert(src_path.startswith("data/contents/"))
+        assert(tgt_path.startswith("data/contents/"))
+
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    if resource.raccess.published and not user.is_superuser:
+        raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
+    istorage = resource.get_irods_storage()
+    src_base_name = src_path[len("data/contents/"):]
+    src_base_name = ResourceFile.validate_new_path(new_path=src_base_name)
+    src_full_path = os.path.join(resource.file_path, src_base_name)
+    tgt_base_name = tgt_path[len("data/contents/"):]
+    tgt_base_name = ResourceFile.validate_new_path(new_path=tgt_base_name)
+    tgt_full_path = os.path.join(resource.file_path, tgt_base_name)
+
+    if src_full_path == tgt_full_path:
+        raise ValidationError("File/folder name is not valid.")
+
+    if validate_move_rename:
+        # this must raise ValidationError if move/rename is not allowed by specific resource type
+        if not resource.supports_rename_path(src_full_path, tgt_full_path):
+            raise ValidationError("File/folder move/rename is not allowed.")
+
+    if src_base_name != tgt_base_name:
+        if istorage.isFile(src_full_path):
+            # renaming a file - need to validate the new file name
+            tgt_file_name_new = os.path.basename(tgt_base_name)
+            if not ResourceFile.is_filename_valid(tgt_file_name_new):
+                filename_banned_chars = " ".join(ResourceFile.banned_symbols())
+                err_msg = f"Filename ({tgt_file_name_new}) contains one more prohibited characters. "
+                err_msg = f"{err_msg}Prohibited characters are: {filename_banned_chars}"
+                raise SuspiciousFileOperation(err_msg)
+        else:
+            # renaming a folder - need validate the new folder name
+            tgt_folder_name_new = os.path.basename(tgt_base_name)
+            if not ResourceFile.is_folder_name_valid(tgt_folder_name_new):
+                foldername_banned_chars = ResourceFile.banned_symbols().replace('/', '')
+                foldername_banned_chars = " ".join(foldername_banned_chars)
+                err_msg = f"Folder name ({tgt_folder_name_new}) contains one more prohibited characters. "
+                err_msg = f"{err_msg}Prohibited characters are: {foldername_banned_chars}"
+                raise SuspiciousFileOperation(err_msg)
+
+    istorage.moveFile(src_full_path, tgt_full_path)
+    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    if resource.resource_type == "CompositeResource":
+        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=src_full_path, new_path=tgt_full_path)
+
+    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)

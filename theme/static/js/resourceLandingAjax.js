@@ -5,6 +5,19 @@
 var radioPointSelector = 'input[type="radio"][value="point"]';
 var radioBoxSelector = 'input[type="radio"][value="box"]';
 
+function getErrorMessage(xhr) {
+    let errorMsg = JSON.stringify(xhr.responseText);
+    try {
+        let errorMessageJSON = JSON.parse(xhr.responseText);
+        if (errorMessageJSON.hasOwnProperty("error")) {
+            errorMsg = errorMessageJSON.error;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+    return errorMsg
+}
+
 function label_ajax_submit() {
     var el = $(this);
     var dataFormID = el.attr("data-form-id");
@@ -892,7 +905,8 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
-            display_error_message('Folder Zipping Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Zipping Failed', errorMsg);
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
@@ -913,7 +927,8 @@ function zip_by_aggregation_file_ajax_submit(res_id, aggregationPath, zipFileNam
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
-            display_error_message('Zipping of Aggregation Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Zipping Failed', errorMsg);
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
@@ -940,7 +955,8 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite, unzi
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
-            display_error_message('File Unzipping Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Creation Failed', errorMsg);
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
@@ -963,9 +979,14 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
                 $('#create-folder-dialog').modal('hide');
                 $("#txtFolderName").val("");
             }
+            else {
+                $('#create-folder-dialog').modal('hide');
+            }
         },
         error: function(xhr, errmsg, err){
-            display_error_message('Folder Creation Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Creation Failed', errorMsg);
+            $('#create-folder-dialog').modal('hide');
         }
     });
 }
@@ -1126,7 +1147,8 @@ function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
             }
         },
         error: function(xhr, errmsg, err){
-            display_error_message('File/Folder Renaming Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('File/Folder Renaming Failed', errorMsg);
         }
     });
 }

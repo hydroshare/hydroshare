@@ -24,18 +24,41 @@
             {% endif %}
         </td>
     </tr>
-    {% if cm.raccess.published %}
-        {% if "pending" in cm.doi or "failure" in cm.doi %}
+    {% if "pending" in cm.doi or "failure" in cm.doi or cm.raccess.review_pending %}
             <tr>
                 <th>Publication Status: </th>
                 <td>
+                    {% if cm.raccess.review_pending %}
+                    <div>Pending Metadata Review</div>
+                        {% if user.is_superuser %}
+                        <a id="metadata_approve" href="/hsapi/_internal/metadata_review/{{ cm.short_id }}/approve/">
+                            <button
+                                class="btn btn-info btn-xs">
+                                Approve metadata for publication
+                            </button>
+                        </a>
+                        <a id="metadata_reject" href="/hsapi/_internal/metadata_review/{{ cm.short_id }}/reject/">
+                            <button
+                                class="btn btn-warning btn-xs">
+                                Reject metadata for publication
+                            </button>
+                        </a>
+                        {% else %}
+                        <div class="small text-muted">
+                            This resource is under review for 
+                            <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">minimum metadata</a> 
+                            and to ensure that it adheres to 
+                            <a href="https://help.hydroshare.org/publishing-in-hydroshare/terms-of-use-and-community-guidelines/" target="_blank">community guidelines</a>.
+                        </div>
+                        {% endif %}
+                    {% else %}
                     <div>Pending Publication</div>
                     <div class="small text-muted">
                         Note that the DOI will not be available until it has been registered and activated.
                     </div>
+                    {% endif %}
                 </td>
             </tr>
-        {% endif %}
     {% endif %}
     <tr>
         <th>Views: </th>

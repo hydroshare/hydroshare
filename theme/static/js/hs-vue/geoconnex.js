@@ -17,18 +17,8 @@ const geoconnexApp = new Vue({
       ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
       // collection: features that will not be mapped or allowed for list selection
       ignoredFeatures: {
-        "nat_aq": ["N9999OTHER"],
-        "principal_aq": [999]
-      },
-      // Geoconnex features have different "name" fields depending on which collection the belong to
-      featureNameFieldMap: {
-        nat_aq: "AQ_NAME",
-        principal_aq: "AQ_NAME",
-        dams: "name",
-        gages: "name",
-        mainstems: "name_at_outconst",
-        sec_hydrg_reg: "SHR",
-        ua10: "NAME10",
+        nat_aq: ["N9999OTHER"],
+        principal_aq: [999],
       },
 
       ////// Resource-level data //////
@@ -252,7 +242,7 @@ const geoconnexApp = new Vue({
           throw new Error("No features returned from fetch");
         }
         for (let feature of features) {
-          feature = geoconnexApp.getFeatureProperties(feature);
+          feature = await geoconnexApp.getFeatureProperties(feature);
           feature.disabled = true;
           geoconnexApp.features.push(feature);
           geoconnexApp.addSelectedFeatureToMap(feature);
@@ -263,10 +253,6 @@ const geoconnexApp = new Vue({
           };
           geoconnexApp.selectedReferenceFeatures.push(featureValues);
         }
-        geoconnexApp.fitMapToFeatures({
-          group: null,
-          overrideShouldFit: true,
-        });
         geoconnexApp.loadingRelations = false;
       } catch (e) {
         const message =
@@ -369,12 +355,11 @@ const geoconnexApp = new Vue({
           keep = keep.concat(val.uris);
         }
       }
-      geoconnexApp.features = geoconnexApp.features.filter((s) =>{
+      geoconnexApp.features = geoconnexApp.features.filter((s) => {
         const ignoredDict = geoconnexApp.ignoredFeatures[s.collection];
         if (ignoredDict && ignoredDict.includes(s.id)) return false;
         return keep.includes(s.uri);
-      }
-      );
+      });
       geoconnexApp.loadingRelations = false;
     },
 
@@ -471,7 +456,7 @@ const geoconnexApp = new Vue({
       const geoconnexApp = this;
       geoconnexApp.searchingDescription = collection.description;
       let response = {};
-      const propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(
+      const propertiesParameter = `&properties=uri,${await geoconnexApp.getFeatureNameField(
         collection.id
       )}`;
       const bboxParameter = bbox ? `&bbox=${bbox.toString()}` : "";
@@ -546,7 +531,7 @@ const geoconnexApp = new Vue({
       skipGeometry = true,
     }) {
       const geoconnexApp = this;
-      const propertiesParameter = `&properties=uri,${geoconnexApp.getFeatureNameField(
+      const propertiesParameter = `&properties=uri,${await geoconnexApp.getFeatureNameField(
         collection.id
       )}`;
       const url = `${geoconnexApp.geoconnexUrl}/${
@@ -636,12 +621,12 @@ const geoconnexApp = new Vue({
       } catch (e) {
         geoconnexApp.error(e.message);
         const response = await geoconnexApp.geoCache.match(url);
-        if (response){
+        if (response) {
           geoconnexApp.log(
             "Geoconnex API fetch error. Falling back to old cached version"
           );
           return response.data;
-        }else{
+        } else {
           geoconnexApp.error(e.message);
           geoconnexApp.generateAppMessage(
             `Error while attempting to fetch Geoconnex items: ${e.message}`
@@ -700,7 +685,6 @@ const geoconnexApp = new Vue({
       } catch (e) {
         geoconnexApp.error("Error attempting to show spatial extent", e);
       }
-      geoconnexApp.fitMapToFeatures({ group: null, overrideShouldFit: true });
     },
     initializeLeafletMap() {
       const geoconnexApp = this;
@@ -750,7 +734,9 @@ const geoconnexApp = new Vue({
         Satelite: googleSat,
       };
 
-      geoconnexApp.map.attributionControl.setPrefix('<a href="https://leafletjs.com/" target="blank">Leaflet</a>');
+      geoconnexApp.map.attributionControl.setPrefix(
+        '<a href="https://leafletjs.com/" target="blank">Leaflet</a>'
+      );
 
       const overlayMaps = {
         "Selected Features": geoconnexApp.selectedFeatureGroup,
@@ -826,16 +812,18 @@ const geoconnexApp = new Vue({
       // geoconnexApp.map.setView([41.850033, -87.6500523], 3);
       geoconnexApp.map.setView([30, 0], 1);
       geoconnexApp.setMapEvents();
-      geoconnexApp.fitMapToFeatures();
     },
-    addSearchFeaturesToMap(features, collectionOverride = null) {
+    async addSearchFeaturesToMap(features, collectionOverride = null) {
       for (const feature of features) {
         // deal with collection first
         const collection = collectionOverride
           ? collectionOverride
           : feature.collection;
 
-        if(geoconnexApp.ignoredFeatures[collection.id] && geoconnexApp.ignoredFeatures[collection.id].includes(feature.id)) return;
+        if (
+          geoconnexApp.ignoredFeatures[collection.id]?.includes(feature.id)
+        )
+          return;
 
         // check if layergroup exists in the "dictionary"
         if (
@@ -869,7 +857,7 @@ const geoconnexApp = new Vue({
         if (alreadySelected) {
           feature.disabled = true;
         } else {
-          geoconnexApp.getFeatureProperties(feature);
+          await geoconnexApp.getFeatureProperties(feature);
           if (feature.geometry.type.includes("Point")) {
             geoconnexApp.addGeojsonToMap({
               geojson: feature,
@@ -1246,23 +1234,35 @@ const geoconnexApp = new Vue({
         geoconnexApp.appMessages.push({ message: message, level: level });
       }
     },
-    setFeatureName(feature) {
+    async setFeatureName(feature) {
       const geoconnexApp = this;
-      const nameField = geoconnexApp.getFeatureNameField(feature.collection);
+      const nameField = await geoconnexApp.getFeatureNameField(
+        feature.collection
+      );
       feature.NAME = feature.properties[nameField] || "";
     },
-    getFeatureNameField(collectionName) {
+    async getFeatureNameField(collectionName) {
       const geoconnexApp = this;
-      // This could also be accomplished by flattening json-ld for the feature and searching for the "https://schema.org/name"
-      return geoconnexApp.featureNameFieldMap[collectionName] || "NAME";
+      const url = `${geoconnexApp.geoconnexUrl}/${collectionName}/items?f=jsonld&lang=en-US&skipGeometry=true&limit=1`;
+      const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
+        url: url,
+      });
+      const contexts = featureJsonLd["@context"];
+      let nameField = "NAME";
+      for (let context of contexts) {
+        nameField =
+          Object.keys(context).find((key) => context[key] === "schema:name") ||
+          "NAME";
+      }
+      return nameField;
     },
-    getFeatureProperties(feature) {
+    async getFeatureProperties(feature) {
       const geoconnexApp = this;
       // Account for some oddities in the Geoconnex API schema
       feature.relative_id = feature.properties.uri.split("ref/").pop();
       feature.collection = feature.relative_id.split("/")[0];
       feature.uri = feature.properties.uri;
-      geoconnexApp.setFeatureName(feature);
+      await geoconnexApp.setFeatureName(feature);
       feature.text = `${feature.NAME} [${feature.relative_id}]`;
 
       //prevent duplicate selections
@@ -1375,14 +1375,17 @@ const geoconnexApp = new Vue({
       geoconnexApp.initializeLeafletMap();
 
       geoconnexApp.resMode == "Edit" && geoconnexApp.fetchCollections(false);
-      geoconnexApp.loadResourceMetadataRelations();
+      await geoconnexApp.loadResourceMetadataRelations();
 
-      // wait for spatial coverage map to load before getting extent
-      await geoconnexApp
+      if (geoconnexApp.resMode == "Edit"){
+        // wait for spatial coverage map to load before getting extent
+        await geoconnexApp
         .until((_) => coverageMap)
         .then(() => {
           geoconnexApp.updateAppWithResSpatialExtent();
         });
+      }
+      geoconnexApp.fitMapToFeatures({ group: null, overrideShouldFit: true });
     }
     geoconnexApp.isLoading = false;
   },

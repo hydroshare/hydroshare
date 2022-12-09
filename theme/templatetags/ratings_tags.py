@@ -22,7 +22,7 @@ def rating_for(context, obj):
     rating_manager = getattr(obj, rating_name)
 
     user = context["request"].user
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         context["you_rated"] = False
     else:
         try:

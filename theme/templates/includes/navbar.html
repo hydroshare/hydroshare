@@ -233,7 +233,7 @@
                     <div v-if="tasks.length">
                         <div class="task" v-for="task in tasks">
                             <div class="notification--content">
-                                <div class="notification--name">${taskMessages[task.name].title}</span>
+                                <div class="notification--name">${taskMessages[task.name].title}
                                     <div class="notification--status">
                                         <span :class="statusIcons[task.status]"></span>
 
@@ -249,6 +249,7 @@
                                             <span v-else-if="task.payload.includes('FileOverrideException') && task.status === 'failed'">
                                             <a id='btn-file-override' v-on:click="showFileOverrideDialog(task.payload)">Select whether to allow file override</a>
                                             </span>
+                                            <span v-else-if="task.status === 'failed'">${task.payload}</span>
                                         </small>
                                     </div>
                                 </div>
