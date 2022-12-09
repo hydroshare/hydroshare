@@ -725,8 +725,7 @@ class ToolMetaData(CoreMetaData):
         return True
 
     def get_required_missing_elements(self, desired_state='discoverable'):  # show missing required meta
-        resource_states = ('discoverable', 'public')
-        if desired_state not in resource_states:
+        if desired_state == 'published':
             return []
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
 
