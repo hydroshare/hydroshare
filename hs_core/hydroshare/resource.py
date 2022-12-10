@@ -1052,7 +1052,7 @@ def submit_resource_for_review(request, pk):
 
     # create review date -- must be after review_pending = True
     resource.metadata.dates.all().filter(type='review_started').delete()
-    resource.metadata.create_element('date', type='review_started', start_date=datetime.datetime.now(pytz.utc))
+    resource.metadata.create_element('date', type='review_started', start_date=datetime.datetime.now(tz.UTC))
 
 
 def publish_resource(user, pk):
