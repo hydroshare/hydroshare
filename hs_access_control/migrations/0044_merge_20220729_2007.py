@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('hs_access_control', '0043_auto_20220520_2047'),
-        ('hs_access_control', '0036_auto_20220510_1213'),
+        ('hs_access_control', '0037_resourceaccess_review_pending'),
     ]
 
     operations = [
