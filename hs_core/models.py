@@ -3773,11 +3773,6 @@ class BaseResource(Page, AbstractResource):
         """Return name used for the content type in discovery/solr search."""
         return self.get_content_model().display_name
 
-    # @property
-    # def display_name(self):
-    #     """Return name used in UI for content type."""
-    #     return self.get_content_model().discovery_content_type
-
     @property
     def can_be_submitted_for_metadata_review(self):
         """Determine when data and metadata are complete enough for the resource to be published.

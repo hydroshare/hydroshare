@@ -275,11 +275,11 @@ function updateSelectionMenuContext() {
         uiActionStates.setModelInstanceFileType.disabled = true;
 
         const foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
-        if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
+        if(resourceType === 'Resource' && foldersSelected.length > 1) {
             uiActionStates.removeAggregation.disabled = true;
             uiActionStates.setFileSetFileType.disabled = true;
         }
-        if(resourceType !== 'Composite Resource') {
+        if(resourceType !== 'Resource') {
             uiActionStates.removeAggregation.disabled = true;
         }
         $("#fileTypeMetaData").html(file_metadata_alert);
@@ -505,7 +505,7 @@ function updateSelectionMenuContext() {
         uiActionStates.setModelInstanceFileType.disabled = true;
         uiActionStates.preview.disabled = true;
 
-        if (resourceType === 'Composite Resource') {
+        if (resourceType === 'Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
                 const logicalFileType = $(this).attr("data-logical-file-type");
                 //disable folder creation in aggregation folders
@@ -1778,7 +1778,7 @@ function warnExternalContent(shortId) {
 function onUploadSuccess(file, response) {
     // uploaded files can affect metadata in composite resource.
     // Use the json data returned from backend to update UI
-    if (RES_TYPE === 'Composite Resource') {
+    if (RES_TYPE === 'Resource') {
         updateResourceUI();
     }
     showCompletedMessage(response);
@@ -1974,7 +1974,7 @@ $(document).ready(function () {
                     pathLog.push(JSON.parse(sessionStorage.currentBrowsepath));
                     pathLogIndex = pathLog.length - 1;
 
-                    if (resourceType === 'Composite Resource') {
+                    if (resourceType === 'Resource') {
                         sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
                         refreshFileBrowser();
                     }
