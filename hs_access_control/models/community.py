@@ -265,8 +265,8 @@ class RequestCommunity(models.Model):
     Note: As part of creating an instance this request, a new community gets created which is in inactive state
     When this request gets approved the community becomes active
     """
-    community_to_approve = models.ForeignKey(Community, related_name='c2crequest')
-    requested_by = models.ForeignKey(User, related_name='u2crequest')
+    community_to_approve = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='c2crequest')
+    requested_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='u2crequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     date_processed = models.DateTimeField(editable=False, null=True)
     pending_approval = models.BooleanField(default=True)
@@ -329,7 +329,7 @@ class RequestCommunity(models.Model):
         self.pending_approval = False
         self.declined = True
         self.decline_reason = reason
-        # upon approval the request the associated community is set to active
+        # upon decline the request the associated community is set to inactive
         self.community_to_approve.active = False
         self.community_to_approve.save()
         self.save()

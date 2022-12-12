@@ -13,19 +13,17 @@ from django.contrib.sites.models import Site
 from django.core import signing
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.mail import send_mail
-from django.core.urlresolvers import reverse
 from django.db import Error, IntegrityError
 from django.db.models import F
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from inplaceeditform.commons import apply_filters, get_dict_from_obj
-from inplaceeditform.views import _get_adaptor, _get_http_response
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import send_mail_template, subject_template
