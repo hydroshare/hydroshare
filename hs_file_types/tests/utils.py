@@ -111,16 +111,16 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     box_coverage = logical_file.metadata.spatial_coverage
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    expected_nlimit = 42.0500269597691
+    expected_nlimit = 42.05002695977342
     self.assertAlmostEqual(float(box_coverage.value['northlimit']), expected_nlimit,
                            places=get_number_of_decimal_places(expected_nlimit))
-    expected_elimit = -111.57773718106195
+    expected_elimit = -111.57773718106199
     self.assertAlmostEqual(float(box_coverage.value['eastlimit']), expected_elimit,
                            places=get_number_of_decimal_places(expected_elimit))
-    expected_slimit = 41.98722286029891
+    expected_slimit = 41.98722286030317
     self.assertAlmostEqual(float(box_coverage.value['southlimit']), expected_slimit,
                            places=get_number_of_decimal_places(expected_slimit))
-    expected_wlimit = -111.69756293084055
+    expected_wlimit = -111.6975629308406
     self.assertAlmostEqual(float(box_coverage.value['westlimit']), expected_wlimit,
                            places=get_number_of_decimal_places(expected_wlimit))
 

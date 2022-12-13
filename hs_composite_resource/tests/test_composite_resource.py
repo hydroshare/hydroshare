@@ -1136,10 +1136,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
             type='box').first()
         self.assertEqual(res_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(res_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(res_coverage.value['northlimit'], 42.0500269597691)
-        self.assertEqual(res_coverage.value['eastlimit'], -111.57773718106195)
-        self.assertEqual(res_coverage.value['southlimit'], 41.98722286029891)
-        self.assertEqual(res_coverage.value['westlimit'], -111.69756293084055)
+        self.assertEqual(res_coverage.value['northlimit'], 42.05002695977342)
+        self.assertEqual(res_coverage.value['eastlimit'], -111.57773718106199)
+        self.assertEqual(res_coverage.value['southlimit'], 41.98722286030317)
+        self.assertEqual(res_coverage.value['westlimit'], -111.6975629308406)
         value_dict = {'east': '-110.88845678', 'north': '43.6789', 'units': 'Decimal deg'}
         generic_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
 
@@ -1151,8 +1151,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(res_coverage.value['northlimit'], 43.6789)
         self.assertEqual(res_coverage.value['eastlimit'], -110.88845678)
-        self.assertEqual(res_coverage.value['southlimit'], 41.98722286029891)
-        self.assertEqual(res_coverage.value['westlimit'], -111.69756293084055)
+        self.assertEqual(res_coverage.value['southlimit'], 41.98722286030317)
+        self.assertEqual(res_coverage.value['westlimit'], -111.6975629308406)
         # update the LFO coverage to box type
         value_dict = {'eastlimit': '-110.88845678', 'northlimit': '43.6789',
                       'westlimit': '-112.78967', 'southlimit': '40.12345',

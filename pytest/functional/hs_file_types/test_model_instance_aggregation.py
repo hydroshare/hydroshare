@@ -502,9 +502,9 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     # model aggr should now have spatial coverage
     assert mi_aggr.metadata.spatial_coverage is not None
     assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
-    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106195
-    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286029891
-    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106199
+    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
+    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
 
     # auto create a netcdf aggregation inside the model instance aggregation
     assert NetCDFLogicalFile.objects.count() == 0
@@ -523,7 +523,7 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
     assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.50594036845686
     assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.8639080745171
-    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
     assert not resource.dangling_aggregations_exist()
 
 
@@ -562,9 +562,9 @@ def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_m
     # raster aggr should have spatial coverage
     assert gr_aggr.metadata.spatial_coverage is not None
     assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
-    assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106195
-    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286029891
-    assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106199
+    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
+    assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
     # check model instance spatial coverage has not been updated
     assert mi_aggr.metadata.spatial_coverage.value['east'] == value_dict['east']
     assert mi_aggr.metadata.spatial_coverage.value['north'] == value_dict['north']
