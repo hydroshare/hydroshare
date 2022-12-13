@@ -32,15 +32,16 @@ class GroupCommunityRequest(models.Model):
     '''
 
     # target
-    group = models.ForeignKey(Group, on_delete=models.CASCADE,  editable=False, null=False)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,  editable=False, null=False, related_name='invite_g2gcr')
     # source
-    community = models.ForeignKey(Community, on_delete=models.CASCADE,  editable=False, null=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,  editable=False, null=False,
+                                  related_name='invite_c2gcr')
     # invitee
     group_owner = models.ForeignKey(User, on_delete=models.CASCADE,  editable=False, null=True, default=None,
-                                    related_name='invite_gcg')
+                                    related_name='invite_go2gcr')
     # inviter
     community_owner = models.ForeignKey(User, on_delete=models.CASCADE,  editable=False, null=True,
-                                        related_name='invite_gcc')
+                                        related_name='invite_co2gcr')
 
     # when group action was taken
     when_group = models.DateTimeField(editable=False, null=True, default=None)
