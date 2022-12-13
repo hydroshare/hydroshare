@@ -1535,8 +1535,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         fs_aggr.update_spatial_coverage()
         # test fileset aggregation spatial coverage data
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.05002695977342)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.50594036845686)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.8639080745171)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.5059403684569)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.86390807452128)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
