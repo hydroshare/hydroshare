@@ -4,7 +4,7 @@ import os
 import parser
 import shutil
 import subprocess
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 import zipfile
 from functools import partial, wraps
 
