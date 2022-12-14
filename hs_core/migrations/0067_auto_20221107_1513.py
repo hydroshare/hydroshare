@@ -12,8 +12,8 @@ from hs_core.hydroshare.utils import update_geoconnex_texts
 def migrate_relations_to_geoconnex(apps, schema_editor):
     for relation in Relation.objects.filter(type="relation"):
         if "geoconnex" in relation.value:
-            print(f"\nAttempting to create new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
             res = BaseResource.objects.get(object_id=relation.object_id)
+            print(f"\nAttempting to create new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
             try:
                 res.metadata.create_element('geospatialrelation',
                                             type='relation',
@@ -28,7 +28,7 @@ def migrate_relations_to_geoconnex(apps, schema_editor):
 
 
 def get_geoconnex_text(apps, schema_editor):
-    update_geoconnex_texts
+    update_geoconnex_texts()
 
 
 class Migration(migrations.Migration):
