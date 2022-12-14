@@ -4323,7 +4323,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         missing_recommended_elements = []
         if not self.funding_agencies.count():
             missing_recommended_elements.append('Funding Agency')
-        if not self.resource.readme_file:
+        if not self.resource.readme_file and "CompositeResource" in self.resource.resource_type:
             missing_recommended_elements.append('Readme file containing variables, '
                                                 'abbreviations/acronyms, and non-standard file formats')
         if not self.coverages.count():
