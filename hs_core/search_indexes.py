@@ -19,7 +19,6 @@ import re
 
 adjacent_caps = re.compile("[A-Z][A-Z]")
 
-
 def remove_whitespace(thing):
     intab = ""
     outtab = ""
@@ -143,7 +142,7 @@ def get_content_types(res):
     if missing_exts:  # if there is anything left over, then mark as Generic
         types.add('Generic Data')
 
-    return (types, missing_exts, all_exts)
+    return types, missing_exts, all_exts
 
 
 def discoverable(thing):
@@ -228,16 +227,41 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # extra metadata
     extra = indexes.MultiValueField(stored=False)
 
+    def _cache_queryset(self, obj, attribute_name, qs_to_cache):
+        # Here is the link why we are setting the a cached_attribute on obj (resource) to minimize DB queries
+        # https://docs.djangoproject.com/en/1.11/topics/db/queries/#caching-and-querysets
+        if not hasattr(obj, attribute_name):
+            setattr(obj, attribute_name, qs_to_cache)
+
+    def _has_metadata(self, obj):
+        return hasattr(obj, 'metadata') and obj.metadata is not None
+
+    def _get_coverage_bounding_box_value(self, obj, box_direction):
+        """Gets the coverage value for the box limit
+        :param  obj: an instance of resource
+        :param  box_direction: One of these: northlimit, westlimit, southlimit, or eastlimit
+        """
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_coverages', obj.metadata.coverages.all())
+            # TODO: does not index properly if there are multiple coverages of the same type.
+            for coverage in obj.cached_coverages:
+                if coverage.type == 'box':
+                    return coverage.value[box_direction]
+
+        return None
+
     def get_model(self):
         """Return BaseResource model."""
         return BaseResource
 
     def index_queryset(self, using=None):
         """Return queryset including discoverable (and public) resources."""
-        candidates = self.get_model().objects.filter(raccess__discoverable=True)
+        candidates = self.get_model().objects.filter(raccess__discoverable=True).select_related('raccess')
         show = [x.short_id for x in candidates if x.show_in_discover]
         # this must return a queryset; this inefficient method is the best I can do
-        return self.get_model().objects.filter(short_id__in=show)
+        discoverable_resources = self.get_model().objects.filter(short_id__in=show)
+        discoverable_resources = discoverable_resources.select_related('raccess')
+        return discoverable_resources
 
     def prepare_created(self, obj):
         return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -247,11 +271,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_title(self, obj):
         """Return metadata title if exists, otherwise return 'none'."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.title is not None and \
-                obj.metadata.title.value is not None:
-            return obj.metadata.title.value.lstrip()
+
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_title', obj.metadata.title)
+            title = obj.cached_title
+            if title is not None and title.value is not None:
+                return title.value.lstrip()
         else:
             return 'none'
 
@@ -261,13 +286,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_abstract(self, obj):
         """Return metadata abstract if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.description is not None and \
-                obj.metadata.description.abstract is not None:
-            return obj.metadata.description.abstract.lstrip()
-        else:
-            return None
+
+        if self._has_metadata(obj):
+            description = obj.metadata.description
+            if description is not None and description.abstract is not None:
+                return description.abstract.lstrip()
+
+        return None
 
     # TODO: it is confusing that the "author" is the first "creator"
     def prepare_author(self, obj):
@@ -276,10 +301,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This must be represented as a single-value field to enable sorting.
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            first_creator = obj.metadata.creators.filter(order=1).first()
+
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_creators', obj.metadata.creators.all())
+            first_creator = None
+            for cr in obj.cached_creators:
+                if cr.order == 1:
+                    first_creator = cr
+                    break
             if first_creator is None:
                 return 'none'
             elif first_creator.name:
@@ -289,8 +318,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 return first_creator.organization.strip()
             else:
                 return 'none'
-        else:
-            return 'none'
+        return 'none'
 
     def prepare_author_lower(self, obj):
         result = self.prepare_author(obj)
@@ -302,16 +330,18 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This field is stored but not indexed, to avoid hitting the Django database during response.
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            first_creator = obj.metadata.creators.filter(order=1).first()
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_creators', obj.metadata.creators.all())
+            first_creator = None
+            for cr in obj.cached_creators:
+                if cr.order == 1:
+                    first_creator = cr
+                    break
             if first_creator is not None and first_creator.relative_uri is not None:
                 return first_creator.relative_uri
             else:
                 return None
-        else:
-            return None
+        return None
 
     def prepare_creator(self, obj):
         """
@@ -319,14 +349,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This field can have multiple values
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            return [normalize_name(creator.name)
-                    for creator in obj.metadata.creators.all()
-                    .exclude(name__isnull=True).exclude(name='')]
-        else:
-            return []
+        normalized_names = []
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_creators', obj.metadata.creators.all())
+            for creator in obj.cached_creators:
+                if creator.name is None or creator.name == '':
+                    continue
+                normalized_names.append(normalize_name(creator.name))
+
+        return normalized_names
 
     def prepare_contributor(self, obj):
         """
@@ -334,15 +365,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This field can have multiple values. Contributors include creators.
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.contributors is not None:
-            output1 = [normalize_name(contributor.name)
-                       for contributor in obj.metadata.contributors.all()
-                       .exclude(name__isnull=True).exclude(name='')]
-            return list(set(output1))  # eliminate duplicates
-        else:
-            return []
+        normalized_names = []
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_contributors', obj.metadata.contributors.all())
+            for contributor in obj.cached_contributors:
+                if contributor.name is None or contributor.name == '':
+                    continue
+                normalized_names.append(normalize_name(contributor.name))
+
+        return list(set(normalized_names))  # remove duplicates
 
     def prepare_subject(self, obj):
         """
@@ -350,32 +381,34 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This field can have multiple values.
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.subjects is not None:
-            return [subject.value.strip() for subject in obj.metadata.subjects.all()
-                    .exclude(value__isnull=True)]
-        else:
-            return []
+        subjects = []
+        if self._has_metadata(obj):
+            for subject in obj.metadata.subjects.all():
+                if subject.value is None:
+                    continue
+                subjects.append(subject.value.strip())
+
+        return subjects
 
     def prepare_organization(self, obj):
         """
         Return metadata organization if it exists, otherwise return empty array.
         """
         organizations = []
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            for creator in obj.metadata.creators.all():
-                if(creator.organization is not None):
-                    organizations.append(creator.organization.strip())
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_creators', obj.metadata.creators.all())
+            for creator in obj.cached_creators:
+                if creator.organization is None:
+                    continue
+                organizations.append(creator.organization.strip())
+
         return organizations
 
     def prepare_publisher(self, obj):
         """
         Return metadata publisher if it exists; otherwise return empty array.
         """
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
+        if self._has_metadata(obj):
             publisher = obj.metadata.publisher
             if publisher is not None:
                 return str(publisher).lstrip()
@@ -410,22 +443,20 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_replaced(self, obj):
         """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.relations is not None:
-            return obj.metadata.relations.filter(type='isReplacedBy').exists()
-        else:
-            return False
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_relations', obj.metadata.relations.all())
+            for relation in obj.cached_relations:
+                if relation.type == 'isReplacedBy':
+                    return True
+        return False
 
     def prepare_coverage(self, obj):
         """Return resource coverage if exists, otherwise return empty array."""
         # TODO: reject empty coverages
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            return [coverage._value.strip() for coverage in obj.metadata.coverages.all()]
-        else:
-            return []
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_coverages', obj.metadata.coverages.all())
+            return [coverage._value.strip() for coverage in obj.cached_coverages]
+        return []
 
     def prepare_coverage_type(self, obj):
         """
@@ -433,12 +464,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This field can have multiple values.
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            return [coverage.type.strip() for coverage in obj.metadata.coverages.all()]
-        else:
-            return []
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_coverages', obj.metadata.coverages.all())
+            return [coverage.type.strip() for coverage in obj.cached_coverages]
+        return []
 
     # TODO: THIS IS SIMPLY THE WRONG WAY TO DO THINGS.
     # Should use geopy Point and Haystack LocationField throughout,
@@ -448,10 +477,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_east(self, obj):
         """Return resource coverage east bound if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            for coverage in obj.metadata.coverages.all():
+
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_coverages', obj.metadata.coverages.all())
+            for coverage in obj.cached_coverages:
                 if coverage.type == 'point':
                     return float(coverage.value["east"])
                 # TODO: this returns the box center, not the extent
@@ -459,86 +488,55 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 elif coverage.type == 'box':
                     return (float(coverage.value["eastlimit"]) +
                             float(coverage.value["westlimit"])) / 2
-        else:
-            return None
+        return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_north(self, obj):
         """Return resource coverage north bound if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            for coverage in obj.metadata.coverages.all():
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_coverages', obj.metadata.coverages.all())
+            for coverage in obj.cached_coverages:
                 if coverage.type == 'point':
                     return float(coverage.value["north"])
                 # TODO: This returns the box center, not the extent
                 elif coverage.type == 'box':
                     return (float(coverage.value["northlimit"]) +
                             float(coverage.value["southlimit"])) / 2
-        else:
-            return None
+        return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_northlimit(self, obj):
         """Return resource coverage north limit if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            # TODO: does not index properly if there are multiple coverages of the same type.
-            for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'box':
-                    return coverage.value["northlimit"]
-        else:
-            return None
+
+        return self._get_coverage_bounding_box_value(obj, "northlimit")
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_eastlimit(self, obj):
         """Return resource coverage east limit if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            # TODO: does not index properly if there are multiple coverages of the same type.
-            for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'box':
-                    return coverage.value["eastlimit"]
-        else:
-            return None
+
+        return self._get_coverage_bounding_box_value(obj, "eastlimit")
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_southlimit(self, obj):
         """Return resource coverage south limit if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            # TODO: does not index properly if there are multiple coverages of the same type.
-            for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'box':
-                    return coverage.value["southlimit"]
-        else:
-            return None
+
+        return self._get_coverage_bounding_box_value(obj, "southlimit")
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_westlimit(self, obj):
         """Return resource coverage west limit if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            # TODO: does not index properly if there are multiple coverages of the same type.
-            for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'box':
-                    return coverage.value["westlimit"]
-        else:
-            return None
+
+        return self._get_coverage_bounding_box_value(obj, "westlimit")
 
     # TODO: time coverages do not specify timezone, and timezone support is active.
     # TODO: Why aren't time coverages specified as Django DateTime objects?
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_start_date(self, obj):
         """Return resource coverage start date if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            for coverage in obj.metadata.coverages.all():
+
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_coverages', obj.metadata.coverages.all())
+            for coverage in obj.cached_coverages:
                 if coverage.type == 'period':
                     clean_date = coverage.value["start"][:10]
                     start_date = ""
@@ -559,18 +557,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                                      .format(start_date, obj.short_id, str(obj)))
                         return None
                     return start_date_object
-        else:
-            return None
+        return None
 
     # TODO: time coverages do not specify timezone, and timezone support is active.
     # TODO: Why aren't time coverages specified as Django DateTime objects?
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_end_date(self, obj):
         """Return resource coverage end date if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            for coverage in obj.metadata.coverages.all():
+
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_coverages', obj.metadata.coverages.all())
+            for coverage in obj.cached_coverages:
                 if coverage.type == 'period' and 'end' in coverage.value:
                     clean_date = coverage.value["end"][:10]
                     end_date = ""
@@ -591,47 +588,38 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                                      .format(end_date, obj.short_id, str(obj)))
                         return None
                     return end_date_object
-        else:
-            return None
+        return None
 
     def prepare_storage_type(self, obj):
         return obj.storage_type
 
     def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.formats is not None:
-            return [format.value.strip() for format in obj.metadata.formats.all()]
-        else:
-            return []
+        if self._has_metadata(obj):
+            return [frmt.value.strip() for frmt in obj.metadata.formats.all()]
+        return []
 
     def prepare_identifier(self, obj):
         """Return metadata identifiers if metadata exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.identifiers is not None:
+        if self._has_metadata(obj):
             return [identifier.name.strip() for identifier in obj.metadata.identifiers.all()]
-        else:
-            return []
+        return []
 
     def prepare_language(self, obj):
         """Return resource language if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.language is not None:
-            return obj.metadata.language.code.strip()
-        else:
-            return None
+        if self._has_metadata(obj):
+            language = obj.metadata.language
+            if language is not None and language.code is None:
+                return obj.metadata.language.code.strip()
+        return None
 
     def prepare_relation(self, obj):
         """Return resource relations if exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.relations is not None:
-            return [relation.value.strip() for relation in obj.metadata.relations.all()]
-        else:
-            return []
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_relations', obj.metadata.relations.all())
+            return [relation.value.strip() for relation in obj.cached_relations]
+
+        return []
 
     def prepare_resource_type(self, obj):
         """Resource type is verbose_name attribute of obj argument."""
@@ -639,16 +627,21 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_content_type(self, obj):
         """ register content types for both logical files and some MIME types """
+
+        self._cache_queryset(obj, 'content_types', get_content_types(obj))
+
         if obj.verbose_name == 'Composite Resource' or \
            obj.verbose_name == 'Generic Resource':
-            output = get_content_types(obj)[0]
+            output = obj.content_types[0]
             return list(output)
         else:
             return [obj.discovery_content_type]
 
     def prepare_content_exts(self, obj):
         """ index by file extension """
-        output = get_content_types(obj)[2]
+
+        self._cache_queryset(obj, 'content_types', get_content_types(obj))
+        output = obj.content_types[2]
         return output
 
     def prepare_comment(self, obj):
@@ -657,17 +650,19 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_owner_login(self, obj):
         """Return list of usernames that have ownership access to resource."""
+
         if hasattr(obj, 'raccess'):
-            return [owner.username for owner in obj.raccess.owners.all()]
-        else:
-            return []
+            self._cache_queryset(obj, 'cached_owners', obj.raccess.owners.all())
+            return [owner.username for owner in obj.cached_owners]
+        return []
 
     # TODO: should utilize name from user profile rather than from User field
     def prepare_owner(self, obj):
         """Return list of names of resource owners."""
         names = []
         if hasattr(obj, 'raccess'):
-            for owner in obj.raccess.owners.all():
+            self._cache_queryset(obj, 'cached_owners', obj.raccess.owners.all())
+            for owner in obj.cached_owners:
                 name = normalize_name(owner.first_name + ' ' + owner.last_name)
                 names.append(name)
         return names
@@ -678,20 +673,23 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         output0 = []
         output1 = []
         output2 = []
+
         if hasattr(obj, 'raccess'):
-            for owner in obj.raccess.owners.all():
+            self._cache_queryset(obj, 'cached_owners', obj.raccess.owners.all())
+            for owner in obj.cached_owners:
                 name = normalize_name(owner.first_name + ' ' + owner.last_name)
                 output0.append(name)
 
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            output1 = [normalize_name(creator.name)
-                       for creator in obj.metadata.creators.all()
-                       .exclude(name__isnull=True).exclude(name='')]
-            output2 = [normalize_name(contributor.name)
-                       for contributor in obj.metadata.contributors.all()
-                       .exclude(name__isnull=True).exclude(name='')]
+        if self._has_metadata(obj):
+            self._cache_queryset(obj, 'cached_creators', obj.metadata.creators.all())
+            self._cache_queryset(obj, 'cached_contributors', obj.metadata.contributors.all())
+            for creator in obj.cached_creators:
+                if creator.name is not None and creator.name != '':
+                    output1.append(normalize_name(creator.name))
+            for contributor in obj.cached_contributors:
+                if contributor.name is not None and contributor.name != '':
+                    output2.append(normalize_name(contributor.name))
+
         return list(set(output0 + output1 + output2))  # eliminate duplicates
 
     # TODO: These should probably be multi-value fields and pick up all types.
@@ -700,7 +698,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return geometry type if metadata exists, otherwise return [].
         TODO: there can be multiples of these now.
         """
-        for f in obj.geofeaturelogicalfile_set.all():
+
+        self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
+        for f in obj.cached_geofeature_logical_files:
             geometry_info = f.metadata.geometryinformation
             if geometry_info is not None:
                 return geometry_info.geometryType
@@ -711,7 +711,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return metadata field name if exists, otherwise return [].
         TODO: there can be multiples of these now.
         """
-        for f in obj.geofeaturelogicalfile_set.all():
+
+        self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
+        for f in obj.cached_geofeature_logical_files:
             field_info = f.metadata.fieldinformations.all().first()
             if field_info is not None and field_info.fieldName is not None:
                 return field_info.fieldName.strip()
@@ -722,7 +724,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return metadata field type if exists, otherwise return None.
         TODO: there can be multiples of these now.
         """
-        for f in obj.geofeaturelogicalfile_set.all():
+
+        self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
+        for f in obj.cached_geofeature_logical_files:
             field_info = f.metadata.fieldinformations.all().first()
             if field_info is not None and field_info.fieldType is not None:
                 return field_info.fieldType.strip()
@@ -732,7 +736,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         Return metadata field type code if exists, otherwise return [].
         """
-        for f in obj.geofeaturelogicalfile_set.all():
+
+        self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
+        for f in obj.cached_geofeature_logical_files:
             field_info = f.metadata.fieldinformations.all().first()
             if field_info is not None and field_info.fieldTypeCode is not None:
                 return field_info.fieldTypeCode.strip()
@@ -742,17 +748,22 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         Return metadata variable names if exists, otherwise return empty array.
         """
+
         variables = set()
-        for f in obj.netcdflogicalfile_set.all():
+        self._cache_queryset(obj, 'cached_netcdf_logical_files', obj.netcdflogicalfile_set.all())
+        for f in obj.cached_netcdf_logical_files:
             for v in f.metadata.variables.all():
                 if discoverable(v.name):
                     variables.add(v.name.strip())
-        for f in obj.timeserieslogicalfile_set.all():
+
+        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+        for f in obj.cached_timeseries_logical_files:
             for v in f.metadata.variables:
                 # TODO: inconsistent use of variable code and variable name
                 if discoverable(v.variable_name):
                     variables.add(v.variable_name.strip())
-        for f in obj.reftimeserieslogicalfile_set.all():
+        self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
+        for f in obj.cached_reftimeseries_logical_files:
             for v in f.metadata.variables:
                 # TODO: inconsistent use of variable code and variable name
                 if discoverable(v.name):
@@ -769,12 +780,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Variable type does not exist for referenced time series files.
         TODO: Deprecated. Not particularly useful as a search locator.
         """
+
         variable_types = set()
-        for f in obj.netcdflogicalfile_set.all():
+        self._cache_queryset(obj, 'cached_netcdf_logical_files', obj.netcdflogicalfile_set.all())
+        for f in obj.cached_netcdf_logical_files:
             for v in f.metadata.variables.all():
                 if discoverable(v.type):
                     variable_types.add(v.type.strip())
-        for f in obj.timeserieslogicalfile_set.all():
+
+        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+        for f in obj.cached_timeseries_logical_files:
             for v in f.metadata.variables:
                 if discoverable(v.variable_type):
                     variable_types.add(v.variable_type.strip())
@@ -785,8 +800,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return metadata variable shapes if exists, otherwise return empty array.
         Shape only exists for NetCDF resources.
         """
+
         variable_shapes = set()
-        for f in obj.netcdflogicalfile_set.all():
+        self._cache_queryset(obj, 'cached_netcdf_logical_files', obj.netcdflogicalfile_set.all())
+        for f in obj.cached_netcdf_logical_files:
             for v in f.metadata.variables.all():
                 if discoverable(v.shape):
                     variable_shapes.add(v.shape.strip())
@@ -804,8 +821,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return metadata variable speciations if exists, otherwise return empty array.
         Speciation only exists for the time series file type.
         """
+
         variable_speciations = set()
-        for f in obj.timeserieslogicalfile_set.all():
+        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+        for f in obj.cached_timeseries_logical_files:
             for v in f.metadata.variables:
                 if discoverable(v.speciation):
                     variable_speciations.add(v.speciation.strip())
@@ -817,12 +836,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Sites only exist for time series.
         TODO: inconsistent use of site name and site code
         """
+
         sites = set()
-        for f in obj.timeserieslogicalfile_set.all():
+        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+        for f in obj.cached_timeseries_logical_files:
             for s in f.metadata.sites:
                 if discoverable(s.site_name):
-                        sites.add(s.site_name.strip())
-        for f in obj.reftimeserieslogicalfile_set.all():
+                    sites.add(s.site_name.strip())
+        self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
+        for f in obj.cached_reftimeseries_logical_files:
             for s in f.metadata.sites:
                 if discoverable(s.name):
                     sites.add(s.name.strip())
@@ -833,12 +855,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return list of methods if exists, otherwise return empty array.
         Methods only exist for time series and referenced time series.
         """
+
         methods = set()
-        for f in obj.timeserieslogicalfile_set.all():
+        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+        for f in obj.cached_timeseries_logical_files:
             for s in f.metadata.methods:
                 if discoverable(s.method_description):
                     methods.add(s.method_description.strip())
-        for f in obj.reftimeserieslogicalfile_set.all():
+
+        self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
+        for f in obj.cached_reftimeseries_logical_files:
             for s in f.metadata.methods:
                 if discoverable(s.description):
                     methods.add(s.description.strip())
@@ -863,12 +889,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return list of sample mediums if exists, otherwise return empty array.
         Sample mediums only exist for time-series types.
         """
+
         mediums = set()
-        for f in obj.timeserieslogicalfile_set.all():
+        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+        for f in obj.cached_timeseries_logical_files:
             for v in f.metadata.time_series_results:
                 if discoverable(v.sample_medium):
                     mediums.add(v.sample_medium.strip())
-        for f in obj.reftimeserieslogicalfile_set.all():
+
+        self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
+        for f in obj.cached_reftimeseries_logical_files:
             for v in f.metadata.sample_mediums:
                 if discoverable(v):
                     mediums.add(v.strip())
@@ -880,8 +910,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Match both units name and units type in this field.
         TODO: Seriously consider blurring the distinction between units and variables during discovery.
         """
+
         units = set()
-        for f in obj.timeserieslogicalfile_set.all():
+
+        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+        for f in obj.cached_timeseries_logical_files:
             for v in f.metadata.time_series_results:
                 # TODO: inconsistent use of units name and units type
                 if discoverable(v.units_name):
@@ -893,8 +926,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return list of units types if exists, otherwise return empty array.
         TODO: Deprecated. In future, use "units" to refer to name and type.
         """
+
         units_types = set()
-        for f in obj.timeserieslogicalfile_set.all():
+        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+        for f in obj.cached_timeseries_logical_files:
             for v in f.metadata.time_series_results:
                 if discoverable(v.units_type):
                     units_types.add(v.units_type.strip())
@@ -907,6 +942,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_extra(self, obj):
         """ For extra metadata, include both key and value """
         extra = []
-        for key, value in list(obj.extra_metadata.items()):
+        for key, value in obj.extra_metadata.items():
             extra.append(key + ': ' + value)
         return extra
