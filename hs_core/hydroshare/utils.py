@@ -448,10 +448,10 @@ async def get_jsonld_from_geoconnex(relation):
     relative_id = relation.value.split("ref/").pop()
     collection = relative_id.split("/")[0]
     id = relative_id.split("/")[1]
-    async with aiohttp.ClientSession('https://reference.geoconnex.us/collections') as session:
-        params = {'f': 'jsonld', 'lang': 'en-US', 'skipGeometry': 'true'}
-        async with session.get(f"/{collection}/items/{id}",
-                                params=params) as resp:
+    url = f"https://reference.geoconnex.us/collections/{collection}/items/{id}?" \
+               "f=jsonld&lang=en-US&skipGeometry=true"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
             return await resp.json()
 
 
@@ -459,7 +459,9 @@ def update_geoconnex_texts():
     # Task to update Relations from Geoconnex API
     relations = GeospatialRelation.objects.all()
     for relation in relations:
-        response = asyncio.run(get_jsonld_from_geoconnex(relation))
+        # TODO: after python > 3.6 upgrade, we can use asyncio.run
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(get_jsonld_from_geoconnex(relation))
         relation.update_from_geoconnex_response(response)
 
 
