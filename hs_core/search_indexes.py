@@ -19,6 +19,7 @@ import re
 
 adjacent_caps = re.compile("[A-Z][A-Z]")
 
+
 def remove_whitespace(thing):
     intab = ""
     outtab = ""

@@ -3840,6 +3840,7 @@ class BaseResource(Page, AbstractResource):
         from hs_core.hydroshare import get_resource_by_shortkey
 
         replaced_by_resources = []
+
         def get_replaced_by(resource):
             replace_relation_meta = resource.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
             if replace_relation_meta is not None:
