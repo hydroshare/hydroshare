@@ -441,7 +441,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     if src_res.resource_type.lower() == "collectionresource":
         # clone contained_res list of original collection and add to new collection
         # note that new collection resource will not contain "deleted resources"
-        tgt_res.resources = src_res.resources.all()
+        tgt_res.resources.set(src_res.resources.all())
 
 
 async def get_jsonld_from_geoconnex(relation):

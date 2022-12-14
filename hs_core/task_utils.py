@@ -56,7 +56,7 @@ def _retrieve_job_id(job_name, res_id):
 
 
 def get_task_user_id(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return request.user.username
     return ""
 

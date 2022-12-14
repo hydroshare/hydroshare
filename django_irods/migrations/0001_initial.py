@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('username', models.CharField(max_length=255)),
                 ('zone', models.TextField()),
                 ('auth', models.TextField(verbose_name=b'Password')),
-                ('owner', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('owner', models.ForeignKey(on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'iRODS Environment',

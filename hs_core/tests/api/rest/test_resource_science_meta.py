@@ -440,7 +440,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "sharing_status": ["Public", "Discoverable"]
             },
             "toolicon": {
-                "value": "https://www.hydroshare.org/static/img/logo-sm.png"
+                "value": "https://www.hydroshare.org/static/static/img/logo-sm.png"
             },
             "apphomepageurl": {
                 "value": "https://mywebapp.com"
@@ -502,7 +502,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "sharing_status": ["Public", "Discoverable"]
             },
             "toolicon": {
-                "value": "https://www.hydroshare.org/static/img/logo-sm.png"
+                "value": "https://www.hydroshare.org/static/static/img/logo-sm.png"
             },
             "apphomepageurl": {
                 "value": "https://mywebapp.com"

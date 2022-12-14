@@ -9,8 +9,8 @@
     <link href="{% static 'css/modal-vue.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/hs-file-icons.css' %}" rel="stylesheet"/>
     <link rel='stylesheet' type='text/css' href="{% static 'css/vuetify.2.64.min.css' %}">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
-    integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
+    integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
     crossorigin=""/>
     <link rel="stylesheet" href="{% static 'css/Leaflet.fullscreen.min.css' %}" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
@@ -339,7 +339,7 @@
                     </li>
                 {% endif %}
                 <li id="content-type-separator" role="separator" class="divider"></li>
-                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" and not cm.raccess.published %}
+                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" and not cm.raccess.published_or_review_pending %}
                     {# ADD METADATA TO A FILE #}
                     <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
                         <i class="fa fa-plus icon-green" aria-hidden="true"></i>
@@ -967,12 +967,12 @@
         {# ======= Resource Specific ======= #}
 
         {% if site or extended_metadata_exists or res_add_metadata or resource_edit_mode %}
-            {% if cm.resource_type != "CompositeResource" and cm.resource_type != "CollectionResource" %}
+            {% if cm.resource_type == "ToolResource" %}
                 <div class="col-xs-12 content-block">
-                    <h3>Resource Specific</h3>
+                    <h3>Configuration</h3>
                     <div id="resourceSpecificTab">
                         <div class="row">
-                            {% if not resource_edit_mode or not cm.raccess.published_or_review_pending %}
+                            {% if not resource_edit_mode or cm.raccess.published_or_review_pending %}
                                 {% block extended_metadata %}{% endblock %}
                             {% else %}
                                 {% crispy metadata_form %}
@@ -1085,8 +1085,8 @@
 
     </script>
 
-    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
-        integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
+        integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg="
         crossorigin="">
     </script>
     <script src="{% static 'js/hs-vue/Leaflet.fullscreen.min.js' %}"></script>

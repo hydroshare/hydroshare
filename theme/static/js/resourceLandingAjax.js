@@ -5,6 +5,19 @@
 var radioPointSelector = 'input[type="radio"][value="point"]';
 var radioBoxSelector = 'input[type="radio"][value="box"]';
 
+function getErrorMessage(xhr) {
+    let errorMsg = JSON.stringify(xhr.responseText);
+    try {
+        let errorMessageJSON = JSON.parse(xhr.responseText);
+        if (errorMessageJSON.hasOwnProperty("error")) {
+            errorMsg = errorMessageJSON.error;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+    return errorMsg
+}
+
 function label_ajax_submit() {
     var el = $(this);
     var dataFormID = el.attr("data-form-id");
@@ -182,14 +195,14 @@ function metadata_update_ajax_submit(form_id){
                 // file type 'coverage' element gets updated for composite resource
                 if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     ((json_response.element_name.toLowerCase() === 'coverage' ||
-                    json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
+                    json_response.element_name.toLowerCase() === 'site') && resourceType === 'Resource')){
                     if (json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
                         // show/hide delete option for resource temporal coverage
                         setResourceTemporalCoverageDeleteOption();
 
-                        if(resourceType === 'Composite Resource' && json_response.has_logical_temporal_coverage) {
+                        if(resourceType === 'Resource' && json_response.has_logical_temporal_coverage) {
                              $("#btn-update-resource-temporal-coverage").show();
                         }
                         else {
@@ -200,13 +213,13 @@ function metadata_update_ajax_submit(form_id){
                     if (json_response.hasOwnProperty('spatial_coverage')) {
                         var spatialCoverage = json_response.spatial_coverage;
                         updateResourceSpatialCoverage(spatialCoverage);
-                        if(resourceType === 'Composite Resource' && json_response.has_logical_spatial_coverage) {
+                        if(resourceType === 'Resource' && json_response.has_logical_spatial_coverage) {
                             $("#btn-update-resource-spatial-coverage").show();
                         }
                         else {
                            $("#btn-update-resource-spatial-coverage").hide();
                         }
-                        if(resourceType === 'Composite Resource') {
+                        if(resourceType === 'Resource') {
                             // show/hide spatial coverage delete option for resource
                             setResourceSpatialCoverageDeleteOption();
                         }
@@ -331,23 +344,24 @@ function showCompletedMessage(json_response) {
                     manageAccessApp.$data.canBePublicDiscoverable = true;
                     let resourceType = RES_TYPE;
                     let promptMessage = "";
-                    if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
+                    if (resourceType === 'Resource')
                         promptMessage = "All required fields are completed. The resource can now be made discoverable " +
                             "or public. To permanently publish the resource and obtain a DOI, the resource " +
                             "must first be made public.";
                     else
-                        promptMessage = "All required fields are completed. The resource can now be made discoverable " +
-                            "or public.";
+                        promptMessage = "All required fields are completed. The " + resourceType.toLowerCase() +
+                            " can now be made discoverable or public.";
 
                     if (!metadata_update_ajax_submit.resourceSatusDisplayed) {
                         metadata_update_ajax_submit.resourceSatusDisplayed = true;
+                        const alertTitle = resourceType + " Status:"
                         if (json_response.hasOwnProperty('res_public_status')) {
                             if (json_response.res_public_status.toLowerCase() === "not public") {
                                 // if the resource is already public no need to show the following alert message
-                                customAlert("Resource Status:", promptMessage, "success", 8000);
+                                customAlert(alertTitle, promptMessage, "success", 8000);
                             }
                         } else {
-                            customAlert("Resource Status:", promptMessage, "success", 8000);
+                            customAlert(alertTitle, promptMessage, "success", 8000);
                         }
                     }
                     $("#missing-metadata-or-file:not(.persistent)").fadeOut();
@@ -892,7 +906,8 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
-            display_error_message('Folder Zipping Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Zipping Failed', errorMsg);
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
@@ -913,7 +928,8 @@ function zip_by_aggregation_file_ajax_submit(res_id, aggregationPath, zipFileNam
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
-            display_error_message('Zipping of Aggregation Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Zipping Failed', errorMsg);
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
@@ -940,7 +956,8 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite, unzi
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
-            display_error_message('File Unzipping Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Creation Failed', errorMsg);
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
@@ -963,9 +980,14 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
                 $('#create-folder-dialog').modal('hide');
                 $("#txtFolderName").val("");
             }
+            else {
+                $('#create-folder-dialog').modal('hide');
+            }
         },
         error: function(xhr, errmsg, err){
-            display_error_message('Folder Creation Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Creation Failed', errorMsg);
+            $('#create-folder-dialog').modal('hide');
         }
     });
 }
@@ -1126,7 +1148,8 @@ function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
             }
         },
         error: function(xhr, errmsg, err){
-            display_error_message('File/Folder Renaming Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('File/Folder Renaming Failed', errorMsg);
         }
     });
 }
@@ -1632,7 +1655,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         $("#id_name").val(spatialCoverage.name);
         if (spatialCoverage.type === 'point') {
             $point_radio.attr('checked', 'checked');
-            if(resourceType !== "Composite Resource"){
+            if(resourceType !== "Resource"){
                 $box_radio.attr('disabled', true);
                 $box_radio.parent().closest("label").addClass("text-muted");
             }
@@ -1652,7 +1675,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         }
         else { //coverage type is 'box'
             $box_radio.attr('checked', 'checked');
-            if(resourceType !== "Composite Resource"){
+            if(resourceType !== "Resource"){
                 $point_radio.attr('disabled', true);
                 $point_radio.parent().closest("label").addClass("text-muted");
             }

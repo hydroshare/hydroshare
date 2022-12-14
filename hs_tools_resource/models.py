@@ -6,7 +6,6 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.http import HttpResponse
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -20,7 +19,8 @@ from hs_file_types.utils import get_SupportedAggTypes_choices
 class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
 
-    discovery_content_type = 'Web App'  # used during discovery
+    # used during discovery as well as in all other places in UI where resource type is displayed
+    display_name = 'App Connector'
 
     class Meta:
         proxy = True
@@ -57,7 +57,7 @@ class ToolResource(BaseResource):
         return ToolMetaData
 
     @property
-    def can_be_published(self):
+    def can_be_submitted_for_metadata_review(self):
         return False
 
 
@@ -471,8 +471,7 @@ class ToolIcon(AbstractMetaDataElement):
         except Exception as ex:
             raise ValidationError("Failed to read data from given url: {0}".format(str(ex)))
         if response.status_code != 200:
-            raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
-                               format(response.status_code))
+            raise ValidationError("Failed to read data from given url. HTTP_code {0}".format(response.status_code))
         if 'Transfer-Encoding' in response.headers and response.headers["Transfer-Encoding"] == "chunked":
             image_size_mb = len(response.content)
         else:

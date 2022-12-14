@@ -9,6 +9,7 @@ import json
 
 from celery.signals import task_postrun
 from datetime import datetime, timedelta, date
+from django.utils import timezone
 from xml.etree import ElementTree
 
 import requests
@@ -16,15 +17,15 @@ from celery import shared_task
 from celery.schedules import crontab
 from django.conf import settings
 from django.core.mail import send_mail
-from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
-from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag
+from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag, current_site_url
 from hydroshare.hydrocelery import app as celery_app
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
-from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref
+from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref, \
+    get_resource_doi
 from hs_core.task_utils import get_or_create_task_notification
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
@@ -71,14 +72,15 @@ class FileOverrideException(Exception):
         super(FileOverrideException, self).__init__(self, error_message)
 
 
-@celery_app.on_after_configure.connect
+@celery_app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
     if (hasattr(settings, 'DISABLE_PERIODIC_TASKS') and settings.DISABLE_PERIODIC_TASKS):
         logger.debug("Periodic tasks are disabled in SETTINGS")
     else:
         sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
-        sender.add_periodic_task(crontab(minute=0, hour=0), manage_task_nightly.s())
         sender.add_periodic_task(crontab(minute=0, hour=1, day_of_month=1), update_from_geoconnex_task.s())
+        sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
+        sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s())
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
                                     send_over_quota_emails.s())
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
@@ -116,8 +118,8 @@ def nightly_zips_cleanup():
 
 
 @celery_app.task(ignore_result=True)
-def manage_task_nightly():
-    # The nightly running task do DOI activation check
+def manage_task_hourly():
+    # The hourly running task do DOI activation check
 
     # Check DOI activation on failed and pending resources and send email.
     msg_lst = []
@@ -182,11 +184,13 @@ def manage_task_nightly():
                                "data deposited since {pub_date}.".format(res_doi=act_doi,
                                                                          pub_date=pub_date))
                 logger.debug(response.content)
+            else:
+                notify_owners_of_publication_success(res)
         else:
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))
 
-    if msg_lst:
+    if msg_lst and not settings.DISABLE_TASK_EMAILS:
         email_msg = '\n'.join(msg_lst)
         subject = 'Notification of pending DOI deposition/activation of published resources'
         # send email for people monitoring and follow-up as needed
@@ -197,6 +201,66 @@ def manage_task_nightly():
 def update_from_geoconnex_task():
     # Task to update from Geoconnex API
     utils.update_geoconnex_texts()
+
+
+@celery_app.task(ignore_result=True)
+def nightly_metadata_review_reminder():
+    # The daiy check for resources with active metadata review that has been pending for more than 48hrs
+
+    if settings.DISABLE_TASK_EMAILS:
+        return
+
+    pending_resources = BaseResource.objects.filter(raccess__review_pending=True)
+    for res in pending_resources:
+        review_date = res.metadata.dates.all().filter(type='review_started').first()
+        if review_date:
+            review_date = review_date.start_date
+            cutoff_date = timezone.now() - timedelta(days=2)
+            if review_date < cutoff_date:
+                res_url = current_site_url() + res.get_absolute_url()
+                subject = f"Metadata review pending since " \
+                    f"{ review_date.strftime('%m/%d/%Y') } for { res.metadata.title }"
+                email_msg = f'''
+                Metadata review for <a href="{ res_url }">{ res_url }</a>
+                was requested at { review_date.strftime("%Y-%m-%d %H:%M:%S") }.
+
+                This is a reminder to review and approve/reject the publication request.
+                '''
+                recipients = [settings.DEFAULT_FROM_EMAIL]
+                # If we have gone 4 days, will also cc support email
+                if review_date < cutoff_date - timedelta(days=2):
+                    recipients.append(settings.DEFAULT_SUPPORT_EMAIL)
+                send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, recipients)
+
+
+def notify_owners_of_publication_success(resource):
+    """
+    Sends email notification to resource owners on publication success
+
+    :param resource: a resource that has been published
+    :return:
+    """
+    res_url = current_site_url() + resource.get_absolute_url()
+
+    email_msg = f'''Dear Resource Owner,
+    <p>The following resource that you submitted for publication:
+    <a href="{ res_url }">
+    { res_url }</a>
+    has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
+
+    <p>The publication request was processed by <a href="https://www.crossref.org/">Crossref.org</a>.
+    The Digital Object Identifier (DOI) for your resource is:
+    <a href="{ get_resource_doi(resource.short_id) }">https://doi.org/10.4211/hs.{ resource.short_id }</a></p>
+
+    <p>Thank you,</p>
+    <p>The HydroShare Team</p>
+    '''
+    if not settings.DISABLE_TASK_EMAILS:
+        send_mail(subject="HydroShare resource metadata review completed",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[o.email for o in resource.raccess.owners.all()])
 
 
 @celery_app.task(ignore_result=True)
@@ -244,7 +308,7 @@ def send_over_quota_emails():
 
                 msg_str += '\n\nHydroShare Support'
                 subject = 'Quota warning'
-                if settings.DEBUG or "www.hydroshare.org" not in Site.objects.get_current().domain:
+                if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
                     logger.info("quota warning email not sent out on debug server but logged instead: "
                                 "{}".format(msg_str))
                 else:
@@ -482,7 +546,7 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new collection will not contain "deleted resources"
-            new_res.resources = ori_res.resources.all()
+            new_res.resources.set(ori_res.resources.all())
 
         # create bag for the new resource
         create_bag(new_res)
@@ -531,7 +595,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new version collection will not contain "deleted resources"
-            new_res.resources = ori_res.resources.all()
+            new_res.resources.set(ori_res.resources.all())
 
         # create bag for the new resource
         create_bag(new_res)

@@ -398,7 +398,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
-    metadata = models.OneToOneField(GeoFeatureFileMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(GeoFeatureFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
     data_type = "GeographicFeature"
 
     @classmethod

@@ -53,7 +53,7 @@
     {# Title #}
     {% with metadata=res.metadata %}
         <td>
-            <strong><a href="{{ res.absolute_url }}">{{ res.title|escape }}</a>
+            <strong><a href="{{ res.absolute_url }}">{{ metadata.title|escape }}</a>
             </strong>
         </td>
         {# First Author #}
@@ -62,7 +62,7 @@
         {# Date Created #}
         <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
         {# Last Modified #}
-        {% with updated=res.updated %}
+        {% with updated=res.last_updated %}
             <td>{{ updated|date:"M d, Y" }} at {{ updated|time }}</td>
             <td>
                 {% for kw in metadata.subjects.all %}

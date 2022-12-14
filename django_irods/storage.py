@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 from django.utils.deconstruct import deconstructible
 from django.conf import settings
 from django.core.files.storage import Storage
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.exceptions import ValidationError
 
 from django_irods import icommands
@@ -468,3 +468,13 @@ class IrodsStorage(Storage):
         timestamp = float(stdout.split("\n", 1)[0])
         utc_dt = datetime.fromtimestamp(timestamp, pytz.utc)
         return utc_dt
+
+    def isFile(self, path):
+        try:
+            self.listdir(path)
+            return False
+        except SessionException:
+            return True
+
+    def isDir(self, path):
+        return not self.isFile(path)

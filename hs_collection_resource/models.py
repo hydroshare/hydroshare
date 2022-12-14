@@ -10,7 +10,8 @@ class CollectionResource(BaseResource):
 
     objects = ResourceManager('CollectionResource')
 
-    discovery_content_type = 'Collection'  # used during discovery
+    # used during discovery as well as in all other places in UI where resource type is displayed
+    display_name = 'Collection'
 
     class Meta:
         proxy = True
@@ -50,7 +51,7 @@ class CollectionResource(BaseResource):
         return not self.resources.all().filter(raccess__published=False).exists()
 
     @property
-    def can_be_published(self):
+    def can_be_submitted_for_metadata_review(self):
         if self.raccess.published:
             return False
 
@@ -74,9 +75,9 @@ processor_for(CollectionResource)(resource_processor)
 
 class CollectionDeletedResource(models.Model):
     resource_title = models.TextField(null=False, blank=False)
-    deleted_by = models.ForeignKey(User)
+    deleted_by = models.ForeignKey(User, on_delete=models.CASCADE)
     date_deleted = models.DateTimeField(auto_now_add=True)
-    collection = models.ForeignKey(BaseResource)
+    collection = models.ForeignKey(BaseResource, on_delete=models.CASCADE)
     resource_id = models.CharField(max_length=32)
     resource_type = models.CharField(max_length=50)
     resource_owners = models.ManyToManyField(User, related_name='collectionDeleted')

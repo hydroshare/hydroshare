@@ -5,6 +5,13 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 
 
+def set_creator_contributor_active_user_default(apps, schema_editor):
+    Creator = apps.get_model("hs_core", "Creator")
+    Contributor = apps.get_model("hs_core", "Contributor")
+    Creator.objects.update(is_active_user=False)
+    Contributor.objects.update(is_active_user=False)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -22,4 +29,7 @@ class Migration(migrations.Migration):
             name='is_active_user',
             field=models.BooleanField(default=False),
         ),
+        migrations.RunSQL("ALTER TABLE hs_core_creator ALTER COLUMN is_active_user SET DEFAULT FALSE;"),
+        migrations.RunSQL("ALTER TABLE hs_core_contributor ALTER COLUMN is_active_user SET DEFAULT FALSE;"),
+        migrations.RunPython(code=set_creator_contributor_active_user_default, reverse_code=migrations.RunPython.noop)
     ]

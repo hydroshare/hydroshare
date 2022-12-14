@@ -27,7 +27,8 @@ logger = logging.getLogger(__name__)
 class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
-    discovery_content_type = 'Composite'  # used during discovery
+    # used during discovery as well as in all other places in UI where resource type is displayed
+    display_name = 'Resource'
 
     class Meta:
         verbose_name = 'Composite Resource'
@@ -125,9 +126,9 @@ class CompositeResource(BaseResource):
         return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
 
     @property
-    def can_be_published(self):
+    def can_be_submitted_for_metadata_review(self):
         # resource level metadata check
-        if not super(CompositeResource, self).can_be_published:
+        if not super(CompositeResource, self).can_be_submitted_for_metadata_review:
             return False
 
         # logical file level metadata check
@@ -495,14 +496,14 @@ class CompositeResource(BaseResource):
 
     def supports_rename_path(self, src_full_path, tgt_full_path):
         """checks if file/folder rename/move is allowed
-        :param  src_full_path: name of the file/folder path to be renamed
-        :param  tgt_full_path: new name for file/folder path
+        :param  src_full_path: name of the file/folder storage path to be renamed (path starts with resource id)
+        :param  tgt_full_path: new name for file/folder storage path (path starts with resource id)
         :return True or False
         """
 
         if __debug__:
-            assert(src_full_path.startswith(self.file_path))
-            assert(tgt_full_path.startswith(self.file_path))
+            assert src_full_path.startswith(self.file_path)
+            assert tgt_full_path.startswith(self.file_path)
 
         # need to find out which of the following actions the user is trying to do:
         # renaming a file
@@ -513,33 +514,31 @@ class CompositeResource(BaseResource):
         is_moving_file = False
         is_moving_folder = False
 
+        if tgt_full_path == self.file_path:
+            # at the root of the resource all file operations are allowed
+            return True
+
         istorage = self.get_irods_storage()
+        scr_base_name = os.path.basename(src_full_path)
+        src_dir_path = os.path.dirname(src_full_path)
+        tgt_dir_path = os.path.dirname(tgt_full_path)
 
-        tgt_folder, tgt_file_name = os.path.split(tgt_full_path)
-        _, tgt_ext = os.path.splitext(tgt_file_name)
-        if tgt_ext:
-            tgt_file_dir = os.path.dirname(tgt_full_path)
-        else:
-            tgt_file_dir = tgt_full_path
-
-        src_folder, src_file_name = os.path.split(src_full_path)
-        _, src_ext = os.path.splitext(src_file_name)
-        if src_ext and tgt_ext:
-            if src_file_name != tgt_file_name:
-                is_renaming_file = True
-            else:
+        if istorage.isFile(src_full_path):
+            if istorage.exists(tgt_full_path) or tgt_full_path.endswith(scr_base_name):
                 is_moving_file = True
-        elif src_ext:
-            is_moving_file = True
-        elif not istorage.exists(tgt_file_dir):
-            src_base_dir = os.path.dirname(src_full_path)
-            tgt_base_dir = os.path.dirname(tgt_full_path)
-            if src_base_dir == tgt_base_dir:
+                if tgt_full_path.endswith(scr_base_name):
+                    tgt_dir_path = os.path.dirname(tgt_full_path)
+                else:
+                    tgt_dir_path = tgt_full_path
+            else:
+                is_renaming_file = True
+        else:
+            # src path is a directory
+            if src_dir_path == tgt_dir_path:
                 # renaming folder - no restriction
                 return True
-            is_moving_folder = True
-        else:
-            is_moving_folder = True
+            else:
+                is_moving_folder = True
 
         def check_src_aggregation(src_aggr):
             """checks if the aggregation at the source allows file rename/move action"""
@@ -556,7 +555,7 @@ class CompositeResource(BaseResource):
             if check_src_aggregation(src_aggr):
                 # check target
                 if is_moving_file:
-                    tgt_aggr = self.get_folder_aggregation_in_path(dir_path=tgt_file_dir)
+                    tgt_aggr = self.get_folder_aggregation_in_path(dir_path=tgt_dir_path)
                     if tgt_aggr is not None:
                         if src_aggr is None:
                             return tgt_aggr.supports_resource_file_move
@@ -764,10 +763,12 @@ class CompositeResource(BaseResource):
                 return True
         return False
 
-    @staticmethod
-    def is_path_folder(path):
-        _, ext = os.path.splitext(path)
-        return ext == ''
+    def is_path_folder(self, path):
+        istorage = self.get_irods_storage()
+        if not path.startswith(self.file_path):
+            path = os.path.join(self.file_path, path)
+        return istorage.isDir(path)
+
 
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed

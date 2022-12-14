@@ -16,9 +16,9 @@ from hs_access_control.models.privilege import PrivilegeCodes
 
 register = template.Library()
 
-RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Composite Resource",
-                                     "CollectionResource": "Collection Resource",
-                                     "ToolResource": "Web App Resource"
+RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Resource",
+                                     "CollectionResource": "Collection",
+                                     "ToolResource": "App Connector"
                                      }
 
 
@@ -99,9 +99,10 @@ def published_date(res_obj):
 
 @register.filter
 def resource_type(content):
-    if content.resource_type in RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS:
-        return RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS[content.resource_type]
-    return content.get_content_model()._meta.verbose_name
+    content_model = content.get_content_model()
+    if content_model.resource_type in RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS:
+        return RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS[content_model.resource_type]
+    return content_model._meta.verbose_name
 
 
 @register.filter
@@ -141,7 +142,7 @@ def contact(content):
     if not content:
         return ''
 
-    if not content.is_authenticated():
+    if not content.is_authenticated:
         content = "Anonymous"
     elif content.first_name:
         if content.userprofile.middle_name:
@@ -170,7 +171,7 @@ def best_name(content):
     each of the functions specified by the RICHTEXT_FILTERS setting.
     """
 
-    if not content.is_authenticated():
+    if not content.is_authenticated:
         content = "Anonymous"
     elif content.first_name:
         if content.userprofile.middle_name:
