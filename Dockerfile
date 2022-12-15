@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:pip-mods-121522
+FROM hydroshare/hs_docker_base:f33c7a78276388a4b807fd4d208db38e6e886b4d
 
 # Set the locale. TODO - remove once we have a better alternative worked out
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
