@@ -1105,6 +1105,14 @@ class Relation(AbstractRelation):
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.TextField()
 
+    @classmethod
+    def create(cls, **kwargs):
+        return super(Relation, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        return super(Relation, cls).update(element_id, **kwargs)
+
     def rdf_triples(self, subject, graph):
         relation_node = BNode()
         graph.add((subject, self.get_class_term(), relation_node))
@@ -1137,6 +1145,14 @@ class GeospatialRelation(AbstractRelation):
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.TextField()
     text = models.TextField(max_length=100)
+
+    @classmethod
+    def create(cls, **kwargs):
+        return super(GeospatialRelation, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        return super(GeospatialRelation, cls).update(element_id, **kwargs)
 
     def rdf_triples(self, subject, graph):
         relation_node = BNode()
