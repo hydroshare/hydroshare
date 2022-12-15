@@ -455,10 +455,12 @@ async def get_jsonld_from_geoconnex(relation):
             return await resp.json()
 
 
-def update_geoconnex_texts():
+def update_geoconnex_texts(relations=None):
     # Task to update Relations from Geoconnex API
-    relations = GeospatialRelation.objects.all()
+    if not relations:
+        relations = GeospatialRelation.objects.all()
     for relation in relations:
+        print(f"CHECKING RELATION '{relation.text}'")
         # TODO: after python > 3.6 upgrade, we can use asyncio.run
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(get_jsonld_from_geoconnex(relation))

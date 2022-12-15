@@ -33,8 +33,8 @@ class Command(BaseCommand):
                 relations = resource.metadata.geospatialrelations.all()
                 if relations:
                     for relation in relations:
-                        print(f"CHECKING RELATION '{relation.text}' FOR RESOURCE '{rid}', ")
-                        relation.check_text()
+                        print(f"CHECKING RELATIONS IN RESOURCE '{rid}': ")
+                    update_geoconnex_texts(relations)
                 else:
                     print(f"RESOURCE {rid} HAS NO GEOSPATIAL RELATIONS")
 
