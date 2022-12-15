@@ -623,8 +623,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return []
 
     def prepare_resource_type(self, obj):
-        """Resource type is verbose_name attribute of obj argument."""
-        return obj.verbose_name
+        """Resource type is display_name attribute of obj argument."""
+        content_model = obj.get_content_model()
+        return content_model.display_name
 
     def prepare_content_type(self, obj):
         """ register content types for both logical files and some MIME types """

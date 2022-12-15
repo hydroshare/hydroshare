@@ -339,7 +339,7 @@
                     </li>
                 {% endif %}
                 <li id="content-type-separator" role="separator" class="divider"></li>
-                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" and not cm.raccess.published %}
+                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" and not cm.raccess.published_or_review_pending %}
                     {# ADD METADATA TO A FILE #}
                     <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
                         <i class="fa fa-plus icon-green" aria-hidden="true"></i>
@@ -967,9 +967,9 @@
         {# ======= Resource Specific ======= #}
 
         {% if site or extended_metadata_exists or res_add_metadata or resource_edit_mode %}
-            {% if cm.resource_type != "CompositeResource" and cm.resource_type != "CollectionResource" %}
+            {% if cm.resource_type == "ToolResource" %}
                 <div class="col-xs-12 content-block">
-                    <h3>Resource Specific</h3>
+                    <h3>Configuration</h3>
                     <div id="resourceSpecificTab">
                         <div class="row">
                             {% if not resource_edit_mode or cm.raccess.published_or_review_pending %}

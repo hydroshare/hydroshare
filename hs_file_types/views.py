@@ -104,7 +104,7 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
         return JsonResponse(response_data, status=status.HTTP_401_UNAUTHORIZED)
 
     if res.resource_type != "CompositeResource":
-        err_msg = "Aggregation type can be set only for files in composite resource."
+        err_msg = "Aggregation type can be set only for files in a resource."
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -441,7 +441,7 @@ def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
 
     res = aggregation.resource
     if res.resource_type != "CompositeResource":
-        err_msg = "Aggregation type can be deleted only in composite resource."
+        err_msg = "Aggregation type can be deleted only in a resource."
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -516,7 +516,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
 
     res = aggregation.resource
     if res.resource_type != "CompositeResource":
-        err_msg = "Aggregation type can be deleted only in composite resource."
+        err_msg = "Aggregation type can be deleted only in a resource."
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1524,10 +1524,10 @@ def _validate_model_aggregation_api_request(request, resource_id, aggregation_pa
         needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
         raises_exception=False)
     if not authorized:
-        raise PermissionDenied("You don't have permission to edit this resource")
+        raise PermissionDenied("You don't have permission to edit this.")
 
     if resource.resource_type != "CompositeResource":
-        raise BadRequestException(f"Specified resource:{resource_id} is not a composite resource")
+        raise BadRequestException(f"Specified type:{resource_id} is not a resource.")
 
     # validate aggregation_path
     try:
