@@ -3536,7 +3536,8 @@ class BaseResource(Page, AbstractResource):
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
-    discovery_content_type = 'Generic Resource'  # used during discovery
+    # used during discovery as well as in all other places in UI where resource type is displayed
+    display_name = 'Generic'
 
     class Meta:
         """Define meta properties for BaseResource model."""
@@ -3769,8 +3770,8 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def discovery_content_type(self):
-        """Return verbose name of content type."""
-        return self.get_content_model().discovery_content_type
+        """Return name used for the content type in discovery/solr search."""
+        return self.get_content_model().display_name
 
     @property
     def can_be_submitted_for_metadata_review(self):
@@ -4322,7 +4323,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         missing_recommended_elements = []
         if not self.funding_agencies.count():
             missing_recommended_elements.append('Funding Agency')
-        if not self.resource.readme_file:
+        if not self.resource.readme_file and self.resource.resource_type == "CompositeResource":
             missing_recommended_elements.append('Readme file containing variables, '
                                                 'abbreviations/acronyms, and non-standard file formats')
         if not self.coverages.count():

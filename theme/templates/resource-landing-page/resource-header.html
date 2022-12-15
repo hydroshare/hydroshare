@@ -99,12 +99,12 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Resource type:</th>
+                    <th>Type:</th>
                     <td>{{ cm|resource_type }}</td>
                 </tr>
                 <tr>
                     <th>Storage:</th>
-                    <td>The size of this resource is {{ cm.size|filesizeformat }}</td>
+                    <td>The size of this {{ cm|resource_type|lower }} is {{ cm.size|filesizeformat }}</td>
                 </tr>
                 <tr>
                     <th>Created:</th>
