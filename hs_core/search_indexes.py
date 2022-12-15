@@ -104,7 +104,7 @@ def get_content_types(res):
         These include content types of logical files, as well as the generic
         content types 'Document', 'Spreadsheet', 'Presentation'.
 
-        This is only meaningful for Generic or Composite resources.
+        This is only meaningful for Composite resources.
     """
 
     resource = res.get_content_model()  # enable full logical file interface
@@ -631,8 +631,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         self._cache_queryset(obj, 'content_types', get_content_types(obj))
 
-        if obj.verbose_name == 'Composite Resource' or \
-           obj.verbose_name == 'Generic Resource':
+        if obj.resource_type == 'CompositeResource':
             output = obj.content_types[0]
             return list(output)
         else:
@@ -699,12 +698,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return geometry type if metadata exists, otherwise return [].
         TODO: there can be multiples of these now.
         """
-
-        self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
-        for f in obj.cached_geofeature_logical_files:
-            geometry_info = f.metadata.geometryinformation
-            if geometry_info is not None:
-                return geometry_info.geometryType
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
+            for f in obj.cached_geofeature_logical_files:
+                geometry_info = f.metadata.geometryinformation
+                if geometry_info is not None:
+                    return geometry_info.geometryType
         return None
 
     def prepare_field_name(self, obj):
@@ -713,11 +712,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         TODO: there can be multiples of these now.
         """
 
-        self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
-        for f in obj.cached_geofeature_logical_files:
-            field_info = f.metadata.fieldinformations.all().first()
-            if field_info is not None and field_info.fieldName is not None:
-                return field_info.fieldName.strip()
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
+            for f in obj.cached_geofeature_logical_files:
+                field_info = f.metadata.fieldinformations.all().first()
+                if field_info is not None and field_info.fieldName is not None:
+                    return field_info.fieldName.strip()
         return None
 
     def prepare_field_type(self, obj):
@@ -725,24 +725,24 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return metadata field type if exists, otherwise return None.
         TODO: there can be multiples of these now.
         """
-
-        self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
-        for f in obj.cached_geofeature_logical_files:
-            field_info = f.metadata.fieldinformations.all().first()
-            if field_info is not None and field_info.fieldType is not None:
-                return field_info.fieldType.strip()
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
+            for f in obj.cached_geofeature_logical_files:
+                field_info = f.metadata.fieldinformations.all().first()
+                if field_info is not None and field_info.fieldType is not None:
+                    return field_info.fieldType.strip()
         return None
 
     def prepare_field_type_code(self, obj):
         """
         Return metadata field type code if exists, otherwise return [].
         """
-
-        self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
-        for f in obj.cached_geofeature_logical_files:
-            field_info = f.metadata.fieldinformations.all().first()
-            if field_info is not None and field_info.fieldTypeCode is not None:
-                return field_info.fieldTypeCode.strip()
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_geofeature_logical_files', obj.geofeaturelogicalfile_set.all())
+            for f in obj.cached_geofeature_logical_files:
+                field_info = f.metadata.fieldinformations.all().first()
+                if field_info is not None and field_info.fieldTypeCode is not None:
+                    return field_info.fieldTypeCode.strip()
         return None
 
     def prepare_variable(self, obj):
@@ -751,28 +751,29 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
 
         variables = set()
-        self._cache_queryset(obj, 'cached_netcdf_logical_files', obj.netcdflogicalfile_set.all())
-        for f in obj.cached_netcdf_logical_files:
-            for v in f.metadata.variables.all():
-                if discoverable(v.name):
-                    variables.add(v.name.strip())
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_netcdf_logical_files', obj.netcdflogicalfile_set.all())
+            for f in obj.cached_netcdf_logical_files:
+                for v in f.metadata.variables.all():
+                    if discoverable(v.name):
+                        variables.add(v.name.strip())
 
-        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
-        for f in obj.cached_timeseries_logical_files:
-            for v in f.metadata.variables:
-                # TODO: inconsistent use of variable code and variable name
-                if discoverable(v.variable_name):
-                    variables.add(v.variable_name.strip())
-        self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
-        for f in obj.cached_reftimeseries_logical_files:
-            for v in f.metadata.variables:
-                # TODO: inconsistent use of variable code and variable name
-                if discoverable(v.name):
-                    variables.add(v.name.strip())
-        for f in obj.georasterlogicalfile_set.all():
-            for b in f.metadata.bandInformations:
-                if discoverable(b.variableName):
-                    variables.add(b.variableName)
+            self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+            for f in obj.cached_timeseries_logical_files:
+                for v in f.metadata.variables:
+                    # TODO: inconsistent use of variable code and variable name
+                    if discoverable(v.variable_name):
+                        variables.add(v.variable_name.strip())
+            self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
+            for f in obj.cached_reftimeseries_logical_files:
+                for v in f.metadata.variables:
+                    # TODO: inconsistent use of variable code and variable name
+                    if discoverable(v.name):
+                        variables.add(v.name.strip())
+            for f in obj.georasterlogicalfile_set.all():
+                for b in f.metadata.bandInformations:
+                    if discoverable(b.variableName):
+                        variables.add(b.variableName)
         return list(variables)
 
     def prepare_variable_type(self, obj):
@@ -783,17 +784,18 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
 
         variable_types = set()
-        self._cache_queryset(obj, 'cached_netcdf_logical_files', obj.netcdflogicalfile_set.all())
-        for f in obj.cached_netcdf_logical_files:
-            for v in f.metadata.variables.all():
-                if discoverable(v.type):
-                    variable_types.add(v.type.strip())
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_netcdf_logical_files', obj.netcdflogicalfile_set.all())
+            for f in obj.cached_netcdf_logical_files:
+                for v in f.metadata.variables.all():
+                    if discoverable(v.type):
+                        variable_types.add(v.type.strip())
 
-        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
-        for f in obj.cached_timeseries_logical_files:
-            for v in f.metadata.variables:
-                if discoverable(v.variable_type):
-                    variable_types.add(v.variable_type.strip())
+            self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+            for f in obj.cached_timeseries_logical_files:
+                for v in f.metadata.variables:
+                    if discoverable(v.variable_type):
+                        variable_types.add(v.variable_type.strip())
         return list(variable_types)
 
     def prepare_variable_shape(self, obj):
@@ -803,11 +805,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
 
         variable_shapes = set()
-        self._cache_queryset(obj, 'cached_netcdf_logical_files', obj.netcdflogicalfile_set.all())
-        for f in obj.cached_netcdf_logical_files:
-            for v in f.metadata.variables.all():
-                if discoverable(v.shape):
-                    variable_shapes.add(v.shape.strip())
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_netcdf_logical_files', obj.netcdflogicalfile_set.all())
+            for f in obj.cached_netcdf_logical_files:
+                for v in f.metadata.variables.all():
+                    if discoverable(v.shape):
+                        variable_shapes.add(v.shape.strip())
         return list(variable_shapes)
 
     def prepare_variable_descriptive_name(self, obj):
@@ -824,11 +827,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
 
         variable_speciations = set()
-        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
-        for f in obj.cached_timeseries_logical_files:
-            for v in f.metadata.variables:
-                if discoverable(v.speciation):
-                    variable_speciations.add(v.speciation.strip())
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+            for f in obj.cached_timeseries_logical_files:
+                for v in f.metadata.variables:
+                    if discoverable(v.speciation):
+                        variable_speciations.add(v.speciation.strip())
         return list(variable_speciations)
 
     def prepare_site(self, obj):
@@ -839,16 +843,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
 
         sites = set()
-        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
-        for f in obj.cached_timeseries_logical_files:
-            for s in f.metadata.sites:
-                if discoverable(s.site_name):
-                    sites.add(s.site_name.strip())
-        self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
-        for f in obj.cached_reftimeseries_logical_files:
-            for s in f.metadata.sites:
-                if discoverable(s.name):
-                    sites.add(s.name.strip())
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+            for f in obj.cached_timeseries_logical_files:
+                for s in f.metadata.sites:
+                    if discoverable(s.site_name):
+                        sites.add(s.site_name.strip())
+            self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
+            for f in obj.cached_reftimeseries_logical_files:
+                for s in f.metadata.sites:
+                    if discoverable(s.name):
+                        sites.add(s.name.strip())
         return list(sites)
 
     def prepare_method(self, obj):
@@ -858,17 +863,18 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
 
         methods = set()
-        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
-        for f in obj.cached_timeseries_logical_files:
-            for s in f.metadata.methods:
-                if discoverable(s.method_description):
-                    methods.add(s.method_description.strip())
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+            for f in obj.cached_timeseries_logical_files:
+                for s in f.metadata.methods:
+                    if discoverable(s.method_description):
+                        methods.add(s.method_description.strip())
 
-        self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
-        for f in obj.cached_reftimeseries_logical_files:
-            for s in f.metadata.methods:
-                if discoverable(s.description):
-                    methods.add(s.description.strip())
+            self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
+            for f in obj.cached_reftimeseries_logical_files:
+                for s in f.metadata.methods:
+                    if discoverable(s.description):
+                        methods.add(s.description.strip())
         return list(methods)
 
     def prepare_quality_level(self, obj):
@@ -892,17 +898,18 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
 
         mediums = set()
-        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
-        for f in obj.cached_timeseries_logical_files:
-            for v in f.metadata.time_series_results:
-                if discoverable(v.sample_medium):
-                    mediums.add(v.sample_medium.strip())
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+            for f in obj.cached_timeseries_logical_files:
+                for v in f.metadata.time_series_results:
+                    if discoverable(v.sample_medium):
+                        mediums.add(v.sample_medium.strip())
 
-        self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
-        for f in obj.cached_reftimeseries_logical_files:
-            for v in f.metadata.sample_mediums:
-                if discoverable(v):
-                    mediums.add(v.strip())
+            self._cache_queryset(obj, 'cached_reftimeseries_logical_files', obj.reftimeserieslogicalfile_set.all())
+            for f in obj.cached_reftimeseries_logical_files:
+                for v in f.metadata.sample_mediums:
+                    if discoverable(v):
+                        mediums.add(v.strip())
         return list(mediums)
 
     def prepare_units(self, obj):
@@ -913,13 +920,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
 
         units = set()
-
-        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
-        for f in obj.cached_timeseries_logical_files:
-            for v in f.metadata.time_series_results:
-                # TODO: inconsistent use of units name and units type
-                if discoverable(v.units_name):
-                    units.add(v.units_name.strip())
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+            for f in obj.cached_timeseries_logical_files:
+                for v in f.metadata.time_series_results:
+                    # TODO: inconsistent use of units name and units type
+                    if discoverable(v.units_name):
+                        units.add(v.units_name.strip())
         return list(units)
 
     def prepare_units_type(self, obj):
@@ -929,11 +936,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
 
         units_types = set()
-        self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
-        for f in obj.cached_timeseries_logical_files:
-            for v in f.metadata.time_series_results:
-                if discoverable(v.units_type):
-                    units_types.add(v.units_type.strip())
+        if obj.resource_type == 'CompositeResource':
+            self._cache_queryset(obj, 'cached_timeseries_logical_files', obj.timeserieslogicalfile_set.all())
+            for f in obj.cached_timeseries_logical_files:
+                for v in f.metadata.time_series_results:
+                    if discoverable(v.units_type):
+                        units_types.add(v.units_type.strip())
         return list(units_types)
 
     def prepare_absolute_url(self, obj):
