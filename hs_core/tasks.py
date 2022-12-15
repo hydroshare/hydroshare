@@ -33,7 +33,7 @@ from theme.models import UserQuota, QuotaMessage, User
 from django_irods.icommands import SessionException
 from celery.result import states
 
-from hs_core.models import BaseResource, TaskNotification, GeospatialRelation
+from hs_core.models import BaseResource, TaskNotification
 from hs_core.enums import RelationTypes
 from theme.utils import get_quota_message
 from hs_collection_resource.models import CollectionDeletedResource
