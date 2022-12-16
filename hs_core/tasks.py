@@ -311,7 +311,7 @@ def send_over_quota_emails():
                                   [u.email, settings.DEFAULT_SUPPORT_EMAIL],
                                   html_message=msg_str)
                     except Exception as ex:
-                        logger.debug("Failed to send quota warning email: " + ex.message)
+                        logger.debug("Failed to send quota warning email: " + str(ex))
             else:
                 if uq.remaining_grace_period >= 0:
                     # turn grace period off now that the user is below quota soft limit

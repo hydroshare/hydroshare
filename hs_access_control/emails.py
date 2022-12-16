@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 from django.http import HttpRequest
 from mezzanine.conf import settings
 
+from hs_core.views.utils import get_default_admin_user
 from .models.community import RequestCommunity
 from .models.invite import GroupCommunityRequest
 from .enums import CommunityRequestEvents, CommunityGroupEvents
@@ -33,7 +34,8 @@ class CommunityGroupEmailNotification:
             <p>{self.group_community_request.group_owner.first_name} is requesting group <a href="{group_url}">
             {self.group_community_request.group.name}</a> to join your community <a href="{community_url}">
             {self.group_community_request.community.name}</a></p>.
-            <p>HydroShare Team</p>
+            <p>Thank you,</p>
+            <p>The HydroShare Team</p>
             """
         elif self.on_event == CommunityGroupEvents.INVITED:
             # send emails to all group owners
@@ -43,7 +45,8 @@ class CommunityGroupEmailNotification:
             <p>Please consider your group <a href="{group_url}">
             {self.group_community_request.group.name}</a> to join the community <a href="{community_url}">
             {self.group_community_request.community.name}</a></p>.
-            <p>HydroShare Team</p>
+            <p>Thank you,</p>
+            <p>The HydroShare Team</p>
             """
         elif self.on_event == CommunityGroupEvents.JOIN_REQUESTED:
             # send emails to all community owners
@@ -53,7 +56,8 @@ class CommunityGroupEmailNotification:
            <p>Our group <a href="{group_url}">{self.group_community_request.group.name}</a>
             would like to join your community <a href="{community_url}">
            {self.group_community_request.community.name}</a></p>.
-           <p>HydroShare Team</p>
+           <p>Thank you,</p>
+           <p>The HydroShare Team</p>
            """
         elif self.on_event == CommunityGroupEvents.DECLINED:
             if self.group_community_request.community_owner is None:
@@ -65,7 +69,8 @@ class CommunityGroupEmailNotification:
                 <p>Sorry to inform that your request for group <a href="{group_url}">
                 {self.group_community_request.group.name}</a> to join the community
                 <a href="{community_url}">{self.group_community_request.community.name}</a> was declined.</p>
-                <p>HydroShare Team</p>
+                <p>Thank you,</p>
+                <p>The HydroShare Team</p>
                 """
             else:
                 # an invitation for a group to join a community was declined by one of the group owners
@@ -77,7 +82,8 @@ class CommunityGroupEmailNotification:
                 {self.group_community_request.group.name}</a> to join the community
                 <a href="{community_url}">
                 {self.group_community_request.community.name}</a> was declined.</p>
-                <p>HydroShare Team</p>
+                <p>Thank you,</p>
+                <p>The HydroShare Team</p>
                 """
         else:
             assert self.on_event == CommunityGroupEvents.APPROVED
@@ -90,7 +96,8 @@ class CommunityGroupEmailNotification:
                 <p>Glad to inform that request for your group <a href="{group_url}">
                 {self.group_community_request.group.name}</a> to join the community <a href="{community_url}">
                 {self.group_community_request.community.name}</a> was approved.</p>
-                <p>HydroShare Team</p>
+                <p>Thank you,</p>
+                <p>The HydroShare Team</p>
                 """
             else:
                 # request accepted by the group owner - so notify community owner
@@ -100,10 +107,11 @@ class CommunityGroupEmailNotification:
                 <p>Your invitation for group <a href="{group_url}">
                 {self.group_community_request.group.name}</a> to join the community <a href="{community_url}">
                 {self.group_community_request.community.name}</a> was accepted.</p>
-                <p>HydroShare Team</p>
+                <p>Thank you,</p>
+                <p>The HydroShare Team</p>
                 """
-
-        send_mail(subject=subject, message=message, html_message=message, from_email=settings.DEFAULT_FROM_EMAIL,
+        admin_user = get_default_admin_user()
+        send_mail(subject=subject, message=message, html_message=message, from_email=admin_user.email,
                   recipient_list=recipient_emails, fail_silently=True)
 
 
@@ -138,7 +146,8 @@ class CommunityRequestEmailNotification:
             Please click on the link below to review this request.
             <p><a href="{community_request_url}">
             {self.community_request.community_to_approve.name}</a></p>
-            <p>HydroShare Team</p>
+            <p>Thank you,</p>
+            <p>The HydroShare Team</p>
             """
         elif self.on_event == CommunityRequestEvents.DECLINED:
             recipient_emails = [self.community_request.requested_by.email]
@@ -149,7 +158,8 @@ class CommunityRequestEmailNotification:
             {self.community_request.community_to_approve.name}</a> was not approved due to
             the reason stated below:</p>
             <p>{self.community_request.decline_reason}</p>
-            <p>HydroShare Team</p>
+            <p>Thank you,</p>
+            <p>The HydroShare Team</p>
             """
         else:
             # community request approved event
@@ -161,7 +171,10 @@ class CommunityRequestEmailNotification:
             <p>Glad to inform you that your request to create the community
             <a href="{community_url}">
             {self.community_request.community_to_approve.name}</a> has been approved.</p>
-            <p>HydroShare Team</p>
+            <p>Thank you,</p>
+            <p>The HydroShare Team</p>
             """
-        send_mail(subject=subject, message=message, html_message=message, from_email=settings.DEFAULT_FROM_EMAIL,
+
+        admin_user = get_default_admin_user()
+        send_mail(subject=subject, message=message, html_message=message, from_email=admin_user.email,
                   recipient_list=recipient_emails, fail_silently=True)
