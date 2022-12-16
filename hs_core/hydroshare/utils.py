@@ -446,10 +446,13 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
 
 
 @sync_to_async
-def get_relations():
-    # TODO: not really sure why this isn't working
-    # https://docs.djangoproject.com/en/3.2/topics/async/
-    return GeospatialRelation.objects.all()
+def _get_relations():
+    return list(GeospatialRelation.objects.all())
+
+
+@sync_to_async
+def _save_relation(relation, json):
+    return relation.update_from_geoconnex_response(json)
 
 
 async def get_jsonld_from_geoconnex(relation, client):
@@ -460,17 +463,19 @@ async def get_jsonld_from_geoconnex(relation, client):
                "f=jsonld&lang=en-US&skipGeometry=true"
     print(f"CHECKING RELATION '{relation.text}'")
     async with client.get(url) as resp:
-        relation.update_from_geoconnex_response(await resp.json())
-        return
+        return await _save_relation(relation, await resp.json())
 
 
 async def update_geoconnex_texts(relations=[]):
     # Task to update Relations from Geoconnex API
+    if not relations:
+        relations = await _get_relations()
     async with aiohttp.ClientSession("https://reference.geoconnex.us") as client:
         await asyncio.gather(*[
             get_jsonld_from_geoconnex(relation, client)
-            for relation in await get_relations()
+            for relation in relations
         ])
+    print("DONE CHECKING RELATIONS")
 
 
 def copy_and_create_metadata(src_res, dest_res):

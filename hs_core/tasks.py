@@ -6,6 +6,7 @@ import traceback
 import zipfile
 import logging
 import json
+import asyncio
 
 from celery.signals import task_postrun
 from datetime import datetime, timedelta, date
@@ -199,8 +200,8 @@ def manage_task_hourly():
 
 @celery_app.task(ignore_result=True)
 def update_from_geoconnex_task():
-    # Task to update from Geoconnex API
-    utils.update_geoconnex_texts()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(utils.update_geoconnex_texts())
 
 
 @celery_app.task(ignore_result=True)

@@ -5,30 +5,6 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 import django.db.models.deletion
 import hs_core.hs_rdf
-from hs_core.models import Relation, BaseResource
-from hs_core.hydroshare.utils import update_geoconnex_texts
-
-
-def migrate_relations_to_geoconnex(apps, schema_editor):
-    for relation in Relation.objects.filter(type="relation"):
-        if "geoconnex" in relation.value:
-            res = BaseResource.objects.get(object_id=relation.object_id)
-            print(f"\nAttempting to create new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
-            try:
-                res.metadata.create_element('geospatialrelation',
-                                            type='relation',
-                                            value=relation.value)
-            except AttributeError as ex:
-                print(f"Metadata object missing for res_id:{res.short_id}, value:{relation.value}. Skipping.")
-                print(ex)
-                continue
-            relation.delete()
-        else:
-            print(f"Encountered resource with non geoconnex generic 'relation' type. Res_id:{res.short_id}")
-
-
-def get_geoconnex_text(apps, schema_editor):
-    update_geoconnex_texts()
 
 
 class Migration(migrations.Migration):
@@ -54,11 +30,9 @@ class Migration(migrations.Migration):
             },
             bases=(models.Model, hs_core.hs_rdf.RDF_Term_MixIn),
         ),
-        migrations.RunPython(migrate_relations_to_geoconnex),
         migrations.AlterField(
             model_name='relation',
             name='type',
             field=models.CharField(choices=[('isPartOf', 'The content of this resource is part of'), ('hasPart', 'This resource includes'), ('isExecutedBy', 'The content of this resource can be executed by'), ('isCreatedBy', 'The content of this resource was created by a related App or software program'), ('isVersionOf', 'This resource updates and replaces a previous version'), ('isReplacedBy', 'This resource has been replaced by a newer version'), ('isDescribedBy', 'This resource is described by'), ('conformsTo', 'This resource conforms to established standard described by'), ('hasFormat', 'This resource has a related resource in another format'), ('isFormatOf', 'This resource is a different format of'), ('isRequiredBy', 'This resource is required by'), ('requires', 'This resource requires'), ('isReferencedBy', 'This resource is referenced by'), ('references', 'The content of this resource references'), ('replaces', 'This resource replaces'), ('source', 'The content of this resource is derived from'), ('isSimilarTo', 'The content of this resource is similar to')], max_length=100),
-        ),
-        migrations.RunPython(get_geoconnex_text)
+        )
     ]
