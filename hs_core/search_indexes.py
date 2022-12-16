@@ -109,7 +109,7 @@ def get_content_types(res):
 
     resource = res.get_content_model()  # enable full logical file interface
 
-    types = set([res.discovery_content_type])  # accumulate high-level content types.
+    types = {res.discovery_content_type}  # accumulate high-level content types.
     missing_exts = set()  # track unmapped file extensions
     all_exts = set()  # track all file extensions
 

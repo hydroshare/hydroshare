@@ -3846,13 +3846,14 @@ class BaseResource(Page, AbstractResource):
             replace_relation_meta = resource.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
             if replace_relation_meta is not None:
                 version_citation = replace_relation_meta.value
-                version_res_id = version_citation.split('/resource/')[-1]
-                try:
-                    new_version_res = get_resource_by_shortkey(version_res_id, or_404=False)
-                    replaced_by_resources.append(new_version_res)
-                    get_replaced_by(new_version_res)
-                except BaseResource.DoesNotExist:
-                    pass
+                if '/resource/' in version_citation:
+                    version_res_id = version_citation.split('/resource/')[-1]
+                    try:
+                        new_version_res = get_resource_by_shortkey(version_res_id, or_404=False)
+                        replaced_by_resources.append(new_version_res)
+                        get_replaced_by(new_version_res)
+                    except BaseResource.DoesNotExist:
+                        pass
 
         get_replaced_by(self)
         return replaced_by_resources
@@ -3882,7 +3883,7 @@ class BaseResource(Page, AbstractResource):
 
         replaced_by_resources = self.replaced_by()
         if any([res.raccess.discoverable for res in replaced_by_resources]):
-            # there is a newer discoverable resource - so this resource should not be shown id discover
+            # there is a newer discoverable resource - so this resource should not be shown in discover
             return False
         return True
 
