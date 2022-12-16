@@ -8,8 +8,9 @@ Update GeospatialRelation objects with text from the geoconnex API
 """
 
 from django.core.management.base import BaseCommand
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, GeospatialRelation
 from hs_core.hydroshare.utils import get_resource_by_shortkey, update_geoconnex_texts
+import asyncio
 
 
 class Command(BaseCommand):
@@ -21,6 +22,8 @@ class Command(BaseCommand):
         parser.add_argument('resource_ids', nargs='*', type=str)
 
     def handle(self, *args, **options):
+        # TODO: after python > 3.6 upgrade, we can use asyncio.run
+        loop = asyncio.get_event_loop()
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
@@ -34,10 +37,10 @@ class Command(BaseCommand):
                 if relations:
                     for relation in relations:
                         print(f"CHECKING RELATIONS IN RESOURCE '{rid}': ")
-                    update_geoconnex_texts(relations)
+                        loop.run_until_complete(update_geoconnex_texts(relations))
                 else:
                     print(f"RESOURCE {rid} HAS NO GEOSPATIAL RELATIONS")
 
         else:  # check all resources
             print("CHECKING RELATIONS FOR ALL RESOURCES")
-            update_geoconnex_texts()
+            loop.run_until_complete(update_geoconnex_texts())

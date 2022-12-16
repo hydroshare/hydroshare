@@ -10,6 +10,7 @@ import errno
 import urllib
 import aiohttp
 import asyncio
+from asgiref.sync import sync_to_async
 
 from urllib.request import pathname2url, url2pathname
 
@@ -444,27 +445,32 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         tgt_res.resources.set(src_res.resources.all())
 
 
-async def get_jsonld_from_geoconnex(relation):
+@sync_to_async
+def get_relations():
+    # TODO: not really sure why this isn't working
+    # https://docs.djangoproject.com/en/3.2/topics/async/
+    return GeospatialRelation.objects.all()
+
+
+async def get_jsonld_from_geoconnex(relation, client):
     relative_id = relation.value.split("ref/").pop()
     collection = relative_id.split("/")[0]
     id = relative_id.split("/")[1]
-    url = f"https://reference.geoconnex.us/collections/{collection}/items/{id}?" \
+    url = f"/collections/{collection}/items/{id}?" \
                "f=jsonld&lang=en-US&skipGeometry=true"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            return await resp.json()
+    print(f"CHECKING RELATION '{relation.text}'")
+    async with client.get(url) as resp:
+        relation.update_from_geoconnex_response(await resp.json())
+        return
 
 
-def update_geoconnex_texts(relations=None):
+async def update_geoconnex_texts(relations=[]):
     # Task to update Relations from Geoconnex API
-    if not relations:
-        relations = GeospatialRelation.objects.all()
-    for relation in relations:
-        print(f"CHECKING RELATION '{relation.text}'")
-        # TODO: after python > 3.6 upgrade, we can use asyncio.run
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(get_jsonld_from_geoconnex(relation))
-        relation.update_from_geoconnex_response(response)
+    async with aiohttp.ClientSession("https://reference.geoconnex.us") as client:
+        await asyncio.gather(*[
+            get_jsonld_from_geoconnex(relation, client)
+            for relation in await get_relations()
+        ])
 
 
 def copy_and_create_metadata(src_res, dest_res):
