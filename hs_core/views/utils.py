@@ -967,15 +967,17 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
                   f"characters: {filename_banned_chars}"
         raise ValidationError(err_msg)
 
+    content_dir = os.path.dirname(res_coll_input)
+    output_zip_full_path = os.path.join(content_dir, output_zip_fname)
+    if istorage.exists(output_zip_full_path):
+        err_msg = f"Zip filename '{output_zip_fname}' already exists. Provide a different name for the zip file."
+        raise ValidationError(err_msg)
+
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
 
-    content_dir = os.path.dirname(res_coll_input)
-    output_zip_full_path = os.path.join(content_dir, output_zip_fname)
     istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
-
     output_zip_size = istorage.size(output_zip_full_path)
-
     zip_res_file = link_irods_file_to_django(resource, output_zip_full_path)
     if resource.resource_type == "CompositeResource":
         # make the newly added zip file part of an aggregation if needed
@@ -1040,7 +1042,8 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     else:
         zip_file_target_full_path = os.path.join(resource.file_path, f"{output_zip_fname}.zip")
     if istorage.exists(zip_file_target_full_path):
-        raise ValidationError(f"Zip file ({output_zip_fname}.zip) already exists")
+        err_msg = f"Zip file ({output_zip_fname}.zip) already exists. Provide a different name for the zip file."
+        raise ValidationError(err_msg)
 
     daily_date = datetime.today().strftime('%Y-%m-%d')
     output_path = f"zips/{daily_date}/{uuid4().hex}/{output_zip_fname}.zip"
