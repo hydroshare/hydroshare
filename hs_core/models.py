@@ -2074,6 +2074,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             self.raccess.discoverable = value
             self.raccess.save()
             self.set_public(False)
+            self.update_index()
 
     def set_public(self, value, user=None):
         """Set the public flag for a resource.
@@ -2130,7 +2131,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 self.raccess.discoverable = value
             self.raccess.save()
             post_raccess_change.send(sender=self, resource=self)
-
+            self.update_index()
             # public changed state: set isPublic metadata AVU accordingly
             if value != old_value:
                 self.setAVU("isPublic", self.raccess.public)
@@ -2153,6 +2154,17 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
                 if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
                     run_script_to_update_hyrax_input_files(self.short_id)
+
+    def update_index(self):
+        """updates previous versions of a resource (self) in index"""
+        prev_version_resource_relation_meta = Relation.objects.filter(type='isReplacedBy',
+                                                                      value__contains=self.short_id).first()
+        if prev_version_resource_relation_meta:
+            prev_version_res = prev_version_resource_relation_meta.metadata.resource
+            if prev_version_res.raccess.discoverable or prev_version_res.raccess.public:
+                # saving to trigger index update for this previous version of resource
+                prev_version_res.save()
+            prev_version_res.update_index()
 
     def set_require_download_agreement(self, user, value):
         """Set resource require_download_agreement flag to True or False.
