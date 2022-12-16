@@ -3,15 +3,18 @@
 # NOTE: this has been optimized for the current and future discovery pages.
 # Features that are not used have been commented out temporarily
 
-from haystack import indexes
-from haystack import fields
-from hs_core.models import BaseResource
-from datetime import datetime
-from nameparser import HumanName
-import probablepeople
-from django.conf import settings
 import logging
 import re
+
+import probablepeople
+
+from dateutil import parser
+from django.conf import settings
+from haystack import fields
+from haystack import indexes
+from nameparser import HumanName
+
+from hs_core.models import BaseResource
 
 # # SOLR extension needs to be installed for the following to work
 # from haystack.utils.geo import Point
@@ -538,26 +541,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if self._has_metadata(obj):
             self._cache_queryset(obj, 'cached_coverages', obj.metadata.coverages.all())
             for coverage in obj.cached_coverages:
-                if coverage.type == 'period':
-                    clean_date = coverage.value["start"][:10]
-                    start_date = ""
-                    if "/" in clean_date:
-                        parsed_date = clean_date.split("/")
-                        if len(parsed_date) == 3:
-                            start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                    elif "-" in clean_date:
-                        parsed_date = clean_date.split("-")
-                        if len(parsed_date) == 3:
-                            start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                    start_date = remove_whitespace(start_date)  # no embedded spaces
+                if coverage.type == 'period' and 'start' in coverage.value:
+                    start_date = coverage.value["start"]
                     try:
-                        start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
+                        start_date = parser.parse(start_date).date()
+                        return start_date
                     except ValueError:
                         logger = logging.getLogger(__name__)
                         logger.error("invalid start date {} in resource {} {}"
                                      .format(start_date, obj.short_id, str(obj)))
                         return None
-                    return start_date_object
         return None
 
     # TODO: time coverages do not specify timezone, and timezone support is active.
@@ -570,25 +563,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             self._cache_queryset(obj, 'cached_coverages', obj.metadata.coverages.all())
             for coverage in obj.cached_coverages:
                 if coverage.type == 'period' and 'end' in coverage.value:
-                    clean_date = coverage.value["end"][:10]
-                    end_date = ""
-                    if "/" in clean_date:
-                        parsed_date = clean_date.split("/")
-                        if len(parsed_date) == 3:
-                            end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                    else:
-                        parsed_date = clean_date.split("-")
-                        if len(parsed_date) == 3:
-                            end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                    end_date = remove_whitespace(end_date)  # no embedded spaces
+                    end_date = coverage.value["end"]
                     try:
-                        end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
+                        end_date = parser.parse(end_date).date()
+                        return end_date
                     except ValueError:
                         logger = logging.getLogger(__name__)
                         logger.error("invalid end date {} in resource {} {}"
                                      .format(end_date, obj.short_id, str(obj)))
                         return None
-                    return end_date_object
         return None
 
     def prepare_storage_type(self, obj):
