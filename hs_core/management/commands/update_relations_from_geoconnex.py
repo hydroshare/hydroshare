@@ -50,7 +50,7 @@ class Command(BaseCommand):
         for relation in Relation.objects.filter(type="relation"):
             if "geoconnex" in relation.value:
                 res = BaseResource.objects.get(object_id=relation.object_id)
-                print(f"\nAttempting to create new geoconnex relation for res_id:{res.short_id}, value:{relation.value}")
+                print(f"\nAttempting to create new geoconnex relation for res:{res.short_id}, value:{relation.value}")
                 try:
                     res.metadata.create_element('geospatialrelation',
                                                 type='relation',
