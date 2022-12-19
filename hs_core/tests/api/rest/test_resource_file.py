@@ -5,7 +5,6 @@ import tempfile
 import shutil
 
 from rest_framework import status
-from datetime import datetime
 
 from hs_core.hydroshare import resource
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
@@ -91,7 +90,7 @@ class TestResourceFile(HSRESTTestCase):
             file=open(self.txt_file_path, "rb"), name=self.txt_file_path
         )
         resource.add_resource_files(self.pid, files)
-        file_response = self.getResourceFile(self.pid, "text.txt")
+        _ = self.getResourceFile(self.pid, "text.txt")
 
     def test_create_resource_file(self):
         # Make a new text file

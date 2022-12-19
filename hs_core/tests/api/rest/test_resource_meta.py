@@ -1,9 +1,5 @@
 import os
 import json
-import tempfile
-import shutil
-
-from lxml import etree
 
 from rest_framework import status
 

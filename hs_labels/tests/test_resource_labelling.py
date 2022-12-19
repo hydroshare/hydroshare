@@ -62,7 +62,7 @@ def match_nested_dicts(d1, d2):
         # print("key is ", k)
         # print("type of d1[k] is ", type(d1[k]))
         # print("type of d2[k] is ", type(d2[k]))
-        if type(d1[k]) != type(d2[k]):
+        if isinstance(d1[k], type(d2[k])):
             return False
         if isinstance(d1[k], dict) and isinstance(d2[k], dict):
             # print("checking dicts against one another")

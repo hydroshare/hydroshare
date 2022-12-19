@@ -83,7 +83,7 @@ class CreateAccountTest(TestCase):
     def test_with_groups(self):
         groups = []
 
-        username, first_name, last_name, password = (
+        username, first_name, last_name, _ = (
             "shaunjl",
             "shaun",
             "joseph",
@@ -112,7 +112,7 @@ class CreateAccountTest(TestCase):
         organizations = ["org with, comma", "another org", "single"]
         organization = ";".join(organizations)
 
-        username, first_name, last_name, password = (
+        username, first_name, last_name, _ = (
             "shaunjl",
             "shaun",
             "joseph",

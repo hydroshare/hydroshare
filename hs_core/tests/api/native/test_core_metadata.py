@@ -1590,7 +1590,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # delete resource file
         hydroshare.delete_resource_file(res.short_id, file_obj_1.name, self.user)
 
-        istorage = res.get_irods_storage()
+        _ = res.get_irods_storage()
 
         # there should be not be any format element at this point for this resource
         self.assertEqual(
@@ -2488,7 +2488,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test adding a contributor with all sub_elements
         con_name = "Sujan Peterson"
-        con_uid = 2
+        con_des = 2
         con_org = "USU"
         con_email = "sujan.peterson@usu.edu"
         con_address = "101 Center St, Logan UT-84321, USA"

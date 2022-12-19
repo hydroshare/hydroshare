@@ -1,10 +1,6 @@
-from django.db import models
 from haystack.signals import RealtimeSignalProcessor
 from haystack.exceptions import NotHandled
 import logging
-import types
-from haystack.query import SearchQuerySet
-from haystack.utils import get_identifier
 
 logger = logging.getLogger(__name__)
 

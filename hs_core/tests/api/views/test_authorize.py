@@ -1,5 +1,3 @@
-import unittest
-
 from django.contrib.auth.models import Group, AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase, RequestFactory

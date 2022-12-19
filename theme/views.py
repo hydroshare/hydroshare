@@ -735,7 +735,7 @@ def create_irods_account(request):
             for out_str in output:
                 if "bash:" in out_str or (
                     "ERROR:" in out_str.upper()
-                    and not "CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME" in out_str.upper()
+                    and "CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME" not in out_str.upper()
                 ):
                     # there is an error from icommand run which is not about the fact
                     # that the user already exists, report the error
