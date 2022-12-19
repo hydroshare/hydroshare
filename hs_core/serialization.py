@@ -316,7 +316,7 @@ class GenericResourceMeta(object):
                     mod_ser = __import__(mod_ser_name, globals(), locals(), [rt_meta])
                     metadata_class = getattr(mod_ser, rt_meta)
                     instance = metadata_class()
-                except AttributeError as ae:
+                except AttributeError:
                     msg = "Unable to instantiate metadata deserializer for resource type {0}, "
                     msg += "based on resource bag {1}"
                     msg = msg.format(res_meta["type"], bag_content_path)
@@ -1110,7 +1110,7 @@ class GenericResourceMeta(object):
                 if key == "start":
                     try:
                         self.start_date = hs_date_to_datetime_iso(value)
-                    except Exception as e:
+                    except Exception:
                         try:
                             self.start_date = hs_date_to_datetime_notz(value)
                         except Exception as e:
@@ -1121,7 +1121,7 @@ class GenericResourceMeta(object):
                 elif key == "end":
                     try:
                         self.end_date = hs_date_to_datetime_iso(value)
-                    except Exception as e:
+                    except Exception:
                         try:
                             self.end_date = hs_date_to_datetime_notz(value)
                         except Exception as e:

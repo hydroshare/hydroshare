@@ -3,7 +3,6 @@ TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
 TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
 
 import os
-import sys
 
 # import importlib
 

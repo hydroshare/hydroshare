@@ -27,7 +27,7 @@ class HydroshareSiteMetrics(TemplateView):
         self.n_agencies = 0
         self.agencies = set()
         self.n_core_contributors = 6  # fixme need to track (use GItHub API Key) https://api.github.com/teams/328946
-        self.n_extension_contributors = 10  # fixme need to track (use GitHub API Key) https://api.github.com/teams/964835
+        self.n_extension_contributors = 10  # fixme need to track (use GH API Key) https://api.github.com/teams/964835
         self.n_citations = 0  # fixme hard to quantify
         self.resource_type_counts = Counter()
         self.user_titles = Counter()

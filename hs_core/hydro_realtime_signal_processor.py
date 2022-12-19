@@ -82,7 +82,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
             try:
                 newbase = instance.resource
                 self.handle_save(BaseResource, newbase)
-            except Exception:
+            except Exception as e:
                 logger.exception("{} exception: {}".format(type(instance), e))
 
         elif isinstance(instance, AbstractMetaDataElement):

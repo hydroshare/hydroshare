@@ -64,7 +64,7 @@ def create_account(
         pass
     try:
         # we chose to follow current email practices with case insensitive emails
-        user = User.objects.get(Q(email__iexact=email))
+        _ = User.objects.get(Q(email__iexact=email))
         raise ValidationError("User with provided email already exists.")
     except User.DoesNotExist:
         pass
@@ -407,7 +407,7 @@ def get_resource_list(
             type,
         )
     ):
-        raise NotImplemented("Returning the full resource list is not supported.")
+        raise NotImplementedError("Returning the full resource list is not supported.")
 
     q = []
 
@@ -459,7 +459,7 @@ def get_resource_list(
 
                 if search_polygon.intersects(coverage_shape):
                     coverages.add(coverage.id)
-            except Exception as e:
+            except Exception:
                 log.error("Coverage value invalid for coverage id %d" % coverage.id)
 
         coverage_hits = Coverage.objects.filter(id__in=coverages)

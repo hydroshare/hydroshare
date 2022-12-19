@@ -363,7 +363,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
 
     def test_update_metadata_ignored_elements(self):
         # the following elements are ignored
-        metadata_dict = [
+        _ = [
             {"date": {"type": "created", "start_date": "1/26/2015"}},
             {"date": {"type": "modified", "start_date": "1/26/2015"}},
             {"date": {"type": "published", "start_date": "1/26/2015"}},

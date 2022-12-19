@@ -1,13 +1,13 @@
 """
 Unittest for def get_capabilities(pk)
 
-author's notes- 
+author's notes-
 I think this should be renamed get_extra_capabilities
 must be extended to test other types of resources
 
 """
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.test import TestCase
 
 from hs_core import hydroshare

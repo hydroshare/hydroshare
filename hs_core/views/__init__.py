@@ -1022,12 +1022,12 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
 
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     """
-    This function needs to be called via AJAX. The function replicates resource bag to iRODS user zone on users.hydroshare.org
-    which is federated with hydroshare zone under the iRODS user account corresponding to a HydroShare user. This function
-    should only be called or exposed to be called from web interface when a corresponding iRODS user account on hydroshare
-    user Zone exists. The purpose of this function is to allow HydroShare resource bag that a HydroShare user has access
-    to be copied to HydroShare user's iRODS space in HydroShare user zone so that users can do analysis or computations on
-    the resource
+    This function needs to be called via AJAX. The function replicates resource bag to iRODS user zone on
+    users.hydroshare.org which is federated with hydroshare zone under the iRODS user account corresponding to a
+    HydroShare user. This function should only be called or exposed to be called from web interface when a
+    corresponding iRODS user account on hydroshare user Zone exists. The purpose of this function is to allow
+    HydroShare resource bag that a HydroShare user has access to be copied to HydroShare user's iRODS space in
+    HydroShare user zone so that users can do analysis or computations on the resource
     Args:
         request: an AJAX request
         shortkey: UUID of the resource to be copied to the login user's iRODS user space
