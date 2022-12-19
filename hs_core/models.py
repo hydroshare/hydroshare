@@ -770,7 +770,7 @@ class Party(AbstractMetaDataElement):
                         "{} not a supported identifier.".format(name)
                     )
             # validate identifier values - check for duplicate links
-            links = [l.lower() for l in list(identifiers.values())]
+            links = [link.lower() for link in list(identifiers.values())]
             if len(links) != len(set(links)):
                 raise ValidationError(
                     "Invalid data found for identifiers. "

@@ -339,7 +339,7 @@ def check_irods_files(
                 for f in lf.files.all():
                     try:
                         f.resource_file.size
-                    except:
+                    except: # noqa
                         ecount += 1
                         msg = "check_resource: file {} does not exist on irods".format(
                             f.storage_path.encode("ascii", "replace")

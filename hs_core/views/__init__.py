@@ -1217,7 +1217,8 @@ def submit_for_review(request, shortkey, *args, **kwargs):
         logger.warn(str(exp))
     else:
         message = """Congratulations!
-                Your resource is under review for appropriate minimum metadata and to ensure that it adheres to community guidelines.
+                Your resource is under review for appropriate minimum metadata and to ensure that it adheres to
+                community guidelines.
                 The review process will likely be complete within 1 business day, but not exceed 2 business days.
                 You will receive a notification via email once the review process has concluded."""
         messages.success(request, message)
@@ -1538,7 +1539,7 @@ go to http://{domain}/verify/{token}/ and verify your account.
 
         context = {"is_email_sent": True}
         return render(request, "pages/verify-account.html", context)
-    except:
+    except: # noqa
         pass  # FIXME should log this instead of ignoring it.
 
 

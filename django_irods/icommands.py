@@ -111,7 +111,7 @@ class Session(object):
         try:
             if os.path.exists(os.path.join(self.session_path, 'irods_environment.json')):
                 return True
-        except:
+        except: # noqa
             return False
         else:
             return False
