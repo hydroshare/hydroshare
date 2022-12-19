@@ -58,7 +58,7 @@ def create_account(
     from hs_labels.models import UserLabels
 
     try:
-        user = User.objects.get(Q(username__iexact=username))
+        _ = User.objects.get(Q(username__iexact=username))
         raise ValidationError("User with provided username already exists.")
     except User.DoesNotExist:
         pass

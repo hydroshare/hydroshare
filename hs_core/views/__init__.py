@@ -104,7 +104,8 @@ from . import apps
 
 from hs_core.hydroshare import utils
 
-from hs_core.signals import *
+from hs_core import signals
+
 from hs_access_control.models import (
     PrivilegeCodes,
     GroupMembershipRequest,
@@ -298,7 +299,7 @@ def update_quota_usage(request, username):
         return HttpResponseForbidden("You are not authenticated to perform this action")
 
     try:
-        user = User.objects.get(username=username)
+        _ = User.objects.get(username=username)
     except User.DoesNotExist:
         return HttpResponseBadRequest("user to update quota for is not valid")
 
@@ -560,7 +561,7 @@ def update_key_value_metadata_public(request, id):
 
     try:
         res.save()
-    except Error as ex:
+    except Error:
         is_update_success = False
 
     if is_update_success:
@@ -597,7 +598,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             res.update_public_and_discoverable()
             resource_modified(res, request.user, overwrite_bag=False)
     else:
-        handler_response = pre_metadata_element_create.send(
+        handler_response = signals.pre_metadata_element_create.send(
             sender=sender_resource, element_name=element_name, request=request
         )
         for receiver, response in handler_response:
@@ -740,7 +741,7 @@ def update_metadata_element(
         request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE
     )
     sender_resource = _get_resource_sender(element_name, res)
-    handler_response = pre_metadata_element_update.send(
+    handler_response = signals.pre_metadata_element_update.send(
         sender=sender_resource,
         element_name=element_name,
         element_id=element_id,
@@ -756,7 +757,7 @@ def update_metadata_element(
                     res.metadata.update_element(
                         element_name, element_id, **element_data_dict
                     )
-                    post_handler_response = post_metadata_element_update.send(
+                    post_handler_response = signals.post_metadata_element_update.send(
                         sender=sender_resource,
                         element_name=element_name,
                         element_id=element_id,
@@ -987,7 +988,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
         task_dict = get_or_create_task_notification(
             task_id, name="resource delete", payload=shortkey, username=user.username
         )
-        pre_delete_resource.send(
+        signals.pre_delete_resource.send(
             sender=type(res),
             request=request,
             user=user,
@@ -1003,7 +1004,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             # make resource being deleted not discoverable to inform solr to remove this resource from solr index
             res.set_discoverable(False)
             hydroshare.delete_resource(shortkey, request_username=request.user.username)
-            pre_delete_resource.send(
+            signals.pre_delete_resource.send(
                 sender=type(res),
                 request=request,
                 user=user,
@@ -2571,7 +2572,7 @@ def my_resources_filter_counts(request, *args, **kwargs):
     """
     View for counting resources that belong to a given user.
     """
-    filter = request.GET.getlist("filter", default=None)
+    _ = request.GET.getlist("filter", default=None)
     u = User.objects.get(pk=request.user.id)
 
     filter_counts = get_my_resources_filter_counts(u)
