@@ -195,7 +195,8 @@ class IGet(IRODSTask):
 
         :param environment: a dict or primary key of the RodsEnvironment model that governs this session
         :param path: the path to get from
-        :param callback: a registered Celery task that can be called as a subtask with the entire contents of the file that was gotten (file must fit in memory)
+        :param callback: a registered Celery task that can be called as a subtask with the entire contents of the file
+            that was gotten (file must fit in memory)
         :param post: a URL to which the results of the iget can be POSTed.  File can be larger than available memory.
         :param post_name: the filename that the POST will be given.
         :param options: any of the above command line options.

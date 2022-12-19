@@ -30,12 +30,12 @@ from mezzanine.utils.cache import add_cache_bypass
 from mezzanine.utils.email import send_verification_mail, send_approve_mail, subject_template, \
     default_token_generator, send_mail_template
 from mezzanine.utils.urls import login_redirect, next_url
-from mezzanine.utils.views import set_cookie, is_spam
+from mezzanine.utils.views import is_spam
 
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
-from hs_core.views.utils import run_ssh_command, get_metadata_contenttypes
+from hs_core.views.utils import run_ssh_command
 from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
@@ -354,7 +354,7 @@ def request_password_reset(request):
     username_or_email = request.POST['username']
     try:
         user = user_from_id(username_or_email)
-    except Exception as ex:
+    except Exception:
         messages.error(request, "No user is found for the provided username or email")
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 

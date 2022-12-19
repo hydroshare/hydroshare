@@ -6,26 +6,27 @@ from hs_core.views.utils import json_or_jsonp
 
 
 def autocomplete(request):
-    term = request.GET.get('term')
+    term = request.GET.get("term")
     resp = []
 
     types = [t for t in get_resource_types() if term.lower() in t.__name__.lower()]
-    resp += [{'label': 'type', 'value': t.__name__, 'id': t.__name__} for t in types]
+    resp += [{"label": "type", "value": t.__name__, "id": t.__name__} for t in types]
 
     # Party calculations are expensive and complicated. Deferring to focus on lower hanging fruit
     #
-    parties = []
+
     def get_party_type(party):
         if Contributor.objects.filter(id=party.id).exists():
-            return 'Contributor'
+            return "Contributor"
         elif Creator.objects.filter(id=party.id).exists():
-            return 'Author'
+            return "Author"
         else:
             return None
+
     seen = set()
     filter_types = {
-        'name': 'name__istartswith',
-        'email': 'email__iexact',
+        "name": "name__istartswith",
+        "email": "email__iexact",
     }
     for model in (Creator, Contributor):
         for filter_type in filter_types:
@@ -37,12 +38,14 @@ def autocomplete(request):
                         name = "Author"
                     if (name, party.name) not in seen:
                         seen.add((name, party.name))
-                        resp.append({
-                            'label': name,
-                            'type': 'party',
-                            'id': getattr(party, filter_type, 'id'),
-                            'value': party.name,
-                        })
+                        resp.append(
+                            {
+                                "label": name,
+                                "type": "party",
+                                "id": getattr(party, filter_type, "id"),
+                                "value": party.name,
+                            }
+                        )
 
     owners = User.objects.filter(username__istartswith=term)
     for owner in owners:
@@ -54,23 +57,27 @@ def autocomplete(request):
             name = "%s (%s)" % (owner.last_name, owner.username)
         else:
             name = owner.username
-        resp.append({
-            'label': 'Owner',
-            'type': 'owner',
-            'id': owner.username,
-            'value': name,
-        })
+        resp.append(
+            {
+                "label": "Owner",
+                "type": "owner",
+                "id": owner.username,
+                "value": name,
+            }
+        )
 
     subjects = Subject.objects.filter(value__istartswith=term)
     for subject in subjects:
-        if ('subject', subject.value) not in seen:
-            seen.add(('subject', subject.value))
-            resp.append({
-                'label': 'Subject',
-                'type': 'subject',
-                'id': subject.value,
-                'value': subject.value,
-            })
+        if ("subject", subject.value) not in seen:
+            seen.add(("subject", subject.value))
+            resp.append(
+                {
+                    "label": "Subject",
+                    "type": "subject",
+                    "id": subject.value,
+                    "value": subject.value,
+                }
+            )
 
     # todo: users
     # todo: groups

@@ -1,7 +1,7 @@
 
 # unit test for get_checksum() from resource.py
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
