@@ -91,7 +91,7 @@ class HSRESTTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
         if exhaust_stream and hasattr(response, "streaming_content"):
-            for l in response.streaming_content:
+            for line in response.streaming_content:
                 pass
 
         return response

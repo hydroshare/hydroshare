@@ -300,7 +300,7 @@ class HydroPrettyXMLSerializer(Serializer):
 
             try:
                 self.nm.qname(type)
-            except:
+            except: # noqa
                 type = None
 
             element = type or RDF.Description

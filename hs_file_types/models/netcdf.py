@@ -1451,7 +1451,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
                             missing_value = np.fromstring(
                                 variable.missing_value + " ", dtype=dt.type, sep=" "
                             )
-                        except:
+                        except: # noqa
                             pass
 
                         if missing_value:

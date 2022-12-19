@@ -139,7 +139,7 @@ def get_dimensions_info(nc_group):
                 )
             else:
                 dimensions_info[dim_name] = len(dim_obj)
-        except:
+        except: # noqa
             continue
 
     return dimensions_info

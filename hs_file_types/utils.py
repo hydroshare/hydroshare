@@ -339,7 +339,7 @@ def ingest_metadata_files(resource, meta_files, map_files):
         try:
             with transaction.atomic():
                 resource.metadata.ingest_metadata(graph)
-        except:
+        except: # noqa
             # logger.exception("Error processing resource metadata file")
             raise
     resource.setAVU("metadata_dirty", True)
@@ -503,7 +503,7 @@ def set_logical_file_type(
             return logical_file_type_class.set_file_type(
                 resource=res, user=user, file_id=file_id, folder_path=folder_path
             )
-    except:
+    except: # noqa
         if fail_feedback:
             raise
         return None
