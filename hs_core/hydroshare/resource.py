@@ -262,7 +262,7 @@ def get_related(pk):
 
 
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
 
 def get_checksum(pk):
