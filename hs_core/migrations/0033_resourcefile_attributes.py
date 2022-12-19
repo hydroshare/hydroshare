@@ -9,23 +9,35 @@ import hs_core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0032_auto_20170120_1445'),
+        ("hs_core", "0032_auto_20170120_1445"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='resourcefile',
-            name='fed_resource_file',
-            field=models.FileField(storage=hs_core.models.FedStorage(), max_length=4096, null=True, upload_to=hs_core.models.get_path, blank=True),
+            model_name="resourcefile",
+            name="fed_resource_file",
+            field=models.FileField(
+                storage=hs_core.models.FedStorage(),
+                max_length=4096,
+                null=True,
+                upload_to=hs_core.models.get_path,
+                blank=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='resourcefile',
-            name='file_folder',
+            model_name="resourcefile",
+            name="file_folder",
             field=models.CharField(max_length=4096, null=True),
         ),
         migrations.AlterField(
-            model_name='resourcefile',
-            name='resource_file',
-            field=models.FileField(storage=django_irods.storage.IrodsStorage(), max_length=4096, null=True, upload_to=hs_core.models.get_path, blank=True),
+            model_name="resourcefile",
+            name="resource_file",
+            field=models.FileField(
+                storage=django_irods.storage.IrodsStorage(),
+                max_length=4096,
+                null=True,
+                upload_to=hs_core.models.get_path,
+                blank=True,
+            ),
         ),
     ]

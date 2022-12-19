@@ -14,13 +14,13 @@ from hs_access_control.models import PrivilegeCodes
 
 def has_subfolders(resource):
     for f in resource.files.all():
-        if '/' in f.short_path:
+        if "/" in f.short_path:
             return True
     return False
 
 
 def measure_resource(short_id):
-    """ Print size and sharing status of a resource """
+    """Print size and sharing status of a resource"""
 
     try:
         res = BaseResource.objects.get(short_id=short_id)
@@ -39,13 +39,31 @@ def measure_resource(short_id):
         status = "private"
 
     if istorage.exists(resource.file_path):
-        print(("{} {} {} {} {} {}".format(resource.size, short_id, status, resource.storage_type,
-                                          resource.resource_type, resource.title)))
+        print(
+            (
+                "{} {} {} {} {} {}".format(
+                    resource.size,
+                    short_id,
+                    status,
+                    resource.storage_type,
+                    resource.resource_type,
+                    resource.title,
+                )
+            )
+        )
     else:
-        print(("{} {} {} {} {} {} NO IRODS FILES".format('-', short_id, status,
-                                                         resource.storage_type,
-                                                         resource.resource_type,
-                                                         resource.title)))
+        print(
+            (
+                "{} {} {} {} {} {} NO IRODS FILES".format(
+                    "-",
+                    short_id,
+                    status,
+                    resource.storage_type,
+                    resource.resource_type,
+                    resource.title,
+                )
+            )
+        )
 
 
 class Command(BaseCommand):
@@ -54,63 +72,66 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's: none does nothing.
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
         # Named (optional) arguments
         parser.add_argument(
-            '--log',
-            action='store_true',  # True for presence, False for absence
-            dest='log',           # value is options['log']
-            help='log errors to system log',
+            "--log",
+            action="store_true",  # True for presence, False for absence
+            dest="log",  # value is options['log']
+            help="log errors to system log",
         )
 
         parser.add_argument(
-            '--type',
-            dest='type',
-            help='limit to resources of a particular type'
+            "--type", dest="type", help="limit to resources of a particular type"
         )
 
         parser.add_argument(
-            '--storage',
-            dest='storage',
-            help='limit to specific storage medium (local, user, federated)'
+            "--storage",
+            dest="storage",
+            help="limit to specific storage medium (local, user, federated)",
         )
 
         parser.add_argument(
-            '--access',
-            dest='access',
-            help='limit to specific access class (public, discoverable, private)'
+            "--access",
+            dest="access",
+            help="limit to specific access class (public, discoverable, private)",
         )
 
         parser.add_argument(
-            '--owned_by',
-            dest='owned_by',
-            help='limit to resources owned by specific user'
+            "--owned_by",
+            dest="owned_by",
+            help="limit to resources owned by specific user",
         )
 
         parser.add_argument(
-            '--has_subfolders',
-            action='store_true',  # True for presence, False for absence
-            dest='has_subfolders',  # value is options['has_subfolders']
-            help='limit to resources with subfolders'
+            "--has_subfolders",
+            action="store_true",  # True for presence, False for absence
+            dest="has_subfolders",  # value is options['has_subfolders']
+            help="limit to resources with subfolders",
         )
 
         parser.add_argument(
-            '--brief',
-            action='store_true',  # True for presence, False for absence
-            dest='brief',  # value is options['brief']
-            help='create brief listing (resource id only)'
+            "--brief",
+            action="store_true",  # True for presence, False for absence
+            dest="brief",  # value is options['brief']
+            help="create brief listing (resource id only)",
         )
 
     def measure_filtered_resource(self, resource, options):
-        if (options['type'] is None or resource.resource_type == options['type']) and \
-           (options['storage'] is None or resource.storage_type == options['storage']) and \
-           (options['access'] != 'public' or resource.raccess.public) and \
-           (options['access'] != 'discoverable' or resource.raccess.discoverable) and \
-           (options['access'] != 'private' or not resource.raccess.discoverable) and \
-           (not options['has_subfolders'] or has_subfolders(resource)):
+        if (
+            (options["type"] is None or resource.resource_type == options["type"])
+            and (
+                options["storage"] is None
+                or resource.storage_type == options["storage"]
+            )
+            and (options["access"] != "public" or resource.raccess.public)
+            and (options["access"] != "discoverable" or resource.raccess.discoverable)
+            and (options["access"] != "private" or not resource.raccess.discoverable)
+            and (not options["has_subfolders"] or has_subfolders(resource))
+        ):
             storage = resource.get_irods_storage()
-            if options['brief']:
+            if options["brief"]:
                 print(resource.short_id)
             else:
                 if storage.exists(resource.root_path):
@@ -119,14 +140,17 @@ class Command(BaseCommand):
                     print("{} does not exist in iRODS".format(resource.short_id))
 
     def handle(self, *args, **options):
-        if options['owned_by'] is not None:
-            owner = User.objects.get(username=options['owned_by'])
-            for r in BaseResource.objects.filter(r2urp__user=owner,
-                                                 r2urp__privilege=PrivilegeCodes.OWNER):
+        if options["owned_by"] is not None:
+            owner = User.objects.get(username=options["owned_by"])
+            for r in BaseResource.objects.filter(
+                r2urp__user=owner, r2urp__privilege=PrivilegeCodes.OWNER
+            ):
                 self.measure_filtered_resource(r, options)
 
-        elif len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        elif (
+            len(options["resource_ids"]) > 0
+        ):  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 resource = get_resource_by_shortkey(rid)
                 self.measure_filtered_resource(resource, options)
 

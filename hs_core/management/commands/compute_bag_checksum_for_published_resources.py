@@ -1,4 +1,3 @@
-
 from django.core.management.base import BaseCommand
 
 from hs_core.models import BaseResource
@@ -12,11 +11,11 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's: if none, process all published resources
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
     def handle(self, *args, **options):
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        if len(options["resource_ids"]) > 0:  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 resource = get_resource_by_shortkey(rid)
                 if resource.raccess.published:
                     create_bag_by_irods(rid)

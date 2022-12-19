@@ -8,13 +8,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_communities', '0002_auto_20190903_1547'),
+        ("hs_communities", "0002_auto_20190903_1547"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='topic',
-            name='order',
-            field=models.IntegerField(default=0, help_text=b'Position of this entry: 1-n'),
+            model_name="topic",
+            name="order",
+            field=models.IntegerField(
+                default=0, help_text=b"Position of this entry: 1-n"
+            ),
         ),
     ]

@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0023_merge'),
+        ("hs_core", "0023_merge"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='baseresource',
-            name='resource_federation_path',
-            field=models.CharField(default='', max_length=100, blank=True),
+            model_name="baseresource",
+            name="resource_federation_path",
+            field=models.CharField(default="", max_length=100, blank=True),
         ),
     ]

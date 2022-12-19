@@ -10,36 +10,131 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0008_alter_user_username_max_length'),
+        ("auth", "0008_alter_user_username_max_length"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('hs_access_control', '0029_auto_20210604_1143'),
+        ("hs_access_control", "0029_auto_20210604_1143"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='GroupCommunityInvite',
+            name="GroupCommunityInvite",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('privilege', models.IntegerField(choices=[(1, 'Owner'), (2, 'Change'), (3, 'View')], default=3, editable=False)),
-                ('redeemed', models.BooleanField(default=False, editable=False)),
-                ('approved', models.BooleanField(default=False, editable=False)),
-                ('community', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='hs_access_control.Community')),
-                ('community_owner', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='invite_gcc', to=settings.AUTH_USER_MODEL)),
-                ('group', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='auth.Group')),
-                ('group_owner', models.ForeignKey(default=None, editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='invite_gcg', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "privilege",
+                    models.IntegerField(
+                        choices=[(1, "Owner"), (2, "Change"), (3, "View")],
+                        default=3,
+                        editable=False,
+                    ),
+                ),
+                ("redeemed", models.BooleanField(default=False, editable=False)),
+                ("approved", models.BooleanField(default=False, editable=False)),
+                (
+                    "community",
+                    models.ForeignKey(
+                        editable=False,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="hs_access_control.Community",
+                    ),
+                ),
+                (
+                    "community_owner",
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="invite_gcc",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "group",
+                    models.ForeignKey(
+                        editable=False,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="auth.Group",
+                    ),
+                ),
+                (
+                    "group_owner",
+                    models.ForeignKey(
+                        default=None,
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="invite_gcg",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='GroupCommunityRequest',
+            name="GroupCommunityRequest",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('privilege', models.IntegerField(choices=[(1, 'Owner'), (2, 'Change'), (3, 'View')], default=3, editable=False)),
-                ('redeemed', models.BooleanField(default=False, editable=False)),
-                ('approved', models.BooleanField(default=False, editable=False)),
-                ('community', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='hs_access_control.Community')),
-                ('community_owner', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='request_gcc', to=settings.AUTH_USER_MODEL)),
-                ('group', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='auth.Group')),
-                ('group_owner', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='request_gcg', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "privilege",
+                    models.IntegerField(
+                        choices=[(1, "Owner"), (2, "Change"), (3, "View")],
+                        default=3,
+                        editable=False,
+                    ),
+                ),
+                ("redeemed", models.BooleanField(default=False, editable=False)),
+                ("approved", models.BooleanField(default=False, editable=False)),
+                (
+                    "community",
+                    models.ForeignKey(
+                        editable=False,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="hs_access_control.Community",
+                    ),
+                ),
+                (
+                    "community_owner",
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="request_gcc",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "group",
+                    models.ForeignKey(
+                        editable=False,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="auth.Group",
+                    ),
+                ),
+                (
+                    "group_owner",
+                    models.ForeignKey(
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="request_gcg",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

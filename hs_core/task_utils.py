@@ -6,7 +6,7 @@ from hs_core.models import TaskNotification
 
 import logging
 
-logger = logging.getLogger('django')
+logger = logging.getLogger("django")
 
 celery_inspector = inspect()
 
@@ -23,16 +23,16 @@ def _retrieve_task_id(job_name, res_id, job_dict):
         workers = list(job_dict.keys())
         for worker in workers:
             for job in job_dict[worker]:
-                if 'name' in job:
-                    if job['name'] == job_name:
-                        if res_id in job['args']:
-                            return job['id']
-                elif 'request' in job:
-                    scheduled_job = job['request']
-                    if 'name' in scheduled_job:
-                        if scheduled_job['name'] == job_name:
-                            if res_id in scheduled_job['args']:
-                                return scheduled_job['id']
+                if "name" in job:
+                    if job["name"] == job_name:
+                        if res_id in job["args"]:
+                            return job["id"]
+                elif "request" in job:
+                    scheduled_job = job["request"]
+                    if "name" in scheduled_job:
+                        if scheduled_job["name"] == job_name:
+                            if res_id in scheduled_job["args"]:
+                                return scheduled_job["id"]
 
     return None
 
@@ -61,14 +61,19 @@ def get_task_user_id(request):
     return ""
 
 
-def get_or_create_task_notification(task_id, status='progress', name='', payload='', username=''):
+def get_or_create_task_notification(
+    task_id, status="progress", name="", payload="", username=""
+):
     with transaction.atomic():
-        obj, created = TaskNotification.objects.get_or_create(task_id=task_id,
-                                                              defaults={'name': name,
-                                                                        'payload': payload,
-                                                                        'status': status,
-                                                                        'username': username
-                                                                        })
+        obj, created = TaskNotification.objects.get_or_create(
+            task_id=task_id,
+            defaults={
+                "name": name,
+                "payload": payload,
+                "status": status,
+                "username": username,
+            },
+        )
         if not created:
             if username:
                 obj.username = username
@@ -76,26 +81,26 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
                 obj.name = name
             if payload:
                 obj.payload = payload
-            if obj.status == 'progress':
+            if obj.status == "progress":
                 # only update status when it moves from progress, all others are finished states
                 obj.status = status
             obj.save()
 
         return {
-            'id': task_id,
-            'name': name,
-            'status': obj.status,
-            'payload': obj.payload
+            "id": task_id,
+            "name": name,
+            "status": obj.status,
+            "payload": obj.payload,
         }
 
 
 def get_resource_bag_task(res_id):
-    job_name = 'hs_core.tasks.create_bag_by_irods'
+    job_name = "hs_core.tasks.create_bag_by_irods"
     return _retrieve_job_id(job_name, res_id)
 
 
 def get_resource_delete_task(res_id):
-    job_name = 'hs_core.tasks.delete_resource_task'
+    job_name = "hs_core.tasks.delete_resource_task"
     return _retrieve_job_id(job_name, res_id)
 
 
@@ -109,12 +114,14 @@ def get_all_tasks(username):
         return []
     task_notif_list = []
     for obj in TaskNotification.objects.filter(username=username):
-        task_notif_list.append({
-            'id': obj.task_id,
-            'name': obj.name,
-            'status': obj.status,
-            'payload': obj.payload
-        })
+        task_notif_list.append(
+            {
+                "id": obj.task_id,
+                "name": obj.name,
+                "status": obj.status,
+                "payload": obj.payload,
+            }
+        )
     return task_notif_list
 
 
@@ -126,11 +133,7 @@ def revoke_task_by_id(task_id):
     """
     result = AsyncResult(task_id)
     result.revoke(terminate=True)
-    return {
-        'id': task_id,
-        'status': 'aborted',
-        'payload': ''
-    }
+    return {"id": task_id, "status": "aborted", "payload": ""}
 
 
 def dismiss_task_by_id(task_id):
@@ -143,10 +146,10 @@ def dismiss_task_by_id(task_id):
     filter_task = TaskNotification.objects.filter(task_id=task_id).first()
     if filter_task:
         task_dict = {
-            'id': task_id,
-            'name': filter_task.name,
-            'status': filter_task.status,
-            'payload': filter_task.payload
+            "id": task_id,
+            "name": filter_task.name,
+            "status": filter_task.status,
+            "payload": filter_task.payload,
         }
         TaskNotification.objects.filter(task_id=task_id).delete()
     return task_dict
@@ -161,12 +164,12 @@ def set_task_delivered_by_id(task_id):
     task_dict = {}
     filter_task = TaskNotification.objects.filter(task_id=task_id).first()
     if filter_task:
-        filter_task.status = 'delivered'
+        filter_task.status = "delivered"
         filter_task.save()
         task_dict = {
-            'id': task_id,
-            'name': filter_task.name,
-            'status': filter_task.status,
-            'payload': filter_task.payload
+            "id": task_id,
+            "name": filter_task.name,
+            "status": filter_task.status,
+            "payload": filter_task.payload,
         }
     return task_dict

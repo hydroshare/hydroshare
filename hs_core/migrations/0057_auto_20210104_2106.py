@@ -9,19 +9,21 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0056_auto_citations'),
+        ("hs_core", "0056_auto_citations"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tasknotification',
-            name='created',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+            model_name="tasknotification",
+            name="created",
+            field=models.DateTimeField(
+                auto_now_add=True, default=django.utils.timezone.now
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='tasknotification',
-            name='username',
+            model_name="tasknotification",
+            name="username",
             field=models.CharField(blank=True, db_index=True, max_length=150),
         ),
     ]

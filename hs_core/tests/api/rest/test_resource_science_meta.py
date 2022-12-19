@@ -7,23 +7,20 @@ from .base import HSRESTTestCase
 
 
 class TestResourceScienceMetadata(HSRESTTestCase):
-
     def setUp(self):
         super(TestResourceScienceMetadata, self).setUp()
 
-        self.rtype = 'GenericResource'
-        self.title = 'My Test resource'
-        res = resource.create_resource(self.rtype,
-                                       self.user,
-                                       self.title)
+        self.rtype = "GenericResource"
+        self.title = "My Test resource"
+        res = resource.create_resource(self.rtype, self.user, self.title)
         self.resource = res
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
 
         # create another resource for testing relation metadata
-        another_res = resource.create_resource('GenericResource',
-                                               self.user,
-                                               'My another Test resource')
+        another_res = resource.create_resource(
+            "GenericResource", self.user, "My another Test resource"
+        )
         self.pid2 = another_res.short_id
         self.resources_to_delete.append(self.pid2)
 
@@ -34,56 +31,66 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         # remove authentication to test public view
         self.client.logout()
         # Get the resource system metadata
-        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
+        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
+            res_id=self.pid
+        )
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # content = json.loads(response.content.decode())
 
     def test_put_scimeta_generic_resource(self):
-        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
+        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
+            res_id=self.pid
+        )
         put_data = {
             "title": "New Title",
             "description": "New Description",
             "subjects": [
                 {"value": "subject1"},
                 {"value": "subject2"},
-                {"value": "subject3"}
+                {"value": "subject3"},
             ],
-            "contributors": [{
-                "name": "Test Name 1",
-                "organization": "Org 1",
-                "identifiers": {"ORCID": "https://orcid.org/012",
-                                "ResearchGateID": "https://www.researchgate.net/002"}
-            }, {
-                "name": None,
-                "organization": "Org 2"
-            }],
-            "creators": [{
-                "name": "Creator 1",
-                "organization": None
-            }, {
+            "contributors": [
+                {
+                    "name": "Test Name 1",
+                    "organization": "Org 1",
+                    "identifiers": {
+                        "ORCID": "https://orcid.org/012",
+                        "ResearchGateID": "https://www.researchgate.net/002",
+                    },
+                },
+                {"name": None, "organization": "Org 2"},
+            ],
+            "creators": [
+                {"name": "Creator 1", "organization": None},
+                {
                     "name": "Creator 2",
                     "organization": "USU",
-                    "identifiers": {"ORCID": "https://orcid.org/011",
-                                    "ResearchGateID": "https://www.researchgate.net/001"}
-            }],
-            "coverages": [{
-                "type": "box",
-                "value": {
-                    "northlimit": 43.19716728247476,
-                    "projection": "WGS 84 EPSG:4326",
-                    "name": "A whole bunch of the atlantic ocean",
-                    "units": "Decimal degrees",
-                    "southlimit": 23.8858376999,
-                    "eastlimit": -19.16015625,
-                    "westlimit": -62.75390625
+                    "identifiers": {
+                        "ORCID": "https://orcid.org/011",
+                        "ResearchGateID": "https://www.researchgate.net/001",
+                    },
+                },
+            ],
+            "coverages": [
+                {
+                    "type": "box",
+                    "value": {
+                        "northlimit": 43.19716728247476,
+                        "projection": "WGS 84 EPSG:4326",
+                        "name": "A whole bunch of the atlantic ocean",
+                        "units": "Decimal degrees",
+                        "southlimit": 23.8858376999,
+                        "eastlimit": -19.16015625,
+                        "westlimit": -62.75390625,
+                    },
                 }
-            }],
+            ],
             "dates": [
                 {
                     "type": "valid",
                     "start_date": "2016-12-07T00:00:00Z",
-                    "end_date": "2018-12-07T00:00:00Z"
+                    "end_date": "2018-12-07T00:00:00Z",
                 }
             ],
             "language": "fre",
@@ -91,34 +98,40 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             "relations": [
                 {
                     "type": "source",
-                    "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
+                    "value": "https://www.hydroshare.org/resource/{}/".format(
+                        self.pid2
+                    ),
                 },
                 {
                     "type": "isExecutedBy",
-                    "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
-                }
+                    "value": "https://www.hydroshare.org/resource/{}/".format(
+                        self.pid2
+                    ),
+                },
             ],
             "funding_agencies": [
-                 {
-                     "agency_name": "NSF",
-                     "award_title": "Cyber Infrastructure",
-                     "award_number": "NSF-101-20-6789",
-                     "agency_url": "https://www.nsf.gov",
-                 },
-                 {
-                     "agency_name": "NSF2",
-                     "award_title": "Cyber Infrastructure2",
-                     "award_number": "NSF-123",
-                     "agency_url": "https://www.google.com",
-                 }
-            ]
+                {
+                    "agency_name": "NSF",
+                    "award_title": "Cyber Infrastructure",
+                    "award_number": "NSF-101-20-6789",
+                    "agency_url": "https://www.nsf.gov",
+                },
+                {
+                    "agency_name": "NSF2",
+                    "award_title": "Cyber Infrastructure2",
+                    "award_number": "NSF-123",
+                    "agency_url": "https://www.google.com",
+                },
+            ],
         }
-        response = self.client.put(sysmeta_url, put_data, format='json')
+        response = self.client.put(sysmeta_url, put_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
         self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
-        self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
+        self.assertEqual(
+            str(self.resource.metadata.rights), "CCC http://www.hydroshare.org"
+        )
         self.assertEqual(str(self.resource.metadata.language), "fre")
         self.assertEqual(self.resource.metadata.coverages.all().count(), 1)
         self.assertEqual(self.resource.metadata.creators.all().count(), 2)
@@ -128,55 +141,50 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(str(self.resource.metadata.title), "New Title")
 
     def test_put_scimeta_generic_resource_double_none(self):
-        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
+        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
+            res_id=self.pid
+        )
         put_data = {
             "title": "New Title",
             "description": "New Description",
             "subjects": [
                 {"value": "subject1"},
                 {"value": "subject2"},
-                {"value": "subject3"}
+                {"value": "subject3"},
             ],
-            "contributors": [{
-                "name": "Test Name 1",
-                "organization": "Org 1"
-            }, {
-                "name": None,
-                "organization": "Org 2"
-            }],
+            "contributors": [
+                {"name": "Test Name 1", "organization": "Org 1"},
+                {"name": None, "organization": "Org 2"},
+            ],
             "creators": [
+                {"name": "Creator", "organization": None},
+                {"name": None, "organization": None},
+            ],
+            "coverages": [
                 {
-                    "name": "Creator",
-                    "organization": None
-                },
-                {
-                    "name": None,
-                    "organization": None
+                    "type": "box",
+                    "value": {
+                        "northlimit": 43.19716728247476,
+                        "projection": "WGS 84 EPSG:4326",
+                        "name": "A whole bunch of the atlantic ocean",
+                        "units": "Decimal degrees",
+                        "southlimit": 23.8858376999,
+                        "eastlimit": -19.16015625,
+                        "westlimit": -62.75390625,
+                    },
                 }
             ],
-            "coverages": [{
-                "type": "box",
-                "value": {
-                    "northlimit": 43.19716728247476,
-                    "projection": "WGS 84 EPSG:4326",
-                    "name": "A whole bunch of the atlantic ocean",
-                    "units": "Decimal degrees",
-                    "southlimit": 23.8858376999,
-                    "eastlimit": -19.16015625,
-                    "westlimit": -62.75390625
-                }
-            }],
             "dates": [
                 {
                     "type": "valid",
                     "start_date": "2016-12-07T00:00:00Z",
-                    "end_date": "2018-12-07T00:00:00Z"
+                    "end_date": "2018-12-07T00:00:00Z",
                 }
             ],
             "language": "fre",
-            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"}
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
         }
-        response = self.client.put(sysmeta_url, put_data, format='json')
+        response = self.client.put(sysmeta_url, put_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_put_scimeta_composite_resource_with_core_metadata(self):
@@ -185,33 +193,35 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         # create a composite resource
         self._create_resource(resource_type="CompositeResource")
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
-            res_id=self.resource.short_id)
+            res_id=self.resource.short_id
+        )
         put_data = {
             "title": "New Title",
             "description": "New Description",
             "subjects": [
                 {"value": "subject1"},
                 {"value": "subject2"},
-                {"value": "subject3"}
+                {"value": "subject3"},
             ],
-            "contributors": [{
-                "name": "Test Name 1",
-                "organization": "Org 1"
-            }, {
-                "name": "Test Name 2",
-                "organization": "Org 2"
-            }],
-            "creators": [{
-                "name": "Creator",
-                "organization": None,
-                "identifiers": {"ORCID": "https://orcid.org/011",
-                                "ResearchGateID": "https://www.researchgate.net/001"}
-            }],
+            "contributors": [
+                {"name": "Test Name 1", "organization": "Org 1"},
+                {"name": "Test Name 2", "organization": "Org 2"},
+            ],
+            "creators": [
+                {
+                    "name": "Creator",
+                    "organization": None,
+                    "identifiers": {
+                        "ORCID": "https://orcid.org/011",
+                        "ResearchGateID": "https://www.researchgate.net/001",
+                    },
+                }
+            ],
             "dates": [
                 {
                     "type": "valid",
                     "start_date": "2016-12-07T00:00:00Z",
-                    "end_date": "2018-12-07T00:00:00Z"
+                    "end_date": "2018-12-07T00:00:00Z",
                 }
             ],
             "language": "fre",
@@ -219,34 +229,40 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             "relations": [
                 {
                     "type": "source",
-                    "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
+                    "value": "https://www.hydroshare.org/resource/{}/".format(
+                        self.pid2
+                    ),
                 },
                 {
                     "type": "isExecutedBy",
-                    "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
-                }
+                    "value": "https://www.hydroshare.org/resource/{}/".format(
+                        self.pid2
+                    ),
+                },
             ],
             "funding_agencies": [
-                 {
-                     "agency_name": "NSF",
-                     "award_title": "Cyber Infrastructure",
-                     "award_number": "NSF-101-20-6789",
-                     "agency_url": "https://www.nsf.gov",
-                 },
-                 {
-                     "agency_name": "NSF2",
-                     "award_title": "Cyber Infrastructure2",
-                     "award_number": "NSF-123",
-                     "agency_url": "https://www.google.com",
-                 }
-            ]
+                {
+                    "agency_name": "NSF",
+                    "award_title": "Cyber Infrastructure",
+                    "award_number": "NSF-101-20-6789",
+                    "agency_url": "https://www.nsf.gov",
+                },
+                {
+                    "agency_name": "NSF2",
+                    "award_title": "Cyber Infrastructure2",
+                    "award_number": "NSF-123",
+                    "agency_url": "https://www.google.com",
+                },
+            ],
         }
-        response = self.client.put(sysmeta_url, put_data, format='json')
+        response = self.client.put(sysmeta_url, put_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
         self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
-        self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
+        self.assertEqual(
+            str(self.resource.metadata.rights), "CCC http://www.hydroshare.org"
+        )
         self.assertEqual(str(self.resource.metadata.language), "fre")
         self.assertEqual(self.resource.metadata.creators.all().count(), 1)
         self.assertEqual(self.resource.metadata.contributors.all().count(), 2)
@@ -261,49 +277,46 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         # create a composite resource
         self._create_resource(resource_type="CompositeResource")
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
-            res_id=self.resource.short_id)
+            res_id=self.resource.short_id
+        )
         put_data = {
             "title": "New Title",
             "description": "New Description",
             "subjects": [
                 {"value": "subject1"},
                 {"value": "subject2"},
-                {"value": "subject3"}
+                {"value": "subject3"},
             ],
-            "contributors": [{
-                "name": "Test Name 1",
-                "organization": "Org 1"
-            }, {
-                "name": "Test Name 2",
-                "organization": "Org 2"
-            }],
-            "creators": [{
-                "name": "Creator",
-                "organization": None
-            }],
-            "coverages": [{
-                "type": "box",
-                "value": {
-                    "northlimit": 43.19716728247476,
-                    "projection": "WGS 84 EPSG:4326",
-                    "name": "A whole bunch of the atlantic ocean",
-                    "units": "Decimal degrees",
-                    "southlimit": 23.8858376999,
-                    "eastlimit": -19.16015625,
-                    "westlimit": -62.75390625
+            "contributors": [
+                {"name": "Test Name 1", "organization": "Org 1"},
+                {"name": "Test Name 2", "organization": "Org 2"},
+            ],
+            "creators": [{"name": "Creator", "organization": None}],
+            "coverages": [
+                {
+                    "type": "box",
+                    "value": {
+                        "northlimit": 43.19716728247476,
+                        "projection": "WGS 84 EPSG:4326",
+                        "name": "A whole bunch of the atlantic ocean",
+                        "units": "Decimal degrees",
+                        "southlimit": 23.8858376999,
+                        "eastlimit": -19.16015625,
+                        "westlimit": -62.75390625,
+                    },
                 }
-            }],
+            ],
             "dates": [
                 {
                     "type": "valid",
                     "start_date": "2016-12-07T00:00:00Z",
-                    "end_date": "2018-12-07T00:00:00Z"
+                    "end_date": "2018-12-07T00:00:00Z",
                 }
             ],
             "language": "fre",
-            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"}
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
         }
-        response = self.client.put(sysmeta_url, put_data, format='json')
+        response = self.client.put(sysmeta_url, put_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.resource.delete()
 
@@ -313,39 +326,41 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         # create a composite resource
         self._create_resource(resource_type="CompositeResource")
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
-            res_id=self.resource.short_id)
+            res_id=self.resource.short_id
+        )
         put_data = {
             "title": "New Title",
             "description": "New Description",
             "subjects": [
                 {"value": "subject1"},
                 {"value": "subject2"},
-                {"value": "subject3"}
+                {"value": "subject3"},
             ],
-            "contributors": [{
-                "name": "Test Name 1",
-                "organization": "Org 1"
-            }, {
-                "name": "Test Name 2",
-                "organization": "Org 2"
-            }],
-            "creators": [{
-                "name": "Creator",
-                "organization": None,
-                "identifiers": {"ORCID": "https://orcid.org/011",
-                                "ResearchGateID": "https://www.researchgate.net/001"}
-            }],
+            "contributors": [
+                {"name": "Test Name 1", "organization": "Org 1"},
+                {"name": "Test Name 2", "organization": "Org 2"},
+            ],
+            "creators": [
+                {
+                    "name": "Creator",
+                    "organization": None,
+                    "identifiers": {
+                        "ORCID": "https://orcid.org/011",
+                        "ResearchGateID": "https://www.researchgate.net/001",
+                    },
+                }
+            ],
             "dates": [
                 {
                     "type": "valid",
                     "start_date": "2016-12-07T00:00:00Z",
-                    "end_date": "2018-12-07T00:00:00Z"
+                    "end_date": "2018-12-07T00:00:00Z",
                 }
             ],
             "language": "fre",
-            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"}
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
         }
-        response = self.client.put(sysmeta_url, put_data, format='json')
+        response = self.client.put(sysmeta_url, put_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.resource.delete()
 
@@ -356,100 +371,100 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         # create a web app resource
         self._create_resource(resource_type="ToolResource")
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
-            res_id=self.resource.short_id)
+            res_id=self.resource.short_id
+        )
         put_data = {
             "title": "New Title",
             "description": "New Description",
             "subjects": [
                 {"value": "subject1"},
                 {"value": "subject2"},
-                {"value": "subject3"}
+                {"value": "subject3"},
             ],
-            "contributors": [{
-                "name": "Test Name 1",
-                "organization": "Org 1"
-            }, {
-                "name": "Test Name 2",
-                "organization": "Org 2",
-                "identifiers": {"ORCID": "https://orcid.org/011",
-                                "ResearchGateID": "https://www.researchgate.net/001"}
-            }],
-            "creators": [{
-                "name": "Creator",
-                "organization": None,
-                "identifiers": {"ORCID": "https://orcid.org/011",
-                                "ResearchGateID": "https://www.researchgate.net/001"}
-            }],
-            "coverages": [{
-                "type": "box",
-                "value": {
-                    "northlimit": 43.19716728247476,
-                    "projection": "WGS 84 EPSG:4326",
-                    "name": "A whole bunch of the atlantic ocean",
-                    "units": "Decimal degrees",
-                    "southlimit": 23.8858376999,
-                    "eastlimit": -19.16015625,
-                    "westlimit": -62.75390625
+            "contributors": [
+                {"name": "Test Name 1", "organization": "Org 1"},
+                {
+                    "name": "Test Name 2",
+                    "organization": "Org 2",
+                    "identifiers": {
+                        "ORCID": "https://orcid.org/011",
+                        "ResearchGateID": "https://www.researchgate.net/001",
+                    },
+                },
+            ],
+            "creators": [
+                {
+                    "name": "Creator",
+                    "organization": None,
+                    "identifiers": {
+                        "ORCID": "https://orcid.org/011",
+                        "ResearchGateID": "https://www.researchgate.net/001",
+                    },
                 }
-            }],
+            ],
+            "coverages": [
+                {
+                    "type": "box",
+                    "value": {
+                        "northlimit": 43.19716728247476,
+                        "projection": "WGS 84 EPSG:4326",
+                        "name": "A whole bunch of the atlantic ocean",
+                        "units": "Decimal degrees",
+                        "southlimit": 23.8858376999,
+                        "eastlimit": -19.16015625,
+                        "westlimit": -62.75390625,
+                    },
+                }
+            ],
             "dates": [
                 {
                     "type": "valid",
                     "start_date": "2016-12-07T00:00:00Z",
-                    "end_date": "2018-12-07T00:00:00Z"
+                    "end_date": "2018-12-07T00:00:00Z",
                 }
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "requesturlbase": {
-                "value": "https://www.google.com"
-            },
-            "toolversion": {
-                "value": "1.12"
-            },
+            "requesturlbase": {"value": "https://www.google.com"},
+            "toolversion": {"value": "1.12"},
             "supportedrestypes": {
                 "supported_res_types": ["CompositeResource", "CollectionResource"]
             },
-            "supportedsharingstatuses": {
-                "sharing_status": ["Public", "Discoverable"]
-            },
+            "supportedsharingstatuses": {"sharing_status": ["Public", "Discoverable"]},
             "toolicon": {
                 "value": "https://www.hydroshare.org/static/static/img/logo-sm.png"
             },
-            "apphomepageurl": {
-                "value": "https://mywebapp.com"
-            },
-            "mailing_list_url": {
-                "value": "https://mywebapp.com/mailinglist"
-            },
-            "testing_protocol_url": {
-                "value": "https://mywebapp.com/testingprotocol"
-            },
-            "help_page_url": {
-                "value": "https://mywebapp.com/helppage"
-            },
-            "source_code_url": {
-                "value": "https://mywebapp.com/sourcecode"
-            },
-            "issues_page_url": {
-                "value": "https://mywebapp.com/issues"
-            },
-            "roadmap": {
-                "value": "roadmap"
-            }
+            "apphomepageurl": {"value": "https://mywebapp.com"},
+            "mailing_list_url": {"value": "https://mywebapp.com/mailinglist"},
+            "testing_protocol_url": {"value": "https://mywebapp.com/testingprotocol"},
+            "help_page_url": {"value": "https://mywebapp.com/helppage"},
+            "source_code_url": {"value": "https://mywebapp.com/sourcecode"},
+            "issues_page_url": {"value": "https://mywebapp.com/issues"},
+            "roadmap": {"value": "roadmap"},
         }
 
-        response = self.client.put(sysmeta_url, put_data, format='json')
+        response = self.client.put(sysmeta_url, put_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        response = self.client.get(sysmeta_url, format='json')
+        response = self.client.get(sysmeta_url, format="json")
         content = json.loads(response.content.decode())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(content["app_home_page_url"]["value"], "https://mywebapp.com")
-        self.assertEqual(content["mailing_list_url"]["value"], "https://mywebapp.com/mailinglist")
-        self.assertEqual(content["testing_protocol_url"]["value"], "https://mywebapp.com/testingprotocol")
-        self.assertEqual(content["help_page_url"]["value"], "https://mywebapp.com/helppage")
-        self.assertEqual(content["source_code_url"]["value"], "https://mywebapp.com/sourcecode")
-        self.assertEqual(content["issues_page_url"]["value"], "https://mywebapp.com/issues")
+        self.assertEqual(
+            content["mailing_list_url"]["value"], "https://mywebapp.com/mailinglist"
+        )
+        self.assertEqual(
+            content["testing_protocol_url"]["value"],
+            "https://mywebapp.com/testingprotocol",
+        )
+        self.assertEqual(
+            content["help_page_url"]["value"], "https://mywebapp.com/helppage"
+        )
+        self.assertEqual(
+            content["source_code_url"]["value"], "https://mywebapp.com/sourcecode"
+        )
+        self.assertEqual(
+            content["issues_page_url"]["value"], "https://mywebapp.com/issues"
+        )
         self.assertEqual(content["roadmap"]["value"], "roadmap")
 
         self.resource.delete()
@@ -461,28 +476,21 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         # create a web app resource
         self._create_resource(resource_type="ToolResource")
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
-            res_id=self.resource.short_id)
+            res_id=self.resource.short_id
+        )
         put_data = {
-            "requesturlbase": {
-                "value": "https://www.google.com"
-            },
-            "toolversion": {
-                "value": "1.12"
-            },
+            "requesturlbase": {"value": "https://www.google.com"},
+            "toolversion": {"value": "1.12"},
             "supportedrestypes": {
                 "supported_res_types": ["CompositeResource", "CollectionResource"]
             },
-            "supportedsharingstatuses": {
-                "sharing_status": ["Public", "Discoverable"]
-            },
+            "supportedsharingstatuses": {"sharing_status": ["Public", "Discoverable"]},
             "toolicon": {
                 "value": "https://www.hydroshare.org/static/static/img/logo-sm.png"
             },
-            "apphomepageurl": {
-                "value": "https://mywebapp.com"
-            }
+            "apphomepageurl": {"value": "https://mywebapp.com"},
         }
-        response = self.client.put(sysmeta_url, put_data, format='json')
+        response = self.client.put(sysmeta_url, put_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.resource.delete()
 
@@ -493,8 +501,11 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.resource = resource.create_resource(
             resource_type=resource_type,
             owner=self.user,
-            title="Testing bulk metadata update for resource type - {}".format(resource_type),
-            files=files
-            )
-        resource_post_create_actions(resource=self.resource, user=self.user,
-                                     metadata=self.resource.metadata)
+            title="Testing bulk metadata update for resource type - {}".format(
+                resource_type
+            ),
+            files=files,
+        )
+        resource_post_create_actions(
+            resource=self.resource, user=self.user, metadata=self.resource.metadata
+        )

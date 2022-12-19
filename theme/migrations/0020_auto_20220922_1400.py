@@ -7,18 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('theme', '0019_auto_20220510_1213'),
+        ("theme", "0019_auto_20220510_1213"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='siteconfiguration',
-            name='has_social_network_links',
+            model_name="siteconfiguration",
+            name="has_social_network_links",
             field=models.BooleanField(blank=True, default=False),
         ),
         migrations.AlterField(
-            model_name='userprofile',
-            name='identifiers',
-            field=django.contrib.postgres.fields.hstore.HStoreField(blank=True, default=dict, null=True),
+            model_name="userprofile",
+            name="identifiers",
+            field=django.contrib.postgres.fields.hstore.HStoreField(
+                blank=True, default=dict, null=True
+            ),
         ),
     ]

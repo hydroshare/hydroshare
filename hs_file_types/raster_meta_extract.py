@@ -37,9 +37,9 @@ def get_raster_meta_dict(raster_file_name):
 
     # write meta as dictionary
     raster_meta_dict = {
-        'spatial_coverage_info': spatial_coverage_info,
-        'cell_info': cell_info,
-        'band_info': band_info,
+        "spatial_coverage_info": spatial_coverage_info,
+        "cell_info": cell_info,
+        "band_info": band_info,
     }
 
     return raster_meta_dict
@@ -56,8 +56,8 @@ def get_spatial_coverage_info(raster_file_name):
     original_coverage_info = get_original_coverage_info(raster_dataset)
     wgs84_coverage_info = get_wgs84_coverage_info(raster_dataset)
     spatial_coverage_info = {
-        'original_coverage_info': original_coverage_info,
-        'wgs84_coverage_info': wgs84_coverage_info
+        "original_coverage_info": original_coverage_info,
+        "wgs84_coverage_info": wgs84_coverage_info,
     }
     return spatial_coverage_info
 
@@ -85,19 +85,22 @@ def get_original_coverage_info(raster_dataset):
 
         # get projection string, datum
         projection_string = proj_wkt
-        datum = spatial_ref.GetAttrValue("DATUM", 0) \
-            if spatial_ref.GetAttrValue("DATUM", 0) else None
+        datum = (
+            spatial_ref.GetAttrValue("DATUM", 0)
+            if spatial_ref.GetAttrValue("DATUM", 0)
+            else None
+        )
 
         # get unit info and check spelling
         unit = spatial_ref.GetAttrValue("UNIT", 0)
-        if re.match('metre', unit, re.I):
-            unit = 'meter'
+        if re.match("metre", unit, re.I):
+            unit = "meter"
 
         # get projection info
         if spatial_ref.IsProjected():
-            projection = spatial_ref.GetAttrValue('projcs', 0)
+            projection = spatial_ref.GetAttrValue("projcs", 0)
         else:
-            projection = spatial_ref.GetAttrValue('geogcs', 0)
+            projection = spatial_ref.GetAttrValue("geogcs", 0)
 
     else:
         unit = None
@@ -126,8 +129,8 @@ def get_original_coverage_info(raster_dataset):
         y_coor = []
         for px in xarr:
             for py in yarr:
-                x = gt[0]+(px*gt[1])+(py*gt[2])
-                y = gt[3]+(px*gt[4])+(py*gt[5])
+                x = gt[0] + (px * gt[1]) + (py * gt[2])
+                y = gt[3] + (px * gt[4]) + (py * gt[5])
                 x_coor.append(x)
                 y_coor.append(y)
             yarr.reverse()
@@ -141,16 +144,18 @@ def get_original_coverage_info(raster_dataset):
         westlimit = None
         eastlimit = None
 
-    spatial_coverage_info = OrderedDict([
-        ('northlimit', northlimit),
-        ('southlimit', southlimit),
-        ('eastlimit', eastlimit),
-        ('westlimit', westlimit),
-        ('projection', projection),
-        ('units', unit),
-        ('projection_string', projection_string),
-        ('datum', datum)
-    ])
+    spatial_coverage_info = OrderedDict(
+        [
+            ("northlimit", northlimit),
+            ("southlimit", southlimit),
+            ("eastlimit", eastlimit),
+            ("westlimit", westlimit),
+            ("projection", projection),
+            ("units", unit),
+            ("projection_string", projection_string),
+            ("datum", datum),
+        ]
+    )
 
     return spatial_coverage_info
 
@@ -200,10 +205,10 @@ def get_wgs84_coverage_info(raster_dataset):
             log.exception(str(ex))
 
         # get original bounding box info
-        original_northlimit = original_coverage_info['northlimit']
-        original_southlimit = original_coverage_info['southlimit']
-        original_westlimit = original_coverage_info['westlimit']
-        original_eastlimit = original_coverage_info['eastlimit']
+        original_northlimit = original_coverage_info["northlimit"]
+        original_southlimit = original_coverage_info["southlimit"]
+        original_westlimit = original_coverage_info["westlimit"]
+        original_eastlimit = original_coverage_info["eastlimit"]
 
         if transform is not None and transform.this is not None:
             # Find bounding box that encapsulates tranformed original bounding box
@@ -223,14 +228,16 @@ def get_wgs84_coverage_info(raster_dataset):
             wgs84_westlimit = min(x_wgs84)  # min x
             wgs84_eastlimit = max(x_wgs84)
 
-            wgs84_coverage_info = OrderedDict([
-                ('northlimit', wgs84_northlimit),
-                ('southlimit', wgs84_southlimit),
-                ('eastlimit', wgs84_eastlimit),
-                ('westlimit', wgs84_westlimit),
-                ('units', 'Decimal degrees'),
-                ('projection', 'WGS 84 EPSG:4326')
-            ])
+            wgs84_coverage_info = OrderedDict(
+                [
+                    ("northlimit", wgs84_northlimit),
+                    ("southlimit", wgs84_southlimit),
+                    ("eastlimit", wgs84_eastlimit),
+                    ("westlimit", wgs84_westlimit),
+                    ("units", "Decimal degrees"),
+                    ("projection", "WGS 84 EPSG:4326"),
+                ]
+            )
 
     return wgs84_coverage_info
 
@@ -254,22 +261,25 @@ def get_cell_info(raster_file_name):
         band = raster_dataset.GetRasterBand(1)
         cell_data_type = gdal.GetDataTypeName(band.DataType)
 
-        cell_info = OrderedDict([
-            ('rows', rows),
-            ('columns', columns),
-            ('cellSizeXValue', cell_size_x_value),
-            ('cellSizeYValue', cell_size_y_value),
-            ('cellDataType', cell_data_type),
-
-        ])
+        cell_info = OrderedDict(
+            [
+                ("rows", rows),
+                ("columns", columns),
+                ("cellSizeXValue", cell_size_x_value),
+                ("cellSizeYValue", cell_size_y_value),
+                ("cellDataType", cell_data_type),
+            ]
+        )
     else:
-        cell_info = OrderedDict([
-            ('rows', None),
-            ('columns', None),
-            ('cellSizeXValue', None),
-            ('cellSizeYValue', None),
-            ('cellDataType', None),
-        ])
+        cell_info = OrderedDict(
+            [
+                ("rows", None),
+                ("columns", None),
+                ("cellSizeXValue", None),
+                ("cellSizeYValue", None),
+                ("cellDataType", None),
+            ]
+        )
 
     return cell_info
 
@@ -279,6 +289,7 @@ def get_band_info(raster_file_name):
     raster_dataset = gdal.Open(raster_file_name, GA_ReadOnly)
 
     import os
+
     ori_dir = os.getcwd()
     os.chdir(os.path.dirname(raster_file_name))
 
@@ -288,7 +299,7 @@ def get_band_info(raster_file_name):
         band_count = raster_dataset.RasterCount
 
         for i in range(0, band_count):
-            band = raster_dataset.GetRasterBand(i+1)
+            band = raster_dataset.GetRasterBand(i + 1)
             minimum, maximum, _, _ = band.ComputeStatistics(False)
             no_data = band.GetNoDataValue()
             new_no_data = None
@@ -302,22 +313,22 @@ def get_band_info(raster_file_name):
                 band.SetNoDataValue(new_no_data)
                 minimum, maximum, _, _ = band.ComputeStatistics(False)
 
-            band_info[i+1] = {
-                'name': 'Band_'+str(i+1),
-                'variableName': '',
-                'variableUnit': band.GetUnitType(),
-                'noDataValue': band.GetNoDataValue(),
-                'maximumValue': maximum,
-                'minimumValue': minimum,
-                }
+            band_info[i + 1] = {
+                "name": "Band_" + str(i + 1),
+                "variableName": "",
+                "variableUnit": band.GetUnitType(),
+                "noDataValue": band.GetNoDataValue(),
+                "maximumValue": maximum,
+                "minimumValue": minimum,
+            }
     else:
         band_info = {
-                'name': 'Band_1',
-                'variableName': '',
-                'variableUnit': '',
-                'noDataValue': None,
-                'maximumValue': None,
-                'minimumValue': None,
+            "name": "Band_1",
+            "variableName": "",
+            "variableUnit": "",
+            "noDataValue": None,
+            "maximumValue": None,
+            "minimumValue": None,
         }
 
     raster_dataset = None

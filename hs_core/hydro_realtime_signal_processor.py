@@ -11,12 +11,12 @@ logger = logging.getLogger(__name__)
 
 class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
 
-    """ 
-    Customized for the fact that all indexed resources are subclasses of BaseResource. 
-    Notes: 
-    1. RealtimeSignalProcessor already plumbs in all class updates. We might want to be more specific. 
-    2. The class sent to this is a subclass of BaseResource, or another class. 
-    3. Thus, we want to capture cases in which it is an appropriate instance, and respond. 
+    """
+    Customized for the fact that all indexed resources are subclasses of BaseResource.
+    Notes:
+    1. RealtimeSignalProcessor already plumbs in all class updates. We might want to be more specific.
+    2. The class sent to this is a subclass of BaseResource, or another class.
+    3. Thus, we want to capture cases in which it is an appropriate instance, and respond.
     """
 
     def handle_save(self, sender, instance, **kwargs):
@@ -29,9 +29,8 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         from hs_file_types.models import AbstractFileMetaData
         from django.contrib.postgres.fields import HStoreField
 
-
         if isinstance(instance, BaseResource):
-            if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'):
+            if hasattr(instance, "raccess") and hasattr(instance, "metadata"):
                 # work around for failure of super(BaseResource, instance) to work properly.
                 # this always succeeds because this is a post-save object action.
                 newbase = BaseResource.objects.get(pk=instance.pk)
@@ -42,21 +41,34 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                     # test whether the object should be exposed.
                     if instance.show_in_discover:
                         try:
-                            index = self.connections[using].get_unified_index().get_index(newsender)
+                            index = (
+                                self.connections[using]
+                                .get_unified_index()
+                                .get_index(newsender)
+                            )
                             index.update_object(newbase, using=using)
                         except NotHandled:
-                            logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
-                                             str(type(instance)), newbase.short_id)
-
+                            logger.exception(
+                                "Failure: changes to %s with short_id %s not added to Solr Index.",
+                                str(type(instance)),
+                                newbase.short_id,
+                            )
 
                     # if object is private or becoming private, delete from index
                     else:  # not to be shown in discover
                         try:
-                            index = self.connections[using].get_unified_index().get_index(newsender)
+                            index = (
+                                self.connections[using]
+                                .get_unified_index()
+                                .get_index(newsender)
+                            )
                             index.remove_object(newbase, using=using)
                         except NotHandled:
-                            logger.exception("Failure: delete of %s with short_id %s failed.",
-                                             str(type(instance)), newbase.short_id)
+                            logger.exception(
+                                "Failure: delete of %s with short_id %s failed.",
+                                str(type(instance)),
+                                newbase.short_id,
+                            )
 
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it.
@@ -98,6 +110,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
 
     def handle_delete(self, sender, instance, **kwargs):
         """
-        Ignore delete events as this is accomplished separately. 
+        Ignore delete events as this is accomplished separately.
         """
         pass

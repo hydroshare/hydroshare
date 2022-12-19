@@ -1,5 +1,3 @@
-
-
 from django.db import migrations
 from django.contrib.auth.models import User
 
@@ -29,9 +27,12 @@ def undo_migrate_users_and_resources(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_labels', '0001_initial'),
+        ("hs_labels", "0001_initial"),
     ]
 
     operations = [
-        migrations.RunPython(code=migrate_users_and_resources, reverse_code=undo_migrate_users_and_resources),
+        migrations.RunPython(
+            code=migrate_users_and_resources,
+            reverse_code=undo_migrate_users_and_resources,
+        ),
     ]

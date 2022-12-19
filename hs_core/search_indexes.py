@@ -54,13 +54,13 @@ def normalize_name(name):
         # probablepeople doesn't understand utf-8 encoding. Hand it pure unicode.
         _, type = probablepeople.tag(nname)  # discard parser result
     except probablepeople.RepeatedLabelError:  # if it can't understand the name, it's foreign
-        type = 'Unknown'
+        type = "Unknown"
 
-    if type == 'Corporation':
+    if type == "Corporation":
         return sname  # do not parse and reorder company names
 
     # special case for capitalization: flag as corporation
-    if (adjacent_caps.match(sname)):
+    if adjacent_caps.match(sname):
         return sname
 
     # treat anything else as a human name
@@ -73,38 +73,38 @@ def normalize_name(name):
         if not normalized:
             normalized = nameparts.suffix
         else:
-            normalized = normalized + ' ' + nameparts.suffix
+            normalized = normalized + " " + nameparts.suffix
 
     if normalized:
-        normalized = normalized + ','
+        normalized = normalized + ","
 
     if nameparts.title:
         if not normalized:
             normalized = nameparts.title
         else:
-            normalized = normalized + ' ' + nameparts.title
+            normalized = normalized + " " + nameparts.title
 
     if nameparts.first:
         if not normalized:
             normalized = nameparts.first
         else:
-            normalized = normalized + ' ' + nameparts.first
+            normalized = normalized + " " + nameparts.first
 
     if nameparts.middle:
         if not normalized:
             normalized = nameparts.middle
         else:
-            normalized = ' ' + normalized + ' ' + nameparts.middle
+            normalized = " " + normalized + " " + nameparts.middle
 
     return normalized.strip()
 
 
 def get_content_types(res):
-    """ return a set of content types matching extensions in a resource.
-        These include content types of logical files, as well as the generic
-        content types 'Document', 'Spreadsheet', 'Presentation'.
+    """return a set of content types matching extensions in a resource.
+    These include content types of logical files, as well as the generic
+    content types 'Document', 'Spreadsheet', 'Presentation'.
 
-        This is only meaningful for Generic or Composite resources.
+    This is only meaningful for Generic or Composite resources.
     """
 
     resource = res.get_content_model()  # enable full logical file interface
@@ -119,7 +119,7 @@ def get_content_types(res):
         path = f.short_path
         path = path.split(".")  # determine last extension
         if len(path) > 1:
-            ext = path[len(path)-1]
+            ext = path[len(path) - 1]
             if len(ext) <= 5:  # skip obviously non-MIME extensions
                 all_exts.add(ext.lower())
             else:
@@ -141,13 +141,13 @@ def get_content_types(res):
             missing_exts -= settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]
 
     if missing_exts:  # if there is anything left over, then mark as Generic
-        types.add('Generic Data')
+        types.add("Generic Data")
 
     return (types, missing_exts, all_exts)
 
 
 def discoverable(thing):
-    """ return True if the string given is discoverable information, False if not """
+    """return True if the string given is discoverable information, False if not"""
     if thing is not None and thing.strip() != "Unknown" and thing.strip() != "":
         return True
     return False
@@ -157,10 +157,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     """Define base class for resource indexes."""
 
     text = indexes.CharField(document=True, use_template=True, stored=False)
-    short_id = indexes.CharField(model_attr='short_id')
-    doi = indexes.CharField(model_attr='doi', null=True, stored=False)
+    short_id = indexes.CharField(model_attr="short_id")
+    doi = indexes.CharField(model_attr="doi", null=True, stored=False)
     author = indexes.FacetCharField()  # normalized to last, first, middle
-    author_lower = indexes.FacetCharField()  # normalized to last, first, middle in lower case
+    author_lower = (
+        indexes.FacetCharField()
+    )  # normalized to last, first, middle in lower case
     author_url = indexes.CharField(indexed=False, null=True)
     title = indexes.FacetCharField()  # so that sorting isn't tokenized
     title_lower = indexes.FacetCharField()  # so that sorting isn't tokenized
@@ -172,8 +174,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     shareable = indexes.BooleanField()
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField(stored=False)
-    created = indexes.DateTimeField(model_attr='created')
-    modified = indexes.DateTimeField(model_attr='last_updated')
+    created = indexes.DateTimeField(model_attr="created")
+    modified = indexes.DateTimeField(model_attr="last_updated")
     organization = indexes.MultiValueField(stored=False)
     publisher = indexes.CharField(stored=False)
     coverage = indexes.MultiValueField(indexed=False)
@@ -240,20 +242,22 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return self.get_model().objects.filter(short_id__in=show)
 
     def prepare_created(self, obj):
-        return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return obj.created.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def prepare_modified(self, obj):
-        return obj.last_updated.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return obj.last_updated.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def prepare_title(self, obj):
         """Return metadata title if exists, otherwise return 'none'."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.title is not None and \
-                obj.metadata.title.value is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.title is not None
+            and obj.metadata.title.value is not None
+        ):
             return obj.metadata.title.value.lstrip()
         else:
-            return 'none'
+            return "none"
 
     def prepare_title_lower(self, obj):
         result = self.prepare_title(obj)
@@ -261,10 +265,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_abstract(self, obj):
         """Return metadata abstract if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.description is not None and \
-                obj.metadata.description.abstract is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.description is not None
+            and obj.metadata.description.abstract is not None
+        ):
             return obj.metadata.description.abstract.lstrip()
         else:
             return None
@@ -276,21 +282,23 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This must be represented as a single-value field to enable sorting.
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.creators is not None
+        ):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator is None:
-                return 'none'
+                return "none"
             elif first_creator.name:
                 normalized = normalize_name(first_creator.name)
                 return normalized
             elif first_creator.organization:
                 return first_creator.organization.strip()
             else:
-                return 'none'
+                return "none"
         else:
-            return 'none'
+            return "none"
 
     def prepare_author_lower(self, obj):
         result = self.prepare_author(obj)
@@ -302,9 +310,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This field is stored but not indexed, to avoid hitting the Django database during response.
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.creators is not None
+        ):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator is not None and first_creator.relative_uri is not None:
                 return first_creator.relative_uri
@@ -319,12 +329,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This field can have multiple values
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            return [normalize_name(creator.name)
-                    for creator in obj.metadata.creators.all()
-                    .exclude(name__isnull=True).exclude(name='')]
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.creators is not None
+        ):
+            return [
+                normalize_name(creator.name)
+                for creator in obj.metadata.creators.all()
+                .exclude(name__isnull=True)
+                .exclude(name="")
+            ]
         else:
             return []
 
@@ -334,12 +349,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This field can have multiple values. Contributors include creators.
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.contributors is not None:
-            output1 = [normalize_name(contributor.name)
-                       for contributor in obj.metadata.contributors.all()
-                       .exclude(name__isnull=True).exclude(name='')]
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.contributors is not None
+        ):
+            output1 = [
+                normalize_name(contributor.name)
+                for contributor in obj.metadata.contributors.all()
+                .exclude(name__isnull=True)
+                .exclude(name="")
+            ]
             return list(set(output1))  # eliminate duplicates
         else:
             return []
@@ -350,11 +370,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This field can have multiple values.
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.subjects is not None:
-            return [subject.value.strip() for subject in obj.metadata.subjects.all()
-                    .exclude(value__isnull=True)]
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.subjects is not None
+        ):
+            return [
+                subject.value.strip()
+                for subject in obj.metadata.subjects.all().exclude(value__isnull=True)
+            ]
         else:
             return []
 
@@ -363,11 +387,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return metadata organization if it exists, otherwise return empty array.
         """
         organizations = []
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.creators is not None
+        ):
             for creator in obj.metadata.creators.all():
-                if(creator.organization is not None):
+                if creator.organization is not None:
                     organizations.append(creator.organization.strip())
         return organizations
 
@@ -375,7 +401,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         Return metadata publisher if it exists; otherwise return empty array.
         """
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
+        if hasattr(obj, "metadata") and obj.metadata is not None:
             publisher = obj.metadata.publisher
             if publisher is not None:
                 return str(publisher).lstrip()
@@ -391,39 +417,45 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         To make faceting work properly, all flags that are True are represented.
         """
         options = []
-        if hasattr(obj, 'raccess'):
+        if hasattr(obj, "raccess"):
             if obj.raccess.published:
-                options.append('published')
+                options.append("published")
             elif obj.raccess.public:
-                options.append('public')
+                options.append("public")
             elif obj.raccess.discoverable:
-                options.append('discoverable')
+                options.append("discoverable")
             else:
-                options.append('private')
+                options.append("private")
         else:
-            options.append('private')
+            options.append("private")
         return options
 
     def prepare_shareable(self, obj):
-        """ used in depicting results """
+        """used in depicting results"""
         return obj.raccess.shareable
 
     def prepare_replaced(self, obj):
         """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.relations is not None:
-            return obj.metadata.relations.filter(type='isReplacedBy').exists()
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.relations is not None
+        ):
+            return obj.metadata.relations.filter(type="isReplacedBy").exists()
         else:
             return False
 
     def prepare_coverage(self, obj):
         """Return resource coverage if exists, otherwise return empty array."""
         # TODO: reject empty coverages
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
-            return [coverage._value.strip() for coverage in obj.metadata.coverages.all()]
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.coverages is not None
+        ):
+            return [
+                coverage._value.strip() for coverage in obj.metadata.coverages.all()
+            ]
         else:
             return []
 
@@ -433,9 +465,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
         This field can have multiple values.
         """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.coverages is not None
+        ):
             return [coverage.type.strip() for coverage in obj.metadata.coverages.all()]
         else:
             return []
@@ -448,45 +482,55 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_east(self, obj):
         """Return resource coverage east bound if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.coverages is not None
+        ):
             for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'point':
+                if coverage.type == "point":
                     return float(coverage.value["east"])
                 # TODO: this returns the box center, not the extent
                 # TODO: probably better to call this something different.
-                elif coverage.type == 'box':
-                    return (float(coverage.value["eastlimit"]) +
-                            float(coverage.value["westlimit"])) / 2
+                elif coverage.type == "box":
+                    return (
+                        float(coverage.value["eastlimit"])
+                        + float(coverage.value["westlimit"])
+                    ) / 2
         else:
             return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_north(self, obj):
         """Return resource coverage north bound if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.coverages is not None
+        ):
             for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'point':
+                if coverage.type == "point":
                     return float(coverage.value["north"])
                 # TODO: This returns the box center, not the extent
-                elif coverage.type == 'box':
-                    return (float(coverage.value["northlimit"]) +
-                            float(coverage.value["southlimit"])) / 2
+                elif coverage.type == "box":
+                    return (
+                        float(coverage.value["northlimit"])
+                        + float(coverage.value["southlimit"])
+                    ) / 2
         else:
             return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_northlimit(self, obj):
         """Return resource coverage north limit if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.coverages is not None
+        ):
             # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'box':
+                if coverage.type == "box":
                     return coverage.value["northlimit"]
         else:
             return None
@@ -494,12 +538,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_eastlimit(self, obj):
         """Return resource coverage east limit if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.coverages is not None
+        ):
             # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'box':
+                if coverage.type == "box":
                     return coverage.value["eastlimit"]
         else:
             return None
@@ -507,12 +553,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_southlimit(self, obj):
         """Return resource coverage south limit if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.coverages is not None
+        ):
             # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'box':
+                if coverage.type == "box":
                     return coverage.value["southlimit"]
         else:
             return None
@@ -520,12 +568,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_westlimit(self, obj):
         """Return resource coverage west limit if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.coverages is not None
+        ):
             # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'box':
+                if coverage.type == "box":
                     return coverage.value["westlimit"]
         else:
             return None
@@ -535,28 +585,45 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_start_date(self, obj):
         """Return resource coverage start date if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.coverages is not None
+        ):
             for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'period':
+                if coverage.type == "period":
                     clean_date = coverage.value["start"][:10]
                     start_date = ""
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
                         if len(parsed_date) == 3:
-                            start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                            start_date = (
+                                parsed_date[2]
+                                + "-"
+                                + parsed_date[0]
+                                + "-"
+                                + parsed_date[1]
+                            )
                     elif "-" in clean_date:
                         parsed_date = clean_date.split("-")
                         if len(parsed_date) == 3:
-                            start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                            start_date = (
+                                parsed_date[0]
+                                + "-"
+                                + parsed_date[1]
+                                + "-"
+                                + parsed_date[2]
+                            )
                     start_date = remove_whitespace(start_date)  # no embedded spaces
                     try:
-                        start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
+                        start_date_object = datetime.strptime(start_date, "%Y-%m-%d")
                     except ValueError:
                         logger = logging.getLogger(__name__)
-                        logger.error("invalid start date {} in resource {} {}"
-                                     .format(start_date, obj.short_id, str(obj)))
+                        logger.error(
+                            "invalid start date {} in resource {} {}".format(
+                                start_date, obj.short_id, str(obj)
+                            )
+                        )
                         return None
                     return start_date_object
         else:
@@ -567,28 +634,45 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_end_date(self, obj):
         """Return resource coverage end date if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.coverages is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.coverages is not None
+        ):
             for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'period' and 'end' in coverage.value:
+                if coverage.type == "period" and "end" in coverage.value:
                     clean_date = coverage.value["end"][:10]
                     end_date = ""
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
                         if len(parsed_date) == 3:
-                            end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                            end_date = (
+                                parsed_date[2]
+                                + "-"
+                                + parsed_date[0]
+                                + "-"
+                                + parsed_date[1]
+                            )
                     else:
                         parsed_date = clean_date.split("-")
                         if len(parsed_date) == 3:
-                            end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                            end_date = (
+                                parsed_date[0]
+                                + "-"
+                                + parsed_date[1]
+                                + "-"
+                                + parsed_date[2]
+                            )
                     end_date = remove_whitespace(end_date)  # no embedded spaces
                     try:
-                        end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
+                        end_date_object = datetime.strptime(end_date, "%Y-%m-%d")
                     except ValueError:
                         logger = logging.getLogger(__name__)
-                        logger.error("invalid end date {} in resource {} {}"
-                                     .format(end_date, obj.short_id, str(obj)))
+                        logger.error(
+                            "invalid end date {} in resource {} {}".format(
+                                end_date, obj.short_id, str(obj)
+                            )
+                        )
                         return None
                     return end_date_object
         else:
@@ -599,36 +683,46 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.formats is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.formats is not None
+        ):
             return [format.value.strip() for format in obj.metadata.formats.all()]
         else:
             return []
 
     def prepare_identifier(self, obj):
         """Return metadata identifiers if metadata exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.identifiers is not None:
-            return [identifier.name.strip() for identifier in obj.metadata.identifiers.all()]
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.identifiers is not None
+        ):
+            return [
+                identifier.name.strip() for identifier in obj.metadata.identifiers.all()
+            ]
         else:
             return []
 
     def prepare_language(self, obj):
         """Return resource language if exists, otherwise return None."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.language is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.language is not None
+        ):
             return obj.metadata.language.code.strip()
         else:
             return None
 
     def prepare_relation(self, obj):
         """Return resource relations if exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.relations is not None:
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.relations is not None
+        ):
             return [relation.value.strip() for relation in obj.metadata.relations.all()]
         else:
             return []
@@ -638,16 +732,18 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.verbose_name
 
     def prepare_content_type(self, obj):
-        """ register content types for both logical files and some MIME types """
-        if obj.verbose_name == 'Composite Resource' or \
-           obj.verbose_name == 'Generic Resource':
+        """register content types for both logical files and some MIME types"""
+        if (
+            obj.verbose_name == "Composite Resource"
+            or obj.verbose_name == "Generic Resource"
+        ):
             output = get_content_types(obj)[0]
             return list(output)
         else:
             return [obj.discovery_content_type]
 
     def prepare_content_exts(self, obj):
-        """ index by file extension """
+        """index by file extension"""
         output = get_content_types(obj)[2]
         return output
 
@@ -657,7 +753,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_owner_login(self, obj):
         """Return list of usernames that have ownership access to resource."""
-        if hasattr(obj, 'raccess'):
+        if hasattr(obj, "raccess"):
             return [owner.username for owner in obj.raccess.owners.all()]
         else:
             return []
@@ -666,9 +762,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_owner(self, obj):
         """Return list of names of resource owners."""
         names = []
-        if hasattr(obj, 'raccess'):
+        if hasattr(obj, "raccess"):
             for owner in obj.raccess.owners.all():
-                name = normalize_name(owner.first_name + ' ' + owner.last_name)
+                name = normalize_name(owner.first_name + " " + owner.last_name)
                 names.append(name)
         return names
 
@@ -678,20 +774,28 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         output0 = []
         output1 = []
         output2 = []
-        if hasattr(obj, 'raccess'):
+        if hasattr(obj, "raccess"):
             for owner in obj.raccess.owners.all():
-                name = normalize_name(owner.first_name + ' ' + owner.last_name)
+                name = normalize_name(owner.first_name + " " + owner.last_name)
                 output0.append(name)
 
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            output1 = [normalize_name(creator.name)
-                       for creator in obj.metadata.creators.all()
-                       .exclude(name__isnull=True).exclude(name='')]
-            output2 = [normalize_name(contributor.name)
-                       for contributor in obj.metadata.contributors.all()
-                       .exclude(name__isnull=True).exclude(name='')]
+        if (
+            hasattr(obj, "metadata")
+            and obj.metadata is not None
+            and obj.metadata.creators is not None
+        ):
+            output1 = [
+                normalize_name(creator.name)
+                for creator in obj.metadata.creators.all()
+                .exclude(name__isnull=True)
+                .exclude(name="")
+            ]
+            output2 = [
+                normalize_name(contributor.name)
+                for contributor in obj.metadata.contributors.all()
+                .exclude(name__isnull=True)
+                .exclude(name="")
+            ]
         return list(set(output0 + output1 + output2))  # eliminate duplicates
 
     # TODO: These should probably be multi-value fields and pick up all types.
@@ -821,7 +925,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         for f in obj.timeserieslogicalfile_set.all():
             for s in f.metadata.sites:
                 if discoverable(s.site_name):
-                        sites.add(s.site_name.strip())
+                    sites.add(s.site_name.strip())
         for f in obj.reftimeserieslogicalfile_set.all():
             for s in f.metadata.sites:
                 if discoverable(s.name):
@@ -905,8 +1009,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.get_absolute_url()
 
     def prepare_extra(self, obj):
-        """ For extra metadata, include both key and value """
+        """For extra metadata, include both key and value"""
         extra = []
         for key, value in list(obj.extra_metadata.items()):
-            extra.append(key + ': ' + value)
+            extra.append(key + ": " + value)
         return extra

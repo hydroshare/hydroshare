@@ -13,34 +13,81 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Session',
+            name="Session",
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('begin', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        verbose_name="ID",
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
+                ("begin", models.DateTimeField(auto_now_add=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Variable',
+            name="Variable",
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('name', models.CharField(max_length=32)),
-                ('type', models.IntegerField(choices=[('Integer', int), ('Floating Point', float), ('Text', str), ('Flag', bool)])),
-                ('value', models.CharField(max_length=130)),
-                ('session', models.ForeignKey(on_delete=models.CASCADE, to='hs_tracking.Session')),
+                (
+                    "id",
+                    models.AutoField(
+                        verbose_name="ID",
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                ("name", models.CharField(max_length=32)),
+                (
+                    "type",
+                    models.IntegerField(
+                        choices=[
+                            ("Integer", int),
+                            ("Floating Point", float),
+                            ("Text", str),
+                            ("Flag", bool),
+                        ]
+                    ),
+                ),
+                ("value", models.CharField(max_length=130)),
+                (
+                    "session",
+                    models.ForeignKey(
+                        on_delete=models.CASCADE, to="hs_tracking.Session"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Visitor',
+            name="Visitor",
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('first_seen', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(blank=True, on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL, null=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        verbose_name="ID",
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
+                ("first_seen", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        on_delete=models.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                        null=True,
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='session',
-            name='visitor',
-            field=models.ForeignKey(on_delete=models.CASCADE, to='hs_tracking.Visitor'),
+            model_name="session",
+            name="visitor",
+            field=models.ForeignKey(on_delete=models.CASCADE, to="hs_tracking.Visitor"),
         ),
     ]

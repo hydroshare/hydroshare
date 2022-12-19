@@ -27,13 +27,22 @@ from theme.utils import get_upload_path_group
 # (Revised Sept 17, 2021)
 #############################################
 class GroupMembershipRequest(models.Model):
-    request_from = models.ForeignKey(User, on_delete=models.CASCADE,  related_name='ru2gmrequest')
+    request_from = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="ru2gmrequest"
+    )
 
     # when user is requesting to join a group this will be blank
     # when a group owner is sending an invitation, this field will represent the inviting user
-    invitation_to = models.ForeignKey(User, on_delete=models.CASCADE,  null=True, blank=True,
-                                      related_name='iu2gmrequest')
-    group_to_join = models.ForeignKey(Group, on_delete=models.CASCADE,  related_name='g2gmrequest')
+    invitation_to = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="iu2gmrequest",
+    )
+    group_to_join = models.ForeignKey(
+        Group, on_delete=models.CASCADE, related_name="g2gmrequest"
+    )
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     explanation = models.TextField(null=True, blank=True, max_length=300)
     redeemed = models.BooleanField(default=False)
@@ -50,40 +59,56 @@ class GroupAccess(models.Model):
     """
 
     # Django Group object: this has a side effect of creating Group.gaccess back relation.
-    group = models.OneToOneField(Group, on_delete=models.CASCADE,
-                                 editable=False,
-                                 null=False,
-                                 related_name='gaccess',
-                                 related_query_name='gaccess',
-                                 help_text='group object that this object protects')
+    group = models.OneToOneField(
+        Group,
+        on_delete=models.CASCADE,
+        editable=False,
+        null=False,
+        related_name="gaccess",
+        related_query_name="gaccess",
+        help_text="group object that this object protects",
+    )
 
-    active = models.BooleanField(default=True,
-                                 editable=False,
-                                 help_text='whether group is currently active')
+    active = models.BooleanField(
+        default=True, editable=False, help_text="whether group is currently active"
+    )
 
-    discoverable = models.BooleanField(default=True,
-                                       editable=False,
-                                       help_text='whether group description is discoverable by everyone')
+    discoverable = models.BooleanField(
+        default=True,
+        editable=False,
+        help_text="whether group description is discoverable by everyone",
+    )
 
-    public = models.BooleanField(default=True,
-                                 editable=False,
-                                 help_text='whether group members can be listed by everyone')
+    public = models.BooleanField(
+        default=True,
+        editable=False,
+        help_text="whether group members can be listed by everyone",
+    )
 
-    shareable = models.BooleanField(default=True,
-                                    editable=False,
-                                    help_text='whether group can be shared by non-owners')
+    shareable = models.BooleanField(
+        default=True,
+        editable=False,
+        help_text="whether group can be shared by non-owners",
+    )
 
-    auto_approve = models.BooleanField(default=False,
-                                       editable=False,
-                                       help_text='whether group membership can be auto approved')
+    auto_approve = models.BooleanField(
+        default=False,
+        editable=False,
+        help_text="whether group membership can be auto approved",
+    )
 
-    requires_explanation = models.BooleanField(default=False, editable=False,
-                                               help_text='whether membership requests include explanation')
+    requires_explanation = models.BooleanField(
+        default=False,
+        editable=False,
+        help_text="whether membership requests include explanation",
+    )
 
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
-    picture = ThumbnailImageField(upload_to=get_upload_path_group, null=True, blank=True)
+    picture = ThumbnailImageField(
+        upload_to=get_upload_path_group, null=True, blank=True
+    )
 
     ####################################
     # group membership: owners, edit_users, view_users are parallel to those in resources
@@ -99,18 +124,22 @@ class GroupAccess(models.Model):
         Users can only own groups via direct links. Community-based ownership is not possible.
         """
 
-        return User.objects.filter(is_active=True,
-                                   u2ugp__group=self.group,
-                                   u2ugp__privilege=PrivilegeCodes.OWNER).select_related('userprofile')
+        return User.objects.filter(
+            is_active=True,
+            u2ugp__group=self.group,
+            u2ugp__privilege=PrivilegeCodes.OWNER,
+        ).select_related("userprofile")
 
     @property
     def __edit_users_of_group(self):
         """
         Q expression for users who can edit a group according to group privilege
         """
-        return Q(is_active=True,
-                 u2ugp__group=self.group,
-                 u2ugp__privilege__lte=PrivilegeCodes.CHANGE)
+        return Q(
+            is_active=True,
+            u2ugp__group=self.group,
+            u2ugp__privilege__lte=PrivilegeCodes.CHANGE,
+        )
 
     @property
     def edit_users(self):
@@ -129,9 +158,11 @@ class GroupAccess(models.Model):
         """
         Q expression for users who can view a group according to group privilege
         """
-        return Q(is_active=True,
-                 u2ugp__group=self.group,
-                 u2ugp__privilege__lte=PrivilegeCodes.VIEW)
+        return Q(
+            is_active=True,
+            u2ugp__group=self.group,
+            u2ugp__privilege__lte=PrivilegeCodes.VIEW,
+        )
 
     @property
     def view_users(self):
@@ -155,17 +186,19 @@ class GroupAccess(models.Model):
 
         This eliminates duplicates due to multiple invitations.
         """
-        return User.objects.filter(is_active=True,
-                                   u2ugp__group=self.group,
-                                   u2ugp__privilege__lte=PrivilegeCodes.VIEW).select_related('userprofile')
+        return User.objects.filter(
+            is_active=True,
+            u2ugp__group=self.group,
+            u2ugp__privilege__lte=PrivilegeCodes.VIEW,
+        ).select_related("userprofile")
 
     @property
     def viewers(self):
-        """ viewers are group members """
+        """viewers are group members"""
         return User.objects.filter(
-                Q(is_active=True) &
-                (Q(u2ugp__group__gaccess__active=True,
-                   u2ugp__group=self.group))).distinct()
+            Q(is_active=True)
+            & (Q(u2ugp__group__gaccess__active=True, u2ugp__group=self.group))
+        ).distinct()
 
     def communities(self):
         """
@@ -192,9 +225,11 @@ class GroupAccess(models.Model):
 
         Used in queries of BaseResource
         """
-        return Q(r2grp__group=self.group,
-                 raccess__immutable=False,
-                 r2grp__privilege__lte=PrivilegeCodes.CHANGE)
+        return Q(
+            r2grp__group=self.group,
+            raccess__immutable=False,
+            r2grp__privilege__lte=PrivilegeCodes.CHANGE,
+        )
 
     @property
     def __owned_resources_of_group(self):
@@ -203,9 +238,11 @@ class GroupAccess(models.Model):
 
         Used in queries of BaseResource
         """
-        return Q(r2grp__group=self.group,
-                 r2urp__user__u2ugp__group=self.group,
-                 r2urp__privilege=PrivilegeCodes.OWNER)
+        return Q(
+            r2grp__group=self.group,
+            r2urp__user__u2ugp__group=self.group,
+            r2urp__privilege=PrivilegeCodes.OWNER,
+        )
 
     @property
     def view_resources(self):
@@ -215,7 +252,9 @@ class GroupAccess(models.Model):
         :return: QuerySet of resource objects held by group.
 
         """
-        return BaseResource.objects.filter(self.__view_resources_of_group).select_related('raccess')
+        return BaseResource.objects.filter(
+            self.__view_resources_of_group
+        ).select_related("raccess")
 
     @property
     def edit_resources(self):
@@ -248,9 +287,11 @@ class GroupAccess(models.Model):
         :return: QuerySet
         """
 
-        return GroupMembershipRequest.objects.filter(group_to_join=self.group,
-                                                     group_to_join__gaccess__active=True,
-                                                     redeemed=False)
+        return GroupMembershipRequest.objects.filter(
+            group_to_join=self.group,
+            group_to_join__gaccess__active=True,
+            redeemed=False,
+        )
 
     def get_resources_with_explicit_access(self, this_privilege):
         """
@@ -265,7 +306,10 @@ class GroupAccess(models.Model):
         resource when the permission is "CHANGE", and as the original resource otherwise.
         """
         if __debug__:
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         # this query computes resources with privilege X as follows:
         # a) There is a privilege of X for the object for group.
@@ -276,18 +320,23 @@ class GroupAccess(models.Model):
 
         elif this_privilege == PrivilegeCodes.CHANGE:
             # CHANGE does not include immutable resources
-            return BaseResource.objects.filter(raccess__immutable=False,
-                                               r2grp__privilege=this_privilege,
-                                               r2grp__group=self.group)
+            return BaseResource.objects.filter(
+                raccess__immutable=False,
+                r2grp__privilege=this_privilege,
+                r2grp__group=self.group,
+            )
             # there are no excluded resources; maximum privilege is CHANGE
 
         else:  # this_privilege == PrivilegeCodes.VIEW
             # VIEW includes CHANGE & immutable as well as explicit VIEW
-            return BaseResource.objects.filter(Q(r2grp__privilege=PrivilegeCodes.VIEW,
-                                                 r2grp__group=self.group) |
-                                               Q(raccess__immutable=True,
-                                                 r2grp__privilege=PrivilegeCodes.CHANGE,
-                                                 r2grp__group=self.group)).distinct()
+            return BaseResource.objects.filter(
+                Q(r2grp__privilege=PrivilegeCodes.VIEW, r2grp__group=self.group)
+                | Q(
+                    raccess__immutable=True,
+                    r2grp__privilege=PrivilegeCodes.CHANGE,
+                    r2grp__group=self.group,
+                )
+            ).distinct()
 
     def get_users_with_explicit_access(self, this_privilege):
         """
@@ -300,18 +349,25 @@ class GroupAccess(models.Model):
         """
 
         if __debug__:
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         if this_privilege == PrivilegeCodes.OWNER:
             return self.owners
         elif this_privilege == PrivilegeCodes.CHANGE:
-            return User.objects.filter(is_active=True,
-                                       u2ugp__group=self.group,
-                                       u2ugp__privilege=PrivilegeCodes.CHANGE)
+            return User.objects.filter(
+                is_active=True,
+                u2ugp__group=self.group,
+                u2ugp__privilege=PrivilegeCodes.CHANGE,
+            )
         else:  # this_privilege == PrivilegeCodes.VIEW
-            return User.objects.filter(is_active=True,
-                                       u2ugp__group=self.group,
-                                       u2ugp__privilege=PrivilegeCodes.VIEW)
+            return User.objects.filter(
+                is_active=True,
+                u2ugp__group=self.group,
+                u2ugp__privilege=PrivilegeCodes.VIEW,
+            )
 
     def get_effective_privilege(self, this_user):
         """
@@ -326,8 +382,7 @@ class GroupAccess(models.Model):
         if not this_user.is_active:
             return PrivilegeCodes.NONE
         try:
-            p = UserGroupPrivilege.objects.get(group=self.group,
-                                               user=this_user)
+            p = UserGroupPrivilege.objects.get(group=self.group, user=this_user)
             return p.privilege
         except UserGroupPrivilege.DoesNotExist:
             return PrivilegeCodes.NONE
@@ -348,16 +403,20 @@ class GroupAccess(models.Model):
            However, that annotation is really efficient, and is implemented as a postgres
            subquery. This is a Django 1.11 extension.
         """
-        return Group.objects\
-            .annotate(
+        return (
+            Group.objects.annotate(
                 has_public_resources=Exists(
                     BaseResource.objects.filter(
                         raccess__discoverable=True,
-                        r2grp__group__id=OuterRef('id'),
-                        r2urp__user__u2ugp__group__id=OuterRef('id'),
-                        r2urp__privilege=PrivilegeCodes.OWNER)))\
-            .filter(has_public_resources=True)\
-            .order_by('name')
+                        r2grp__group__id=OuterRef("id"),
+                        r2urp__user__u2ugp__group__id=OuterRef("id"),
+                        r2urp__privilege=PrivilegeCodes.OWNER,
+                    )
+                )
+            )
+            .filter(has_public_resources=True)
+            .order_by("name")
+        )
 
     @property
     def public_resources(self):
@@ -366,20 +425,29 @@ class GroupAccess(models.Model):
 
         Based upon hs_access_control/models/community.py:Community:public_resources
         """
-        res = BaseResource.objects.filter(r2grp__group__gaccess=self,
-                                          r2grp__group__gaccess__active=True)\
-                                  .filter(Q(raccess__public=True) |
-                                          Q(raccess__published=True) |
-                                          Q(raccess__discoverable=True))\
-                                  .filter(r2urp__privilege=PrivilegeCodes.OWNER,
-                                          r2urp__user__u2ugp__group=self.group)\
-                                  .annotate(group_name=F("r2grp__group__name"),
-                                            group_id=F("r2grp__group__id"),
-                                            public=F("raccess__public"),
-                                            published=F("raccess__published"),
-                                            discoverable=F("raccess__discoverable"))
+        res = (
+            BaseResource.objects.filter(
+                r2grp__group__gaccess=self, r2grp__group__gaccess__active=True
+            )
+            .filter(
+                Q(raccess__public=True)
+                | Q(raccess__published=True)
+                | Q(raccess__discoverable=True)
+            )
+            .filter(
+                r2urp__privilege=PrivilegeCodes.OWNER,
+                r2urp__user__u2ugp__group=self.group,
+            )
+            .annotate(
+                group_name=F("r2grp__group__name"),
+                group_id=F("r2grp__group__id"),
+                public=F("raccess__public"),
+                published=F("raccess__published"),
+                discoverable=F("raccess__discoverable"),
+            )
+        )
 
-        res = res.only('title', 'resource_type', 'created', 'updated')
+        res = res.only("title", "resource_type", "created", "updated")
 
         # # Can't do the following because the content model is polymorphic.
         # # This is documented as only working for monomorphic content_type
@@ -407,8 +475,11 @@ class GroupAccess(models.Model):
 
         # force-populate the cache of content type objects.
         for item in res:
-            setattr(item, '_content_object_cache',
-                    relations[item.content_type.id][item.object_id])
+            setattr(
+                item,
+                "_content_object_cache",
+                relations[item.content_type.id][item.object_id],
+            )
 
         # Detailed notes:
         # This subverts chained lookup by pre-populating the content object cache
@@ -420,8 +491,9 @@ class GroupAccess(models.Model):
 
     @property
     def first_owner(self):
-        opriv = UserGroupPrivilege.objects.filter(group=self.group, privilege=PrivilegeCodes.OWNER)\
-            .order_by('start')
+        opriv = UserGroupPrivilege.objects.filter(
+            group=self.group, privilege=PrivilegeCodes.OWNER
+        ).order_by("start")
         opriv = list(opriv)
         if opriv:
             return opriv[0].user

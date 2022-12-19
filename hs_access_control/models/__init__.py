@@ -1,8 +1,20 @@
-from .privilege import PrivilegeCodes,\
-        UserResourcePrivilege, UserGroupPrivilege, GroupResourcePrivilege, \
-        UserCommunityPrivilege, GroupCommunityPrivilege, CommunityResourcePrivilege
-from .provenance import UserResourceProvenance, UserGroupProvenance, GroupResourceProvenance, \
-        UserCommunityProvenance, GroupCommunityProvenance, CommunityResourceProvenance
+from .privilege import (
+    PrivilegeCodes,
+    UserResourcePrivilege,
+    UserGroupPrivilege,
+    GroupResourcePrivilege,
+    UserCommunityPrivilege,
+    GroupCommunityPrivilege,
+    CommunityResourcePrivilege,
+)
+from .provenance import (
+    UserResourceProvenance,
+    UserGroupProvenance,
+    GroupResourceProvenance,
+    UserCommunityProvenance,
+    GroupCommunityProvenance,
+    CommunityResourceProvenance,
+)
 from .user import UserAccess, FeatureCodes, Feature
 from .group import GroupAccess, GroupMembershipRequest
 from .resource import ResourceAccess

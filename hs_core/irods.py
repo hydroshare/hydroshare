@@ -10,7 +10,8 @@ from hs_core.signals import pre_check_bag_flag
 
 
 class ResourceIRODSMixin(models.Model):
-    """ This contains iRODS methods to be included as options for resources """
+    """This contains iRODS methods to be included as options for resources"""
+
     class Meta:
         abstract = True
 
@@ -31,7 +32,7 @@ class ResourceIRODSMixin(models.Model):
         are home paths, and adds irods_home_path to these to qualify them.
 
         """
-        if path.startswith('/'):
+        if path.startswith("/"):
             return path
         else:
             return os.path.join(self.irods_home_path, path)
@@ -54,18 +55,18 @@ class ResourceIRODSMixin(models.Model):
         resource_cls = check_resource_type(self.resource_type)
         pre_check_bag_flag.send(sender=resource_cls, resource=self)
 
-        metadata_dirty = self.getAVU('metadata_dirty')
-        bag_modified = self.getAVU('bag_modified')
+        metadata_dirty = self.getAVU("metadata_dirty")
+        bag_modified = self.getAVU("bag_modified")
 
         if metadata_dirty:  # automatically cast to Bool
             create_bag_metadata_files(self)
-            self.setAVU('metadata_dirty', False)
+            self.setAVU("metadata_dirty", False)
 
         # the ticket system does synchronous bag creation.
         # async bag creation isn't supported.
         if bag_modified:  # automatically cast to Bool
             create_bag_by_irods(self.short_id)
-            self.setAVU('bag_modified', False)
+            self.setAVU("bag_modified", False)
 
     def update_metadata_files(self):
         """
@@ -75,10 +76,10 @@ class ResourceIRODSMixin(models.Model):
         """
         from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
-        metadata_dirty = self.getAVU('metadata_dirty')
+        metadata_dirty = self.getAVU("metadata_dirty")
         if metadata_dirty:
             create_bag_metadata_files(self)
-            self.setAVU('metadata_dirty', False)
+            self.setAVU("metadata_dirty", False)
 
     def create_ticket(self, user, path=None, write=False, allowed_uses=1):
         """
@@ -113,21 +114,31 @@ class ResourceIRODSMixin(models.Model):
         # authorize user
         if write:
             if not user.is_authenticated or not user.uaccess.can_change_resource(self):
-                raise PermissionDenied("user {} cannot change resource {}"
-                                       .format(user.username, self.short_id))
+                raise PermissionDenied(
+                    "user {} cannot change resource {}".format(
+                        user.username, self.short_id
+                    )
+                )
         else:
-            if not self.raccess.public and (not user.is_authenticated or
-                                            not user.uaccess.can_view_resource(self)):
-                raise PermissionDenied("user {} cannot view resource {}"
-                                       .format(user.username, self.short_id))
+            if not self.raccess.public and (
+                not user.is_authenticated or not user.uaccess.can_view_resource(self)
+            ):
+                raise PermissionDenied(
+                    "user {} cannot view resource {}".format(
+                        user.username, self.short_id
+                    )
+                )
         if path is None:
             path = self.file_path  # default = all data files
 
         # can only write resource files
         if write:
             if not path.startswith(self.file_path):
-                raise PermissionDenied("{} can only write data files to {}"
-                                       .format(user.username, self.short_id))
+                raise PermissionDenied(
+                    "{} can only write data files to {}".format(
+                        user.username, self.short_id
+                    )
+                )
         # can read anything inside this particular resource
         else:
             if path == self.bag_path:
@@ -138,16 +149,19 @@ class ResourceIRODSMixin(models.Model):
                 self.update_metadata_files()
 
         istorage = self.get_irods_storage()
-        read_or_write = 'write' if write else 'read'
-        if path.startswith(self.short_id) or path.startswith('bags/'):  # local path
+        read_or_write = "write" if write else "read"
+        if path.startswith(self.short_id) or path.startswith("bags/"):  # local path
             path = os.path.join(self.irods_home_path, path)
-        stdout, stderr = istorage.session.run("iticket", None, 'create', read_or_write, path)
-        if not stdout.startswith('ticket:'):
+        stdout, stderr = istorage.session.run(
+            "iticket", None, "create", read_or_write, path
+        )
+        if not stdout.startswith("ticket:"):
             raise ValidationError("ticket creation failed: {}", stderr)
-        ticket = stdout.split('\n')[0]
-        ticket_id = ticket[len('ticket:'):]
-        istorage.session.run('iticket', None, 'mod', ticket_id,
-                             'uses', str(allowed_uses))
+        ticket = stdout.split("\n")[0]
+        ticket_id = ticket[len("ticket:") :]
+        istorage.session.run(
+            "iticket", None, "mod", ticket_id, "uses", str(allowed_uses)
+        )
 
         # This creates a timestamp with a one-hour timeout.
         # Note that this is a timeout on when the ticket is first used, and
@@ -157,69 +171,72 @@ class ResourceIRODSMixin(models.Model):
         # server from within iRODS; shell access is required.
         timeout = datetime.now() + timedelta(hours=1)
         formatted = timeout.strftime("%Y-%m-%d.%H:%M")
-        istorage.session.run('iticket', None, 'mod', ticket_id,
-                             'expire', formatted)
+        istorage.session.run("iticket", None, "mod", ticket_id, "expire", formatted)
 
         # fully qualify home paths with their iRODS prefix when returning them.
         return ticket_id, self.irods_full_path(path)
 
     def list_ticket(self, ticket_id):
-        """ List a ticket's attributes """
+        """List a ticket's attributes"""
         istorage = self.get_irods_storage()
-        stdout, stderr = istorage.session.run("iticket", None, 'ls', ticket_id)
-        if stdout.startswith('id:'):
-            stuff = stdout.split('\n')
+        stdout, stderr = istorage.session.run("iticket", None, "ls", ticket_id)
+        if stdout.startswith("id:"):
+            stuff = stdout.split("\n")
             output = {}
             for s in stuff:
                 try:
-                    line = s.split(': ')
+                    line = s.split(": ")
                     key = line[0]
                     value = line[1]
-                    if key == 'collection name' or key == 'data collection':
-                        output['full_path'] = value
+                    if key == "collection name" or key == "data collection":
+                        output["full_path"] = value
                         if self.is_federated:
                             if __debug__:
-                                assert(value.startswith(self.resource_federation_path))
-                            output['long_path'] = value[len(self.resource_federation_path):]
-                            output['home_path'] = self.resource_federation_path
+                                assert value.startswith(self.resource_federation_path)
+                            output["long_path"] = value[
+                                len(self.resource_federation_path) :
+                            ]
+                            output["home_path"] = self.resource_federation_path
                         else:
                             location = value.find(self.short_id)
                             if __debug__:
-                                assert(location >= 0)
+                                assert location >= 0
                             if location == 0:
-                                output['long_path'] = value
-                                output['home_path'] = self.irods_home_path
+                                output["long_path"] = value
+                                output["home_path"] = self.irods_home_path
                             else:
-                                output['long_path'] = value[location:]
+                                output["long_path"] = value[location:]
                                 # omit trailing slash
-                                output['home_path'] = value[:(location-1)]
+                                output["home_path"] = value[: (location - 1)]
 
                         if __debug__:
-                            assert(output['long_path'].startswith(self.short_id))
+                            assert output["long_path"].startswith(self.short_id)
 
-                    if key == 'string':
-                        output['ticket_id'] = value
-                    elif key == 'data-object name':
-                        output['filename'] = value
-                    elif key == 'ticket type':
-                        output['type'] = value
-                    elif key == 'owner name':
-                        output['owner'] = value
-                    elif key == 'owner zone':
-                        output['zone'] = value
-                    elif key == 'expire time':
-                        output['expires'] = value
+                    if key == "string":
+                        output["ticket_id"] = value
+                    elif key == "data-object name":
+                        output["filename"] = value
+                    elif key == "ticket type":
+                        output["type"] = value
+                    elif key == "owner name":
+                        output["owner"] = value
+                    elif key == "owner zone":
+                        output["zone"] = value
+                    elif key == "expire time":
+                        output["expires"] = value
                     else:
                         output[line[0]] = line[1]
                 except Exception:  # no ':' in line
                     pass
 
             # put in actual file path including folder and filename
-            if 'filename' in output:
-                output['full_path'] = os.path.join(output['full_path'], output['filename'])
+            if "filename" in output:
+                output["full_path"] = os.path.join(
+                    output["full_path"], output["filename"]
+                )
             return output
 
-        elif stdout == '':
+        elif stdout == "":
             raise ValidationError("ticket {} not found".format(ticket_id))
         else:
             raise ValidationError("ticket {} error: {}".format(ticket_id, stderr))
@@ -245,31 +262,41 @@ class ResourceIRODSMixin(models.Model):
         """
         meta = self.list_ticket(ticket_id)
 
-        if self.root_path not in meta['full_path']:
-            raise PermissionDenied("user {} cannot delete ticket {} for a different resource"
-                                   .format(user.username, ticket_id))
+        if self.root_path not in meta["full_path"]:
+            raise PermissionDenied(
+                "user {} cannot delete ticket {} for a different resource".format(
+                    user.username, ticket_id
+                )
+            )
         # get kind of ticket
-        write = meta['type'] == 'write'
+        write = meta["type"] == "write"
 
         # authorize user
         if write:
             if not user.is_authenticated or not user.uaccess.can_change_resource(self):
-                raise PermissionDenied("user {} cannot delete change ticket {} for {}"
-                                       .format(user.username, ticket_id, self.short_id))
+                raise PermissionDenied(
+                    "user {} cannot delete change ticket {} for {}".format(
+                        user.username, ticket_id, self.short_id
+                    )
+                )
         else:
             if not user.is_authenticated or not user.uaccess.can_view_resource(self):
-                raise PermissionDenied("user {} cannot delete view ticket {} for {}"
-                                       .format(user.username, ticket_id, self.short_id))
+                raise PermissionDenied(
+                    "user {} cannot delete view ticket {} for {}".format(
+                        user.username, ticket_id, self.short_id
+                    )
+                )
         istorage = self.get_irods_storage()
-        istorage.session.run('iticket', None, 'delete', ticket_id)
+        istorage.session.run("iticket", None, "delete", ticket_id)
         return meta
 
 
 class ResourceFileIRODSMixin(models.Model):
-    """ This contains iRODS functions related to resource files """
+    """This contains iRODS functions related to resource files"""
+
     class Meta:
         abstract = True
 
     def create_ticket(self, user, write=False):
-        """ This creates a ticket to read or modify this file """
+        """This creates a ticket to read or modify this file"""
         return self.resource.create_ticket(user, path=self.storage_path, write=write)

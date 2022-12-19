@@ -6,24 +6,26 @@ from django.db import migrations
 
 
 def remove_comma_from_creator_contributor_for_empty_author_name(apps, schema_editor):
-    Creator = apps.get_model('hs_core', 'Creator')
+    Creator = apps.get_model("hs_core", "Creator")
     for creator in Creator.objects.all():
-        if creator.name == ', ':
-            creator.name = ''
+        if creator.name == ", ":
+            creator.name = ""
             creator.save()
-    Contributor = apps.get_model('hs_core', 'Contributor')
+    Contributor = apps.get_model("hs_core", "Contributor")
     for contributor in Contributor.objects.all():
-        if contributor.name == ',' or contributor.name == ', ':
-            contributor.name = ''
+        if contributor.name == "," or contributor.name == ", ":
+            contributor.name = ""
             contributor.save()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0054_auto_20201028_1432'),
+        ("hs_core", "0054_auto_20201028_1432"),
     ]
 
     operations = [
-        migrations.RunPython(remove_comma_from_creator_contributor_for_empty_author_name),
+        migrations.RunPython(
+            remove_comma_from_creator_contributor_for_empty_author_name
+        ),
     ]

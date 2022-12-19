@@ -31,16 +31,17 @@ def hs_date_to_datetime(datestr):
         msg = "Unable to parse date {0}.".format(datestr)
         raise HsDateException(msg)
     try:
-        ret_date = datetime.datetime(year=int(m.group('year')),
-                                     month=int(m.group('month')),
-                                     day=int(m.group('day')),
-                                     hour=int(m.group('hour')),
-                                     minute=int(m.group('minute')),
-                                     second=int(m.group('second')),
-                                     tzinfo=tz.UTC)
+        ret_date = datetime.datetime(
+            year=int(m.group("year")),
+            month=int(m.group("month")),
+            day=int(m.group("day")),
+            hour=int(m.group("hour")),
+            minute=int(m.group("minute")),
+            second=int(m.group("second")),
+            tzinfo=tz.UTC,
+        )
     except Exception as e:
-        msg = "Unable to parse date {0}, error {1}.".format(datestr,
-                                                            str(e))
+        msg = "Unable to parse date {0}, error {1}.".format(datestr, str(e))
         raise HsDateException(msg)
 
     return ret_date
@@ -58,24 +59,25 @@ def hs_date_to_datetime_iso(datestr):
         raise HsDateException(msg)
     try:
         # Handle microseconds (if present)
-        if m.group('microsecond'):
-            us = float(m.group('microsecond'))
+        if m.group("microsecond"):
+            us = float(m.group("microsecond"))
             # Convert from seconds to microseconds
             microsecond = int(1000 * 1000 * us)
         else:
             microsecond = 0
 
-        ret_date = datetime.datetime(year=int(m.group('year')),
-                                     month=int(m.group('month')),
-                                     day=int(m.group('day')),
-                                     hour=int(m.group('hour')),
-                                     minute=int(m.group('minute')),
-                                     second=int(m.group('second')),
-                                     microsecond=microsecond,
-                                     tzinfo=tz.UTC)
+        ret_date = datetime.datetime(
+            year=int(m.group("year")),
+            month=int(m.group("month")),
+            day=int(m.group("day")),
+            hour=int(m.group("hour")),
+            minute=int(m.group("minute")),
+            second=int(m.group("second")),
+            microsecond=microsecond,
+            tzinfo=tz.UTC,
+        )
     except Exception as e:
-        msg = "Unable to parse date {0}, error {1}.".format(datestr,
-                                                            str(e))
+        msg = "Unable to parse date {0}, error {1}.".format(datestr, str(e))
         raise HsDateException(msg)
 
     return ret_date
@@ -93,16 +95,17 @@ def hs_date_to_datetime_notz(datestr):
         msg = "Unable to parse date {0}.".format(datestr)
         raise HsDateException(msg)
     try:
-        ret_date = datetime.datetime(year=int(m.group('year')),
-                                     month=int(m.group('month')),
-                                     day=int(m.group('day')),
-                                     hour=int(m.group('hour')),
-                                     minute=int(m.group('minute')),
-                                     second=int(m.group('second')),
-                                     tzinfo=tz.UTC)
+        ret_date = datetime.datetime(
+            year=int(m.group("year")),
+            month=int(m.group("month")),
+            day=int(m.group("day")),
+            hour=int(m.group("hour")),
+            minute=int(m.group("minute")),
+            second=int(m.group("second")),
+            tzinfo=tz.UTC,
+        )
     except Exception as e:
-        msg = "Unable to parse date {0}, error {1}.".format(datestr,
-                                                            str(e))
+        msg = "Unable to parse date {0}, error {1}.".format(datestr, str(e))
         raise HsDateException(msg)
 
     return ret_date

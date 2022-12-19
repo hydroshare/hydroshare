@@ -8,13 +8,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0052_tasknotification_username'),
+        ("hs_core", "0052_tasknotification_username"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='tasknotification',
-            name='status',
-            field=models.CharField(choices=[('progress', 'Progress'), ('failed', 'Failed'), ('aborted', 'Aborted'), ('completed', 'Completed'), ('delivered', 'Delivered')], default='pending', max_length=20),
+            model_name="tasknotification",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("progress", "Progress"),
+                    ("failed", "Failed"),
+                    ("aborted", "Aborted"),
+                    ("completed", "Completed"),
+                    ("delivered", "Delivered"),
+                ],
+                default="pending",
+                max_length=20,
+            ),
         ),
     ]

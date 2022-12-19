@@ -9,16 +9,33 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='ODM2Variable',
+            name="ODM2Variable",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(editable=False, help_text='Variable name', max_length=256)),
-                ('description', models.TextField(editable=False, help_text='Definition of variable name')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        editable=False, help_text="Variable name", max_length=256
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        editable=False, help_text="Definition of variable name"
+                    ),
+                ),
             ],
         ),
     ]

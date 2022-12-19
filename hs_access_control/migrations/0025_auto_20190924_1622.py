@@ -11,21 +11,40 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('hs_access_control', '0024_remove_groupcommunityprivilege_allow_view'),
+        ("hs_access_control", "0024_remove_groupcommunityprivilege_allow_view"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Feature',
+            name="Feature",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('feature', models.IntegerField(choices=[(0, b'None'), (1, b'CZO')], default=0)),
-                ('enabled', models.BooleanField(default=False)),
-                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='feature', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "feature",
+                    models.IntegerField(choices=[(0, b"None"), (1, b"CZO")], default=0),
+                ),
+                ("enabled", models.BooleanField(default=False)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="feature",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.AlterUniqueTogether(
-            name='feature',
-            unique_together=set([('user', 'feature')]),
+            name="feature",
+            unique_together=set([("user", "feature")]),
         ),
     ]

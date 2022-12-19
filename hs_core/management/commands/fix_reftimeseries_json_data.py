@@ -4,12 +4,16 @@ from hs_file_types.models import RefTimeseriesLogicalFile
 
 
 class Command(BaseCommand):
-    help = "Saves content of resource file (json data file) in ref timeseries logical file metadata field " \
-           "json_file_content"
+    help = (
+        "Saves content of resource file (json data file) in ref timeseries logical file metadata field "
+        "json_file_content"
+    )
 
     def handle(self, *args, **options):
         aggr_counter = 0
-        print(f"Total Ref Timeseries Aggregations found:{RefTimeseriesLogicalFile.objects.count()}")
+        print(
+            f"Total Ref Timeseries Aggregations found:{RefTimeseriesLogicalFile.objects.count()}"
+        )
         for aggr in RefTimeseriesLogicalFile.objects.all().iterator():
             res_json_file = aggr.files.all().first()
             if res_json_file:

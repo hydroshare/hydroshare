@@ -13,89 +13,290 @@ import hs_file_types.models.base
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_composite_resource', '0001_initial'),
-        ('hs_core', '0054_auto_20201028_1432'),
-        ('hs_file_types', '0010_auto_20181209_0255'),
+        ("hs_composite_resource", "0001_initial"),
+        ("hs_core", "0054_auto_20201028_1432"),
+        ("hs_file_types", "0010_auto_20181209_0255"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ModelInstanceFileMetaData',
+            name="ModelInstanceFileMetaData",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('extra_metadata', django.contrib.postgres.fields.hstore.HStoreField(default={})),
-                ('keywords', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, max_length=100, null=True), default=[], size=None)),
-                ('is_dirty', models.BooleanField(default=False)),
-                ('has_model_output', models.BooleanField(default=False)),
-                ('metadata_json', django.contrib.postgres.fields.jsonb.JSONField(default=dict)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "extra_metadata",
+                    django.contrib.postgres.fields.hstore.HStoreField(default={}),
+                ),
+                (
+                    "keywords",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(
+                            blank=True, max_length=100, null=True
+                        ),
+                        default=[],
+                        size=None,
+                    ),
+                ),
+                ("is_dirty", models.BooleanField(default=False)),
+                ("has_model_output", models.BooleanField(default=False)),
+                (
+                    "metadata_json",
+                    django.contrib.postgres.fields.jsonb.JSONField(default=dict),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='ModelInstanceLogicalFile',
+            name="ModelInstanceLogicalFile",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('dataset_name', models.CharField(blank=True, max_length=255, null=True)),
-                ('extra_data', django.contrib.postgres.fields.hstore.HStoreField(default={})),
-                ('folder', models.CharField(blank=True, max_length=4096, null=True)),
-                ('metadata_schema_json', django.contrib.postgres.fields.jsonb.JSONField(default=dict)),
-                ('model_instance_type', models.CharField(default='Unknown Model Instance', max_length=255)),
-                ('metadata', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='logical_file', to='hs_file_types.ModelInstanceFileMetaData')),
-                ('resource', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "dataset_name",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "extra_data",
+                    django.contrib.postgres.fields.hstore.HStoreField(default={}),
+                ),
+                ("folder", models.CharField(blank=True, max_length=4096, null=True)),
+                (
+                    "metadata_schema_json",
+                    django.contrib.postgres.fields.jsonb.JSONField(default=dict),
+                ),
+                (
+                    "model_instance_type",
+                    models.CharField(default="Unknown Model Instance", max_length=255),
+                ),
+                (
+                    "metadata",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="logical_file",
+                        to="hs_file_types.ModelInstanceFileMetaData",
+                    ),
+                ),
+                (
+                    "resource",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="hs_composite_resource.CompositeResource",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
             bases=(hs_file_types.models.base.NestedLogicalFileMixin, models.Model),
         ),
         migrations.CreateModel(
-            name='ModelProgramFileMetaData',
+            name="ModelProgramFileMetaData",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('extra_metadata', django.contrib.postgres.fields.hstore.HStoreField(default={})),
-                ('keywords', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, max_length=100, null=True), default=[], size=None)),
-                ('is_dirty', models.BooleanField(default=False)),
-                ('version', models.CharField(blank=True, help_text='The software version or build number of the model', max_length=255, null=True, verbose_name='Version')),
-                ('programming_languages', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, max_length=100, null=True), default=list, help_text='The programming language(s) that the model is written in', size=None)),
-                ('operating_systems', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, max_length=100, null=True), default=list, help_text='Compatible operating systems to setup and run the model', size=None)),
-                ('release_date', models.DateField(blank=True, help_text='The date that this version of the model was released', null=True, verbose_name='Release Date')),
-                ('website', models.URLField(blank=True, help_text='A URL to the website maintained by the model developers', max_length=255, null=True, verbose_name='Website')),
-                ('code_repository', models.URLField(blank=True, help_text='A URL to the source code repository (e.g. git, mercurial, svn)', max_length=255, null=True, verbose_name='Software Repository')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "extra_metadata",
+                    django.contrib.postgres.fields.hstore.HStoreField(default={}),
+                ),
+                (
+                    "keywords",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(
+                            blank=True, max_length=100, null=True
+                        ),
+                        default=[],
+                        size=None,
+                    ),
+                ),
+                ("is_dirty", models.BooleanField(default=False)),
+                (
+                    "version",
+                    models.CharField(
+                        blank=True,
+                        help_text="The software version or build number of the model",
+                        max_length=255,
+                        null=True,
+                        verbose_name="Version",
+                    ),
+                ),
+                (
+                    "programming_languages",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(
+                            blank=True, max_length=100, null=True
+                        ),
+                        default=list,
+                        help_text="The programming language(s) that the model is written in",
+                        size=None,
+                    ),
+                ),
+                (
+                    "operating_systems",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(
+                            blank=True, max_length=100, null=True
+                        ),
+                        default=list,
+                        help_text="Compatible operating systems to setup and run the model",
+                        size=None,
+                    ),
+                ),
+                (
+                    "release_date",
+                    models.DateField(
+                        blank=True,
+                        help_text="The date that this version of the model was released",
+                        null=True,
+                        verbose_name="Release Date",
+                    ),
+                ),
+                (
+                    "website",
+                    models.URLField(
+                        blank=True,
+                        help_text="A URL to the website maintained by the model developers",
+                        max_length=255,
+                        null=True,
+                        verbose_name="Website",
+                    ),
+                ),
+                (
+                    "code_repository",
+                    models.URLField(
+                        blank=True,
+                        help_text="A URL to the source code repository (e.g. git, mercurial, svn)",
+                        max_length=255,
+                        null=True,
+                        verbose_name="Software Repository",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='ModelProgramLogicalFile',
+            name="ModelProgramLogicalFile",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('dataset_name', models.CharField(blank=True, max_length=255, null=True)),
-                ('extra_data', django.contrib.postgres.fields.hstore.HStoreField(default={})),
-                ('folder', models.CharField(blank=True, max_length=4096, null=True)),
-                ('metadata_schema_json', django.contrib.postgres.fields.jsonb.JSONField(default=dict)),
-                ('model_program_type', models.CharField(default='Unknown Model Program', max_length=255)),
-                ('metadata', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='logical_file', to='hs_file_types.ModelProgramFileMetaData')),
-                ('resource', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "dataset_name",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "extra_data",
+                    django.contrib.postgres.fields.hstore.HStoreField(default={}),
+                ),
+                ("folder", models.CharField(blank=True, max_length=4096, null=True)),
+                (
+                    "metadata_schema_json",
+                    django.contrib.postgres.fields.jsonb.JSONField(default=dict),
+                ),
+                (
+                    "model_program_type",
+                    models.CharField(default="Unknown Model Program", max_length=255),
+                ),
+                (
+                    "metadata",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="logical_file",
+                        to="hs_file_types.ModelProgramFileMetaData",
+                    ),
+                ),
+                (
+                    "resource",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="hs_composite_resource.CompositeResource",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='ModelProgramResourceFileType',
+            name="ModelProgramResourceFileType",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file_type', models.PositiveSmallIntegerField(choices=[(1, 'Release Notes'), (2, 'Documentation'), (3, 'Software'), (4, 'Computational Engine')])),
-                ('mp_metadata', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mp_file_types', to='hs_file_types.ModelProgramFileMetaData')),
-                ('res_file', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='hs_core.ResourceFile')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "file_type",
+                    models.PositiveSmallIntegerField(
+                        choices=[
+                            (1, "Release Notes"),
+                            (2, "Documentation"),
+                            (3, "Software"),
+                            (4, "Computational Engine"),
+                        ]
+                    ),
+                ),
+                (
+                    "mp_metadata",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="mp_file_types",
+                        to="hs_file_types.ModelProgramFileMetaData",
+                    ),
+                ),
+                (
+                    "res_file",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="hs_core.ResourceFile",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='modelinstancefilemetadata',
-            name='executed_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='mi_metadata_objects', to='hs_file_types.ModelProgramLogicalFile'),
+            model_name="modelinstancefilemetadata",
+            name="executed_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="mi_metadata_objects",
+                to="hs_file_types.ModelProgramLogicalFile",
+            ),
         ),
     ]

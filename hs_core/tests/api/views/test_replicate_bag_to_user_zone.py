@@ -16,26 +16,26 @@ class TestReplicateBagToUserZone(TestCaseCommonUtilities, TestCase):
         super(TestReplicateBagToUserZone, self).setUp()
         super(TestReplicateBagToUserZone, self).assert_federated_irods_available()
 
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        self.username = 'john'
-        self.password = 'jhmypassword'
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
+        self.username = "john"
+        self.password = "jhmypassword"
         self.user = hydroshare.create_account(
-            'john@gmail.com',
+            "john@gmail.com",
             username=self.username,
-            first_name='John',
-            last_name='Clarson',
+            first_name="John",
+            last_name="Clarson",
             superuser=False,
             password=self.password,
-            groups=[]
+            groups=[],
         )
 
         # create corresponding irods account in user zone
         super(TestReplicateBagToUserZone, self).create_irods_user_in_user_zone()
 
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.user,
-            title='Generic Resource Key/Value Metadata Testing'
+            title="Generic Resource Key/Value Metadata Testing",
         )
 
         self.factory = RequestFactory()
@@ -44,15 +44,17 @@ class TestReplicateBagToUserZone(TestCaseCommonUtilities, TestCase):
         # here we are testing rep_res_bag_to_irods_user_zone view function
         super(TestReplicateBagToUserZone, self).assert_federated_irods_available()
 
-        url_params = {'shortkey': self.gen_res.short_id}
-        url = reverse('replicate_bag_user_zone', kwargs=url_params)
+        url_params = {"shortkey": self.gen_res.short_id}
+        url = reverse("replicate_bag_user_zone", kwargs=url_params)
         request = self.factory.post(url, data={})
         request.user = self.user
         # make it a ajax request
-        request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
-        response = rep_res_bag_to_irods_user_zone(request, shortkey=self.gen_res.short_id)
+        request.META["HTTP_X_REQUESTED_WITH"] = "XMLHttpRequest"
+        response = rep_res_bag_to_irods_user_zone(
+            request, shortkey=self.gen_res.short_id
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = json.loads(response.content.decode())
-        self.assertIn('resource copy to user zone',  response_data.values())
+        self.assertIn("resource copy to user zone", response_data.values())
         # clean up
         hydroshare.delete_resource(self.gen_res.short_id)

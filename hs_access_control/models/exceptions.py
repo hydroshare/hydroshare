@@ -6,6 +6,7 @@
 
 
 class PolymorphismError(Exception):
-    """ A function is called with an inappropriate combination of arguments """
+    """A function is called with an inappropriate combination of arguments"""
+
     # This is a generic exception.
     pass

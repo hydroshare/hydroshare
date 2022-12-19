@@ -33,7 +33,7 @@ import netCDF4
 from .nc_utils import get_nc_dataset
 
 
-def get_netcdf_header_file(nc_file_name, dump_folder=''):
+def get_netcdf_header_file(nc_file_name, dump_folder=""):
     """
     (string,string) -> file
 
@@ -42,14 +42,19 @@ def get_netcdf_header_file(nc_file_name, dump_folder=''):
 
     # create a new text file
     # name with no file extension
-    nc_file_basename = '.'.join(basename(nc_file_name).split('.')[:-1])
+    nc_file_basename = ".".join(basename(nc_file_name).split(".")[:-1])
     nc_dump_file_folder = dump_folder if dump_folder else os.getcwd()
-    nc_dump_file_name = nc_dump_file_folder + '/' + nc_file_basename + '_header_info.txt'
-    nc_dump_file = open(nc_dump_file_name, 'w')
+    nc_dump_file_name = (
+        nc_dump_file_folder + "/" + nc_file_basename + "_header_info.txt"
+    )
+    nc_dump_file = open(nc_dump_file_name, "w")
 
     # write the nc_dump string in text fle
-    dump_string = get_nc_dump_string_by_ncdump(nc_file_name) \
-        if get_nc_dump_string_by_ncdump(nc_file_name) else get_nc_dump_string(nc_file_name)
+    dump_string = (
+        get_nc_dump_string_by_ncdump(nc_file_name)
+        if get_nc_dump_string_by_ncdump(nc_file_name)
+        else get_nc_dump_string(nc_file_name)
+    )
     if dump_string:
         nc_dump_file.write(dump_string)
 
@@ -62,10 +67,12 @@ def get_nc_dump_string_by_ncdump(nc_file_name):
     """
 
     try:
-        process = subprocess.Popen(['ncdump', '-h', nc_file_name], stdout=subprocess.PIPE, encoding="UTF-8")
+        process = subprocess.Popen(
+            ["ncdump", "-h", nc_file_name], stdout=subprocess.PIPE, encoding="UTF-8"
+        )
         nc_dump_string = process.communicate()[0]
     except Exception:
-        nc_dump_string = ''
+        nc_dump_string = ""
 
     return nc_dump_string
 
@@ -78,15 +85,15 @@ def get_nc_dump_string(nc_file_name):
     """
     try:
         nc_dataset = get_nc_dataset(nc_file_name)
-        nc_file_basename = '.'.join(basename(nc_file_name).split('.')[:-1])
+        nc_file_basename = ".".join(basename(nc_file_name).split(".")[:-1])
         nc_dump_dict = get_nc_dump_dict(nc_dataset)
         if nc_dump_dict:
-            nc_dump_string = 'netcdf {0} \n'.format(nc_file_basename)
+            nc_dump_string = "netcdf {0} \n".format(nc_file_basename)
             nc_dump_string += json.dumps(nc_dump_dict, indent=4)
         else:
-            nc_dump_string = ''
+            nc_dump_string = ""
     except Exception:
-        nc_dump_string = ''
+        nc_dump_string = ""
 
     return nc_dump_string
 
@@ -100,16 +107,16 @@ def get_nc_dump_dict(nc_group):
     info = OrderedDict()
     if isinstance(nc_group, netCDF4.Dataset):
         if get_dimensions_info(nc_group):
-            info['dimensions'] = get_dimensions_info(nc_group)
+            info["dimensions"] = get_dimensions_info(nc_group)
         if get_variables_info(nc_group):
-            info['variables'] = get_variables_info(nc_group)
+            info["variables"] = get_variables_info(nc_group)
         if get_global_attr_info(nc_group):
-            info['global attributes'] = get_global_attr_info(nc_group)
+            info["global attributes"] = get_global_attr_info(nc_group)
 
         if nc_group.groups:
             for group_name, group_obj in list(nc_group.groups.items()):
                 try:
-                    info['group: ' + group_name] = get_nc_dump_dict(group_obj)
+                    info["group: " + group_name] = get_nc_dump_dict(group_obj)
                 except Exception:
                     continue
 
@@ -127,7 +134,9 @@ def get_dimensions_info(nc_group):
     for dim_name, dim_obj in list(nc_group.dimensions.items()):
         try:
             if dim_obj.isunlimited():
-                dimensions_info[dim_name] = 'UNLIMITED; // ({0} currently)'.format(len(dim_obj))
+                dimensions_info[dim_name] = "UNLIMITED; // ({0} currently)".format(
+                    len(dim_obj)
+                )
             else:
                 dimensions_info[dim_name] = len(dim_obj)
         except:
@@ -145,7 +154,7 @@ def get_global_attr_info(nc_group):
     global_attr_info = OrderedDict()
     if nc_group.__dict__:
         for name, val in list(nc_group.__dict__.items()):
-            value = str(val).split('\n') if '\n' in str(val) else str(val)
+            value = str(val).split("\n") if "\n" in str(val) else str(val)
             global_attr_info[name] = value
 
     return global_attr_info
@@ -162,16 +171,16 @@ def get_variables_info(nc_group):
         for var_name, var_obj in list(nc_group.variables.items()):
             try:
                 if isinstance(var_obj.datatype, netCDF4.CompoundType):
-                    var_type = 'compound'
+                    var_type = "compound"
                 elif isinstance(var_obj.datatype, netCDF4.VLType):
-                    var_type = 'variable length'
+                    var_type = "variable length"
                 else:
                     var_type = var_obj.datatype.name
-                var_dimensions = '({0})'.format(','.join(var_obj.dimensions).encode())
-                var_title = '{0} {1}{2}'.format(var_type, var_name, var_dimensions)
+                var_dimensions = "({0})".format(",".join(var_obj.dimensions).encode())
+                var_title = "{0} {1}{2}".format(var_type, var_name, var_dimensions)
                 variables_info[var_title] = OrderedDict()
                 for name, val in list(var_obj.__dict__.items()):
-                    value = str(val).split('\n') if '\n' in str(val) else str(val)
+                    value = str(val).split("\n") if "\n" in str(val) else str(val)
                     variables_info[var_title][name] = value
             except Exception:
                 continue

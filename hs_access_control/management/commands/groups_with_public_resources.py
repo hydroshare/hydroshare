@@ -16,18 +16,18 @@ def shorten(title, length):
     if len(title) <= length:
         return title
     else:
-        return title[0:19]+'...'
+        return title[0:19] + "..."
 
 
 def access_type(thing):
-    if thing['published']:
-        return 'published'
-    elif thing['public']:
-        return 'public'
-    elif thing['discoverable']:
-        return 'discoverable'
+    if thing["published"]:
+        return "published"
+    elif thing["public"]:
+        return "public"
+    elif thing["discoverable"]:
+        return "discoverable"
     else:
-        return 'private'
+        return "private"
 
 
 class Command(BaseCommand):

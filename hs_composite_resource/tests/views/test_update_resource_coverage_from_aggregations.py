@@ -11,31 +11,36 @@ from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
-class TestUpdateResourceCoverageViewFunctions(MockIRODSTestCaseMixin, ViewTestCase,
-                                              CompositeResourceTestMixin):
+class TestUpdateResourceCoverageViewFunctions(
+    MockIRODSTestCaseMixin, ViewTestCase, CompositeResourceTestMixin
+):
     def setUp(self):
         super(TestUpdateResourceCoverageViewFunctions, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        self.username = 'john'
-        self.password = 'jhmypassword'
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
+        self.username = "john"
+        self.password = "jhmypassword"
         self.user = hydroshare.create_account(
-            'john@gmail.com',
+            "john@gmail.com",
             username=self.username,
-            first_name='John',
-            last_name='Clarson',
+            first_name="John",
+            last_name="Clarson",
             superuser=False,
             password=self.password,
-            groups=[]
+            groups=[],
         )
 
         self.factory = RequestFactory()
-        self.res_title = 'Testing Composite Resource'
+        self.res_title = "Testing Composite Resource"
 
-        self.raster_file_name = 'small_logan.tif'
-        self.raster_file = 'hs_composite_resource/tests/data/{}'.format(self.raster_file_name)
+        self.raster_file_name = "small_logan.tif"
+        self.raster_file = "hs_composite_resource/tests/data/{}".format(
+            self.raster_file_name
+        )
 
-        self.netcdf_file_name = 'netcdf_valid.nc'
-        self.netcdf_file = 'hs_composite_resource/tests/data/{}'.format(self.netcdf_file_name)
+        self.netcdf_file_name = "netcdf_valid.nc"
+        self.netcdf_file = "hs_composite_resource/tests/data/{}".format(
+            self.netcdf_file_name
+        )
 
     def test_update_resource_spatial_coverage(self):
         """Here we are testing the update of resource spatial coverage based on the
@@ -46,17 +51,23 @@ class TestUpdateResourceCoverageViewFunctions(MockIRODSTestCaseMixin, ViewTestCa
         res_file = self.composite_resource.files.first()
 
         # set the tif file to GeoRasterLogicalFile type (aggregation)
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GeoRasterLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
 
-        url_params = {'resource_id': self.composite_resource.short_id,
-                      'coverage_type': 'spatial'
-                      }
-        url = reverse('update_resource_coverage', kwargs=url_params)
+        url_params = {
+            "resource_id": self.composite_resource.short_id,
+            "coverage_type": "spatial",
+        }
+        url = reverse("update_resource_coverage", kwargs=url_params)
         request = self.factory.post(url)
         request.user = self.user
         # this is the view function we are testing
-        response = update_resource_coverage(request, resource_id=self.composite_resource.short_id,
-                                            coverage_type='spatial')
+        response = update_resource_coverage(
+            request,
+            resource_id=self.composite_resource.short_id,
+            coverage_type="spatial",
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.composite_resource.delete()
 
@@ -71,14 +82,18 @@ class TestUpdateResourceCoverageViewFunctions(MockIRODSTestCaseMixin, ViewTestCa
         # set the tif file to GeoRasterLogicalFile type (aggregation)
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
-        url_params = {'resource_id': self.composite_resource.short_id,
-                      'coverage_type': 'temporal'
-                      }
-        url = reverse('update_resource_coverage', kwargs=url_params)
+        url_params = {
+            "resource_id": self.composite_resource.short_id,
+            "coverage_type": "temporal",
+        }
+        url = reverse("update_resource_coverage", kwargs=url_params)
         request = self.factory.post(url)
         request.user = self.user
         # this is the view function we are testing
-        response = update_resource_coverage(request, resource_id=self.composite_resource.short_id,
-                                            coverage_type='temporal')
+        response = update_resource_coverage(
+            request,
+            resource_id=self.composite_resource.short_id,
+            coverage_type="temporal",
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.composite_resource.delete()

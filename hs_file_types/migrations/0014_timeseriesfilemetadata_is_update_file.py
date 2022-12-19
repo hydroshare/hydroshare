@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_file_types', '0013_netcdffilemetadata_is_update_file'),
+        ("hs_file_types", "0013_netcdffilemetadata_is_update_file"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='timeseriesfilemetadata',
-            name='is_update_file',
+            model_name="timeseriesfilemetadata",
+            name="is_update_file",
             field=models.BooleanField(default=False),
         ),
     ]

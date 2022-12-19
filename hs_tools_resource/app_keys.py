@@ -3,4 +3,4 @@
 
 # The tool_app_key is used to associate a specific resource with a specific web app tool if
 # both have the matching value for tool_app_key
-tool_app_key = 'appkey'
+tool_app_key = "appkey"

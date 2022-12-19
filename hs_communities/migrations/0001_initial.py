@@ -10,30 +10,70 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Topic',
+            name="Topic",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
             ],
         ),
         migrations.CreateModel(
-            name='TopicEntry',
+            name="TopicEntry",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order', models.IntegerField(help_text=b'Position of this entry: 1-n')),
-                ('topic', models.ForeignKey(help_text=b'One topic entry for a resource', on_delete=django.db.models.deletion.CASCADE, to='hs_communities.Topic')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "order",
+                    models.IntegerField(help_text=b"Position of this entry: 1-n"),
+                ),
+                (
+                    "topic",
+                    models.ForeignKey(
+                        help_text=b"One topic entry for a resource",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="hs_communities.Topic",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Topics',
+            name="Topics",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('topics', models.ManyToManyField(help_text=b'A list of topics, in order', null=True, to='hs_communities.TopicEntry')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "topics",
+                    models.ManyToManyField(
+                        help_text=b"A list of topics, in order",
+                        null=True,
+                        to="hs_communities.TopicEntry",
+                    ),
+                ),
             ],
         ),
     ]

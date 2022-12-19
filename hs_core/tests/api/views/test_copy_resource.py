@@ -15,22 +15,22 @@ from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 class TestCopyResource(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestCopyResource, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        self.username = 'john'
-        self.password = 'jhmypassword'
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
+        self.username = "john"
+        self.password = "jhmypassword"
         self.user = hydroshare.create_account(
-            'john@gmail.com',
+            "john@gmail.com",
             username=self.username,
-            first_name='John',
-            last_name='Clarson',
+            first_name="John",
+            last_name="Clarson",
             superuser=False,
             password=self.password,
-            groups=[]
+            groups=[],
         )
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.user,
-            title='Generic Resource Key/Value Metadata Testing'
+            title="Generic Resource Key/Value Metadata Testing",
         )
 
     def tearDown(self):
@@ -43,15 +43,15 @@ class TestCopyResource(MockIRODSTestCaseMixin, ViewTestCase):
 
         # we should have 1 resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
-        url_params = {'shortkey': self.gen_res.short_id}
-        url = reverse('copy_resource', kwargs=url_params)
+        url_params = {"shortkey": self.gen_res.short_id}
+        url = reverse("copy_resource", kwargs=url_params)
         request = self.factory.post(url, data={})
         request.user = self.user
 
         self.add_session_to_request(request)
         response = copy_resource(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        res_id = response.url.split('/')[2]
+        res_id = response.url.split("/")[2]
         self.assertEqual(BaseResource.objects.filter(short_id=res_id).exists(), True)
         # should have 2 resources now
         self.assertEqual(BaseResource.objects.count(), 2)

@@ -1,4 +1,3 @@
-
 from django_nose.runner import NoseTestSuiteRunner
 
 from celery import current_app
@@ -43,7 +42,13 @@ class CustomTestSuiteRunner(NoseTestSuiteRunner):
             # No appnames specified on the command line, so we run all
             # tests, but remove those which we know are troublesome.
 
-            test_labels = [app for app in settings.INSTALLED_APPS if app not in settings.APPS_TO_NOT_RUN
-                           and (not app.startswith('django.') and not app.startswith('mezzanine.'))]
+            test_labels = [
+                app
+                for app in settings.INSTALLED_APPS
+                if app not in settings.APPS_TO_NOT_RUN
+                and (not app.startswith("django.") and not app.startswith("mezzanine."))
+            ]
 
-        return super(CustomTestSuiteRunner, self).run_tests(test_labels, extra_tests, **kwargs)
+        return super(CustomTestSuiteRunner, self).run_tests(
+            test_labels, extra_tests, **kwargs
+        )

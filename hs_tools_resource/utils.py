@@ -41,15 +41,18 @@ def get_SupportedResTypes_choices():
     This function generates a list of resource types currently supported for web app
     """
 
-    supported_resource_types = [[CompositeResource.__name__, CompositeResource._meta.verbose_name],
-                                [CollectionResource.__name__, CollectionResource._meta.verbose_name]]
+    supported_resource_types = [
+        [CompositeResource.__name__, CompositeResource._meta.verbose_name],
+        [CollectionResource.__name__, CollectionResource._meta.verbose_name],
+    ]
 
     return supported_resource_types
 
 
 def get_SupportedSharingStatus_choices():
-    return [['Published', 'Published'],
-            ['Public', 'Public'],
-            ['Discoverable', 'Discoverable'],
-            ['Private', 'Private'],
-            ]
+    return [
+        ["Published", "Published"],
+        ["Public", "Public"],
+        ["Discoverable", "Discoverable"],
+        ["Private", "Private"],
+    ]

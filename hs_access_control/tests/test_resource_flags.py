@@ -13,67 +13,66 @@ from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 
 
 class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
-
     def setUp(self):
         super(T08ResourceFlags, self).setUp()
         global_reset()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.admin = hydroshare.create_account(
-            'admin@gmail.com',
-            username='admin',
-            first_name='administrator',
-            last_name='couch',
+            "admin@gmail.com",
+            username="admin",
+            first_name="administrator",
+            last_name="couch",
             superuser=True,
-            groups=[]
+            groups=[],
         )
 
         self.cat = hydroshare.create_account(
-            'cat@gmail.com',
-            username='cat',
-            first_name='not a dog',
-            last_name='last_name_cat',
+            "cat@gmail.com",
+            username="cat",
+            first_name="not a dog",
+            last_name="last_name_cat",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.dog = hydroshare.create_account(
-            'dog@gmail.com',
-            username='dog',
-            first_name='a little arfer',
-            last_name='last_name_dog',
+            "dog@gmail.com",
+            username="dog",
+            first_name="a little arfer",
+            last_name="last_name_dog",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.bat = hydroshare.create_account(
-            'bat@gmail.com',
-            username='bat',
-            first_name='not a man',
-            last_name='last_name_bat',
+            "bat@gmail.com",
+            username="bat",
+            first_name="not a man",
+            last_name="last_name_bat",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.nobody = hydroshare.create_account(
-            'nobody@gmail.com',
-            username='nobody',
-            first_name='no one in particular',
-            last_name='last_name_nobody',
+            "nobody@gmail.com",
+            username="nobody",
+            first_name="no one in particular",
+            last_name="last_name_nobody",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.bones = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.dog,
-            title='all about dog bones',
+            title="all about dog bones",
             metadata=[],
         )
 
         self.chewies = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.dog,
-            title='all about dog chewies',
+            title="all about dog chewies",
             metadata=[],
         )
 
@@ -116,8 +115,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_view_resource(bones))
 
         # django admin should be able share even if shareable is False
-        self.admin.uaccess.share_resource_with_user(
-            bones, cat, PrivilegeCodes.CHANGE)
+        self.admin.uaccess.share_resource_with_user(bones, cat, PrivilegeCodes.CHANGE)
 
     def test_03_not_shareable(self):
         "Resource that is not shareable cannot be shared by non-owner"
@@ -132,14 +130,13 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
 
         # cat should not be able to reshare
         with self.assertRaises(PermissionDenied) as cm:
-            cat.uaccess.share_resource_with_user(
-                bones, bat, PrivilegeCodes.VIEW)
-        self.assertEqual(str(cm.exception),
-                         'User must own resource or have sharing privilege')
+            cat.uaccess.share_resource_with_user(bones, bat, PrivilegeCodes.VIEW)
+        self.assertEqual(
+            str(cm.exception), "User must own resource or have sharing privilege"
+        )
 
         # django admin still can share
-        self.admin.uaccess.share_resource_with_user(
-            bones, bat, PrivilegeCodes.VIEW)
+        self.admin.uaccess.share_resource_with_user(bones, bat, PrivilegeCodes.VIEW)
 
     def test_04_transitive_sharing(self):
         """Resource shared with one user can be shared with another"""
@@ -183,9 +180,8 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(bones.raccess.shareable)
 
         self.assertTrue(
-            is_equal_to_as_set(
-                [bones],
-                GenericResource.discoverable_resources.all()))
+            is_equal_to_as_set([bones], GenericResource.discoverable_resources.all())
+        )
 
     def test_06_not_discoverable(self):
         """Resource can be made not discoverable and not public"""
@@ -276,13 +272,11 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(chewies.raccess.shareable)
 
         self.assertTrue(
-            is_equal_to_as_set(
-                [chewies],
-                GenericResource.public_resources.all()))
+            is_equal_to_as_set([chewies], GenericResource.public_resources.all())
+        )
         self.assertTrue(
-            is_equal_to_as_set(
-                [chewies],
-                GenericResource.discoverable_resources.all()))
+            is_equal_to_as_set([chewies], GenericResource.discoverable_resources.all())
+        )
 
         # can 'nobody' see the public resource owned by 'dog'
         # but not explicitly shared with 'nobody'.
@@ -316,13 +310,10 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         # discoverable doesn't mean public
         # TODO: get_public_resources and get_discoverable_resources should be
         # static methods
+        self.assertTrue(is_equal_to_as_set([], GenericResource.public_resources.all()))
         self.assertTrue(
-            is_equal_to_as_set(
-                [], GenericResource.public_resources.all()))
-        self.assertTrue(
-            is_equal_to_as_set(
-                [chewies],
-                GenericResource.discoverable_resources.all()))
+            is_equal_to_as_set([chewies], GenericResource.discoverable_resources.all())
+        )
 
         # can 'nobody' see the public resource owned by 'dog' but not
         # explicitly shared with 'nobody'.
@@ -348,5 +339,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
 
         # users with view permissions and higher may copy a resource
         self.assertFalse(self.cat.uaccess.can_view_resource(self.bones))
-        self.dog.uaccess.share_resource_with_user(self.bones, self.cat, PrivilegeCodes.VIEW)
+        self.dog.uaccess.share_resource_with_user(
+            self.bones, self.cat, PrivilegeCodes.VIEW
+        )
         self.assertTrue(self.cat.uaccess.can_view_resource(self.bones))

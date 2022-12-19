@@ -16,26 +16,33 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         # ID of a resource for which users should be re-ordered
-        parser.add_argument('--resource_id', type=str, help=('Required. The id (short_id) of'
-                                                             ' the resource'))
+        parser.add_argument(
+            "--resource_id",
+            type=str,
+            help=("Required. The id (short_id) of" " the resource"),
+        )
 
     def handle(self, *args, **options):
-        if not options['resource_id']:
-            raise CommandError('resource_id argument is required')
-        res_id = options['resource_id']
+        if not options["resource_id"]:
+            raise CommandError("resource_id argument is required")
+        res_id = options["resource_id"]
         res = BaseResource.objects.filter(short_id=res_id).first()
         if not res:
-            raise CommandError('No resource found for the provided resource_id')
+            raise CommandError("No resource found for the provided resource_id")
         if res.raccess.published:
-            raise CommandError(f"Resource id: {res_id} is already published--can't update author order.")
+            raise CommandError(
+                f"Resource id: {res_id} is already published--can't update author order."
+            )
         if res.metadata is not None:
             creators = res.metadata.creators.all()
             is_dirty = False
             for index, creator in enumerate(creators, start=1):
                 if creator.order != index:
                     print("*" * 100)
-                    print(f"Author out of order.\nR:{res.short_id}"
-                            f"\nExpected: {index}, got: {creator.order}")
+                    print(
+                        f"Author out of order.\nR:{res.short_id}"
+                        f"\nExpected: {index}, got: {creator.order}"
+                    )
                     creator.order = index
                     creator.save()
                     is_dirty = True

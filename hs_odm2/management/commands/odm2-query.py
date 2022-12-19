@@ -11,7 +11,7 @@ class Command(BaseCommand):
     help = "query ODM2 variable name database."
 
     def add_arguments(self, parser):
-        parser.add_argument('prefix', type=str, help='Prefix of variable name to match')
+        parser.add_argument("prefix", type=str, help="Prefix of variable name to match")
 
     def handle(self, *args, **options):
-        print(list(ODM2Variable.search(options['prefix'])))
+        print(list(ODM2Variable.search(options["prefix"])))

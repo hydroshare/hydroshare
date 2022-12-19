@@ -9,7 +9,7 @@ def remove_pending_citations_from_relations(apps, schema_editor):
     Relation = apps.get_model("hs_core", "Relation")
     for relation in Relation.objects.all():
         if relation.value:
-            sep = ', DOI for this published resource is pending activation'
+            sep = ", DOI for this published resource is pending activation"
             head, _, _ = relation.value.partition(sep)
             relation.value = head
             relation.save()
@@ -18,7 +18,7 @@ def remove_pending_citations_from_relations(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0062_auto_20220520_1449'),
+        ("hs_core", "0062_auto_20220520_1449"),
     ]
 
     operations = [

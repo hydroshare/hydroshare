@@ -43,98 +43,152 @@ class ResourceUpdateRequestValidator(serializers.Serializer):
         return self._validate_groups(value)
 
     def _validate_users(self, value):
-        values = value.split(',')
+        values = value.split(",")
         for value in values:
             if not User.objects.filter(username=value).exists():
-                raise serializers.ValidationError("%s in not a valid user name." % value)
+                raise serializers.ValidationError(
+                    "%s in not a valid user name." % value
+                )
         return values
 
     def _validate_groups(self, value):
-        values = value.split(',')
+        values = value.split(",")
         for value in values:
             if not Group.objects.filter(name=value).exists():
-                raise serializers.ValidationError("%s in not a valid group name." % value)
+                raise serializers.ValidationError(
+                    "%s in not a valid group name." % value
+                )
         return values
 
 
 class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
     resource_type = serializers.ChoiceField(
-            choices=list(zip(
+        choices=list(
+            zip(
                 [x.__name__ for x in hydroshare.get_resource_types()],
-                [x.__name__ for x in hydroshare.get_resource_types()]
-            )), default='CompositeResource')
+                [x.__name__ for x in hydroshare.get_resource_types()],
+            )
+        ),
+        default="CompositeResource",
+    )
 
 
 class ResourceTypesSerializer(serializers.Serializer):
-    resource_type = serializers.CharField(max_length=100, required=True,
-                                          validators=[lambda x: x in RESOURCE_TYPES],
-                                          help_text='list of resource types')
+    resource_type = serializers.CharField(
+        max_length=100,
+        required=True,
+        validators=[lambda x: x in RESOURCE_TYPES],
+        help_text="list of resource types",
+    )
 
 
 class ContentTypesSerializer(serializers.Serializer):
-    content_type = serializers.CharField(max_length=100, required=True,
-                                          validators=[lambda x: x in CONTENT_TYPES],
-                                          help_text='list of content types')
+    content_type = serializers.CharField(
+        max_length=100,
+        required=True,
+        validators=[lambda x: x in CONTENT_TYPES],
+        help_text="list of content types",
+    )
 
 
 class CheckStatusSerializer(serializers.Serializer):
-    status = serializers.BooleanField(help_text='Whether the task is complete')
+    status = serializers.BooleanField(help_text="Whether the task is complete")
     payload = serializers.URLField(help_text="URL of the generated zip")
 
 
 class TaskStatusSerializer(serializers.Serializer):
     bag_status = serializers.CharField(help_text='Status of task, i.e. "Not Ready" ')
-    task_id = serializers.CharField(help_text="The task id to be used to check task status")
+    task_id = serializers.CharField(
+        help_text="The task id to be used to check task status"
+    )
 
 
 class ResourceListRequestValidator(serializers.Serializer):
-    creator = serializers.CharField(min_length=1, required=False,
-                                    help_text='The first author (name or email)')
-    author = serializers.CharField(required=False,
-                                   help_text='Comma separated list of authors (name or email)')
-    group = serializers.CharField(min_length=1, required=False, validators=[validate_group],
-                                  help_text='A group name (requires edit_permissions=True)')
-    user = serializers.CharField(min_length=1, required=False, validators=[validate_user],
-                                 help_text='Viewable by user (name or email)')
-    owner = serializers.CharField(min_length=1, required=False, validators=[validate_user],
-                                  help_text='Owned by user (name or email)')
-    from_date = serializers.DateField(required=False, default=None,
-                                      help_text='to get a list of resources created on or after '
-                                                'this date')
-    to_date = serializers.DateField(required=False, default=None,
-                                    help_text='to get a list of resources created on or before '
-                                              'this date')
-    subject = serializers.CharField(required=False,
-                                    help_text='Comma separated list of subjects')
-    full_text_search = serializers.CharField(required=False,
-                                             help_text='get a list of resources with this text')
-    edit_permission = serializers.BooleanField(required=False, default=False,
-                                               help_text='filter by edit permissions of '
-                                                         'user/group/owner')
-    published = serializers.BooleanField(required=False, default=False,
-                                         help_text='filter by published resources')
-    type = serializers.MultipleChoiceField(choices=RESOURCE_TYPES, required=False, default=None,
-                                           help_text='to get a list of resources of the specified '
-                                                     'resource types')
-    coverage_type = serializers.ChoiceField(choices=['box', 'point'], required=False,
-                                            help_text='to get a list of resources that fall within '
-                                                      'the specified spatial coverage boundary')
-    north = serializers.CharField(required=False,
-                                  help_text='north coordinate of spatial coverage. This parameter '
-                                            'is required if *coverage_type* has been specified')
-    south = serializers.CharField(required=False,
-                                  help_text='south coordinate of spatial coverage. This parameter '
-                                            'is required if *coverage_type* has been specified '
-                                            'with a value of box')
-    east = serializers.CharField(required=False,
-                                 help_text='east coordinate of spatial coverage. This parameter '
-                                           'is required if *coverage_type* has been specified')
-    west = serializers.CharField(required=False,
-                                 help_text='west coordinate of spatial coverage. This parameter '
-                                           'is required if *coverage_type* has been specified with '
-                                           'a value of box')
-    include_obsolete = serializers.BooleanField(required=False, default=False,
-                                                help_text='Include repleaced resources')
+    creator = serializers.CharField(
+        min_length=1, required=False, help_text="The first author (name or email)"
+    )
+    author = serializers.CharField(
+        required=False, help_text="Comma separated list of authors (name or email)"
+    )
+    group = serializers.CharField(
+        min_length=1,
+        required=False,
+        validators=[validate_group],
+        help_text="A group name (requires edit_permissions=True)",
+    )
+    user = serializers.CharField(
+        min_length=1,
+        required=False,
+        validators=[validate_user],
+        help_text="Viewable by user (name or email)",
+    )
+    owner = serializers.CharField(
+        min_length=1,
+        required=False,
+        validators=[validate_user],
+        help_text="Owned by user (name or email)",
+    )
+    from_date = serializers.DateField(
+        required=False,
+        default=None,
+        help_text="to get a list of resources created on or after " "this date",
+    )
+    to_date = serializers.DateField(
+        required=False,
+        default=None,
+        help_text="to get a list of resources created on or before " "this date",
+    )
+    subject = serializers.CharField(
+        required=False, help_text="Comma separated list of subjects"
+    )
+    full_text_search = serializers.CharField(
+        required=False, help_text="get a list of resources with this text"
+    )
+    edit_permission = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="filter by edit permissions of " "user/group/owner",
+    )
+    published = serializers.BooleanField(
+        required=False, default=False, help_text="filter by published resources"
+    )
+    type = serializers.MultipleChoiceField(
+        choices=RESOURCE_TYPES,
+        required=False,
+        default=None,
+        help_text="to get a list of resources of the specified " "resource types",
+    )
+    coverage_type = serializers.ChoiceField(
+        choices=["box", "point"],
+        required=False,
+        help_text="to get a list of resources that fall within "
+        "the specified spatial coverage boundary",
+    )
+    north = serializers.CharField(
+        required=False,
+        help_text="north coordinate of spatial coverage. This parameter "
+        "is required if *coverage_type* has been specified",
+    )
+    south = serializers.CharField(
+        required=False,
+        help_text="south coordinate of spatial coverage. This parameter "
+        "is required if *coverage_type* has been specified "
+        "with a value of box",
+    )
+    east = serializers.CharField(
+        required=False,
+        help_text="east coordinate of spatial coverage. This parameter "
+        "is required if *coverage_type* has been specified",
+    )
+    west = serializers.CharField(
+        required=False,
+        help_text="west coordinate of spatial coverage. This parameter "
+        "is required if *coverage_type* has been specified with "
+        "a value of box",
+    )
+    include_obsolete = serializers.BooleanField(
+        required=False, default=False, help_text="Include repleaced resources"
+    )
 
 
 class ResourceListItemSerializer(serializers.Serializer):
@@ -145,8 +199,8 @@ class ResourceListItemSerializer(serializers.Serializer):
     authors = serializers.ListField()
     creator = serializers.CharField(max_length=100)
     doi = serializers.CharField(max_length=200)
-    date_created = serializers.DateTimeField(format='%m-%d-%Y')
-    date_last_updated = serializers.DateTimeField(format='%m-%d-%Y')
+    date_created = serializers.DateTimeField(format="%m-%d-%Y")
+    date_last_updated = serializers.DateTimeField(format="%m-%d-%Y")
     public = serializers.BooleanField()
     discoverable = serializers.BooleanField()
     shareable = serializers.BooleanField()
@@ -163,40 +217,48 @@ class ResourceListItemSerializer(serializers.Serializer):
         # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
         site_url = hydroshare.utils.current_site_url()
         bag_url = site_url + instance.bag_url
-        science_metadata_url = site_url + reverse('get_update_science_metadata', args=[instance.short_id])
-        resource_map_url = site_url + reverse('get_resource_map', args=[instance.short_id])
+        science_metadata_url = site_url + reverse(
+            "get_update_science_metadata", args=[instance.short_id]
+        )
+        resource_map_url = site_url + reverse(
+            "get_resource_map", args=[instance.short_id]
+        )
         resource_url = site_url + instance.get_absolute_url()
-        coverages = [{"type": v['type'], "value": json.loads(v['_value'])}
-                     for v in list(instance.metadata.coverages.values())]
+        coverages = [
+            {"type": v["type"], "value": json.loads(v["_value"])}
+            for v in list(instance.metadata.coverages.values())
+        ]
         authors = []
         for c in instance.metadata.creators.all():
             authors.append(c.name)
         doi = None
         if instance.raccess.published:
             doi = "10.4211/hs.{}".format(instance.short_id)
-        description = ''
+        description = ""
         if instance.metadata.description:
             description = instance.metadata.description.abstract
-        return {'resource_type': instance.resource_type,
-                'resource_id': instance.short_id,
-                'resource_title': instance.metadata.title.value,
-                'abstract': description,
-                'authors': authors,
-                'creator': instance.first_creator.name,
-                'doi': doi,
-                'public': instance.raccess.public,
-                'discoverable': instance.raccess.discoverable,
-                'shareable': instance.raccess.shareable,
-                'immutable': instance.raccess.immutable,
-                'published': instance.raccess.published,
-                'date_created': instance.created,
-                'date_last_updated': instance.last_updated,
-                'bag_url': bag_url,
-                'coverages': coverages,
-                'science_metadata_url': science_metadata_url,
-                'resource_map_url': resource_map_url,
-                'resource_url': resource_url,
-                'content_types': instance.aggregation_types}
+        return {
+            "resource_type": instance.resource_type,
+            "resource_id": instance.short_id,
+            "resource_title": instance.metadata.title.value,
+            "abstract": description,
+            "authors": authors,
+            "creator": instance.first_creator.name,
+            "doi": doi,
+            "public": instance.raccess.public,
+            "discoverable": instance.raccess.discoverable,
+            "shareable": instance.raccess.shareable,
+            "immutable": instance.raccess.immutable,
+            "published": instance.raccess.published,
+            "date_created": instance.created,
+            "date_last_updated": instance.last_updated,
+            "bag_url": bag_url,
+            "coverages": coverages,
+            "science_metadata_url": science_metadata_url,
+            "resource_map_url": resource_map_url,
+            "resource_url": resource_url,
+            "content_types": instance.aggregation_types,
+        }
 
 
 class ResourceCreatedSerializer(serializers.Serializer):
@@ -206,48 +268,62 @@ class ResourceCreatedSerializer(serializers.Serializer):
 
 
 class ResourceFileSerializer(serializers.Serializer):
-    file_name = serializers.CharField(max_length=200, help_text='The filename, including the path')
-    url = serializers.URLField(help_text='The url to download the file')
-    size = serializers.IntegerField(help_text='The size of the file')
-    content_type = serializers.CharField(max_length=255, help_text='The content type of the file')
+    file_name = serializers.CharField(
+        max_length=200, help_text="The filename, including the path"
+    )
+    url = serializers.URLField(help_text="The url to download the file")
+    size = serializers.IntegerField(help_text="The size of the file")
+    content_type = serializers.CharField(
+        max_length=255, help_text="The content type of the file"
+    )
     logical_file_type = serializers.CharField(max_length=255)
     modified_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S")
     checksum = serializers.CharField(max_length=100)
 
 
 class GroupPrivilegeSerializer(serializers.Serializer):
-    status = serializers.CharField(help_text='The status of the request')
+    status = serializers.CharField(help_text="The status of the request")
     name = serializers.CharField(help_text="The name of the shared group")
-    privileg_granted = serializers.ChoiceField(help_text="The privilege to grant",
-                                               choices=PrivilegeCodes.CHOICES,
-                                               default=PrivilegeCodes.NONE)
+    privileg_granted = serializers.ChoiceField(
+        help_text="The privilege to grant",
+        choices=PrivilegeCodes.CHOICES,
+        default=PrivilegeCodes.NONE,
+    )
     group_pic = serializers.CharField(help_text="Url of the group picture")
-    current_user_privilege = serializers.ChoiceField(help_text="Logged in user's permissions",
-                                                     choices=PrivilegeCodes.CHOICES,
-                                                     default=PrivilegeCodes.NONE)
+    current_user_privilege = serializers.ChoiceField(
+        help_text="Logged in user's permissions",
+        choices=PrivilegeCodes.CHOICES,
+        default=PrivilegeCodes.NONE,
+    )
     error_msg = serializers.CharField(help_text="Description of error")
 
 
 class UserPrivilegeSerializer(serializers.Serializer):
-    status = serializers.CharField(help_text='The status of the request')
+    status = serializers.CharField(help_text="The status of the request")
     username = serializers.CharField(help_text="The username name of the shared user")
     name = serializers.CharField(help_text="The full name name of the shared user")
-    privileg_granted = serializers.ChoiceField(help_text="The privilege to grant",
-                                               choices=PrivilegeCodes.CHOICES,
-                                               default=PrivilegeCodes.NONE)
-    current_user_privilege = serializers.ChoiceField(help_text="Logged in user's permissions",
-                                                     choices=PrivilegeCodes.CHOICES,
-                                                     default=PrivilegeCodes.NONE)
+    privileg_granted = serializers.ChoiceField(
+        help_text="The privilege to grant",
+        choices=PrivilegeCodes.CHOICES,
+        default=PrivilegeCodes.NONE,
+    )
+    current_user_privilege = serializers.ChoiceField(
+        help_text="Logged in user's permissions",
+        choices=PrivilegeCodes.CHOICES,
+        default=PrivilegeCodes.NONE,
+    )
     profile_pic = serializers.CharField(help_text="Url of the user's profile picture")
-    is_current_user = serializers.BooleanField(help_text="Indicates whether the currently logged "
-                                                         "in user made ther permission request")
+    is_current_user = serializers.BooleanField(
+        help_text="Indicates whether the currently logged "
+        "in user made ther permission request"
+    )
     error_msg = serializers.CharField(help_text="Description of error")
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['title', 'organization', 'state', 'country', 'user_type']
+        fields = ["title", "organization", "state", "country", "user_type"]
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
@@ -255,7 +331,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'id', 'last_name', 'user_profile']
+        fields = ["username", "email", "first_name", "id", "last_name", "user_profile"]
 
 
 class ResourceType(object):
@@ -268,36 +344,44 @@ class ContentType(object):
         self.content_type = content_type
 
 
-ResourceListItem = namedtuple('ResourceListItem',
-                              ['resource_type',
-                               'resource_id',
-                               'resource_title',
-                               'abstract',
-                               'authors',
-                               'creator',
-                               'doi',
-                               'public',
-                               'discoverable',
-                               'shareable',
-                               'immutable',
-                               'published',
-                               'date_created',
-                               'date_last_updated',
-                               'bag_url',
-                               'coverages',
-                               'science_metadata_url',
-                               'resource_map_url',
-                               'resource_url',
-                               'content_types'])
+ResourceListItem = namedtuple(
+    "ResourceListItem",
+    [
+        "resource_type",
+        "resource_id",
+        "resource_title",
+        "abstract",
+        "authors",
+        "creator",
+        "doi",
+        "public",
+        "discoverable",
+        "shareable",
+        "immutable",
+        "published",
+        "date_created",
+        "date_last_updated",
+        "bag_url",
+        "coverages",
+        "science_metadata_url",
+        "resource_map_url",
+        "resource_url",
+        "content_types",
+    ],
+)
 
-ResourceFileItem = namedtuple('ResourceFileItem',
-                              ['url',
-                               'file_name',
-                               'size',
-                               'content_type',
-                               'logical_file_type',
-                               'modified_time',
-                               'checksum'])
+ResourceFileItem = namedtuple(
+    "ResourceFileItem",
+    [
+        "url",
+        "file_name",
+        "size",
+        "content_type",
+        "logical_file_type",
+        "modified_time",
+        "checksum",
+    ],
+)
 
 
 class UserAuthenticateRequestValidator(serializers.Serializer):

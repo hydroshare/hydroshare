@@ -5,14 +5,16 @@ from mezzanine.core.sitemaps import DisplayableSitemap
 
 from .sitemaps import PagesSitemap
 
-sitemaps = {
-    "resources": DisplayableSitemap,
-    "pages": PagesSitemap
-}
-sitemap_view = 'django.contrib.sitemaps.views.sitemap'
+sitemaps = {"resources": DisplayableSitemap, "pages": PagesSitemap}
+sitemap_view = "django.contrib.sitemaps.views.sitemap"
 
 
 urlpatterns = [
-    url(r'^\.xml$', views.index, {'sitemaps': sitemaps}),
-    url(r'^-(?P<section>.+)\.xml$', views.sitemap, {'sitemaps': sitemaps}, name=sitemap_view),
+    url(r"^\.xml$", views.index, {"sitemaps": sitemaps}),
+    url(
+        r"^-(?P<section>.+)\.xml$",
+        views.sitemap,
+        {"sitemaps": sitemaps},
+        name=sitemap_view,
+    ),
 ]

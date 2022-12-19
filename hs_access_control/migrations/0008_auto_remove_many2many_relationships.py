@@ -7,32 +7,32 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0007_manual_populate_new_fields'),
+        ("hs_access_control", "0007_manual_populate_new_fields"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='groupaccess',
-            name='held_resources',
+            model_name="groupaccess",
+            name="held_resources",
         ),
         migrations.RemoveField(
-            model_name='groupaccess',
-            name='members',
+            model_name="groupaccess",
+            name="members",
         ),
         migrations.RemoveField(
-            model_name='resourceaccess',
-            name='holding_groups',
+            model_name="resourceaccess",
+            name="holding_groups",
         ),
         migrations.RemoveField(
-            model_name='resourceaccess',
-            name='holding_users',
+            model_name="resourceaccess",
+            name="holding_users",
         ),
         migrations.RemoveField(
-            model_name='useraccess',
-            name='held_groups',
+            model_name="useraccess",
+            name="held_groups",
         ),
         migrations.RemoveField(
-            model_name='useraccess',
-            name='held_resources',
+            model_name="useraccess",
+            name="held_resources",
         ),
     ]

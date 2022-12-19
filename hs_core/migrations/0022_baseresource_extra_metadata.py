@@ -8,13 +8,13 @@ import django.contrib.postgres.fields.hstore
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0021_hstore_extension'),
+        ("hs_core", "0021_hstore_extension"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='baseresource',
-            name='extra_metadata',
+            model_name="baseresource",
+            name="extra_metadata",
             field=django.contrib.postgres.fields.hstore.HStoreField(default={}),
         ),
     ]

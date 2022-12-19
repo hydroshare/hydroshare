@@ -7,30 +7,30 @@ from django.db.models import F, Func, Value
 
 
 def backwards(apps, schema_editor):
-    UserProfile.objects.filter(organization__icontains=',').update(
+    UserProfile.objects.filter(organization__icontains=",").update(
         organization=Func(
-            F('organization'),
-            Value(';'), Value(','),
-            function='replace',
+            F("organization"),
+            Value(";"),
+            Value(","),
+            function="replace",
         )
     )
 
 
 def forwards(apps, schema_editor):
-    UserProfile.objects.filter(organization__icontains=',').update(
+    UserProfile.objects.filter(organization__icontains=",").update(
         organization=Func(
-            F('organization'),
-            Value(','), Value(';'),
-            function='replace',
+            F("organization"),
+            Value(","),
+            Value(";"),
+            function="replace",
         )
     )
 
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('theme', '0013_auto_20180222_1700'),
+        ("theme", "0013_auto_20180222_1700"),
     ]
 
-    operations = [
-        migrations.RunPython(forwards, backwards)
-    ]
+    operations = [migrations.RunPython(forwards, backwards)]

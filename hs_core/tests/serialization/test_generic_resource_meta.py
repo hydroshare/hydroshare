@@ -17,20 +17,20 @@ class TestGenericResourceMeta(unittest.TestCase):
 
         creator1 = GenericResourceMeta.ResourceCreator()
         creator1.order = 7
-        creator1.name = 'John Smith'
-        creator1.uri = 'http://akebono.stanford.edu/yahoo/'
+        creator1.name = "John Smith"
+        creator1.uri = "http://akebono.stanford.edu/yahoo/"
         rmeta.add_creator(creator1)
 
         creator2 = GenericResourceMeta.ResourceCreator()
         creator2.order = 8
-        creator2.name = 'Johnny Appleseed'
-        creator2.uri = 'http://www.foo.com/'
+        creator2.name = "Johnny Appleseed"
+        creator2.uri = "http://www.foo.com/"
         rmeta.add_creator(creator2)
 
         creator3 = GenericResourceMeta.ResourceCreator()
         creator3.order = 1
-        creator3.name = 'Pharoah Sanders'
-        creator3.uri = 'gopher://gopher.mit.edu'
+        creator3.name = "Pharoah Sanders"
+        creator3.uri = "gopher://gopher.mit.edu"
         rmeta.add_creator(creator3)
 
         creators = rmeta.get_creators()

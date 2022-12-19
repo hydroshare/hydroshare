@@ -30,29 +30,30 @@ class PrivilegeCodes(object):
         * 4 or PrivilegeCodes.NONE:
             the user has no privilege over the object.
     """
+
     OWNER = 1
     CHANGE = 2
     VIEW = 3
     NONE = 4
     CHOICES = (
-        (OWNER, 'Owner'),
-        (CHANGE, 'Change'),
-        (VIEW, 'View')
+        (OWNER, "Owner"),
+        (CHANGE, "Change"),
+        (VIEW, "View")
         # (NONE, 'None') : disallow "no privilege" lines
     )
     # Names of privileges for printing
-    NAMES = ('Unspecified', 'Owner', 'Change', 'View', 'None')
+    NAMES = ("Unspecified", "Owner", "Change", "View", "None")
 
     @classmethod
     def from_string(self, privilege):
-        """ Converts a string representation to a PrivilegeCode """
-        if privilege.lower() == 'view':
+        """Converts a string representation to a PrivilegeCode"""
+        if privilege.lower() == "view":
             return PrivilegeCodes.VIEW
-        if privilege.lower() == 'edit':
+        if privilege.lower() == "edit":
             return PrivilegeCodes.CHANGE
-        if privilege.lower() == 'owner':
+        if privilege.lower() == "owner":
             return PrivilegeCodes.OWNER
-        if privilege.lower() == 'none':
+        if privilege.lower() == "none":
             return PrivilegeCodes.NONE
         return None
 
@@ -111,26 +112,25 @@ class PrivilegeBase(models.Model):
         Only use this routine if you wish to completely bypass access control.
         Note also that using this routine directly breaks provenance and disables undo.
         """
-        grantor = kwargs['grantor']
-        privilege = kwargs.get('privilege', None)
+        grantor = kwargs["grantor"]
+        privilege = kwargs.get("privilege", None)
         if privilege is not None and privilege < PrivilegeCodes.NONE:
-            if 'privilege' in kwargs:
-                del kwargs['privilege']
-            del kwargs['grantor']
+            if "privilege" in kwargs:
+                del kwargs["privilege"]
+            del kwargs["grantor"]
             with transaction.atomic():
-                record, create = cls.objects.get_or_create(defaults={'privilege': privilege,
-                                                                     'grantor': grantor},
-                                                           **kwargs)
+                record, create = cls.objects.get_or_create(
+                    defaults={"privilege": privilege, "grantor": grantor}, **kwargs
+                )
                 if not create:
                     record.privilege = privilege
                     record.grantor = grantor
                     record.save()
         else:
-            if 'privilege' in kwargs:
-                del kwargs['privilege']
-            del kwargs['grantor']
-            cls.objects.filter(**kwargs) \
-               .delete()
+            if "privilege" in kwargs:
+                del kwargs["privilege"]
+            del kwargs["grantor"]
+            cls.objects.filter(**kwargs).delete()
 
     @classmethod
     def share(cls, **kwargs):
@@ -182,7 +182,7 @@ class PrivilegeBase(models.Model):
 
 
 class UserGroupPrivilege(PrivilegeBase):
-    """ Privileges of a user over a group
+    """Privileges of a user over a group
 
     Having any privilege over a group is synonymous with membership.
 
@@ -192,42 +192,56 @@ class UserGroupPrivilege(PrivilegeBase):
     provenance models to record removing a privilege.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE,
-                             null=False,
-                             editable=False,
-                             related_name='u2ugp',
-                             help_text='user to be granted privilege')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="u2ugp",
+        help_text="user to be granted privilege",
+    )
 
-    group = models.ForeignKey(Group, on_delete=models.CASCADE,
-                              null=False,
-                              editable=False,
-                              related_name='g2ugp',
-                              help_text='group to which privilege applies')
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="g2ugp",
+        help_text="group to which privilege applies",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=False,
-                                editable=False,
-                                related_name='x2ugp',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="x2ugp",
+        help_text="grantor of privilege",
+    )
 
     class Meta:
-        unique_together = ('user', 'group')
+        unique_together = ("user", "group")
 
     def __str__(self):
-        """ Return printed depiction for debugging """
-        return str.format("<user '{}' (id={}) holds {} ({})" +
-                          " over group '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
-                          str(self.user.username), str(self.user.id),
-                          PrivilegeCodes.NAMES[self.privilege],
-                          str(self.privilege),
-                          str(self.group.name), str(self.group.id),
-                          str(self.grantor.username), str(self.grantor.id))
+        """Return printed depiction for debugging"""
+        return str.format(
+            "<user '{}' (id={}) holds {} ({})"
+            + " over group '{}' (id={})"
+            + " via grantor '{}' (id={})>",
+            str(self.user.username),
+            str(self.user.id),
+            PrivilegeCodes.NAMES[self.privilege],
+            str(self.privilege),
+            str(self.group.name),
+            str(self.group.id),
+            str(self.grantor.username),
+            str(self.grantor.id),
+        )
 
     @classmethod
     def share(cls, **kwargs):
@@ -246,17 +260,19 @@ class UserGroupPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserGroupProvenance
+
         if __debug__:
-            assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group)
-            assert 'user' in kwargs
-            assert isinstance(kwargs['user'], User)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
-            assert 'privilege' in kwargs
-            assert \
-                kwargs['privilege'] >= PrivilegeCodes.OWNER and \
-                kwargs['privilege'] <= PrivilegeCodes.NONE
+            assert "group" in kwargs
+            assert isinstance(kwargs["group"], Group)
+            assert "user" in kwargs
+            assert isinstance(kwargs["user"], User)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
+            assert "privilege" in kwargs
+            assert (
+                kwargs["privilege"] >= PrivilegeCodes.OWNER
+                and kwargs["privilege"] <= PrivilegeCodes.NONE
+            )
             assert len(kwargs) == 4
         cls.update(**kwargs)
         UserGroupProvenance.update(**kwargs)
@@ -283,13 +299,14 @@ class UserGroupPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserGroupProvenance
+
         if __debug__:
-            assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group)
-            assert 'user' in kwargs
-            assert isinstance(kwargs['user'], User)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "group" in kwargs
+            assert isinstance(kwargs["group"], Group)
+            assert "user" in kwargs
+            assert isinstance(kwargs["user"], User)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 3
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserGroupProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
@@ -323,16 +340,17 @@ class UserGroupPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserGroupProvenance
+
         if __debug__:
-            assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group)
-            assert 'user' in kwargs
-            assert isinstance(kwargs['user'], User)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "group" in kwargs
+            assert isinstance(kwargs["group"], Group)
+            assert "user" in kwargs
+            assert isinstance(kwargs["user"], User)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 3
-        grantor = kwargs['grantor']
-        del kwargs['grantor']
+        grantor = kwargs["grantor"]
+        del kwargs["grantor"]
         # undo in provenance model; add a record that reinstates previous privilege.
         UserGroupProvenance.undo_share(grantor=grantor, **kwargs)
         # read that record and post to privilege table.
@@ -341,7 +359,7 @@ class UserGroupPrivilege(PrivilegeBase):
 
     @classmethod
     def get_undo_users(cls, **kwargs):
-        """ Get a set of users for which a grantor can undo privilege
+        """Get a set of users for which a grantor can undo privilege
 
         :param group: group to check
         :param grantor: user that will undo privilege
@@ -353,65 +371,81 @@ class UserGroupPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserGroupProvenance
+
         if __debug__:
-            assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "group" in kwargs
+            assert isinstance(kwargs["group"], Group)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 2
         return UserGroupProvenance.get_undo_users(**kwargs)
 
 
 class UserResourcePrivilege(PrivilegeBase):
-    """ Privileges of a user over a resource
+    """Privileges of a user over a resource
 
     This model encodes privileges of individual users, like an access
     control list; see GroupResourcePrivilege and UserGroupPrivilege
     for other kinds of privilege.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE,
-                             null=False,
-                             editable=False,
-                             related_name='u2urp',
-                             help_text='user to be granted privilege')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="u2urp",
+        help_text="user to be granted privilege",
+    )
 
-    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
-                                 null=False,
-                                 editable=False,
-                                 related_name='r2urp',
-                                 help_text='resource to which privilege applies')
+    resource = models.ForeignKey(
+        BaseResource,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="r2urp",
+        help_text="resource to which privilege applies",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=False,
-                                editable=False,
-                                related_name='x2urp',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="x2urp",
+        help_text="grantor of privilege",
+    )
 
-    exhibit = models.BooleanField(default=False,
-                                  null=False,
-                                  editable=False,
-                                  help_text='exhibit resource as product')
+    exhibit = models.BooleanField(
+        default=False,
+        null=False,
+        editable=False,
+        help_text="exhibit resource as product",
+    )
 
     class Meta:
-        unique_together = ('user', 'resource')
+        unique_together = ("user", "resource")
 
     def __str__(self):
-        """ Return printed depiction for debugging """
-        return str.format("<user '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
-                          str(self.user.username), str(self.user.id),
-                          PrivilegeCodes.NAMES[self.privilege],
-                          str(self.privilege),
-                          str(self.resource.title),
-                          str(self.resource.short_id),
-                          str(self.grantor.username), str(self.grantor.id))
+        """Return printed depiction for debugging"""
+        return str.format(
+            "<user '{}' (id={}) holds {} ({})"
+            + " over resource '{}' (id={})"
+            + " via grantor '{}' (id={})>",
+            str(self.user.username),
+            str(self.user.id),
+            PrivilegeCodes.NAMES[self.privilege],
+            str(self.privilege),
+            str(self.resource.title),
+            str(self.resource.short_id),
+            str(self.grantor.username),
+            str(self.grantor.id),
+        )
 
     @classmethod
     def share(cls, **kwargs):
@@ -432,6 +466,7 @@ class UserResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserResourceProvenance
+
         cls.update(**kwargs)
         UserResourceProvenance.update(**kwargs)
 
@@ -459,6 +494,7 @@ class UserResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserResourceProvenance
+
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
 
@@ -493,24 +529,31 @@ class UserResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserResourceProvenance
+
         if __debug__:
-            assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource)
-            assert 'user' in kwargs
-            assert isinstance(kwargs['user'], User)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "resource" in kwargs
+            assert isinstance(kwargs["resource"], BaseResource)
+            assert "user" in kwargs
+            assert isinstance(kwargs["user"], User)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
         # add an undo record to the provenance table.
         UserResourceProvenance.undo_share(**kwargs)
         # read that record.
-        del kwargs['grantor']
+        del kwargs["grantor"]
         r = UserResourceProvenance.get_current_record(**kwargs)
         # post to privilege table.
-        cls.update(user=r.user, resource=r.resource, privilege=r.privilege, grantor=r.grantor, exhibit=r.exhibit)
+        cls.update(
+            user=r.user,
+            resource=r.resource,
+            privilege=r.privilege,
+            grantor=r.grantor,
+            exhibit=r.exhibit,
+        )
 
     @classmethod
     def get_undo_users(cls, **kwargs):
-        """ Get a set of users for which the current user can undo privilege
+        """Get a set of users for which the current user can undo privilege
 
         :param resource: resource to check
         :param grantor: user that will undo privilege
@@ -523,11 +566,12 @@ class UserResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserResourceProvenance
+
         if __debug__:
-            assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "resource" in kwargs
+            assert isinstance(kwargs["resource"], BaseResource)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 2
         return UserResourceProvenance.get_undo_users(**kwargs)
 
@@ -541,48 +585,63 @@ class GroupResourcePrivilege(PrivilegeBase):
     the group, as listed in UserGroupPrivilege above.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    group = models.ForeignKey(Group, on_delete=models.CASCADE,
-                              null=False,
-                              editable=False,
-                              related_name='g2grp',
-                              help_text='group to be granted privilege')
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="g2grp",
+        help_text="group to be granted privilege",
+    )
 
-    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
-                                 null=False,
-                                 editable=False,
-                                 related_name='r2grp',
-                                 help_text='resource to which privilege applies')
+    resource = models.ForeignKey(
+        BaseResource,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="r2grp",
+        help_text="resource to which privilege applies",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=False,
-                                editable=False,
-                                related_name='x2grp',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="x2grp",
+        help_text="grantor of privilege",
+    )
 
-    exhibit = models.BooleanField(default=False,
-                                  null=False,
-                                  editable=False,
-                                  help_text='exhibit resource as product')
+    exhibit = models.BooleanField(
+        default=False,
+        null=False,
+        editable=False,
+        help_text="exhibit resource as product",
+    )
 
     class Meta:
-        unique_together = ('group', 'resource')
+        unique_together = ("group", "resource")
 
     def __str__(self):
-        """ Return printed depiction for debugging """
-        return str.format("<group '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
-                          str(self.group.name), str(self.group.id),
-                          PrivilegeCodes.NAMES[self.privilege],
-                          str(self.privilege),
-                          str(self.resource.title),
-                          str(self.resource.short_id),
-                          str(self.grantor.username), str(self.grantor.id))
+        """Return printed depiction for debugging"""
+        return str.format(
+            "<group '{}' (id={}) holds {} ({})"
+            + " over resource '{}' (id={})"
+            + " via grantor '{}' (id={})>",
+            str(self.group.name),
+            str(self.group.id),
+            PrivilegeCodes.NAMES[self.privilege],
+            str(self.privilege),
+            str(self.resource.title),
+            str(self.resource.short_id),
+            str(self.grantor.username),
+            str(self.grantor.id),
+        )
 
     @classmethod
     def share(cls, **kwargs):
@@ -603,6 +662,7 @@ class GroupResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupResourceProvenance
+
         cls.update(**kwargs)
         GroupResourceProvenance.update(**kwargs)
 
@@ -624,6 +684,7 @@ class GroupResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupResourceProvenance
+
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         GroupResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
 
@@ -652,21 +713,28 @@ class GroupResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupResourceProvenance
+
         if __debug__:
-            assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource)
-            assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "resource" in kwargs
+            assert isinstance(kwargs["resource"], BaseResource)
+            assert "group" in kwargs
+            assert isinstance(kwargs["group"], Group)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
         GroupResourceProvenance.undo_share(**kwargs)
-        del kwargs['grantor']
+        del kwargs["grantor"]
         r = GroupResourceProvenance.get_current_record(**kwargs)
-        cls.update(group=r.group, resource=r.resource, privilege=r.privilege, grantor=r.grantor, exhibit=r.exhibit)
+        cls.update(
+            group=r.group,
+            resource=r.resource,
+            privilege=r.privilege,
+            grantor=r.grantor,
+            exhibit=r.exhibit,
+        )
 
     @classmethod
     def get_undo_groups(cls, **kwargs):
-        """ Get a set of groups for which the current user can undo privilege
+        """Get a set of groups for which the current user can undo privilege
 
         :param resource: resource to check
         :param grantor: user that will undo privilege
@@ -676,17 +744,18 @@ class GroupResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupResourceProvenance
+
         if __debug__:
-            assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "resource" in kwargs
+            assert isinstance(kwargs["resource"], BaseResource)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 2
         return GroupResourceProvenance.get_undo_groups(**kwargs)
 
 
 class UserCommunityPrivilege(PrivilegeBase):
-    """ Privileges of a user over a community
+    """Privileges of a user over a community
 
     Having any privilege over a community is synonymous with membership.
 
@@ -696,42 +765,56 @@ class UserCommunityPrivilege(PrivilegeBase):
     provenance models to record removing a privilege.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    community = models.ForeignKey(Community, on_delete=models.CASCADE,
-                                  null=False,
-                                  editable=False,
-                                  related_name='c2ucp',
-                                  help_text='community to be granted privilege')
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="c2ucp",
+        help_text="community to be granted privilege",
+    )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE,
-                             null=False,
-                             editable=False,
-                             related_name='u2ucp',
-                             help_text='group providing privilege')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="u2ucp",
+        help_text="group providing privilege",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=False,
-                                editable=False,
-                                related_name='x2ucp',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="x2ucp",
+        help_text="grantor of privilege",
+    )
 
     class Meta:
-        unique_together = ('community', 'user')
+        unique_together = ("community", "user")
 
     def __str__(self):
-        """ Return printed depiction for debugging """
-        return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over user '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
-                          str(self.community.name), str(self.community.id),
-                          PrivilegeCodes.NAMES[self.privilege],
-                          str(self.privilege),
-                          str(self.user.username), str(self.user.id),
-                          str(self.grantor.username), str(self.grantor.id))
+        """Return printed depiction for debugging"""
+        return str.format(
+            "<community '{}' (id={}) holds {} ({})"
+            + " over user '{}' (id={})"
+            + " via grantor '{}' (id={})>",
+            str(self.community.name),
+            str(self.community.id),
+            PrivilegeCodes.NAMES[self.privilege],
+            str(self.privilege),
+            str(self.user.username),
+            str(self.user.id),
+            str(self.grantor.username),
+            str(self.grantor.id),
+        )
 
     @classmethod
     def share(cls, **kwargs):
@@ -750,17 +833,19 @@ class UserCommunityPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserCommunityProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'user' in kwargs
-            assert isinstance(kwargs['user'], User)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
-            assert 'privilege' in kwargs
-            assert \
-                kwargs['privilege'] >= PrivilegeCodes.OWNER and \
-                kwargs['privilege'] <= PrivilegeCodes.NONE
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "user" in kwargs
+            assert isinstance(kwargs["user"], User)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
+            assert "privilege" in kwargs
+            assert (
+                kwargs["privilege"] >= PrivilegeCodes.OWNER
+                and kwargs["privilege"] <= PrivilegeCodes.NONE
+            )
             assert len(kwargs) == 4
         cls.update(**kwargs)
         UserCommunityProvenance.update(**kwargs)
@@ -787,13 +872,14 @@ class UserCommunityPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserCommunityProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'user' in kwargs
-            assert isinstance(kwargs['user'], User)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "user" in kwargs
+            assert isinstance(kwargs["user"], User)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 3
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserCommunityProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
@@ -825,25 +911,28 @@ class UserCommunityPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserCommunityProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'user' in kwargs
-            assert isinstance(kwargs['user'], User)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "user" in kwargs
+            assert isinstance(kwargs["user"], User)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 3
-        grantor = kwargs['grantor']
-        del kwargs['grantor']
+        grantor = kwargs["grantor"]
+        del kwargs["grantor"]
         # undo in provenance model; add a record that reinstates previous privilege.
         UserCommunityProvenance.undo_share(grantor=grantor, **kwargs)
         # read that record and post to privilege table.
         r = UserCommunityProvenance.get_current_record(**kwargs)
-        cls.update(community=r.community, user=r.user, privilege=r.privilege, grantor=r.grantor)
+        cls.update(
+            community=r.community, user=r.user, privilege=r.privilege, grantor=r.grantor
+        )
 
     @classmethod
     def get_undo_users(cls, **kwargs):
-        """ Get a set of users for which a grantor can undo privilege
+        """Get a set of users for which a grantor can undo privilege
 
         :param community: community to check
         :param grantor: user that will undo privilege
@@ -854,17 +943,18 @@ class UserCommunityPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserCommunityProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 2
         return UserCommunityProvenance.get_undo_users(**kwargs)
 
 
 class GroupCommunityPrivilege(PrivilegeBase):
-    """ Privileges of a group over a community
+    """Privileges of a group over a community
 
     This encodes the privileges of a specific group over a community.
 
@@ -877,48 +967,64 @@ class GroupCommunityPrivilege(PrivilegeBase):
     to record removing a privilege.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
 
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    community = models.ForeignKey(Community, on_delete=models.CASCADE,
-                                  null=False,
-                                  editable=False,
-                                  related_name='c2gcp',
-                                  help_text='community to be granted privilege')
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="c2gcp",
+        help_text="community to be granted privilege",
+    )
 
-    group = models.ForeignKey(Group, on_delete=models.CASCADE,
-                              null=False,
-                              editable=False,
-                              related_name='g2gcp',
-                              help_text='group providing privilege')
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="g2gcp",
+        help_text="group providing privilege",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=False,
-                                editable=False,
-                                related_name='x2gcp',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="x2gcp",
+        help_text="grantor of privilege",
+    )
 
-    exhibit = models.BooleanField(default=False,
-                                  null=False,
-                                  editable=False,
-                                  help_text='exhibit resource as product')
+    exhibit = models.BooleanField(
+        default=False,
+        null=False,
+        editable=False,
+        help_text="exhibit resource as product",
+    )
 
     class Meta:
-        unique_together = ('community', 'group')
+        unique_together = ("community", "group")
 
     def __str__(self):
-        """ Return printed depiction for debugging """
-        return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over group '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
-                          str(self.community.name), str(self.community.id),
-                          PrivilegeCodes.NAMES[self.privilege],
-                          str(self.privilege),
-                          str(self.group.name), str(self.group.id),
-                          str(self.grantor.username), str(self.grantor.id))
+        """Return printed depiction for debugging"""
+        return str.format(
+            "<community '{}' (id={}) holds {} ({})"
+            + " over group '{}' (id={})"
+            + " via grantor '{}' (id={})>",
+            str(self.community.name),
+            str(self.community.id),
+            PrivilegeCodes.NAMES[self.privilege],
+            str(self.privilege),
+            str(self.group.name),
+            str(self.group.id),
+            str(self.grantor.username),
+            str(self.grantor.id),
+        )
 
     @classmethod
     def share(cls, **kwargs):
@@ -937,17 +1043,19 @@ class GroupCommunityPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupCommunityProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
-            assert 'privilege' in kwargs
-            assert \
-                kwargs['privilege'] >= PrivilegeCodes.OWNER and \
-                kwargs['privilege'] <= PrivilegeCodes.NONE
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "group" in kwargs
+            assert isinstance(kwargs["group"], Group)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
+            assert "privilege" in kwargs
+            assert (
+                kwargs["privilege"] >= PrivilegeCodes.OWNER
+                and kwargs["privilege"] <= PrivilegeCodes.NONE
+            )
             assert len(kwargs) == 4
         cls.update(**kwargs)
         GroupCommunityProvenance.update(**kwargs)
@@ -973,13 +1081,14 @@ class GroupCommunityPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupCommunityProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "group" in kwargs
+            assert isinstance(kwargs["group"], Group)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 3
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         GroupCommunityProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
@@ -1011,26 +1120,32 @@ class GroupCommunityPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupCommunityProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "group" in kwargs
+            assert isinstance(kwargs["group"], Group)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 3
-        grantor = kwargs['grantor']
-        del kwargs['grantor']
+        grantor = kwargs["grantor"]
+        del kwargs["grantor"]
         # undo in provenance model; add a record that reinstates previous privilege.
         GroupCommunityProvenance.undo_share(grantor=grantor, **kwargs)
         # read that record and post to privilege table.
         r = GroupCommunityProvenance.get_current_record(**kwargs)
-        cls.update(community=r.community, group=r.group, privilege=r.privilege,
-                   grantor=r.grantor, exhibit=r.exhibit)
+        cls.update(
+            community=r.community,
+            group=r.group,
+            privilege=r.privilege,
+            grantor=r.grantor,
+            exhibit=r.exhibit,
+        )
 
     @classmethod
     def get_undo_groups(cls, **kwargs):
-        """ Get a set of groups for which a grantor can undo privilege
+        """Get a set of groups for which a grantor can undo privilege
 
         :param community: community to check
         :param grantor: user that will undo privilege
@@ -1041,17 +1156,18 @@ class GroupCommunityPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupCommunityProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 2
         return GroupCommunityProvenance.get_undo_groups(**kwargs)
 
 
 class CommunityResourcePrivilege(PrivilegeBase):
-    """ Privileges of a resource over a community
+    """Privileges of a resource over a community
 
     This encodes the privileges of a specific resource over a community.
 
@@ -1064,48 +1180,64 @@ class CommunityResourcePrivilege(PrivilegeBase):
     to record removing a privilege.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
 
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    community = models.ForeignKey(Community, on_delete=models.CASCADE,
-                                  null=False,
-                                  editable=False,
-                                  related_name='c2crp',
-                                  help_text='community to be granted privilege')
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="c2crp",
+        help_text="community to be granted privilege",
+    )
 
-    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
-                                 null=False,
-                                 editable=False,
-                                 related_name='r2crp',
-                                 help_text='resource providing privilege')
+    resource = models.ForeignKey(
+        BaseResource,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="r2crp",
+        help_text="resource providing privilege",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=False,
-                                editable=False,
-                                related_name='x2crp',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="x2crp",
+        help_text="grantor of privilege",
+    )
 
-    exhibit = models.BooleanField(default=False,
-                                  null=False,
-                                  editable=False,
-                                  help_text='exhibit resource as product')
+    exhibit = models.BooleanField(
+        default=False,
+        null=False,
+        editable=False,
+        help_text="exhibit resource as product",
+    )
 
     class Meta:
-        unique_together = ('community', 'resource')
+        unique_together = ("community", "resource")
 
     def __str__(self):
-        """ Return printed depiction for debugging """
-        return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
-                          str(self.community.name), str(self.community.id),
-                          PrivilegeCodes.NAMES[self.privilege],
-                          str(self.privilege),
-                          str(self.resource.name), str(self.group.id),
-                          str(self.grantor.username), str(self.grantor.id))
+        """Return printed depiction for debugging"""
+        return str.format(
+            "<community '{}' (id={}) holds {} ({})"
+            + " over resource '{}' (id={})"
+            + " via grantor '{}' (id={})>",
+            str(self.community.name),
+            str(self.community.id),
+            PrivilegeCodes.NAMES[self.privilege],
+            str(self.privilege),
+            str(self.resource.name),
+            str(self.group.id),
+            str(self.grantor.username),
+            str(self.grantor.id),
+        )
 
     @classmethod
     def share(cls, **kwargs):
@@ -1124,17 +1256,19 @@ class CommunityResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import CommunityResourceProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
-            assert 'privilege' in kwargs
-            assert \
-                kwargs['privilege'] >= PrivilegeCodes.OWNER and \
-                kwargs['privilege'] <= PrivilegeCodes.NONE
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "resource" in kwargs
+            assert isinstance(kwargs["resource"], BaseResource)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
+            assert "privilege" in kwargs
+            assert (
+                kwargs["privilege"] >= PrivilegeCodes.OWNER
+                and kwargs["privilege"] <= PrivilegeCodes.NONE
+            )
             assert len(kwargs) == 4
         cls.update(**kwargs)
         CommunityResourceProvenance.update(**kwargs)
@@ -1160,13 +1294,14 @@ class CommunityResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import CommunityResourceProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "resource" in kwargs
+            assert isinstance(kwargs["resource"], BaseResource)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 3
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         CommunityResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
@@ -1198,25 +1333,31 @@ class CommunityResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import CommunityResourceProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "resource" in kwargs
+            assert isinstance(kwargs["resource"], BaseResource)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 3
-        grantor = kwargs['grantor']
-        del kwargs['grantor']
+        grantor = kwargs["grantor"]
+        del kwargs["grantor"]
         # undo in provenance model; add a record that reinstates previous privilege.
         CommunityResourceProvenance.undo_share(grantor=grantor, **kwargs)
         # read that record and post to privilege table.
         r = CommunityResourceProvenance.get_current_record(**kwargs)
-        cls.update(community=r.community, resource=r.resource, privilege=r.privilege, grantor=r.grantor)
+        cls.update(
+            community=r.community,
+            resource=r.resource,
+            privilege=r.privilege,
+            grantor=r.grantor,
+        )
 
     @classmethod
     def get_undo_resources(cls, **kwargs):
-        """ Get a set of communities for which a grantor can undo privilege
+        """Get a set of communities for which a grantor can undo privilege
 
         :param community: community to check
         :param grantor: user that will undo privilege
@@ -1227,10 +1368,11 @@ class CommunityResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import CommunityResourceProvenance
+
         if __debug__:
-            assert 'community' in kwargs
-            assert isinstance(kwargs['community'], Community)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "community" in kwargs
+            assert isinstance(kwargs["community"], Community)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 2
         return CommunityResourceProvenance.get_undo_resources(**kwargs)

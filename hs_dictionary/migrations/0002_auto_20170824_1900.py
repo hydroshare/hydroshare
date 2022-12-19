@@ -13,11 +13,7 @@ def forwards(apps, schema_editor):
     with open(os.path.dirname(__file__) + "/world-universities.csv") as f:
         reader = csv.reader(f)
         for i, line in enumerate(reader):
-            University.objects.create(
-                name=line[1],
-                country_code=line[0],
-                url=line[2]
-            )
+            University.objects.create(name=line[1], country_code=line[0], url=line[2])
 
 
 def backwards(apps, schema_editor):
@@ -27,9 +23,7 @@ def backwards(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_dictionary', '0001_initial'),
+        ("hs_dictionary", "0001_initial"),
     ]
 
-    operations = [
-        migrations.RunPython(forwards, backwards)
-    ]
+    operations = [migrations.RunPython(forwards, backwards)]

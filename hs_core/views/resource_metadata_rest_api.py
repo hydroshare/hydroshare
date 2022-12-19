@@ -9,8 +9,18 @@ from rest_framework import generics
 from rest_framework import serializers
 
 from hs_core import hydroshare
-from hs_core.models import Contributor, CoreMetaData, Coverage, Creator, Date, \
-    Format, FundingAgency, Identifier, Subject, Relation
+from hs_core.models import (
+    Contributor,
+    CoreMetaData,
+    Coverage,
+    Creator,
+    Date,
+    Format,
+    FundingAgency,
+    Identifier,
+    Subject,
+    Relation,
+)
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
@@ -33,8 +43,16 @@ class PartySerializer(serializers.Serializer):
 
     class Meta:
         model = Creator
-        fields = {'name', 'hydroshare_user_id', 'organization', 'email',
-                  'address', 'phone', 'homepage', 'identifiers'}
+        fields = {
+            "name",
+            "hydroshare_user_id",
+            "organization",
+            "email",
+            "address",
+            "phone",
+            "homepage",
+            "identifiers",
+        }
 
 
 class CreatorSerializer(PartySerializer):
@@ -158,15 +176,18 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
     ValidationError: return json format: {parameter-1': ['error message-1'],
     'parameter-2': ['error message-2'], .. }
     """
-    ACCEPT_FORMATS = ('application/json',)
 
-    allowed_methods = ('GET', 'PUT')
+    ACCEPT_FORMATS = ("application/json",)
+
+    allowed_methods = ("GET", "PUT")
 
     # Overwritten by resource types with extended metadata
     serializer_class = CoreMetaDataSerializer
 
     def get(self, request, pk):
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+        view_utils.authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA
+        )
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
         serializer = resource.metadata.serializer
         self.serializer_class = resource.metadata.serializer
@@ -175,8 +196,8 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
     def put(self, request, pk):
         # Update science metadata
         resource, _, _ = view_utils.authorize(
-            request, pk,
-            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE
+        )
 
         metadata = []
         put_data = request.data.copy()
@@ -186,11 +207,13 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
             put_data = put_data.dict()
         try:
             resource.metadata.parse_for_bulk_update(put_data, metadata)
-            hydroshare.update_science_metadata(pk=pk, metadata=metadata, user=request.user)
+            hydroshare.update_science_metadata(
+                pk=pk, metadata=metadata, user=request.user
+            )
         except Exception as ex:
             error_msg = {
-                'resource': "Resource metadata update failed: %s, %s"
-                            % (ex.__class__, str(ex))
+                "resource": "Resource metadata update failed: %s, %s"
+                % (ex.__class__, str(ex))
             }
             raise ValidationError(detail=error_msg)
 

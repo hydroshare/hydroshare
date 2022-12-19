@@ -37,35 +37,23 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a command to execute
-        parser.add_argument('command', nargs='*', type=str)
+        parser.add_argument("command", nargs="*", type=str)
 
-        parser.add_argument(
-            '--first',
-            dest='first',
-            help='first name of user'
-        )
+        parser.add_argument("--first", dest="first", help="first name of user")
 
-        parser.add_argument(
-            '--last',
-            dest='last',
-            help='last name of user'
-        )
+        parser.add_argument("--last", dest="last", help="last name of user")
 
-        parser.add_argument(
-            '--email',
-            dest='email',
-            help='email of user'
-        )
+        parser.add_argument("--email", dest="email", help="email of user")
 
     def handle(self, *args, **options):
 
-        if len(options['command']) > 0:
-            uname = options['command'][0]
+        if len(options["command"]) > 0:
+            uname = options["command"][0]
         else:
             uname = None
 
-        if len(options['command']) > 1:
-            command = options['command'][1]
+        if len(options["command"]) > 1:
+            command = options["command"][1]
         else:
             command = None
 
@@ -76,7 +64,7 @@ class Command(BaseCommand):
                 print("  '{}'".format(u.username))
             exit(0)
 
-        if command is None or command == 'list':
+        if command is None or command == "list":
             try:
                 user = User.objects.get(username=uname)
             except User.DoesNotExist:
@@ -90,34 +78,34 @@ class Command(BaseCommand):
             print("  last: {}".format(user.last_name))
 
         # These are idempotent actions. Creating a user twice does nothing.
-        elif command == 'update' or command == 'create':
+        elif command == "update" or command == "create":
             try:
                 user = User.objects.get(username=uname)
-                if 'email' in options:
-                    user.email = options['email']
+                if "email" in options:
+                    user.email = options["email"]
                     user.save()
-                if 'first' in options:
-                    user.first_name = options['first']
+                if "first" in options:
+                    user.first_name = options["first"]
                     user.save()
-                if 'last' in options:
-                    user.last_name = options['last']
+                if "last" in options:
+                    user.last_name = options["last"]
                     user.save()
 
             except User.DoesNotExist:  # create it
 
-                if options['email'] is not None:
-                    email = options['email']
+                if options["email"] is not None:
+                    email = options["email"]
                 else:
                     print("Email must be specified to create a user.")
                     usage()
                     exit(1)
-                if options['first'] is not None:
-                    first = options['first']
+                if options["first"] is not None:
+                    first = options["first"]
                 else:
                     first = "T.C."
 
-                if options['last'] is not None:
-                    last = options['last']
+                if options["last"] is not None:
+                    last = options["last"]
                 else:
                     last = "Mitts"
 
@@ -129,7 +117,7 @@ class Command(BaseCommand):
                     first_name=first,
                     last_name=last,
                     superuser=False,
-                    groups=[]
+                    groups=[],
                 )
 
         else:

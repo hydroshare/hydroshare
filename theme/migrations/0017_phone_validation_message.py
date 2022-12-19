@@ -9,18 +9,38 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('theme', '0016_userprofile_phone_validations'),
+        ("theme", "0016_userprofile_phone_validations"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='userprofile',
-            name='phone_1',
-            field=models.CharField(blank=True, max_length=16, null=True, validators=[django.core.validators.RegexValidator(message="Our validation for phone numbers has recently changed. Please ensure that your phone number is entered in the following format: '999999999'. Up to 16 digits are allowed.  If you made other changes to your profile - please make sure they saved successfully.", regex='^\\d{8,15}$')]),
+            model_name="userprofile",
+            name="phone_1",
+            field=models.CharField(
+                blank=True,
+                max_length=16,
+                null=True,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        message="Our validation for phone numbers has recently changed. Please ensure that your phone number is entered in the following format: '999999999'. Up to 16 digits are allowed.  If you made other changes to your profile - please make sure they saved successfully.",
+                        regex="^\\d{8,15}$",
+                    )
+                ],
+            ),
         ),
         migrations.AlterField(
-            model_name='userprofile',
-            name='phone_2',
-            field=models.CharField(blank=True, max_length=16, null=True, validators=[django.core.validators.RegexValidator(message="Our validation for phone numbers has recently changed. Please ensure that your phone number is entered in the following format: '999999999'. Up to 16 digits are allowed.  If you made other changes to your profile - please make sure they saved successfully.", regex='^\\d{8,15}$')]),
+            model_name="userprofile",
+            name="phone_2",
+            field=models.CharField(
+                blank=True,
+                max_length=16,
+                null=True,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        message="Our validation for phone numbers has recently changed. Please ensure that your phone number is entered in the following format: '999999999'. Up to 16 digits are allowed.  If you made other changes to your profile - please make sure they saved successfully.",
+                        regex="^\\d{8,15}$",
+                    )
+                ],
+            ),
         ),
     ]

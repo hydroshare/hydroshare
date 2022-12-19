@@ -1,5 +1,3 @@
-
-
 import unittest
 import os
 
@@ -13,25 +11,27 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
     def setUp(self):
         super(TestDeleteResourceFile, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.user = hydroshare.create_account(
-            'jamy2@gmail.com',
-            username='jamy2',
-            first_name='Tian',
-            last_name='Gan',
+            "jamy2@gmail.com",
+            username="jamy2",
+            first_name="Tian",
+            last_name="Gan",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
-        self.res = hydroshare.create_resource(resource_type='GenericResource',
-                                              owner=self.user,
-                                              title='Test Resource',
-                                              metadata=[],)
+        self.res = hydroshare.create_resource(
+            resource_type="GenericResource",
+            owner=self.user,
+            title="Test Resource",
+            metadata=[],
+        )
 
-        test_file = open('myfile.txt', "w")
+        test_file = open("myfile.txt", "w")
         test_file.write("Test text file in test1.txt")
         test_file.close()
-        self.file = open('myfile.txt', 'rb')
+        self.file = open("myfile.txt", "rb")
 
         hydroshare.add_resource_files(self.res.short_id, self.file)
 
@@ -50,7 +50,7 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
         self.assertIn(
             self.file.name,
             [os.path.basename(rf.resource_file.name) for rf in resource_file_objects],
-            msg='the test file is not added to the resource'
+            msg="the test file is not added to the resource",
         )
         self.assertEqual(27, self.res.size)
 
@@ -61,6 +61,6 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
         self.assertNotIn(
             self.file.name,
             [os.path.basename(rf.resource_file.name) for rf in resource_file_objects],
-            msg='the added test file is not deleted from the resource'
+            msg="the added test file is not deleted from the resource",
         )
         self.assertEqual(0, self.res.size)

@@ -7,29 +7,32 @@ class Command(BaseCommand):
     help = "Output quota allocations and used values for all users in HydroShare"
 
     def add_arguments(self, parser):
-        parser.add_argument('output_file_name_with_path', help='output file name with path')
+        parser.add_argument(
+            "output_file_name_with_path", help="output file name with path"
+        )
 
     def handle(self, *args, **options):
-        with open(options['output_file_name_with_path'], 'w') as csvfile:
+        with open(options["output_file_name_with_path"], "w") as csvfile:
             w = csv.writer(csvfile)
             fields = [
-                'User id',
-                'User name',
-                'Allocated quota value',
-                'Used quota value',
-                'Quota unit',
-                'Storage zone'
+                "User id",
+                "User name",
+                "Allocated quota value",
+                "Used quota value",
+                "Quota unit",
+                "Storage zone",
             ]
             w.writerow(fields)
 
-            for uq in UserQuota.objects.filter(
-                    user__is_active=True).filter(user__is_superuser=False):
+            for uq in UserQuota.objects.filter(user__is_active=True).filter(
+                user__is_superuser=False
+            ):
                 values = [
                     uq.user.id,
                     uq.user.username,
                     uq.allocated_value,
                     uq.used_value,
                     uq.unit,
-                    uq.zone
+                    uq.zone,
                 ]
                 w.writerow([str(v) for v in values])

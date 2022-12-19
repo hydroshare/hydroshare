@@ -9,18 +9,22 @@ import theme.utils
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0032_auto_20210607_2027'),
+        ("hs_access_control", "0032_auto_20210607_2027"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='community',
-            name='picture',
-            field=models.ImageField(blank=True, null=True, upload_to=theme.utils.get_upload_path_community),
+            model_name="community",
+            name="picture",
+            field=models.ImageField(
+                blank=True, null=True, upload_to=theme.utils.get_upload_path_community
+            ),
         ),
         migrations.AlterField(
-            model_name='groupaccess',
-            name='picture',
-            field=models.ImageField(blank=True, null=True, upload_to=theme.utils.get_upload_path_group),
+            model_name="groupaccess",
+            name="picture",
+            field=models.ImageField(
+                blank=True, null=True, upload_to=theme.utils.get_upload_path_group
+            ),
         ),
     ]

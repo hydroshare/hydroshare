@@ -8,8 +8,8 @@ from itertools import chain
 
 
 def migrate_url_to_uid(apps, schema_editor):
-    Contributor = apps.get_model('hs_core.Contributor')
-    Creator = apps.get_model('hs_core.Creator')
+    Contributor = apps.get_model("hs_core.Contributor")
+    Creator = apps.get_model("hs_core.Creator")
     combined_list = list(chain(Contributor.objects.all(), Creator.objects.all()))
     for party in combined_list:
         if party.description:
@@ -21,27 +21,35 @@ def migrate_url_to_uid(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0060_auto_20220202_1732'),
+        ("hs_core", "0060_auto_20220202_1732"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contributor',
-            name='hydroshare_user_id',
-            field=models.IntegerField(blank=True, null=True, validators=[hs_core.models.validate_hydroshare_user_id]),
+            model_name="contributor",
+            name="hydroshare_user_id",
+            field=models.IntegerField(
+                blank=True,
+                null=True,
+                validators=[hs_core.models.validate_hydroshare_user_id],
+            ),
         ),
         migrations.AddField(
-            model_name='creator',
-            name='hydroshare_user_id',
-            field=models.IntegerField(blank=True, null=True, validators=[hs_core.models.validate_hydroshare_user_id]),
+            model_name="creator",
+            name="hydroshare_user_id",
+            field=models.IntegerField(
+                blank=True,
+                null=True,
+                validators=[hs_core.models.validate_hydroshare_user_id],
+            ),
         ),
         migrations.RunPython(migrate_url_to_uid),
         migrations.RemoveField(
-            model_name='contributor',
-            name='description',
+            model_name="contributor",
+            name="description",
         ),
         migrations.RemoveField(
-            model_name='creator',
-            name='description',
+            model_name="creator",
+            name="description",
         ),
     ]

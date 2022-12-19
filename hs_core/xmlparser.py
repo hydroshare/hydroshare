@@ -4,13 +4,14 @@ import base64
 import os.path
 from io import StringIO
 from xml.sax import xmlreader, saxutils
+
 # TODO: should we use defusedxml.sax?
 from xml.sax.expatreader import ExpatParser
 
 from django.conf import settings
 
 
-XML_CACHE = os.path.join(settings.PROJECT_ROOT, '_xmlcache')
+XML_CACHE = os.path.join(settings.PROJECT_ROOT, "_xmlcache")
 
 
 class CatalogedExpatParser(ExpatParser):
@@ -22,14 +23,12 @@ class CatalogedExpatParser(ExpatParser):
             return 1
 
         source = self._ent_handler.resolveEntity(pubid, sysid)
-        source = saxutils.prepare_input_source(source,
-                                               self._source.getSystemId() or
-                                               "")
+        source = saxutils.prepare_input_source(source, self._source.getSystemId() or "")
 
         # If an entry does not exist in the xml cache, create it.
         filepath = os.path.join(XML_CACHE, base64.urlsafe_b64encode(pubid))
         if not os.path.isfile(filepath):
-            with open(filepath, 'w') as f:
+            with open(filepath, "w") as f:
                 contents = source.getByteStream().read()
                 source.setByteStream(StringIO(contents))
                 f.write(contents)
@@ -56,7 +55,7 @@ class CatalogEntityResolver(object):
         filepath = os.path.join(XML_CACHE, base64.urlsafe_b64encode(publicId))
         if os.path.isfile(filepath):
             source = xmlreader.InputSource()
-            with open(filepath, 'r') as f:
+            with open(filepath, "r") as f:
                 source.setByteStream(StringIO(f.read()))
             return source
 

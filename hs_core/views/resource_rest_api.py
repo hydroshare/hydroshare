@@ -18,18 +18,29 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.request import Request
-from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
+from rest_framework.exceptions import (
+    ValidationError,
+    NotAuthenticated,
+    PermissionDenied,
+    NotFound,
+)
 
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
-from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types, \
-    get_content_types
+from hs_core.hydroshare.utils import (
+    get_resource_by_shortkey,
+    get_resource_types,
+    get_content_types,
+)
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
 from hs_core.hydroshare.utils import get_file_storage, resource_modified
-from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException, \
-    HsDeserializationException
+from hs_core.serialization import (
+    GenericResourceMeta,
+    HsDeserializationDependencyException,
+    HsDeserializationException,
+)
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -57,13 +68,15 @@ class ResourceFileToListItemMixin(object):
             ftype = mimetype[0]
         else:
             ftype = repr(None)
-        resource_file_info_item = serializers.ResourceFileItem(url=url,
-                                                               file_name=file_name,
-                                                               size=fsize,
-                                                               content_type=ftype,
-                                                               logical_file_type=logical_file_type,
-                                                               modified_time=modified_time,
-                                                               checksum=checksum)
+        resource_file_info_item = serializers.ResourceFileItem(
+            url=url,
+            file_name=file_name,
+            size=fsize,
+            content_type=ftype,
+            logical_file_type=logical_file_type,
+            modified_time=modified_time,
+            checksum=checksum,
+        )
         return resource_file_info_item
 
 
@@ -71,14 +84,18 @@ class ResourceTypes(generics.ListAPIView):
     # We don't need pagination for a list of resource types
     pagination_class = None
 
-    @swagger_auto_schema(operation_description="List Resource Types",
-                         responses={200: serializers.ResourceTypesSerializer})
+    @swagger_auto_schema(
+        operation_description="List Resource Types",
+        responses={200: serializers.ResourceTypesSerializer},
+    )
     def get(self, request):
         return self.list(request)
 
     def get_queryset(self):
-        return [serializers.ResourceType(resource_type=rtype.__name__) for rtype in
-                get_resource_types()]
+        return [
+            serializers.ResourceType(resource_type=rtype.__name__)
+            for rtype in get_resource_types()
+        ]
 
     def get_serializer_class(self):
         return serializers.ResourceTypesSerializer
@@ -87,14 +104,18 @@ class ResourceTypes(generics.ListAPIView):
 class ContentTypes(generics.ListAPIView):
     pagination_class = None
 
-    @swagger_auto_schema(operation_description="List Content Types",
-                         responses={200: serializers.ContentTypesSerializer})
+    @swagger_auto_schema(
+        operation_description="List Content Types",
+        responses={200: serializers.ContentTypesSerializer},
+    )
     def get(self, request):
         return self.list(request)
 
     def get_queryset(self):
-        return [serializers.ContentType(content_type=ctype.__name__) for ctype in
-                get_content_types()]
+        return [
+            serializers.ContentType(content_type=ctype.__name__)
+            for ctype in get_content_types()
+        ]
 
     def get_serializer_class(self):
         return serializers.ContentTypesSerializer
@@ -103,19 +124,27 @@ class ContentTypes(generics.ListAPIView):
 class CheckTaskStatus(generics.RetrieveAPIView):
 
     # TODO, setup a serializer for in, figure out if redirect is needed...
-    tid = openapi.Parameter('task_id', openapi.IN_PATH, description="id of the task", type=openapi.TYPE_STRING)
+    tid = openapi.Parameter(
+        "task_id",
+        openapi.IN_PATH,
+        description="id of the task",
+        type=openapi.TYPE_STRING,
+    )
 
-    @swagger_auto_schema(operation_description="Get the status of an asynchronous task",
-                         responses={200: serializers.CheckStatusSerializer}, manual_parameters=[tid])
+    @swagger_auto_schema(
+        operation_description="Get the status of an asynchronous task",
+        responses={200: serializers.CheckStatusSerializer},
+        manual_parameters=[tid],
+    )
     def get(self, request, task_id):
-        '''
+        """
         Get the status of an asynchronous task
 
         :param request:
         :param task_id: Id of the task
         :return: JSON response to return result from asynchronous task
-        '''
-        url = reverse('rest_check_task_status', kwargs={'task_id': task_id})
+        """
+        url = reverse("rest_check_task_status", kwargs={"task_id": task_id})
         return HttpResponseRedirect(url)
 
 
@@ -123,16 +152,18 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     # pagination doesn't make sense as there is only one resource
     pagination_class = None
 
-    allowed_methods = ('GET', 'PUT', 'DELETE')
+    allowed_methods = ("GET", "PUT", "DELETE")
 
-    @swagger_auto_schema(operation_description="Get a resource in zipped BagIt format",
-                         responses={200: serializers.TaskStatusSerializer})
+    @swagger_auto_schema(
+        operation_description="Get a resource in zipped BagIt format",
+        responses={200: serializers.TaskStatusSerializer},
+    )
     def get(self, request, pk):
-        res, _, _ = view_utils.authorize(request, pk,
-                                         needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        res, _, _ = view_utils.authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
+        )
 
-        bag_url = reverse('rest_download',
-                          kwargs={'path': 'bags/{}.zip'.format(pk)})
+        bag_url = reverse("rest_download", kwargs={"path": "bags/{}.zip".format(pk)})
         return HttpResponseRedirect(bag_url)
 
     @swagger_auto_schema(operation_description="Not Implemented")
@@ -142,16 +173,19 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
 
     def delete(self, request, pk):
         # only resource owners are allowed to delete
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+        view_utils.authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE
+        )
         hydroshare.delete_resource(pk, request_username=request.user.username)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ResourceListCreate(generics.ListCreateAPIView):
-
-    @swagger_auto_schema(request_body=serializers.ResourceCreateRequestValidator,
-                         operation_description="Create a resource",
-                         responses={201: serializers.ResourceCreatedSerializer})
+    @swagger_auto_schema(
+        request_body=serializers.ResourceCreateRequestValidator,
+        operation_description="Create a resource",
+        responses={201: serializers.ResourceCreatedSerializer},
+    )
     def post(self, request):
         return self.create(request)
 
@@ -161,35 +195,48 @@ class ResourceListCreate(generics.ListCreateAPIView):
             raise NotAuthenticated()
 
         resource_create_request_validator = serializers.ResourceCreateRequestValidator(
-            data=request.data)
+            data=request.data
+        )
         if not resource_create_request_validator.is_valid():
             raise ValidationError(detail=resource_create_request_validator.errors)
 
         validated_request_data = resource_create_request_validator.validated_data
-        resource_type = validated_request_data['resource_type']
-        if resource_type in ["RasterResource", "GeographicFeatureResource", "RefTimeSeriesResource",
-                             "NetcdfResource", "TimeSeriesResource", "GenericResource"]:
+        resource_type = validated_request_data["resource_type"]
+        if resource_type in [
+            "RasterResource",
+            "GeographicFeatureResource",
+            "RefTimeSeriesResource",
+            "NetcdfResource",
+            "TimeSeriesResource",
+            "GenericResource",
+        ]:
             # force deprecated resource types to composite
             resource_type = "CompositeResource"
 
-        res_title = validated_request_data.get('title', 'Untitled resource')
-        keywords = validated_request_data.get('keywords', [])
-        abstract = validated_request_data.get('abstract', None)
-        metadata = validated_request_data.get('metadata', None)
-        extra_metadata = validated_request_data.get('extra_metadata', None)
+        res_title = validated_request_data.get("title", "Untitled resource")
+        keywords = validated_request_data.get("keywords", [])
+        abstract = validated_request_data.get("abstract", None)
+        metadata = validated_request_data.get("metadata", None)
+        extra_metadata = validated_request_data.get("extra_metadata", None)
 
         num_files = len(request.FILES)
         # TODO: (Couch) reconsider whether multiple file upload should be
         # supported when multipart bug fixed.
         if num_files > 0:
             if num_files > 1:
-                raise ValidationError(detail={'file': 'Multiple file upload is not allowed on '
-                                                      'resource creation. Add additional files '
-                                                      'after the resource is created.'})
+                raise ValidationError(
+                    detail={
+                        "file": "Multiple file upload is not allowed on "
+                        "resource creation. Add additional files "
+                        "after the resource is created."
+                    }
+                )
             # Place files into format expected by hydroshare.utils.resource_pre_create_actions and
             # hydroshare.create_resource, i.e. a tuple of
             # django.core.files.uploadedfile.TemporaryUploadedFile objects.
-            files = [request.FILES['file'], ]
+            files = [
+                request.FILES["file"],
+            ]
         else:
             files = []
 
@@ -203,11 +250,15 @@ class ResourceListCreate(generics.ListCreateAPIView):
 
         try:
             _, res_title, metadata = hydroshare.utils.resource_pre_create_actions(
-                resource_type=resource_type, resource_title=res_title,
-                page_redirect_url_key=None, files=files, metadata=metadata,
-                **kwargs)
+                resource_type=resource_type,
+                resource_title=res_title,
+                page_redirect_url_key=None,
+                files=files,
+                metadata=metadata,
+                **kwargs
+            )
         except Exception as ex:
-            error_msg = {'resource': "Resource creation failed. %s" % str(ex)}
+            error_msg = {"resource": "Resource creation failed. %s" % str(ex)}
             raise ValidationError(detail=error_msg)
 
         try:
@@ -215,38 +266,47 @@ class ResourceListCreate(generics.ListCreateAPIView):
                 resource_type=resource_type,
                 owner=request.user,
                 title=res_title,
-                edit_users=validated_request_data.get('edit_users', None),
-                view_users=validated_request_data.get('view_users', None),
-                edit_groups=validated_request_data.get('edit_groups', None),
-                view_groups=validated_request_data.get('view_groups', None),
+                edit_users=validated_request_data.get("edit_users", None),
+                view_users=validated_request_data.get("view_users", None),
+                edit_groups=validated_request_data.get("edit_groups", None),
+                view_groups=validated_request_data.get("view_groups", None),
                 keywords=keywords,
                 metadata=metadata,
                 extra_metadata=extra_metadata,
-                files=files
+                files=files,
             )
             if abstract:
-                resource.metadata.create_element('description', abstract=abstract)
+                resource.metadata.create_element("description", abstract=abstract)
         except Exception as ex:
-            error_msg = {'resource': "Resource creation failed. %s" % str(ex)}
+            error_msg = {"resource": "Resource creation failed. %s" % str(ex)}
             raise ValidationError(detail=error_msg)
 
-        post_creation_error_msg = ''
+        post_creation_error_msg = ""
         try:
-            hydroshare.utils.resource_post_create_actions(request=request, resource=resource,
-                                                          user=request.user,
-                                                          metadata=metadata, **kwargs)
+            hydroshare.utils.resource_post_create_actions(
+                request=request,
+                resource=resource,
+                user=request.user,
+                metadata=metadata,
+                **kwargs
+            )
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
             post_creation_error_msg = str(ex)
-        response_data = {'resource_type': resource_type, 'resource_id': resource.short_id,
-                         'message': post_creation_error_msg}
+        response_data = {
+            "resource_type": resource_type,
+            "resource_id": resource.short_id,
+            "message": post_creation_error_msg,
+        }
 
-        return Response(data=response_data,  status=status.HTTP_201_CREATED)
+        return Response(data=response_data, status=status.HTTP_201_CREATED)
 
     pagination_class = PageNumberPagination
-    pagination_class.page_size_query_param = 'count'
+    pagination_class.page_size_query_param = "count"
 
-    @swagger_auto_schema(query_serializer=serializers.ResourceListRequestValidator,
-                         operation_description="List resources")
+    @swagger_auto_schema(
+        query_serializer=serializers.ResourceListRequestValidator,
+        operation_description="List resources",
+    )
     def get(self, request):
         return self.list(request)
 
@@ -254,18 +314,21 @@ class ResourceListCreate(generics.ListCreateAPIView):
     # copied from ResourceList
     def get_queryset(self):
         resource_list_request_validator = serializers.ResourceListRequestValidator(
-            data=self.request.query_params)
+            data=self.request.query_params
+        )
         if not resource_list_request_validator.is_valid():
             raise ValidationError(detail=resource_list_request_validator.errors)
 
         filter_parms = resource_list_request_validator.validated_data
-        filter_parms['user'] = (self.request.user if self.request.user.is_authenticated else None)
-        if len(filter_parms['type']) == 0:
-            filter_parms['type'] = None
+        filter_parms["user"] = (
+            self.request.user if self.request.user.is_authenticated else None
+        )
+        if len(filter_parms["type"]) == 0:
+            filter_parms["type"] = None
         else:
-            filter_parms['type'] = list(filter_parms['type'])
+            filter_parms["type"] = list(filter_parms["type"])
 
-        filter_parms['public'] = not self.request.user.is_authenticated
+        filter_parms["public"] = not self.request.user.is_authenticated
 
         return hydroshare.get_resource_list(**filter_parms)
 
@@ -280,14 +343,17 @@ class ResourceListCreate(generics.ListCreateAPIView):
 
 class SystemMetadataRetrieve(APIView):
 
-    allowed_methods = ('GET',)
+    allowed_methods = ("GET",)
 
-    @swagger_auto_schema(operation_description="Get resource system metadata, as well as URLs to "
-                                               "the bag and science metadata",
-                         responses={200: serializers.ResourceListItemSerializer})
+    @swagger_auto_schema(
+        operation_description="Get resource system metadata, as well as URLs to "
+        "the bag and science metadata",
+        responses={200: serializers.ResourceListItemSerializer},
+    )
     def get(self, request, pk):
-        res, _, _ = view_utils.authorize(request, pk,
-                                         needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+        res, _, _ = view_utils.authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA
+        )
         ser = self.get_serializer_class()(res)
 
         return Response(data=ser.data, status=status.HTTP_200_OK)
@@ -308,27 +374,31 @@ class AccessRulesUpdate(APIView):
     :param pk: id of the resource
     :return: No content.  Status code will 200 (OK)
     """
+
     # TODO: (Couch) Need GET as well.
-    allowed_methods = ('PUT',)
+    allowed_methods = ("PUT",)
 
     def put(self, request, pk):
-        """ Update access rules
-        """
+        """Update access rules"""
         # only resource owners are allowed to change resource flags (e.g., public)
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+        view_utils.authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG
+        )
 
-        access_rules_validator = serializers.AccessRulesRequestValidator(data=request.data)
+        access_rules_validator = serializers.AccessRulesRequestValidator(
+            data=request.data
+        )
         if not access_rules_validator.is_valid():
             raise ValidationError(detail=access_rules_validator.errors)
 
         validated_request_data = access_rules_validator.validated_data
         res = get_resource_by_shortkey(pk)
         try:
-            res.set_public(validated_request_data['public'], request.user)
+            res.set_public(validated_request_data["public"], request.user)
         except CoreValidationError:
-            return Response(data={'resource_id': pk}, status=status.HTTP_403_FORBIDDEN)
+            return Response(data={"resource_id": pk}, status=status.HTTP_403_FORBIDDEN)
 
-        return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
+        return Response(data={"resource_id": pk}, status=status.HTTP_200_OK)
 
 
 class ScienceMetadataRetrieveUpdate(APIView):
@@ -363,12 +433,15 @@ class ScienceMetadataRetrieveUpdate(APIView):
     ValidationError: return json format: {parameter-1': ['error message-1'],
     'parameter-2': ['error message-2'], .. }
     """
-    ACCEPT_FORMATS = ('application/xml', 'application/rdf+xml')
 
-    allowed_methods = ('GET', 'PUT')
+    ACCEPT_FORMATS = ("application/xml", "application/rdf+xml")
+
+    allowed_methods = ("GET", "PUT")
 
     def get(self, request, pk):
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+        view_utils.authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA
+        )
 
         scimeta_url = AbstractResource.scimeta_url(pk)
         return redirect(scimeta_url)
@@ -376,33 +449,47 @@ class ScienceMetadataRetrieveUpdate(APIView):
     def put(self, request, pk):
         # Update science metadata based on resourcemetadata.xml uploaded
         resource, authorized, user = view_utils.authorize(
-            request, pk,
+            request,
+            pk,
             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-            raises_exception=False)
+            raises_exception=False,
+        )
         if not authorized:
             raise PermissionDenied()
 
         files = list(request.FILES.values())
         if len(files) == 0:
-            error_msg = {'file': 'No resourcemetadata.xml file was found to update resource '
-                                 'metadata.'}
+            error_msg = {
+                "file": "No resourcemetadata.xml file was found to update resource "
+                "metadata."
+            }
             raise ValidationError(detail=error_msg)
         elif len(files) > 1:
-            error_msg = {'file': ('More than one file was found. Only one file, named '
-                                  'resourcemetadata.xml, '
-                                  'can be used to update resource metadata.')}
+            error_msg = {
+                "file": (
+                    "More than one file was found. Only one file, named "
+                    "resourcemetadata.xml, "
+                    "can be used to update resource metadata."
+                )
+            }
             raise ValidationError(detail=error_msg)
 
         scimeta = files[0]
         if scimeta.content_type not in self.ACCEPT_FORMATS:
-            error_msg = {'file': ("Uploaded file has content type {t}, "
-                                  "but only these types are accepted: {e}.").format(
-                t=scimeta.content_type, e=",".join(self.ACCEPT_FORMATS))}
+            error_msg = {
+                "file": (
+                    "Uploaded file has content type {t}, "
+                    "but only these types are accepted: {e}."
+                ).format(t=scimeta.content_type, e=",".join(self.ACCEPT_FORMATS))
+            }
             raise ValidationError(detail=error_msg)
-        expect = 'resourcemetadata.xml'
+        expect = "resourcemetadata.xml"
         if scimeta.name != expect:
-            error_msg = {'file': "Uploaded file has name {n}, but expected {e}.".format(
-                n=scimeta.name, e=expect)}
+            error_msg = {
+                "file": "Uploaded file has name {n}, but expected {e}.".format(
+                    n=scimeta.name, e=expect
+                )
+            }
             raise ValidationError(detail=error_msg)
 
         # Temp directory to store resourcemetadata.xml
@@ -410,16 +497,16 @@ class ScienceMetadataRetrieveUpdate(APIView):
         try:
             # Fake the bag structure so that GenericResourceMeta.read_metadata_from_resource_bag
             # can read and validate the system and science metadata for us.
-            bag_data_path = os.path.join(tmp_dir, 'data')
+            bag_data_path = os.path.join(tmp_dir, "data")
             os.mkdir(bag_data_path)
             # Copy new science metadata to bag data path
-            scimeta_path = os.path.join(bag_data_path, 'resourcemetadata.xml')
+            scimeta_path = os.path.join(bag_data_path, "resourcemetadata.xml")
             shutil.copy(scimeta.temporary_file_path(), scimeta_path)
             # Copy existing resource map to bag data path
             # (use a file-like object as the file may be in iRODS, so we can't
             #  just copy it to a local path)
-            resmeta_path = os.path.join(bag_data_path, 'resourcemap.xml')
-            with open(resmeta_path, 'wb') as resmeta:
+            resmeta_path = os.path.join(bag_data_path, "resourcemap.xml")
+            with open(resmeta_path, "wb") as resmeta:
                 storage = get_file_storage()
                 resmeta_irods = storage.open(AbstractResource.sysmeta_path(pk))
                 shutil.copyfileobj(resmeta_irods, resmeta)
@@ -429,14 +516,19 @@ class ScienceMetadataRetrieveUpdate(APIView):
             try:
                 # Read resource system and science metadata
                 domain = Site.objects.get_current().domain
-                rm = GenericResourceMeta.read_metadata_from_resource_bag(tmp_dir,
-                                                                         hydroshare_host=domain)
+                rm = GenericResourceMeta.read_metadata_from_resource_bag(
+                    tmp_dir, hydroshare_host=domain
+                )
                 # Update resource metadata
-                rm.write_metadata_to_resource(resource, update_title=True, update_keywords=True)
+                rm.write_metadata_to_resource(
+                    resource, update_title=True, update_keywords=True
+                )
                 create_bag_metadata_files(resource)
             except HsDeserializationDependencyException as e:
-                msg = ("HsDeserializationDependencyException encountered when updating "
-                       "science metadata for resource {pk}; depedent resource was {dep}.")
+                msg = (
+                    "HsDeserializationDependencyException encountered when updating "
+                    "science metadata for resource {pk}; depedent resource was {dep}."
+                )
                 msg = msg.format(pk=pk, dep=e.dependency_resource_id)
                 logger.error(msg)
                 raise ValidationError(detail=msg)
@@ -444,7 +536,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
                 raise ValidationError(detail=str(e))
 
             resource_modified(resource, request.user, overwrite_bag=False)
-            return Response(data={'resource_id': pk}, status=status.HTTP_202_ACCEPTED)
+            return Response(data={"resource_id": pk}, status=status.HTTP_202_ACCEPTED)
         finally:
             shutil.rmtree(tmp_dir)
 
@@ -465,10 +557,13 @@ class ResourceMapRetrieve(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform
     this action.'}
     """
-    allowed_methods = ('GET',)
+
+    allowed_methods = ("GET",)
 
     def get(self, request, pk):
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+        view_utils.authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA
+        )
 
         resmap_url = AbstractResource.resmap_url(pk)
         return redirect(resmap_url)
@@ -525,7 +620,8 @@ class ResourceFileCRUD(APIView):
     ValidationError: return json format: {'parameter-1':['error message-1'],
     'parameter-2': ['error message-2'], .. }
     """
-    allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
+
+    allowed_methods = ("GET", "POST", "PUT", "DELETE")
     parser_classes = (MultiPartParser,)
 
     def initialize_request(self, request, *args, **kwargs):
@@ -547,7 +643,9 @@ class ResourceFileCRUD(APIView):
             # Don't deep copy the file data as it may contain an open file handle
             old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
-            request = super(ResourceFileCRUD, self).initialize_request(request, *args, **kwargs)
+            request = super(ResourceFileCRUD, self).initialize_request(
+                request, *args, **kwargs
+            )
             request.POST._mutable = True
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
@@ -555,11 +653,13 @@ class ResourceFileCRUD(APIView):
 
     def get(self, request, pk, pathname):
         resource, _, _ = view_utils.authorize(
-            request, pk,
-            needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
+        )
 
-        if not resource.supports_folders and '/' in pathname:
-            return Response("Resource type does not support folders", status.HTTP_403_FORBIDDEN)
+        if not resource.supports_folders and "/" in pathname:
+            return Response(
+                "Resource type does not support folders", status.HTTP_403_FORBIDDEN
+            )
 
         try:
             view_utils.irods_path_is_allowed(pathname)
@@ -569,14 +669,18 @@ class ResourceFileCRUD(APIView):
         try:
             f = hydroshare.get_resource_file(pk, pathname).resource_file
         except ObjectDoesNotExist:
-            err_msg = 'File with file name {file_name} does not exist for resource with ' \
-                      'resource id {res_id}'.format(file_name=pathname, res_id=pk)
+            err_msg = (
+                "File with file name {file_name} does not exist for resource with "
+                "resource id {res_id}".format(file_name=pathname, res_id=pk)
+            )
             raise NotFound(detail=err_msg)
 
         # redirects to django_irods/views.download function
         # use new internal url for rest call
         # TODO: (Couch) Migrate model (with a "data migration") so that this hack is not needed.
-        redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
+        redirect_url = f.url.replace(
+            "django_irods/download/", "django_irods/rest_download/"
+        )
         return HttpResponseRedirect(redirect_url)
 
     @swagger_auto_schema(request_body=serializers.ResourceFileValidator)
@@ -591,16 +695,19 @@ class ResourceFileCRUD(APIView):
         Leaving out pathname in the URI calls a different class function in ResourceFileListCreate
         that stores in the root directory instead.
         """
-        resource, _, _ = view_utils.authorize(request, pk,
-                                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        resource, _, _ = view_utils.authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE
+        )
 
         resource_files = list(request.FILES.values())
         if len(resource_files) == 0:
-            error_msg = {'file': 'No file was found to add to the resource.'}
+            error_msg = {"file": "No file was found to add to the resource."}
             raise ValidationError(detail=error_msg)
         elif len(resource_files) > 1:
-            error_msg = {'file': 'More than one file was found. Only one file can be '
-                                 'added at a time.'}
+            error_msg = {
+                "file": "More than one file was found. Only one file can be "
+                "added at a time."
+            }
             raise ValidationError(detail=error_msg)
 
         # TODO: (Brian) I know there has been some discussion when to validate a file
@@ -608,40 +715,55 @@ class ResourceFileCRUD(APIView):
         # Once we have a decision, I will change this implementation accordingly. In that case
         # we have to implement additional rest endpoints for file validation and extraction.
         try:
-            hydroshare.utils.resource_file_add_pre_process(resource=resource,
-                                                           files=[resource_files[0]],
-                                                           folder=pathname,
-                                                           user=request.user, extract_metadata=True)
+            hydroshare.utils.resource_file_add_pre_process(
+                resource=resource,
+                files=[resource_files[0]],
+                folder=pathname,
+                user=request.user,
+                extract_metadata=True,
+            )
 
-        except (hydroshare.utils.ResourceFileSizeException,
-                hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-            error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
+        except (
+            hydroshare.utils.ResourceFileSizeException,
+            hydroshare.utils.ResourceFileValidationException,
+            Exception,
+        ) as ex:
+            error_msg = {"file": "Adding file to resource failed. %s" % str(ex)}
             raise ValidationError(detail=error_msg)
 
         try:
-            res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
-                                                                          files=[resource_files[0]],
-                                                                          folder=pathname,
-                                                                          user=request.user,
-                                                                          extract_metadata=True)
+            res_file_objects = hydroshare.utils.resource_file_add_process(
+                resource=resource,
+                files=[resource_files[0]],
+                folder=pathname,
+                user=request.user,
+                extract_metadata=True,
+            )
 
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-            error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
+            error_msg = {"file": "Adding file to resource failed. %s" % str(ex)}
             raise ValidationError(detail=error_msg)
 
         # prepare response data
         file_name = os.path.basename(res_file_objects[0].resource_file.name)
-        file_path = res_file_objects[0].resource_file.name.split('/data/contents/')[1]
-        response_data = {'resource_id': pk, 'file_name': file_name, 'file_path': file_path}
+        file_path = res_file_objects[0].resource_file.name.split("/data/contents/")[1]
+        response_data = {
+            "resource_id": pk,
+            "file_name": file_name,
+            "file_path": file_path,
+        }
         resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk, pathname):
         resource, _, user = view_utils.authorize(
-            request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE
+        )
 
-        if not resource.supports_folders and '/' in pathname:
-            return Response("Resource type does not support folders", status.HTTP_403_FORBIDDEN)
+        if not resource.supports_folders and "/" in pathname:
+            return Response(
+                "Resource type does not support folders", status.HTTP_403_FORBIDDEN
+            )
 
         try:
             view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
@@ -650,11 +772,11 @@ class ResourceFileCRUD(APIView):
 
         try:
             hydroshare.delete_resource_file(pk, pathname, user)
-        except ObjectDoesNotExist as ex:    # matching file not found
+        except ObjectDoesNotExist as ex:  # matching file not found
             raise NotFound(detail=str(ex))
 
         # prepare response data
-        response_data = {'resource_id': pk, 'file_name': pathname}
+        response_data = {"resource_id": pk, "file_name": pathname}
         resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_200_OK)
 
@@ -719,7 +841,8 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
     this action.'}
 
     """
-    allowed_methods = ('GET', 'POST')
+
+    allowed_methods = ("GET", "POST")
 
     def initialize_request(self, request, *args, **kwargs):
         """
@@ -741,7 +864,8 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
             request = super(ResourceFileListCreate, self).initialize_request(
-                request, *args, **kwargs)
+                request, *args, **kwargs
+            )
             request.POST._mutable = True
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
@@ -757,8 +881,11 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         return self.list(request)
 
     def get_queryset(self):
-        resource, _, _ = view_utils.authorize(self.request, self.kwargs['pk'],
-                                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        resource, _, _ = view_utils.authorize(
+            self.request,
+            self.kwargs["pk"],
+            needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+        )
         resource_file_info_list = []
         for f in resource.files.all():
             resource_file_info_list.append(self.resourceFileToListItem(f))
@@ -774,52 +901,68 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         :param pk: Primary key of the resource (i.e. resource short ID)
         :return:
         """
-        resource, _, _ = view_utils.authorize(request, pk,
-                                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        resource, _, _ = view_utils.authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE
+        )
         resource_files = list(request.FILES.values())
         if len(resource_files) == 0:
-            error_msg = {'file': 'No file was found to add to the resource.'}
+            error_msg = {"file": "No file was found to add to the resource."}
             raise ValidationError(detail=error_msg)
         elif len(resource_files) > 1:
-            error_msg = {'file': 'More than one file was found. Only one file can be '
-                                 'added at a time.'}
+            error_msg = {
+                "file": "More than one file was found. Only one file can be "
+                "added at a time."
+            }
             raise ValidationError(detail=error_msg)
 
         # TODO: (Brian) I know there has been some discussion when to validate a file
         # I agree that we should not validate and extract metadata as part of the file add api
         # Once we have a decision, I will change this implementation accordingly. In that case
         # we have to implement additional rest endpoints for file validation and extraction.
-        folder = request.POST.get('folder', '')
+        folder = request.POST.get("folder", "")
         try:
-            hydroshare.utils.resource_file_add_pre_process(resource=resource,
-                                                           files=[resource_files[0]],
-                                                           user=request.user,
-                                                           folder=folder,
-                                                           extract_metadata=True)
+            hydroshare.utils.resource_file_add_pre_process(
+                resource=resource,
+                files=[resource_files[0]],
+                user=request.user,
+                folder=folder,
+                extract_metadata=True,
+            )
 
-        except (hydroshare.utils.ResourceFileSizeException,
-                hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-            error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
+        except (
+            hydroshare.utils.ResourceFileSizeException,
+            hydroshare.utils.ResourceFileValidationException,
+            Exception,
+        ) as ex:
+            error_msg = {"file": "Adding file to resource failed. %s" % str(ex)}
             raise ValidationError(detail=error_msg)
 
         try:
-            res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
-                                                                          files=[resource_files[0]],
-                                                                          user=request.user,
-                                                                          folder=folder,
-                                                                          extract_metadata=True)
+            res_file_objects = hydroshare.utils.resource_file_add_process(
+                resource=resource,
+                files=[resource_files[0]],
+                user=request.user,
+                folder=folder,
+                extract_metadata=True,
+            )
 
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-            error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
+            error_msg = {"file": "Adding file to resource failed. %s" % str(ex)}
             raise ValidationError(detail=error_msg)
 
         if len(res_file_objects) == 0:
             # metadata ingestion
-            response_data = {'resource_id': pk}
+            response_data = {"resource_id": pk}
         else:
             file_name = os.path.basename(res_file_objects[0].resource_file.name)
-            file_path = res_file_objects[0].resource_file.name.split('/data/contents/')[1]
-            response_data = {'resource_id': pk, 'file_name': file_name, 'file_path': file_path}
+            file_path = res_file_objects[0].resource_file.name.split("/data/contents/")[
+                1
+            ]
+            response_data = {
+                "resource_id": pk,
+                "file_name": file_name,
+                "file_path": file_path,
+            }
         resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
@@ -844,13 +987,23 @@ def _validate_metadata(metadata_list):
     :return:
     """
 
-    err_message = "Metadata validation failed. Metadata element '{}' was found in value passed " \
-                  "for parameter 'metadata'. Though it's a valid element it can't be passed " \
-                  "as part of 'metadata' parameter."
+    err_message = (
+        "Metadata validation failed. Metadata element '{}' was found in value passed "
+        "for parameter 'metadata'. Though it's a valid element it can't be passed "
+        "as part of 'metadata' parameter."
+    )
     for element in metadata_list:
         # here k is the name of the element
         # v is a dict of all element attributes/field names and field values
         k, v = list(element.items())[0]
-        if k.lower() in ('title', 'subject', 'description', 'publisher', 'format', 'date', 'type'):
+        if k.lower() in (
+            "title",
+            "subject",
+            "description",
+            "publisher",
+            "format",
+            "date",
+            "type",
+        ):
             err_message = err_message.format(k.lower())
             raise ValidationError(detail=err_message)

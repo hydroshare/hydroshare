@@ -1,4 +1,3 @@
-
 from copy import deepcopy
 
 from mezzanine.blog.admin import BlogPostAdmin

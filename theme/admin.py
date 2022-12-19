@@ -16,25 +16,29 @@ class IconBoxInline(TabularDynamicInlineAdmin):
 
 class UserQuotaForm(forms.ModelForm):
     user = forms.ModelChoiceField(
-        queryset=User.objects.exclude(is_superuser=True).exclude(is_active=False))
+        queryset=User.objects.exclude(is_superuser=True).exclude(is_active=False)
+    )
 
     class Meta:
         model = UserQuota
-        fields = ['allocated_value', 'used_value', 'unit', 'zone']
+        fields = ["allocated_value", "used_value", "unit", "zone"]
 
     def save(self, *args, **kwargs):
         instance = super(UserQuotaForm, self).save(commit=False)
-        instance.user = self.cleaned_data['user']
+        instance.user = self.cleaned_data["user"]
         return instance
 
 
 class QuotaAdmin(admin.ModelAdmin):
     model = UserQuota
 
-    list_display = ('user', 'allocated_value', 'used_value', 'unit', 'zone')
-    list_filter = ('zone', 'user__username', )
+    list_display = ("user", "allocated_value", "used_value", "unit", "zone")
+    list_filter = (
+        "zone",
+        "user__username",
+    )
 
-    readonly_fields = ('user',)
+    readonly_fields = ("user",)
 
     def get_form(self, request, obj=None, **kwargs):
         # use a customized form class when adding a UserQuota object so that

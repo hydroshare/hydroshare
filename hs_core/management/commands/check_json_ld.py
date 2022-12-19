@@ -18,19 +18,19 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's: none does nothing.
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
         # Named (optional) arguments
         parser.add_argument(
-            '--log',
-            action='store_true',  # True for presence, False for absence
-            dest='log',           # value is options['log']
-            help='log errors to system log',
+            "--log",
+            action="store_true",  # True for presence, False for absence
+            dest="log",  # value is options['log']
+            help="log errors to system log",
         )
 
     def handle(self, *args, **options):
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        if len(options["resource_ids"]) > 0:  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 CheckJSONLD(rid).test()
         else:
             for r in BaseResource.objects.all():

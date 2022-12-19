@@ -6,7 +6,8 @@ class ForgivingManifestStaticFilesStorage(ManifestStaticFilesStorage):
     """
     Allow collectstatic to continue even if files are missing
     """
-    logger = logging.getLogger('django.contrib.staticfiles')
+
+    logger = logging.getLogger("django.contrib.staticfiles")
 
     # Ideally, just setting manifest_strict would solve this issue but there is a known issue:
     # https://code.djangoproject.com/ticket/31520

@@ -11,41 +11,44 @@ from hs_core.models import ResourceFile
 
 
 class TestFolderDownloadZip(TestCase):
-
     def setUp(self):
         super(TestFolderDownloadZip, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.user = create_account(
-            'shauntheta@gmail.com',
-            username='shaun',
-            first_name='Shaun',
-            last_name='Livingston',
+            "shauntheta@gmail.com",
+            username="shaun",
+            first_name="Shaun",
+            last_name="Livingston",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
-        self.res = create_resource(resource_type='CompositeResource',
-                                   owner=self.user,
-                                   title='Test Resource',
-                                   metadata=[])
+        self.res = create_resource(
+            resource_type="CompositeResource",
+            owner=self.user,
+            title="Test Resource",
+            metadata=[],
+        )
 
-        ResourceFile.create_folder(self.res, 'foo')
+        ResourceFile.create_folder(self.res, "foo")
 
         # create files
         self.n1 = "test1.txt"
-        test_file = open(self.n1, 'w')
+        test_file = open(self.n1, "w")
         test_file.write("Test text file in test1.txt")
         test_file.close()
 
         self.test_file = open(self.n1, "rb")
-        add_resource_files(self.res.short_id, self.test_file, folder='foo')
+        add_resource_files(self.res.short_id, self.test_file, folder="foo")
 
         # copy refts file into new file to be added to the resource as an aggregation
-        reft_data_file = open('hs_core/tests/data/multi_sites_formatted_version1.0.refts.json', 'rb')
-        refts_file = open('multi_sites_formatted_version1.0.refts.json', 'wb')
+        reft_data_file = open(
+            "hs_core/tests/data/multi_sites_formatted_version1.0.refts.json", "rb"
+        )
+        refts_file = open("multi_sites_formatted_version1.0.refts.json", "wb")
         refts_file.writelines(reft_data_file.readlines())
         refts_file.close()
-        self.refts_file = open('multi_sites_formatted_version1.0.refts.json', 'rb')
+        self.refts_file = open("multi_sites_formatted_version1.0.refts.json", "rb")
 
         add_resource_files(self.res.short_id, self.refts_file)
         self.res.create_aggregation_meta_files()
@@ -69,26 +72,49 @@ class TestFolderDownloadZip(TestCase):
         input_path = "{}/data/contents/foo".format(self.res.short_id)
         output_path = "zips/rand/foo.zip"
 
-        self.assertEqual(create_temp_zip(self.res.short_id, input_path, output_path,
-                                         download_path=input_path), input_path)
+        self.assertEqual(
+            create_temp_zip(
+                self.res.short_id, input_path, output_path, download_path=input_path
+            ),
+            input_path,
+        )
         self.assertTrue(self.istorage.exists(output_path))
 
         # test aggregation
-        input_path = "{}/data/contents/multi_sites_formatted_version1.0.refts.json"\
-                     .format(self.res.short_id)
+        input_path = (
+            "{}/data/contents/multi_sites_formatted_version1.0.refts.json".format(
+                self.res.short_id
+            )
+        )
         output_path = "zips/rand/multi_sites_formatted_version1.0.refts.json.zip"
 
-        self.assertEqual(create_temp_zip(self.res.short_id, input_path, output_path, sf_zip=True,
-                                         download_path=input_path), input_path)
+        self.assertEqual(
+            create_temp_zip(
+                self.res.short_id,
+                input_path,
+                output_path,
+                sf_zip=True,
+                download_path=input_path,
+            ),
+            input_path,
+        )
         self.assertTrue(self.istorage.exists(output_path))
 
     def test_create_temp_zip_aggregation(self):
-        input_path = "{}/data/contents/" \
-                     "multi_sites_formatted_version1.0.refts.json".format(self.res.short_id)
+        input_path = (
+            "{}/data/contents/"
+            "multi_sites_formatted_version1.0.refts.json".format(self.res.short_id)
+        )
         output_path = "zips/rand/aggregation.zip"
 
-        self.assertEqual(create_temp_zip(self.res.short_id, input_path,
-                                         output_path,
-                                         aggregation_name="multi_sites_formatted_version1.0.refts.json",
-                                         download_path=input_path), input_path)
+        self.assertEqual(
+            create_temp_zip(
+                self.res.short_id,
+                input_path,
+                output_path,
+                aggregation_name="multi_sites_formatted_version1.0.refts.json",
+                download_path=input_path,
+            ),
+            input_path,
+        )
         self.assertTrue(self.istorage.exists(output_path))

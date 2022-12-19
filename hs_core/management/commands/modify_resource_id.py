@@ -21,34 +21,48 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's, or none to check all resources
-        parser.add_argument('resource_id', type=str, help=('Required. The existing id (short_id) of'
-                                                           ' the resource'))
-        parser.add_argument('new_resource_id', type=str,
-                            help=('Optional. The new id (short_id) for the resource. A random one '
-                                  'is generated if none is provided. Must be a valid string '
-                                  'representation of a uuid hex'))
+        parser.add_argument(
+            "resource_id",
+            type=str,
+            help=("Required. The existing id (short_id) of" " the resource"),
+        )
+        parser.add_argument(
+            "new_resource_id",
+            type=str,
+            help=(
+                "Optional. The new id (short_id) for the resource. A random one "
+                "is generated if none is provided. Must be a valid string "
+                "representation of a uuid hex"
+            ),
+        )
 
     def handle(self, *args, **options):
 
-        if not options['resource_id']:
-            raise CommandError('resource_id argument is required')
-        res_id = options['resource_id']
+        if not options["resource_id"]:
+            raise CommandError("resource_id argument is required")
+        res_id = options["resource_id"]
         try:
             res = get_resource_by_shortkey(res_id, or_404=False)
         except ObjectDoesNotExist:
             raise CommandError("No Resource found for id {}".format(res_id))
 
-        if options['new_resource_id']:
+        if options["new_resource_id"]:
             try:
-                UUID(options['new_resource_id'])
-                new_res_id = options['new_resource_id']
+                UUID(options["new_resource_id"])
+                new_res_id = options["new_resource_id"]
             except Exception as e:
-                raise CommandError('new_resource_id {} must be a valid uuid hex string'
-                                   .format(options['new_resource_id']), e)
+                raise CommandError(
+                    "new_resource_id {} must be a valid uuid hex string".format(
+                        options["new_resource_id"]
+                    ),
+                    e,
+                )
 
             try:
                 if BaseResource.objects.get(short_id=new_res_id):
-                    raise CommandError('resource with id {} already exists'.format(new_res_id))
+                    raise CommandError(
+                        "resource with id {} already exists".format(new_res_id)
+                    )
             except ObjectDoesNotExist:
                 pass
         else:
@@ -68,18 +82,22 @@ class Command(BaseCommand):
             with transaction.atomic():
                 print("Deleting existing bag")
                 res.setAVU("bag_modified", True)
-                res.setAVU('metadata_dirty', 'true')
+                res.setAVU("metadata_dirty", "true")
 
-                print("Updating BaseResource short_id from {} to {}".format(res_id, new_res_id))
+                print(
+                    "Updating BaseResource short_id from {} to {}".format(
+                        res_id, new_res_id
+                    )
+                )
                 res.short_id = new_res_id
                 res.save()
 
                 print("Updating resource slug")
-                res.set_slug('resource/{}'.format(new_res_id))
+                res.set_slug("resource/{}".format(new_res_id))
 
                 print("Updating Resource files short_path")
                 for file in res.files.all():
-                    file_name = file.short_path.split('data/contents/')[1]
+                    file_name = file.short_path.split("data/contents/")[1]
                     file.set_short_path(file_name)
 
                 print("Updating metadata identifiers")
@@ -100,4 +118,6 @@ class Command(BaseCommand):
         print("Creating Bag")
         create_bag(res)
 
-        print(("Resource id successfully update from {} to {}".format(res_id, new_res_id)))
+        print(
+            ("Resource id successfully update from {} to {}".format(res_id, new_res_id))
+        )

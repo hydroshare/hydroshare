@@ -32,7 +32,7 @@ from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 # system projection coverage, see issue #210 on github for details
 @rdf_terms(HSTERMS.spatialReference)
 class OriginalCoverageRaster(AbstractMetaDataElement):
-    term = 'OriginalCoverage'
+    term = "OriginalCoverage"
 
     """
     _value field stores a json string as shown below for box coverage type
@@ -68,29 +68,50 @@ class OriginalCoverageRaster(AbstractMetaDataElement):
         """
 
         value_arg_dict = None
-        if 'value' in kwargs:
-            value_arg_dict = kwargs['value']
-        elif '_value' in kwargs:
-            value_arg_dict = json.loads(kwargs['_value'])
+        if "value" in kwargs:
+            value_arg_dict = kwargs["value"]
+        elif "_value" in kwargs:
+            value_arg_dict = json.loads(kwargs["_value"])
 
         if value_arg_dict:
             # check that all the required sub-elements exist
-            for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+            for value_item in [
+                "units",
+                "northlimit",
+                "eastlimit",
+                "southlimit",
+                "westlimit",
+            ]:
                 if value_item not in value_arg_dict:
-                    raise ValidationError("For coverage of type 'box' values for {} is missing. {}"
-                                          .format(value_item, value_arg_dict))
+                    raise ValidationError(
+                        "For coverage of type 'box' values for {} is missing. {}".format(
+                            value_item, value_arg_dict
+                        )
+                    )
 
-            value_dict = {k: v for k, v in list(value_arg_dict.items())
-                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
-                                   'projection', 'projection_string', 'datum')}
+            value_dict = {
+                k: v
+                for k, v in list(value_arg_dict.items())
+                if k
+                in (
+                    "units",
+                    "northlimit",
+                    "eastlimit",
+                    "southlimit",
+                    "westlimit",
+                    "projection",
+                    "projection_string",
+                    "datum",
+                )
+            }
 
             value_json = json.dumps(value_dict)
-            if 'value' in kwargs:
-                del kwargs['value']
-            kwargs['_value'] = value_json
+            if "value" in kwargs:
+                del kwargs["value"]
+            kwargs["_value"] = value_json
             return super(OriginalCoverageRaster, cls).create(**kwargs)
         else:
-            raise ValidationError('Coverage value is missing.')
+            raise ValidationError("Coverage value is missing.")
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -104,31 +125,44 @@ class OriginalCoverageRaster(AbstractMetaDataElement):
 
         cov = OriginalCoverageRaster.objects.get(id=element_id)
 
-        if 'value' in kwargs:
+        if "value" in kwargs:
             value_dict = cov.value
 
-            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
-                              'projection', 'projection_string', 'datum'):
-                if item_name in kwargs['value']:
-                    value_dict[item_name] = kwargs['value'][item_name]
+            for item_name in (
+                "units",
+                "northlimit",
+                "eastlimit",
+                "southlimit",
+                "westlimit",
+                "projection",
+                "projection_string",
+                "datum",
+            ):
+                if item_name in kwargs["value"]:
+                    value_dict[item_name] = kwargs["value"][item_name]
 
             value_json = json.dumps(value_dict)
-            del kwargs['value']
-            kwargs['_value'] = value_json
+            del kwargs["value"]
+            kwargs["_value"] = value_json
             super(OriginalCoverageRaster, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("Coverage element can't be deleted.")
 
-    hsterms = ['spatialReference', 'box', ]
-    rdf = ['value']
+    hsterms = [
+        "spatialReference",
+        "box",
+    ]
+    rdf = ["value"]
 
     def rdf_triples(self, subject, graph):
         original_coverage = BNode()
         graph.add((subject, self.get_class_term(), original_coverage))
         graph.add((original_coverage, RDF.type, HSTERMS.box))
-        value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
+        value_string = "; ".join(
+            ["=".join([key, str(val)]) for key, val in self.value.items()]
+        )
         graph.add((original_coverage, RDF.value, Literal(value_string)))
 
     @classmethod
@@ -140,10 +174,12 @@ class OriginalCoverageRaster(AbstractMetaDataElement):
                 for key_value in value_str.split(";"):
                     key_value = key_value.strip()
                     k, v = key_value.split("=")
-                    if k in ['start', 'end']:
+                    if k in ["start", "end"]:
                         v = parser.parse(v).strftime("%Y/%m/%d")
                     value_dict[k] = v
-                OriginalCoverageRaster.create(value=value_dict, content_object=content_object)
+                OriginalCoverageRaster.create(
+                    value=value_dict, content_object=content_object
+                )
 
     @classmethod
     def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
@@ -154,20 +190,24 @@ class OriginalCoverageRaster(AbstractMetaDataElement):
 
         ori_coverage_data_dict = {}
         if element is not None:
-            ori_coverage_data_dict['projection'] = element.value.get('projection', None)
-            ori_coverage_data_dict['datum'] = element.value.get('datum', None)
-            ori_coverage_data_dict['projection_string'] = element.value.get('projection_string',
-                                                                            None)
-            ori_coverage_data_dict['units'] = element.value['units']
-            ori_coverage_data_dict['northlimit'] = element.value['northlimit']
-            ori_coverage_data_dict['eastlimit'] = element.value['eastlimit']
-            ori_coverage_data_dict['southlimit'] = element.value['southlimit']
-            ori_coverage_data_dict['westlimit'] = element.value['westlimit']
+            ori_coverage_data_dict["projection"] = element.value.get("projection", None)
+            ori_coverage_data_dict["datum"] = element.value.get("datum", None)
+            ori_coverage_data_dict["projection_string"] = element.value.get(
+                "projection_string", None
+            )
+            ori_coverage_data_dict["units"] = element.value["units"]
+            ori_coverage_data_dict["northlimit"] = element.value["northlimit"]
+            ori_coverage_data_dict["eastlimit"] = element.value["eastlimit"]
+            ori_coverage_data_dict["southlimit"] = element.value["southlimit"]
+            ori_coverage_data_dict["westlimit"] = element.value["westlimit"]
 
         originalcov_form = OriginalCoverageSpatialForm(
-            initial=ori_coverage_data_dict, allow_edit=allow_edit,
+            initial=ori_coverage_data_dict,
+            allow_edit=allow_edit,
             res_short_id=resource.short_id if resource else None,
-            element_id=element.id if element else None, file_type=file_type)
+            element_id=element.id if element else None,
+            file_type=file_type,
+        )
 
         return originalcov_form
 
@@ -180,36 +220,40 @@ class OriginalCoverageRaster(AbstractMetaDataElement):
             return html_tags.th(heading_name, cls="text-muted")
 
         with root_div:
-            html_tags.legend('Spatial Reference')
-            html_tags.div('Coordinate Reference System', cls='text-muted space-top')
-            html_tags.div(self.value.get('projection', ''))
-            html_tags.div('Coordinate Reference System Unit', cls='text-muted space-top')
-            html_tags.div(self.value['units'])
-            html_tags.div('Datum', cls='text-muted space-top')
-            html_tags.div(self.value.get('datum', ''))
-            html_tags.div('Coordinate String', cls='text-muted space-top')
-            html_tags.div(self.value.get('projection_string', ''), style="word-break: break-all;")
-            html_tags.h4('Extent', cls='space-top')
-            with html_tags.table(cls='custom-table'):
+            html_tags.legend("Spatial Reference")
+            html_tags.div("Coordinate Reference System", cls="text-muted space-top")
+            html_tags.div(self.value.get("projection", ""))
+            html_tags.div(
+                "Coordinate Reference System Unit", cls="text-muted space-top"
+            )
+            html_tags.div(self.value["units"])
+            html_tags.div("Datum", cls="text-muted space-top")
+            html_tags.div(self.value.get("datum", ""))
+            html_tags.div("Coordinate String", cls="text-muted space-top")
+            html_tags.div(
+                self.value.get("projection_string", ""), style="word-break: break-all;"
+            )
+            html_tags.h4("Extent", cls="space-top")
+            with html_tags.table(cls="custom-table"):
                 with html_tags.tbody():
                     with html_tags.tr():
-                        get_th('North')
-                        html_tags.td(self.value['northlimit'])
+                        get_th("North")
+                        html_tags.td(self.value["northlimit"])
                     with html_tags.tr():
-                        get_th('West')
-                        html_tags.td(self.value['westlimit'])
+                        get_th("West")
+                        html_tags.td(self.value["westlimit"])
                     with html_tags.tr():
-                        get_th('South')
-                        html_tags.td(self.value['southlimit'])
+                        get_th("South")
+                        html_tags.td(self.value["southlimit"])
                     with html_tags.tr():
-                        get_th('East')
-                        html_tags.td(self.value['eastlimit'])
+                        get_th("East")
+                        html_tags.td(self.value["eastlimit"])
 
         return root_div.render(pretty=pretty)
 
 
 class BandInformation(AbstractMetaDataElement):
-    term = 'BandInformation'
+    term = "BandInformation"
     # required fields
     # has to call the field name rather than bandName, which seems to be enforced by
     # the AbstractMetaDataElement;
@@ -230,7 +274,9 @@ class BandInformation(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("BandInformation element of the raster resource cannot be deleted.")
+        raise ValidationError(
+            "BandInformation element of the raster resource cannot be deleted."
+        )
 
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
@@ -243,40 +289,40 @@ class BandInformation(AbstractMetaDataElement):
         with root_div:
             with html_tags.div(cls="custom-well"):
                 html_tags.strong(self.name)
-                with html_tags.table(cls='custom-table'):
+                with html_tags.table(cls="custom-table"):
                     with html_tags.tbody():
                         with html_tags.tr():
-                            get_th('Variable Name')
+                            get_th("Variable Name")
                             html_tags.td(self.variableName)
                         with html_tags.tr():
-                            get_th('Variable Unit')
+                            get_th("Variable Unit")
                             html_tags.td(self.variableUnit)
                         if self.noDataValue:
                             with html_tags.tr():
-                                get_th('No Data Value')
+                                get_th("No Data Value")
                                 html_tags.td(self.noDataValue)
                         if self.maximumValue:
                             with html_tags.tr():
-                                get_th('Maximum Value')
+                                get_th("Maximum Value")
                                 html_tags.td(self.maximumValue)
                         if self.minimumValue:
                             with html_tags.tr():
-                                get_th('Minimum Value')
+                                get_th("Minimum Value")
                                 html_tags.td(self.minimumValue)
                         if self.method:
                             with html_tags.tr():
-                                get_th('Method')
+                                get_th("Method")
                                 html_tags.td(self.method)
                         if self.comment:
                             with html_tags.tr():
-                                get_th('Comment')
+                                get_th("Comment")
                                 html_tags.td(self.comment)
 
         return root_div.render(pretty=pretty)
 
 
 class CellInformation(AbstractMetaDataElement):
-    term = 'CellInformation'
+    term = "CellInformation"
     # required fields
     name = models.CharField(max_length=500, null=True)
     rows = models.IntegerField(null=True)
@@ -294,15 +340,20 @@ class CellInformation(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("CellInformation element of a raster resource cannot be removed")
+        raise ValidationError(
+            "CellInformation element of a raster resource cannot be removed"
+        )
 
     def get_html_form(self, resource):
         """Generates html form code for this metadata element so that this element can be edited"""
 
         from ..forms import CellInfoForm
-        cellinfo_form = CellInfoForm(instance=self,
-                                     res_short_id=resource.short_id if resource else None,
-                                     element_id=self.id if self else None)
+
+        cellinfo_form = CellInfoForm(
+            instance=self,
+            res_short_id=resource.short_id if resource else None,
+            element_id=self.id if self else None,
+        )
         return cellinfo_form
 
     def get_html(self, pretty=True):
@@ -314,23 +365,23 @@ class CellInformation(AbstractMetaDataElement):
             return html_tags.th(heading_name, cls="text-muted")
 
         with root_div:
-            html_tags.legend('Cell Information')
-            with html_tags.table(cls='custom-table'):
+            html_tags.legend("Cell Information")
+            with html_tags.table(cls="custom-table"):
                 with html_tags.tbody():
                     with html_tags.tr():
-                        get_th('Rows')
+                        get_th("Rows")
                         html_tags.td(self.rows)
                     with html_tags.tr():
-                        get_th('Columns')
+                        get_th("Columns")
                         html_tags.td(self.columns)
                     with html_tags.tr():
-                        get_th('Cell Size X Value')
+                        get_th("Cell Size X Value")
                         html_tags.td(self.cellSizeXValue)
                     with html_tags.tr():
-                        get_th('Cell Size Y Value')
+                        get_th("Cell Size Y Value")
                         html_tags.td(self.cellSizeYValue)
                     with html_tags.tr():
-                        get_th('Cell Data Type')
+                        get_th("Cell Data Type")
                         html_tags.td(self.cellDataType)
 
         return root_div.render(pretty=pretty)
@@ -366,19 +417,20 @@ class GeoRasterMetaDataMixin(models.Model):
             return False
         if self.bandInformations.count() == 0:
             return False
-        if not self.coverages.all().filter(type='box').first():
+        if not self.coverages.all().filter(type="box").first():
             return False
         return True
 
     def get_required_missing_elements(self):
-        missing_required_elements = super(GeoRasterMetaDataMixin,
-                                          self).get_required_missing_elements()
-        if not self.coverages.all().filter(type='box').first():
-            missing_required_elements.append('Spatial Coverage')
+        missing_required_elements = super(
+            GeoRasterMetaDataMixin, self
+        ).get_required_missing_elements()
+        if not self.coverages.all().filter(type="box").first():
+            missing_required_elements.append("Spatial Coverage")
         if not self.cellInformation:
-            missing_required_elements.append('Cell Information')
+            missing_required_elements.append("Cell Information")
         if not self.bandInformations:
-            missing_required_elements.append('Band Information')
+            missing_required_elements.append("Band Information")
 
         return missing_required_elements
 
@@ -395,9 +447,9 @@ class GeoRasterMetaDataMixin(models.Model):
         # get the names of all core metadata elements
         elements = super(GeoRasterMetaDataMixin, cls).get_supported_element_names()
         # add the name of any additional element to the list
-        elements.append('CellInformation')
-        elements.append('BandInformation')
-        elements.append('OriginalCoverageRaster')
+        elements.append("CellInformation")
+        elements.append("BandInformation")
+        elements.append("OriginalCoverageRaster")
         return elements
 
 
@@ -405,14 +457,16 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
     # the metadata element models used for this file type are from the raster resource type app
     # use the 'model_app_label' attribute with ContentType, do dynamically find the right element
     # model class from element name (string)
-    model_app_label = 'hs_file_types'
+    model_app_label = "hs_file_types"
 
     @classmethod
     def get_metadata_model_classes(cls):
-        metadata_model_classes = super(GeoRasterFileMetaData, cls).get_metadata_model_classes()
-        metadata_model_classes['originalcoverageraster'] = OriginalCoverageRaster
-        metadata_model_classes['bandinformation'] = BandInformation
-        metadata_model_classes['cellinformation'] = CellInformation
+        metadata_model_classes = super(
+            GeoRasterFileMetaData, cls
+        ).get_metadata_model_classes()
+        metadata_model_classes["originalcoverageraster"] = OriginalCoverageRaster
+        metadata_model_classes["bandinformation"] = BandInformation
+        metadata_model_classes["cellinformation"] = CellInformation
         return metadata_model_classes
 
     def get_metadata_elements(self):
@@ -422,8 +476,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return elements
 
     def _get_metadata_element_model_type(self, element_model_name):
-        if element_model_name.lower() == 'originalcoverage':
-            element_model_name = 'originalcoverageraster'
+        if element_model_name.lower() == "originalcoverage":
+            element_model_name = "originalcoverageraster"
         return super()._get_metadata_element_model_type(element_model_name)
 
     def get_html(self, **kwargs):
@@ -455,33 +509,51 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         with root_div:
             super(GeoRasterFileMetaData, self).get_html_forms()
             with html_tags.div(id="spatial-coverage-filetype"):
-                with html_tags.form(id="id-spatial-coverage-file-type",
-                                    cls='hs-coordinates-picker', data_coordinates_type="point",
-                                    action="{{ coverage_form.action }}",
-                                    method="post", enctype="multipart/form-data"):
+                with html_tags.form(
+                    id="id-spatial-coverage-file-type",
+                    cls="hs-coordinates-picker",
+                    data_coordinates_type="point",
+                    action="{{ coverage_form.action }}",
+                    method="post",
+                    enctype="multipart/form-data",
+                ):
                     html_tags.div("{% crispy coverage_form %}")
                     with html_tags.div(cls="row", style="margin-top:10px;"):
-                        with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
-                                               "col-md-2 col-xs-6"):
-                            html_tags.button("Save changes", type="button",
-                                             cls="btn btn-primary pull-right",
-                                             style="display: none;")
+                        with html_tags.div(
+                            cls="col-md-offset-10 col-xs-offset-6 " "col-md-2 col-xs-6"
+                        ):
+                            html_tags.button(
+                                "Save changes",
+                                type="button",
+                                cls="btn btn-primary pull-right",
+                                style="display: none;",
+                            )
 
                 html_tags.div("{% crispy orig_coverage_form %}", cls="content-block")
 
-                html_tags.div("{% crispy cellinfo_form %}", cls='content-block')
+                html_tags.div("{% crispy cellinfo_form %}", cls="content-block")
 
                 with html_tags.div(id="variables", cls="content-block"):
                     html_tags.div("{% for form in bandinfo_formset_forms %}")
-                    with html_tags.form(id="{{ form.form_id }}", action="{{ form.action }}",
-                                        method="post", enctype="multipart/form-data", cls='well'):
+                    with html_tags.form(
+                        id="{{ form.form_id }}",
+                        action="{{ form.action }}",
+                        method="post",
+                        enctype="multipart/form-data",
+                        cls="well",
+                    ):
                         html_tags.div("{% crispy form %}")
                         with html_tags.div(cls="row", style="margin-top:10px;"):
-                            with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
-                                                   "col-md-2 col-xs-6"):
-                                html_tags.button("Save changes", type="button",
-                                                 cls="btn btn-primary pull-right btn-form-submit",
-                                                 style="display: none;")
+                            with html_tags.div(
+                                cls="col-md-offset-10 col-xs-offset-6 "
+                                "col-md-2 col-xs-6"
+                            ):
+                                html_tags.button(
+                                    "Save changes",
+                                    type="button",
+                                    cls="btn btn-primary pull-right btn-form-submit",
+                                    style="display: none;",
+                                )
                     html_tags.div("{% endfor %}")
 
         template = Template(root_div.render())
@@ -491,20 +563,26 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         context_dict["cellinfo_form"] = self.get_cellinfo_form()
         temp_cov_form = self.get_temporal_coverage_form()
 
-        update_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/{2}/update-file-metadata/"
-        create_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/add-file-metadata/"
+        update_action = (
+            "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/{2}/update-file-metadata/"
+        )
+        create_action = (
+            "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/add-file-metadata/"
+        )
         spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
         if self.spatial_coverage:
-            form_action = update_action.format(self.logical_file.id, "coverage",
-                                               self.spatial_coverage.id)
+            form_action = update_action.format(
+                self.logical_file.id, "coverage", self.spatial_coverage.id
+            )
         else:
             form_action = create_action.format(self.logical_file.id, "coverage")
 
         spatial_cov_form.action = form_action
 
         if self.temporal_coverage:
-            form_action = update_action.format(self.logical_file.id, "coverage",
-                                               self.temporal_coverage.id)
+            form_action = update_action.format(
+                self.logical_file.id, "coverage", self.temporal_coverage.id
+            )
             temp_cov_form.action = form_action
         else:
             form_action = create_action.format(self.logical_file.id, "coverage")
@@ -521,23 +599,32 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return self.cellInformation.get_html_form(resource=None)
 
     def get_original_coverage_form(self):
-        return OriginalCoverageRaster.get_html_form(resource=None, element=self.originalCoverage,
-                                                    file_type=True, allow_edit=False)
+        return OriginalCoverageRaster.get_html_form(
+            resource=None,
+            element=self.originalCoverage,
+            file_type=True,
+            allow_edit=False,
+        )
 
     def get_bandinfo_formset(self):
         from ..forms import BandInfoForm, BaseBandInfoFormSet
 
         BandInfoFormSetEdit = formset_factory(
             wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=True)),
-            formset=BaseBandInfoFormSet, extra=0)
+            formset=BaseBandInfoFormSet,
+            extra=0,
+        )
         bandinfo_formset = BandInfoFormSetEdit(
-            initial=list(self.bandInformations.values()), prefix='BandInformation')
+            initial=list(self.bandInformations.values()), prefix="BandInformation"
+        )
 
         for frm in bandinfo_formset.forms:
             if len(frm.initial) > 0:
-                frm.action = "/hsapi/_internal/%s/%s/bandinformation/%s/update-file-metadata/" % (
-                    "GeoRasterLogicalFile", self.logical_file.id, frm.initial['id'])
-                frm.number = frm.initial['id']
+                frm.action = (
+                    "/hsapi/_internal/%s/%s/bandinformation/%s/update-file-metadata/"
+                    % ("GeoRasterLogicalFile", self.logical_file.id, frm.initial["id"])
+                )
+                frm.number = frm.initial["id"]
 
         return bandinfo_formset
 
@@ -547,19 +634,22 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
         from ..forms import BandInfoValidationForm
 
-        if element_name.lower() not in [el_name.lower() for el_name
-                                        in cls.get_supported_element_names()]:
+        if element_name.lower() not in [
+            el_name.lower() for el_name in cls.get_supported_element_names()
+        ]:
             err_msg = "{} is nor a supported metadata element for Geo Raster file type"
             err_msg = err_msg.format(element_name)
-            return {'is_valid': False, 'element_data_dict': None, "errors": err_msg}
+            return {"is_valid": False, "element_data_dict": None, "errors": err_msg}
         element_name = element_name.lower()
-        if element_name == 'bandinformation':
+        if element_name == "bandinformation":
             form_data = {}
             for field_name in BandInfoValidationForm().fields:
-                matching_key = [key for key in request.POST if '-' + field_name in key][0]
+                matching_key = [key for key in request.POST if "-" + field_name in key][
+                    0
+                ]
                 form_data[field_name] = request.POST[matching_key]
             element_form = BandInfoValidationForm(form_data)
-        elif element_name == 'coverage' and 'start' not in request.POST:
+        elif element_name == "coverage" and "start" not in request.POST:
             element_form = CoverageSpatialForm(data=request.POST)
         else:
             # element_name must be coverage
@@ -567,9 +657,13 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             element_form = CoverageTemporalForm(data=request.POST)
 
         if element_form.is_valid():
-            return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+            return {"is_valid": True, "element_data_dict": element_form.cleaned_data}
         else:
-            return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
+            return {
+                "is_valid": False,
+                "element_data_dict": None,
+                "errors": element_form.errors,
+            }
 
     def get_preview_data_url(self, resource, folder_path):
         """Get a GeoServer layer preview link."""
@@ -578,7 +672,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             preview_data_url = utils.build_preview_data_url(
                 resource=resource,
                 folder_path=folder_path,
-                spatial_coverage=self.spatial_coverage.value
+                spatial_coverage=self.spatial_coverage.value,
             )
         else:
             preview_data_url = None
@@ -587,7 +681,9 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
-    metadata = models.OneToOneField(GeoRasterFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
+    metadata = models.OneToOneField(
+        GeoRasterFileMetaData, on_delete=models.CASCADE, related_name="logical_file"
+    )
     data_type = "GeographicRaster"
 
     @classmethod
@@ -607,8 +703,10 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_aggregation_display_name():
-        return 'Geographic Raster Content: A geographic grid represented by a virtual raster ' \
-               'tile (.vrt) file and one or more geotiff (.tif) files'
+        return (
+            "Geographic Raster Content: A geographic grid represented by a virtual raster "
+            "tile (.vrt) file and one or more geotiff (.tif) files"
+        )
 
     @staticmethod
     def get_aggregation_term_label():
@@ -629,7 +727,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
-        raster_metadata = GeoRasterFileMetaData.objects.create(keywords=[], extra_metadata={})
+        raster_metadata = GeoRasterFileMetaData.objects.create(
+            keywords=[], extra_metadata={}
+        )
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=raster_metadata, resource=resource)
@@ -676,8 +776,11 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             return ""
 
         # check if there are multiple tif files, then there has to be one vrt file
-        tif_files = [f for f in files if f.extension.lower() == ".tif" or f.extension.lower() ==
-                     ".tiff"]
+        tif_files = [
+            f
+            for f in files
+            if f.extension.lower() == ".tif" or f.extension.lower() == ".tiff"
+        ]
         if len(tif_files) > 1:
             if len(vrt_files) != 1:
                 return ""
@@ -688,19 +791,24 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
-        """ Creates a GeoRasterLogicalFile (aggregation) from a tif or a zip resource file """
+    def set_file_type(cls, resource, user, file_id=None, folder_path=""):
+        """Creates a GeoRasterLogicalFile (aggregation) from a tif or a zip resource file"""
 
         log = logging.getLogger()
-        with FileTypeContext(aggr_cls=cls, user=user, resource=resource, file_id=file_id,
-                             folder_path=folder_path,
-                             post_aggr_signal=post_add_raster_aggregation,
-                             is_temp_file=True) as ft_ctx:
+        with FileTypeContext(
+            aggr_cls=cls,
+            user=user,
+            resource=resource,
+            file_id=file_id,
+            folder_path=folder_path,
+            post_aggr_signal=post_add_raster_aggregation,
+            is_temp_file=True,
+        ) as ft_ctx:
 
             res_file = ft_ctx.res_file
             file_name = res_file.file_name
             # get file name without the extension - needed for naming the aggregation folder
-            base_file_name = file_name[:-len(res_file.extension)]
+            base_file_name = file_name[: -len(res_file.extension)]
             file_folder = res_file.file_folder
             upload_folder = file_folder
             temp_file = ft_ctx.temp_file
@@ -708,33 +816,43 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
             raster_folder = folder_path if folder_path else file_folder
             # validate the file
-            validation_results = raster_file_validation(raster_file=temp_file, resource=resource,
-                                                        raster_folder=raster_folder)
+            validation_results = raster_file_validation(
+                raster_file=temp_file, resource=resource, raster_folder=raster_folder
+            )
 
-            if not validation_results['error_info']:
-                vrt_created = validation_results['vrt_created']
+            if not validation_results["error_info"]:
+                vrt_created = validation_results["vrt_created"]
                 msg = "Geographic raster aggregation. Error when creating aggregation. Error:{}"
                 log.info("Geographic raster aggregation validation successful.")
                 # extract metadata
-                temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
-                                      '.vrt' == os.path.splitext(f)[1]].pop()
+                temp_vrt_file_path = [
+                    os.path.join(temp_dir, f)
+                    for f in os.listdir(temp_dir)
+                    if ".vrt" == os.path.splitext(f)[1]
+                ].pop()
                 metadata = extract_metadata(temp_vrt_file_path)
                 log.info("Geographic raster metadata extraction was successful.")
 
                 with transaction.atomic():
                     try:
-                        res_files = validation_results['raster_resource_files']
-                        files_to_upload = validation_results['new_resource_files_to_add']
+                        res_files = validation_results["raster_resource_files"]
+                        files_to_upload = validation_results[
+                            "new_resource_files_to_add"
+                        ]
                         # create a raster aggregation
-                        logical_file = cls.create_aggregation(dataset_name=base_file_name,
-                                                              resource=resource,
-                                                              res_files=res_files,
-                                                              new_files_to_upload=files_to_upload,
-                                                              folder_path=upload_folder)
+                        logical_file = cls.create_aggregation(
+                            dataset_name=base_file_name,
+                            resource=resource,
+                            res_files=res_files,
+                            new_files_to_upload=files_to_upload,
+                            folder_path=upload_folder,
+                        )
 
-                        log.info("Geographic raster aggregation type - new files were added "
-                                 "to the resource.")
-                        logical_file.extra_data['vrt_created'] = vrt_created
+                        log.info(
+                            "Geographic raster aggregation type - new files were added "
+                            "to the resource."
+                        )
+                        logical_file.extra_data["vrt_created"] = vrt_created
                         logical_file.save()
                         # use the extracted metadata to populate file metadata
                         for element in metadata:
@@ -743,7 +861,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                             k, v = list(element.items())[0]
                             logical_file.metadata.create_element(k, **v)
 
-                        log.info("Geographic raster aggregation type - metadata was saved to DB")
+                        log.info(
+                            "Geographic raster aggregation type - metadata was saved to DB"
+                        )
                         ft_ctx.logical_file = logical_file
                     except Exception as ex:
                         logical_file.remove_aggregation()
@@ -753,8 +873,11 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
                 return logical_file
             else:
-                err_msg = "Geographic raster aggregation type validation failed. {}".format(
-                    ' '.join(validation_results['error_info']))
+                err_msg = (
+                    "Geographic raster aggregation type validation failed. {}".format(
+                        " ".join(validation_results["error_info"])
+                    )
+                )
                 log.error(err_msg)
                 raise ValidationError(err_msg)
 
@@ -764,7 +887,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         deleted."""
 
         # need to delete the system generated vrt file
-        vrt_created = self.extra_data.get('vrt_created', False)
+        vrt_created = self.extra_data.get("vrt_created", False)
         vrt_file = None
         if vrt_created:
             # the vrt file is a system generated file
@@ -779,22 +902,26 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     @classmethod
     def get_primary_resource_file(cls, resource_files):
         """Gets a resource file that has extension .vrt (if exists) otherwsie 'tif'
-        from the list of files *resource_files* """
+        from the list of files *resource_files*"""
 
-        res_files = [f for f in resource_files if f.extension.lower() == '.vrt']
+        res_files = [f for f in resource_files if f.extension.lower() == ".vrt"]
         if not res_files:
-            res_files = [f for f in resource_files if f.extension.lower() in ('.tif', 'tiff')]
+            res_files = [
+                f for f in resource_files if f.extension.lower() in (".tif", "tiff")
+            ]
 
         return res_files[0] if res_files else None
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
-        super(GeoRasterLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
+        super(GeoRasterLogicalFile, self).create_aggregation_xml_documents(
+            create_map_xml
+        )
         self.metadata.is_dirty = False
         self.metadata.save()
 
 
-def raster_file_validation(raster_file, resource, raster_folder=''):
-    """ Validates if the relevant files are valid for raster aggregation or raster resource type
+def raster_file_validation(raster_file, resource, raster_folder=""):
+    """Validates if the relevant files are valid for raster aggregation or raster resource type
 
     :param  raster_file: a temp file (extension tif or zip) retrieved from irods and stored on temp
     dir in django
@@ -807,48 +934,63 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
     new_resource_files_to_add = []
     raster_resource_files = []
     create_vrt = False
-    validation_results = {'error_info': error_info,
-                          'new_resource_files_to_add': new_resource_files_to_add,
-                          'raster_resource_files': raster_resource_files,
-                          'vrt_created': create_vrt}
+    validation_results = {
+        "error_info": error_info,
+        "new_resource_files_to_add": new_resource_files_to_add,
+        "raster_resource_files": raster_resource_files,
+        "vrt_created": create_vrt,
+    }
     file_name_part, ext = os.path.splitext(os.path.basename(raster_file))
     ext = ext.lower()
-    if ext == '.tif' or ext == '.tiff':
-        res_files = ResourceFile.list_folder(resource=resource, folder=raster_folder,
-                                             sub_folders=False)
+    if ext == ".tif" or ext == ".tiff":
+        res_files = ResourceFile.list_folder(
+            resource=resource, folder=raster_folder, sub_folders=False
+        )
 
         uploaded_vrt = None
         vrt_files_for_raster = get_vrt_files(raster_file, res_files)
         if len(vrt_files_for_raster) > 1:
-            error_info.append("The raster {} is listed by more than one vrt file {}".format(raster_file,
-                                                                                            vrt_files_for_raster))
+            error_info.append(
+                "The raster {} is listed by more than one vrt file {}".format(
+                    raster_file, vrt_files_for_raster
+                )
+            )
             return validation_results
 
         if uploaded_vrt is not None and not vrt_files_for_raster:
-            error_info.append("The raster {} is not listed in vrt file {}".format(raster_file, uploaded_vrt))
+            error_info.append(
+                "The raster {} is not listed in vrt file {}".format(
+                    raster_file, uploaded_vrt
+                )
+            )
             return validation_results
 
         if len(vrt_files_for_raster) == 1:
             vrt_file = vrt_files_for_raster[0]
             raster_resource_files.extend([vrt_file])
             temp_dir = os.path.dirname(raster_file)
-            temp_vrt_file = utils.get_file_from_irods(resource=resource, file_path=vrt_file.storage_path,
-                                                      temp_dir=temp_dir)
+            temp_vrt_file = utils.get_file_from_irods(
+                resource=resource, file_path=vrt_file.storage_path, temp_dir=temp_dir
+            )
             listed_tif_files = list_tif_files(vrt_file)
             tif_files = [f for f in res_files if f.file_name in listed_tif_files]
             if len(tif_files) != len(listed_tif_files):
-                error_info.append("The vrt file {} lists {} files, only found {}".format(vrt_file,
-                                                                                         len(listed_tif_files),
-                                                                                         len(tif_files)))
+                error_info.append(
+                    "The vrt file {} lists {} files, only found {}".format(
+                        vrt_file, len(listed_tif_files), len(tif_files)
+                    )
+                )
                 return validation_results
         else:
             # create the .vrt file
-            tif_files = [f for f in res_files if f.file_name == os.path.basename(raster_file)]
+            tif_files = [
+                f for f in res_files if f.file_name == os.path.basename(raster_file)
+            ]
             try:
                 vrt_file = create_vrt_file(raster_file)
                 temp_vrt_file = vrt_file
                 create_vrt = True
-                validation_results['vrt_created'] = create_vrt
+                validation_results["vrt_created"] = create_vrt
             except Exception as ex:
                 error_info.append(str(ex))
             else:
@@ -857,7 +999,7 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
 
         raster_resource_files.extend(tif_files)
 
-    elif ext == '.zip':
+    elif ext == ".zip":
         try:
             extract_file_paths = _explode_raster_zip_file(raster_file)
         except Exception as ex:
@@ -872,35 +1014,44 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
         if ext == ".zip":
             # in case of zip, there needs to be more than one file extracted out of the zip file
             if len(new_resource_files_to_add) < 2:
-                error_info.append("Invalid zip file. Seems to contain only one file. "
-                                  "Multiple tif files are expected.")
+                error_info.append(
+                    "Invalid zip file. Seems to contain only one file. "
+                    "Multiple tif files are expected."
+                )
                 return validation_results
 
-            files_ext = [os.path.splitext(path)[1].lower() for path in new_resource_files_to_add]
-            if files_ext.count('.vrt') > 1:
-                error_info.append("Invalid zip file. Seems to contain multiple vrt files.")
+            files_ext = [
+                os.path.splitext(path)[1].lower() for path in new_resource_files_to_add
+            ]
+            if files_ext.count(".vrt") > 1:
+                error_info.append(
+                    "Invalid zip file. Seems to contain multiple vrt files."
+                )
                 return validation_results
-            elif files_ext.count('.vrt') == 0:
+            elif files_ext.count(".vrt") == 0:
                 error_info.append("Invalid zip file. No vrt file was found.")
                 return validation_results
-            elif files_ext.count('.tif') + files_ext.count('.tiff') < 1:
+            elif files_ext.count(".tif") + files_ext.count(".tiff") < 1:
                 error_info.append("Invalid zip file. No tif/tiff file was found.")
                 return validation_results
 
             # check if there are files that are not raster related
-            non_raster_files = [f_ext for f_ext in files_ext if f_ext
-                                not in ('.tif', '.tiff', '.vrt')]
+            non_raster_files = [
+                f_ext for f_ext in files_ext if f_ext not in (".tif", ".tiff", ".vrt")
+            ]
             if non_raster_files:
-                error_info.append("Invalid zip file. Contains files that are not raster related.")
+                error_info.append(
+                    "Invalid zip file. Contains files that are not raster related."
+                )
                 return validation_results
 
-            temp_vrt_file = new_resource_files_to_add[files_ext.index('.vrt')]
+            temp_vrt_file = new_resource_files_to_add[files_ext.index(".vrt")]
 
         # validate vrt file if we didn't create it
-        if ext == '.zip' or not create_vrt:
+        if ext == ".zip" or not create_vrt:
             raster_dataset = gdal.Open(temp_vrt_file, GA_ReadOnly)
             if raster_dataset is None:
-                error_info.append('Failed to open the vrt file.')
+                error_info.append("Failed to open the vrt file.")
                 return validation_results
 
             # check if the vrt file is valid
@@ -909,31 +1060,40 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
                 raster_dataset.RasterYSize
                 raster_dataset.RasterCount
             except AttributeError:
-                error_info.append('Raster size and band information are missing.')
+                error_info.append("Raster size and band information are missing.")
                 return validation_results
 
             # check if the raster file numbers and names are valid in vrt file
-            with open(temp_vrt_file, 'r') as vrt_file:
+            with open(temp_vrt_file, "r") as vrt_file:
                 vrt_string = vrt_file.read()
                 root = ET.fromstring(vrt_string)
-                file_names_in_vrt = [file_name.text for file_name in root.iter('SourceFilename')]
+                file_names_in_vrt = [
+                    file_name.text for file_name in root.iter("SourceFilename")
+                ]
 
-            if ext == '.zip':
-                file_names = [os.path.basename(path) for path in new_resource_files_to_add]
+            if ext == ".zip":
+                file_names = [
+                    os.path.basename(path) for path in new_resource_files_to_add
+                ]
             else:
                 file_names = [f.file_name for f in raster_resource_files]
 
-            file_names = [f_name for f_name in file_names if not f_name.endswith('.vrt')]
+            file_names = [
+                f_name for f_name in file_names if not f_name.endswith(".vrt")
+            ]
 
             for vrt_ref_raster_name in file_names_in_vrt:
-                if vrt_ref_raster_name in file_names \
-                        or (os.path.split(vrt_ref_raster_name)[0] == '.' and
-                            os.path.split(vrt_ref_raster_name)[1] in file_names):
+                if vrt_ref_raster_name in file_names or (
+                    os.path.split(vrt_ref_raster_name)[0] == "."
+                    and os.path.split(vrt_ref_raster_name)[1] in file_names
+                ):
                     continue
                 else:
                     msg = "The file {tif} which is listed in the {vrt} file is missing."
-                    msg = msg.format(tif=os.path.basename(vrt_ref_raster_name),
-                                     vrt=os.path.basename(temp_vrt_file))
+                    msg = msg.format(
+                        tif=os.path.basename(vrt_ref_raster_name),
+                        vrt=os.path.basename(temp_vrt_file),
+                    )
                     error_info.append(msg)
                     break
 
@@ -947,11 +1107,15 @@ def list_tif_files(vrt_file):
     :return: List of string filenames read from vrt_file
     """
     resource = vrt_file.resource
-    temp_vrt_file = utils.get_file_from_irods(resource=resource, file_path=vrt_file.storage_path)
-    with open(temp_vrt_file, 'r') as opened_vrt_file:
+    temp_vrt_file = utils.get_file_from_irods(
+        resource=resource, file_path=vrt_file.storage_path
+    )
+    with open(temp_vrt_file, "r") as opened_vrt_file:
         vrt_string = opened_vrt_file.read()
         root = ET.fromstring(vrt_string)
-        file_names_in_vrt = [file_name.text for file_name in root.iter('SourceFilename')]
+        file_names_in_vrt = [
+            file_name.text for file_name in root.iter("SourceFilename")
+        ]
         return file_names_in_vrt
 
 
@@ -976,53 +1140,55 @@ def get_vrt_files(raster_file, res_files):
 def extract_metadata(temp_vrt_file_path):
     metadata = []
     res_md_dict = raster_meta_extract.get_raster_meta_dict(temp_vrt_file_path)
-    wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
+    wgs_cov_info = res_md_dict["spatial_coverage_info"]["wgs84_coverage_info"]
     # add core metadata coverage - box
     if wgs_cov_info:
-        box = {'coverage': {'type': 'box', 'value': wgs_cov_info}}
+        box = {"coverage": {"type": "box", "value": wgs_cov_info}}
         metadata.append(box)
 
     # Save extended meta spatial reference
-    orig_cov_info = res_md_dict['spatial_coverage_info']['original_coverage_info']
+    orig_cov_info = res_md_dict["spatial_coverage_info"]["original_coverage_info"]
 
     # Here the assumption is that if there is no value for the 'northlimit' then there is no value
     # for the bounding box
-    if orig_cov_info['northlimit'] is not None:
-        ori_cov = {'OriginalCoverageRaster': {'value': orig_cov_info}}
+    if orig_cov_info["northlimit"] is not None:
+        ori_cov = {"OriginalCoverageRaster": {"value": orig_cov_info}}
         metadata.append(ori_cov)
 
     # Save extended meta cell info
-    res_md_dict['cell_info']['name'] = os.path.basename(temp_vrt_file_path)
-    metadata.append({'CellInformation': res_md_dict['cell_info']})
+    res_md_dict["cell_info"]["name"] = os.path.basename(temp_vrt_file_path)
+    metadata.append({"CellInformation": res_md_dict["cell_info"]})
 
     # Save extended meta band info
-    for band_info in list(res_md_dict['band_info'].values()):
-        metadata.append({'BandInformation': band_info})
+    for band_info in list(res_md_dict["band_info"].values()):
+        metadata.append({"BandInformation": band_info})
     return metadata
 
 
 def create_vrt_file(tif_file):
-    """ tif_file exists in temp directory - retrieved from irods """
+    """tif_file exists in temp directory - retrieved from irods"""
 
     log = logging.getLogger()
 
     # create vrt file
     temp_dir = os.path.dirname(tif_file)
     tif_file_name = os.path.basename(tif_file)
-    vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_file_name)[0] + '.vrt')
+    vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_file_name)[0] + ".vrt")
 
-    with open(os.devnull, 'w') as fp:
-        subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file, vrt_file_path],
-                         stdout=fp,
-                         stderr=fp).wait()  # need to wait
+    with open(os.devnull, "w") as fp:
+        subprocess.Popen(
+            ["gdal_translate", "-of", "VRT", tif_file, vrt_file_path],
+            stdout=fp,
+            stderr=fp,
+        ).wait()  # need to wait
 
     # edit VRT contents
     try:
         tree = ET.parse(vrt_file_path)
         root = tree.getroot()
-        for element in root.iter('SourceFilename'):
+        for element in root.iter("SourceFilename"):
             element.text = tif_file_name
-            element.attrib['relativeToVRT'] = '1'
+            element.attrib["relativeToVRT"] = "1"
 
         tree.write(vrt_file_path)
 
@@ -1034,12 +1200,12 @@ def create_vrt_file(tif_file):
 
 
 def _explode_raster_zip_file(zip_file):
-    """ zip_file exists in temp directory - retrieved from irods """
+    """zip_file exists in temp directory - retrieved from irods"""
 
     log = logging.getLogger()
     temp_dir = os.path.dirname(zip_file)
     try:
-        zf = zipfile.ZipFile(zip_file, 'r')
+        zf = zipfile.ZipFile(zip_file, "r")
         zf.extractall(temp_dir)
         zf.close()
 
@@ -1052,7 +1218,9 @@ def _explode_raster_zip_file(zip_file):
                 file_ext = file_ext.lower()
                 if file_ext in GeoRasterLogicalFile.get_allowed_storage_file_types():
                     shutil.move(file_path, os.path.join(temp_dir, name))
-                    extract_file_paths.append(os.path.join(temp_dir, os.path.basename(file_path)))
+                    extract_file_paths.append(
+                        os.path.join(temp_dir, os.path.basename(file_path))
+                    )
 
     except Exception as ex:
         log.exception("Failed to unzip. Error:{}".format(str(ex)))

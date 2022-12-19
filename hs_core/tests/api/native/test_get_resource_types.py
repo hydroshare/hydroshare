@@ -11,4 +11,3 @@ class TestGetResourceTypesAPI(TestCase):
         # test that each resource type is a subclass of BaseResource type
         for res_type in res_types:
             self.assertEqual(issubclass(res_type, BaseResource), True)
-

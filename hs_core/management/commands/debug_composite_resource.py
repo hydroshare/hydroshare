@@ -10,7 +10,7 @@ from pprint import pprint
 
 
 def debug_resource(short_id):
-    """ Debug view for resource depicts output of various integrity checking scripts """
+    """Debug view for resource depicts output of various integrity checking scripts"""
 
     try:
         res = BaseResource.objects.get(short_id=short_id)
@@ -20,7 +20,7 @@ def debug_resource(short_id):
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
 
-    if resource.resource_type == 'CompositeResource':
+    if resource.resource_type == "CompositeResource":
         # first dump the data from each logical file
         for f in resource.files.all():
             if f.has_logical_file:
@@ -30,7 +30,7 @@ def debug_resource(short_id):
 
         resource.create_aggregation_meta_files()
         print("resource {}".format(resource.short_id))
-        '''
+        """
         storage = resource.get_irods_storage()
         single_file_aggregation has been removed
         for f in ResourceFile.objects.filter(object_id=resource.id):
@@ -44,7 +44,7 @@ def debug_resource(short_id):
                     print("    {} does not exist".format(f.storage_path + "_resmap.xml"))
                 if not storage.exists(f.storage_path + "_meta.xml"):
                     print("    {} does not exist".format(f.storage_path + "_meta.xml"))
-         '''
+         """
 
 
 class Command(BaseCommand):
@@ -53,19 +53,19 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's: none does nothing.
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
         # Named (optional) arguments
         parser.add_argument(
-            '--log',
-            action='store_true',  # True for presence, False for absence
-            dest='log',           # value is options['log']
-            help='log errors to system log',
+            "--log",
+            action="store_true",  # True for presence, False for absence
+            dest="log",  # value is options['log']
+            help="log errors to system log",
         )
 
     def handle(self, *args, **options):
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        if len(options["resource_ids"]) > 0:  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 debug_resource(rid)
         else:
             for r in BaseResource.objects.filter(resource_type="CompositeResource"):

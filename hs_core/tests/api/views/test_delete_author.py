@@ -15,22 +15,20 @@ from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 class TestDeleteAuthor(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestDeleteAuthor, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        self.username = 'john'
-        self.password = 'jhmypassword'
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
+        self.username = "john"
+        self.password = "jhmypassword"
         self.user = hydroshare.create_account(
-            'john@gmail.com',
+            "john@gmail.com",
             username=self.username,
-            first_name='John',
-            last_name='Clarson',
+            first_name="John",
+            last_name="Clarson",
             superuser=False,
             password=self.password,
-            groups=[]
+            groups=[],
         )
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
-            owner=self.user,
-            title='My Test Resource'
+            resource_type="GenericResource", owner=self.user, title="My Test Resource"
         )
 
     def tearDown(self):
@@ -44,36 +42,39 @@ class TestDeleteAuthor(MockIRODSTestCaseMixin, ViewTestCase):
 
         # the resource should have only the original author now
         self.assertEqual(self.gen_res.metadata.creators.count(), 1)
-        url_params = {'shortkey': self.gen_res.short_id, 'element_name': 'creator'}
-        post_data = {'name': 'Smith, John', 'email': 'jm@gmail.com'}
-        url = reverse('add_metadata_element', kwargs=url_params)
+        url_params = {"shortkey": self.gen_res.short_id, "element_name": "creator"}
+        post_data = {"name": "Smith, John", "email": "jm@gmail.com"}
+        url = reverse("add_metadata_element", kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
         # make it an ajax request
-        request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
+        request.META["HTTP_X_REQUESTED_WITH"] = "XMLHttpRequest"
         self.set_request_message_attributes(request)
-        response = add_metadata_element(request, shortkey=self.gen_res.short_id,
-                                        element_name='creator')
+        response = add_metadata_element(
+            request, shortkey=self.gen_res.short_id, element_name="creator"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_dict = json.loads(response.content.decode())
-        self.assertEqual(response_dict['status'], 'success')
-        self.assertEqual(response_dict['element_name'], 'creator')
+        self.assertEqual(response_dict["status"], "success")
+        self.assertEqual(response_dict["element_name"], "creator")
         self.gen_res.refresh_from_db()
         # there should be two authors now
         self.assertEqual(self.gen_res.metadata.creators.count(), 2)
 
         # delete the author we added above
         author = self.gen_res.metadata.creators.all()[1]
-        url_params = {'shortkey': self.gen_res.short_id, 'element_id': author.id}
+        url_params = {"shortkey": self.gen_res.short_id, "element_id": author.id}
 
-        url = reverse('delete_author', kwargs=url_params)
+        url = reverse("delete_author", kwargs=url_params)
         request = self.factory.post(url, data={})
         request.user = self.user
 
-        request.META['HTTP_REFERER'] = 'some-url'
+        request.META["HTTP_REFERER"] = "some-url"
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
-        response = delete_author(request, shortkey=self.gen_res.short_id, element_id=author.id)
+        response = delete_author(
+            request, shortkey=self.gen_res.short_id, element_id=author.id
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.gen_res.refresh_from_db()
         # there should be only the original author now

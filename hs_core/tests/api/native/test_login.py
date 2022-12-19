@@ -9,19 +9,24 @@ from django.contrib.auth import (
 
 class CreateAccountTest(TestCase):
     def setUp(self):
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
 
     def test_login_case_insensitive_username(self):
-        username, first_name, last_name, password = 'Shaunjl', 'shaun', 'joseph', 'mypass'
+        username, first_name, last_name, password = (
+            "Shaunjl",
+            "shaun",
+            "joseph",
+            "mypass",
+        )
         hydroshare.create_account(
-            'sHaun@gmail.com',
+            "sHaun@gmail.com",
             username=username,
             first_name=first_name,
             last_name=last_name,
             superuser=False,
             password=password,
-            active=True
-            )
+            active=True,
+        )
 
         user = authenticate(username="SHaUn@gmail.com", password="mypass")
         self.assertNotEqual(None, user)
@@ -29,16 +34,21 @@ class CreateAccountTest(TestCase):
         self.assertEqual(user.username, "Shaunjl")
 
     def test_login_case_insensitive_email(self):
-        username, first_name, last_name, password = 'Shaunjl', 'shaun', 'joseph', 'mypass'
+        username, first_name, last_name, password = (
+            "Shaunjl",
+            "shaun",
+            "joseph",
+            "mypass",
+        )
         hydroshare.create_account(
-            'shaun@gmail.com',
+            "shaun@gmail.com",
             username=username,
             first_name=first_name,
             last_name=last_name,
             superuser=False,
             password=password,
-            active=True
-            )
+            active=True,
+        )
 
         user = authenticate(username="ShAuNjl", password="mypass")
         self.assertNotEqual(None, user)

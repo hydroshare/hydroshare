@@ -8,88 +8,114 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0028_auto_20210528_1427'),
+        ("hs_access_control", "0028_auto_20210528_1427"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='communityresourceprivilege',
-            name='exhibit',
-            field=models.BooleanField(default=False, editable=False, help_text='exhibit resource as product'),
+            model_name="communityresourceprivilege",
+            name="exhibit",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="exhibit resource as product"
+            ),
         ),
         migrations.AddField(
-            model_name='communityresourceprovenance',
-            name='exhibit',
-            field=models.BooleanField(default=False, editable=False, help_text='exhibit resource as product'),
+            model_name="communityresourceprovenance",
+            name="exhibit",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="exhibit resource as product"
+            ),
         ),
         migrations.AddField(
-            model_name='groupcommunityprivilege',
-            name='exhibit',
-            field=models.BooleanField(default=False, editable=False, help_text='exhibit resource as product'),
+            model_name="groupcommunityprivilege",
+            name="exhibit",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="exhibit resource as product"
+            ),
         ),
         migrations.AddField(
-            model_name='groupcommunityprovenance',
-            name='exhibit',
+            model_name="groupcommunityprovenance",
+            name="exhibit",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='groupresourceprivilege',
-            name='exhibit',
-            field=models.BooleanField(default=False, editable=False, help_text='exhibit resource as product'),
+            model_name="groupresourceprivilege",
+            name="exhibit",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="exhibit resource as product"
+            ),
         ),
         migrations.AddField(
-            model_name='groupresourceprovenance',
-            name='exhibit',
-            field=models.BooleanField(default=False, editable=False, help_text='exhibit resource as product'),
+            model_name="groupresourceprovenance",
+            name="exhibit",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="exhibit resource as product"
+            ),
         ),
         migrations.AddField(
-            model_name='usercommunityprovenance',
-            name='exhibit',
+            model_name="usercommunityprovenance",
+            name="exhibit",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='usergroupprovenance',
-            name='exhibit',
+            model_name="usergroupprovenance",
+            name="exhibit",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='userresourceprivilege',
-            name='exhibit',
-            field=models.BooleanField(default=False, editable=False, help_text='exhibit resource as product'),
+            model_name="userresourceprivilege",
+            name="exhibit",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="exhibit resource as product"
+            ),
         ),
         migrations.AddField(
-            model_name='userresourceprovenance',
-            name='exhibit',
-            field=models.BooleanField(default=False, editable=False, help_text='exhibit resource as product'),
+            model_name="userresourceprovenance",
+            name="exhibit",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="exhibit resource as product"
+            ),
         ),
         migrations.AlterField(
-            model_name='communityresourceprovenance',
-            name='undone',
-            field=models.BooleanField(default=False, editable=False, help_text='already undone by undo'),
+            model_name="communityresourceprovenance",
+            name="undone",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="already undone by undo"
+            ),
         ),
         migrations.AlterField(
-            model_name='groupcommunityprovenance',
-            name='undone',
-            field=models.BooleanField(default=False, editable=False, help_text='already undone by undo'),
+            model_name="groupcommunityprovenance",
+            name="undone",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="already undone by undo"
+            ),
         ),
         migrations.AlterField(
-            model_name='groupresourceprovenance',
-            name='undone',
-            field=models.BooleanField(default=False, editable=False, help_text='already undone by undo'),
+            model_name="groupresourceprovenance",
+            name="undone",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="already undone by undo"
+            ),
         ),
         migrations.AlterField(
-            model_name='usercommunityprovenance',
-            name='undone',
-            field=models.BooleanField(default=False, editable=False, help_text='already undone by undo'),
+            model_name="usercommunityprovenance",
+            name="undone",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="already undone by undo"
+            ),
         ),
         migrations.AlterField(
-            model_name='usergroupprovenance',
-            name='undone',
-            field=models.BooleanField(default=False, editable=False, help_text='already undone by undo'),
+            model_name="usergroupprovenance",
+            name="undone",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="already undone by undo"
+            ),
         ),
         migrations.AlterField(
-            model_name='userresourceprovenance',
-            name='undone',
-            field=models.BooleanField(default=False, editable=False, help_text='already undone by undo'),
+            model_name="userresourceprovenance",
+            name="undone",
+            field=models.BooleanField(
+                default=False, editable=False, help_text="already undone by undo"
+            ),
         ),
     ]

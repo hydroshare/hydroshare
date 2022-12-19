@@ -11,14 +11,14 @@ def migrate_user_quota_default_zone_name(apps, schema_editor):
     """
     UserQuota = apps.get_model("theme", "UserQuota")
     for uq in UserQuota.objects.all():
-        uq.zone = 'hydroshare'
+        uq.zone = "hydroshare"
         uq.save()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('theme', '0010_auto_20180207_1845'),
+        ("theme", "0010_auto_20180207_1845"),
     ]
 
     operations = [

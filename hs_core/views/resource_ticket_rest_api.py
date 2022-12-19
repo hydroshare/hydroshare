@@ -46,7 +46,7 @@ class CreateResourceTicket(APIView):
     Error returns 400, 403, 404 return a string with the error message instead of JSON.
     """
 
-    allowed_methods = ('GET',)
+    allowed_methods = ("GET",)
 
     def get(self, request, pk, op, pathname):
         """
@@ -56,16 +56,22 @@ class CreateResourceTicket(APIView):
         :param op: operation: 'read' or 'write'
         :param pathname: path for which to issue ticket. If empty, whole data directory is assumed.
         """
-        if op != 'read' and op != 'write':
-            return Response("Operation must be read or write", status=status.HTTP_400_BAD_REQUEST)
+        if op != "read" and op != "write":
+            return Response(
+                "Operation must be read or write", status=status.HTTP_400_BAD_REQUEST
+            )
 
-        write = (op == 'write')
-        needed_permission = ACTION_TO_AUTHORIZE.EDIT_RESOURCE if write \
+        write = op == "write"
+        needed_permission = (
+            ACTION_TO_AUTHORIZE.EDIT_RESOURCE
+            if write
             else ACTION_TO_AUTHORIZE.VIEW_RESOURCE
+        )
 
         try:
             resource, authorized, user = view_utils.authorize(
-                request, pk, needed_permission=needed_permission, raises_exception=False)
+                request, pk, needed_permission=needed_permission, raises_exception=False
+            )
         except NotFound as ex:
             return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
@@ -76,30 +82,32 @@ class CreateResourceTicket(APIView):
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
-        if pathname is not None and pathname != '':
+        if pathname is not None and pathname != "":
             fullpath = os.path.join(resource.root_path, pathname)
-        elif op == 'read':  # allow reading anything in path
+        elif op == "read":  # allow reading anything in path
             fullpath = resource.root_path
         else:  # op == 'write'
-            return Response("Write operation must specify path", status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                "Write operation must specify path", status=status.HTTP_400_BAD_REQUEST
+            )
 
         # TODO: check for folder support before allowing folders to be written to
         # The API allows existing files that should not exist to be read anyway.
         # It should not allow files that should not exist to be created.
 
         try:
-            ticket, abspath = resource.create_ticket(request.user, path=fullpath, write=write)
+            ticket, abspath = resource.create_ticket(
+                request.user, path=fullpath, write=write
+            )
         except SessionException as e:
             return Response(e.stderr, status=status.HTTP_400_BAD_REQUEST)
         except ValidationError as e:
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response(
-            {'resource_id': pk,
-             'path': abspath,
-             'ticket_id': ticket,
-             'operation': op},
-            status=status.HTTP_201_CREATED)
+            {"resource_id": pk, "path": abspath, "ticket_id": ticket, "operation": op},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class CreateBagTicket(APIView):
@@ -121,7 +129,8 @@ class CreateBagTicket(APIView):
 
     Error returns 400, 403, 404 return a string with the error message instead of JSON.
     """
-    allowed_methods = ('GET',)
+
+    allowed_methods = ("GET",)
 
     def get(self, request, pk):
         """
@@ -132,8 +141,11 @@ class CreateBagTicket(APIView):
         """
         try:
             resource, authorized, user = view_utils.authorize(
-                request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-                raises_exception=False)
+                request,
+                pk,
+                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                raises_exception=False,
+            )
         except NotFound as ex:
             return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
@@ -141,18 +153,23 @@ class CreateBagTicket(APIView):
 
         fullpath = resource.bag_path
         try:
-            ticket, abspath = resource.create_ticket(request.user, path=fullpath, write=False)
+            ticket, abspath = resource.create_ticket(
+                request.user, path=fullpath, write=False
+            )
         except SessionException as e:
             return Response(e.stderr, status=status.HTTP_400_BAD_REQUEST)
         except ValidationError as e:
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response(
-            {'resource_id': pk,
-             'path': abspath,
-             'ticket_id': ticket,
-             'operation': 'read'},
-            status=status.HTTP_201_CREATED)
+            {
+                "resource_id": pk,
+                "path": abspath,
+                "ticket_id": ticket,
+                "operation": "read",
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class ManageResourceTicket(APIView):
@@ -213,7 +230,7 @@ class ManageResourceTicket(APIView):
     Error returns 400, 403, 404 return a string with the error message instead of JSON.
     """
 
-    allowed_methods = ('GET', 'DELETE')
+    allowed_methods = ("GET", "DELETE")
 
     def get(self, request, pk, ticket):
         """
@@ -223,15 +240,22 @@ class ManageResourceTicket(APIView):
         """
         try:
             resource, authorized, user = view_utils.authorize(
-                request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-                raises_exception=False)
+                request,
+                pk,
+                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                raises_exception=False,
+            )
         except NotFound as ex:
             return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
-            return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                "Insufficient permission", status=status.HTTP_401_UNAUTHORIZED
+            )
 
         try:
-            return Response(data=resource.list_ticket(ticket), status=status.HTTP_200_OK)
+            return Response(
+                data=resource.list_ticket(ticket), status=status.HTTP_200_OK
+            )
         except ValidationError as ex:
             return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         except SessionException as ex:
@@ -244,12 +268,17 @@ class ManageResourceTicket(APIView):
         """
         try:
             resource, authorized, user = view_utils.authorize(
-                request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-                raises_exception=False)
+                request,
+                pk,
+                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                raises_exception=False,
+            )
         except NotFound as ex:
             return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
-            return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                "Insufficient permission", status=status.HTTP_401_UNAUTHORIZED
+            )
 
         # list the ticket details to return to user
         try:

@@ -21,14 +21,20 @@ class RDF_MetaData_Mixin(object):
     """
 
     def rdf_subject(self):
-        raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_subject")
+        raise NotImplementedError(
+            "RDF_Metadata_Mixin implementations must implement rdf_subject"
+        )
 
     def rdf_metadata_subject(self):
-        raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_metadata_subject")
+        raise NotImplementedError(
+            "RDF_Metadata_Mixin implementations must implement rdf_metadata_subject"
+        )
 
     def rdf_type(self):
-        raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_type. "
-                                  "https://www.w3.org/TR/rdf-schema/#ch_type")
+        raise NotImplementedError(
+            "RDF_Metadata_Mixin implementations must implement rdf_type. "
+            "https://www.w3.org/TR/rdf-schema/#ch_type"
+        )
 
     def ignored_generic_relations(self):
         """Override to exclude generic relations from the rdf/xml.  This is built specifically for Format, which is the
@@ -44,14 +50,21 @@ class RDF_MetaData_Mixin(object):
             subject = s
             break
         if not subject:
-            raise Exception("Invalid rdf/xml, could not find required predicate dc:title")
+            raise Exception(
+                "Invalid rdf/xml, could not find required predicate dc:title"
+            )
         return subject
 
     def ingest_metadata(self, graph):
         """Given an rdflib Graph, run ingest_rdf for all generic relations on the object"""
         subject = self.rdf_subject_from_graph(graph)
 
-        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.private_fields))
+        generic_relations = list(
+            filter(
+                lambda f: isinstance(f, GenericRelation),
+                type(self)._meta.private_fields,
+            )
+        )
         for generic_relation in generic_relations:
             if generic_relation.related_model not in self.ignored_generic_relations():
                 getattr(self, generic_relation.name).all().delete()
@@ -61,14 +74,19 @@ class RDF_MetaData_Mixin(object):
     def get_rdf_graph(self):
         """adds the rdf triples of all generic relations on the object into an rdflib Graph"""
         graph = Graph()
-        graph.namespace_manager.bind('hsterms', HSTERMS, override=False)
+        graph.namespace_manager.bind("hsterms", HSTERMS, override=False)
         graph.namespace_manager.bind("rdfs1", RDFS1, override=False)
-        graph.namespace_manager.bind('dc', DC, override=False)
-        graph.namespace_manager.bind('dcterms', DCTERMS, override=False)
+        graph.namespace_manager.bind("dc", DC, override=False)
+        graph.namespace_manager.bind("dcterms", DCTERMS, override=False)
 
         subject = self.rdf_subject()
         graph.add((subject, RDF.type, self.rdf_type()))
-        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.private_fields))
+        generic_relations = list(
+            filter(
+                lambda f: isinstance(f, GenericRelation),
+                type(self)._meta.private_fields,
+            )
+        )
         for generic_relation in generic_relations:
             if generic_relation.related_model not in self.ignored_generic_relations():
                 gr_name = generic_relation.name
@@ -81,7 +99,7 @@ class RDF_MetaData_Mixin(object):
     def get_xml(self, pretty_print=True, include_format_elements=True):
         """Generates ORI+RDF xml for this metadata"""
         g = self.get_rdf_graph()
-        return g.serialize(format='hydro-xml').decode()
+        return g.serialize(format="hydro-xml").decode()
 
 
 class RDF_Term_MixIn(object):
@@ -98,9 +116,9 @@ class RDF_Term_MixIn(object):
      When a model requires an rdf-xml format that the default configuration will not provide, you may overwrite
      the rdf_triples method and the ingest_rdf method.  If you overwrite one, you must overwrite both or this mixin
      will not work correctly.
-     """
+    """
 
-    ignored_fields = ['id', 'object_id', 'content_type']
+    ignored_fields = ["id", "object_id", "content_type"]
 
     def rdf_triples(self, subject, graph):
         """Default implementation that parses by convention."""
@@ -116,14 +134,19 @@ class RDF_Term_MixIn(object):
     def get_field_terms_and_values(self, extra_ignored_fields=[]):
         """Method that returns the field terms and field values on an object"""
         from hs_core.hydroshare import encode_resource_url
+
         term_values = []
         extra_ignored_fields.extend(self.ignored_fields)
-        for field in [field for field in self._meta.fields if field.name not in extra_ignored_fields]:
+        for field in [
+            field
+            for field in self._meta.fields
+            if field.name not in extra_ignored_fields
+        ]:
             field_term = self.get_field_term(field.name)
             field_value = getattr(self, field.name)
-            if field_value is not None and field_value != 'None':
+            if field_value is not None and field_value != "None":
                 # urls should be a URIRef term, all others should be a Literal term
-                if isinstance(field_value, str) and field_value.startswith('http'):
+                if isinstance(field_value, str) and field_value.startswith("http"):
                     field_value = URIRef(encode_resource_url(field_value))
                 else:
                     field_value = Literal(field_value)
@@ -136,7 +159,9 @@ class RDF_Term_MixIn(object):
         return a term mapped by the @rdf_terms decorator or if the decorator is not provided, create an
         HSTERMS.{cls.__name__}
         """
-        return cls.rdf_term if hasattr(cls, 'rdf_term') else getattr(HSTERMS, cls.__name__)
+        return (
+            cls.rdf_term if hasattr(cls, "rdf_term") else getattr(HSTERMS, cls.__name__)
+        )
 
     @classmethod
     def get_field_term(cls, field_name):
@@ -144,7 +169,7 @@ class RDF_Term_MixIn(object):
         Given a class field_name, return a term mapped by the @rdf_terms decoroator or if the decorator is
         not provided, create an HSTERMS.{field_name}
         """
-        field_term_attr = field_name + '_rdf_term'
+        field_term_attr = field_name + "_rdf_term"
         if hasattr(cls, field_term_attr):
             return getattr(cls, field_term_attr)
         else:
@@ -170,7 +195,9 @@ class RDF_Term_MixIn(object):
                 val = graph.value(subject=metadata_node, predicate=field_term)
                 if val is not None:
                     if isinstance(val, URIRef):
-                        value_dict[field.name] = decode_resource_url(str(val.toPython()))
+                        value_dict[field.name] = decode_resource_url(
+                            str(val.toPython())
+                        )
                     else:
                         value_dict[field.name] = str(val.toPython())
             if value_dict:
@@ -183,13 +210,15 @@ def rdf_terms(class_term, **field_terms):
     term.  field_terms are key/values with the key matching a class's field and the value being the mapped term.
 
     :raises ValidationError when a field_term key does not match a field on the class"""
+
     def decorator(obj):
         obj.rdf_term = class_term
         for k, v in field_terms.items():
             if not hasattr(obj, k):
                 raise ValidationError("field {} not found".format(k))
-            setattr(obj, k + '_rdf_term', v)
+            setattr(obj, k + "_rdf_term", v)
         return obj
+
     return decorator
 
 
@@ -211,8 +240,7 @@ class HydroPrettyXMLSerializer(Serializer):
         self.writer = writer = XMLWriter(stream, nm, encoding)
         namespaces = {}
 
-        possible = set(store.predicates()).union(
-            store.objects(None, RDF.type))
+        possible = set(store.predicates()).union(store.objects(None, RDF.type))
 
         for predicate in possible:
             prefix, namespace, local = nm.compute_qname(predicate)
@@ -279,6 +307,7 @@ class HydroPrettyXMLSerializer(Serializer):
             writer.push(element)
 
             if isinstance(subject, BNode):
+
                 def subj_as_obj_more_than(ceil):
                     return True
                     # more_than(store.triples((None, None, subject)), ceil)
@@ -326,10 +355,13 @@ class HydroPrettyXMLSerializer(Serializer):
                 # Warn that any assertions on object other than
                 # RDF.first and RDF.rest are ignored... including RDF.List
                 import warnings
+
                 warnings.warn(
-                    "Assertions on %s other than RDF.first " % repr(object) +
-                    "and RDF.rest are ignored ... including RDF.List",
-                    UserWarning, stacklevel=2)
+                    "Assertions on %s other than RDF.first " % repr(object)
+                    + "and RDF.rest are ignored ... including RDF.List",
+                    UserWarning,
+                    stacklevel=2,
+                )
                 writer.attribute(RDF.parseType, "Collection")
 
                 col = Collection(store, object)
@@ -343,9 +375,11 @@ class HydroPrettyXMLSerializer(Serializer):
                     if not isinstance(item, URIRef):
                         self.__serialized[item] = 1
             else:
-                if first(store.triples_choices(
-                    (object, RDF.type, [OWL_NS.Class, RDFS.Class]))) \
-                        and isinstance(object, URIRef):
+                if first(
+                    store.triples_choices(
+                        (object, RDF.type, [OWL_NS.Class, RDFS.Class])
+                    )
+                ) and isinstance(object, URIRef):
                     writer.attribute(RDF.resource, self.relativize(object))
 
                 elif depth <= self.max_depth:
@@ -353,9 +387,11 @@ class HydroPrettyXMLSerializer(Serializer):
 
                 elif isinstance(object, BNode):
 
-                    if object not in self.__serialized \
-                            and (object, None, None) in store \
-                            and len(list(store.subjects(object=object))) == 1:
+                    if (
+                        object not in self.__serialized
+                        and (object, None, None) in store
+                        and len(list(store.subjects(object=object))) == 1
+                    ):
                         # inline blank nodes if they haven't been serialized yet
                         # and are only referenced once (regardless of depth)
                         self.subject(object, depth + 1)
@@ -365,6 +401,5 @@ class HydroPrettyXMLSerializer(Serializer):
 
         writer.pop(predicate)
 
-register(
-    'hydro-xml', Serializer,
-    'hs_core.hs_rdf', 'HydroPrettyXMLSerializer')
+
+register("hydro-xml", Serializer, "hs_core.hs_rdf", "HydroPrettyXMLSerializer")

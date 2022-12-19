@@ -2,18 +2,38 @@
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
-    pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
-    post_add_netcdf_aggregation, post_add_raster_aggregation, post_add_timeseries_aggregation, \
-    post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change, \
-    post_delete_file_from_resource
+from hs_core.signals import (
+    pre_metadata_element_create,
+    pre_metadata_element_update,
+    pre_delete_resource,
+    post_add_geofeature_aggregation,
+    post_add_generic_aggregation,
+    post_add_netcdf_aggregation,
+    post_add_raster_aggregation,
+    post_add_timeseries_aggregation,
+    post_add_reftimeseries_aggregation,
+    post_remove_file_aggregation,
+    post_raccess_change,
+    post_delete_file_from_resource,
+)
 from hs_core.tasks import update_web_services
 from hs_core.models import GenericResource, Creator, Contributor, Party
 from django.conf import settings
-from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
-    ContributorValidationForm, RelationValidationForm, RightsValidationForm, \
-    LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
-    CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm
+from .forms import (
+    SubjectsForm,
+    AbstractValidationForm,
+    CreatorValidationForm,
+    ContributorValidationForm,
+    RelationValidationForm,
+    RightsValidationForm,
+    LanguageValidationForm,
+    ValidDateValidationForm,
+    FundingAgencyValidationForm,
+    CoverageSpatialForm,
+    CoverageTemporalForm,
+    IdentifierForm,
+    TitleValidationForm,
+)
 
 
 @receiver(post_save, sender=User)
@@ -41,18 +61,21 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 
     This handler is executed only when a metadata element is added as part of editing a resource
     """
-    element_name = kwargs['element_name']
-    request = kwargs['request']
-    if element_name == "subject":   # keywords
+    element_name = kwargs["element_name"]
+    request = kwargs["request"]
+    if element_name == "subject":  # keywords
         element_form = SubjectsForm(data=request.POST)
-    elif element_name == "description":   # abstract
+    elif element_name == "description":  # abstract
         element_form = AbstractValidationForm(request.POST)
     elif element_name == "creator":
         try:
             post_data_dict = Party.get_post_data_with_identifiers(request=request)
         except Exception as ex:
-            return {'is_valid': False, 'element_data_dict': None,
-                    "errors": {"identifiers": [str(ex)]}}
+            return {
+                "is_valid": False,
+                "element_data_dict": None,
+                "errors": {"identifiers": [str(ex)]},
+            }
 
         element_form = CreatorValidationForm(post_data_dict)
 
@@ -60,40 +83,53 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         try:
             post_data_dict = Party.get_post_data_with_identifiers(request=request)
         except Exception as ex:
-            return {'is_valid': False, 'element_data_dict': None,
-                    "errors": {"identifiers": [str(ex)]}}
+            return {
+                "is_valid": False,
+                "element_data_dict": None,
+                "errors": {"identifiers": [str(ex)]},
+            }
         element_form = ContributorValidationForm(post_data_dict)
 
     elif element_name == "citation":
-        return {'is_valid': True, 'element_data_dict': {'value': request.POST.get('content').strip()}}
+        return {
+            "is_valid": True,
+            "element_data_dict": {"value": request.POST.get("content").strip()},
+        }
 
-    elif element_name == 'relation':
+    elif element_name == "relation":
         element_form = RelationValidationForm(request.POST)
-    elif element_name == 'rights':
+    elif element_name == "rights":
         element_form = RightsValidationForm(request.POST)
-    elif element_name == 'language':
+    elif element_name == "language":
         element_form = LanguageValidationForm(request.POST)
-    elif element_name == 'date':
+    elif element_name == "date":
         element_form = ValidDateValidationForm(request.POST)
-    elif element_name == 'fundingagency':
+    elif element_name == "fundingagency":
         element_form = FundingAgencyValidationForm(request.POST)
-    elif element_name == 'coverage':
-        if 'type' in request.POST:
-            if request.POST['type'].lower() == 'point' or request.POST['type'].lower() == 'box':
+    elif element_name == "coverage":
+        if "type" in request.POST:
+            if (
+                request.POST["type"].lower() == "point"
+                or request.POST["type"].lower() == "box"
+            ):
                 element_form = CoverageSpatialForm(data=request.POST)
             else:
                 element_form = CoverageTemporalForm(data=request.POST)
         else:
             element_form = CoverageTemporalForm(data=request.POST)
-    elif element_name == 'identifier':
+    elif element_name == "identifier":
         element_form = IdentifierForm(data=request.POST)
     else:
         raise Exception("Invalid metadata element name:{}".format(element_name))
 
     if element_form.is_valid():
-        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+        return {"is_valid": True, "element_data_dict": element_form.cleaned_data}
     else:
-        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
+        return {
+            "is_valid": False,
+            "element_data_dict": None,
+            "errors": element_form.errors,
+        }
 
 
 @receiver(pre_metadata_element_update, sender=GenericResource)
@@ -102,21 +138,25 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 
     This handler is executed only when a metadata element is added as part of editing a resource
     """
-    element_name = kwargs['element_name'].lower()
-    request = kwargs['request']
-    repeatable_elements = {'creator': CreatorValidationForm,
-                           'contributor': ContributorValidationForm,
-                           'relation': RelationValidationForm
-                           }
+    element_name = kwargs["element_name"].lower()
+    request = kwargs["request"]
+    repeatable_elements = {
+        "creator": CreatorValidationForm,
+        "contributor": ContributorValidationForm,
+        "relation": RelationValidationForm,
+    }
 
-    if element_name == 'title':
+    if element_name == "title":
         element_form = TitleValidationForm(request.POST)
-    elif element_name == "description":   # abstract
+    elif element_name == "description":  # abstract
         element_form = AbstractValidationForm(request.POST)
     elif element_name == "fundingagency":
         element_form = FundingAgencyValidationForm(request.POST)
     elif element_name == "citation":
-        return {'is_valid': True, 'element_data_dict': {'value': request.POST.get('content').strip()}}
+        return {
+            "is_valid": True,
+            "element_data_dict": {"value": request.POST.get("content").strip()},
+        }
     elif element_name in repeatable_elements:
         # since element_name is a repeatable element (e.g creator) and data for the element
         # is displayed on the landing page using formset, the data coming from a single element
@@ -124,52 +164,70 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_validation_form = repeatable_elements[element_name]
         form_data = {}
         for field_name in element_validation_form().fields:
-            if element_name.lower() == "creator" or element_name.lower() == "contributor":
+            if (
+                element_name.lower() == "creator"
+                or element_name.lower() == "contributor"
+            ):
                 try:
-                    post_data_dict = Party.get_post_data_with_identifiers(request=request)
+                    post_data_dict = Party.get_post_data_with_identifiers(
+                        request=request
+                    )
                 except Exception as ex:
-                    return {'is_valid': False, 'element_data_dict': None,
-                            "errors": {"identifiers": [str(ex)]}}
+                    return {
+                        "is_valid": False,
+                        "element_data_dict": None,
+                        "errors": {"identifiers": [str(ex)]},
+                    }
 
                 # for creator or contributor who is not a hydroshare user the 'hydroshare_user_id'
                 # key might be missing in the POST form data
-                if field_name == 'hydroshare_user_id':
-                    matching_key = [key for key in request.POST if '-'+field_name in key]
+                if field_name == "hydroshare_user_id":
+                    matching_key = [
+                        key for key in request.POST if "-" + field_name in key
+                    ]
                     if matching_key:
                         matching_key = matching_key[0]
                     else:
                         continue
-                elif field_name == 'identifiers':
-                    matching_key = 'identifiers'
+                elif field_name == "identifiers":
+                    matching_key = "identifiers"
                 else:
-                    matching_key = [key for key in request.POST if '-'+field_name in key][0]
+                    matching_key = [
+                        key for key in request.POST if "-" + field_name in key
+                    ][0]
 
                 form_data[field_name] = post_data_dict[matching_key]
             else:
-                matching_key = [key for key in request.POST if '-'+field_name in key][0]
+                matching_key = [key for key in request.POST if "-" + field_name in key][
+                    0
+                ]
                 form_data[field_name] = request.POST[matching_key]
 
         element_form = element_validation_form(form_data)
-    elif element_name == 'rights':
+    elif element_name == "rights":
         element_form = RightsValidationForm(request.POST)
-    elif element_name == 'language':
+    elif element_name == "language":
         element_form = LanguageValidationForm(request.POST)
-    elif element_name == 'date':
+    elif element_name == "date":
         element_form = ValidDateValidationForm(request.POST)
-    elif element_name == 'coverage':
-        if 'type' in request.POST:
+    elif element_name == "coverage":
+        if "type" in request.POST:
             element_form = CoverageSpatialForm(data=request.POST)
         else:
             element_form = CoverageTemporalForm(data=request.POST)
-    elif element_name == 'identifier':
+    elif element_name == "identifier":
         element_form = IdentifierForm(data=request.POST)
     else:
         raise Exception("Invalid metadata element name:{}".format(element_name))
 
     if element_form.is_valid():
-        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+        return {"is_valid": True, "element_data_dict": element_form.cleaned_data}
     else:
-        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
+        return {
+            "is_valid": False,
+            "element_data_dict": None,
+            "errors": element_form.errors,
+        }
 
 
 @receiver(post_add_generic_aggregation)
@@ -190,12 +248,15 @@ def hs_update_web_services(sender, **kwargs):
         if "resource" in kwargs:
             rid = kwargs.get("resource").short_id
         elif "resource_id" in kwargs:
-            rid = kwargs.get('resource_id')
+            rid = kwargs.get("resource_id")
         if rid:
-            update_web_services.apply_async((
-                settings.HSWS_URL,
-                settings.HSWS_API_TOKEN,
-                settings.HSWS_TIMEOUT,
-                settings.HSWS_PUBLISH_URLS,
-                rid
-            ), countdown=1)
+            update_web_services.apply_async(
+                (
+                    settings.HSWS_URL,
+                    settings.HSWS_API_TOKEN,
+                    settings.HSWS_TIMEOUT,
+                    settings.HSWS_PUBLISH_URLS,
+                    rid,
+                ),
+                countdown=1,
+            )

@@ -1,4 +1,3 @@
-
 import os
 from unittest import TestCase
 
@@ -11,25 +10,23 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetResourceFile, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.user = hydroshare.create_account(
-            'get_resource_file_test_user@gmail.com',
-            username='get_res_file_test_user',
-            first_name='test',
-            last_name='user',
-            superuser=False
+            "get_resource_file_test_user@gmail.com",
+            username="get_res_file_test_user",
+            first_name="test",
+            last_name="user",
+            superuser=False,
         )
 
         self.res = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test File'
+            resource_type="CompositeResource", owner=self.user, title="Test File"
         )
 
-        test_file = open('test1.txt', 'w')
+        test_file = open("test1.txt", "w")
         test_file.write("Test text file in test1.txt")
         test_file.close()
-        self.file = open('test1.txt', 'rb')
+        self.file = open("test1.txt", "rb")
         hydroshare.add_resource_files(self.res.short_id, self.file)
 
     def tearDown(self):
@@ -39,13 +36,12 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
 
     def test_get_file(self):
         # test if the added test file is obtained
-        res_file = hydroshare.get_resource_file(self.res.short_id,
-                                                       self.file.name)
+        res_file = hydroshare.get_resource_file(self.res.short_id, self.file.name)
         res_file_object = res_file.resource_file
         self.assertEqual(
             self.file.name,
             os.path.basename(res_file_object.name),
-            msg='file name did not match'
+            msg="file name did not match",
         )
 
         # test if the last modified time for the file can be obtained

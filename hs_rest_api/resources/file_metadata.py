@@ -15,7 +15,7 @@ from hs_core import hydroshare
 
 # TODO: Once we upgrade past Django Rest Framework 3.3, this won't be necessary
 class JSONSerializerField(serializers.Field):
-    """ Serializer for JSONField -- required to make field writable"""
+    """Serializer for JSONField -- required to make field writable"""
 
     def to_internal_value(self, data):
         return data
@@ -35,7 +35,10 @@ class FileMetaDataSerializer(serializers.Serializer):
 
 class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FileMetaDataSerializer
-    allowed_methods = ('GET', 'PUT',)
+    allowed_methods = (
+        "GET",
+        "PUT",
+    )
     permission_classes = (CanViewOrEditResourceMetadata,)
 
     def get(self, request, pk, pathname):
@@ -90,28 +93,32 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
                 logical_file = resource.get_folder_aggregation_object(dir_path)
                 metadata = None
 
-        title = logical_file.dataset_name \
-            if logical_file else ""
-        keywords = metadata.keywords \
-            if metadata else []
-        spatial_coverage = metadata.spatial_coverage.value \
-            if metadata and metadata.spatial_coverage else {}
-        extra_metadata = metadata.extra_metadata \
-            if metadata else {}
-        temporal_coverage = metadata.temporal_coverage.value if \
-            metadata and metadata.temporal_coverage else {}
-        extra_data = logical_file.metadata.dict() \
-            if logical_file else {}
+        title = logical_file.dataset_name if logical_file else ""
+        keywords = metadata.keywords if metadata else []
+        spatial_coverage = (
+            metadata.spatial_coverage.value
+            if metadata and metadata.spatial_coverage
+            else {}
+        )
+        extra_metadata = metadata.extra_metadata if metadata else {}
+        temporal_coverage = (
+            metadata.temporal_coverage.value
+            if metadata and metadata.temporal_coverage
+            else {}
+        )
+        extra_data = logical_file.metadata.dict() if logical_file else {}
 
         # TODO: How to leverage serializer for this?
-        return Response({
-            "title": title,
-            "keywords": keywords,
-            "spatial_coverage": spatial_coverage,
-            "extra_metadata": extra_metadata,
-            "temporal_coverage": temporal_coverage,
-            "logical_file": extra_data
-        })
+        return Response(
+            {
+                "title": title,
+                "keywords": keywords,
+                "spatial_coverage": spatial_coverage,
+                "extra_metadata": extra_metadata,
+                "temporal_coverage": temporal_coverage,
+                "logical_file": extra_data,
+            }
+        )
 
     def put(self, request, pk, pathname):
         """
@@ -160,35 +167,39 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
                 # Backwards compatibility for file_id
                 resource_file = ResourceFile.objects.get(id=pathname)
             if resource_file is None:
-                raise NotFound("File {} in resource {} does not exist".format(pathname, pk))
+                raise NotFound(
+                    "File {} in resource {} does not exist".format(pathname, pk)
+                )
             resource_file.metadata.logical_file.dataset_name = title
             resource_file.metadata.logical_file.save()
 
             spatial_coverage = file_serializer.data.pop("spatial_coverage", None)
             if spatial_coverage is not None:
                 # defaulting to point if not provided for backwards compatibility
-                type = spatial_coverage["type"] if "type" in spatial_coverage else "point"
+                type = (
+                    spatial_coverage["type"] if "type" in spatial_coverage else "point"
+                )
                 if resource_file.metadata.spatial_coverage is not None:
                     cov_id = resource_file.metadata.spatial_coverage.id
-                    resource_file.metadata.update_element('coverage',
-                                                          cov_id,
-                                                          type=type,
-                                                          value=spatial_coverage)
+                    resource_file.metadata.update_element(
+                        "coverage", cov_id, type=type, value=spatial_coverage
+                    )
                 elif resource_file.metadata.spatial_coverage is None:
-                    resource_file.metadata.create_element('coverage', type=type,
-                                                          value=spatial_coverage)
+                    resource_file.metadata.create_element(
+                        "coverage", type=type, value=spatial_coverage
+                    )
 
             temporal_coverage = file_serializer.data.pop("temporal_coverage", None)
             if temporal_coverage is not None:
                 if resource_file.metadata.temporal_coverage is not None:
                     cov_id = resource_file.metadata.temporal_coverage.id
-                    resource_file.metadata.update_element('coverage',
-                                                          cov_id,
-                                                          type='period',
-                                                          value=temporal_coverage)
+                    resource_file.metadata.update_element(
+                        "coverage", cov_id, type="period", value=temporal_coverage
+                    )
                 elif resource_file.metadata.temporal_coverage is None:
-                    resource_file.metadata.create_element('coverage', type="period",
-                                                          value=temporal_coverage)
+                    resource_file.metadata.create_element(
+                        "coverage", type="period", value=temporal_coverage
+                    )
 
             keywords = file_serializer.data.pop("keywords", None)
             if keywords is not None:
@@ -203,21 +214,32 @@ class FileMetaDataRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             raise APIException(e)
 
         # TODO: How to leverage serializer for this?
-        title = resource_file.metadata.logical_file.dataset_name \
-            if resource_file.metadata.logical_file else ""
-        keywords = resource_file.metadata.keywords \
-            if resource_file.metadata else []
-        spatial_coverage = resource_file.metadata.spatial_coverage.value \
-            if resource_file.metadata.spatial_coverage else {}
-        extra_metadata = resource_file.metadata.extra_metadata \
-            if resource_file.metadata else {}
-        temporal_coverage = resource_file.metadata.temporal_coverage.value if \
-            resource_file.metadata.temporal_coverage else {}
+        title = (
+            resource_file.metadata.logical_file.dataset_name
+            if resource_file.metadata.logical_file
+            else ""
+        )
+        keywords = resource_file.metadata.keywords if resource_file.metadata else []
+        spatial_coverage = (
+            resource_file.metadata.spatial_coverage.value
+            if resource_file.metadata.spatial_coverage
+            else {}
+        )
+        extra_metadata = (
+            resource_file.metadata.extra_metadata if resource_file.metadata else {}
+        )
+        temporal_coverage = (
+            resource_file.metadata.temporal_coverage.value
+            if resource_file.metadata.temporal_coverage
+            else {}
+        )
 
-        return Response({
-            "title": title,
-            "keywords": keywords,
-            "spatial_coverage": spatial_coverage,
-            "extra_metadata": extra_metadata,
-            "temporal_coverage": temporal_coverage
-        })
+        return Response(
+            {
+                "title": title,
+                "keywords": keywords,
+                "spatial_coverage": spatial_coverage,
+                "extra_metadata": extra_metadata,
+                "temporal_coverage": temporal_coverage,
+            }
+        )

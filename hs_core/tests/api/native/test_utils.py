@@ -13,31 +13,31 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestUtils(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestUtils, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.user = hydroshare.create_account(
-            'user1@nowhere.com',
-            username='user1',
-            first_name='Creator_FirstName',
-            last_name='Creator_LastName',
+            "user1@nowhere.com",
+            username="user1",
+            first_name="Creator_FirstName",
+            last_name="Creator_LastName",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.user2 = hydroshare.create_account(
-            'user2@nowhere.com',
-            username='user2',
-            first_name='user2_FirstName',
-            last_name='user2_LastName',
+            "user2@nowhere.com",
+            username="user2",
+            first_name="user2_FirstName",
+            last_name="user2_LastName",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.res = hydroshare.create_resource(
-            'GenericResource',
+            "GenericResource",
             self.user,
-            'test resource',
+            "test resource",
         )
-        self.res.doi = 'doi1000100010001'
+        self.res.doi = "doi1000100010001"
         self.res.save()
 
     def test_get_resource_types(self):
@@ -49,76 +49,66 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
 
     def test_get_resource_instance(self):
         self.assertEqual(
-            utils.get_resource_instance('hs_core', 'GenericResource', self.res.pk),
-            self.res
+            utils.get_resource_instance("hs_core", "GenericResource", self.res.pk),
+            self.res,
         )
 
     def test_get_resource_by_shortkey(self):
-        self.assertEqual(
-            utils.get_resource_by_shortkey(self.res.short_id),
-            self.res
-        )
+        self.assertEqual(utils.get_resource_by_shortkey(self.res.short_id), self.res)
 
     def test_get_resource_by_doi(self):
-        self.assertEqual(
-            utils.get_resource_by_doi('doi1000100010001'),
-            self.res
-        )
+        self.assertEqual(utils.get_resource_by_doi("doi1000100010001"), self.res)
 
     def test_user_from_id(self):
         self.assertEqual(
-            utils.user_from_id(self.user),
-            self.user,
-            msg='user passthrough failed'
+            utils.user_from_id(self.user), self.user, msg="user passthrough failed"
         )
 
         self.assertEqual(
-            utils.user_from_id('user1@nowhere.com'),
+            utils.user_from_id("user1@nowhere.com"),
             self.user,
-            msg='lookup by email address failed'
+            msg="lookup by email address failed",
         )
 
         self.assertEqual(
-            utils.user_from_id('user1'),
-            self.user,
-            msg='lookup by username failed'
+            utils.user_from_id("user1"), self.user, msg="lookup by username failed"
         )
 
     def test_group_from_id(self):
         self.assertEqual(
-            utils.group_from_id(self.group),
-            self.group,
-            msg='group passthrough failed'
+            utils.group_from_id(self.group), self.group, msg="group passthrough failed"
         )
 
         self.assertEqual(
-            utils.group_from_id('Hydroshare Author'),
+            utils.group_from_id("Hydroshare Author"),
             self.group,
-            msg='lookup by group name failed'
+            msg="lookup by group name failed",
         )
 
     def test_get_user_profile(self):
         self.assertEqual(self.user.userprofile, utils.get_profile(self.user))
 
     def test_get_mime_type(self):
-        test_file = 'my_file.txt'
-        self.assertEqual(utils.get_file_mime_type(test_file), 'text/plain')
-        test_file = 'my_file.tif'
-        self.assertEqual(utils.get_file_mime_type(test_file), 'image/tiff')
-        test_file = 'my_file.abc'
-        self.assertEqual(utils.get_file_mime_type(test_file), 'application/abc')
+        test_file = "my_file.txt"
+        self.assertEqual(utils.get_file_mime_type(test_file), "text/plain")
+        test_file = "my_file.tif"
+        self.assertEqual(utils.get_file_mime_type(test_file), "image/tiff")
+        test_file = "my_file.abc"
+        self.assertEqual(utils.get_file_mime_type(test_file), "application/abc")
 
     def test_get_current_site_url(self):
         current_site = Site.objects.get_current()
-        protocol = getattr(settings, 'MY_SITE_PROTOCOL', 'http')
-        url = '%s://%s' % (protocol, current_site.domain)
+        protocol = getattr(settings, "MY_SITE_PROTOCOL", "http")
+        url = "%s://%s" % (protocol, current_site.domain)
         self.assertEqual(utils.current_site_url(), url)
 
     def test_resource_modified(self):
-        modified_date1 = self.res.metadata.dates.filter(type='modified').first()
+        modified_date1 = self.res.metadata.dates.filter(type="modified").first()
         self.assertEqual(self.res.last_changed_by, self.user)
         utils.resource_modified(self.res, self.user2)
-        modified_date2 = self.res.metadata.dates.filter(type='modified').first()
-        self.assertTrue((modified_date2.start_date - modified_date1.start_date).total_seconds() > 0)
+        modified_date2 = self.res.metadata.dates.filter(type="modified").first()
+        self.assertTrue(
+            (modified_date2.start_date - modified_date1.start_date).total_seconds() > 0
+        )
         self.assertEqual(self.res.last_changed_by, self.user2)
         self.assertEqual(self.res.last_updated, modified_date2.start_date)

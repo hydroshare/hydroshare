@@ -8,16 +8,16 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_file_types', '0017_timeseries_metadata_models'),
+        ("hs_file_types", "0017_timeseries_metadata_models"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='modelinstancelogicalfile',
-            name='model_instance_type',
+            model_name="modelinstancelogicalfile",
+            name="model_instance_type",
         ),
         migrations.RemoveField(
-            model_name='modelprogramlogicalfile',
-            name='model_program_type',
+            model_name="modelprogramlogicalfile",
+            name="model_program_type",
         ),
     ]

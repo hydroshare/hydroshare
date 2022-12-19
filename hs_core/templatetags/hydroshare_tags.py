@@ -1,4 +1,3 @@
-
 from future.builtins import int
 from json import dumps
 
@@ -16,10 +15,11 @@ from hs_access_control.models.privilege import PrivilegeCodes
 
 register = template.Library()
 
-RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Composite Resource",
-                                     "CollectionResource": "Collection Resource",
-                                     "ToolResource": "Web App Resource"
-                                     }
+RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {
+    "CompositeResource": "Composite Resource",
+    "CollectionResource": "Collection Resource",
+    "ToolResource": "Web App Resource",
+}
 
 
 @register.filter
@@ -35,7 +35,11 @@ def user_permission(content, arg):
         permission = "View"
 
     if permission == "None":
-        if res_obj.raccess.published or res_obj.raccess.discoverable or res_obj.raccess.public:
+        if (
+            res_obj.raccess.published
+            or res_obj.raccess.discoverable
+            or res_obj.raccess.public
+        ):
             permission = "Open Access"
     return permission
 
@@ -50,13 +54,15 @@ def user_resource_labels(resource, user):
 
 @register.filter
 def get_user_privilege(resource, user):
-    user_privilege = resource.raccess.get_effective_privilege(user, ignore_superuser=True)
+    user_privilege = resource.raccess.get_effective_privilege(
+        user, ignore_superuser=True
+    )
     if user_privilege == PrivilegeCodes.OWNER:
-        self_access_level = 'Owned'
+        self_access_level = "Owned"
     elif user_privilege == PrivilegeCodes.CHANGE:
-        self_access_level = 'Editable'
+        self_access_level = "Editable"
     elif user_privilege == PrivilegeCodes.VIEW:
-        self_access_level = 'Viewable'
+        self_access_level = "Viewable"
     else:
         self_access_level = "Discovered"
     return self_access_level
@@ -92,9 +98,9 @@ def is_url(content):
 @register.filter
 def published_date(res_obj):
     if res_obj.raccess.published:
-        return res_obj.metadata.dates.all().filter(type='published').first().start_date
+        return res_obj.metadata.dates.all().filter(type="published").first().start_date
     else:
-        return ''
+        return ""
 
 
 @register.filter
@@ -107,7 +113,7 @@ def resource_type(content):
 @register.filter
 def resource_first_author(content):
     if not content:
-        return ''
+        return ""
 
     first_creator = None
     for creator in content.metadata.creators.all():
@@ -116,20 +122,26 @@ def resource_first_author(content):
             break
 
     if first_creator:
-        if first_creator.name and first_creator.relative_uri and first_creator.is_active_user:
-            return format_html('<a href="{desc}">{name}</a>',
-                               desc=first_creator.relative_uri,
-                               name=first_creator.name)
+        if (
+            first_creator.name
+            and first_creator.relative_uri
+            and first_creator.is_active_user
+        ):
+            return format_html(
+                '<a href="{desc}">{name}</a>',
+                desc=first_creator.relative_uri,
+                name=first_creator.name,
+            )
         elif first_creator.name:
-            return format_html('<span>{name}</span>', name=first_creator.name)
+            return format_html("<span>{name}</span>", name=first_creator.name)
     else:
         first_creator = content.metadata.creators.filter(order=1).first()
         if first_creator.name:
-            return format_html('<span>{name}</span>', name=first_creator.name)
+            return format_html("<span>{name}</span>", name=first_creator.name)
         if first_creator.organization:
-            return format_html('<span>{name}</span>', name=first_creator.organization)
+            return format_html("<span>{name}</span>", name=first_creator.organization)
 
-        return ''
+        return ""
 
 
 @register.filter
@@ -139,26 +151,30 @@ def contact(content):
     each of the functions specified by the RICHTEXT_FILTERS setting.
     """
     if not content:
-        return ''
+        return ""
 
     if not content.is_authenticated:
         content = "Anonymous"
     elif content.first_name:
         if content.userprofile.middle_name:
-            content = format_html("<a href='/user/{uid}/'>{fn} {mn} {ln}</a>",
-                                  fn=content.first_name,
-                                  mn=content.userprofile.middle_name,
-                                  ln=content.last_name,
-                                  uid=content.pk)
+            content = format_html(
+                "<a href='/user/{uid}/'>{fn} {mn} {ln}</a>",
+                fn=content.first_name,
+                mn=content.userprofile.middle_name,
+                ln=content.last_name,
+                uid=content.pk,
+            )
         else:
-            content = format_html("<a href='/user/{uid}/'>{fn} {ln}</a>",
-                                  fn=content.first_name,
-                                  ln=content.last_name,
-                                  uid=content.pk)
+            content = format_html(
+                "<a href='/user/{uid}/'>{fn} {ln}</a>",
+                fn=content.first_name,
+                ln=content.last_name,
+                uid=content.pk,
+            )
     else:
-        content = format_html("<a href='/user/{uid}/'>{un}</a>",
-                              uid=content.pk,
-                              un=content.username)
+        content = format_html(
+            "<a href='/user/{uid}/'>{un}</a>", uid=content.pk, un=content.username
+        )
 
     return content
 
@@ -174,9 +190,11 @@ def best_name(content):
         content = "Anonymous"
     elif content.first_name:
         if content.userprofile.middle_name:
-            content = "{fn} {mn} {ln}".format(fn=content.first_name,
-                                              mn=content.userprofile.middle_name,
-                                              ln=content.last_name)
+            content = "{fn} {mn} {ln}".format(
+                fn=content.first_name,
+                mn=content.userprofile.middle_name,
+                ln=content.last_name,
+            )
         else:
             content = "{fn} {ln}".format(fn=content.first_name, ln=content.last_name)
     else:
@@ -212,8 +230,9 @@ def display_name(user):
     """
 
     if user.first_name:
-        content = "{fn} {ln} ({un})".format(fn=user.first_name, ln=user.last_name,
-                                            un=user.username)
+        content = "{fn} {ln} ({un})".format(
+            fn=user.first_name, ln=user.last_name, un=user.username
+        )
     else:
         content = user.username
 
@@ -227,11 +246,11 @@ def clean_pagination_url(content):
     if "&page=" not in content:
         return content
     else:
-        clean_content = ''
+        clean_content = ""
         parsed_content = content.split("&")
         for token in parsed_content:
             if "page=" not in token:
-                clean_content += token + '&'
+                clean_content += token + "&"
         clean_content = clean_content[:-1]
         return clean_content
 
@@ -243,18 +262,18 @@ def to_int(value):
 
 @register.filter
 def relative_irods_path(fed_irods_file_name):
-    idx = fed_irods_file_name.find('/data/contents/')
-    return fed_irods_file_name[idx+1:]
+    idx = fed_irods_file_name.find("/data/contents/")
+    return fed_irods_file_name[idx + 1 :]
 
 
 @register.filter
 def resource_replaced_by(res):
-    return res.get_relation_version_res_url('isReplacedBy')
+    return res.get_relation_version_res_url("isReplacedBy")
 
 
 @register.filter
 def resource_version_of(res):
-    return res.get_relation_version_res_url('isVersionOf')
+    return res.get_relation_version_res_url("isVersionOf")
 
 
 @register.filter
@@ -266,49 +285,54 @@ def resource_from_uuid(id):
 
 @register.filter
 def res_uuid_from_res_path(path):
-    prefix_str = 'resource/'
+    prefix_str = "resource/"
     prefix_idx = path.find(prefix_str)
     if prefix_idx >= 0:
-        sidx = prefix_idx+len(prefix_str)
+        sidx = prefix_idx + len(prefix_str)
         # resource uuid is 32 bits
-        return path[sidx:sidx+32]
+        return path[sidx : sidx + 32]
     else:
         return path
 
 
 @register.filter
 def remove_last_char(statement):
-    return statement[:len(statement)-1]
+    return statement[: len(statement) - 1]
 
 
 @register.filter
 def five_options_around(page):
-    """ Create five page numbers around current page for discovery pagination. """
+    """Create five page numbers around current page for discovery pagination."""
     if page.number <= 3:
         return list(range(1, min(5, page.paginator.num_pages) + 1))
     elif page.number >= (page.paginator.num_pages - 2):
-        return list(range(max((page.paginator.num_pages - 4), 1),
-                          page.paginator.num_pages + 1))
+        return list(
+            range(max((page.paginator.num_pages - 4), 1), page.paginator.num_pages + 1)
+        )
     else:
-        return list(range(max(1, (page.number - 2)),
-                          min((page.number + 2), page.paginator.num_pages) + 1))
+        return list(
+            range(
+                max(1, (page.number - 2)),
+                min((page.number + 2), page.paginator.num_pages) + 1,
+            )
+        )
 
 
 @register.filter
 def normalize_human_name(name):
-    """ Normalize 'First M. Last' to 'Last, First M.'"""
+    """Normalize 'First M. Last' to 'Last, First M.'"""
     return normalize_name(name)
 
 
 @register.filter
 def display_name_to_class(value):
-    """ Converts an aggregation display name to a string that is usable as a CSS class name """
+    """Converts an aggregation display name to a string that is usable as a CSS class name"""
     return value.replace(" ", "_").lower()
 
 
 @register.filter
 def creator_json_ld_element(crs):
-    """ return json ld element for creators for schema.org script embedded on resource landing page"""
+    """return json ld element for creators for schema.org script embedded on resource landing page"""
     crs_array = []
     for cr in crs:
         cr_dict = {}
@@ -316,18 +340,12 @@ def creator_json_ld_element(crs):
         if cr.email:
             cr_dict["email"] = cr.email
         if cr.address:
-            cr_dict["address"] = {
-                "@type": "PostalAddress",
-                "streetAddress": cr.address
-            }
+            cr_dict["address"] = {"@type": "PostalAddress", "streetAddress": cr.address}
         if cr.name:
             cr_dict["@type"] = "Person"
             cr_dict["name"] = name_without_commas(cr.name)
             if cr.organization:
-                affl_dict = {
-                    "@type": "Organization",
-                    "name": cr.organization
-                }
+                affl_dict = {"@type": "Organization", "name": cr.organization}
                 cr_dict["affiliation"] = affl_dict
         else:
             cr_dict["@type"] = "Organization"
@@ -346,13 +364,13 @@ def creator_json_ld_element(crs):
             for k in cr.identifiers:
                 urls.append(cr.identifiers[k])
         if len(urls) == 1:
-            cr_dict['url'] = urls[0]
+            cr_dict["url"] = urls[0]
         elif len(urls) > 1:
-            cr_dict['url'] = urls
+            cr_dict["url"] = urls
         crs_array.append(cr_dict)
     # reformat json dumped str a bit to fix the indentation issue with the last bracket
     default_dump = dumps({"@list": crs_array}, sort_keys=True, indent=6)
-    format_dump = '{}    {}'.format(default_dump[:-1], default_dump[-1])
+    format_dump = "{}    {}".format(default_dump[:-1], default_dump[-1])
     return format_dump
 
 
@@ -363,8 +381,8 @@ def is_debug(page):
 
 @register.filter
 def discoverable(item):
-    """ used in templates for discovery to avoid non-indicative results. """
-    if item is None or item == 'Unknown':
+    """used in templates for discovery to avoid non-indicative results."""
+    if item is None or item == "Unknown":
         return ""
     return item
 
@@ -390,7 +408,7 @@ def param_replace(context, **kwargs):
     Based on
     https://stackoverflow.com/questions/22734695/next-and-before-links-for-a-django-paginated-query/22735278#22735278
     """
-    d = context['request'].GET.copy()
+    d = context["request"].GET.copy()
     for k, v in kwargs.items():
         d[k] = v
     for k in [k for k, v in d.items() if not v]:

@@ -20,7 +20,7 @@ def get_nginx_ip():
     every nginx restart. This address is dynamic and changes on every restart.
     """
     ip = None
-    with open('tmp/nginx_ip', 'r') as fd:
+    with open("tmp/nginx_ip", "r") as fd:
         for line in fd:
             ip = line
             break
@@ -37,21 +37,23 @@ def localize_url(url):
     """
     parsed = urllib.parse.urlparse(url)
     # www.hydroshare.org or dev-machine-name.domain.org
-    if parsed[1] == getattr(settings, 'PROD_FQDN_OR_IP', 'www.hydroshare.org') or \
-       parsed[1] == getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org'):
+    if parsed[1] == getattr(
+        settings, "PROD_FQDN_OR_IP", "www.hydroshare.org"
+    ) or parsed[1] == getattr(settings, "FQDN_OR_IP", "www.hydroshare.org"):
         # insert local IP instead of fake target
-        parsed2 = urllib.parse.ParseResult(parsed[0], get_nginx_ip(), parsed[2],
-                                           parsed[3], parsed[4], parsed[5])
+        parsed2 = urllib.parse.ParseResult(
+            parsed[0], get_nginx_ip(), parsed[2], parsed[3], parsed[4], parsed[5]
+        )
         return parsed2.geturl()
     else:
         return url
 
 
 def get(url, *args, **kwargs):
-    """ call requests.get on a localized url """
+    """call requests.get on a localized url"""
     return requests.get(localize_url(url), *args, **kwargs)
 
 
 def post(url, *args, **kwargs):
-    """ call requests.post on a localized url """
+    """call requests.post on a localized url"""
     return requests.post(localize_url(url), *args, **kwargs)

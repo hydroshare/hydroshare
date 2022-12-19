@@ -7,19 +7,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0036_auto_20171117_0422'),
+        ("hs_core", "0036_auto_20171117_0422"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='externalprofilelink',
+            name="externalprofilelink",
             unique_together=set([]),
         ),
         migrations.RemoveField(
-            model_name='externalprofilelink',
-            name='content_type',
+            model_name="externalprofilelink",
+            name="content_type",
         ),
         migrations.DeleteModel(
-            name='ExternalProfileLink',
+            name="ExternalProfileLink",
         ),
     ]

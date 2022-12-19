@@ -13,10 +13,8 @@ Please connect to the bash shell for the hydroshare container before running the
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
-from hs_access_control.models.privilege import PrivilegeCodes, \
-        UserResourcePrivilege
-from hs_access_control.management.utilities import \
-        user_from_name, resource_from_id
+from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivilege
+from hs_access_control.management.utilities import user_from_name, resource_from_id
 
 
 def usage():
@@ -38,31 +36,27 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a command to execute
-        parser.add_argument('command', nargs='*', type=str)
+        parser.add_argument("command", nargs="*", type=str)
 
-        parser.add_argument(
-            '--grantor',
-            dest='grantor',
-            help='grantor of privilege'
-        )
+        parser.add_argument("--grantor", dest="grantor", help="grantor of privilege")
 
     def handle(self, *args, **options):
 
-        if len(options['command']) > 0:
-            rid = options['command'][0]
+        if len(options["command"]) > 0:
+            rid = options["command"][0]
         else:
             rid = None
 
-        if len(options['command']) > 1:
-            command = options['command'][1]
+        if len(options["command"]) > 1:
+            command = options["command"][1]
         else:
             command = None
 
         # resolve grantor:
-        if options['grantor'] is not None:
-            oname = options['grantor']
+        if options["grantor"] is not None:
+            oname = options["grantor"]
         else:
-            oname = 'admin'
+            oname = "admin"
 
         grantor = user_from_name(oname)
         if grantor is None:
@@ -81,50 +75,78 @@ class Command(BaseCommand):
             usage()
             exit(1)
 
-        if command is None or command == 'list':
+        if command is None or command == "list":
 
-            print("resource '{}' title='{}'):".format(resource.short_id, resource.title))
+            print(
+                "resource '{}' title='{}'):".format(resource.short_id, resource.title)
+            )
             print("  owners:")
-            for ugp in UserResourcePrivilege.objects.filter(resource=resource,
-                                                            privilege=PrivilegeCodes.OWNER):
-                print("    {} (grantor {})".format(ugp.user.username, ugp.grantor.username))
+            for ugp in UserResourcePrivilege.objects.filter(
+                resource=resource, privilege=PrivilegeCodes.OWNER
+            ):
+                print(
+                    "    {} (grantor {})".format(
+                        ugp.user.username, ugp.grantor.username
+                    )
+                )
             print("  editors:")
-            for ugp in UserResourcePrivilege.objects.filter(resource=resource,
-                                                            privilege=PrivilegeCodes.CHANGE):
-                print("    {} (grantor {})".format(ugp.user.username, ugp.grantor.username))
+            for ugp in UserResourcePrivilege.objects.filter(
+                resource=resource, privilege=PrivilegeCodes.CHANGE
+            ):
+                print(
+                    "    {} (grantor {})".format(
+                        ugp.user.username, ugp.grantor.username
+                    )
+                )
             print("  viewrs:")
-            for ugp in UserResourcePrivilege.objects.filter(resource=resource,
-                                                            privilege=PrivilegeCodes.VIEW):
-                print("    {} (grantor {})".format(ugp.user.username, ugp.grantor.username))
+            for ugp in UserResourcePrivilege.objects.filter(
+                resource=resource, privilege=PrivilegeCodes.VIEW
+            ):
+                print(
+                    "    {} (grantor {})".format(
+                        ugp.user.username, ugp.grantor.username
+                    )
+                )
             exit(0)
 
-        if command == 'owner':
+        if command == "owner":
 
-            if len(options['command']) < 3:
+            if len(options["command"]) < 3:
                 # list owners
                 print("owners of resource '{}'".format(resource.short_id))
-                for ugp in UserResourcePrivilege.objects.filter(resource=resource,
-                                                                privilege=PrivilegeCodes.OWNER):
+                for ugp in UserResourcePrivilege.objects.filter(
+                    resource=resource, privilege=PrivilegeCodes.OWNER
+                ):
                     print("    {}".format(ugp.user.username))
                 exit(0)
 
-            oname = options['command'][2]
+            oname = options["command"][2]
             owner = user_from_name(oname)
             if owner is None:
                 usage()
                 exit(1)
 
-            action = options['command'][3]
-            if action == 'add':
-                print("adding {} as owner of {}"
-                      .format(owner.username, resource.short_id))
-                UserResourcePrivilege.share(user=owner, resource=resource,
-                                            privilege=PrivilegeCodes.OWNER, grantor=grantor)
+            action = options["command"][3]
+            if action == "add":
+                print(
+                    "adding {} as owner of {}".format(owner.username, resource.short_id)
+                )
+                UserResourcePrivilege.share(
+                    user=owner,
+                    resource=resource,
+                    privilege=PrivilegeCodes.OWNER,
+                    grantor=grantor,
+                )
 
-            elif action == 'remove':
-                print("removing {} as owner of {}"
-                      .format(owner.username, resource.short_id))
-                UserResourcePrivilege.unshare(user=owner, resource=resource, grantor=grantor)
+            elif action == "remove":
+                print(
+                    "removing {} as owner of {}".format(
+                        owner.username, resource.short_id
+                    )
+                )
+                UserResourcePrivilege.unshare(
+                    user=owner, resource=resource, grantor=grantor
+                )
 
             else:
                 print("unknown owner action '{}'".format(action))

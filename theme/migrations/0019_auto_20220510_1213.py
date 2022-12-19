@@ -10,13 +10,15 @@ import theme.utils
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('theme', '0018_auto_20220217_2304'),
+        ("theme", "0018_auto_20220217_2304"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='userprofile',
-            name='picture',
-            field=sorl.thumbnail.fields.ImageField(blank=True, null=True, upload_to=theme.utils.get_upload_path_userprofile),
+            model_name="userprofile",
+            name="picture",
+            field=sorl.thumbnail.fields.ImageField(
+                blank=True, null=True, upload_to=theme.utils.get_upload_path_userprofile
+            ),
         ),
     ]

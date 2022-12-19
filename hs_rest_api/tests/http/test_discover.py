@@ -18,27 +18,30 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
     @skip("TODO: was not running before python3 upgrade")
     def test_discovery_rest_api(self):
         # Just need to test it works, more thorough tests exist in the discover view
-        response = self.client.get(reverse('discover-hsapi', kwargs={}))
+        response = self.client.get(reverse("discover-hsapi", kwargs={}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content.decode())
         self.assertEqual(response_json.get("count"), 0)
 
         # Create resource
-        response = self.client.post(reverse('list_create_resource'), {
-            'resource_type': 'CompositeResource',
-            'title': "File Metadata Test Resource"
-        })
+        response = self.client.post(
+            reverse("list_create_resource"),
+            {
+                "resource_type": "CompositeResource",
+                "title": "File Metadata Test Resource",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_json = json.loads(response.content.decode())
         res_id = response_json.get("resource_id")
         self.resources_to_delete.append(res_id)
 
         # matching test
-        response = self.client.get(reverse('discover-hsapi', kwargs={}) + "?text=Test")
+        response = self.client.get(reverse("discover-hsapi", kwargs={}) + "?text=Test")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response_json.get("count"), 1)
 
         # not matching test
-        response = self.client.get(reverse('discover-hsapi', kwargs={}) + "?text=Water")
+        response = self.client.get(reverse("discover-hsapi", kwargs={}) + "?text=Water")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response_json.get("count"), 1)

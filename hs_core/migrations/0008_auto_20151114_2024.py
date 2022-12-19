@@ -7,12 +7,12 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0007_auto_20151114_1618'),
+        ("hs_core", "0007_auto_20151114_1618"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='subject',
-            unique_together=set([('value', 'content_type', 'object_id')]),
+            name="subject",
+            unique_together=set([("value", "content_type", "object_id")]),
         ),
     ]

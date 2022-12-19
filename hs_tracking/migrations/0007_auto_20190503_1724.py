@@ -8,18 +8,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_tracking', '0006_auto_20190407_1436'),
+        ("hs_tracking", "0006_auto_20190407_1436"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='variable',
-            name='rest',
+            model_name="variable",
+            name="rest",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='variable',
-            name='landing',
+            model_name="variable",
+            name="landing",
             field=models.BooleanField(default=False),
         ),
     ]

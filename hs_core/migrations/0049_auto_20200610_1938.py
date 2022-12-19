@@ -9,20 +9,27 @@ from hs_core.models import BaseResource
 
 def update_doi_none_to_empty(apps, schema_editor):
     for resource in BaseResource.objects.filter(doi=None):
-        resource.doi = ''
+        resource.doi = ""
         resource.save()
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0048_auto_20200603_2110'),
+        ("hs_core", "0048_auto_20200603_2110"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='baseresource',
-            name='doi',
-            field=models.CharField(blank=True, db_index=True, default='', help_text="Permanent identifier. Never changes once it's been set.", max_length=1024),
+            model_name="baseresource",
+            name="doi",
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                default="",
+                help_text="Permanent identifier. Never changes once it's been set.",
+                max_length=1024,
+            ),
         ),
         migrations.RunPython(update_doi_none_to_empty),
     ]

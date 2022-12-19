@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class HsDiscoverConfig(AppConfig):
-    name = 'hs_discover'
+    name = "hs_discover"

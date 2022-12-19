@@ -5,7 +5,12 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceFile, ResourceManager, resource_processor
+from hs_core.models import (
+    BaseResource,
+    ResourceFile,
+    ResourceManager,
+    resource_processor,
+)
 from hs_file_types.models import (
     FileSetLogicalFile,
     GenericLogicalFile,
@@ -16,10 +21,17 @@ from hs_file_types.models import (
     ModelProgramResourceFileType,
     NetCDFLogicalFile,
     RefTimeseriesLogicalFile,
-    TimeSeriesLogicalFile
+    TimeSeriesLogicalFile,
 )
-from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH, SCHEMA_JSON_FILE_ENDSWITH
-from hs_file_types.utils import update_target_spatial_coverage, update_target_temporal_coverage
+from hs_file_types.models.base import (
+    METADATA_FILE_ENDSWITH,
+    RESMAP_FILE_ENDSWITH,
+    SCHEMA_JSON_FILE_ENDSWITH,
+)
+from hs_file_types.utils import (
+    update_target_spatial_coverage,
+    update_target_temporal_coverage,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +39,10 @@ logger = logging.getLogger(__name__)
 class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
-    discovery_content_type = 'Composite'  # used during discovery
+    discovery_content_type = "Composite"  # used during discovery
 
     class Meta:
-        verbose_name = 'Composite Resource'
+        verbose_name = "Composite Resource"
         proxy = True
 
     @property
@@ -104,8 +116,8 @@ class CompositeResource(BaseResource):
             ModelProgramLogicalFile.type_name(): self.modelprogramlogicalfile_set.all(),
             NetCDFLogicalFile.type_name(): self.netcdflogicalfile_set.all(),
             TimeSeriesLogicalFile.type_name(): self.timeserieslogicalfile_set.all(),
-            RefTimeseriesLogicalFile.type_name(): self.reftimeserieslogicalfile_set.all()
-            }
+            RefTimeseriesLogicalFile.type_name(): self.reftimeserieslogicalfile_set.all(),
+        }
 
         if logical_file_class_name in class_name_to_query_mappings:
             return class_name_to_query_mappings[logical_file_class_name]
@@ -116,13 +128,17 @@ class CompositeResource(BaseResource):
     def has_logical_spatial_coverage(self):
         """Checks if any of the logical files has spatial coverage"""
 
-        return any(lf.metadata.spatial_coverage is not None for lf in self.logical_files)
+        return any(
+            lf.metadata.spatial_coverage is not None for lf in self.logical_files
+        )
 
     @property
     def has_logical_temporal_coverage(self):
         """Checks if any of the logical files has temporal coverage"""
 
-        return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
+        return any(
+            lf.metadata.temporal_coverage is not None for lf in self.logical_files
+        )
 
     @property
     def can_be_submitted_for_metadata_review(self):
@@ -135,7 +151,7 @@ class CompositeResource(BaseResource):
             if not lf.metadata.has_all_required_elements():
                 return False
             # url file cannot be published
-            if 'url' in lf.extra_data:
+            if "url" in lf.extra_data:
                 return False
 
         return True
@@ -162,8 +178,12 @@ class CompositeResource(BaseResource):
                     if aggregation.is_model_program:
                         # if the file is getting moved within a model program folder hierarchy then no need
                         # to delete any associated ModelProgramResourceFileType object
-                        if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
-                            ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
+                        if not tgt_folder.startswith(
+                            src_folder
+                        ) and not src_folder.startswith(tgt_folder):
+                            ModelProgramResourceFileType.objects.filter(
+                                res_file=moved_res_file
+                            ).delete()
                     self.cleanup_aggregations()
             except ObjectDoesNotExist:
                 pass
@@ -178,7 +198,9 @@ class CompositeResource(BaseResource):
             aggregation = self.get_model_aggregation_in_path(moved_res_file.file_folder)
             if aggregation is None:
                 # then check for fileset aggregation
-                aggregation = self.get_fileset_aggregation_in_path(moved_res_file.file_folder)
+                aggregation = self.get_fileset_aggregation_in_path(
+                    moved_res_file.file_folder
+                )
             if aggregation is not None:
                 # make the moved file part of the fileset or model program aggregation unless the file is
                 # already part of another aggregation (single file aggregation)
@@ -186,23 +208,23 @@ class CompositeResource(BaseResource):
 
     def get_folder_aggregation_object(self, dir_path, aggregations=None):
         """Returns an aggregation (file type) object if the specified folder *dir_path* represents a
-         file type aggregation (logical file), otherwise None.
+        file type aggregation (logical file), otherwise None.
 
-         :param dir_path: Resource file directory path (full folder path starting with resource id)
-         for which the aggregation object to be retrieved
-         :param aggregations:   list of all aggregations in self (this resource)
+        :param dir_path: Resource file directory path (full folder path starting with resource id)
+        for which the aggregation object to be retrieved
+        :param aggregations:   list of all aggregations in self (this resource)
         """
 
         aggregation_path = dir_path
         if dir_path.startswith(self.file_path):
-            aggregation_path = dir_path[len(self.file_path) + 1:]
+            aggregation_path = dir_path[len(self.file_path) + 1 :]
         if aggregations is None:
             logical_files = list(self.logical_files)
         else:
             logical_files = aggregations
 
         for lf in logical_files:
-            if hasattr(lf, 'folder'):
+            if hasattr(lf, "folder"):
                 if lf.folder == aggregation_path:
                     return lf
         return None
@@ -216,18 +238,20 @@ class CompositeResource(BaseResource):
         """
 
         # will be using aggregations more than once if dir_path consists of multiple folders
-        aggregations = list(self.logical_files) if '/' in dir_path else None
+        aggregations = list(self.logical_files) if "/" in dir_path else None
         if dir_path.startswith(self.file_path):
-            dir_path = dir_path[len(self.file_path) + 1:]
+            dir_path = dir_path[len(self.file_path) + 1 :]
 
         def get_aggregation(path):
             try:
-                aggregation = self.get_aggregation_by_name(path, aggregations=aggregations)
+                aggregation = self.get_aggregation_by_name(
+                    path, aggregations=aggregations
+                )
                 return aggregation
             except ObjectDoesNotExist:
                 return None
 
-        while '/' in dir_path:
+        while "/" in dir_path:
             aggr = get_aggregation(dir_path)
             if aggr is not None:
                 return aggr
@@ -237,14 +261,14 @@ class CompositeResource(BaseResource):
 
     def get_file_aggregation_object(self, file_path):
         """Returns an aggregation (file type) object if the specified file *file_path* represents a
-         file type aggregation (logical file), otherwise None.
+        file type aggregation (logical file), otherwise None.
 
-         :param file_path: Resource file path (full file path starting with resource id)
-         for which the aggregation object to be retrieved
+        :param file_path: Resource file path (full file path starting with resource id)
+        for which the aggregation object to be retrieved
         """
         relative_file_path = file_path
         if file_path.startswith(self.file_path):
-            relative_file_path = file_path[len(self.file_path) + 1:]
+            relative_file_path = file_path[len(self.file_path) + 1 :]
 
         folder, base = os.path.split(relative_file_path)
         try:
@@ -257,15 +281,15 @@ class CompositeResource(BaseResource):
 
     @property
     def supports_folders(self):
-        """ allow folders for CompositeResources """
+        """allow folders for CompositeResources"""
         return True
 
     @property
     def supports_logical_file(self):
-        """ if this resource allows associating resource file objects with logical file"""
+        """if this resource allows associating resource file objects with logical file"""
         return True
 
-    def create_aggregation_meta_files(self, path=''):
+    def create_aggregation_meta_files(self, path=""):
         """Creates aggregation meta files (resource map, metadata xml files and schema json files) for each of the
         contained aggregations
         :param  path: (optional) file or folder path for which meta files need to be created for
@@ -283,7 +307,7 @@ class CompositeResource(BaseResource):
             if is_path_a_folder:
                 # need to create xml files for all aggregations that exist under path
                 if path.startswith(self.file_path):
-                    path = path[len(self.file_path) + 1:]
+                    path = path[len(self.file_path) + 1 :]
                 for lf in self.logical_files:
                     if lf.aggregation_name.startswith(path) and lf.metadata.is_dirty:
                         lf.create_aggregation_xml_documents()
@@ -308,8 +332,9 @@ class CompositeResource(BaseResource):
             if aggregation.aggregation_name == aggregation_name:
                 return aggregation
 
-        raise ObjectDoesNotExist("No matching aggregation was found for "
-                                 "name:{}".format(aggregation_name))
+        raise ObjectDoesNotExist(
+            "No matching aggregation was found for " "name:{}".format(aggregation_name)
+        )
 
     def get_aggregation_by_name(self, name, aggregations=None):
         """Get an aggregation that matches the aggregation name specified by *name*
@@ -322,10 +347,13 @@ class CompositeResource(BaseResource):
         is_aggr_path_a_folder = self.is_path_folder(path=name)
         if is_aggr_path_a_folder:
             folder_full_path = os.path.join(self.file_path, name)
-            aggregation = self.get_folder_aggregation_object(folder_full_path, aggregations=aggregations)
+            aggregation = self.get_folder_aggregation_object(
+                folder_full_path, aggregations=aggregations
+            )
             if aggregation is None:
                 raise ObjectDoesNotExist(
-                    "No matching aggregation was found for name:{}".format(name))
+                    "No matching aggregation was found for name:{}".format(name)
+                )
             return aggregation
         else:
             folder, base = os.path.split(name)
@@ -334,7 +362,8 @@ class CompositeResource(BaseResource):
                 return res_file.logical_file
 
             raise ObjectDoesNotExist(
-                    "No matching aggregation was found for name:{}".format(name))
+                "No matching aggregation was found for name:{}".format(name)
+            )
 
     def get_fileset_aggregation_in_path(self, path):
         """Get the first fileset aggregation in the path moving up (towards the root)in the path
@@ -343,17 +372,19 @@ class CompositeResource(BaseResource):
         """
 
         # will be using aggregations more than once if path consists of multiple folders
-        aggregations = list(self.logical_files) if '/' in path else None
+        aggregations = list(self.logical_files) if "/" in path else None
 
         def get_fileset(path):
             try:
-                aggregation = self.get_aggregation_by_name(path, aggregations=aggregations)
+                aggregation = self.get_aggregation_by_name(
+                    path, aggregations=aggregations
+                )
                 if aggregation.is_fileset:
                     return aggregation
             except ObjectDoesNotExist:
                 return None
 
-        while '/' in path:
+        while "/" in path:
             fileset = get_fileset(path)
             if fileset is not None:
                 return fileset
@@ -368,16 +399,18 @@ class CompositeResource(BaseResource):
         """
 
         # will be using aggregations more than once if path consists of multiple folders
-        aggregations = list(self.logical_files) if '/' in path else None
+        aggregations = list(self.logical_files) if "/" in path else None
 
         def get_aggregation(path):
             try:
-                aggregation = self.get_aggregation_by_name(path, aggregations=aggregations)
+                aggregation = self.get_aggregation_by_name(
+                    path, aggregations=aggregations
+                )
                 return aggregation
             except ObjectDoesNotExist:
                 return None
 
-        while '/' in path:
+        while "/" in path:
             aggr = get_aggregation(path)
             if aggr is not None and (aggr.is_model_program or aggr.is_model_instance):
                 return aggr
@@ -400,19 +433,21 @@ class CompositeResource(BaseResource):
         aggregations = list(self.logical_files)
 
         def set_parent_aggregation_dirty(path_to_search):
-            if '/' in path_to_search:
+            if "/" in path_to_search:
                 path = os.path.dirname(path_to_search)
                 try:
-                    parent_aggr = self.get_aggregation_by_name(path, aggregations=aggregations)
+                    parent_aggr = self.get_aggregation_by_name(
+                        path, aggregations=aggregations
+                    )
                     parent_aggr.set_metadata_dirty()
                 except ObjectDoesNotExist:
                     pass
 
         if new_path.startswith(self.file_path):
-            new_path = new_path[len(self.file_path) + 1:]
+            new_path = new_path[len(self.file_path) + 1 :]
 
         if orig_path.startswith(self.file_path):
-            orig_path = orig_path[len(self.file_path) + 1:]
+            orig_path = orig_path[len(self.file_path) + 1 :]
 
         is_new_path_a_folder = self.is_path_folder(path=new_path)
         istorage = self.get_irods_storage()
@@ -425,7 +460,9 @@ class CompositeResource(BaseResource):
         map_xml_file_name = file_name + RESMAP_FILE_ENDSWITH
         if not is_new_path_a_folder:
             # case of file rename/move for single file aggregation
-            schema_json_file_full_path = os.path.join(self.file_path, schema_json_file_name)
+            schema_json_file_full_path = os.path.join(
+                self.file_path, schema_json_file_name
+            )
             meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
             map_xml_file_full_path = os.path.join(self.file_path, map_xml_file_name)
         else:
@@ -433,9 +470,15 @@ class CompositeResource(BaseResource):
             _, schema_json_file_name = os.path.split(schema_json_file_name)
             _, meta_xml_file_name = os.path.split(meta_xml_file_name)
             _, map_xml_file_name = os.path.split(map_xml_file_name)
-            schema_json_file_full_path = os.path.join(self.file_path, new_path, schema_json_file_name)
-            meta_xml_file_full_path = os.path.join(self.file_path, new_path, meta_xml_file_name)
-            map_xml_file_full_path = os.path.join(self.file_path, new_path, map_xml_file_name)
+            schema_json_file_full_path = os.path.join(
+                self.file_path, new_path, schema_json_file_name
+            )
+            meta_xml_file_full_path = os.path.join(
+                self.file_path, new_path, meta_xml_file_name
+            )
+            map_xml_file_full_path = os.path.join(
+                self.file_path, new_path, map_xml_file_name
+            )
 
         if istorage.exists(schema_json_file_full_path):
             istorage.delete(schema_json_file_full_path)
@@ -450,9 +493,11 @@ class CompositeResource(BaseResource):
         # aggregation or bag download
         for lf in aggregations:
             # set metadata dirty for any folder based aggregations under the orig_path
-            if hasattr(lf, 'folder'):
+            if hasattr(lf, "folder"):
                 if lf.folder is not None and lf.folder.startswith(orig_path):
-                    lf.folder = os.path.join(new_path, lf.folder[len(orig_path) + 1:]).strip('/')
+                    lf.folder = os.path.join(
+                        new_path, lf.folder[len(orig_path) + 1 :]
+                    ).strip("/")
                     lf.save()
                     lf.set_metadata_dirty()
                     continue
@@ -472,7 +517,9 @@ class CompositeResource(BaseResource):
         set_parent_aggregation_dirty(new_path)
 
         try:
-            aggregation = self.get_aggregation_by_name(new_path, aggregations=aggregations)
+            aggregation = self.get_aggregation_by_name(
+                new_path, aggregations=aggregations
+            )
             aggregation.set_metadata_dirty()
         except ObjectDoesNotExist:
             # the file path *new_path* does not represent an aggregation - no more
@@ -480,16 +527,20 @@ class CompositeResource(BaseResource):
             pass
 
     def is_aggregation_xml_file(self, file_path):
-        """ determine whether a given file in the file hierarchy is metadata.
+        """determine whether a given file in the file hierarchy is metadata.
 
         This is true if it is listed as metadata in any logical file.
         """
-        if not (file_path.endswith(METADATA_FILE_ENDSWITH) or
-                file_path.endswith(RESMAP_FILE_ENDSWITH)):
+        if not (
+            file_path.endswith(METADATA_FILE_ENDSWITH)
+            or file_path.endswith(RESMAP_FILE_ENDSWITH)
+        ):
             return False
         for logical_file in self.logical_files:
-            if logical_file.metadata_file_path == file_path or \
-                    logical_file.map_file_path == file_path:
+            if (
+                logical_file.metadata_file_path == file_path
+                or logical_file.map_file_path == file_path
+            ):
                 return True
         return False
 
@@ -554,7 +605,9 @@ class CompositeResource(BaseResource):
             if check_src_aggregation(src_aggr):
                 # check target
                 if is_moving_file:
-                    tgt_aggr = self.get_folder_aggregation_in_path(dir_path=tgt_dir_path)
+                    tgt_aggr = self.get_folder_aggregation_in_path(
+                        dir_path=tgt_dir_path
+                    )
                     if tgt_aggr is not None:
                         if src_aggr is None:
                             return tgt_aggr.supports_resource_file_move
@@ -568,9 +621,14 @@ class CompositeResource(BaseResource):
             src_aggr = self.get_folder_aggregation_in_path(dir_path=src_full_path)
             if src_aggr is not None:
                 if src_aggr.supports_resource_file_move:
-                    tgt_aggr = self.get_folder_aggregation_in_path(dir_path=tgt_full_path)
+                    tgt_aggr = self.get_folder_aggregation_in_path(
+                        dir_path=tgt_full_path
+                    )
                     if tgt_aggr is not None:
-                        return tgt_aggr.supports_resource_file_move and tgt_aggr.can_contain_aggregation(src_aggr)
+                        return (
+                            tgt_aggr.supports_resource_file_move
+                            and tgt_aggr.can_contain_aggregation(src_aggr)
+                        )
                     return True
             tgt_aggr = self.get_folder_aggregation_in_path(dir_path=tgt_full_path)
             if tgt_aggr is not None:
@@ -592,7 +650,7 @@ class CompositeResource(BaseResource):
         if not path_to_check.endswith("data/contents"):
             # it is not the base directory - it must be a directory under base dir
             if path_to_check.startswith(self.file_path):
-                aggregation_path = path_to_check[len(self.file_path) + 1:]
+                aggregation_path = path_to_check[len(self.file_path) + 1 :]
             else:
                 aggregation_path = path_to_check
             try:
@@ -650,8 +708,12 @@ class CompositeResource(BaseResource):
         for lfo in self.logical_files:
             if not lfo.metadata.has_all_required_elements():
                 missing_elements = lfo.metadata.get_required_missing_elements()
-                metadata_missing_info.append({'file_path': lfo.aggregation_name,
-                                              'missing_elements': missing_elements})
+                metadata_missing_info.append(
+                    {
+                        "file_path": lfo.aggregation_name,
+                        "missing_elements": missing_elements,
+                    }
+                )
         return metadata_missing_info
 
     def get_data_services_urls(self):
@@ -670,28 +732,28 @@ class CompositeResource(BaseResource):
             try:
                 resource_data_types = [lf.data_type for lf in self.logical_files]
                 service_url = (
-                        f'{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/' +
-                        '{}?request=GetCapabilities'
-                    )
-                if 'GeographicFeature' in resource_data_types:
-                    wfs_url = service_url.format('wfs')
-                    wms_url = service_url.format('wms')
-                if 'GeographicRaster' in resource_data_types:
-                    wcs_url = service_url.format('wcs')
-                    wms_url = service_url.format('wms')
+                    f"{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/"
+                    + "{}?request=GetCapabilities"
+                )
+                if "GeographicFeature" in resource_data_types:
+                    wfs_url = service_url.format("wfs")
+                    wms_url = service_url.format("wms")
+                if "GeographicRaster" in resource_data_types:
+                    wcs_url = service_url.format("wcs")
+                    wms_url = service_url.format("wms")
             except Exception as e:
                 logger.exception("get_data_services_urls: " + str(e))
 
-            if 'Multidimensional' in resource_data_types:
+            if "Multidimensional" in resource_data_types:
                 thredds_url = (
-                    f'{settings.THREDDS_SERVER_URL}catalog/hydroshare/resources/{self.short_id}/data/contents/'
-                    f'catalog.html'
+                    f"{settings.THREDDS_SERVER_URL}catalog/hydroshare/resources/{self.short_id}/data/contents/"
+                    f"catalog.html"
                 )
         data_services_urls = {
-            'wms_url': wms_url,
-            'wfs_url': wfs_url,
-            'wcs_url': wcs_url,
-            'thredds_url': thredds_url
+            "wms_url": wms_url,
+            "wfs_url": wfs_url,
+            "wcs_url": wcs_url,
+            "thredds_url": thredds_url,
         }
 
         return data_services_urls
@@ -701,11 +763,11 @@ class CompositeResource(BaseResource):
         :param coverage_type: A value of either 'spatial' or 'temporal
         :return:
         """
-        if coverage_type.lower() == 'spatial' and self.metadata.spatial_coverage:
+        if coverage_type.lower() == "spatial" and self.metadata.spatial_coverage:
             self.metadata.spatial_coverage.delete()
             self.metadata.is_dirty = True
             self.metadata.save()
-        elif coverage_type.lower() == 'temporal' and self.metadata.temporal_coverage:
+        elif coverage_type.lower() == "temporal" and self.metadata.temporal_coverage:
             self.metadata.temporal_coverage.delete()
             self.metadata.is_dirty = True
             self.metadata.save()
@@ -748,7 +810,11 @@ class CompositeResource(BaseResource):
                 agg_cls_name = lf.type_name()
                 lf.remove_aggregation()
                 count += 1
-                msg = "Deleted a dangling aggregation of type:{} for resource:{}".format(agg_cls_name, self.short_id)
+                msg = (
+                    "Deleted a dangling aggregation of type:{} for resource:{}".format(
+                        agg_cls_name, self.short_id
+                    )
+                )
                 logger.warning(msg)
         return count
 

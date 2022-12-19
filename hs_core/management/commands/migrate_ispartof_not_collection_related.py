@@ -19,7 +19,9 @@ class Command(BaseCommand):
         for res in BaseResource.objects.all().iterator():
             res = res.get_content_model()
             if res.metadata is None:
-                log_msg = "Resource with ID:{} missing metadata object. Skipping this resource".format(res.short_id)
+                log_msg = "Resource with ID:{} missing metadata object. Skipping this resource".format(
+                    res.short_id
+                )
                 print(log_msg)
                 log.warning(log_msg)
                 continue
@@ -40,11 +42,19 @@ class Command(BaseCommand):
                 updated_res_count += 1
                 set_dirty_bag_flag(res)
                 log_msg = "Relation type:{} migrated to type:{} for resource with ID:{} and type:{}."
-                log_msg = log_msg.format(RelationTypes.isPartOf.value, RelationTypes.isReferencedBy.value,
-                                         res.short_id, res.resource_type)
+                log_msg = log_msg.format(
+                    RelationTypes.isPartOf.value,
+                    RelationTypes.isReferencedBy.value,
+                    res.short_id,
+                    res.resource_type,
+                )
                 print(log_msg)
                 log.info(log_msg)
 
-        log_msg = "{} resource(s) updated for migrating relation type (isPartOf).".format(updated_res_count)
+        log_msg = (
+            "{} resource(s) updated for migrating relation type (isPartOf).".format(
+                updated_res_count
+            )
+        )
         print(log_msg)
         log.info(log_msg)

@@ -1,4 +1,3 @@
-
 from future.builtins import int
 
 from collections import defaultdict
@@ -55,11 +54,13 @@ def comment_thread(context, parent):
         replied_to = int(context["request"].POST["replied_to"])
     except KeyError:
         replied_to = 0
-    context.update({
-        "comments_for_thread": context["all_comments"].get(parent_id, []),
-        "no_comments": parent_id is None and not context["all_comments"],
-        "replied_to": replied_to,
-    })
+    context.update(
+        {
+            "comments_for_thread": context["all_comments"].get(parent_id, []),
+            "no_comments": parent_id is None and not context["all_comments"],
+            "replied_to": replied_to,
+        }
+    )
     return context.flatten()
 
 
@@ -83,8 +84,10 @@ def comment_filter(comment_text):
     """
     filter_func = settings.COMMENT_FILTER
     if not filter_func:
+
         def filter_func(s):
             return linebreaksbr(s, autoescape=True)
+
     elif not callable(filter_func):
         filter_func = import_dotted_path(filter_func)
     return filter_func(comment_text)

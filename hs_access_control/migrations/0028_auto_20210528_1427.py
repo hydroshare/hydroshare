@@ -10,46 +10,137 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0057_auto_20210104_2106'),
+        ("hs_core", "0057_auto_20210104_2106"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('hs_access_control', '0027_groupmembershiprequest_redeemed'),
+        ("hs_access_control", "0027_groupmembershiprequest_redeemed"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CommunityResourcePrivilege',
+            name="CommunityResourcePrivilege",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('privilege', models.IntegerField(choices=[(1, 'Owner'), (2, 'Change'), (3, 'View')], default=3, editable=False)),
-                ('start', models.DateTimeField(auto_now=True)),
-                ('community', models.ForeignKey(editable=False, help_text='community to be granted privilege', on_delete=django.db.models.deletion.CASCADE, related_name='c2crp', to='hs_access_control.Community')),
-                ('grantor', models.ForeignKey(editable=False, help_text='grantor of privilege', on_delete=django.db.models.deletion.CASCADE, related_name='x2crp', to=settings.AUTH_USER_MODEL)),
-                ('resource', models.ForeignKey(editable=False, help_text='resource providing privilege', on_delete=django.db.models.deletion.CASCADE, related_name='r2crp', to='hs_core.BaseResource')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "privilege",
+                    models.IntegerField(
+                        choices=[(1, "Owner"), (2, "Change"), (3, "View")],
+                        default=3,
+                        editable=False,
+                    ),
+                ),
+                ("start", models.DateTimeField(auto_now=True)),
+                (
+                    "community",
+                    models.ForeignKey(
+                        editable=False,
+                        help_text="community to be granted privilege",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="c2crp",
+                        to="hs_access_control.Community",
+                    ),
+                ),
+                (
+                    "grantor",
+                    models.ForeignKey(
+                        editable=False,
+                        help_text="grantor of privilege",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="x2crp",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "resource",
+                    models.ForeignKey(
+                        editable=False,
+                        help_text="resource providing privilege",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="r2crp",
+                        to="hs_core.BaseResource",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='CommunityResourceProvenance',
+            name="CommunityResourceProvenance",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('privilege', models.IntegerField(choices=[(1, 'Owner'), (2, 'Change'), (3, 'View')], default=3, editable=False)),
-                ('start', models.DateTimeField(auto_now_add=True)),
-                ('undone', models.BooleanField(default=False, editable=False)),
-                ('community', models.ForeignKey(editable=False, help_text='community to which privilege applies', on_delete=django.db.models.deletion.CASCADE, related_name='c2crq', to='hs_access_control.Community')),
-                ('grantor', models.ForeignKey(editable=False, help_text='grantor of privilege', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='x2crq', to=settings.AUTH_USER_MODEL)),
-                ('resource', models.ForeignKey(editable=False, help_text='community to be granted privilege', on_delete=django.db.models.deletion.CASCADE, related_name='r2crq', to='hs_core.BaseResource')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "privilege",
+                    models.IntegerField(
+                        choices=[(1, "Owner"), (2, "Change"), (3, "View")],
+                        default=3,
+                        editable=False,
+                    ),
+                ),
+                ("start", models.DateTimeField(auto_now_add=True)),
+                ("undone", models.BooleanField(default=False, editable=False)),
+                (
+                    "community",
+                    models.ForeignKey(
+                        editable=False,
+                        help_text="community to which privilege applies",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="c2crq",
+                        to="hs_access_control.Community",
+                    ),
+                ),
+                (
+                    "grantor",
+                    models.ForeignKey(
+                        editable=False,
+                        help_text="grantor of privilege",
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="x2crq",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "resource",
+                    models.ForeignKey(
+                        editable=False,
+                        help_text="community to be granted privilege",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="r2crq",
+                        to="hs_core.BaseResource",
+                    ),
+                ),
             ],
         ),
         migrations.AlterField(
-            model_name='groupcommunityprivilege',
-            name='grantor',
-            field=models.ForeignKey(editable=False, help_text='grantor of privilege', on_delete=django.db.models.deletion.CASCADE, related_name='x2gcp', to=settings.AUTH_USER_MODEL),
+            model_name="groupcommunityprivilege",
+            name="grantor",
+            field=models.ForeignKey(
+                editable=False,
+                help_text="grantor of privilege",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="x2gcp",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='communityresourceprovenance',
-            unique_together=set([('resource', 'community', 'start')]),
+            name="communityresourceprovenance",
+            unique_together=set([("resource", "community", "start")]),
         ),
         migrations.AlterUniqueTogether(
-            name='communityresourceprivilege',
-            unique_together=set([('community', 'resource')]),
+            name="communityresourceprivilege",
+            unique_together=set([("community", "resource")]),
         ),
     ]

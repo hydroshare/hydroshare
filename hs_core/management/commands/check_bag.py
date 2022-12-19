@@ -26,15 +26,16 @@ def check_bag(rid, options):
 
         if root_exists:
             # print status of metadata/bag system
-            scimeta_path = os.path.join(resource.root_path, 'data',
-                                        'resourcemetadata.xml')
+            scimeta_path = os.path.join(
+                resource.root_path, "data", "resourcemetadata.xml"
+            )
             scimeta_exists = istorage.exists(scimeta_path)
             if scimeta_exists:
                 print("resource metadata {} found".format(scimeta_path))
             else:
                 print("resource metadata {} NOT FOUND".format(scimeta_path))
 
-            resmap_path = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
+            resmap_path = os.path.join(resource.root_path, "data", "resourcemap.xml")
             resmap_exists = istorage.exists(resmap_path)
             if resmap_exists:
                 print("resource map {} found".format(resmap_path))
@@ -47,71 +48,74 @@ def check_bag(rid, options):
             else:
                 print("bag {} NOT FOUND".format(resource.bag_path))
 
-            dirty = resource.getAVU('metadata_dirty')
+            dirty = resource.getAVU("metadata_dirty")
             print("{}.metadata_dirty is {}".format(rid, str(dirty)))
 
-            modified = resource.getAVU('bag_modified')
+            modified = resource.getAVU("bag_modified")
             print("{}.bag_modified is {}".format(rid, str(modified)))
 
-            if options['reset']:  # reset all data to pristine
-                resource.setAVU('metadata_dirty', 'true')
+            if options["reset"]:  # reset all data to pristine
+                resource.setAVU("metadata_dirty", "true")
                 print("{}.metadata_dirty set to true".format(rid))
                 try:
                     istorage.delete(resource.scimeta_path)
                     print("{} deleted".format(resource.scimeta_path))
                 except SessionException as ex:
-                    print("{} delete failed: {}"
-                          .format(resource.scimeta_path,
-                                  ex.stderr))
+                    print(
+                        "{} delete failed: {}".format(resource.scimeta_path, ex.stderr)
+                    )
                 try:
                     istorage.delete(resource.resmap_path)
                     print("{} deleted".format(resource.resmap_path))
                 except SessionException as ex:
-                    print("{} delete failed: {}"
-                          .format(resource.resmap_path,
-                                  ex.stderr))
+                    print(
+                        "{} delete failed: {}".format(resource.resmap_path, ex.stderr)
+                    )
 
-                resource.setAVU('bag_modified', 'true')
+                resource.setAVU("bag_modified", "true")
                 print("{}.bag_modified set to true".format(rid))
                 try:
                     istorage.delete(resource.bag_path)
                     print("{} deleted".format(resource.bag_path))
                 except SessionException as ex:
-                    print("{} delete failed: {}"
-                          .format(resource.bag_path,
-                                  ex.stderr))
+                    print("{} delete failed: {}".format(resource.bag_path, ex.stderr))
 
-            if options['reset_metadata']:
-                resource.setAVU('metadata_dirty', 'true')
+            if options["reset_metadata"]:
+                resource.setAVU("metadata_dirty", "true")
                 print("{}.metadata_dirty set to true".format(rid))
                 try:
                     istorage.delete(resource.scimeta_path)
                     print("{} deleted".format(resource.scimeta_path))
                 except SessionException as ex:
-                    print("delete of {} failed: {}"
-                          .format(resource.scimeta_path,
-                                  ex.stderr))
+                    print(
+                        "delete of {} failed: {}".format(
+                            resource.scimeta_path, ex.stderr
+                        )
+                    )
                 try:
                     istorage.delete(resource.resmap_path)
                     print("{} deleted".format(resource.resmap_path))
                 except SessionException as ex:
-                    print("{} delete failed: {}"
-                          .format(resource.resmap_path,
-                                  ex.stderr))
+                    print(
+                        "{} delete failed: {}".format(resource.resmap_path, ex.stderr)
+                    )
 
-            if options['reset_bag']:
-                resource.setAVU('bag_modified', 'true')
+            if options["reset_bag"]:
+                resource.setAVU("bag_modified", "true")
                 print("{}.bag_modified set to true".format(rid))
                 try:
                     istorage.delete(resource.bag_path)
                     print("{} deleted".format(resource.bag_path))
                 except SessionException as ex:
-                    print("{} delete failed: {}"
-                          .format(resource.bag_path,
-                                  ex.stderr))
+                    print("{} delete failed: {}".format(resource.bag_path, ex.stderr))
 
-            if options['generate']:  # generate usable bag
-                if not options['if_needed'] or dirty or not scimeta_exists or not resmap_exists:
+            if options["generate"]:  # generate usable bag
+                if (
+                    not options["if_needed"]
+                    or dirty
+                    or not scimeta_exists
+                    or not resmap_exists
+                ):
                     try:
                         create_bag_metadata_files(resource)
                     except ValueError as e:
@@ -119,69 +123,84 @@ def check_bag(rid, options):
                         return
 
                     print("{} metadata generated from Django".format(rid))
-                    resource.setAVU('metadata_dirty', 'false')
-                    resource.setAVU('bag_modified', 'true')
+                    resource.setAVU("metadata_dirty", "false")
+                    resource.setAVU("bag_modified", "true")
                     print("{}.metadata_dirty set to false".format(rid))
 
-                if not options['if_needed'] or modified or not bag_exists:
+                if not options["if_needed"] or modified or not bag_exists:
                     create_bag_by_irods(rid)
                     print("{} bag generated from iRODs".format(rid))
-                    resource.setAVU('bag_modified', 'false')
+                    resource.setAVU("bag_modified", "false")
                     print("{}.bag_modified set to false".format(rid))
 
-            if options['generate_metadata']:
-                if not options['if_needed'] or dirty or not scimeta_exists or not resmap_exists:
+            if options["generate_metadata"]:
+                if (
+                    not options["if_needed"]
+                    or dirty
+                    or not scimeta_exists
+                    or not resmap_exists
+                ):
                     try:
                         create_bag_metadata_files(resource)
                     except ValueError as e:
                         print(("{}: value error encountered: {}".format(rid, str(e))))
                         return
                     print("{}: metadata generated from Django".format(rid))
-                    resource.setAVU('metadata_dirty', 'false')
+                    resource.setAVU("metadata_dirty", "false")
                     print("{}.metadata_dirty set to false".format(rid))
-                    resource.setAVU('bag_modified', 'true')
+                    resource.setAVU("bag_modified", "true")
                     print("{}.bag_modified set to false".format(rid))
 
-            if options['generate_bag']:
-                if not options['if_needed'] or modified or not bag_exists:
+            if options["generate_bag"]:
+                if not options["if_needed"] or modified or not bag_exists:
                     create_bag_by_irods(rid)
                     print("{}: bag generated from iRODs".format(rid))
-                    resource.setAVU('bag_modified', 'false')
+                    resource.setAVU("bag_modified", "false")
                     print("{}.bag_modified set to false".format(rid))
 
-            if options['download_bag']:
-                if options['password']:
-                    server = getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org')
+            if options["download_bag"]:
+                if options["password"]:
+                    server = getattr(settings, "FQDN_OR_IP", "www.hydroshare.org")
                     uri = "https://{}/hsapi/resource/{}/".format(server, rid)
                     print("download uri is {}".format(uri))
-                    r = hs_requests.get(uri, verify=False, stream=True,
-                                        auth=requests.auth.HTTPBasicAuth(options['login'],
-                                                                         options['password']))
+                    r = hs_requests.get(
+                        uri,
+                        verify=False,
+                        stream=True,
+                        auth=requests.auth.HTTPBasicAuth(
+                            options["login"], options["password"]
+                        ),
+                    )
                     print("download return status is {}".format(str(r.status_code)))
                     print("redirects:")
                     for thing in r.history:
                         print("...url: {}".format(thing.url))
-                    filename = 'tmp/check_bag_block'
-                    with open(filename, 'wb') as fd:
+                    filename = "tmp/check_bag_block"
+                    with open(filename, "wb") as fd:
                         for chunk in r.iter_content(chunk_size=128):
                             fd.write(chunk)
                 else:
                     print("cannot download bag without username and password.")
 
-            if options['open_bag']:
-                if options['password']:
-                    server = getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org')
+            if options["open_bag"]:
+                if options["password"]:
+                    server = getattr(settings, "FQDN_OR_IP", "www.hydroshare.org")
                     uri = "https://{}/hsapi/resource/{}/".format(server, rid)
                     print("download uri is {}".format(uri))
-                    r = hs_requests.get(uri, verify=False, stream=True,
-                                        auth=requests.auth.HTTPBasicAuth(options['login'],
-                                                                         options['password']))
+                    r = hs_requests.get(
+                        uri,
+                        verify=False,
+                        stream=True,
+                        auth=requests.auth.HTTPBasicAuth(
+                            options["login"], options["password"]
+                        ),
+                    )
                     print("download return status is {}".format(str(r.status_code)))
                     print("redirects:")
                     for thing in r.history:
                         print("...url: {}".format(thing.url))
-                    filename = 'tmp/check_bag_block'
-                    with open(filename, 'wb') as fd:
+                    filename = "tmp/check_bag_block"
+                    with open(filename, "wb") as fd:
                         for chunk in r.iter_content(chunk_size=128):
                             fd.write(chunk)
                             break
@@ -199,91 +218,91 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's, or none to check all resources
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
         # Named (optional) arguments
 
         parser.add_argument(
-            '--reset',
-            action='store_true',  # True for presence, False for absence
-            dest='reset',  # value is options['reset']
-            help='delete metadata and bag and start over'
+            "--reset",
+            action="store_true",  # True for presence, False for absence
+            dest="reset",  # value is options['reset']
+            help="delete metadata and bag and start over",
         )
 
         parser.add_argument(
-            '--reset_metadata',
-            action='store_true',  # True for presence, False for absence
-            dest='reset_metadata',  # value is options['reset_metadata']
-            help='delete metadata files and start over'
+            "--reset_metadata",
+            action="store_true",  # True for presence, False for absence
+            dest="reset_metadata",  # value is options['reset_metadata']
+            help="delete metadata files and start over",
         )
 
         parser.add_argument(
-            '--reset_bag',
-            action='store_true',  # True for presence, False for absence
-            dest='reset_bag',  # value is options['reset_bag']
-            help='delete bag and start over'
+            "--reset_bag",
+            action="store_true",  # True for presence, False for absence
+            dest="reset_bag",  # value is options['reset_bag']
+            help="delete bag and start over",
         )
 
         parser.add_argument(
-            '--generate',
-            action='store_true',  # True for presence, False for absence
-            dest='generate',  # value is options['generate']
-            help='force generation of metadata and bag'
+            "--generate",
+            action="store_true",  # True for presence, False for absence
+            dest="generate",  # value is options['generate']
+            help="force generation of metadata and bag",
         )
 
         parser.add_argument(
-            '--generate_metadata',
-            action='store_true',  # True for presence, False for absence
-            dest='generate_metadata',  # value is options['generate_metadata']
-            help='force generation of metadata and bag'
+            "--generate_metadata",
+            action="store_true",  # True for presence, False for absence
+            dest="generate_metadata",  # value is options['generate_metadata']
+            help="force generation of metadata and bag",
         )
 
         parser.add_argument(
-            '--generate_bag',
-            action='store_true',  # True for presence, False for absence
-            dest='generate_bag',  # value is options['generate_bag']
-            help='force generation of metadata and bag'
+            "--generate_bag",
+            action="store_true",  # True for presence, False for absence
+            dest="generate_bag",  # value is options['generate_bag']
+            help="force generation of metadata and bag",
         )
 
         parser.add_argument(
-            '--if_needed',
-            action='store_true',  # True for presence, False for absence
-            dest='if_needed',  # value is options['if_needed']
-            help='generate only if not present'
+            "--if_needed",
+            action="store_true",  # True for presence, False for absence
+            dest="if_needed",  # value is options['if_needed']
+            help="generate only if not present",
         )
 
         parser.add_argument(
-            '--download_bag',
-            action='store_true',  # True for presence, False for absence
-            dest='download_bag',  # value is options['download_bag']
-            help='try downloading the bag'
+            "--download_bag",
+            action="store_true",  # True for presence, False for absence
+            dest="download_bag",  # value is options['download_bag']
+            help="try downloading the bag",
         )
 
         parser.add_argument(
-            '--open_bag',
-            action='store_true',  # True for presence, False for absence
-            dest='open_bag',  # value is options['open_bag']
-            help='try opening the bag in http without downloading'
+            "--open_bag",
+            action="store_true",  # True for presence, False for absence
+            dest="open_bag",  # value is options['open_bag']
+            help="try opening the bag in http without downloading",
         )
 
         parser.add_argument(
-            '--login',
-            default='admin',
-            dest='login',  # value is options['login']
-            help='HydroShare login name'
+            "--login",
+            default="admin",
+            dest="login",  # value is options['login']
+            help="HydroShare login name",
         )
 
         parser.add_argument(
-            '--password',
+            "--password",
             default=None,
-            dest='password',  # value is options['password']
-            help='HydroShare password'
+            dest="password",  # value is options['password']
+            help="HydroShare password",
         )
 
     def handle(self, *args, **options):
 
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        if len(options["resource_ids"]) > 0:  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 check_bag(rid, options)
         else:
             for r in BaseResource.objects.all():

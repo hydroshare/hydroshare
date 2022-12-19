@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_labels', '0005_auto_20171127_1952'),
+        ("hs_labels", "0005_auto_20171127_1952"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='userresourcelabels',
-            name='label',
+            model_name="userresourcelabels",
+            name="label",
             field=models.TextField(max_length=75),
         ),
     ]

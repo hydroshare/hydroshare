@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_file_types', '0012_auto_20220228_2239'),
+        ("hs_file_types", "0012_auto_20220228_2239"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='netcdffilemetadata',
-            name='is_update_file',
+            model_name="netcdffilemetadata",
+            name="is_update_file",
             field=models.BooleanField(default=False),
         ),
     ]

@@ -21,17 +21,21 @@ from hs_core.hydroshare.users import create_account
 from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
-from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
+from hs_access_control.models import (
+    ResourceAccess,
+    UserResourcePrivilege,
+    PrivilegeCodes,
+)
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
 
-FILE_SIZE_LIMIT = 1*(1024 ** 3)
-FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
-METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
-METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
+FILE_SIZE_LIMIT = 1 * (1024**3)
+FILE_SIZE_LIMIT_FOR_DISPLAY = "1G"
+METADATA_STATUS_SUFFICIENT = "Sufficient to publish or make public"
+METADATA_STATUS_INSUFFICIENT = "Insufficient to publish or make public"
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +47,7 @@ def get_quota_usage_from_irods(username):
     :return: the combined quota usage from iRODS data zone and user zone; raise ValidationError
     if quota usage cannot be retrieved from iRODS
     """
-    attname = username + '-usage'
+    attname = username + "-usage"
     istorage = IrodsStorage()
     # get quota size for user in iRODS data zone by retrieving AVU set on irods bagit path
     # collection
@@ -62,9 +66,13 @@ def get_quota_usage_from_irods(username):
 
     # get quota size for the user in iRODS user zone
     try:
-        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
-                                     settings.IRODS_BAGIT_PATH)
+        uz_bagit_path = os.path.join(
+            "/",
+            settings.HS_USER_IRODS_ZONE,
+            "home",
+            settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
+            settings.IRODS_BAGIT_PATH,
+        )
         uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
         if uqUserZoneSize is None:
             # user may not have resources in user zone, so corresponding quota size AVU may not
@@ -78,7 +86,9 @@ def get_quota_usage_from_irods(username):
         uqUserZoneSize = -1
 
     if uqDataZoneSize < 0 and uqUserZoneSize < 0:
-        err_msg = 'no quota size AVU in data zone and user zone for user {}'.format(username)
+        err_msg = "no quota size AVU in data zone and user zone for user {}".format(
+            username
+        )
         logger.error(err_msg)
         raise ValidationError(err_msg)
     elif uqUserZoneSize < 0:
@@ -101,10 +111,16 @@ def update_quota_usage(username):
     :return: raise ValidationError if quota cannot be updated.
     """
     hs_internal_zone = "hydroshare"
-    uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
+    uq = UserQuota.objects.filter(
+        user__username=username, zone=hs_internal_zone
+    ).first()
     if uq is None:
         # the quota row does not exist in Django
-        err_msg = 'quota row does not exist in Django for hydroshare zone for user {}'.format(username)
+        err_msg = (
+            "quota row does not exist in Django for hydroshare zone for user {}".format(
+                username
+            )
+        )
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
@@ -123,7 +139,7 @@ def res_has_web_reference(res):
 
     for f in ResourceFile.objects.filter(object_id=res.id):
         if f.has_logical_file:
-            if 'url' in f.logical_file.extra_data:
+            if "url" in f.logical_file.extra_data:
                 return True
     return False
 
@@ -167,7 +183,7 @@ def get_capabilities(pk):
     Exception.ServiceFailure - The service is unable to process the request
     """
     res = utils.get_resource_by_shortkey(pk)
-    return getattr(res, 'extra_capabilities', lambda: None)()
+    return getattr(res, "extra_capabilities", lambda: None)()
 
 
 def get_resource_file(pk, filename):
@@ -305,9 +321,9 @@ def check_resource_files(files=()):
             # if file is already on the server, e.g., a file transferred directly from iRODS,
             # the file should not be subject to file size check since the file size check is
             # only prompted by file upload limit
-            if hasattr(file, '_size'):
+            if hasattr(file, "_size"):
                 sum += int(file._size)
-            elif hasattr(file, 'size'):
+            elif hasattr(file, "size"):
                 sum += int(file.size)
             else:
                 try:
@@ -316,9 +332,9 @@ def check_resource_files(files=()):
                     size = 0
                 sum += size
             continue
-        if hasattr(file, '_size') and file._size is not None:
+        if hasattr(file, "_size") and file._size is not None:
             size = int(file._size)
-        elif hasattr(file, 'size') and file.size is not None:
+        elif hasattr(file, "size") and file.size is not None:
             size = int(file.size)
         else:
             try:
@@ -347,8 +363,9 @@ def check_resource_type(resource_type):
             res_cls = tp
             break
     else:
-        raise NotImplementedError("Type {resource_type} does not exist".format(
-            resource_type=resource_type))
+        raise NotImplementedError(
+            "Type {resource_type} does not exist".format(resource_type=resource_type)
+        )
     return res_cls
 
 
@@ -364,26 +381,42 @@ def add_zip_file_contents_to_resource_async(resource, f):
     # Add contents of zipfile asynchronously; wait 30 seconds to be "sure" that resource creation
     # has finished.
     uploaded_filepath = f.temporary_file_path()
-    tmp_dir = getattr(settings, 'HYDROSHARE_SHARED_TEMP', '/shared_tmp')
-    logger.debug("Copying uploaded file from {0} to {1}".format(uploaded_filepath,
-                                                                tmp_dir))
+    tmp_dir = getattr(settings, "HYDROSHARE_SHARED_TEMP", "/shared_tmp")
+    logger.debug(
+        "Copying uploaded file from {0} to {1}".format(uploaded_filepath, tmp_dir)
+    )
     shutil.copy(uploaded_filepath, tmp_dir)
     zfile_name = os.path.join(tmp_dir, os.path.basename(uploaded_filepath))
     logger.debug("Retained upload as {0}".format(zfile_name))
     # Import here to avoid circular reference
     from hs_core.tasks import add_zip_file_contents_to_resource
-    add_zip_file_contents_to_resource.apply_async((resource.short_id, zfile_name),
-                                                  countdown=30)
-    resource.file_unpack_status = 'Pending'
+
+    add_zip_file_contents_to_resource.apply_async(
+        (resource.short_id, zfile_name), countdown=30
+    )
+    resource.file_unpack_status = "Pending"
     resource.save()
 
 
 def create_resource(
-        resource_type, owner, title,
-        edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=(), metadata=None, extra_metadata=None,
-        files=(), create_metadata=True, create_bag=True, unpack_file=False, full_paths={},
-        auto_aggregate=True, **kwargs):
+    resource_type,
+    owner,
+    title,
+    edit_users=None,
+    view_users=None,
+    edit_groups=None,
+    view_groups=None,
+    keywords=(),
+    metadata=None,
+    extra_metadata=None,
+    files=(),
+    create_metadata=True,
+    create_bag=True,
+    unpack_file=False,
+    full_paths={},
+    auto_aggregate=True,
+    **kwargs
+):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to
     write content to HydroShare. The pid for the resource is assigned by HydroShare upon inserting
@@ -463,7 +496,7 @@ def create_resource(
         resource.resource_type = resource_type
 
         # by default make resource private
-        resource.slug = 'resource{0}{1}'.format('/', resource.short_id)
+        resource.slug = "resource{0}{1}".format("/", resource.short_id)
         resource.save()
 
         if not metadata:
@@ -477,8 +510,9 @@ def create_resource(
         resource_access = ResourceAccess(resource=resource)
         resource_access.save()
         # use the built-in share routine to set initial provenance.
-        UserResourcePrivilege.share(resource=resource, grantor=owner, user=owner,
-                                    privilege=PrivilegeCodes.OWNER)
+        UserResourcePrivilege.share(
+            resource=resource, grantor=owner, user=owner, privilege=PrivilegeCodes.OWNER
+        )
 
         resource_labels = ResourceLabels(resource=resource)
         resource_labels.save()
@@ -486,22 +520,30 @@ def create_resource(
         if edit_users:
             for user in edit_users:
                 user = utils.user_from_id(user)
-                owner.uaccess.share_resource_with_user(resource, user, PrivilegeCodes.CHANGE)
+                owner.uaccess.share_resource_with_user(
+                    resource, user, PrivilegeCodes.CHANGE
+                )
 
         if view_users:
             for user in view_users:
                 user = utils.user_from_id(user)
-                owner.uaccess.share_resource_with_user(resource, user, PrivilegeCodes.VIEW)
+                owner.uaccess.share_resource_with_user(
+                    resource, user, PrivilegeCodes.VIEW
+                )
 
         if edit_groups:
             for group in edit_groups:
                 group = utils.group_from_id(group)
-                owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.CHANGE)
+                owner.uaccess.share_resource_with_group(
+                    resource, group, PrivilegeCodes.CHANGE
+                )
 
         if view_groups:
             for group in view_groups:
                 group = utils.group_from_id(group)
-                owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.VIEW)
+                owner.uaccess.share_resource_with_group(
+                    resource, group, PrivilegeCodes.VIEW
+                )
 
         # set quota of this resource to this creator
         # quota holder has to be set before the files are added in order for real time iRODS
@@ -510,8 +552,9 @@ def create_resource(
 
         if create_metadata:
             # prepare default metadata
-            utils.prepare_resource_default_metadata(resource=resource, metadata=metadata,
-                                                    res_title=title)
+            utils.prepare_resource_default_metadata(
+                resource=resource, metadata=metadata, res_title=title
+            )
 
             for element in metadata:
                 # here k is the name of the element
@@ -520,7 +563,7 @@ def create_resource(
                 resource.metadata.create_element(k, **v)
 
             for keyword in keywords:
-                resource.metadata.create_element('subject', value=keyword)
+                resource.metadata.create_element("subject", value=keyword)
 
             resource.title = resource.metadata.title.value
             resource.save()
@@ -536,14 +579,18 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, *files, full_paths=full_paths,
-                               auto_aggregate=auto_aggregate)
+            add_resource_files(
+                resource.short_id,
+                *files,
+                full_paths=full_paths,
+                auto_aggregate=auto_aggregate
+            )
 
         if create_bag:
             hs_bagit.create_bag(resource)
 
     # set the resource to private
-    resource.setAVU('isPublic', resource.raccess.public)
+    resource.setAVU("isPublic", resource.raccess.public)
 
     # set the resource type (which is immutable)
     resource.setAVU("resourceType", resource._meta.object_name)
@@ -551,7 +598,7 @@ def create_resource(
     return resource
 
 
-def create_empty_resource(pk, user_or_username, action='version'):
+def create_empty_resource(pk, user_or_username, action="version"):
     """
     Create a resource with empty content and empty metadata for resource versioning or copying.
     This empty resource object is then used to create metadata and content from its original
@@ -570,19 +617,24 @@ def create_empty_resource(pk, user_or_username, action='version'):
         user = user_or_username
     else:
         user = User.objects.get(username=user_or_username)
-    if action == 'version':
+    if action == "version":
         if not user.uaccess.owns_resource(res):
-            raise PermissionDenied('Only resource owners can create new versions')
-    elif action == 'copy':
+            raise PermissionDenied("Only resource owners can create new versions")
+    elif action == "copy":
         # import here to avoid circular import
         from hs_core.views.utils import rights_allows_copy
+
         if not user.uaccess.can_view_resource(res):
-            raise PermissionDenied('You do not have permission to view this resource')
+            raise PermissionDenied("You do not have permission to view this resource")
         allow_copy = rights_allows_copy(res, user)
         if not allow_copy:
-            raise PermissionDenied('The license for this resource does not permit copying')
+            raise PermissionDenied(
+                "The license for this resource does not permit copying"
+            )
     else:
-        raise ValidationError('Input parameter error: action needs to be version or copy')
+        raise ValidationError(
+            "Input parameter error: action needs to be version or copy"
+        )
 
     # create the resource without files and without creating bags first
     new_resource = create_resource(
@@ -590,7 +642,7 @@ def create_empty_resource(pk, user_or_username, action='version'):
         owner=user,
         title=res.metadata.title.value,
         create_metadata=False,
-        create_bag=False
+        create_bag=False,
     )
     return new_resource
 
@@ -610,8 +662,11 @@ def copy_resource(ori_res, new_res, user=None):
     """
 
     from hs_core.tasks import copy_resource_task
+
     if user:
-        copy_resource_task(ori_res.short_id, new_res.short_id, request_username=user.username)
+        copy_resource_task(
+            ori_res.short_id, new_res.short_id, request_username=user.username
+        )
     else:
         copy_resource_task(ori_res.short_id, new_res.short_id)
     # cannot directly return the new_res object being passed in, but rather return the new resource object being copied
@@ -632,16 +687,21 @@ def create_new_version_resource(ori_res, new_res, user):
 
     """
     from hs_core.tasks import create_new_version_resource_task
+
     if ori_res.locked_time:
         # cannot create new version for this resource since the resource is locked by another user
-        raise utils.ResourceVersioningException('Failed to create a new version for this resource '
-                                                'since another user is creating a new version for '
-                                                'this resource synchronously.')
+        raise utils.ResourceVersioningException(
+            "Failed to create a new version for this resource "
+            "since another user is creating a new version for "
+            "this resource synchronously."
+        )
     # lock the resource to prevent concurrent new version creation since only one new version for an
     # obsoleted resource is allowed
     ori_res.locked_time = datetime.datetime.now(tz.UTC)
     ori_res.save()
-    create_new_version_resource_task(ori_res.short_id, user.username, new_res_id=new_res.short_id)
+    create_new_version_resource_task(
+        ori_res.short_id, user.username, new_res_id=new_res.short_id
+    )
     # cannot directly return the new_res object being passed in, but rather return the new versioned resource object
     return utils.get_resource_by_shortkey(new_res.short_id)
 
@@ -672,15 +732,15 @@ def add_resource_files(pk, *files, **kwargs):
     """
     resource = utils.get_resource_by_shortkey(pk)
     ret = []
-    source_names = kwargs.pop('source_names', [])
-    full_paths = kwargs.pop('full_paths', {})
-    auto_aggregate = kwargs.pop('auto_aggregate', True)
+    source_names = kwargs.pop("source_names", [])
+    full_paths = kwargs.pop("full_paths", {})
+    auto_aggregate = kwargs.pop("auto_aggregate", True)
 
     if __debug__:
-        assert(isinstance(source_names, list))
+        assert isinstance(source_names, list)
 
-    folder = kwargs.pop('folder', '')
-    user = kwargs.pop('user', None)
+    folder = kwargs.pop("folder", "")
+    user = kwargs.pop("user", None)
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
@@ -691,11 +751,11 @@ def add_resource_files(pk, *files, **kwargs):
         if user is None or not user.is_superuser:
             raise ValidationError("Only admin can add files to a published resource")
 
-    prefix_path = 'data/contents'
+    prefix_path = "data/contents"
     if folder == prefix_path:
         base_dir = ""
     elif folder.startswith(prefix_path):
-        base_dir = folder[len(prefix_path) + 1:]
+        base_dir = folder[len(prefix_path) + 1 :]
     else:
         base_dir = folder
     for f in files:
@@ -709,9 +769,11 @@ def add_resource_files(pk, *files, **kwargs):
         ret.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user))
 
     for ifname in source_names:
-        ret.append(utils.add_file_to_resource(resource, None,
-                                              folder=folder,
-                                              source_name=ifname, user=user))
+        ret.append(
+            utils.add_file_to_resource(
+                resource, None, folder=folder, source_name=ifname, user=user
+            )
+        )
 
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
@@ -796,6 +858,7 @@ def delete_resource(pk, request_username=None):
     Note:  Only HydroShare administrators will be able to delete formally published resource
     """
     from hs_core.tasks import delete_resource_task
+
     resource = utils.get_resource_by_shortkey(pk)
     resource.set_discoverable(False)
     delete_resource_task(pk, request_username)
@@ -843,10 +906,13 @@ def delete_format_metadata_after_delete_file(resource, file_name):
 
     # if there is no other resource file with the same extension as the
     # file just deleted then delete the matching format metadata element for the resource
-    resource_file_extensions = [os.path.splitext(get_resource_file_name(f))[1] for f in
-                                resource.files.all()]
+    resource_file_extensions = [
+        os.path.splitext(get_resource_file_name(f))[1] for f in resource.files.all()
+    ]
     if delete_file_extension not in resource_file_extensions:
-        format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
+        format_element = resource.metadata.formats.filter(
+            value=delete_file_mime_type
+        ).first()
         if format_element:
             resource.metadata.delete_element(format_element.term, format_element.id)
 
@@ -883,10 +949,14 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
         if resource.files.count() == 1:
-            raise ValidationError("Resource file delete is not allowed. Published resource must contain at "
-                                  "least one file")
+            raise ValidationError(
+                "Resource file delete is not allowed. Published resource must contain at "
+                "least one file"
+            )
         elif not user.is_superuser:
-            raise ValidationError("Resource file can be deleted only by admin for a published resource")
+            raise ValidationError(
+                "Resource file can be deleted only by admin for a published resource"
+            )
 
     res_cls = resource.__class__
     file_by_id = False
@@ -903,8 +973,11 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             folder, base = os.path.split(filename_or_id)
             f = ResourceFile.get(resource=resource, file=base, folder=folder)
     except ObjectDoesNotExist:
-        raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
-                                            resource.short_id, filename_or_id))
+        raise ObjectDoesNotExist(
+            str.format(
+                "resource {}, file {} not found", resource.short_id, filename_or_id
+            )
+        )
 
     if delete_logical_file and f.has_logical_file:
         logical_file = f.logical_file
@@ -916,8 +989,9 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
         else:
             logical_file.set_metadata_dirty()
 
-    signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
-                                               resource=resource, user=user)
+    signals.pre_delete_file_from_resource.send(
+        sender=res_cls, file=f, resource=resource, user=user
+    )
 
     file_name = delete_resource_file_only(resource, f)
 
@@ -935,7 +1009,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     return filename_or_id
 
 
-def get_resource_doi(res_id, flag=''):
+def get_resource_doi(res_id, flag=""):
     doi_str = "https://doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
     if flag:
         return "{doi}{append_flag}".format(doi=doi_str, append_flag=flag)
@@ -958,8 +1032,8 @@ def get_activated_doi(doi):
     Returns:
         the activated DOI with all flags removed if any
     """
-    idx1 = doi.find('pending')
-    idx2 = doi.find('failure')
+    idx1 = doi.find("pending")
+    idx2 = doi.find("failure")
     if idx1 >= 0:
         return doi[:idx1]
     elif idx2 >= 0:
@@ -969,9 +1043,9 @@ def get_activated_doi(doi):
 
 
 def get_crossref_url():
-    main_url = 'https://test.crossref.org/'
+    main_url = "https://test.crossref.org/"
     if not settings.USE_CROSSREF_TEST:
-        main_url = 'https://doi.crossref.org/'
+        main_url = "https://doi.crossref.org/"
     return main_url
 
 
@@ -985,17 +1059,17 @@ def deposit_res_metadata_with_crossref(res):
         response returned for the metadata deposition request from CrossRef
 
     """
-    xml_file_name = '{uuid}_deposit_metadata.xml'.format(uuid=res.short_id)
+    xml_file_name = "{uuid}_deposit_metadata.xml".format(uuid=res.short_id)
     # using HTTP to POST deposit xml file to crossref
     post_data = {
-        'operation': 'doMDUpload',
-        'login_id': settings.CROSSREF_LOGIN_ID,
-        'login_passwd': settings.CROSSREF_LOGIN_PWD
+        "operation": "doMDUpload",
+        "login_id": settings.CROSSREF_LOGIN_ID,
+        "login_passwd": settings.CROSSREF_LOGIN_PWD,
     }
-    files = {'file': (xml_file_name, res.get_crossref_deposit_xml())}
+    files = {"file": (xml_file_name, res.get_crossref_deposit_xml())}
     # exceptions will be raised if POST request fails
     main_url = get_crossref_url()
-    post_url = '{MAIN_URL}servlet/deposit'.format(MAIN_URL=main_url)
+    post_url = "{MAIN_URL}servlet/deposit".format(MAIN_URL=main_url)
     # TODO turning off verify for crossref until our ssl dependencies are updated
     response = requests.post(post_url, data=post_data, files=files, verify=False)
     return response
@@ -1029,9 +1103,11 @@ def submit_resource_for_review(request, pk):
         raise ValidationError("Metadata review has already been initiated")
 
     if not resource.can_be_submitted_for_metadata_review:
-        raise ValidationError("This resource cannot be submitted for metadata review since "
-                              "it does not have required metadata or content files, or it contains "
-                              "reference content, or this resource type is not allowed for publication.")
+        raise ValidationError(
+            "This resource cannot be submitted for metadata review since "
+            "it does not have required metadata or content files, or it contains "
+            "reference content, or this resource type is not allowed for publication."
+        )
 
     try:
         user_to = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
@@ -1041,18 +1117,26 @@ def submit_resource_for_review(request, pk):
             username=settings.DEFAULT_FROM_EMAIL,
             first_name=settings.DEFAULT_FROM_EMAIL,
             last_name=settings.DEFAULT_FROM_EMAIL,
-            superuser=True
+            superuser=True,
         )
     from hs_core.views.utils import send_action_to_take_email
-    send_action_to_take_email(request, user=user_to, user_from=request.user,
-                                action_type='metadata_review', resource=resource)
+
+    send_action_to_take_email(
+        request,
+        user=user_to,
+        user_from=request.user,
+        action_type="metadata_review",
+        resource=resource,
+    )
     resource.raccess.review_pending = True
     resource.raccess.immutable = True
     resource.raccess.save()
 
     # create review date -- must be after review_pending = True
-    resource.metadata.dates.all().filter(type='review_started').delete()
-    resource.metadata.create_element('date', type='review_started', start_date=datetime.datetime.now(tz.UTC))
+    resource.metadata.dates.all().filter(type="review_started").delete()
+    resource.metadata.create_element(
+        "date", type="review_started", start_date=datetime.datetime.now(tz.UTC)
+    )
 
 
 def publish_resource(user, pk):
@@ -1084,13 +1168,15 @@ def publish_resource(user, pk):
     # TODO: whether a resource can be published is not considered in can_be_submitted_for_metadata_review
     # TODO: can_be_submitted_for_metadata_review is currently an alias for can_be_public_or_discoverable
     if not resource.can_be_submitted_for_metadata_review:
-        raise ValidationError("This resource cannot be submitted for metadata review since "
-                              "it does not have required metadata or content files, or it contains "
-                              "reference content, or this resource type is not allowed for publication.")
+        raise ValidationError(
+            "This resource cannot be submitted for metadata review since "
+            "it does not have required metadata or content files, or it contains "
+            "reference content, or this resource type is not allowed for publication."
+        )
 
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
-    resource.doi = get_resource_doi(pk, 'pending')
+    resource.doi = get_resource_doi(pk, "pending")
     resource.save()
 
     if not settings.DEBUG:
@@ -1099,7 +1185,7 @@ def publish_resource(user, pk):
         if not response.status_code == status.HTTP_200_OK:
             # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
             # crontab celery task
-            resource.doi = get_resource_doi(pk, 'failure')
+            resource.doi = get_resource_doi(pk, "failure")
             resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
@@ -1107,18 +1193,21 @@ def publish_resource(user, pk):
     resource.raccess.save()
 
     # change "Publisher" element of science metadata to CUAHSI
-    md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, '
-                       'Inc. (CUAHSI)',
-               'url': 'https://www.cuahsi.org'}
-    resource.metadata.create_element('Publisher', **md_args)
+    md_args = {
+        "name": "Consortium of Universities for the Advancement of Hydrologic Science, "
+        "Inc. (CUAHSI)",
+        "url": "https://www.cuahsi.org",
+    }
+    resource.metadata.create_element("Publisher", **md_args)
 
     # create published date
-    resource.metadata.create_element('date', type='published', start_date=resource.updated)
+    resource.metadata.create_element(
+        "date", type="published", start_date=resource.updated
+    )
 
     # add doi to "Identifier" element of science metadata
-    md_args = {'name': 'doi',
-               'url': get_activated_doi(resource.doi)}
-    resource.metadata.create_element('Identifier', **md_args)
+    md_args = {"name": "doi", "url": get_activated_doi(resource.doi)}
+    resource.metadata.create_element("Identifier", **md_args)
 
     utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1164,7 +1253,9 @@ def create_metadata_element(resource_short_id, element_model_name, **kwargs):
     res.metadata.create_element(element_model_name, **kwargs)
 
 
-def update_metadata_element(resource_short_id, element_model_name, element_id, **kwargs):
+def update_metadata_element(
+    resource_short_id, element_model_name, element_id, **kwargs
+):
     """
     Updates the data associated with a metadata element for a specified resource
 

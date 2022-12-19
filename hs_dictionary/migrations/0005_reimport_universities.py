@@ -14,19 +14,12 @@ def forwards(apps, schema_editor):
     with open(os.path.dirname(__file__) + "/world-universities.csv") as f:
         reader = csv.reader(f)
         for i, line in enumerate(reader):
-            University.objects.create(
-                name=line[1],
-                country_code=line[0],
-                url=line[2]
-            )
+            University.objects.create(name=line[1], country_code=line[0], url=line[2])
 
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('hs_dictionary', '0004_merge'),
+        ("hs_dictionary", "0004_merge"),
     ]
 
-    operations = [
-        migrations.RunPython(forwards)
-    ]
-
+    operations = [migrations.RunPython(forwards)]

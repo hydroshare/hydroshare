@@ -51,6 +51,7 @@ from django.db.models import Q
 
 from hs_core.models import BaseResource
 
+
 class FlagCodes(object):
     """
     Flag codes describe the meanings of per-user flags for a resource.
@@ -61,13 +62,14 @@ class FlagCodes(object):
     * 2 or FlagCodes.MINE:
       marked as being part of "My Resources" on "Discover" page.
     """
+
     FAVORITE = 1
     MINE = 2
     OPEN_WITH_APP = 3
     FLAG_CHOICES = (
-        (FAVORITE, 'Favorite'),  # marked as favorite in my resources page.
-        (MINE, 'Mine'),          # marked as mine in discovery page.
-        (OPEN_WITH_APP, 'Open With App'),  # marked as a open_with app
+        (FAVORITE, "Favorite"),  # marked as favorite in my resources page.
+        (MINE, "Mine"),  # marked as mine in discovery page.
+        (OPEN_WITH_APP, "Open With App"),  # marked as a open_with app
     )
 
 
@@ -77,22 +79,31 @@ class UserResourceLabels(models.Model):
 
     This model stores labels of an individual user, like an access control list. T
     """
+
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    user = models.ForeignKey(User, null=False, editable=False,
-                             related_name='u2url',  # unused but must be defined and unique
-                             help_text='user assigning a label',
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User,
+        null=False,
+        editable=False,
+        related_name="u2url",  # unused but must be defined and unique
+        help_text="user assigning a label",
+        on_delete=models.CASCADE,
+    )
 
-    resource = models.ForeignKey(BaseResource, null=False, editable=False,
-                                 related_name='r2url',  # unused but must be defined and unique
-                                 help_text='resource to which a label applies',
-                                 on_delete=models.CASCADE)
+    resource = models.ForeignKey(
+        BaseResource,
+        null=False,
+        editable=False,
+        related_name="r2url",  # unused but must be defined and unique
+        help_text="resource to which a label applies",
+        on_delete=models.CASCADE,
+    )
 
     label = models.TextField(null=False, max_length=75)
 
     class Meta:
-        unique_together = ('user', 'resource', 'label')
+        unique_together = ("user", "resource", "label")
 
 
 class UserResourceFlags(models.Model):
@@ -103,37 +114,51 @@ class UserResourceFlags(models.Model):
     control list; There are several kinds of labels documented in FlagCodes.
     These are similar in implementation but differ in semantics.
     """
-    kind = models.IntegerField(choices=FlagCodes.FLAG_CHOICES,
-                               editable=False,
-                               default=FlagCodes.FAVORITE)
+
+    kind = models.IntegerField(
+        choices=FlagCodes.FLAG_CHOICES, editable=False, default=FlagCodes.FAVORITE
+    )
 
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    user = models.ForeignKey(User, null=False, editable=False,
-                             related_name='u2urf',  # unused but must be defined and unique
-                             help_text='user assigning a flag',
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User,
+        null=False,
+        editable=False,
+        related_name="u2urf",  # unused but must be defined and unique
+        help_text="user assigning a flag",
+        on_delete=models.CASCADE,
+    )
 
-    resource = models.ForeignKey(BaseResource, null=False, editable=False,
-                                 related_name="r2urf",  # unused but must be defined and unique
-                                 help_text='resource to which a flag applies',
-                                 on_delete=models.CASCADE)
+    resource = models.ForeignKey(
+        BaseResource,
+        null=False,
+        editable=False,
+        related_name="r2urf",  # unused but must be defined and unique
+        help_text="resource to which a flag applies",
+        on_delete=models.CASCADE,
+    )
 
     class Meta:
-        unique_together = ('user', 'resource', 'kind')
+        unique_together = ("user", "resource", "kind")
 
 
 class UserStoredLabels(models.Model):
     """
     Storage class for persistent labels that are reusable across different kinds of objects
     """
-    user  = models.ForeignKey(User, null=False,
-                              help_text='user who stored the label',
-                              related_name='ul2usl',
-                              on_delete=models.CASCADE)
-    label = models.TextField(help_text='label to be stored by user')
+
+    user = models.ForeignKey(
+        User,
+        null=False,
+        help_text="user who stored the label",
+        related_name="ul2usl",
+        on_delete=models.CASCADE,
+    )
+    label = models.TextField(help_text="label to be stored by user")
+
     class Meta:
-        unique_together = ('user', 'label')
+        unique_together = ("user", "label")
 
 
 class UserLabels(models.Model):
@@ -144,12 +169,14 @@ class UserLabels(models.Model):
     Thus for an User u, u.user is this model.
     """
 
-    user = models.OneToOneField(User,
-                                editable=False,
-                                null=True,
-                                related_name='ulabels',  # induced field in User class.
-                                related_query_name='ulabels',
-                                on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        User,
+        editable=False,
+        null=True,
+        related_name="ulabels",  # induced field in User class.
+        related_query_name="ulabels",
+        on_delete=models.CASCADE,
+    )
 
     ##########################################
     # PUBLIC FUNCTIONS: resources
@@ -168,12 +195,15 @@ class UserLabels(models.Model):
         Get resources with a specific flag.
         """
         if __debug__:  # during testing only, check argument types and preconditions
-            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE or \
-                this_flagcode == FlagCodes.OPEN_WITH_APP
+            assert (
+                this_flagcode == FlagCodes.FAVORITE
+                or this_flagcode == FlagCodes.MINE
+                or this_flagcode == FlagCodes.OPEN_WITH_APP
+            )
 
-
-        return BaseResource.objects.filter(r2urf__user=self.user,
-                                           r2urf__kind=this_flagcode)
+        return BaseResource.objects.filter(
+            r2urf__user=self.user, r2urf__kind=this_flagcode
+        )
 
     @property
     def favorited_resources(self):
@@ -197,7 +227,9 @@ class UserLabels(models.Model):
         """
         Get a QuerySet of resources the user has tagged in any way.
         """
-        return BaseResource.objects.filter(Q(r2url__user=self.user) | Q(r2urf__user=self.user)).distinct()
+        return BaseResource.objects.filter(
+            Q(r2url__user=self.user) | Q(r2urf__user=self.user)
+        ).distinct()
 
     def get_resources_with_label(self, this_label):
         """
@@ -206,20 +238,28 @@ class UserLabels(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_label, str)
 
-        label_string = UserLabels.clean_label(this_label)  # remove leading and trailing spaces
-        return BaseResource.objects.filter(r2url__user=self.user,
-                                           r2url__label__exact=label_string)\
-                                    .distinct()\
-                                    .order_by('r2url__label')
+        label_string = UserLabels.clean_label(
+            this_label
+        )  # remove leading and trailing spaces
+        return (
+            BaseResource.objects.filter(
+                r2url__user=self.user, r2url__label__exact=label_string
+            )
+            .distinct()
+            .order_by("r2url__label")
+        )
 
     @property
     def user_labels(self):
         """
         Get a QuerySet of labels in use now.
         """
-        return UserResourceLabels.objects.values_list('label', flat=True)\
-                                 .filter(user=self.user)\
-                                 .distinct().order_by('label')
+        return (
+            UserResourceLabels.objects.values_list("label", flat=True)
+            .filter(user=self.user)
+            .distinct()
+            .order_by("label")
+        )
 
     ######################################
     # Label a resource
@@ -227,9 +267,11 @@ class UserLabels(models.Model):
 
     @staticmethod
     def clean_label(name):
-        label_string = re.sub('/', r'', name)                   # no /'s
-        label_string = label_string.strip()                     # no leading or trailing whitespace
-        label_string = re.sub(r'\s+', r' ', label_string)       # collapse multiple whitespace, including tabs
+        label_string = re.sub("/", r"", name)  # no /'s
+        label_string = label_string.strip()  # no leading or trailing whitespace
+        label_string = re.sub(
+            r"\s+", r" ", label_string
+        )  # collapse multiple whitespace, including tabs
         return label_string
 
     def label_resource(self, this_resource, this_label):
@@ -246,9 +288,9 @@ class UserLabels(models.Model):
         # remove leading and trailing spaces
         label_string = UserLabels.clean_label(this_label)
         with transaction.atomic():  # empirically, get_or_create is not atomic.
-            UserResourceLabels.objects.get_or_create(resource=this_resource,
-                                                     label=label_string,
-                                                     user=self.user)
+            UserResourceLabels.objects.get_or_create(
+                resource=this_resource, label=label_string, user=self.user
+            )
 
     def unlabel_resource(self, this_resource, this_label):
         """
@@ -264,9 +306,9 @@ class UserLabels(models.Model):
         # remove leading and trailing spaces
         label_string = UserLabels.clean_label(this_label)
 
-        UserResourceLabels.objects.filter(resource=this_resource,
-                                          label__exact=label_string,
-                                          user=self.user).delete()
+        UserResourceLabels.objects.filter(
+            resource=this_resource, label__exact=label_string, user=self.user
+        ).delete()
 
     def clear_resource_labels(self, this_resource):
         """
@@ -275,8 +317,9 @@ class UserLabels(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
 
-        UserResourceLabels.objects.filter(resource=this_resource,
-                                          user=self.user).delete()
+        UserResourceLabels.objects.filter(
+            resource=this_resource, user=self.user
+        ).delete()
 
     def remove_resource_label(self, this_label):
         """
@@ -284,8 +327,7 @@ class UserLabels(models.Model):
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_label, str)
-        UserResourceLabels.objects.filter(label=this_label, user=self.user)\
-                                  .delete()
+        UserResourceLabels.objects.filter(label=this_label, user=self.user).delete()
 
     ##########################################
     # general flagging of resources
@@ -300,13 +342,16 @@ class UserLabels(models.Model):
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
-            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE or \
-                this_flagcode == FlagCodes.OPEN_WITH_APP
+            assert (
+                this_flagcode == FlagCodes.FAVORITE
+                or this_flagcode == FlagCodes.MINE
+                or this_flagcode == FlagCodes.OPEN_WITH_APP
+            )
 
         with transaction.atomic():  # empirically, get_or_create is not atomic.
-            UserResourceFlags.objects.get_or_create(resource=this_resource,
-                                                     kind=this_flagcode,
-                                                     user=self.user)
+            UserResourceFlags.objects.get_or_create(
+                resource=this_resource, kind=this_flagcode, user=self.user
+            )
 
     def unflag_resource(self, this_resource, this_flagcode):
         """
@@ -317,20 +362,21 @@ class UserLabels(models.Model):
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
-            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE or \
-                this_flagcode == FlagCodes.OPEN_WITH_APP
+            assert (
+                this_flagcode == FlagCodes.FAVORITE
+                or this_flagcode == FlagCodes.MINE
+                or this_flagcode == FlagCodes.OPEN_WITH_APP
+            )
 
-        UserResourceFlags.objects.filter(user=self.user,
-                                          resource=this_resource,
-                                          kind=this_flagcode).delete()
+        UserResourceFlags.objects.filter(
+            user=self.user, resource=this_resource, kind=this_flagcode
+        ).delete()
 
     def clear_all_flags(self, this_flagcode):
         """
         remove all flags of a specific kind for a user
         """
-        UserResourceFlags.objects.filter(user=self.user,
-                                          kind=this_flagcode)\
-                                  .delete()
+        UserResourceFlags.objects.filter(user=self.user, kind=this_flagcode).delete()
 
     ##########################################
     # favorite resources
@@ -401,7 +447,6 @@ class UserLabels(models.Model):
         """
         self.unflag_resource(this_resource, FlagCodes.OPEN_WITH_APP)
 
-
     ##########################################
     # routines that apply to all kinds of annotations
     ##########################################
@@ -413,14 +458,12 @@ class UserLabels(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
 
-        UserResourceLabels.objects\
-                          .filter(resource=this_resource,
-                                  user=self.user)\
-                          .delete()
-        UserResourceFlags.objects\
-                         .filter(resource=this_resource,
-                                 user=self.user)\
-                         .delete()
+        UserResourceLabels.objects.filter(
+            resource=this_resource, user=self.user
+        ).delete()
+        UserResourceFlags.objects.filter(
+            resource=this_resource, user=self.user
+        ).delete()
 
     ##########################################
     # save unused labels
@@ -433,7 +476,9 @@ class UserLabels(models.Model):
         Users are allowed to label any resource, including resources to which they do not have access.
         This is not an access control problem because labeling information is private.
         """
-        label_string = UserLabels.clean_label(this_label)    # remove leading and trailing spaces
+        label_string = UserLabels.clean_label(
+            this_label
+        )  # remove leading and trailing spaces
         with transaction.atomic():  # empirically, get_or_create is not atomic.
             UserStoredLabels.objects.get_or_create(label=label_string, user=self.user)
 
@@ -443,7 +488,9 @@ class UserLabels(models.Model):
         """
         # remove leading and trailing spaces
         label_string = UserLabels.clean_label(this_label)
-        UserStoredLabels.objects.filter(label__exact=label_string, user=self.user).delete()
+        UserStoredLabels.objects.filter(
+            label__exact=label_string, user=self.user
+        ).delete()
         # remove all uses of that label from resources.
         self.remove_resource_label(label_string)
 
@@ -458,25 +505,34 @@ class UserLabels(models.Model):
         """
         Return a QuerySet of saved labels.
         """
-        return UserStoredLabels.objects.filter(user=self.user).values_list('label', flat=True).distinct()
+        return (
+            UserStoredLabels.objects.filter(user=self.user)
+            .values_list("label", flat=True)
+            .distinct()
+        )
 
 
 class ResourceLabels(models.Model):
     """
     For a BaseResource r, r.rlabels is this model. It contains functions relevant to resources.
     """
-    resource = models.OneToOneField(BaseResource,
-                                    editable=False,
-                                    null=True,
-                                    related_name='rlabels',
-                                    related_query_name='rlabels',
-                                    on_delete=models.CASCADE)
+
+    resource = models.OneToOneField(
+        BaseResource,
+        editable=False,
+        null=True,
+        related_name="rlabels",
+        related_query_name="rlabels",
+        on_delete=models.CASCADE,
+    )
 
     def get_users(self):
         """
         Return a QuerySet of all users who have labeled this resource.
         """
-        return User.objects.filter(Q(u2url__resource=self.resource) | Q(u2urf__resource=self.resource))
+        return User.objects.filter(
+            Q(u2url__resource=self.resource) | Q(u2urf__resource=self.resource)
+        )
 
     def get_labels(self, this_user):
         """
@@ -485,11 +541,12 @@ class ResourceLabels(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_user, User)
 
-        labels = UserResourceLabels.objects\
-                                   .values_list('label', flat=True)\
-                                   .filter(user=this_user,
-                                           resource=self.resource)\
-                                   .order_by("label").all()
+        labels = (
+            UserResourceLabels.objects.values_list("label", flat=True)
+            .filter(user=this_user, resource=self.resource)
+            .order_by("label")
+            .all()
+        )
         return labels
 
     def is_flagged(self, this_user, this_flagcode):
@@ -498,12 +555,15 @@ class ResourceLabels(models.Model):
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_user, User)
-            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE or \
-                this_flagcode == FlagCodes.OPEN_WITH_APP
+            assert (
+                this_flagcode == FlagCodes.FAVORITE
+                or this_flagcode == FlagCodes.MINE
+                or this_flagcode == FlagCodes.OPEN_WITH_APP
+            )
 
-        return UserResourceFlags.objects.filter(user=this_user,
-                                                 resource=self.resource,
-                                                 kind=this_flagcode).exists()
+        return UserResourceFlags.objects.filter(
+            user=this_user, resource=self.resource, kind=this_flagcode
+        ).exists()
 
     def is_favorite(self, this_user):
         """
@@ -522,4 +582,3 @@ class ResourceLabels(models.Model):
         Return True if this resource has been set as open-with-app by a given user
         """
         return self.is_flagged(this_user, FlagCodes.OPEN_WITH_APP)
-

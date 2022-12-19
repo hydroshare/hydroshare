@@ -52,12 +52,13 @@ import tempfile
 import requests
 from django.conf import settings
 
+
 class RodsException(Exception):
     pass
 
 
 class IRODSTask(Task):
-    abstract=True
+    abstract = True
 
     def __init__(self, *args, **kwargs):
         super(IRODSTask, self).__init__(*args, **kwargs)
@@ -66,7 +67,7 @@ class IRODSTask(Task):
         self._mounted_names = {}
 
     def session(self, environment=None):
-        if getattr(settings, 'IRODS_GLOBAL_SESSION', False):
+        if getattr(settings, "IRODS_GLOBAL_SESSION", False):
             return GLOBAL_SESSION
 
         if environment is None:
@@ -80,15 +81,17 @@ class IRODSTask(Task):
                 username=settings.IRODS_USERNAME,
                 zone=settings.IRODS_ZONE,
                 auth=settings.IRODS_AUTH,
-                irods_default_hash_scheme='MD5'
+                irods_default_hash_scheme="MD5",
             )
         elif isinstance(environment, int):
             environment = m.RodsEnvironment.objects.get(pk=environment)
 
         if environment.pk not in self._sessions:
-            session = Session("/tmp/django_irods", settings.IRODS_ICOMMANDS_PATH, session_id=uuid4())
+            session = Session(
+                "/tmp/django_irods", settings.IRODS_ICOMMANDS_PATH, session_id=uuid4()
+            )
             session.create_environment(environment)
-            session.run('iinit', None, environment.auth)
+            session.run("iinit", None, environment.auth)
 
             self._sessions[environment.pk] = session
 
@@ -97,11 +100,11 @@ class IRODSTask(Task):
     def mount(self, environment, local_name, collection=None):
         if local_name not in self._mounted_collections:
             if collection:
-                self.session(environment).run('icd', None, collection)
+                self.session(environment).run("icd", None, collection)
 
             path = os.path.join(self.session(environment).session_path, local_name)
             os.mkdir(path)
-            self.session(environment).run('irodsFs', None, path)
+            self.session(environment).run("irodsFs", None, path)
             self._mounted_collections[local_name] = collection
             self._mounted_names[local_name] = path
         return self._mounted_names[local_name]
@@ -110,28 +113,36 @@ class IRODSTask(Task):
         return self._mounted_names[name]
 
     def unmount(self, local_name):
-        if not hasattr(self, '_mounted_collections'):
+        if not hasattr(self, "_mounted_collections"):
             return None
 
         if local_name in self._mounted_collections:
-            os.system("fusermount -uz {local_name}".format(local_name=self.collection(local_name)))
+            os.system(
+                "fusermount -uz {local_name}".format(
+                    local_name=self.collection(local_name)
+                )
+            )
 
     def __del__(self):
         for name in list(self._mounted_names.keys()):
             self.unmount(name)
         for session in list(self._sessions.values()):
-            session.run('iexit')
+            session.run("iexit")
             session.delete_environment()
 
     def run(self, environment, *options, **kwargs):
         return self.session(environment).run(self.name, None, *options)
 
-CHUNK_SIZE=8192
+
+CHUNK_SIZE = 8192
+
 
 class IGet(IRODSTask):
-    name = 'django_irods.tasks.iget'
+    name = "django_irods.tasks.iget"
 
-    def run(self, environment, path, callback=None, post=None, post_name=None, *options):
+    def run(
+        self, environment, path, callback=None, post=None, post_name=None, *options
+    ):
         """
         Usage: iget [-fIKPQrUvVT] [-n replNumber] [-N numThreads] [-X restartFile]
         [-R resource] srcDataObj|srcCollection ... destLocalFile|destLocalDir
@@ -202,10 +213,10 @@ class IGet(IRODSTask):
         :return:
         """
 
-        options += ('-',) # we're redirecting to stdout.
+        options += ("-",)  # we're redirecting to stdout.
 
-        proc = self.session(environment).run_safe('iget', None, path, *options)
-        tmp = tempfile.SpooledTemporaryFile()   # spool to disk if the iget is too large
+        proc = self.session(environment).run_safe("iget", None, path, *options)
+        tmp = tempfile.SpooledTemporaryFile()  # spool to disk if the iget is too large
         chunk = proc.stdout.read(CHUNK_SIZE)
         while chunk:
             tmp.write(chunk)
@@ -219,16 +230,14 @@ class IGet(IRODSTask):
             subtask(callback).delay(data)
             return None
         elif post:
-            rsp =  requests.post(post, files={post_name: tmp})
-            return {
-                'code' : rsp.status_code,
-                'content' : rsp.content
-            }
+            rsp = requests.post(post, files={post_name: tmp})
+            return {"code": rsp.status_code, "content": rsp.content}
         else:
             return tmp.read()
 
+
 class IPut(IRODSTask):
-    name = 'django_irods.tasks.iput'
+    name = "django_irods.tasks.iput"
 
     def run(self, environment, data_is_file, path, data, *options):
         """
@@ -319,16 +328,16 @@ class IPut(IRODSTask):
         :return: stdout, stderr of the command.
         """
         if not data_is_file:
-            with tempfile.NamedTemporaryFile('w+b') as tmp:
+            with tempfile.NamedTemporaryFile("w+b") as tmp:
                 tmp.write(data)
                 tmp.flush()
                 tmp.seek(0)
 
                 options += (tmp.name, path)
-                return self.session(environment).run('iput', None, *options)
+                return self.session(environment).run("iput", None, *options)
         else:
             options += (data, path)
-            return self.session(environment).run('iput', None, *options)
+            return self.session(environment).run("iput", None, *options)
 
 
 class ILs(IRODSTask):
@@ -346,7 +355,9 @@ class ILs(IRODSTask):
     :param options: any of the above command line options
     :return: stdout, stderr tuple of the command.
     """
-    name = 'django_irods.tasks.ils'
+
+    name = "django_irods.tasks.ils"
+
 
 class IAdmin(IRODSTask):
     """
@@ -410,204 +421,206 @@ class IAdmin(IRODSTask):
     :param options:
     :return:
     """
-    name = 'django_irods.tasks.iadmin'
+
+    name = "django_irods.tasks.iadmin"
+
     def run(self, environment, command, *options):
-        return self.session(environment).run('iadmin', None, command, *options)
+        return self.session(environment).run("iadmin", None, command, *options)
+
 
 class IBundle(IRODSTask):
 
-   """
-   Usage : ibun -x [-hb] [-R resource] structFilePath
-               irodsCollection
+    """
+    Usage : ibun -x [-hb] [-R resource] structFilePath
+                irodsCollection
 
-   Usage : ibun -c [-hf] [-R resource] [-D dataType] structFilePath
-               irodsCollection
+    Usage : ibun -c [-hf] [-R resource] [-D dataType] structFilePath
+                irodsCollection
 
-   Bundle file operations. This command allows structured files such as
-   tar files to be uploaded and downloaded to/from iRODS.
+    Bundle file operations. This command allows structured files such as
+    tar files to be uploaded and downloaded to/from iRODS.
 
-   A tar file containing many small files can be created with normal unix
-   tar command on the client and then uploaded to the iRODS server as a
-   normal iRODS file. The 'ibun -x' command can then be used to extract/untar
-   the uploaded tar file. The extracted subfiles and subdirectories will
-   appeared as normal iRODS files and sub-collections. The 'ibun -c' command
-   can be used to tar/bundle an iRODS collection into a tar file.
+    A tar file containing many small files can be created with normal unix
+    tar command on the client and then uploaded to the iRODS server as a
+    normal iRODS file. The 'ibun -x' command can then be used to extract/untar
+    the uploaded tar file. The extracted subfiles and subdirectories will
+    appeared as normal iRODS files and sub-collections. The 'ibun -c' command
+    can be used to tar/bundle an iRODS collection into a tar file.
 
-   For example, to upload a directory mydir to iRODS::
+    For example, to upload a directory mydir to iRODS::
 
-       tar -chlf mydir.tar -C /x/y/z/mydir .
-       iput -Dtar mydir.tar .
-       ibun -x mydir.tar mydir
+        tar -chlf mydir.tar -C /x/y/z/mydir .
+        iput -Dtar mydir.tar .
+        ibun -x mydir.tar mydir
 
-   Note the use of -C option with the tar command which will tar the
-   content of mydir but without including the directory mydir in the paths.
-   The 'ibun -x' command extracts the tar file into the mydir collection.
-   The target mydir collection does not have to exist nor be empty.
-   If a subfile already exists in the target collection, the ingestion
-   of this subfile will fail (unless the -f flag is set) but the process
-   will continue.
+    Note the use of -C option with the tar command which will tar the
+    content of mydir but without including the directory mydir in the paths.
+    The 'ibun -x' command extracts the tar file into the mydir collection.
+    The target mydir collection does not have to exist nor be empty.
+    If a subfile already exists in the target collection, the ingestion
+    of this subfile will fail (unless the -f flag is set) but the process
+    will continue.
 
-   It is generally a good practice to tag the tar file using the -Dtar flag
-   when uploading the file using iput. But if the tag is not made,
-   the server assumes it is a tar dataType. The dataType tag can be added
-   afterward with the isysmeta command. For example:
-   isysmeta mod /tempZone/home/rods/mydir.tar datatype 'tar file'
+    It is generally a good practice to tag the tar file using the -Dtar flag
+    when uploading the file using iput. But if the tag is not made,
+    the server assumes it is a tar dataType. The dataType tag can be added
+    afterward with the isysmeta command. For example:
+    isysmeta mod /tempZone/home/rods/mydir.tar datatype 'tar file'
 
-   The following command bundles the iRods collection mydir into a tar file::
+    The following command bundles the iRods collection mydir into a tar file::
 
-        ibun -cDtar mydir1.tar mydir
+         ibun -cDtar mydir1.tar mydir
 
-   If a copy of a file to be bundled does not exist on the target resource,
-   a replica will automatically be made on the target resource.
-   Again, if the -D flag is not use, the bundling will be done using tar.
+    If a copy of a file to be bundled does not exist on the target resource,
+    a replica will automatically be made on the target resource.
+    Again, if the -D flag is not use, the bundling will be done using tar.
 
-   The -b option when used with the -x option, specifies bulk registration
-   which does up to 50 rgistrations at a time to reduce overhead.
+    The -b option when used with the -x option, specifies bulk registration
+    which does up to 50 rgistrations at a time to reduce overhead.
 
-   Options are:
-   * -b  bulk registration when used with -x to reduce overhead
-   * -R  resource - specifies the resource to store to. This is optional
-     in your environment
-   * -D  dataType - the struct file data type. Valid only if the struct file
-     does not exist. Currently only one dataType - 't' which specifies
-     a tar file type is supported. If -D is not specified, the default is
-     a tar file type
-   * -x  extract the structFile and register the extracted files and directories
-     under the input irodsCollection
-   * -c  bundle the files and sub-collection underneath the input irodsCollection
-     and store it in the structFilePath
-   * -f  force overwrite the struct file (-c) or the subfiles (-x).
-   * -h  this help
+    Options are:
+    * -b  bulk registration when used with -x to reduce overhead
+    * -R  resource - specifies the resource to store to. This is optional
+      in your environment
+    * -D  dataType - the struct file data type. Valid only if the struct file
+      does not exist. Currently only one dataType - 't' which specifies
+      a tar file type is supported. If -D is not specified, the default is
+      a tar file type
+    * -x  extract the structFile and register the extracted files and directories
+      under the input irodsCollection
+    * -c  bundle the files and sub-collection underneath the input irodsCollection
+      and store it in the structFilePath
+    * -f  force overwrite the struct file (-c) or the subfiles (-x).
+    * -h  this help
 
-   :param environment:
-   :param options:
-   :return:
-   """
-   def run(self, environment, command, *options):
-       return self.session(environment).run('iadmin', None, command, *options)
+    :param environment:
+    :param options:
+    :return:
+    """
+
+    def run(self, environment, command, *options):
+        return self.session(environment).run("iadmin", None, command, *options)
 
 
 class IChksum(IRODSTask):
-    name = 'django_irods.tasks.ichksum'
+    name = "django_irods.tasks.ichksum"
 
 
 class Ichmod(IRODSTask):
-    name = 'django_irods.tasks.ichmod'
+    name = "django_irods.tasks.ichmod"
 
 
 class Icp(IRODSTask):
-    name = 'django_irods.tasks.icp'
+    name = "django_irods.tasks.icp"
 
 
 class Iexecmd(IRODSTask):
-    name = 'django_irods.tasks.iexecmd'
+    name = "django_irods.tasks.iexecmd"
 
 
 class Ifsck(IRODSTask):
-    name = 'django_irods.tasks.ifsck'
+    name = "django_irods.tasks.ifsck"
 
 
 class Ilocate(IRODSTask):
-    name = 'django_irods.tasks.ilocate'
+    name = "django_irods.tasks.ilocate"
 
 
 class Ilsresc(IRODSTask):
-    name = 'django_irods.tasks.ilsresc'
+    name = "django_irods.tasks.ilsresc"
 
 
 class Imcoll(IRODSTask):
-    name = 'django_irods.tasks.imcoll'
+    name = "django_irods.tasks.imcoll"
 
 
 class Imeta(IRODSTask):
-    name = 'django_irods.tasks.imeta'
+    name = "django_irods.tasks.imeta"
 
 
 class Imiscserverinfo(IRODSTask):
-    name = 'django_irods.tasks.imiscserverinfo'
+    name = "django_irods.tasks.imiscserverinfo"
 
 
 class Imkdir(IRODSTask):
-    name = 'django_irods.tasks.imkdir'
+    name = "django_irods.tasks.imkdir"
 
 
 class Imv(IRODSTask):
-    name = 'django_irods.tasks.imv'
+    name = "django_irods.tasks.imv"
 
 
 class Iphybun(IRODSTask):
-    name = 'django_irods.tasks.iphybun'
+    name = "django_irods.tasks.iphybun"
 
 
 class Iphymv(IRODSTask):
-    name = 'django_irods.tasks.iphymv'
+    name = "django_irods.tasks.iphymv"
 
 
 class Ips(IRODSTask):
-    name = 'django_irods.tasks.ips'
+    name = "django_irods.tasks.ips"
 
 
 class Iqdel(IRODSTask):
-    name = 'django_irods.tasks.iqdel'
+    name = "django_irods.tasks.iqdel"
 
 
 class Iqmod(IRODSTask):
-    name = 'django_irods.tasks.iqmod'
+    name = "django_irods.tasks.iqmod"
 
 
 class Iqstat(IRODSTask):
-    name = 'django_irods.tasks.iqstat'
+    name = "django_irods.tasks.iqstat"
 
 
 class Iquest(IRODSTask):
-    name = 'django_irods.tasks.iquest'
+    name = "django_irods.tasks.iquest"
 
 
 class Iquota(IRODSTask):
-    name = 'django_irods.tasks.iquota'
+    name = "django_irods.tasks.iquota"
 
 
 class Ireg(IRODSTask):
-    name = 'django_irods.tasks.ireg'
+    name = "django_irods.tasks.ireg"
 
 
 class Irepl(IRODSTask):
-    name = 'django_irods.tasks.irepl'
+    name = "django_irods.tasks.irepl"
 
 
 class Irm(IRODSTask):
-    name = 'django_irods.tasks.irm'
+    name = "django_irods.tasks.irm"
 
 
 class Irmtrash(IRODSTask):
-    name = 'django_irods.tasks.irmtrash'
+    name = "django_irods.tasks.irmtrash"
 
 
 class Irsync(IRODSTask):
-    name = 'django_irods.tasks.irsync'
+    name = "django_irods.tasks.irsync"
 
 
 class Irule(IRODSTask):
-    name = 'django_irods.tasks.irule'
+    name = "django_irods.tasks.irule"
 
 
 class Iscan(IRODSTask):
-    name = 'django_irods.tasks.iscan'
+    name = "django_irods.tasks.iscan"
 
 
 class Isysmeta(IRODSTask):
-    name = 'django_irods.tasks.isysmeta'
+    name = "django_irods.tasks.isysmeta"
 
 
 class Itrim(IRODSTask):
-    name = 'django_irods.tasks.itrim'
+    name = "django_irods.tasks.itrim"
 
 
 class Iuserinfo(IRODSTask):
-    name = 'django_irods.tasks.iuserinfo'
+    name = "django_irods.tasks.iuserinfo"
 
 
 class Ixmsg(IRODSTask):
-    name = 'django_irods.tasks.ixmsg'
-
-
+    name = "django_irods.tasks.ixmsg"

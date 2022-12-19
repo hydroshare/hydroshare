@@ -8,10 +8,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         # csv filename with full path to load versioning chain violation resources from
-        parser.add_argument('input_file', help='input csv file name with full path to load resource date to fix')
+        parser.add_argument(
+            "input_file",
+            help="input csv file name with full path to load resource date to fix",
+        )
 
     def handle(self, *args, **options):
-        input_file = options['input_file']
+        input_file = options["input_file"]
         with open(input_file) as f:
             reader = csv.reader(f)
             count = 0
@@ -23,11 +26,13 @@ class Command(BaseCommand):
                 try:
                     res = get_resource_by_shortkey(res_id)
                 except Exception:
-                    print(f'Resource {res_id} does not exist', flush=True)
+                    print(f"Resource {res_id} does not exist", flush=True)
                     continue
                 res.updated = res_date
-                if res.metadata.dates.all().filter(type='modified'):
-                    res_modified_date = res.metadata.dates.all().filter(type='modified')[0]
+                if res.metadata.dates.all().filter(type="modified"):
+                    res_modified_date = res.metadata.dates.all().filter(
+                        type="modified"
+                    )[0]
                     res_modified_date.start_date = res_date
                     res_modified_date.save()
                 res.save()

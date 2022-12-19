@@ -1,4 +1,3 @@
-
 from django.test import TestCase
 from django.contrib.auth.models import Group
 
@@ -11,36 +10,35 @@ from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 
 
 class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
-
     def setUp(self):
         super(T04CreateGroup, self).setUp()
         global_reset()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.admin = hydroshare.create_account(
-            'admin@gmail.com',
-            username='admin',
-            first_name='administrator',
-            last_name='couch',
+            "admin@gmail.com",
+            username="admin",
+            first_name="administrator",
+            last_name="couch",
             superuser=True,
-            groups=[]
+            groups=[],
         )
 
         self.cat = hydroshare.create_account(
-            'cat@gmail.com',
-            username='cat',
-            first_name='not a dog',
-            last_name='last_name_cat',
+            "cat@gmail.com",
+            username="cat",
+            first_name="not a dog",
+            last_name="last_name_cat",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.dog = hydroshare.create_account(
-            'dog@gmail.com',
-            username='dog',
-            first_name='a little arfer',
-            last_name='last_name_dog',
+            "dog@gmail.com",
+            username="dog",
+            first_name="a little arfer",
+            last_name="last_name_dog",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
     def test_02_create(self):
@@ -52,22 +50,24 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
 
         # user 'dog' create a new group called 'arfers'
         arfers = dog.uaccess.create_group(
-            title='arfers',
+            title="arfers",
             description="This is arfers group",
-            purpose="Our purpose to collaborate on hydrology")
+            purpose="Our purpose to collaborate on hydrology",
+        )
 
         # TODO:
         # test the attributes (title, description) of the group object
-        self.assertEqual(arfers.name, 'arfers')
+        self.assertEqual(arfers.name, "arfers")
         self.assertEqual(arfers.gaccess.description, "This is arfers group")
         self.assertEqual(
-            arfers.gaccess.purpose,
-            "Our purpose to collaborate on hydrology")
+            arfers.gaccess.purpose, "Our purpose to collaborate on hydrology"
+        )
 
         arfers.delete()
         arfers = dog.uaccess.create_group(
-            title='arfers', description="This is arfers group")
-        self.assertEqual(arfers.name, 'arfers')
+            title="arfers", description="This is arfers group"
+        )
+        self.assertEqual(arfers.name, "arfers")
         self.assertEqual(arfers.gaccess.description, "This is arfers group")
         self.assertEqual(arfers.gaccess.purpose, None)
 
@@ -96,15 +96,9 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(dog.uaccess.can_change_group_flags(arfers))
         self.assertTrue(dog.uaccess.can_delete_group(arfers))
-        self.assertTrue(
-            dog.uaccess.can_share_group(
-                arfers, PrivilegeCodes.OWNER))
-        self.assertTrue(
-            dog.uaccess.can_share_group(
-                arfers, PrivilegeCodes.CHANGE))
-        self.assertTrue(
-            dog.uaccess.can_share_group(
-                arfers, PrivilegeCodes.VIEW))
+        self.assertTrue(dog.uaccess.can_share_group(arfers, PrivilegeCodes.OWNER))
+        self.assertTrue(dog.uaccess.can_share_group(arfers, PrivilegeCodes.CHANGE))
+        self.assertTrue(dog.uaccess.can_share_group(arfers, PrivilegeCodes.VIEW))
 
         # membership
         self.assertTrue(dog in arfers.gaccess.members)
@@ -117,15 +111,9 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         # composite django state for other user
         self.assertFalse(cat.uaccess.can_change_group_flags(arfers))
         self.assertFalse(cat.uaccess.can_delete_group(arfers))
-        self.assertFalse(
-            cat.uaccess.can_share_group(
-                arfers, PrivilegeCodes.OWNER))
-        self.assertFalse(
-            cat.uaccess.can_share_group(
-                arfers, PrivilegeCodes.CHANGE))
-        self.assertFalse(
-            cat.uaccess.can_share_group(
-                arfers, PrivilegeCodes.VIEW))
+        self.assertFalse(cat.uaccess.can_share_group(arfers, PrivilegeCodes.OWNER))
+        self.assertFalse(cat.uaccess.can_share_group(arfers, PrivilegeCodes.CHANGE))
+        self.assertFalse(cat.uaccess.can_share_group(arfers, PrivilegeCodes.VIEW))
 
         # membership for other user
         self.assertTrue(cat not in arfers.gaccess.members)
@@ -139,14 +127,12 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.admin.uaccess.can_change_group_flags(arfers))
         self.assertTrue(self.admin.uaccess.can_view_group(arfers))
         self.assertTrue(
-            self.admin.uaccess.can_share_group(
-                arfers, PrivilegeCodes.OWNER))
+            self.admin.uaccess.can_share_group(arfers, PrivilegeCodes.OWNER)
+        )
         self.assertTrue(
-            self.admin.uaccess.can_share_group(
-                arfers, PrivilegeCodes.CHANGE))
-        self.assertTrue(
-            self.admin.uaccess.can_share_group(
-                arfers, PrivilegeCodes.VIEW))
+            self.admin.uaccess.can_share_group(arfers, PrivilegeCodes.CHANGE)
+        )
+        self.assertTrue(self.admin.uaccess.can_share_group(arfers, PrivilegeCodes.VIEW))
         self.assertTrue(self.admin.uaccess.can_delete_group(arfers))
         self.admin.uaccess.delete_group(arfers)
 
@@ -154,9 +140,10 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         """Owner can retract a group"""
         dog = self.dog
         arfers = dog.uaccess.create_group(
-            title='arfers',
+            title="arfers",
             description="This is arfers group",
-            purpose="Our purpose to collaborate on hydrology")
+            purpose="Our purpose to collaborate on hydrology",
+        )
 
         # check that it got created
         self.assertEqual(dog.uaccess.owned_groups.count(), 1)
@@ -186,36 +173,37 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(T15CreateGroup, self).setUp()
         global_reset()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.admin = hydroshare.create_account(
-            'admin@gmail.com',
-            username='admin',
-            first_name='administrator',
-            last_name='couch',
+            "admin@gmail.com",
+            username="admin",
+            first_name="administrator",
+            last_name="couch",
             superuser=True,
-            groups=[]
+            groups=[],
         )
 
         self.cat = hydroshare.create_account(
-            'cat@gmail.com',
-            username='cat',
-            first_name='not a dog',
-            last_name='last_name_cat',
+            "cat@gmail.com",
+            username="cat",
+            first_name="not a dog",
+            last_name="last_name_cat",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.dog = hydroshare.create_account(
-            'dog@gmail.com',
-            username='dog',
-            first_name='a little arfer',
-            last_name='last_name_dog',
+            "dog@gmail.com",
+            username="dog",
+            first_name="a little arfer",
+            last_name="last_name_dog",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.meowers = self.cat.uaccess.create_group(
-            title='meowers', description='We are the meowers group')
+            title="meowers", description="We are the meowers group"
+        )
 
     def test_01_default_group_ownership(self):
         "Defaults for group ownership are correct"

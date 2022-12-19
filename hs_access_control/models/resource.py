@@ -4,8 +4,11 @@ from django.db.models import Q, Subquery
 from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
-from hs_access_control.models.privilege import PrivilegeCodes as PC, \
-        UserResourcePrivilege, GroupResourcePrivilege
+from hs_access_control.models.privilege import (
+    PrivilegeCodes as PC,
+    UserResourcePrivilege,
+    GroupResourcePrivilege,
+)
 
 #############################################
 # flags and methods for resources
@@ -17,43 +20,57 @@ from hs_access_control.models.privilege import PrivilegeCodes as PC, \
 
 
 class ResourceAccess(models.Model):
-    """ Resource model for access control
-    """
+    """Resource model for access control"""
+
     #############################################
     # model variables
     #############################################
 
-    resource = models.OneToOneField(BaseResource, on_delete=models.CASCADE,
-                                    editable=False,
-                                    null=False,
-                                    related_name='raccess',
-                                    related_query_name='raccess')
+    resource = models.OneToOneField(
+        BaseResource,
+        on_delete=models.CASCADE,
+        editable=False,
+        null=False,
+        related_name="raccess",
+        related_query_name="raccess",
+    )
 
     # only for resources
-    active = models.BooleanField(default=True,
-                                 help_text='whether resource is currently active')
+    active = models.BooleanField(
+        default=True, help_text="whether resource is currently active"
+    )
     # both resources and groups
-    discoverable = models.BooleanField(default=False,
-                                       help_text='whether resource is discoverable by everyone')
-    public = models.BooleanField(default=False,
-                                 help_text='whether resource data can be viewed by everyone')
-    shareable = models.BooleanField(default=True,
-                                    help_text='whether resource can be shared by non-owners')
+    discoverable = models.BooleanField(
+        default=False, help_text="whether resource is discoverable by everyone"
+    )
+    public = models.BooleanField(
+        default=False, help_text="whether resource data can be viewed by everyone"
+    )
+    shareable = models.BooleanField(
+        default=True, help_text="whether resource can be shared by non-owners"
+    )
     # these are for resources only
-    review_pending = models.BooleanField(default=False,
-                                         help_text='whether resource is under metadata review')
-    published = models.BooleanField(default=False,
-                                    help_text='whether resource has been published')
-    immutable = models.BooleanField(default=False,
-                                    help_text='whether to prevent all changes to the resource')
+    review_pending = models.BooleanField(
+        default=False, help_text="whether resource is under metadata review"
+    )
+    published = models.BooleanField(
+        default=False, help_text="whether resource has been published"
+    )
+    immutable = models.BooleanField(
+        default=False, help_text="whether to prevent all changes to the resource"
+    )
 
-    require_download_agreement = models.BooleanField(default=False,
-                                                     help_text='whether to require agreement to '
-                                                               'resource rights statement for '
-                                                               'resource content downloads')
-    allow_private_sharing = models.BooleanField(default=False,
-                                                help_text='whether to allow anonymous user to '
-                                                          'access private resource in view mode')
+    require_download_agreement = models.BooleanField(
+        default=False,
+        help_text="whether to require agreement to "
+        "resource rights statement for "
+        "resource content downloads",
+    )
+    allow_private_sharing = models.BooleanField(
+        default=False,
+        help_text="whether to allow anonymous user to "
+        "access private resource in view mode",
+    )
 
     #############################################
     # workalike queries adapt to old access control system
@@ -61,21 +78,24 @@ class ResourceAccess(models.Model):
 
     @property
     def __view_users_from_individual(self):
-        return Q(is_active=True,
-                 u2urp__resource=self.resource)
+        return Q(is_active=True, u2urp__resource=self.resource)
 
     @property
     def __view_users_from_group(self):
-        return Q(is_active=True,
-                 u2ugp__group__gaccess__active=True,
-                 u2ugp__group__g2grp__resource=self.resource)
+        return Q(
+            is_active=True,
+            u2ugp__group__gaccess__active=True,
+            u2ugp__group__g2grp__resource=self.resource,
+        )
 
     @property
     def __view_users_from_community(self):
-        return Q(is_active=True,
-                 u2ugp__group__gaccess__active=True,
-                 u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                 u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource)
+        return Q(
+            is_active=True,
+            u2ugp__group__gaccess__active=True,
+            u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+            u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
+        )
 
     @property
     def view_users(self):
@@ -90,26 +110,30 @@ class ResourceAccess(models.Model):
         VIEW, even if the resource is immutable.
         """
 
-        return User.objects.filter(self.__view_users_from_individual |
-                                   self.__view_users_from_group).distinct()
+        return User.objects.filter(
+            self.__view_users_from_individual | self.__view_users_from_group
+        ).distinct()
 
     @property
     def __edit_users_from_individual(self):
-        return Q(is_active=True,
-                 u2urp__resource=self.resource,
-                 u2urp__privilege=PC.OWNER) | \
-               Q(is_active=True,
-                 u2urp__resource=self.resource,
-                 u2urp__resource__raccess__immutable=False,
-                 u2urp__privilege__lte=PC.CHANGE)
+        return Q(
+            is_active=True, u2urp__resource=self.resource, u2urp__privilege=PC.OWNER
+        ) | Q(
+            is_active=True,
+            u2urp__resource=self.resource,
+            u2urp__resource__raccess__immutable=False,
+            u2urp__privilege__lte=PC.CHANGE,
+        )
 
     @property
     def __edit_users_from_group(self):
-        return Q(is_active=True,
-                 u2ugp__group__gaccess__active=True,
-                 u2ugp__group__g2grp__resource=self.resource,
-                 u2ugp__group__g2grp__resource__raccess__immutable=False,
-                 u2ugp__group__g2grp__privilege__lte=PC.CHANGE)
+        return Q(
+            is_active=True,
+            u2ugp__group__gaccess__active=True,
+            u2ugp__group__g2grp__resource=self.resource,
+            u2ugp__group__g2grp__resource__raccess__immutable=False,
+            u2ugp__group__g2grp__privilege__lte=PC.CHANGE,
+        )
 
     @property
     def __edit_users_from_community(self):
@@ -120,7 +144,8 @@ class ResourceAccess(models.Model):
             u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
             u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
             u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource__raccess__immutable=False,
-            u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege=PC.CHANGE)
+            u2ugp__group__g2gcp__community__c2gcp__group__g2grp__privilege=PC.CHANGE,
+        )
 
     @property
     def edit_users(self):
@@ -132,20 +157,21 @@ class ResourceAccess(models.Model):
         This now accounts for group and community privileges
 
         """
-        return User.objects\
-                   .filter((self.__edit_users_from_individual) |
-                           (self.__edit_users_from_group)).distinct()
+        return User.objects.filter(
+            (self.__edit_users_from_individual) | (self.__edit_users_from_group)
+        ).distinct()
 
     @property
     def __view_groups_from_group(self):
-        return Q(gaccess__active=True,
-                 g2grp__resource=self.resource)
+        return Q(gaccess__active=True, g2grp__resource=self.resource)
 
     @property
     def __view_groups_from_community(self):
-        return Q(gaccess__active=True,
-                 g2gcp__community__c2gcp__group__gaccess__active=True,
-                 g2gcp__community__c2gcp__group__g2grp__resource=self.resource)
+        return Q(
+            gaccess__active=True,
+            g2gcp__community__c2gcp__group__gaccess__active=True,
+            g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
+        )
 
     @property
     def view_groups(self):
@@ -160,19 +186,23 @@ class ResourceAccess(models.Model):
 
     @property
     def __edit_groups_from_group(self):
-        return Q(gaccess__active=True,
-                 g2grp__resource=self.resource,
-                 g2grp__resource__raccess__immutable=False,
-                 g2grp__privilege__lte=PC.CHANGE)
+        return Q(
+            gaccess__active=True,
+            g2grp__resource=self.resource,
+            g2grp__resource__raccess__immutable=False,
+            g2grp__privilege__lte=PC.CHANGE,
+        )
 
     @property
     def __edit_groups_from_community(self):
-        return Q(gaccess__active=True,
-                 g2gcp__privilege=PC.CHANGE,
-                 g2gcp__community__c2gcp__group__gaccess__active=True,
-                 g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
-                 g2gcp__community__c2gcp__group__g2grp__resource__raccess__immutable=False,
-                 g2gcp__community__c2gcp__group__g2grp__privilege=PC.CHANGE)
+        return Q(
+            gaccess__active=True,
+            g2gcp__privilege=PC.CHANGE,
+            g2gcp__community__c2gcp__group__gaccess__active=True,
+            g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
+            g2gcp__community__c2gcp__group__g2grp__resource__raccess__immutable=False,
+            g2gcp__community__c2gcp__group__g2grp__privilege=PC.CHANGE,
+        )
 
     @property
     def edit_groups(self):
@@ -201,14 +231,17 @@ class ResourceAccess(models.Model):
 
         For immutable resources, owners are not modified, but do not have CHANGE privilege.
         """
-        return User.objects.filter(is_active=True,
-                                   u2urp__privilege=PC.OWNER,
-                                   u2urp__resource=self.resource)
+        return User.objects.filter(
+            is_active=True, u2urp__privilege=PC.OWNER, u2urp__resource=self.resource
+        )
 
-    def get_users_with_explicit_access(self, this_privilege,
-                                       include_user_granted_access=True,
-                                       include_group_granted_access=True,
-                                       include_community_granted_access=False):
+    def get_users_with_explicit_access(
+        self,
+        this_privilege,
+        include_user_granted_access=True,
+        include_group_granted_access=True,
+        include_community_granted_access=False,
+    ):
 
         """
         Gets a QuerySet of Users who have the explicit specified privilege access to the resource.
@@ -234,21 +267,23 @@ class ResourceAccess(models.Model):
         elif this_privilege == PC.VIEW:
 
             if include_user_granted_access:
-                incl = Q(u2urp__resource=self.resource,
-                         u2urp__privilege=PC.VIEW)
-                excl = Q(u2urp__resource=self.resource,
-                         u2urp__privilege__lt=PC.VIEW)
+                incl = Q(u2urp__resource=self.resource, u2urp__privilege=PC.VIEW)
+                excl = Q(u2urp__resource=self.resource, u2urp__privilege__lt=PC.VIEW)
 
             if include_group_granted_access:
-                i = Q(u2ugp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2grp__privilege=PC.VIEW)
+                i = Q(
+                    u2ugp__group__g2grp__resource=self.resource,
+                    u2ugp__group__g2grp__privilege=PC.VIEW,
+                )
                 if incl is not None:
                     incl = incl | i
                 else:
                     incl = i
                 # exclude higher privilege
-                e = Q(u2ugp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2grp__privilege__lt=PC.VIEW)
+                e = Q(
+                    u2ugp__group__g2grp__resource=self.resource,
+                    u2ugp__group__g2grp__privilege__lt=PC.VIEW,
+                )
                 if excl is not None:
                     excl = excl | e
                 else:
@@ -270,10 +305,12 @@ class ResourceAccess(models.Model):
                     # A subquery speeds up the execution of __in by eliminating
                     # a postgresql invocation, but requires the values operator.
                     # See Subquery documentation for why this is necessary.
-                    excluded = User.objects.filter(excl).values('pk')
-                    return User.objects.filter(incl)\
-                                       .exclude(pk__in=Subquery(excluded))\
-                                       .distinct()
+                    excluded = User.objects.filter(excl).values("pk")
+                    return (
+                        User.objects.filter(incl)
+                        .exclude(pk__in=Subquery(excluded))
+                        .distinct()
+                    )
                 else:
                     return User.objects.filter(incl)
 
@@ -283,15 +320,15 @@ class ResourceAccess(models.Model):
         elif this_privilege == PC.CHANGE:
 
             if include_user_granted_access:
-                incl = Q(u2urp__resource=self.resource,
-                         u2urp__privilege=PC.CHANGE)
-                excl = Q(u2urp__resource=self.resource,
-                         u2urp__privilege=PC.OWNER)
+                incl = Q(u2urp__resource=self.resource, u2urp__privilege=PC.CHANGE)
+                excl = Q(u2urp__resource=self.resource, u2urp__privilege=PC.OWNER)
 
             if include_group_granted_access:
-                i = Q(u2ugp__group__gaccess__active=True,
-                      u2ugp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2grp__privilege=PC.CHANGE)
+                i = Q(
+                    u2ugp__group__gaccess__active=True,
+                    u2ugp__group__g2grp__resource=self.resource,
+                    u2ugp__group__g2grp__privilege=PC.CHANGE,
+                )
                 if incl is not None:
                     incl = incl | i
                 else:
@@ -303,11 +340,12 @@ class ResourceAccess(models.Model):
                     # A subquery speeds up the execution of __in by eliminating
                     # a postgresql invocation, but requires the values operator.
                     # See Subquery documentation for why this is necessary.
-                    excluded = User.objects.filter(excl).values('pk')
-                    return User.objects\
-                            .filter(incl)\
-                            .exclude(pk__in=Subquery(excluded))\
-                            .distinct()
+                    excluded = User.objects.filter(excl).values("pk")
+                    return (
+                        User.objects.filter(incl)
+                        .exclude(pk__in=Subquery(excluded))
+                        .distinct()
+                    )
                 else:
                     return User.objects.filter(incl)
             else:
@@ -337,8 +375,9 @@ class ResourceAccess(models.Model):
 
         # compute simple user privilege over resource
         try:
-            p = UserResourcePrivilege.objects.get(resource=self.resource,
-                                                  user=this_user)
+            p = UserResourcePrivilege.objects.get(
+                resource=self.resource, user=this_user
+            )
             response1 = p.privilege
         except UserResourcePrivilege.DoesNotExist:
             response1 = PC.NONE
@@ -361,13 +400,13 @@ class ResourceAccess(models.Model):
             raise PermissionDenied("Grantee user is not active")
 
         # Group privileges must be aggregated
-        group_priv = GroupResourcePrivilege.objects\
-            .filter(resource=self.resource,
-                    group__gaccess__active=True,
-                    group__g2ugp__user=this_user)\
-            .aggregate(models.Min('privilege'))
+        group_priv = GroupResourcePrivilege.objects.filter(
+            resource=self.resource,
+            group__gaccess__active=True,
+            group__g2ugp__user=this_user,
+        ).aggregate(models.Min("privilege"))
 
-        response2 = group_priv['privilege__min']
+        response2 = group_priv["privilege__min"]
         if response2 is None:
             response2 = PC.NONE
         return response2
@@ -382,15 +421,21 @@ class ResourceAccess(models.Model):
         This does not account for resource flags.
         """
         # Community privileges are either direct or via community.
-        community_priv = GroupResourcePrivilege.objects \
-            .filter(Q(resource=self.resource,
-                      group__gaccess__active=True,
-                      group__g2gcp__community__c2gcp__group__g2ugp__user=this_user))\
-            .aggregate(models.Min('privilege'),
-                       models.Min('group__g2gcp__community__c2gcp__privilege'))
+        community_priv = GroupResourcePrivilege.objects.filter(
+            Q(
+                resource=self.resource,
+                group__gaccess__active=True,
+                group__g2gcp__community__c2gcp__group__g2ugp__user=this_user,
+            )
+        ).aggregate(
+            models.Min("privilege"),
+            models.Min("group__g2gcp__community__c2gcp__privilege"),
+        )
 
-        if community_priv['privilege__min'] is None or \
-           community_priv['group__g2gcp__community__c2gcp__privilege__min'] is None:
+        if (
+            community_priv["privilege__min"] is None
+            or community_priv["group__g2gcp__community__c2gcp__privilege__min"] is None
+        ):
             return PC.NONE
         else:
             return PC.VIEW
@@ -404,7 +449,9 @@ class ResourceAccess(models.Model):
 
         This accounts for resource flags by revoking CHANGE on immutable resources.
         """
-        user_priv = self.__get_raw_user_privilege(this_user, ignore_superuser=ignore_superuser)
+        user_priv = self.__get_raw_user_privilege(
+            this_user, ignore_superuser=ignore_superuser
+        )
         if self.immutable and user_priv == PC.CHANGE:
             return PC.VIEW
         else:
@@ -467,14 +514,16 @@ class ResourceAccess(models.Model):
         if not this_user.is_active:
             raise PermissionDenied("Grantee user is not active")
 
-        user_priv = self.get_effective_user_privilege(this_user, ignore_superuser=ignore_superuser)
+        user_priv = self.get_effective_user_privilege(
+            this_user, ignore_superuser=ignore_superuser
+        )
         group_priv = self.get_effective_group_privilege(this_user)
         # community_priv = self.get_effective_community_privilege(this_user)
         return min(user_priv, group_priv)  # , community_priv)
 
     @property
     def sharing_status(self):
-        """ return the sharing status as a status word """
+        """return the sharing status as a status word"""
         if self.published:
             return "published"
         elif self.public:
@@ -486,8 +535,9 @@ class ResourceAccess(models.Model):
 
     @property
     def first_owner(self):
-        opriv = UserResourcePrivilege.objects.filter(community=self, privilege=PC.OWNER)\
-            .order_by('start')
+        opriv = UserResourcePrivilege.objects.filter(
+            community=self, privilege=PC.OWNER
+        ).order_by("start")
         opriv = list(opriv)
         if opriv:
             return opriv[0].user

@@ -13,21 +13,40 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='RodsEnvironment',
+            name="RodsEnvironment",
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('host', models.CharField(max_length=255, verbose_name=b'Hostname')),
-                ('port', models.IntegerField()),
-                ('def_res', models.CharField(max_length=255, verbose_name=b'Default resource')),
-                ('home_coll', models.CharField(max_length=255, verbose_name=b'Home collection')),
-                ('cwd', models.TextField(verbose_name=b'Working directory')),
-                ('username', models.CharField(max_length=255)),
-                ('zone', models.TextField()),
-                ('auth', models.TextField(verbose_name=b'Password')),
-                ('owner', models.ForeignKey(on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        verbose_name="ID",
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
+                ("host", models.CharField(max_length=255, verbose_name=b"Hostname")),
+                ("port", models.IntegerField()),
+                (
+                    "def_res",
+                    models.CharField(max_length=255, verbose_name=b"Default resource"),
+                ),
+                (
+                    "home_coll",
+                    models.CharField(max_length=255, verbose_name=b"Home collection"),
+                ),
+                ("cwd", models.TextField(verbose_name=b"Working directory")),
+                ("username", models.CharField(max_length=255)),
+                ("zone", models.TextField()),
+                ("auth", models.TextField(verbose_name=b"Password")),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'iRODS Environment',
+                "verbose_name": "iRODS Environment",
             },
             bases=(models.Model,),
         ),

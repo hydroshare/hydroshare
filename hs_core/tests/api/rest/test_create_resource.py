@@ -13,18 +13,18 @@ from .base import HSRESTTestCase
 class TestCreateResource(HSRESTTestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_UPLIFTED_post_resource_get_sysmeta(self):
-        rtype = 'CompositeResource'
-        title = 'My Test resource'
-        params = {'resource_type': rtype,
-                  'title': title,
-                  'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif', 'rb'),
-                           'image/tiff')}
-        url = '/hsapi/resource/'
+        rtype = "CompositeResource"
+        title = "My Test resource"
+        params = {
+            "resource_type": rtype,
+            "title": title,
+            "file": ("cea.tif", open("hs_core/tests/data/cea.tif", "rb"), "image/tiff"),
+        }
+        url = "/hsapi/resource/"
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content.decode())
-        res_id = content['resource_id']
+        res_id = content["resource_id"]
         self.resources_to_delete.append(res_id)
 
         # Get the resource system metadata to make sure the resource was
@@ -33,40 +33,40 @@ class TestCreateResource(HSRESTTestCase):
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content.decode())
-        self.assertEqual(content['resource_type'], rtype)
-        self.assertEqual(content['resource_title'], title)
+        self.assertEqual(content["resource_type"], rtype)
+        self.assertEqual(content["resource_title"], title)
         # Get resource bag
         response = self.getResourceBag(res_id)
-        if response['Content-Type'] == 'application/json':
+        if response["Content-Type"] == "application/json":
             content = json.loads(response.content.decode())
-            if content['status'] != "Completed":
+            if content["status"] != "Completed":
                 # wait for 10 seconds to give task a chance to run and finish
                 time.sleep(10)
-                task_id = content['id']
+                task_id = content["id"]
                 status_response = self.getDownloadTaskStatus(task_id)
                 status_content = json.loads(status_response.content.decode())
-                if status_content['status']:
+                if status_content["status"]:
                     # bag creation task succeeds, get bag again
                     response = self.getResourceBag(res_id)
-                    self.assertEqual(response['Content-Type'], 'application/zip')
-                    self.assertGreater(int(response['Content-Length']), 0)
+                    self.assertEqual(response["Content-Type"], "application/zip")
+                    self.assertGreater(int(response["Content-Length"]), 0)
         else:
-            self.assertEqual(response['Content-Type'], 'application/zip')
-            self.assertGreater(int(response['Content-Length']), 0)
+            self.assertEqual(response["Content-Type"], "application/zip")
+            self.assertGreater(int(response["Content-Length"]), 0)
 
     def test_post_resource_get_sysmeta(self):
-        rtype = 'GenericResource'
-        title = 'My Test resource'
-        params = {'resource_type': rtype,
-                  'title': title,
-                  'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif', 'rb'),
-                           'image/tiff')}
-        url = '/hsapi/resource/'
+        rtype = "GenericResource"
+        title = "My Test resource"
+        params = {
+            "resource_type": rtype,
+            "title": title,
+            "file": ("cea.tif", open("hs_core/tests/data/cea.tif", "rb"), "image/tiff"),
+        }
+        url = "/hsapi/resource/"
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content.decode())
-        res_id = content['resource_id']
+        res_id = content["resource_id"]
         self.resources_to_delete.append(res_id)
 
         # Get the resource system metadata to make sure the resource was
@@ -76,26 +76,26 @@ class TestCreateResource(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content.decode())
         # generic has been deprecated and now defaults to Composite (#2575)
-        self.assertEqual(content['resource_type'], "CompositeResource")
-        self.assertEqual(content['resource_title'], title)
+        self.assertEqual(content["resource_type"], "CompositeResource")
+        self.assertEqual(content["resource_title"], title)
         # Get resource bag
         response = self.getResourceBag(res_id)
-        if response['Content-Type'] == 'application/json':
+        if response["Content-Type"] == "application/json":
             content = json.loads(response.content.decode())
-            if content['status'] != "Completed":
+            if content["status"] != "Completed":
                 # wait for 10 seconds to give task a chance to run and finish
                 time.sleep(10)
-                task_id = content['id']
+                task_id = content["id"]
                 status_response = self.getDownloadTaskStatus(task_id)
                 status_content = json.loads(status_response.content.decode())
-                if status_content['status']:
+                if status_content["status"]:
                     # bag creation task succeeds, get bag again
                     response = self.getResourceBag(res_id)
-                    self.assertEqual(response['Content-Type'], 'application/zip')
-                    self.assertGreater(int(response['Content-Length']), 0)
+                    self.assertEqual(response["Content-Type"], "application/zip")
+                    self.assertGreater(int(response["Content-Length"]), 0)
         else:
-            self.assertEqual(response['Content-Type'], 'application/zip')
-            self.assertGreater(int(response['Content-Length']), 0)
+            self.assertEqual(response["Content-Type"], "application/zip")
+            self.assertGreater(int(response["Content-Length"]), 0)
 
     @skip("TODO: was not running before python3 upgrade")
     def test_resource_create_with_core_metadata(self):
@@ -112,81 +112,130 @@ class TestCreateResource(HSRESTTestCase):
         fundingagency
 
         """
-        rtype = 'GenericResource'
-        title = 'My Test resource'
+        rtype = "GenericResource"
+        title = "My Test resource"
         metadata = []
-        metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
-                                                                  'end': '12/12/2010'}}})
-        statement = 'This resource is shared under the Creative Commons Attribution CC BY.'
-        url = 'http://creativecommons.org/licenses/by/4.0/'
-        metadata.append({'rights': {'statement': statement, 'url': url}})
-        metadata.append({'language': {'code': 'fre'}})
+        metadata.append(
+            {
+                "coverage": {
+                    "type": "period",
+                    "value": {"start": "01/01/2000", "end": "12/12/2010"},
+                }
+            }
+        )
+        statement = (
+            "This resource is shared under the Creative Commons Attribution CC BY."
+        )
+        url = "http://creativecommons.org/licenses/by/4.0/"
+        metadata.append({"rights": {"statement": statement, "url": url}})
+        metadata.append({"language": {"code": "fre"}})
 
         # contributor
-        con_name = 'Mike Sundar'
+        con_name = "Mike Sundar"
         con_org = "USU"
-        con_email = 'mike.sundar@usu.edu'
+        con_email = "mike.sundar@usu.edu"
         con_address = "11 River Drive, Logan UT-84321, USA"
-        con_phone = '435-567-0989'
-        con_homepage = 'http://usu.edu/homepage/001'
-        con_identifiers = {'ORCID': 'https://orcid.org/mike_s',
-                           'ResearchGateID': 'https://www.researchgate.net/mike_s'}
-        metadata.append({'contributor': {'name': con_name,
-                                         'organization': con_org, 'email': con_email,
-                                         'address': con_address, 'phone': con_phone,
-                                         'homepage': con_homepage,
-                                         'identifiers': con_identifiers}})
+        con_phone = "435-567-0989"
+        con_homepage = "http://usu.edu/homepage/001"
+        con_identifiers = {
+            "ORCID": "https://orcid.org/mike_s",
+            "ResearchGateID": "https://www.researchgate.net/mike_s",
+        }
+        metadata.append(
+            {
+                "contributor": {
+                    "name": con_name,
+                    "organization": con_org,
+                    "email": con_email,
+                    "address": con_address,
+                    "phone": con_phone,
+                    "homepage": con_homepage,
+                    "identifiers": con_identifiers,
+                }
+            }
+        )
 
         # creator
-        cr_name = 'John Smith'
+        cr_name = "John Smith"
         cr_org = "USU"
-        cr_email = 'jsmith@gmail.com'
+        cr_email = "jsmith@gmail.com"
         cr_address = "101 Clarson Ave, Provo UT-84321, USA"
-        cr_phone = '801-567=9090'
-        cr_homepage = 'http://byu.edu/homepage/002'
-        cr_identifiers = {'ORCID': 'https://orcid.org/john_smith',
-                          'ResearchGateID': 'https://www.researchgate.net/john_smith'}
-        metadata.append({'creator': {'name': cr_name, 'organization': cr_org,
-                                     'email': cr_email, 'address': cr_address,
-                                     'phone': cr_phone, 'homepage': cr_homepage,
-                                     'identifiers': cr_identifiers}})
+        cr_phone = "801-567=9090"
+        cr_homepage = "http://byu.edu/homepage/002"
+        cr_identifiers = {
+            "ORCID": "https://orcid.org/john_smith",
+            "ResearchGateID": "https://www.researchgate.net/john_smith",
+        }
+        metadata.append(
+            {
+                "creator": {
+                    "name": cr_name,
+                    "organization": cr_org,
+                    "email": cr_email,
+                    "address": cr_address,
+                    "phone": cr_phone,
+                    "homepage": cr_homepage,
+                    "identifiers": cr_identifiers,
+                }
+            }
+        )
 
         # relation
-        metadata.append({'relation': {'type': 'isPartOf',
-                                      'value': 'http://hydroshare.org/resource/001'}})
+        metadata.append(
+            {
+                "relation": {
+                    "type": "isPartOf",
+                    "value": "http://hydroshare.org/resource/001",
+                }
+            }
+        )
 
         # identifier
-        metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})
+        metadata.append(
+            {"identifier": {"name": "someIdentifier", "url": "http://some.org/001"}}
+        )
 
         # fundingagency
-        agency_name = 'NSF'
+        agency_name = "NSF"
         award_title = "Cyber Infrastructure"
         award_number = "NSF-101-20-6789"
         agency_url = "http://www.nsf.gov"
-        metadata.append({'fundingagency': {'agency_name': agency_name, 'award_title': award_title,
-                                           'award_number': award_number, 'agency_url': agency_url}})
-        params = {'resource_type': rtype,
-                  'title': title,
-                  'metadata': json.dumps(metadata),
-                  'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif', 'rb'),
-                           'image/tiff')}
-        rest_url = '/hsapi/resource/'
+        metadata.append(
+            {
+                "fundingagency": {
+                    "agency_name": agency_name,
+                    "award_title": award_title,
+                    "award_number": award_number,
+                    "agency_url": agency_url,
+                }
+            }
+        )
+        params = {
+            "resource_type": rtype,
+            "title": title,
+            "metadata": json.dumps(metadata),
+            "file": ("cea.tif", open("hs_core/tests/data/cea.tif", "rb"), "image/tiff"),
+        }
+        rest_url = "/hsapi/resource/"
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content.decode())
-        res_id = content['resource_id']
+        res_id = content["resource_id"]
         resource = get_resource_by_shortkey(res_id)
         self.assertEqual(resource.metadata.coverages.all().count(), 1)
-        self.assertEqual(resource.metadata.coverages.filter(type='period').count(), 1)
+        self.assertEqual(resource.metadata.coverages.filter(type="period").count(), 1)
         coverage = resource.metadata.coverages.all().first()
-        self.assertEqual(parser.parse(coverage.value['start']).date(),
-                         parser.parse('01/01/2000').date())
-        self.assertEqual(parser.parse(coverage.value['end']).date(),
-                         parser.parse('12/12/2010').date())
+        self.assertEqual(
+            parser.parse(coverage.value["start"]).date(),
+            parser.parse("01/01/2000").date(),
+        )
+        self.assertEqual(
+            parser.parse(coverage.value["end"]).date(),
+            parser.parse("12/12/2010").date(),
+        )
         self.assertEqual(resource.metadata.rights.statement, statement)
         self.assertEqual(resource.metadata.rights.url, url)
-        self.assertEqual(resource.metadata.language.code, 'fre')
+        self.assertEqual(resource.metadata.language.code, "fre")
 
         # there should be 1 contributor
         self.assertEqual(resource.metadata.contributors.all().count(), 1)
@@ -213,13 +262,13 @@ class TestCreateResource(HSRESTTestCase):
         # there should be 1 relation element
         self.assertEqual(resource.metadata.relations.all().count(), 1)
         relation = resource.metadata.relations.all().first()
-        self.assertEqual(relation.type, 'isPartOf')
-        self.assertEqual(relation.value, 'http://hydroshare.org/resource/001')
+        self.assertEqual(relation.type, "isPartOf")
+        self.assertEqual(relation.value, "http://hydroshare.org/resource/001")
 
         # there should be 2 identifiers
         self.assertEqual(resource.metadata.identifiers.all().count(), 2)
-        identifier = resource.metadata.identifiers.filter(name='someIdentifier').first()
-        self.assertEqual(identifier.url, 'http://some.org/001')
+        identifier = resource.metadata.identifiers.filter(name="someIdentifier").first()
+        self.assertEqual(identifier.url, "http://some.org/001")
 
         # there should be 1 fundingagency
         self.assertEqual(resource.metadata.funding_agencies.all().count(), 1)
@@ -233,59 +282,73 @@ class TestCreateResource(HSRESTTestCase):
 
     def test_resource_create_with_core_and_extra_metadata(self):
 
-        rtype = 'GenericResource'
-        title = 'My Test resource'
+        rtype = "GenericResource"
+        title = "My Test resource"
         metadata = []
-        metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
-                                                                  'end': '12/12/2010'}}})
-        extra_metadata = {'latitude': '40', 'longitude': '-110'}
+        metadata.append(
+            {
+                "coverage": {
+                    "type": "period",
+                    "value": {"start": "01/01/2000", "end": "12/12/2010"},
+                }
+            }
+        )
+        extra_metadata = {"latitude": "40", "longitude": "-110"}
 
-        params = {'resource_type': rtype,
-                  'title': title,
-                  'metadata': json.dumps(metadata),
-                  'extra_metadata': json.dumps(extra_metadata)}
+        params = {
+            "resource_type": rtype,
+            "title": title,
+            "metadata": json.dumps(metadata),
+            "extra_metadata": json.dumps(extra_metadata),
+        }
 
-        rest_url = '/hsapi/resource/'
+        rest_url = "/hsapi/resource/"
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # test core metadata
         content = json.loads(response.content.decode())
-        res_id = content['resource_id']
+        res_id = content["resource_id"]
         resource = get_resource_by_shortkey(res_id)
         self.assertEqual(resource.metadata.coverages.all().count(), 1)
-        self.assertEqual(resource.metadata.coverages.filter(type='period').count(), 1)
+        self.assertEqual(resource.metadata.coverages.filter(type="period").count(), 1)
         coverage = resource.metadata.coverages.all().first()
-        self.assertEqual(parser.parse(coverage.value['start']).date(),
-                         parser.parse('01/01/2000').date())
-        self.assertEqual(parser.parse(coverage.value['end']).date(),
-                         parser.parse('12/12/2010').date())
+        self.assertEqual(
+            parser.parse(coverage.value["start"]).date(),
+            parser.parse("01/01/2000").date(),
+        )
+        self.assertEqual(
+            parser.parse(coverage.value["end"]).date(),
+            parser.parse("12/12/2010").date(),
+        )
 
         # test extra metadata
-        self.assertEqual(resource.extra_metadata.get('latitude'), '40')
-        self.assertEqual(resource.extra_metadata.get('longitude'), '-110')
+        self.assertEqual(resource.extra_metadata.get("latitude"), "40")
+        self.assertEqual(resource.extra_metadata.get("longitude"), "-110")
 
         self.resources_to_delete.append(res_id)
 
     def test_resource_create_with_extra_metadata(self):
-        rtype = 'GenericResource'
-        title = 'My Test resource'
-        extra_metadata = {'latitude': '40', 'longitude': '-110'}
+        rtype = "GenericResource"
+        title = "My Test resource"
+        extra_metadata = {"latitude": "40", "longitude": "-110"}
 
-        params = {'resource_type': rtype,
-                  'title': title,
-                  'extra_metadata': json.dumps(extra_metadata)}
+        params = {
+            "resource_type": rtype,
+            "title": title,
+            "extra_metadata": json.dumps(extra_metadata),
+        }
 
-        rest_url = '/hsapi/resource/'
+        rest_url = "/hsapi/resource/"
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content.decode())
-        res_id = content['resource_id']
+        res_id = content["resource_id"]
         resource = get_resource_by_shortkey(res_id)
 
         # test extra metadata
-        self.assertEqual(resource.extra_metadata.get('latitude'), '40')
-        self.assertEqual(resource.extra_metadata.get('longitude'), '-110')
+        self.assertEqual(resource.extra_metadata.get("latitude"), "40")
+        self.assertEqual(resource.extra_metadata.get("longitude"), "-110")
 
         self.resources_to_delete.append(res_id)
 
@@ -305,65 +368,65 @@ class TestCreateResource(HSRESTTestCase):
         :return:
         """
 
-        rtype = 'GenericResource'
-        title = 'My Test resource'
+        rtype = "GenericResource"
+        title = "My Test resource"
         # test title
         metadata = []
-        metadata.append({'title': {'value': "This is a generic resource"}})
+        metadata.append({"title": {"value": "This is a generic resource"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
         # test description
         metadata = []
-        metadata.append({'description': {'abstract': "This is a great resource"}})
+        metadata.append({"description": {"abstract": "This is a great resource"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
         # test subject
         metadata = []
-        metadata.append({'subject': {'value': "sample"}})
+        metadata.append({"subject": {"value": "sample"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
         # test format
         metadata = []
-        metadata.append({'format': {'value': 'text/csv'}})
+        metadata.append({"format": {"value": "text/csv"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
         # test date
         metadata = []
-        metadata.append({'date': {'type': 'created', 'start_date': '01/01/2016'}})
+        metadata.append({"date": {"type": "created", "start_date": "01/01/2016"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
         metadata = []
-        metadata.append({'date': {'type': 'modified', 'start_date': '01/01/2016'}})
+        metadata.append({"date": {"type": "modified", "start_date": "01/01/2016"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
         # test publisher
         metadata = []
-        metadata.append({'publisher': {'name': 'USGS', 'url': 'http://usgs.gov'}})
+        metadata.append({"publisher": {"name": "USGS", "url": "http://usgs.gov"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
         # test type
         metadata = []
-        metadata.append({'type': {'url': "http://hydroshare.org/generic"}})
+        metadata.append({"type": {"url": "http://hydroshare.org/generic"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
     def _get_params(self, rtype, title, metadata):
-        params = {'resource_type': rtype,
-                  'title': title,
-                  'metadata': json.dumps(metadata),
-                  'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif', 'rb'),
-                           'image/tiff')}
+        params = {
+            "resource_type": rtype,
+            "title": title,
+            "metadata": json.dumps(metadata),
+            "file": ("cea.tif", open("hs_core/tests/data/cea.tif", "rb"), "image/tiff"),
+        }
         return params
 
     def _test_not_allowed_element(self, params):
-        rest_url = '/hsapi/resource/'
+        rest_url = "/hsapi/resource/"
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

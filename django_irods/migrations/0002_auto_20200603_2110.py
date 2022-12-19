@@ -8,33 +8,33 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_irods', '0001_initial'),
+        ("django_irods", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='rodsenvironment',
-            name='auth',
-            field=models.TextField(verbose_name='Password'),
+            model_name="rodsenvironment",
+            name="auth",
+            field=models.TextField(verbose_name="Password"),
         ),
         migrations.AlterField(
-            model_name='rodsenvironment',
-            name='cwd',
-            field=models.TextField(verbose_name='Working directory'),
+            model_name="rodsenvironment",
+            name="cwd",
+            field=models.TextField(verbose_name="Working directory"),
         ),
         migrations.AlterField(
-            model_name='rodsenvironment',
-            name='def_res',
-            field=models.CharField(max_length=255, verbose_name='Default resource'),
+            model_name="rodsenvironment",
+            name="def_res",
+            field=models.CharField(max_length=255, verbose_name="Default resource"),
         ),
         migrations.AlterField(
-            model_name='rodsenvironment',
-            name='home_coll',
-            field=models.CharField(max_length=255, verbose_name='Home collection'),
+            model_name="rodsenvironment",
+            name="home_coll",
+            field=models.CharField(max_length=255, verbose_name="Home collection"),
         ),
         migrations.AlterField(
-            model_name='rodsenvironment',
-            name='host',
-            field=models.CharField(max_length=255, verbose_name='Hostname'),
+            model_name="rodsenvironment",
+            name="host",
+            field=models.CharField(max_length=255, verbose_name="Hostname"),
         ),
     ]

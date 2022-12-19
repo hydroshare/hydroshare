@@ -8,13 +8,31 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0041_resourcefile__size'),
+        ("hs_core", "0041_resourcefile__size"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='relation',
-            name='type',
-            field=models.CharField(choices=[('isHostedBy', 'The content of this resource is hosted by'), ('isCopiedFrom', 'The content of this resource was copied from'), ('isPartOf', 'The content of this resource is part of'), ('hasPart', 'Has Part'), ('isExecutedBy', 'The content of this resource can be executed by'), ('isCreatedBy', 'The content of this resource was created by'), ('isVersionOf', 'Version Of'), ('isReplacedBy', 'Replaced By'), ('isDataFor', 'The content of this resource serves as the data for'), ('cites', 'This resource cites'), ('isDescribedBy', 'This resource is described by')], max_length=100),
+            model_name="relation",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("isHostedBy", "The content of this resource is hosted by"),
+                    ("isCopiedFrom", "The content of this resource was copied from"),
+                    ("isPartOf", "The content of this resource is part of"),
+                    ("hasPart", "Has Part"),
+                    ("isExecutedBy", "The content of this resource can be executed by"),
+                    ("isCreatedBy", "The content of this resource was created by"),
+                    ("isVersionOf", "Version Of"),
+                    ("isReplacedBy", "Replaced By"),
+                    (
+                        "isDataFor",
+                        "The content of this resource serves as the data for",
+                    ),
+                    ("cites", "This resource cites"),
+                    ("isDescribedBy", "This resource is described by"),
+                ],
+                max_length=100,
+            ),
         ),
     ]

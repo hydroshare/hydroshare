@@ -9,13 +9,19 @@ class CanViewOrEditResourceMetadata(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if not view.kwargs.get('pk', False):
+        if not view.kwargs.get("pk", False):
             return True
 
         if request.method == "GET":
-            _, authorized, _ = authorize(request, view.kwargs.get('pk'),
-                                         needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+            _, authorized, _ = authorize(
+                request,
+                view.kwargs.get("pk"),
+                needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA,
+            )
         else:
-            _, authorized, _ = authorize(request, view.kwargs.get('pk'),
-                                         needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            _, authorized, _ = authorize(
+                request,
+                view.kwargs.get("pk"),
+                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+            )
         return authorized

@@ -9,50 +9,71 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_file_types', 'set_aggregation_resource'),
+        ("hs_file_types", "set_aggregation_resource"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='filesetlogicalfile',
-            name='resource',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
+            model_name="filesetlogicalfile",
+            name="resource",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="hs_composite_resource.CompositeResource",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='genericlogicalfile',
-            name='resource',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
+            model_name="genericlogicalfile",
+            name="resource",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="hs_composite_resource.CompositeResource",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='geofeaturelogicalfile',
-            name='resource',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
+            model_name="geofeaturelogicalfile",
+            name="resource",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="hs_composite_resource.CompositeResource",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='georasterlogicalfile',
-            name='resource',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
+            model_name="georasterlogicalfile",
+            name="resource",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="hs_composite_resource.CompositeResource",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='netcdflogicalfile',
-            name='resource',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
+            model_name="netcdflogicalfile",
+            name="resource",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="hs_composite_resource.CompositeResource",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='reftimeserieslogicalfile',
-            name='resource',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
+            model_name="reftimeserieslogicalfile",
+            name="resource",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="hs_composite_resource.CompositeResource",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='timeserieslogicalfile',
-            name='resource',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='hs_composite_resource.CompositeResource'),
+            model_name="timeserieslogicalfile",
+            name="resource",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="hs_composite_resource.CompositeResource",
+            ),
             preserve_default=False,
         ),
     ]

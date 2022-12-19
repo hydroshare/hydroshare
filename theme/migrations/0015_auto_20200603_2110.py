@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('theme', '0014_comma_semicolon_delimiter'),
+        ("theme", "0014_comma_semicolon_delimiter"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='userquota',
-            name='unit',
-            field=models.CharField(default='GB', max_length=10),
+            model_name="userquota",
+            name="unit",
+            field=models.CharField(default="GB", max_length=10),
         ),
     ]

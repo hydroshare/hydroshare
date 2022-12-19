@@ -12,9 +12,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger = logging.getLogger(__name__)
         resource_counter = 0
-        to_resource_type = 'CompositeResource'
+        to_resource_type = "CompositeResource"
         msg = "THERE ARE CURRENTLY {} GENERIC RESOURCES PRIOR TO CONVERSION.".format(
-            GenericResource.objects.all().count())
+            GenericResource.objects.all().count()
+        )
         logger.info(msg)
         print(">> {}".format(msg))
         for gen_res in GenericResource.objects.all():
@@ -28,7 +29,9 @@ class Command(BaseCommand):
 
             # update url attribute of the metadata 'type' element
             type_element = comp_res.metadata.type
-            type_element.url = '{0}/terms/{1}'.format(current_site_url(), to_resource_type)
+            type_element.url = "{0}/terms/{1}".format(
+                current_site_url(), to_resource_type
+            )
             type_element.save()
 
             # set resource to dirty so that resource level xml files (resource map and
@@ -37,10 +40,12 @@ class Command(BaseCommand):
             resource_counter += 1
 
         msg = "{} GENERIC RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE.".format(
-            resource_counter)
+            resource_counter
+        )
         logger.info(msg)
         print(">> {}".format(msg))
         msg = "THERE ARE CURRENTLY {} GENERIC RESOURCES AFTER CONVERSION.".format(
-            GenericResource.objects.all().count())
+            GenericResource.objects.all().count()
+        )
         logger.info(msg)
         print(">> {}".format(msg))

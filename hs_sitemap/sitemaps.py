@@ -4,10 +4,10 @@ from django.urls import reverse
 
 class PagesSitemap(sitemaps.Sitemap):
     priority = 0.5
-    changefreq = 'daily'
+    changefreq = "daily"
 
     def items(self):
-        return ['home', 'login', 'apps']
+        return ["home", "login", "apps"]
 
     def location(self, item):
         return reverse(item)

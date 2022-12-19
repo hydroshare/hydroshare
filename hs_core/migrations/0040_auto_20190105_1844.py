@@ -8,18 +8,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0039_doi_url'),
+        ("hs_core", "0039_doi_url"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='baseresource',
-            name='download_count',
+            model_name="baseresource",
+            name="download_count",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='baseresource',
-            name='view_count',
+            model_name="baseresource",
+            name="view_count",
             field=models.PositiveIntegerField(default=0),
         ),
     ]

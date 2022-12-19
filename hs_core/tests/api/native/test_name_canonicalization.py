@@ -8,7 +8,6 @@ from hs_core.search_indexes import normalize_name
 
 
 class NameTest(TestCase):
-
     def setUp(self):
         pass
 
@@ -26,7 +25,10 @@ class NameTest(TestCase):
             ["Andrew C. Kurtz", "Kurtz, Andrew C."],
             ["Angel Torres-Sanchez", "Torres-Sanchez, Angel"],
             ["Calhoun Critical Zone Observatory", "Calhoun Critical Zone Observatory"],
-            ["Colorado's Surface Water Conditions", "Colorado's Surface Water Conditions"],
+            [
+                "Colorado's Surface Water Conditions",
+                "Colorado's Surface Water Conditions",
+            ],
             [" Damiano, S.G.", "Damiano, S. G."],
             ["Damiano, S. G.", "Damiano, S. G."],
             ["Damiano, S.G.", "Damiano, S. G."],
@@ -45,14 +47,20 @@ class NameTest(TestCase):
             [" Idaho State University", "Idaho State University"],
             [" IITF ", "IITF"],
             ["Ingo Heidbuechel", "Ingo Heidbuechel"],  # miscategorized as corporation
-            ["Luquillo Critical Zone Observatory", "Luquillo Critical Zone Observatory"],
+            [
+                "Luquillo Critical Zone Observatory",
+                "Luquillo Critical Zone Observatory",
+            ],
             ["M. Yekta", "M. Yekta"],
             ["NADP", "NADP"],
             ["National Ocean Service (NOS)", "National Ocean Service (NOS)"],
             ["National Park Service", "National Park Service"],
             ["Niwot Ridge LTER", "Niwot Ridge LTER"],
             ["NOAA", "NOAA"],
-            ["NOAA's National Climatic Data Center", "NOAA's National Climatic Data Center"],
+            [
+                "NOAA's National Climatic Data Center",
+                "NOAA's National Climatic Data Center",
+            ],
             ["Oshun, Jasper", "Oshun, Jasper"],
             ["others", "others"],
             ["Philip A.E. Pogge von Strandmann", "Philip A.E. Pogge von Strandmann"],
@@ -76,8 +84,14 @@ class NameTest(TestCase):
             ["Roman DiBiase", "DiBiase, Roman"],
             ["Rood, Dylan H.", "Rood, Dylan H."],
             ["Russo, Tess", "Russo, Tess"],
-            [" Shale Hills Critical Zone Observatory", "Shale Hills Critical Zone Observatory"],
-            ["Shale Hills Critical Zone Observatory", "Shale Hills Critical Zone Observatory"],
+            [
+                " Shale Hills Critical Zone Observatory",
+                "Shale Hills Critical Zone Observatory",
+            ],
+            [
+                "Shale Hills Critical Zone Observatory",
+                "Shale Hills Critical Zone Observatory",
+            ],
             ["Shale Hills CZO", "Shale Hills CZO"],
             ["Sharon Billings", "Billings, Sharon"],
             ["Sharon Cantrell", "Cantrell, Sharon"],
@@ -112,7 +126,10 @@ class NameTest(TestCase):
             ["Tyson Lee Swetnam", "Swetnam, Tyson Lee"],
             ["University of Arizona", "University of Arizona"],
             ["University of California Merced", "University of California Merced"],
-            ["U.S. Army Corps of Engineers (USACE)", "U.S. Army Corps of Engineers (USACE)"],
+            [
+                "U.S. Army Corps of Engineers (USACE)",
+                "U.S. Army Corps of Engineers (USACE)",
+            ],
             ["USDA-ARS", "USDA-ARS"],
             ["USDA USFS", "USDA USFS"],
             ["U.S. Department of Agriculture", "U.S. Department of Agriculture"],
@@ -138,7 +155,7 @@ class NameTest(TestCase):
             ["Xavier Comas", "Comas, Xavier"],
             ["Xavier Zapata-Rios", "Zapata-Rios, Xavier"],
             ["Zreda, Marek", "Zreda, Marek"],
-            ["Z.S. Brecheisen", "Brecheisen, Z. S."]
+            ["Z.S. Brecheisen", "Brecheisen, Z. S."],
         ]
         for n in names:
             result = normalize_name(n[0])

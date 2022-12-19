@@ -7,7 +7,11 @@ from django.template.loader import render_to_string
 from rest_framework import status as http_status
 
 from hs_core.enums import RelationTypes
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
+from hs_core.hydroshare.utils import (
+    get_resource_by_shortkey,
+    resource_modified,
+    set_dirty_bag_flag,
+)
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 from .utils import add_or_remove_relation_metadata, get_collectable_resources
 
@@ -18,34 +22,45 @@ UI_DATETIME_FORMAT = "%m/%d/%Y"
 def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
     status = "success"
     msg = ""
-    collectable_resources_modal_html = ''
+    collectable_resources_modal_html = ""
     status_code = http_status.HTTP_200_OK
     try:
-        collection_res, is_authorized, user = authorize(request, shortkey,
-                                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        collection_res, is_authorized, user = authorize(
+            request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE
+        )
 
         if collection_res.resource_type.lower() != "collectionresource":
             raise Exception(f"Resource {shortkey} is not a collection resource.")
 
         if collection_res.raccess.published:
-            raise Exception(f"Resource {shortkey} is a published collection resource and can't be changed")
+            raise Exception(
+                f"Resource {shortkey} is a published collection resource and can't be changed"
+            )
 
         collectable_resources = get_collectable_resources(user, collection_res)
-        context = {'collectable_resources': collectable_resources}
-        template_name = 'pages/collectable_resources_modal.html'
-        collectable_resources_modal_html = render_to_string(template_name, context, request)
+        context = {"collectable_resources": collectable_resources}
+        template_name = "pages/collectable_resources_modal.html"
+        collectable_resources_modal_html = render_to_string(
+            template_name, context, request
+        )
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
-        logger.error(err_msg.format(str(ex),
-                     request.user.username if request.user.is_authenticated else "anonymous",
-                     shortkey))
+        logger.error(
+            err_msg.format(
+                str(ex),
+                request.user.username if request.user.is_authenticated else "anonymous",
+                shortkey,
+            )
+        )
         status = "error"
         msg = str(ex)
         status_code = http_status.HTTP_400_BAD_REQUEST
     finally:
-        ajax_response_data = {'status': status, 'msg': msg,
-                              'collectable_resources_modal': collectable_resources_modal_html
-                              }
+        ajax_response_data = {
+            "status": status,
+            "msg": msg,
+            "collectable_resources_modal": collectable_resources_modal_html,
+        }
         return JsonResponse(ajax_response_data, status=status_code)
 
 
@@ -73,12 +88,14 @@ def update_collection(request, shortkey, *args, **kwargs):
 
     try:
         with transaction.atomic():
-            collection_res_obj, is_authorized, user \
-                = authorize(request, shortkey,
-                            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            collection_res_obj, is_authorized, user = authorize(
+                request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE
+            )
 
             if collection_res_obj.resource_type.lower() != "collectionresource":
-                raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+                raise Exception(
+                    "Resource {0} is not a collection resource.".format(shortkey)
+                )
 
             if collection_res_obj.raccess.published:
                 raise Exception("Resources of a published collection can't be changed")
@@ -93,12 +110,14 @@ def update_collection(request, shortkey, *args, **kwargs):
             # adding a resource that is already in the collection will raise error
             # 3) 'remove': remove resources in the list from collection
             # removing a resource that is not in collection will raise error
-            update_type = request.POST.get("update_type", 'set').lower()
+            update_type = request.POST.get("update_type", "set").lower()
 
             if update_type not in ["set", "add", "remove"]:
                 raise Exception("Invalid value of 'update_type' parameter")
 
-            if len(updated_contained_res_id_list) > len(set(updated_contained_res_id_list)):
+            if len(updated_contained_res_id_list) > len(
+                set(updated_contained_res_id_list)
+            ):
                 raise Exception("Duplicate resources exist in list 'resource_id_list'")
 
             for updated_contained_res_id in updated_contained_res_id_list:
@@ -107,7 +126,9 @@ def update_collection(request, shortkey, *args, **kwargs):
                     raise Exception("Can not contain collection itself.")
 
             # current contained res
-            res_id_list_current_collection = [res.short_id for res in collection_res_obj.resources.all()]
+            res_id_list_current_collection = [
+                res.short_id for res in collection_res_obj.resources.all()
+            ]
 
             # res to remove
             res_id_list_remove = []
@@ -115,9 +136,11 @@ def update_collection(request, shortkey, *args, **kwargs):
                 res_id_list_remove = updated_contained_res_id_list
                 for res_id_remove in res_id_list_remove:
                     if res_id_remove not in res_id_list_current_collection:
-                        raise Exception('Cannot remove resource {0} as it '
-                                        'is not currently contained '
-                                        'in collection'.format(res_id_remove))
+                        raise Exception(
+                            "Cannot remove resource {0} as it "
+                            "is not currently contained "
+                            "in collection".format(res_id_remove)
+                        )
             elif update_type == "set":
                 for res_id_remove in res_id_list_current_collection:
                     if res_id_remove not in updated_contained_res_id_list:
@@ -129,13 +152,19 @@ def update_collection(request, shortkey, *args, **kwargs):
                 collection_res_obj.resources.remove(res_obj_remove)
 
                 # delete relation meta element of type 'hasPart' for the collection resource
-                add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
-                                                relation_type=hasPart, relation_value=res_obj_remove.get_citation(),
-                                                set_res_modified=False)
+                add_or_remove_relation_metadata(
+                    add=False,
+                    target_res_obj=collection_res_obj,
+                    relation_type=hasPart,
+                    relation_value=res_obj_remove.get_citation(),
+                    set_res_modified=False,
+                )
 
                 # delete relation meta element of type 'isPartOf' from the resource removed from the collection
-                res_obj_remove.metadata.relations.filter(type=RelationTypes.isPartOf,
-                                                         value__contains=collection_res_obj.short_id).first().delete()
+                res_obj_remove.metadata.relations.filter(
+                    type=RelationTypes.isPartOf,
+                    value__contains=collection_res_obj.short_id,
+                ).first().delete()
                 set_dirty_bag_flag(res_obj_remove)
 
             # res to add
@@ -144,8 +173,10 @@ def update_collection(request, shortkey, *args, **kwargs):
                 res_id_list_add = updated_contained_res_id_list
                 for res_id_add in res_id_list_add:
                     if res_id_add in res_id_list_current_collection:
-                        raise Exception('Cannot add resource {0} as it '
-                                        'is already contained in collection'.format(res_id_add))
+                        raise Exception(
+                            "Cannot add resource {0} as it "
+                            "is already contained in collection".format(res_id_add)
+                        )
             elif update_type == "set":
                 for res_id_add in updated_contained_res_id_list:
                     if res_id_add not in res_id_list_current_collection:
@@ -155,9 +186,11 @@ def update_collection(request, shortkey, *args, **kwargs):
                 # the requesting user should at least have metadata view permission for each of
                 # the new resources to be added to the collection
 
-                res_to_add, _, _ \
-                    = authorize(request, res_id_add,
-                                needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+                res_to_add, _, _ = authorize(
+                    request,
+                    res_id_add,
+                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA,
+                )
 
                 # the resources being added should be discoverable, 'shareable' by,
                 # or owned by current user
@@ -166,22 +199,32 @@ def update_collection(request, shortkey, *args, **kwargs):
                 # to "exists" and exactly matches the intent of the UI.  It is much
                 # more efficient than it looks.
 
-                if not get_collectable_resources(user, collection_res_obj) \
-                        .filter(short_id=res_to_add.short_id).exists():
-                    raise Exception('Only resource owner can add a non-shareable private'
-                                    'resource to a collection ')
+                if (
+                    not get_collectable_resources(user, collection_res_obj)
+                    .filter(short_id=res_to_add.short_id)
+                    .exists()
+                ):
+                    raise Exception(
+                        "Only resource owner can add a non-shareable private"
+                        "resource to a collection "
+                    )
 
                 # add this new res to collection
                 collection_res_obj.resources.add(res_to_add)
 
                 # add relation meta element of type 'hasPart' to the collection resource
-                add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
-                                                relation_type=hasPart, relation_value=res_to_add.get_citation(),
-                                                set_res_modified=False)
+                add_or_remove_relation_metadata(
+                    add=True,
+                    target_res_obj=collection_res_obj,
+                    relation_type=hasPart,
+                    relation_value=res_to_add.get_citation(),
+                    set_res_modified=False,
+                )
 
                 # add relation meta element of type 'isPartOf' to the resource added to the collection
-                res_to_add.metadata.create_element('relation', type='isPartOf',
-                                                   value=collection_res_obj.get_citation())
+                res_to_add.metadata.create_element(
+                    "relation", type="isPartOf", value=collection_res_obj.get_citation()
+                )
                 set_dirty_bag_flag(res_to_add)
 
             if collection_res_obj.can_be_public_or_discoverable:
@@ -190,21 +233,27 @@ def update_collection(request, shortkey, *args, **kwargs):
             new_coverage_list = _update_collection_coverages(collection_res_obj)
 
             # set flag to update csv collection resource file to be generated at the time of bag download
-            collection_res_obj.set_update_text_file(flag='True')
+            collection_res_obj.set_update_text_file(flag="True")
             resource_modified(collection_res_obj, user, overwrite_bag=False)
 
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
-        logger.error(err_msg.format(str(ex),
-                     request.user.username if request.user.is_authenticated else "anonymous",
-                     shortkey))
+        logger.error(
+            err_msg.format(
+                str(ex),
+                request.user.username if request.user.is_authenticated else "anonymous",
+                shortkey,
+            )
+        )
         status = "error"
         msg = str(ex)
     finally:
-        ajax_response_data = \
-            {'status': status, 'msg': msg,
-             'metadata_status': metadata_status,
-             'new_coverage_list': new_coverage_list}
+        ajax_response_data = {
+            "status": status,
+            "msg": msg,
+            "metadata_status": metadata_status,
+            "new_coverage_list": new_coverage_list,
+        }
         return JsonResponse(ajax_response_data)
 
 
@@ -216,32 +265,36 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
     as a result of collection referenced resource being deleted by resource owner.
     """
 
-    ajax_response_data = {'status': "success"}
+    ajax_response_data = {"status": "success"}
     try:
         with transaction.atomic():
-            collection_res, is_authorized, user \
-                = authorize(request, shortkey,
-                            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            collection_res, is_authorized, user = authorize(
+                request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE
+            )
 
             if collection_res.resource_type.lower() != "collectionresource":
-                raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+                raise Exception(
+                    "Resource {0} is not a collection resource.".format(shortkey)
+                )
 
             new_coverage_list = _update_collection_coverages(collection_res)
-            ajax_response_data['new_coverage_list'] = new_coverage_list
+            ajax_response_data["new_coverage_list"] = new_coverage_list
 
             # remove all logged deleted resources for the collection
             collection_res.deleted_resources.all().delete()
 
             # set flag to update csv collection resource file to be generated at the time of bag download
-            collection_res.set_update_text_file(flag='True')
+            collection_res.set_update_text_file(flag="True")
             resource_modified(collection_res, user, overwrite_bag=False)
 
     except Exception as ex:
-        logger.error("Failed to update collection for "
-                     "deleted resources.Collection resource ID: {}. "
-                     "Error:{} ".format(shortkey, str(ex)))
+        logger.error(
+            "Failed to update collection for "
+            "deleted resources.Collection resource ID: {}. "
+            "Error:{} ".format(shortkey, str(ex))
+        )
 
-        ajax_response_data = {'status': "error", 'message': str(ex)}
+        ajax_response_data = {"status": "error", "message": str(ex)}
     finally:
         return JsonResponse(ajax_response_data)
 
@@ -251,23 +304,27 @@ def calculate_collection_coverages(request, shortkey, *args, **kwargs):
     Calculate latest coverages of the specified collection resource
     This func is a wrapper of the _calculate_collection_coverages func
     """
-    ajax_response_data = {'status': "success"}
+    ajax_response_data = {"status": "success"}
     try:
-        collection_res, is_authorized, user \
-            = authorize(request, shortkey,
-                        needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        collection_res, is_authorized, user = authorize(
+            request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
+        )
 
         if collection_res.resource_type.lower() != "collectionresource":
-            raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+            raise Exception(
+                "Resource {0} is not a collection resource.".format(shortkey)
+            )
 
         new_coverage_list = _calculate_collection_coverages(collection_res)
-        ajax_response_data['new_coverage_list'] = new_coverage_list
+        ajax_response_data["new_coverage_list"] = new_coverage_list
 
     except Exception as ex:
-        logger.error("Failed to calculate collection coverages. Collection resource ID: {0}. "
-                     "Error:{1} ".format(shortkey, str(ex)))
+        logger.error(
+            "Failed to calculate collection coverages. Collection resource ID: {0}. "
+            "Error:{1} ".format(shortkey, str(ex))
+        )
 
-        ajax_response_data = {'status': "error", 'message': str(ex)}
+        ajax_response_data = {"status": "error", "message": str(ex)}
     finally:
         return JsonResponse(ajax_response_data)
 
@@ -286,10 +343,9 @@ def _update_collection_coverages(collection_res_obj):
     with transaction.atomic():
         collection_res_obj.metadata.coverages.all().delete()
         for cvg in new_coverage_list:
-            element = collection_res_obj.\
-                metadata.create_element('Coverage',
-                                        type=cvg['type'],
-                                        value=cvg['value'])
+            element = collection_res_obj.metadata.create_element(
+                "Coverage", type=cvg["type"], value=cvg["value"]
+            )
             cvg["element_id_str"] = str(element.id)
 
     return new_coverage_list
@@ -329,47 +385,51 @@ def _calculate_collection_coverages(collection_res_obj):
                         time_list.append(end_date)
                 except ValueError as ex:
                     # skip the res if it has invalid datetime string
-                    logger.warning("_calculate_collection_coverages: "
-                                   "Ignore unknown datetime string. "
-                                   "Collection resource ID: {0}. "
-                                   "Contained res ID: {1}"
-                                   "Msg: {2} ".
-                                   format(res_id,
-                                          contained_res_obj.short_id, str(ex)))
+                    logger.warning(
+                        "_calculate_collection_coverages: "
+                        "Ignore unknown datetime string. "
+                        "Collection resource ID: {0}. "
+                        "Contained res ID: {1}"
+                        "Msg: {2} ".format(res_id, contained_res_obj.short_id, str(ex))
+                    )
 
     # spatial coverage
     if len(lon_list) > 0 and len(lat_list) > 0:
         value_dict = {}
-        type_str = 'point'
+        type_str = "point"
         lon_min = min(lon_list)
         lon_max = max(lon_list)
         lat_min = min(lat_list)
         lat_max = max(lat_list)
         if lon_min == lon_max and lat_min == lat_max:
-            type_str = 'point'
-            value_dict['east'] = lon_min
-            value_dict['north'] = lat_min
-            value_dict['units'] = output_spatial_units_str
+            type_str = "point"
+            value_dict["east"] = lon_min
+            value_dict["north"] = lat_min
+            value_dict["units"] = output_spatial_units_str
         else:
-            type_str = 'box'
-            value_dict['eastlimit'] = lon_max
-            value_dict['westlimit'] = lon_min
-            value_dict['northlimit'] = lat_max
-            value_dict['southlimit'] = lat_min
-            value_dict['units'] = output_spatial_units_str,
-            value_dict['projection'] = output_spatial_projection_str
+            type_str = "box"
+            value_dict["eastlimit"] = lon_max
+            value_dict["westlimit"] = lon_min
+            value_dict["northlimit"] = lat_max
+            value_dict["southlimit"] = lat_min
+            value_dict["units"] = (output_spatial_units_str,)
+            value_dict["projection"] = output_spatial_projection_str
 
-        new_coverage_list.append({'type': type_str,
-                                  'value': value_dict, 'element_id_str': "-1"})
+        new_coverage_list.append(
+            {"type": type_str, "value": value_dict, "element_id_str": "-1"}
+        )
 
     # temporal coverage
     if len(time_list) > 0:
         time_start = min(time_list)
         time_end = max(time_list)
-        value_dict = {'start': time_start.strftime(UI_DATETIME_FORMAT),
-                      'end': time_end.strftime(UI_DATETIME_FORMAT)}
+        value_dict = {
+            "start": time_start.strftime(UI_DATETIME_FORMAT),
+            "end": time_end.strftime(UI_DATETIME_FORMAT),
+        }
 
-        new_coverage_list.append({'type': 'period',
-                                  'value': value_dict, 'element_id_str': "-1"})
+        new_coverage_list.append(
+            {"type": "period", "value": value_dict, "element_id_str": "-1"}
+        )
 
     return new_coverage_list

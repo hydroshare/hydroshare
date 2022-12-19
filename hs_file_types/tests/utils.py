@@ -6,49 +6,67 @@ from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.hydroshare.utils import add_file_to_resource
 from hs_core.hydroshare import create_resource, add_resource_files
-from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile, \
-    NetCDFLogicalFile, GeoFeatureLogicalFile, GeoFeatureFileMetaData, RefTimeseriesLogicalFile, \
-    TimeSeriesLogicalFile, TimeSeriesFileMetaData
+from hs_file_types.models import (
+    GeoRasterLogicalFile,
+    GeoRasterFileMetaData,
+    GenericLogicalFile,
+    NetCDFLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoFeatureFileMetaData,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile,
+    TimeSeriesFileMetaData,
+)
 
 
 class CompositeResourceTestMixin(object):
-
-    def add_file_to_resource(self, file_to_add, upload_folder=''):
-        file_to_upload = UploadedFile(file=open(file_to_add, 'rb'),
-                                      name=os.path.basename(file_to_add))
+    def add_file_to_resource(self, file_to_add, upload_folder=""):
+        file_to_upload = UploadedFile(
+            file=open(file_to_add, "rb"), name=os.path.basename(file_to_add)
+        )
 
         new_res_file = add_file_to_resource(
-            self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True
+            self.composite_resource,
+            file_to_upload,
+            folder=upload_folder,
+            check_target_folder=True,
         )
         return new_res_file
 
-    def add_files_to_resource(self, files_to_add, upload_folder=''):
+    def add_files_to_resource(self, files_to_add, upload_folder=""):
         files_to_upload = []
         for fl in files_to_add:
-            file_to_upload = UploadedFile(file=open(fl, 'rb'), name=os.path.basename(fl))
+            file_to_upload = UploadedFile(
+                file=open(fl, "rb"), name=os.path.basename(fl)
+            )
             files_to_upload.append(file_to_upload)
-        added_resource_files = add_resource_files(self.composite_resource.short_id,
-                                                  *files_to_upload, folder=upload_folder)
+        added_resource_files = add_resource_files(
+            self.composite_resource.short_id, *files_to_upload, folder=upload_folder
+        )
         return added_resource_files
 
-    def create_composite_resource(self, file_to_upload=[], auto_aggregate=False, folder=''):
+    def create_composite_resource(
+        self, file_to_upload=[], auto_aggregate=False, folder=""
+    ):
         if isinstance(file_to_upload, str):
             file_to_upload = [file_to_upload]
         files = []
         full_paths = {}
         for file_name in file_to_upload:
-            file_obj = open(file_name, 'rb')
+            file_obj = open(file_name, "rb")
             if folder:
                 full_paths[file_obj] = os.path.join(folder, file_name)
-            uploaded_file = UploadedFile(file=file_obj, name=os.path.basename(file_obj.name))
+            uploaded_file = UploadedFile(
+                file=file_obj, name=os.path.basename(file_obj.name)
+            )
             files.append(uploaded_file)
         self.composite_resource = create_resource(
-            resource_type='CompositeResource',
+            resource_type="CompositeResource",
             owner=self.user,
             title=self.res_title,
             files=files,
             auto_aggregate=auto_aggregate,
-            full_paths=full_paths
+            full_paths=full_paths,
         )
 
 
@@ -78,8 +96,9 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     self.assertEqual(logical_file.has_metadata, True)
     # check that the logicalfile is associated with 2 files
     self.assertEqual(logical_file.files.all().count(), 2)
-    self.assertEqual(set(self.composite_resource.files.all()),
-                     set(logical_file.files.all()))
+    self.assertEqual(
+        set(self.composite_resource.files.all()), set(logical_file.files.all())
+    )
 
     # test that size property of the logical file is equal to sun of size of all files
     # that are part of the logical file
@@ -94,10 +113,17 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     # there should be 2 format elements associated with resource
     self.assertEqual(self.composite_resource.metadata.formats.all().count(), 2)
     self.assertEqual(
-        self.composite_resource.metadata.formats.all().filter(value='application/vrt').count(),
-        1)
-    self.assertEqual(self.composite_resource.metadata.formats.all().filter(
-        value='image/tiff').count(), 1)
+        self.composite_resource.metadata.formats.all()
+        .filter(value="application/vrt")
+        .count(),
+        1,
+    )
+    self.assertEqual(
+        self.composite_resource.metadata.formats.all()
+        .filter(value="image/tiff")
+        .count(),
+        1,
+    )
 
     # test extracted metadata for the file type
 
@@ -106,42 +132,65 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
 
     # there should be 1 coverage element - box type
     self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
-    self.assertEqual(logical_file.metadata.spatial_coverage.type, 'box')
+    self.assertEqual(logical_file.metadata.spatial_coverage.type, "box")
 
     box_coverage = logical_file.metadata.spatial_coverage
-    self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
-    self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
+    self.assertEqual(box_coverage.value["projection"], "WGS 84 EPSG:4326")
+    self.assertEqual(box_coverage.value["units"], "Decimal degrees")
     expected_nlimit = 42.05002695977342
-    self.assertAlmostEqual(float(box_coverage.value['northlimit']), expected_nlimit,
-                           places=get_number_of_decimal_places(expected_nlimit))
+    self.assertAlmostEqual(
+        float(box_coverage.value["northlimit"]),
+        expected_nlimit,
+        places=get_number_of_decimal_places(expected_nlimit),
+    )
     expected_elimit = -111.57773718106199
-    self.assertAlmostEqual(float(box_coverage.value['eastlimit']), expected_elimit,
-                           places=get_number_of_decimal_places(expected_elimit))
+    self.assertAlmostEqual(
+        float(box_coverage.value["eastlimit"]),
+        expected_elimit,
+        places=get_number_of_decimal_places(expected_elimit),
+    )
     expected_slimit = 41.98722286030317
-    self.assertAlmostEqual(float(box_coverage.value['southlimit']), expected_slimit,
-                           places=get_number_of_decimal_places(expected_slimit))
+    self.assertAlmostEqual(
+        float(box_coverage.value["southlimit"]),
+        expected_slimit,
+        places=get_number_of_decimal_places(expected_slimit),
+    )
     expected_wlimit = -111.6975629308406
-    self.assertAlmostEqual(float(box_coverage.value['westlimit']), expected_wlimit,
-                           places=get_number_of_decimal_places(expected_wlimit))
+    self.assertAlmostEqual(
+        float(box_coverage.value["westlimit"]),
+        expected_wlimit,
+        places=get_number_of_decimal_places(expected_wlimit),
+    )
 
     # testing extended metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
     expected_nlimit = 4655492.446916306
-    self.assertAlmostEqual(float(ori_coverage.value['northlimit']), expected_nlimit,
-                           places=get_number_of_decimal_places(expected_nlimit))
+    self.assertAlmostEqual(
+        float(ori_coverage.value["northlimit"]),
+        expected_nlimit,
+        places=get_number_of_decimal_places(expected_nlimit),
+    )
     expected_elimit = 452144.01909127034
-    self.assertAlmostEqual(float(ori_coverage.value['eastlimit']), expected_elimit,
-                           places=get_number_of_decimal_places(expected_elimit))
+    self.assertAlmostEqual(
+        float(ori_coverage.value["eastlimit"]),
+        expected_elimit,
+        places=get_number_of_decimal_places(expected_elimit),
+    )
     expected_slimit = 4648592.446916306
-    self.assertAlmostEqual(float(ori_coverage.value['southlimit']), expected_slimit,
-                           places=get_number_of_decimal_places(expected_slimit))
+    self.assertAlmostEqual(
+        float(ori_coverage.value["southlimit"]),
+        expected_slimit,
+        places=get_number_of_decimal_places(expected_slimit),
+    )
     expected_wlimit = 442274.01909127034
-    self.assertAlmostEqual(float(ori_coverage.value['westlimit']), expected_wlimit,
-                           places=get_number_of_decimal_places(expected_wlimit))
-    self.assertEqual(ori_coverage.value['units'], 'meter')
-    self.assertEqual(ori_coverage.value['projection'],
-                     'NAD83 / UTM zone 12N')
+    self.assertAlmostEqual(
+        float(ori_coverage.value["westlimit"]),
+        expected_wlimit,
+        places=get_number_of_decimal_places(expected_wlimit),
+    )
+    self.assertEqual(ori_coverage.value["units"], "meter")
+    self.assertEqual(ori_coverage.value["projection"], "NAD83 / UTM zone 12N")
 
     # testing extended metadata element: cell information
     cell_info = logical_file.metadata.cellInformation
@@ -149,14 +198,14 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     self.assertEqual(cell_info.columns, 329)
     self.assertEqual(cell_info.cellSizeXValue, 30.0)
     self.assertEqual(cell_info.cellSizeYValue, 30.0)
-    self.assertEqual(cell_info.cellDataType, 'Float32')
+    self.assertEqual(cell_info.cellDataType, "Float32")
 
     # testing extended metadata element: band information
     self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
     band_info = logical_file.metadata.bandInformations.first()
-    self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
-    self.assertEqual(band_info.maximumValue, '2880.007080078125')
-    self.assertEqual(band_info.minimumValue, '1870.6365966796875')
+    self.assertEqual(band_info.noDataValue, "-3.4028234663852886e+38")
+    self.assertEqual(band_info.maximumValue, "2880.007080078125")
+    self.assertEqual(band_info.minimumValue, "1870.6365966796875")
 
 
 def assert_netcdf_file_type_metadata(self, title, aggr_folder):
@@ -170,11 +219,13 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     # check that we put the 2 files in a new folder *aggr_folder*
     for res_file in self.composite_resource.files.all():
         if aggr_folder:
-            expected_file_path = "{0}/{1}/{2}".format(self.composite_resource.file_path,
-                                                      aggr_folder, res_file.file_name)
+            expected_file_path = "{0}/{1}/{2}".format(
+                self.composite_resource.file_path, aggr_folder, res_file.file_name
+            )
         else:
-            expected_file_path = "{0}/{1}".format(self.composite_resource.file_path,
-                                                  res_file.file_name)
+            expected_file_path = "{0}/{1}".format(
+                self.composite_resource.file_path, res_file.file_name
+            )
         self.assertEqual(res_file.full_path, expected_file_path)
         self.assertEqual(res_file.file_folder, aggr_folder)
 
@@ -184,8 +235,8 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     # logical file should be associated with 2 files
     self.assertEqual(logical_file.files.all().count(), 2)
     file_extensions = set([f.extension for f in logical_file.files.all()])
-    self.assertIn('.nc', file_extensions)
-    self.assertIn('.txt', file_extensions)
+    self.assertIn(".nc", file_extensions)
+    self.assertIn(".txt", file_extensions)
 
     # test extracted netcdf file type metadata
     # there should 2 content file
@@ -197,11 +248,15 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # there should be an abstract element
     self.assertNotEqual(self.composite_resource.metadata.description, None)
-    extracted_abstract = "This netCDF data is the simulation output from Utah Energy " \
-                         "Balance (UEB) model.It includes the simulation result " \
-                         "of snow water equivalent during the period " \
-                         "Oct. 2009 to June 2010 for TWDEF site in Utah."
-    self.assertEqual(self.composite_resource.metadata.description.abstract, extracted_abstract)
+    extracted_abstract = (
+        "This netCDF data is the simulation output from Utah Energy "
+        "Balance (UEB) model.It includes the simulation result "
+        "of snow water equivalent during the period "
+        "Oct. 2009 to June 2010 for TWDEF site in Utah."
+    )
+    self.assertEqual(
+        self.composite_resource.metadata.description.abstract, extracted_abstract
+    )
 
     # there should be one license element:
     self.assertNotEqual(self.composite_resource.metadata.rights.statement, 1)
@@ -217,131 +272,178 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # there should be 2 coverage element - box type and period type
     self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 2)
-    self.assertEqual(self.composite_resource.metadata.coverages.all().filter(type='box').
-                     count(), 1)
-    self.assertEqual(self.composite_resource.metadata.coverages.all().filter(type='period').
-                     count(), 1)
+    self.assertEqual(
+        self.composite_resource.metadata.coverages.all().filter(type="box").count(), 1
+    )
+    self.assertEqual(
+        self.composite_resource.metadata.coverages.all().filter(type="period").count(),
+        1,
+    )
 
-    box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
-    self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
-    self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
+    box_coverage = (
+        self.composite_resource.metadata.coverages.all().filter(type="box").first()
+    )
+    self.assertEqual(box_coverage.value["projection"], "WGS 84 EPSG:4326")
+    self.assertEqual(box_coverage.value["units"], "Decimal degrees")
     expected_nlimit = 41.867126409000086
-    self.assertAlmostEqual(float(box_coverage.value['northlimit']), expected_nlimit,
-                           places=get_number_of_decimal_places(expected_nlimit))
+    self.assertAlmostEqual(
+        float(box_coverage.value["northlimit"]),
+        expected_nlimit,
+        places=get_number_of_decimal_places(expected_nlimit),
+    )
     expected_elimit = -111.5059403684569
-    self.assertAlmostEqual(float(box_coverage.value['eastlimit']), expected_elimit,
-                           places=get_number_of_decimal_places(expected_elimit))
+    self.assertAlmostEqual(
+        float(box_coverage.value["eastlimit"]),
+        expected_elimit,
+        places=get_number_of_decimal_places(expected_elimit),
+    )
     expected_slimit = 41.86390807452128
-    self.assertAlmostEqual(float(box_coverage.value['southlimit']), expected_slimit,
-                           places=get_number_of_decimal_places(expected_slimit))
+    self.assertAlmostEqual(
+        float(box_coverage.value["southlimit"]),
+        expected_slimit,
+        places=get_number_of_decimal_places(expected_slimit),
+    )
     expected_wlimit = -111.51138807956225
-    self.assertAlmostEqual(float(box_coverage.value['westlimit']), expected_wlimit,
-                           places=get_number_of_decimal_places(expected_wlimit))
+    self.assertAlmostEqual(
+        float(box_coverage.value["westlimit"]),
+        expected_wlimit,
+        places=get_number_of_decimal_places(expected_wlimit),
+    )
 
-    temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
-        type='period').first()
-    self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
-                     parser.parse('10/01/2009').date())
-    self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                     parser.parse('05/30/2010').date())
+    temporal_coverage = (
+        self.composite_resource.metadata.coverages.all().filter(type="period").first()
+    )
+    self.assertEqual(
+        parser.parse(temporal_coverage.value["start"]).date(),
+        parser.parse("10/01/2009").date(),
+    )
+    self.assertEqual(
+        parser.parse(temporal_coverage.value["end"]).date(),
+        parser.parse("05/30/2010").date(),
+    )
 
     # there should be 2 format elements
     self.assertEqual(self.composite_resource.metadata.formats.all().count(), 2)
-    self.assertEqual(self.composite_resource.metadata.formats.all().
-                     filter(value='text/plain').count(), 1)
-    self.assertEqual(self.composite_resource.metadata.formats.all().
-                     filter(value='application/x-netcdf').count(), 1)
+    self.assertEqual(
+        self.composite_resource.metadata.formats.all()
+        .filter(value="text/plain")
+        .count(),
+        1,
+    )
+    self.assertEqual(
+        self.composite_resource.metadata.formats.all()
+        .filter(value="application/x-netcdf")
+        .count(),
+        1,
+    )
 
     # test file type metadata
     res_file = self.composite_resource.files.first()
     logical_file = res_file.logical_file
     # there should be one keyword element
     self.assertEqual(len(logical_file.metadata.keywords), 1)
-    self.assertIn('Snow water equivalent', logical_file.metadata.keywords)
+    self.assertIn("Snow water equivalent", logical_file.metadata.keywords)
 
     # test dataset_name attribute of the logical file which should have the extracted value
-    dataset_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
+    dataset_title = (
+        "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
+    )
     self.assertEqual(logical_file.dataset_name, dataset_title)
 
     # testing extended metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
-    self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-    proj_text = '+proj=tmerc +y_0=0.0 +x_0=500000.0 +k_0=0.9996 +lat_0=0.0 +lon_0=-111.0'
+    self.assertEqual(ori_coverage.projection_string_type, "Proj4 String")
+    proj_text = (
+        "+proj=tmerc +y_0=0.0 +x_0=500000.0 +k_0=0.9996 +lat_0=0.0 +lon_0=-111.0"
+    )
     self.assertEqual(ori_coverage.projection_string_text, proj_text)
-    self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
-    self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
-    self.assertEqual(float(ori_coverage.value['southlimit']), 4.63479e+06)
-    self.assertEqual(float(ori_coverage.value['westlimit']), 457560.0)
-    self.assertEqual(ori_coverage.value['units'], 'Meter')
-    self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
+    self.assertEqual(float(ori_coverage.value["northlimit"]), 4.63515e06)
+    self.assertEqual(float(ori_coverage.value["eastlimit"]), 458010.0)
+    self.assertEqual(float(ori_coverage.value["southlimit"]), 4.63479e06)
+    self.assertEqual(float(ori_coverage.value["westlimit"]), 457560.0)
+    self.assertEqual(ori_coverage.value["units"], "Meter")
+    self.assertEqual(ori_coverage.value["projection"], "transverse_mercator")
 
     # testing extended metadata element: spatial coverage (computed from original coverage as part of
     # metadata extraction)
-    spatial_coverage = logical_file.metadata.coverages.filter(type='box').first()
+    spatial_coverage = logical_file.metadata.coverages.filter(type="box").first()
     self.assertIsNotNone(spatial_coverage)
     expected_nlimit = 41.867126409000086
-    self.assertAlmostEqual(float(spatial_coverage.value['northlimit']), expected_nlimit,
-                           places=get_number_of_decimal_places(expected_nlimit))
+    self.assertAlmostEqual(
+        float(spatial_coverage.value["northlimit"]),
+        expected_nlimit,
+        places=get_number_of_decimal_places(expected_nlimit),
+    )
 
     expected_slimit = 41.86390807452128
-    self.assertAlmostEqual(float(spatial_coverage.value['southlimit']), expected_slimit,
-                           places=get_number_of_decimal_places(expected_slimit))
+    self.assertAlmostEqual(
+        float(spatial_coverage.value["southlimit"]),
+        expected_slimit,
+        places=get_number_of_decimal_places(expected_slimit),
+    )
 
     expected_elimit = -111.5059403684569
-    self.assertAlmostEqual(float(spatial_coverage.value['eastlimit']), expected_elimit,
-                           places=get_number_of_decimal_places(expected_elimit))
+    self.assertAlmostEqual(
+        float(spatial_coverage.value["eastlimit"]),
+        expected_elimit,
+        places=get_number_of_decimal_places(expected_elimit),
+    )
 
     expected_wlimit = -111.51138807956225
-    self.assertAlmostEqual(float(spatial_coverage.value['westlimit']), expected_wlimit,
-                           places=get_number_of_decimal_places(expected_wlimit))
-    self.assertEqual(spatial_coverage.value['units'], "Decimal degrees")
-    self.assertEqual(spatial_coverage.value['projection'], "WGS 84 EPSG:4326")
+    self.assertAlmostEqual(
+        float(spatial_coverage.value["westlimit"]),
+        expected_wlimit,
+        places=get_number_of_decimal_places(expected_wlimit),
+    )
+    self.assertEqual(spatial_coverage.value["units"], "Decimal degrees")
+    self.assertEqual(spatial_coverage.value["projection"], "WGS 84 EPSG:4326")
 
     # testing extended metadata element: variables
     self.assertEqual(logical_file.metadata.variables.all().count(), 5)
 
     # test time variable
-    var_time = logical_file.metadata.variables.all().filter(name='time').first()
+    var_time = logical_file.metadata.variables.all().filter(name="time").first()
     self.assertNotEqual(var_time, None)
-    self.assertEqual(var_time.unit, 'hours since 2009-10-1 0:0:00 UTC')
-    self.assertEqual(var_time.type, 'Float')
-    self.assertEqual(var_time.shape, 'time')
-    self.assertEqual(var_time.descriptive_name, 'time')
+    self.assertEqual(var_time.unit, "hours since 2009-10-1 0:0:00 UTC")
+    self.assertEqual(var_time.type, "Float")
+    self.assertEqual(var_time.shape, "time")
+    self.assertEqual(var_time.descriptive_name, "time")
 
     # test x variable
-    var_x = logical_file.metadata.variables.all().filter(name='x').first()
+    var_x = logical_file.metadata.variables.all().filter(name="x").first()
     self.assertNotEqual(var_x, None)
-    self.assertEqual(var_x.unit, 'Meter')
-    self.assertEqual(var_x.type, 'Float')
-    self.assertEqual(var_x.shape, 'x')
-    self.assertEqual(var_x.descriptive_name, 'x coordinate of projection')
+    self.assertEqual(var_x.unit, "Meter")
+    self.assertEqual(var_x.type, "Float")
+    self.assertEqual(var_x.shape, "x")
+    self.assertEqual(var_x.descriptive_name, "x coordinate of projection")
 
     # test y variable
-    var_y = logical_file.metadata.variables.all().filter(name='y').first()
+    var_y = logical_file.metadata.variables.all().filter(name="y").first()
     self.assertNotEqual(var_y, None)
-    self.assertEqual(var_y.unit, 'Meter')
-    self.assertEqual(var_y.type, 'Float')
-    self.assertEqual(var_y.shape, 'y')
-    self.assertEqual(var_y.descriptive_name, 'y coordinate of projection')
+    self.assertEqual(var_y.unit, "Meter")
+    self.assertEqual(var_y.type, "Float")
+    self.assertEqual(var_y.shape, "y")
+    self.assertEqual(var_y.descriptive_name, "y coordinate of projection")
 
     # test SWE variable
-    var_swe = logical_file.metadata.variables.all().filter(name='SWE').first()
+    var_swe = logical_file.metadata.variables.all().filter(name="SWE").first()
     self.assertNotEqual(var_swe, None)
-    self.assertEqual(var_swe.unit, 'm')
-    self.assertEqual(var_swe.type, 'Float')
-    self.assertEqual(var_swe.shape, 'y,x,time')
-    self.assertEqual(var_swe.descriptive_name, 'Snow water equivalent')
-    self.assertEqual(var_swe.method, 'model simulation of UEB model')
-    self.assertEqual(var_swe.missing_value, '-9999')
+    self.assertEqual(var_swe.unit, "m")
+    self.assertEqual(var_swe.type, "Float")
+    self.assertEqual(var_swe.shape, "y,x,time")
+    self.assertEqual(var_swe.descriptive_name, "Snow water equivalent")
+    self.assertEqual(var_swe.method, "model simulation of UEB model")
+    self.assertEqual(var_swe.missing_value, "-9999")
 
     # test grid mapping variable
-    var_grid = logical_file.metadata.variables.all(). \
-        filter(name='transverse_mercator').first()
+    var_grid = (
+        logical_file.metadata.variables.all().filter(name="transverse_mercator").first()
+    )
     self.assertNotEqual(var_grid, None)
-    self.assertEqual(var_grid.unit, 'Unknown')
-    self.assertEqual(var_grid.type, 'Unknown')
-    self.assertEqual(var_grid.shape, 'Not defined')
+    self.assertEqual(var_grid.unit, "Unknown")
+    self.assertEqual(var_grid.type, "Unknown")
+    self.assertEqual(var_grid.shape, "Not defined")
 
 
 def assert_geofeature_file_type_metadata(self, expected_folder_name):
@@ -369,28 +471,39 @@ def assert_geofeature_file_type_metadata(self, expected_folder_name):
     self.assertEqual(self.composite_resource.metadata.coverages.count(), 0)
     self.assertNotEqual(logical_file.metadata.geometryinformation, None)
     self.assertEqual(logical_file.metadata.geometryinformation.featureCount, 51)
-    self.assertEqual(logical_file.metadata.geometryinformation.geometryType,
-                     "MULTIPOLYGON")
+    self.assertEqual(
+        logical_file.metadata.geometryinformation.geometryType, "MULTIPOLYGON"
+    )
 
     self.assertNotEqual(logical_file.metadata.originalcoverage, None)
-    self.assertEqual(logical_file.metadata.originalcoverage.datum,
-                     'unknown')
-    self.assertEqual(logical_file.metadata.originalcoverage.projection_name,
-                     'unknown')
+    self.assertEqual(logical_file.metadata.originalcoverage.datum, "unknown")
+    self.assertEqual(logical_file.metadata.originalcoverage.projection_name, "unknown")
     self.assertGreater(len(logical_file.metadata.originalcoverage.projection_string), 0)
-    self.assertEqual(logical_file.metadata.originalcoverage.unit, 'unknown')
+    self.assertEqual(logical_file.metadata.originalcoverage.unit, "unknown")
     expected_elimit = -66.9692712587578
-    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.eastlimit), expected_elimit,
-                           places=get_number_of_decimal_places(expected_elimit))
+    self.assertAlmostEqual(
+        float(logical_file.metadata.originalcoverage.eastlimit),
+        expected_elimit,
+        places=get_number_of_decimal_places(expected_elimit),
+    )
     expected_nlimit = 71.406235393967
-    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.northlimit), expected_nlimit,
-                           places=get_number_of_decimal_places(expected_nlimit))
+    self.assertAlmostEqual(
+        float(logical_file.metadata.originalcoverage.northlimit),
+        expected_nlimit,
+        places=get_number_of_decimal_places(expected_nlimit),
+    )
     expected_slimit = 18.921786345087
-    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.southlimit), expected_slimit,
-                           places=get_number_of_decimal_places(expected_slimit))
+    self.assertAlmostEqual(
+        float(logical_file.metadata.originalcoverage.southlimit),
+        expected_slimit,
+        places=get_number_of_decimal_places(expected_slimit),
+    )
     expected_wlimit = -178.217598362366
-    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.westlimit), expected_wlimit,
-                           places=get_number_of_decimal_places(expected_wlimit))
+    self.assertAlmostEqual(
+        float(logical_file.metadata.originalcoverage.westlimit),
+        expected_wlimit,
+        places=get_number_of_decimal_places(expected_wlimit),
+    )
 
 
 def assert_ref_time_series_file_type_metadata(self):
@@ -404,12 +517,14 @@ def assert_ref_time_series_file_type_metadata(self):
     self.composite_resource.metadata.refresh_from_db()
     self.assertEqual(self.composite_resource.metadata.title.value, res_title)
     # resource abstract should have been updated from the abstract value in json file
-    abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria), " \
-               "phycocyanin data collected from 2016-04-06 to 2017-02-09 created on " \
-               "Thu Apr 06 2017 09:15:56 GMT-0600 (Mountain Daylight Time) from the " \
-               "following site(s): HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH, and " \
-               "Provo River at Charleston Advanced Aquatic. Data created by " \
-               "CUAHSI HydroClient: http://data.cuahsi.org/#."
+    abstract = (
+        "Discharge, cubic feet per second,Blue-green algae (cyanobacteria), "
+        "phycocyanin data collected from 2016-04-06 to 2017-02-09 created on "
+        "Thu Apr 06 2017 09:15:56 GMT-0600 (Mountain Daylight Time) from the "
+        "following site(s): HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH, and "
+        "Provo River at Charleston Advanced Aquatic. Data created by "
+        "CUAHSI HydroClient: http://data.cuahsi.org/#."
+    )
 
     self.assertEqual(self.composite_resource.metadata.description.abstract, abstract)
 
@@ -420,20 +535,27 @@ def assert_ref_time_series_file_type_metadata(self):
         self.assertIn(kw, ["Time Series", "CUAHSI"])
 
     # test coverage metadata
-    box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
-    self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
-    self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(float(box_coverage.value['northlimit']), 40.48498)
-    self.assertEqual(float(box_coverage.value['eastlimit']), -111.46245)
-    self.assertEqual(float(box_coverage.value['southlimit']), 40.1788719)
-    self.assertEqual(float(box_coverage.value['westlimit']), -111.639338)
+    box_coverage = (
+        self.composite_resource.metadata.coverages.all().filter(type="box").first()
+    )
+    self.assertEqual(box_coverage.value["projection"], "WGS 84 EPSG:4326")
+    self.assertEqual(box_coverage.value["units"], "Decimal degrees")
+    self.assertEqual(float(box_coverage.value["northlimit"]), 40.48498)
+    self.assertEqual(float(box_coverage.value["eastlimit"]), -111.46245)
+    self.assertEqual(float(box_coverage.value["southlimit"]), 40.1788719)
+    self.assertEqual(float(box_coverage.value["westlimit"]), -111.639338)
 
-    temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
-        type='period').first()
-    self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
-                     parser.parse('04/06/2016').date())
-    self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                     parser.parse('02/09/2017').date())
+    temporal_coverage = (
+        self.composite_resource.metadata.coverages.all().filter(type="period").first()
+    )
+    self.assertEqual(
+        parser.parse(temporal_coverage.value["start"]).date(),
+        parser.parse("04/06/2016").date(),
+    )
+    self.assertEqual(
+        parser.parse(temporal_coverage.value["end"]).date(),
+        parser.parse("02/09/2017").date(),
+    )
 
     # test file level metadata
     res_file = self.composite_resource.files.first()
@@ -441,19 +563,24 @@ def assert_ref_time_series_file_type_metadata(self):
     self.assertEqual(logical_file.dataset_name, res_title)
     for kw in logical_file.metadata.keywords:
         self.assertIn(kw, ["Time Series", "CUAHSI"])
-    box_coverage = logical_file.metadata.coverages.all().filter(type='box').first()
-    self.assertEqual(box_coverage.value['projection'], 'Unknown')
-    self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(float(box_coverage.value['northlimit']), 40.48498)
-    self.assertEqual(float(box_coverage.value['eastlimit']), -111.46245)
-    self.assertEqual(float(box_coverage.value['southlimit']), 40.1788719)
-    self.assertEqual(float(box_coverage.value['westlimit']), -111.639338)
-    temporal_coverage = logical_file.metadata.coverages.all().filter(
-        type='period').first()
-    self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
-                     parser.parse('04/06/2016').date())
-    self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                     parser.parse('02/09/2017').date())
+    box_coverage = logical_file.metadata.coverages.all().filter(type="box").first()
+    self.assertEqual(box_coverage.value["projection"], "Unknown")
+    self.assertEqual(box_coverage.value["units"], "Decimal degrees")
+    self.assertEqual(float(box_coverage.value["northlimit"]), 40.48498)
+    self.assertEqual(float(box_coverage.value["eastlimit"]), -111.46245)
+    self.assertEqual(float(box_coverage.value["southlimit"]), 40.1788719)
+    self.assertEqual(float(box_coverage.value["westlimit"]), -111.639338)
+    temporal_coverage = (
+        logical_file.metadata.coverages.all().filter(type="period").first()
+    )
+    self.assertEqual(
+        parser.parse(temporal_coverage.value["start"]).date(),
+        parser.parse("04/06/2016").date(),
+    )
+    self.assertEqual(
+        parser.parse(temporal_coverage.value["end"]).date(),
+        parser.parse("02/09/2017").date(),
+    )
 
     # file level abstract
     self.assertEqual(logical_file.metadata.abstract, abstract)
@@ -492,7 +619,9 @@ def assert_ref_time_series_file_type_metadata(self):
     web_service_types = [web.service_type for web in logical_file.metadata.web_services]
     self.assertIn("SOAP", web_service_types)
     self.assertEqual(len(set(web_service_types)), 1)
-    web_reference_types = [web.reference_type for web in logical_file.metadata.web_services]
+    web_reference_types = [
+        web.reference_type for web in logical_file.metadata.web_services
+    ]
     self.assertIn("WOF", web_reference_types)
     web_return_types = [web.return_type for web in logical_file.metadata.web_services]
     self.assertIn("WaterML 1.1", web_return_types)
@@ -529,45 +658,60 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
 
     # there should be an abstract element
     self.assertNotEqual(self.composite_resource.metadata.description, None)
-    extracted_abstract = "This dataset contains time series of observations of water " \
-                         "temperature in the Little Bear River, UT. Data were recorded every " \
-                         "30 minutes. The values were recorded using a HydroLab MS5 " \
-                         "multi-parameter water quality sonde connected to a Campbell " \
-                         "Scientific datalogger."
+    extracted_abstract = (
+        "This dataset contains time series of observations of water "
+        "temperature in the Little Bear River, UT. Data were recorded every "
+        "30 minutes. The values were recorded using a HydroLab MS5 "
+        "multi-parameter water quality sonde connected to a Campbell "
+        "Scientific datalogger."
+    )
 
-    self.assertEqual(self.composite_resource.metadata.description.abstract.strip(),
-                     extracted_abstract)
+    self.assertEqual(
+        self.composite_resource.metadata.description.abstract.strip(),
+        extracted_abstract,
+    )
 
     # there should be 2 coverage element -  box type and period type
     self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 2)
-    self.assertEqual(self.composite_resource.metadata.coverages.all().filter(type='box').count(), 1)
-    self.assertEqual(self.composite_resource.metadata.coverages.all().filter(
-        type='period').count(), 1)
+    self.assertEqual(
+        self.composite_resource.metadata.coverages.all().filter(type="box").count(), 1
+    )
+    self.assertEqual(
+        self.composite_resource.metadata.coverages.all().filter(type="period").count(),
+        1,
+    )
 
-    box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
-    self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
-    self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(float(box_coverage.value['northlimit']), 41.718473)
-    self.assertEqual(float(box_coverage.value['eastlimit']), -111.799324)
-    self.assertEqual(float(box_coverage.value['southlimit']), 41.495409)
-    self.assertEqual(float(box_coverage.value['westlimit']), -111.946402)
+    box_coverage = (
+        self.composite_resource.metadata.coverages.all().filter(type="box").first()
+    )
+    self.assertEqual(box_coverage.value["projection"], "WGS 84 EPSG:4326")
+    self.assertEqual(box_coverage.value["units"], "Decimal degrees")
+    self.assertEqual(float(box_coverage.value["northlimit"]), 41.718473)
+    self.assertEqual(float(box_coverage.value["eastlimit"]), -111.799324)
+    self.assertEqual(float(box_coverage.value["southlimit"]), 41.495409)
+    self.assertEqual(float(box_coverage.value["westlimit"]), -111.946402)
 
-    temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
-        type='period').first()
-    self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
-                     parser.parse('01/01/2008').date())
-    self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                     parser.parse('01/30/2008').date())
+    temporal_coverage = (
+        self.composite_resource.metadata.coverages.all().filter(type="period").first()
+    )
+    self.assertEqual(
+        parser.parse(temporal_coverage.value["start"]).date(),
+        parser.parse("01/01/2008").date(),
+    )
+    self.assertEqual(
+        parser.parse(temporal_coverage.value["end"]).date(),
+        parser.parse("01/30/2008").date(),
+    )
 
     # there should be one format element
     self.assertEqual(self.composite_resource.metadata.formats.all().count(), 1)
     format_element = self.composite_resource.metadata.formats.all().first()
-    self.assertEqual(format_element.value, 'application/sqlite')
+    self.assertEqual(format_element.value, "application/sqlite")
 
     # there should be one subject element
     self.assertEqual(self.composite_resource.metadata.subjects.all().count(), 1)
     subj_element = self.composite_resource.metadata.subjects.all().first()
-    self.assertEqual(subj_element.value, 'Temperature')
+    self.assertEqual(subj_element.value, "Temperature")
 
     # test that we put the sqlite file into a new directory
     res_file = self.composite_resource.files.first()
@@ -578,7 +722,7 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     # logical file should be associated with 1 file
     self.assertEqual(logical_file.files.all().count(), 1)
     res_file = logical_file.files.first()
-    self.assertEqual('.sqlite', res_file.extension.lower())
+    self.assertEqual(".sqlite", res_file.extension.lower())
 
     # test file level metadata extraction
 
@@ -595,23 +739,27 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
 
     # there should be one keyword element
     self.assertEqual(len(logical_file.metadata.keywords), 1)
-    self.assertIn('Temperature', logical_file.metadata.keywords)
+    self.assertIn("Temperature", logical_file.metadata.keywords)
 
     # test spatial coverage
     box_coverage = logical_file.metadata.spatial_coverage
-    self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
-    self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(float(box_coverage.value['northlimit']), 41.718473)
-    self.assertEqual(float(box_coverage.value['eastlimit']), -111.799324)
-    self.assertEqual(float(box_coverage.value['southlimit']), 41.495409)
-    self.assertEqual(float(box_coverage.value['westlimit']), -111.946402)
+    self.assertEqual(box_coverage.value["projection"], "WGS 84 EPSG:4326")
+    self.assertEqual(box_coverage.value["units"], "Decimal degrees")
+    self.assertEqual(float(box_coverage.value["northlimit"]), 41.718473)
+    self.assertEqual(float(box_coverage.value["eastlimit"]), -111.799324)
+    self.assertEqual(float(box_coverage.value["southlimit"]), 41.495409)
+    self.assertEqual(float(box_coverage.value["westlimit"]), -111.946402)
 
     # test temporal coverage
     temporal_coverage = logical_file.metadata.temporal_coverage
-    self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
-                     parser.parse('01/01/2008').date())
-    self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                     parser.parse('01/30/2008').date())
+    self.assertEqual(
+        parser.parse(temporal_coverage.value["start"]).date(),
+        parser.parse("01/01/2008").date(),
+    )
+    self.assertEqual(
+        parser.parse(temporal_coverage.value["end"]).date(),
+        parser.parse("01/30/2008").date(),
+    )
 
     # test 'site' - there should be 7 sites
     self.assertEqual(logical_file.metadata.sites.all().count(), 7)
@@ -620,13 +768,13 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
         self.assertEqual(len(site.series_ids), 1)
 
     # test the data for a specific site
-    site = logical_file.metadata.sites.filter(site_code='USU-LBR-Paradise').first()
+    site = logical_file.metadata.sites.filter(site_code="USU-LBR-Paradise").first()
     self.assertNotEqual(site, None)
-    site_name = 'Little Bear River at McMurdy Hollow near Paradise, Utah'
+    site_name = "Little Bear River at McMurdy Hollow near Paradise, Utah"
     self.assertEqual(site.site_name, site_name)
     self.assertEqual(site.elevation_m, 1445)
-    self.assertEqual(site.elevation_datum, 'NGVD29')
-    self.assertEqual(site.site_type, 'Stream')
+    self.assertEqual(site.elevation_datum, "NGVD29")
+    self.assertEqual(site.site_type, "Stream")
     self.assertEqual(site.latitude, 41.575552)
     self.assertEqual(site.longitude, -111.855217)
 
@@ -636,25 +784,29 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     # there should be 7 series ids associated with this one variable
     self.assertEqual(len(variable.series_ids), 7)
     # test the data for a variable
-    self.assertEqual(variable.variable_code, 'USU36')
-    self.assertEqual(variable.variable_name, 'Temperature')
-    self.assertEqual(variable.variable_type, 'Water Quality')
+    self.assertEqual(variable.variable_code, "USU36")
+    self.assertEqual(variable.variable_name, "Temperature")
+    self.assertEqual(variable.variable_type, "Water Quality")
     self.assertEqual(variable.no_data_value, -9999)
     self.assertEqual(variable.variable_definition, None)
-    self.assertEqual(variable.speciation, 'Not Applicable')
+    self.assertEqual(variable.speciation, "Not Applicable")
 
     # test 'method' - there should be 1 method element
     self.assertEqual(logical_file.metadata.methods.all().count(), 1)
     method = logical_file.metadata.methods.all().first()
     # there should be 7 series ids associated with this one method element
     self.assertEqual(len(method.series_ids), 7)
-    self.assertEqual(method.method_code, '28')
-    method_name = 'Quality Control Level 1 Data Series created from raw QC Level 0 data ' \
-                  'using ODM Tools.'
+    self.assertEqual(method.method_code, "28")
+    method_name = (
+        "Quality Control Level 1 Data Series created from raw QC Level 0 data "
+        "using ODM Tools."
+    )
     self.assertEqual(method.method_name, method_name)
-    self.assertEqual(method.method_type, 'Instrument deployment')
-    method_des = 'Quality Control Level 1 Data Series created from raw QC Level 0 data ' \
-                 'using ODM Tools.'
+    self.assertEqual(method.method_type, "Instrument deployment")
+    method_des = (
+        "Quality Control Level 1 Data Series created from raw QC Level 0 data "
+        "using ODM Tools."
+    )
     self.assertEqual(method.method_description, method_des)
     self.assertEqual(method.method_link, None)
 
@@ -663,29 +815,32 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     proc_level = logical_file.metadata.processing_levels.all().first()
     # there should be 7 series ids associated with this one element
     self.assertEqual(len(proc_level.series_ids), 7)
-    self.assertEqual(proc_level.processing_level_code, '1')
-    self.assertEqual(proc_level.definition, 'Quality controlled data')
-    explanation = 'Quality controlled data that have passed quality assurance procedures ' \
-                  'such as routine estimation of timing and sensor calibration or visual ' \
-                  'inspection and removal of obvious errors. An example is USGS published ' \
-                  'streamflow records following parsing through USGS quality control ' \
-                  'procedures.'
+    self.assertEqual(proc_level.processing_level_code, "1")
+    self.assertEqual(proc_level.definition, "Quality controlled data")
+    explanation = (
+        "Quality controlled data that have passed quality assurance procedures "
+        "such as routine estimation of timing and sensor calibration or visual "
+        "inspection and removal of obvious errors. An example is USGS published "
+        "streamflow records following parsing through USGS quality control "
+        "procedures."
+    )
     self.assertEqual(proc_level.explanation, explanation)
 
     # test 'timeseries_result' - there should be 7 timeseries_result element
     self.assertEqual(logical_file.metadata.time_series_results.all().count(), 7)
     ts_result = logical_file.metadata.time_series_results.filter(
-        series_ids__contains=['182d8fa3-1ebc-11e6-ad49-f45c8999816f']).first()
+        series_ids__contains=["182d8fa3-1ebc-11e6-ad49-f45c8999816f"]
+    ).first()
     self.assertNotEqual(ts_result, None)
     # there should be only 1 series id associated with this element
     self.assertEqual(len(ts_result.series_ids), 1)
-    self.assertEqual(ts_result.units_type, 'Temperature')
-    self.assertEqual(ts_result.units_name, 'degree celsius')
-    self.assertEqual(ts_result.units_abbreviation, 'degC')
-    self.assertEqual(ts_result.status, 'Unknown')
-    self.assertEqual(ts_result.sample_medium, 'Surface Water')
+    self.assertEqual(ts_result.units_type, "Temperature")
+    self.assertEqual(ts_result.units_name, "degree celsius")
+    self.assertEqual(ts_result.units_abbreviation, "degC")
+    self.assertEqual(ts_result.status, "Unknown")
+    self.assertEqual(ts_result.sample_medium, "Surface Water")
     self.assertEqual(ts_result.value_count, 1441)
-    self.assertEqual(ts_result.aggregation_statistics, 'Average')
+    self.assertEqual(ts_result.aggregation_statistics, "Average")
 
     # test for CV lookup tables
     # there should be 23 CV_VariableType records
@@ -718,7 +873,6 @@ def get_path_with_no_file_extension(path):
 
 
 def get_number_of_decimal_places(number):
-    """A helper to find the number of decimal places in the specified number that's used for rounding the number
-    """
-    _, decimal_str = str(number).split('.')
+    """A helper to find the number of decimal places in the specified number that's used for rounding the number"""
+    _, decimal_str = str(number).split(".")
     return len(decimal_str)

@@ -15,32 +15,30 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestChangeQuotaHolder, self).setUp()
 
-        self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.hs_group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         # create two users
         self.user1 = hydroshare.create_account(
-            'test_user1@email.com',
-            username='owner1',
-            first_name='owner1_first_name',
-            last_name='owner1_last_name',
+            "test_user1@email.com",
+            username="owner1",
+            first_name="owner1_first_name",
+            last_name="owner1_last_name",
             superuser=False,
-            groups=[self.hs_group]
+            groups=[self.hs_group],
         )
 
         self.user2 = hydroshare.create_account(
-            'test_user2@email.com',
-            username='owner2',
-            first_name='owner2_first_name',
-            last_name='owner2_last_name',
+            "test_user2@email.com",
+            username="owner2",
+            first_name="owner2_first_name",
+            last_name="owner2_last_name",
             superuser=False,
-            groups=[self.hs_group]
+            groups=[self.hs_group],
         )
 
     def test_change_quota_holder(self):
         res = resource.create_resource(
-            'GenericResource',
-            self.user1,
-            'My Test Resource'
-            )
+            "GenericResource", self.user1, "My Test Resource"
+        )
 
         self.assertTrue(res.creator == self.user1)
         self.assertTrue(res.get_quota_holder() == self.user1)
@@ -51,7 +49,9 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
             res.set_quota_holder(self.user1, self.user2)
 
         # test to make sure one owner can transfer quota holder to another owner
-        self.user1.uaccess.share_resource_with_user(res, self.user2, PrivilegeCodes.OWNER)
+        self.user1.uaccess.share_resource_with_user(
+            res, self.user2, PrivilegeCodes.OWNER
+        )
         res.set_quota_holder(self.user1, self.user2)
         self.assertTrue(res.get_quota_holder() == self.user2)
         self.assertFalse(res.get_quota_holder() == self.user1)

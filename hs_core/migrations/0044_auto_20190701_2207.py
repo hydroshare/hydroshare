@@ -9,25 +9,43 @@ import hs_core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0043_auto_20190621_0308'),
+        ("hs_core", "0043_auto_20190621_0308"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Topics',
+            name="Topics",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
             ],
         ),
         migrations.AlterField(
-            model_name='contributor',
-            name='description',
-            field=models.CharField(blank=True, max_length=50, null=True, validators=[hs_core.models.validate_user_url]),
+            model_name="contributor",
+            name="description",
+            field=models.CharField(
+                blank=True,
+                max_length=50,
+                null=True,
+                validators=[hs_core.models.validate_user_url],
+            ),
         ),
         migrations.AlterField(
-            model_name='creator',
-            name='description',
-            field=models.CharField(blank=True, max_length=50, null=True, validators=[hs_core.models.validate_user_url]),
+            model_name="creator",
+            name="description",
+            field=models.CharField(
+                blank=True,
+                max_length=50,
+                null=True,
+                validators=[hs_core.models.validate_user_url],
+            ),
         ),
     ]

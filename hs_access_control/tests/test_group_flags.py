@@ -16,64 +16,66 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(T10GroupFlags, self).setUp()
         global_reset()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.admin = hydroshare.create_account(
-            'admin@gmail.com',
-            username='admin',
-            first_name='administrator',
-            last_name='couch',
+            "admin@gmail.com",
+            username="admin",
+            first_name="administrator",
+            last_name="couch",
             superuser=True,
-            groups=[]
+            groups=[],
         )
 
         self.cat = hydroshare.create_account(
-            'cat@gmail.com',
-            username='cat',
-            first_name='not a dog',
-            last_name='last_name_cat',
+            "cat@gmail.com",
+            username="cat",
+            first_name="not a dog",
+            last_name="last_name_cat",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.dog = hydroshare.create_account(
-            'dog@gmail.com',
-            username='dog',
-            first_name='a little arfer',
-            last_name='last_name_dog',
+            "dog@gmail.com",
+            username="dog",
+            first_name="a little arfer",
+            last_name="last_name_dog",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.bat = hydroshare.create_account(
-            'bat@gmail.com',
-            username='bat',
-            first_name='not a man',
-            last_name='last_name_bat',
+            "bat@gmail.com",
+            username="bat",
+            first_name="not a man",
+            last_name="last_name_bat",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.nobody = hydroshare.create_account(
-            'nobody@gmail.com',
-            username='nobody',
-            first_name='no one in particular',
-            last_name='last_name_nobody',
+            "nobody@gmail.com",
+            username="nobody",
+            first_name="no one in particular",
+            last_name="last_name_nobody",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.scratching = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.dog,
-            title='all about sofas as scrathing posts',
+            title="all about sofas as scrathing posts",
             metadata=[],
         )
 
         # dog owns felines group
         self.felines = self.dog.uaccess.create_group(
-            title='felines', description="Wre are the felines")
+            title="felines", description="Wre are the felines"
+        )
         self.dog.uaccess.share_group_with_user(
-            self.felines, self.cat, PrivilegeCodes.VIEW)
+            self.felines, self.cat, PrivilegeCodes.VIEW
+        )
         # poetic justice: cat can VIEW what dogs think about scratching sofas
 
     def test_00_defaults(self):
@@ -106,8 +108,7 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(felines.gaccess.shareable)
 
         self.assertTrue(felines in hydroshare.get_discoverable_groups())
-        self.assertTrue(
-            felines in hydroshare.get_public_groups())  # still public!
+        self.assertTrue(felines in hydroshare.get_public_groups())  # still public!
 
         # undo prior change
         felines.gaccess.discoverable = True
@@ -122,8 +123,7 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
 
         # still discoverable
         self.assertTrue(felines in hydroshare.get_discoverable_groups())
-        self.assertTrue(
-            felines in hydroshare.get_public_groups())  # still public!
+        self.assertTrue(felines in hydroshare.get_public_groups())  # still public!
 
     def test_07_make_not_public(self):
         """Can make a group not public"""
@@ -156,9 +156,9 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(felines.gaccess.shareable)
 
         self.assertTrue(
-            felines in hydroshare.get_discoverable_groups())  # still public!
-        self.assertTrue(
-            felines in hydroshare.get_public_groups())  # still public!
+            felines in hydroshare.get_discoverable_groups()
+        )  # still public!
+        self.assertTrue(felines in hydroshare.get_public_groups())  # still public!
 
     def test_07_make_private(self):
         """Making a group not public and not discoverable hides it"""
@@ -269,8 +269,7 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         self._set_group_active_status(felines, True)
 
         # give cat edit permission on group
-        dog.uaccess.share_group_with_user(
-            felines, self.cat, PrivilegeCodes.CHANGE)
+        dog.uaccess.share_group_with_user(felines, self.cat, PrivilegeCodes.CHANGE)
         # cat should be a member of the group
         self.assertIn(self.cat, felines.gaccess.members)
         # cat should have one group with edit permission (group is active)
@@ -312,16 +311,17 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
             dog.uaccess.can_share_group(felines, PrivilegeCodes.VIEW)
 
         with self.assertRaises(PermissionDenied):
-            dog.uaccess.share_group_with_user(
-                felines, self.bat, PrivilegeCodes.VIEW)
+            dog.uaccess.share_group_with_user(felines, self.bat, PrivilegeCodes.VIEW)
 
         with self.assertRaises(PermissionDenied):
             dog.uaccess.can_share_resource_with_group(
-                self.scratching, felines, PrivilegeCodes.VIEW)
+                self.scratching, felines, PrivilegeCodes.VIEW
+            )
 
         with self.assertRaises(PermissionDenied):
             dog.uaccess.share_resource_with_group(
-                self.scratching, felines, PrivilegeCodes.VIEW)
+                self.scratching, felines, PrivilegeCodes.VIEW
+            )
 
         with self.assertRaises(PermissionDenied):
             dog.uaccess.can_unshare_group_with_user(felines, self.cat)
@@ -330,8 +330,7 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
             dog.uaccess.unshare_group_with_user(felines, self.cat)
 
         with self.assertRaises(PermissionDenied):
-            dog.uaccess.can_unshare_resource_with_group(
-                self.scratching, felines)
+            dog.uaccess.can_unshare_resource_with_group(self.scratching, felines)
 
         with self.assertRaises(PermissionDenied):
             dog.uaccess.unshare_resource_with_group(self.scratching, felines)
@@ -358,7 +357,8 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
 
         # share the resource with the group
         dog.uaccess.share_resource_with_group(
-            self.scratching, felines, PrivilegeCodes.VIEW)
+            self.scratching, felines, PrivilegeCodes.VIEW
+        )
         # for the active group the resource should have 1 group with view
         # permission
         self.assertEqual(len(self.scratching.raccess.view_groups), 1)
@@ -378,7 +378,8 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(self.cat.uaccess.view_resources), 1)
 
         dog.uaccess.share_resource_with_group(
-            self.scratching, felines, PrivilegeCodes.CHANGE)
+            self.scratching, felines, PrivilegeCodes.CHANGE
+        )
         # for the active group the resource should have 1 group with view
         # permission
         self.assertEqual(len(self.scratching.raccess.view_groups), 1)
@@ -427,14 +428,16 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
 
         # share resource with user 'cat' with view permission
         dog.uaccess.share_resource_with_user(
-            self.scratching, self.cat, PrivilegeCodes.VIEW)
+            self.scratching, self.cat, PrivilegeCodes.VIEW
+        )
 
         # so user 'cat' at this point has view permission on resource
         # (access granted at user level) and edit permission (access granted at group level).
         # The effective privilege then should be edit when the group is active
         self.assertEqual(
-            self.scratching.raccess.get_effective_privilege(
-                self.cat), PrivilegeCodes.CHANGE)
+            self.scratching.raccess.get_effective_privilege(self.cat),
+            PrivilegeCodes.CHANGE,
+        )
 
         # now make the group inactive
         self._set_group_active_status(felines, False)
@@ -442,8 +445,9 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         # now the user cat should have view as the effective permission for the
         # resource
         self.assertEqual(
-            self.scratching.raccess.get_effective_privilege(
-                self.cat), PrivilegeCodes.VIEW)
+            self.scratching.raccess.get_effective_privilege(self.cat),
+            PrivilegeCodes.VIEW,
+        )
 
     def _set_group_active_status(self, group, active):
         group.gaccess.active = active

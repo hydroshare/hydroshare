@@ -8,15 +8,15 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0045_delete_topics'),
+        ("hs_core", "0045_delete_topics"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='bags',
-            name='content_type',
+            model_name="bags",
+            name="content_type",
         ),
         migrations.DeleteModel(
-            name='Bags',
+            name="Bags",
         ),
     ]

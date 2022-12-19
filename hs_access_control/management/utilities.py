@@ -8,11 +8,11 @@ from hs_access_control.models.community import Community
 import re
 
 
-RE_INT = re.compile(r'^([1-9]\d*|0)$')
+RE_INT = re.compile(r"^([1-9]\d*|0)$")
 
 
 def group_from_name_or_id(gname):
-    """ return a group object given either an id or a name """
+    """return a group object given either an id or a name"""
 
     if RE_INT.match(gname):
         try:
@@ -32,14 +32,18 @@ def group_from_name_or_id(gname):
             group = groups[0]
             return group
         else:
-            print("Group name {} is not unique. Please use group id instead:".format(gname))
+            print(
+                "Group name {} is not unique. Please use group id instead:".format(
+                    gname
+                )
+            )
             for g in groups:
                 print("   '{}' (id={})".format(g.name, str(g.id)))
             return None
 
 
 def community_from_name_or_id(cname):
-    """ return a group object given either an id or a name """
+    """return a group object given either an id or a name"""
 
     if RE_INT.match(cname):
         try:
@@ -60,8 +64,11 @@ def community_from_name_or_id(cname):
             community = communities[0]
             return community
         else:
-            print("Community name '{}' is not unique. Please use community id instead:"
-                  .format(cname))
+            print(
+                "Community name '{}' is not unique. Please use community id instead:".format(
+                    cname
+                )
+            )
             for g in communities:
                 print("   '{}' (id={})".format(g.name, str(g.id)))
             return None

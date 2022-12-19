@@ -1,6 +1,7 @@
 import os
 import heapq
 import xml.sax
+
 # TODO: should we use defusedxml.sax?
 import urllib.parse
 import logging
@@ -14,13 +15,25 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from hs_core.hydroshare.utils import get_resource_types
-from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso, hs_date_to_datetime_notz,\
-    HsDateException
+from hs_core.hydroshare.date_util import (
+    hs_date_to_datetime,
+    hs_date_to_datetime_iso,
+    hs_date_to_datetime_notz,
+    HsDateException,
+)
 
 from hs_core.hydroshare.utils import resource_pre_create_actions
-from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
+from hs_core.hydroshare.utils import (
+    ResourceFileSizeException,
+    ResourceFileValidationException,
+)
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource, validate_hydroshare_user_id, clean_for_xml, Relation
+from hs_core.models import (
+    BaseResource,
+    validate_hydroshare_user_id,
+    clean_for_xml,
+    Relation,
+)
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 
@@ -36,7 +49,6 @@ class HsDeserializationException(HsSerializationException):
 
 
 class HsDeserializationDependencyException(HsDeserializationException):
-
     def __init__(self, dependency_resource_id, message):
         """
         :param dependency_resource_id: ID of resource that we depend on.
@@ -49,9 +61,11 @@ class HsDeserializationDependencyException(HsDeserializationException):
 
     def __str__(self):
         msg = "{classname} Resource dependency {rid} does not exist: {mesg}"
-        msg = msg.format(classname=type(self).__name__,
-                         rid=self.dependency_resource_id,
-                         mesg=self.message)
+        msg = msg.format(
+            classname=type(self).__name__,
+            rid=self.dependency_resource_id,
+            mesg=self.message,
+        )
         return msg
 
     def __unicode__(self):
@@ -64,7 +78,7 @@ def _prepare_resource_files_for_creation(file_paths):
     for fp in file_paths:
         fname = os.path.basename(fp)
         fsize = os.stat(fp).st_size
-        fd = open(fp, 'rb')
+        fd = open(fp, "rb")
         res_files.append(UploadedFile(file=fd, name=fname, size=fsize))
 
     return res_files
@@ -119,11 +133,12 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
         if resource_files is None:
             resource_files = []
 
-        page_url_dict, res_title, metadata = \
-            resource_pre_create_actions(resource_type=rm.res_type,
-                                        files=resource_files,
-                                        resource_title=rm.title,
-                                        page_redirect_url_key=None)
+        page_url_dict, res_title, metadata = resource_pre_create_actions(
+            resource_type=rm.res_type,
+            files=resource_files,
+            resource_title=rm.title,
+            page_redirect_url_key=None,
+        )
     except ResourceFileSizeException as ex:
         raise HsDeserializationException(str(ex))
 
@@ -155,27 +170,32 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
             resource_id = rm.id
 
         kwargs = {}
-        resource = create_resource(resource_type=rm.res_type,
-                                   owner=pk,
-                                   title=rm.title,
-                                   keywords=rm.keywords,
-                                   metadata=metadata,
-                                   files=resource_files,
-                                   content=rm.title,
-                                   short_id=resource_id,
-                                   **kwargs)
+        resource = create_resource(
+            resource_type=rm.res_type,
+            owner=pk,
+            title=rm.title,
+            keywords=rm.keywords,
+            metadata=metadata,
+            files=resource_files,
+            content=rm.title,
+            short_id=resource_id,
+            **kwargs
+        )
     except Exception as ex:
         logger.exception("Resource creation failed.")
         raise HsDeserializationException(str(ex))
 
     # Add additional metadata
-    assert(resource is not None)
+    assert resource is not None
 
     try:
-        rm.write_metadata_to_resource(resource, update_creators=True,
-                                      update_contributors=True,
-                                      update_creation_date=True,
-                                      update_modification_date=True)
+        rm.write_metadata_to_resource(
+            resource,
+            update_creators=True,
+            update_contributors=True,
+            update_creation_date=True,
+            update_modification_date=True,
+        )
         # Force bag files to be re-written
         create_bag_metadata_files(resource)
     except HsDeserializationDependencyException as e:
@@ -201,6 +221,7 @@ class GenericResourceMeta(object):
     resource-specific GenericResourceMeta implementations after I get your
     comments and suggestions on this approach.
     """
+
     def __init__(self):
         self.root_uri = None
         # From resource map
@@ -253,7 +274,9 @@ class GenericResourceMeta(object):
         return True
 
     @classmethod
-    def read_metadata_from_resource_bag(cls, bag_content_path, hydroshare_host='www.hydroshare.org'):
+    def read_metadata_from_resource_bag(
+        cls, bag_content_path, hydroshare_host="www.hydroshare.org"
+    ):
         """
         Factory method for getting resource-specific metadata from an exploded BagIt archive.
         To work with this factory, each HydroShare resource type must implement
@@ -273,15 +296,16 @@ class GenericResourceMeta(object):
          as expected.
         """
         # Read resource map so that we know the resource type
-        (root_uri, res_meta_path, res_meta) = cls._read_resource_map(bag_content_path,
-                                                                     hydroshare_host)
+        (root_uri, res_meta_path, res_meta) = cls._read_resource_map(
+            bag_content_path, hydroshare_host
+        )
         # Iterate over HydroShare resource types
         res_types = get_resource_types()
         for rt in res_types:
             rt_name = rt.__name__
-            if rt_name == res_meta['type']:
+            if rt_name == res_meta["type"]:
                 # Instantiate metadata class for resource type
-                rt_root = rt.__module__.split('.')[0]
+                rt_root = rt.__module__.split(".")[0]
                 rt_meta = "{0}Meta".format(rt_name)
                 logger.debug("rt_meta: {0}".format(rt_meta))
                 mod_ser_name = "{root}.serialization".format(root=rt_root)
@@ -295,16 +319,16 @@ class GenericResourceMeta(object):
                 except AttributeError as ae:
                     msg = "Unable to instantiate metadata deserializer for resource type {0}, "
                     msg += "based on resource bag {1}"
-                    msg = msg.format(res_meta['type'], bag_content_path)
+                    msg = msg.format(res_meta["type"], bag_content_path)
                     raise GenericResourceMeta.ResourceMetaException(msg)
 
-                assert(instance is not None)
+                assert instance is not None
 
                 # Populate core metadata
-                instance.id = res_meta['id']
-                instance.res_type = res_meta['type']
-                instance.title = res_meta['title']
-                instance.files = res_meta['files']
+                instance.id = res_meta["id"]
+                instance.res_type = res_meta["type"]
+                instance.title = res_meta["title"]
+                instance.files = res_meta["files"]
 
                 # Read additional metadata
                 instance.bag_content_path = bag_content_path
@@ -316,7 +340,7 @@ class GenericResourceMeta(object):
         return None
 
     @classmethod
-    def _read_resource_map(cls, bag_content_path, hydroshare_host='www.hydroshare.org'):
+    def _read_resource_map(cls, bag_content_path, hydroshare_host="www.hydroshare.org"):
         """
         Read resource metadata out of the resourcemap.xml of the exploded bag path
 
@@ -330,11 +354,15 @@ class GenericResourceMeta(object):
         :raises: ResourceMetaException if metadata cannot be found or do not appear
          as expected.
         """
-        rmap_path = os.path.join(bag_content_path, 'data', 'resourcemap.xml')
+        rmap_path = os.path.join(bag_content_path, "data", "resourcemap.xml")
         if not os.path.exists(rmap_path):
-            raise GenericResourceMeta.ResourceMetaException("Resource map {0} does not exist".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "Resource map {0} does not exist".format(rmap_path)
+            )
         if not os.access(rmap_path, os.R_OK):
-            raise GenericResourceMeta.ResourceMetaException("Unable to read resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "Unable to read resource map {0}".format(rmap_path)
+            )
 
         res_meta = {}
 
@@ -343,60 +371,75 @@ class GenericResourceMeta(object):
         # Get resource ID
         for s, p, o in g.triples((None, None, None)):
             if s.endswith("resourcemap.xml") and p == rdflib.namespace.DC.identifier:
-                res_meta['id'] = str(o)
-        if res_meta['id'] is None:
-            msg = "Unable to determine resource ID from resource map {0}".format(rmap_path)
+                res_meta["id"] = str(o)
+        if res_meta["id"] is None:
+            msg = "Unable to determine resource ID from resource map {0}".format(
+                rmap_path
+            )
             raise GenericResourceMeta.ResourceMetaException(msg)
-        logger.debug("Resource ID is {0}".format(res_meta['id']))
+        logger.debug("Resource ID is {0}".format(res_meta["id"]))
 
         # Build URI reference for #aggregation section of resource map
-        res_root_uri = "http://{host}/resource/{res_id}".format(host=hydroshare_host, res_id=res_meta['id'])
+        res_root_uri = "http://{host}/resource/{res_id}".format(
+            host=hydroshare_host, res_id=res_meta["id"]
+        )
         root_uri = res_root_uri
-        res_agg_subj = "{res_root_url}/data/resourcemap.xml#aggregation".format(res_root_url=res_root_uri)
+        res_agg_subj = "{res_root_url}/data/resourcemap.xml#aggregation".format(
+            res_root_url=res_root_uri
+        )
         res_agg = URIRef(res_agg_subj)
 
         # Get resource type
         type_lit = g.value(res_agg, rdflib.namespace.DCTERMS.type)
         if type_lit is None:
-            raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource type found in resource map {0}".format(rmap_path)
+            )
         # Type literal is represented as 'http://example.com/terms/GenericResource', we want the part after
         # the final '/', or 'GenericResource'
-        res_type_part = str(type_lit).rpartition('/')
-        if res_type_part[1] == '':
-            raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
-        res_meta['type'] = res_type_part[-1]
-        logger.debug("\tType is {0}".format(res_meta['type']))
+        res_type_part = str(type_lit).rpartition("/")
+        if res_type_part[1] == "":
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource type found in resource map {0}".format(rmap_path)
+            )
+        res_meta["type"] = res_type_part[-1]
+        logger.debug("\tType is {0}".format(res_meta["type"]))
 
         # Get resource title
         title_lit = g.value(res_agg, rdflib.namespace.DC.title)
         if title_lit is None:
-            raise GenericResourceMeta.ResourceMetaException("No resource title found in resource map {0}".format(rmap_path))
-        res_meta['title'] = str(title_lit)
-        logger.debug("\tTitle is {0}".format(res_meta['title']))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource title found in resource map {0}".format(rmap_path)
+            )
+        res_meta["title"] = str(title_lit)
+        logger.debug("\tTitle is {0}".format(res_meta["title"]))
 
         # Get list of files in resource
-        res_meta['files'] = []
-        res_root_uri_withslash = res_root_uri + '/'
+        res_meta["files"] = []
+        res_root_uri_withslash = res_root_uri + "/"
         res_meta_path = None
-        ore = rdflib.namespace.Namespace('http://www.openarchives.org/ore/terms/')
+        ore = rdflib.namespace.Namespace("http://www.openarchives.org/ore/terms/")
         for s, p, o in g.triples((res_agg, ore.aggregates, None)):
-            if o.endswith('resourcemetadata.xml'):
+            if o.endswith("resourcemetadata.xml"):
                 if res_meta_path is not None and o != res_meta_path:
                     msg = "More than one resource metadata URI found. "
-                    msg += "(first: {first}, second: {second}".format(first=res_meta_path,
-                                                                      second=o)
+                    msg += "(first: {first}, second: {second}".format(
+                        first=res_meta_path, second=o
+                    )
                     raise GenericResourceMeta.ResourceMetaException(msg)
                 res_meta_path = o.split(res_root_uri_withslash)[1]
                 continue
 
-            res_meta['files'].append(o.split(res_root_uri_withslash)[1])
+            res_meta["files"].append(o.split(res_root_uri_withslash)[1])
 
         if res_meta_path is None:
-            raise GenericResourceMeta.ResourceMetaException("No resource metadata found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource metadata found in resource map {0}".format(rmap_path)
+            )
 
         logger.debug("\tResource metadata path {0}".format(res_meta_path))
 
-        for uri in res_meta['files']:
+        for uri in res_meta["files"]:
             logger.debug("\tContents: {0}".format(uri))
 
         return (root_uri, res_meta_path, res_meta)
@@ -409,9 +452,13 @@ class GenericResourceMeta(object):
         """
         self.rmeta_path = os.path.join(self.bag_content_path, self.res_meta_path)
         if not os.path.exists(self.rmeta_path):
-            raise GenericResourceMeta.ResourceMetaException("Resource metadata {0} does not exist".format(self.rmeta_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "Resource metadata {0} does not exist".format(self.rmeta_path)
+            )
         if not os.access(self.rmeta_path, os.R_OK):
-            raise GenericResourceMeta.ResourceMetaException("Unable to read resource metadata {0}".format(self.rmeta_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "Unable to read resource metadata {0}".format(self.rmeta_path)
+            )
 
         # Parse metadata using RDFLib
         self._rmeta_graph = Graph()
@@ -425,22 +472,26 @@ class GenericResourceMeta(object):
             # Resource identifier literal is represented as
             # 'http://example.com/resource/c9616269b5094c51b71632e8d1d02c0d', we want the part
             # after the final '/', 'or c9616269b5094c51b71632e8d1d02c0d'
-            rmeta_id_part = str(s).rpartition('/')
-            if rmeta_id_part[1] == '':
+            rmeta_id_part = str(s).rpartition("/")
+            if rmeta_id_part[1] == "":
                 # Should not be possible if a triple matched
-                msg = 'Resource metadata does not contain a resource ID.'
+                msg = "Resource metadata does not contain a resource ID."
                 raise HsDeserializationException(msg)
             rmeta_id = rmeta_id_part[-1]
             if rmeta_id != self.id:
-                msg = ("Resource metadata resource ID {0} does not match "
-                       "resource map resource ID {1}.").format(rmeta_id, self.id)
+                msg = (
+                    "Resource metadata resource ID {0} does not match "
+                    "resource map resource ID {1}."
+                ).format(rmeta_id, self.id)
                 raise HsDeserializationException(msg)
             logger.debug("Resource ID from resource map {0}".format(rmeta_id))
             break
 
         if not rmeta_id:
-            msg = ("Resource metadata does not contain a resource ID "
-                   "that matches resource map resource ID {0}.").format(self.id)
+            msg = (
+                "Resource metadata does not contain a resource ID "
+                "that matches resource map resource ID {0}."
+            ).format(self.id)
             raise HsDeserializationException(msg)
 
         # Also parse using SAX so that we can capture certain metadata elements
@@ -448,7 +499,7 @@ class GenericResourceMeta(object):
         SAX_parse_results = GenericResourceSAXHandler()
         xml.sax.parse(self.rmeta_path, SAX_parse_results)
 
-        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace("https://www.hydroshare.org/terms/")
 
         # Warn if title does not match that from resource map
         title_lit = self._rmeta_graph.value(res_uri, rdflib.namespace.DC.title)
@@ -463,13 +514,17 @@ class GenericResourceMeta(object):
                 logger.warn(msg)
 
         # Get abstract
-        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
+        for s, p, o in self._rmeta_graph.triples(
+            (None, rdflib.namespace.DCTERMS.abstract, None)
+        ):
             self.abstract = o
         if self.abstract:
             logger.debug("\t\tAbstract: {0}".format(self.abstract))
 
         # Get creators
-        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.creator, None)):
+        for s, p, o in self._rmeta_graph.triples(
+            (None, rdflib.namespace.DC.creator, None)
+        ):
             creator = GenericResourceMeta.ResourceCreator()
             creator.set_uri(o)
             # Get order
@@ -499,7 +554,7 @@ class GenericResourceMeta(object):
             # Get phone
             phone_lit = self._rmeta_graph.value(o, hsterms.phone)
             if phone_lit is not None:
-                phone_raw = str(phone_lit).split(':')
+                phone_raw = str(phone_lit).split(":")
                 if len(phone_raw) > 1:
                     creator.phone = phone_raw[1]
                 else:
@@ -520,7 +575,9 @@ class GenericResourceMeta(object):
             self.contributors = list(SAX_parse_results.contributors)
         else:
             # Get contributors from RDF
-            for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.contributor, None)):
+            for s, p, o in self._rmeta_graph.triples(
+                (None, rdflib.namespace.DC.contributor, None)
+            ):
                 contributor = GenericResourceMeta.ResourceContributor()
                 contributor.set_uri(o)
                 # Get name
@@ -544,7 +601,7 @@ class GenericResourceMeta(object):
                 # Get phone
                 phone_lit = self._rmeta_graph.value(o, hsterms.phone)
                 if phone_lit is not None:
-                    phone_raw = str(phone_lit).split(':')
+                    phone_raw = str(phone_lit).split(":")
                     if len(phone_raw) > 1:
                         contributor.phone = phone_raw[1]
                     else:
@@ -560,10 +617,14 @@ class GenericResourceMeta(object):
             logger.debug("\t\tContributor: {0}".format(str(c)))
 
         # Get creation date
-        for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.created)):
+        for s, p, o in self._rmeta_graph.triples(
+            (None, None, rdflib.namespace.DCTERMS.created)
+        ):
             created_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if created_lit is None:
-                msg = "Resource metadata {0} does not contain a creation date.".format(self.rmeta_path)
+                msg = "Resource metadata {0} does not contain a creation date.".format(
+                    self.rmeta_path
+                )
                 raise GenericResourceMeta.ResourceMetaException(msg)
             try:
                 self.creation_date = hs_date_to_datetime(str(created_lit))
@@ -571,17 +632,22 @@ class GenericResourceMeta(object):
                 try:
                     self.creation_date = hs_date_to_datetime_iso(str(created_lit))
                 except HsDateException as e:
-                    msg = "Unable to parse creation date {0}, error: {1}".format(str(created_lit),
-                                                                                 str(e))
+                    msg = "Unable to parse creation date {0}, error: {1}".format(
+                        str(created_lit), str(e)
+                    )
                     raise GenericResourceMeta.ResourceMetaException(msg)
 
         logger.debug("\t\tCreation date: {0}".format(str(self.creation_date)))
 
         # Get modification date
-        for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.modified)):
+        for s, p, o in self._rmeta_graph.triples(
+            (None, None, rdflib.namespace.DCTERMS.modified)
+        ):
             modified_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if modified_lit is None:
-                msg = "Resource metadata {0} does not contain a modification date.".format(self.rmeta_path)
+                msg = "Resource metadata {0} does not contain a modification date.".format(
+                    self.rmeta_path
+                )
                 raise GenericResourceMeta.ResourceMetaException(msg)
             try:
                 self.modification_date = hs_date_to_datetime(str(modified_lit))
@@ -589,31 +655,40 @@ class GenericResourceMeta(object):
                 try:
                     self.modification_date = hs_date_to_datetime_iso(str(modified_lit))
                 except HsDateException as e:
-                    msg = "Unable to parse modification date {0}, error: {1}".format(str(modified_lit),
-                                                                                     str(e))
+                    msg = "Unable to parse modification date {0}, error: {1}".format(
+                        str(modified_lit), str(e)
+                    )
                     raise GenericResourceMeta.ResourceMetaException(msg)
 
         logger.debug("\t\tModification date: {0}".format(str(self.modification_date)))
 
         # Get rights
         resource_rights = None
-        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.rights, None)):
+        for s, p, o in self._rmeta_graph.triples(
+            (None, rdflib.namespace.DC.rights, None)
+        ):
             resource_rights = GenericResourceMeta.ResourceRights()
             # License URI
             rights_uri = self._rmeta_graph.value(o, hsterms.URL)
             if rights_uri is None:
-                msg = "Resource metadata {0} does not contain rights URI.".format(self.rmeta_path)
+                msg = "Resource metadata {0} does not contain rights URI.".format(
+                    self.rmeta_path
+                )
                 raise GenericResourceMeta.ResourceMetaException(msg)
             resource_rights.uri = str(rights_uri)
             # Rights statement
             rights_stmt_lit = self._rmeta_graph.value(o, hsterms.rightsStatement)
             if rights_stmt_lit is None:
-                msg = "Resource metadata {0} does not contain rights statement.".format(self.rmeta_path)
+                msg = "Resource metadata {0} does not contain rights statement.".format(
+                    self.rmeta_path
+                )
                 raise GenericResourceMeta.ResourceMetaException(msg)
             resource_rights.statement = str(rights_stmt_lit)
 
         if resource_rights is None:
-            msg = "Resource metadata {0} does not contain rights.".format(self.rmeta_path)
+            msg = "Resource metadata {0} does not contain rights.".format(
+                self.rmeta_path
+            )
             raise GenericResourceMeta.ResourceMetaException(msg)
 
         self.rights = resource_rights
@@ -626,7 +701,9 @@ class GenericResourceMeta(object):
             self.keywords = list(SAX_parse_results.subjects)
         else:
             # Get keywords from RDF
-            for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.subject, None)):
+            for s, p, o in self._rmeta_graph.triples(
+                (None, rdflib.namespace.DC.subject, None)
+            ):
                 self.keywords.append(str(o))
 
         logger.debug("\t\tKeywords: {0}".format(str(self.keywords)))
@@ -634,14 +711,16 @@ class GenericResourceMeta(object):
         # Get language
         lang_lit = self._rmeta_graph.value(res_uri, rdflib.namespace.DC.language)
         if lang_lit is None:
-            self.language = 'eng'
+            self.language = "eng"
         else:
             self.language = str(lang_lit)
 
         logger.debug("\t\tLanguage: {0}".format(self.language))
 
         # Get coverage (box)
-        for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.box)):
+        for s, p, o in self._rmeta_graph.triples(
+            (None, None, rdflib.namespace.DCTERMS.box)
+        ):
             coverage_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if coverage_lit is None:
                 msg = "Coverage value not found for {0}.".format(o)
@@ -650,7 +729,9 @@ class GenericResourceMeta(object):
             self.coverages.append(coverage)
 
         # Get coverage (point)
-        for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.point)):
+        for s, p, o in self._rmeta_graph.triples(
+            (None, None, rdflib.namespace.DCTERMS.point)
+        ):
             coverage_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if coverage_lit is None:
                 msg = "Coverage value not found for {0}.".format(o)
@@ -659,7 +740,9 @@ class GenericResourceMeta(object):
             self.coverages.append(coverage)
 
         # Get coverage (period)
-        for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.period)):
+        for s, p, o in self._rmeta_graph.triples(
+            (None, None, rdflib.namespace.DCTERMS.period)
+        ):
             coverage_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if coverage_lit is None:
                 msg = "Coverage value not found for {0}.".format(o)
@@ -672,7 +755,9 @@ class GenericResourceMeta(object):
             logger.debug("\t\t\t{0}".format(str(c)))
 
         # Get relations
-        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.relation, None)):
+        for s, p, o in self._rmeta_graph.triples(
+            (None, rdflib.namespace.DC.relation, None)
+        ):
             for pred, obj in self._rmeta_graph.predicate_objects(o):
                 relation = GenericResourceMeta.ResourceRelation(obj, pred)
                 self.relations.append(relation)
@@ -691,22 +776,27 @@ class GenericResourceMeta(object):
 
     def set_resource_modification_date(self, resource):
         if self.modification_date:
-            res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
+            res_modified_date = resource.metadata.dates.all().filter(type="modified")[0]
             res_modified_date.start_date = self.modification_date
             res_modified_date.save()
             # Update creation date representation provided by Mezzanine
             #   Get around calling save() on the resource, which will overwrite the modification
             #   date.
-            BaseResource.objects.filter(id=resource.id).update(updated=self.modification_date)
+            BaseResource.objects.filter(id=resource.id).update(
+                updated=self.modification_date
+            )
 
     @transaction.atomic
-    def write_metadata_to_resource(self, resource,
-                                   update_creators=False,
-                                   update_contributors=False,
-                                   update_creation_date=False,
-                                   update_modification_date=False,
-                                   update_title=False,
-                                   update_keywords=False):
+    def write_metadata_to_resource(
+        self,
+        resource,
+        update_creators=False,
+        update_contributors=False,
+        update_creation_date=False,
+        update_modification_date=False,
+        update_title=False,
+        update_keywords=False,
+    ):
         """
         Write metadata to resource
 
@@ -731,17 +821,22 @@ class GenericResourceMeta(object):
             for c in self.get_creators():
                 if isinstance(c, GenericResourceMeta.ResourceCreator):
                     # Set creator metadata, from bag metadata, to be used in create or update as needed (see below)
-                    kwargs = {'order': c.order, 'name': c.name,
-                              'organization': c.organization,
-                              'email': c.email, 'address': c.address,
-                              'phone': c.phone, 'homepage': c.homepage,
-                              'researcherID': c.researcherID,
-                              'researchGateID': c.researchGateID}
+                    kwargs = {
+                        "order": c.order,
+                        "name": c.name,
+                        "organization": c.organization,
+                        "email": c.email,
+                        "address": c.address,
+                        "phone": c.phone,
+                        "homepage": c.homepage,
+                        "researcherID": c.researcherID,
+                        "researchGateID": c.researchGateID,
+                    }
                     if c.rel_uri:
                         # HydroShare user URIs are stored as relative not absolute URIs
-                        kwargs['hydroshare_user_id'] = c.id
+                        kwargs["hydroshare_user_id"] = c.id
                     else:
-                        kwargs['hydroshare_user_id'] = None
+                        kwargs["hydroshare_user_id"] = None
 
                     if self.owner_is_hs_user and c.order == 1:
                         # Use metadata from bag for owner if the owner is a HydroShare user
@@ -749,15 +844,21 @@ class GenericResourceMeta(object):
                         # called create_resource above)
 
                         # Find the owner in the creators metadata
-                        owner_metadata = resource.metadata.creators.filter(order=1).first()
+                        owner_metadata = resource.metadata.creators.filter(
+                            order=1
+                        ).first()
                         if owner_metadata is None:
-                            msg = "Unable to find owner metadata for created resource {0}".format(resource.short_id)
+                            msg = "Unable to find owner metadata for created resource {0}".format(
+                                resource.short_id
+                            )
                             raise GenericResourceMeta.ResourceMetaException(msg)
                         # Update owner's creator metadata entry with what came from the bag metadata
-                        resource.metadata.update_element('Creator', owner_metadata.id, **kwargs)
+                        resource.metadata.update_element(
+                            "Creator", owner_metadata.id, **kwargs
+                        )
                     else:
                         # For the non-owner creators, just create new metadata elements for them.
-                        resource.metadata.create_element('creator', **kwargs)
+                        resource.metadata.create_element("creator", **kwargs)
                 else:
                     msg = "Creators with type {0} are not supported"
                     msg = msg.format(c.__class__.__name__)
@@ -766,41 +867,53 @@ class GenericResourceMeta(object):
             for c in self.contributors:
                 # Add contributors
                 if isinstance(c, GenericResourceMeta.ResourceContributor):
-                    kwargs = {'name': c.name, 'organization': c.organization,
-                              'hydroshare_user_id': c.id,
-                              'email': c.email, 'address': c.address,
-                              'phone': c.phone, 'homepage': c.homepage,
-                              'researcherID': c.researcherID,
-                              'researchGateID': c.researchGateID}
-                    resource.metadata.create_element('contributor', **kwargs)
+                    kwargs = {
+                        "name": c.name,
+                        "organization": c.organization,
+                        "hydroshare_user_id": c.id,
+                        "email": c.email,
+                        "address": c.address,
+                        "phone": c.phone,
+                        "homepage": c.homepage,
+                        "researcherID": c.researcherID,
+                        "researchGateID": c.researchGateID,
+                    }
+                    resource.metadata.create_element("contributor", **kwargs)
                 else:
                     msg = "Contributor with type {0} are not supported"
                     msg = msg.format(c.__class__.__name__)
                     raise TypeError(msg)
         if update_title and self.title:
-            resource.metadata.update_element('title', resource.metadata.title.id,
-                                             value=self.title)
+            resource.metadata.update_element(
+                "title", resource.metadata.title.id, value=self.title
+            )
         if update_keywords and self.keywords:
             # Remove existing keywords
             if resource.metadata.subjects:
                 resource.metadata.subjects.all().delete()
             for keyword in self.keywords:
-                resource.metadata.create_element('subject', value=keyword)
+                resource.metadata.create_element("subject", value=keyword)
         if self.abstract:
             if resource.metadata.description:
-                resource.metadata.update_element('description', resource.metadata.description.id,
-                                                 abstract=clean_for_xml(self.abstract))
+                resource.metadata.update_element(
+                    "description",
+                    resource.metadata.description.id,
+                    abstract=clean_for_xml(self.abstract),
+                )
             else:
-                resource.metadata.create_element('description',
-                                                 abstract=clean_for_xml(self.abstract))
+                resource.metadata.create_element(
+                    "description", abstract=clean_for_xml(self.abstract)
+                )
         if self.rights:
-            resource.metadata.update_element('rights', resource.metadata.rights.id,
-                                             statement=self.rights.statement)
+            resource.metadata.update_element(
+                "rights", resource.metadata.rights.id, statement=self.rights.statement
+            )
         if self.language:
-            resource.metadata.update_element('language', resource.metadata.language.id,
-                                             code=self.language)
+            resource.metadata.update_element(
+                "language", resource.metadata.language.id, code=self.language
+            )
         if update_creation_date and self.creation_date:
-            res_created_date = resource.metadata.dates.all().filter(type='created')[0]
+            res_created_date = resource.metadata.dates.all().filter(type="created")[0]
             res_created_date.start_date = self.creation_date
             res_created_date.save()
             # Update creation date representation provided by Mezzanine
@@ -811,45 +924,45 @@ class GenericResourceMeta(object):
         for c in self.coverages:
             kwargs = {}
             if isinstance(c, GenericResourceMeta.ResourceCoveragePeriod):
-                kwargs['type'] = 'period'
+                kwargs["type"] = "period"
                 val = {}
-                val['name'] = c.name
+                val["name"] = c.name
                 # val['start'] = c.start_date.isoformat()
                 # val['end'] = c.end_date.isoformat()
                 # Cast temporal coverages to month/day/year format as this is how they are stored as strings
                 #  in the metadata tables.
-                val['start'] = c.start_date.strftime('%m/%d/%Y')
-                val['end'] = c.end_date.strftime('%m/%d/%Y')
-                val['scheme'] = c.scheme
-                kwargs['value'] = val
-                resource.metadata.create_element('coverage', **kwargs)
+                val["start"] = c.start_date.strftime("%m/%d/%Y")
+                val["end"] = c.end_date.strftime("%m/%d/%Y")
+                val["scheme"] = c.scheme
+                kwargs["value"] = val
+                resource.metadata.create_element("coverage", **kwargs)
             elif isinstance(c, GenericResourceMeta.ResourceCoveragePoint):
-                kwargs['type'] = 'point'
+                kwargs["type"] = "point"
                 val = {}
-                val['name'] = c.name
-                val['east'] = c.east
-                val['north'] = c.north
-                val['units'] = c.units
-                val['elevation'] = c.elevation
-                val['zunits'] = c.zunits
-                val['projection'] = c.projection
-                kwargs['value'] = val
-                resource.metadata.create_element('coverage', **kwargs)
+                val["name"] = c.name
+                val["east"] = c.east
+                val["north"] = c.north
+                val["units"] = c.units
+                val["elevation"] = c.elevation
+                val["zunits"] = c.zunits
+                val["projection"] = c.projection
+                kwargs["value"] = val
+                resource.metadata.create_element("coverage", **kwargs)
             elif isinstance(c, GenericResourceMeta.ResourceCoverageBox):
-                kwargs['type'] = 'box'
+                kwargs["type"] = "box"
                 val = {}
-                val['name'] = c.name
-                val['northlimit'] = c.northlimit
-                val['eastlimit'] = c.eastlimit
-                val['southlimit'] = c.southlimit
-                val['westlimit'] = c.westlimit
-                val['units'] = c.units
-                val['projection'] = c.projection
-                val['uplimit'] = c.uplimit
-                val['downlimit'] = c.downlimit
-                val['zunits'] = c.zunits
-                kwargs['value'] = val
-                resource.metadata.create_element('coverage', **kwargs)
+                val["name"] = c.name
+                val["northlimit"] = c.northlimit
+                val["eastlimit"] = c.eastlimit
+                val["southlimit"] = c.southlimit
+                val["westlimit"] = c.westlimit
+                val["units"] = c.units
+                val["projection"] = c.projection
+                val["uplimit"] = c.uplimit
+                val["downlimit"] = c.downlimit
+                val["zunits"] = c.zunits
+                kwargs["value"] = val
+                resource.metadata.create_element("coverage", **kwargs)
             else:
                 msg = "Coverages with type {0} are not supported"
                 msg = msg.format(c.__class__.__name__)
@@ -858,9 +971,8 @@ class GenericResourceMeta(object):
             resource.metadata.relations.all().delete()
         for r in self.relations:
             if isinstance(r, GenericResourceMeta.ResourceRelation):
-                kwargs = {'type': r.relationship_type,
-                          'value': r.uri}
-                resource.metadata.create_element('relation', **kwargs)
+                kwargs = {"type": r.relationship_type, "value": r.uri}
+                resource.metadata.create_element("relation", **kwargs)
             else:
                 msg = "Relations with type {0} are not supported"
                 msg = msg.format(r.__class__.__name__)
@@ -871,7 +983,6 @@ class GenericResourceMeta(object):
             self.set_resource_modification_date(resource)
 
     class ResourceContributor(object):
-
         def __init__(self):
             # HydroShare user ID of user specified by self.url (set by self.set_uri)
             self.id = None
@@ -891,9 +1002,7 @@ class GenericResourceMeta(object):
         def __str__(self):
             msg = "ResourceContributor {uri}, name: {name}, "
             msg += "email: {email}"
-            msg = msg.format(uri=self.uri,
-                             name=self.name,
-                             email=self.email)
+            msg = msg.format(uri=self.uri, name=self.name, email=self.email)
             return msg
 
         def __unicode__(self):
@@ -910,7 +1019,7 @@ class GenericResourceMeta(object):
             # Parse URI
             parsed_uri = urllib.parse.urlparse(uri)
             # Separate out the user ID for HydroShare users
-            contributor_pk = os.path.basename(parsed_uri.path.strip('/'))
+            contributor_pk = os.path.basename(parsed_uri.path.strip("/"))
             # Make sure this is a HydroShare user URI
             is_hs_user_uri = False
             try:
@@ -929,7 +1038,7 @@ class GenericResourceMeta(object):
                     msg = "User ID {0} is not an integer. User URI was {1}."
                     raise GenericResourceMeta.ResourceMetaException(msg)
 
-                assert(pk is not None)
+                assert pk is not None
                 self.id = pk
 
             self.uri = uri
@@ -947,25 +1056,22 @@ class GenericResourceMeta(object):
         def __str__(self):
             msg = "ResourceCreator {uri}, name: {name}, "
             msg += "order: {order}, email: {email}"
-            msg = msg.format(uri=self.uri,
-                             name=self.name,
-                             order=self.order,
-                             email=self.email)
+            msg = msg.format(
+                uri=self.uri, name=self.name, order=self.order, email=self.email
+            )
             return msg
 
         def __unicode__(self):
             return str(self)
 
     class ResourceRights(object):
-
         def __init__(self):
             self.uri = None
             self.statement = None
 
         def __str__(self):
             msg = "ResourceRights {uri}, statement: {statement}"
-            msg = msg.format(uri=self.uri,
-                             statement=self.statement)
+            msg = msg.format(uri=self.uri, statement=self.statement)
             return msg
 
         def __unicode__(self):
@@ -982,8 +1088,9 @@ class GenericResourceMeta(object):
         def __str__(self):
             msg = "ResourceCoveragePeriod start_date: {start_date}, "
             msg += "end_date: {end_date}, scheme: {scheme}"
-            msg = msg.format(start_date=self.start_date, end_date=self.end_date,
-                             scheme=self.scheme)
+            msg = msg.format(
+                start_date=self.start_date, end_date=self.end_date, scheme=self.scheme
+            )
             return msg
 
         def __unicode__(self):
@@ -995,41 +1102,47 @@ class GenericResourceMeta(object):
             self.end_date = None
             self.scheme = None
 
-            kvp = value_str.split(';')
+            kvp = value_str.split(";")
             for pair in kvp:
-                (key, value) = pair.split('=')
+                (key, value) = pair.split("=")
                 key = key.strip()
                 value = value.strip()
-                if key == 'start':
+                if key == "start":
                     try:
                         self.start_date = hs_date_to_datetime_iso(value)
                     except Exception as e:
                         try:
                             self.start_date = hs_date_to_datetime_notz(value)
                         except Exception as e:
-                            msg = "Unable to parse start date {0}, error: {1}".format(value,
-                                                                                      str(e))
+                            msg = "Unable to parse start date {0}, error: {1}".format(
+                                value, str(e)
+                            )
                             raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'end':
+                elif key == "end":
                     try:
                         self.end_date = hs_date_to_datetime_iso(value)
                     except Exception as e:
                         try:
                             self.end_date = hs_date_to_datetime_notz(value)
                         except Exception as e:
-                            msg = "Unable to parse end date {0}, error: {1}".format(value,
-                                                                                    str(e))
+                            msg = "Unable to parse end date {0}, error: {1}".format(
+                                value, str(e)
+                            )
                             raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'scheme':
+                elif key == "scheme":
                     self.scheme = value
-                elif key == 'name':
+                elif key == "name":
                     self.name = value
 
             if self.start_date is None:
-                msg = "Period coverage '{0}' does not contain start date.".format(value_str)
+                msg = "Period coverage '{0}' does not contain start date.".format(
+                    value_str
+                )
                 raise GenericResourceMeta.ResourceMetaException(msg)
             if self.end_date is None:
-                msg = "Period coverage '{0}' does not contain end date.".format(value_str)
+                msg = "Period coverage '{0}' does not contain end date.".format(
+                    value_str
+                )
                 raise GenericResourceMeta.ResourceMetaException(msg)
             if self.scheme is None:
                 msg = "Period coverage '{0}' does not contain scheme.".format(value_str)
@@ -1043,8 +1156,7 @@ class GenericResourceMeta(object):
         def __str__(self):
             msg = "ResourceCoveragePoint north: {north}, "
             msg += "east: {east}, units: {units}"
-            msg = msg.format(north=self.north, east=self.east,
-                             units=self.units)
+            msg = msg.format(north=self.north, east=self.east, units=self.units)
             return msg
 
         def __unicode__(self):
@@ -1059,49 +1171,58 @@ class GenericResourceMeta(object):
             self.zunits = None  # Optional
             self.projection = None  # Optional
 
-            kvp = value_str.split(';')
+            kvp = value_str.split(";")
             for pair in kvp:
-                (key, value) = pair.split('=')
+                (key, value) = pair.split("=")
                 key = key.strip()
                 value = value.strip()
-                if key == 'name':
+                if key == "name":
                     self.name = value
-                elif key == 'east':
+                elif key == "east":
                     try:
                         self.east = float(value)
                     except Exception as e:
-                        msg = "Unable to parse easting {0}, error: {1}".format(value,
-                                                                               str(e))
+                        msg = "Unable to parse easting {0}, error: {1}".format(
+                            value, str(e)
+                        )
                         raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'north':
+                elif key == "north":
                     try:
                         self.north = float(value)
                     except Exception as e:
-                        msg = "Unable to parse northing {0}, error: {1}".format(value,
-                                                                                str(e))
+                        msg = "Unable to parse northing {0}, error: {1}".format(
+                            value, str(e)
+                        )
                         raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'units':
+                elif key == "units":
                     self.units = value
-                elif key == 'projection':
+                elif key == "projection":
                     self.projection = value
-                elif key == 'elevation':
+                elif key == "elevation":
                     try:
                         self.elevation = float(value)
                     except Exception as e:
-                        msg = "Unable to parse elevation {0}, error: {1}".format(value,
-                                                                                 str(e))
+                        msg = "Unable to parse elevation {0}, error: {1}".format(
+                            value, str(e)
+                        )
                         raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'zunits':
+                elif key == "zunits":
                     self.zunits = value
 
             if self.east is None:
-                msg = "Point coverage '{0}' does not contain an easting.".format(value_str)
+                msg = "Point coverage '{0}' does not contain an easting.".format(
+                    value_str
+                )
                 raise GenericResourceMeta.ResourceMetaException(msg)
             if self.north is None:
-                msg = "Point coverage '{0}' does not contain a northing.".format(value_str)
+                msg = "Point coverage '{0}' does not contain a northing.".format(
+                    value_str
+                )
                 raise GenericResourceMeta.ResourceMetaException(msg)
             if self.units is None:
-                msg = "Point coverage '{0}' does not contain units information.".format(value_str)
+                msg = "Point coverage '{0}' does not contain units information.".format(
+                    value_str
+                )
                 raise GenericResourceMeta.ResourceMetaException(msg)
 
     class ResourceCoverageBox(ResourceCoverage):
@@ -1113,9 +1234,13 @@ class GenericResourceMeta(object):
             msg = "ResourceCoverageBox northlimit: {northlimit}, "
             msg += "eastlimit: {eastlimit}, southlimit: {southlimit}, "
             msg += "westlimit: {westlimit}, units: {units}"
-            msg = msg.format(northlimit=self.northlimit, eastlimit=self.eastlimit,
-                             southlimit=self.southlimit, westlimit=self.westlimit,
-                             units=self.units)
+            msg = msg.format(
+                northlimit=self.northlimit,
+                eastlimit=self.eastlimit,
+                southlimit=self.southlimit,
+                westlimit=self.westlimit,
+                units=self.units,
+            )
             return msg
 
         def __unicode__(self):
@@ -1133,63 +1258,71 @@ class GenericResourceMeta(object):
             self.downlimit = None  # Optional
             self.zunits = None  # Only present if uplimit or downlimit is present
 
-            kvp = value_str.split(';')
+            kvp = value_str.split(";")
             for pair in kvp:
-                (key, value) = pair.split('=')
+                (key, value) = pair.split("=")
                 key = key.strip()
                 value = value.strip()
-                if key == 'name':
+                if key == "name":
                     self.name = value
-                elif key == 'eastlimit':
+                elif key == "eastlimit":
                     try:
                         self.eastlimit = float(value)
                     except Exception as e:
-                        msg = "Unable to parse east limit {0}, error: {1}".format(value,
-                                                                                  str(e))
+                        msg = "Unable to parse east limit {0}, error: {1}".format(
+                            value, str(e)
+                        )
                         raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'northlimit':
+                elif key == "northlimit":
                     try:
                         self.northlimit = float(value)
                     except Exception as e:
-                        msg = "Unable to parse north limit {0}, error: {1}".format(value,
-                                                                                   str(e))
+                        msg = "Unable to parse north limit {0}, error: {1}".format(
+                            value, str(e)
+                        )
                         raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'southlimit':
+                elif key == "southlimit":
                     try:
                         self.southlimit = float(value)
                     except Exception as e:
-                        msg = "Unable to parse south limit {0}, error: {1}".format(value,
-                                                                                   str(e))
+                        msg = "Unable to parse south limit {0}, error: {1}".format(
+                            value, str(e)
+                        )
                         raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'westlimit':
+                elif key == "westlimit":
                     try:
                         self.westlimit = float(value)
                     except Exception as e:
-                        msg = "Unable to parse west limit {0}, error: {1}".format(value,
-                                                                                  str(e))
+                        msg = "Unable to parse west limit {0}, error: {1}".format(
+                            value, str(e)
+                        )
                         raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'units':
+                elif key == "units":
                     self.units = value
-                elif key == 'projection':
+                elif key == "projection":
                     self.projection = value
-                elif key == 'uplimit':
+                elif key == "uplimit":
                     try:
                         self.uplimit = float(value)
                     except Exception as e:
-                        msg = "Unable to parse uplimit {0}, error: {1}".format(value,
-                                                                               str(e))
+                        msg = "Unable to parse uplimit {0}, error: {1}".format(
+                            value, str(e)
+                        )
                         raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'downlimit':
+                elif key == "downlimit":
                     try:
                         self.downlimit = float(value)
                     except Exception as e:
-                        msg = "Unable to parse downlimit {0}, error: {1}".format(value,
-                                                                                 str(e))
+                        msg = "Unable to parse downlimit {0}, error: {1}".format(
+                            value, str(e)
+                        )
                         raise GenericResourceMeta.ResourceMetaException(msg)
-                elif key == 'zunits':
+                elif key == "zunits":
                     self.zunits = value
 
-            if self.zunits is None and (self.uplimit is not None or self.downlimit is not None):
+            if self.zunits is None and (
+                self.uplimit is not None or self.downlimit is not None
+            ):
                 msg = "Point coverage '{0}' contains uplimit or downlimit but "
                 msg += "does not contain zunits."
                 msg = msg.format(value_str)
@@ -1200,9 +1333,11 @@ class GenericResourceMeta(object):
 
         def __str__(self):
             msg = "{classname} {relationship_type}: {uri}"
-            msg = msg.format(classname=type(self).__name__,
-                             relationship_type=self.relationship_type,
-                             uri=self.uri)
+            msg = msg.format(
+                classname=type(self).__name__,
+                relationship_type=self.relationship_type,
+                uri=self.uri,
+            )
             return msg
 
         def __unicode__(self):
@@ -1220,7 +1355,7 @@ class GenericResourceMeta(object):
             self.relationship_type = relationship_type
 
     class ResourceSource(ResourceRelation):
-        KNOWN_TYPES = {'isDerivedFrom'}
+        KNOWN_TYPES = {"isDerivedFrom"}
 
     class ResourceMetaException(Exception):
         pass
@@ -1281,70 +1416,78 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
             self._contributor_address.append(content)
 
     def startElement(self, name, attrs):
-        if name == 'dc:subject':
+        if name == "dc:subject":
             if self._get_subject:
                 raise xml.sax.SAXException("Error: nested dc:subject elements.")
             self._get_subject = True
             self._subject = []
 
-        elif name == 'dc:contributor':
+        elif name == "dc:contributor":
             if self._get_contributor:
                 raise xml.sax.SAXException("Error: nested dc:contributor elements.")
             self._get_contributor = True
 
-        elif name == 'rdf:Description':
+        elif name == "rdf:Description":
             if self._get_contributor:
                 if self._get_contributor_details:
                     msg = "Error: nested rdf:Description elements within dc:contributor element."
                     raise xml.sax.SAXException(msg)
                 # Create new contributor
                 contributor = GenericResourceMeta.ResourceContributor()
-                if 'rdf:about' in attrs:
-                    contributor.set_uri(attrs.getValue('rdf:about'))
+                if "rdf:about" in attrs:
+                    contributor.set_uri(attrs.getValue("rdf:about"))
                 self.contributors.append(contributor)
                 self._get_contributor_details = True
 
-        elif name == 'hsterms:name':
+        elif name == "hsterms:name":
             if self._get_contributor_details:
                 if self._get_contributor_name:
-                    raise xml.sax.SAXException("Error: nested hsterms:name elements within dc:contributor.")
+                    raise xml.sax.SAXException(
+                        "Error: nested hsterms:name elements within dc:contributor."
+                    )
                 self._get_contributor_name = True
                 self._contributor_name = []
 
-        elif name == 'hsterms:organization':
+        elif name == "hsterms:organization":
             if self._get_contributor_details:
                 if self._get_contributor_organization:
-                    raise xml.sax.SAXException("Error: nested hsterms:organization elements within dc:contributor.")
+                    raise xml.sax.SAXException(
+                        "Error: nested hsterms:organization elements within dc:contributor."
+                    )
                 self._get_contributor_organization = True
                 self._contributor_organization = []
 
-        elif name == 'hsterms:email':
+        elif name == "hsterms:email":
             if self._get_contributor_details:
                 if self._get_contributor_email:
-                    raise xml.sax.SAXException("Error: nested hsterms:email elements within dc:contributor.")
+                    raise xml.sax.SAXException(
+                        "Error: nested hsterms:email elements within dc:contributor."
+                    )
                 self._get_contributor_email = True
                 self._contributor_email = []
 
-        elif name == 'hsterms:address':
+        elif name == "hsterms:address":
             if self._get_contributor_details:
                 if self._get_contributor_address:
-                    raise xml.sax.SAXException("Error: nested hsterms:address elements within dc:contributor.")
+                    raise xml.sax.SAXException(
+                        "Error: nested hsterms:address elements within dc:contributor."
+                    )
                 self._get_contributor_address = True
                 self._contributor_address = []
 
-        elif name == 'hsterms:phone':
+        elif name == "hsterms:phone":
             if self._get_contributor_details:
-                if 'rdf:resource' not in attrs:
+                if "rdf:resource" not in attrs:
                     msg = "Error: hsterms:phone within dc:contributor element has no phone number."
                     raise xml.sax.SAXException(msg)
-                phone_raw = str(attrs.getValue('rdf:resource')).split(':')
+                phone_raw = str(attrs.getValue("rdf:resource")).split(":")
                 if len(phone_raw) > 1:
                     self.contributors[-1].phone = phone_raw[1]
                 else:
                     self.contributors[-1].phone = phone_raw[0]
 
     def endElement(self, name):
-        if name == 'dc:subject':
+        if name == "dc:subject":
             if not self._get_subject:
                 msg = "Error: close dc:subject tag without corresponding open tag."
                 raise xml.sax.SAXException(msg)
@@ -1352,13 +1495,13 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
             self._subject = None
             self._get_subject = False
 
-        elif name == 'dc:contributor':
+        elif name == "dc:contributor":
             if not self._get_contributor:
                 msg = "Error: close dc:contributor tag without corresponding open tag."
                 raise xml.sax.SAXException(msg)
             self._get_contributor = False
 
-        elif name == 'rdf:Description':
+        elif name == "rdf:Description":
             if self._get_contributor:
                 if not self._get_contributor_details:
                     msg = "Error: close rdf:Description tag without corresponding open tag "
@@ -1366,37 +1509,43 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                     raise xml.sax.SAXException(msg)
                 self._get_contributor_details = False
 
-        elif name == 'hsterms:name':
+        elif name == "hsterms:name":
             if self._get_contributor_details:
                 if not self._get_contributor_name:
-                    msg = "Error: close hsterms:name tag without corresponding open tag "
+                    msg = (
+                        "Error: close hsterms:name tag without corresponding open tag "
+                    )
                     msg += "within dc:contributor."
                     raise xml.sax.SAXException(msg)
                 self.contributors[-1].name = "".join(self._contributor_name)
                 self._contributor_name = None
                 self._get_contributor_name = False
 
-        elif name == 'hsterms:organization':
+        elif name == "hsterms:organization":
             if self._get_contributor_details:
                 if not self._get_contributor_organization:
                     msg = "Error: close hsterms:organization tag without corresponding open tag "
                     msg += "within dc:contributor."
                     raise xml.sax.SAXException(msg)
-                self.contributors[-1].organization = "".join(self._contributor_organization)
+                self.contributors[-1].organization = "".join(
+                    self._contributor_organization
+                )
                 self._contributor_organization = None
                 self._get_contributor_organization = False
 
-        elif name == 'hsterms:email':
+        elif name == "hsterms:email":
             if self._get_contributor_details:
                 if not self._get_contributor_email:
-                    msg = "Error: close hsterms:email tag without corresponding open tag "
+                    msg = (
+                        "Error: close hsterms:email tag without corresponding open tag "
+                    )
                     msg += "within dc:contributor."
                     raise xml.sax.SAXException(msg)
                 self.contributors[-1].email = "".join(self._contributor_email)
                 self._contributor_email = None
                 self._get_contributor_email = False
 
-        elif name == 'hsterms:address':
+        elif name == "hsterms:address":
             if self._get_contributor_details:
                 if not self._get_contributor_address:
                     msg = "Error: close hsterms:address tag without corresponding open tag "

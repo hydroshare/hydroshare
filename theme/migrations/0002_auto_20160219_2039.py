@@ -8,13 +8,13 @@ import mezzanine.core.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('theme', '0001_initial'),
+        ("theme", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='iconbox',
-            name='_order',
-            field=mezzanine.core.fields.OrderField(null=True, verbose_name='Order'),
+            model_name="iconbox",
+            name="_order",
+            field=mezzanine.core.fields.OrderField(null=True, verbose_name="Order"),
         ),
     ]

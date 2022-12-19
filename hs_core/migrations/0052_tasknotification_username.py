@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0051_tasknotification'),
+        ("hs_core", "0051_tasknotification"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tasknotification',
-            name='username',
+            model_name="tasknotification",
+            name="username",
             field=models.CharField(blank=True, max_length=150),
         ),
     ]

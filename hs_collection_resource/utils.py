@@ -22,9 +22,14 @@ def get_landing_page_url_template():
     return current_site_url() + "/resource/{0}/"
 
 
-def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type="",
-                                    relation_value="", set_res_modified=False,
-                                    last_change_user=None):
+def add_or_remove_relation_metadata(
+    add=True,
+    target_res_obj=None,
+    relation_type="",
+    relation_value="",
+    set_res_modified=False,
+    last_change_user=None,
+):
     """
     add new or remove relation metadata to/from target res obj
     :param add: True -- add metadata; False -- remove metadata
@@ -39,12 +44,13 @@ def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type
 
     if add:
         meta_dict = {}
-        meta_dict['type'] = relation_type
-        meta_dict['value'] = relation_value
+        meta_dict["type"] = relation_type
+        meta_dict["value"] = relation_value
         target_res_obj.metadata.create_element("relation", **meta_dict)
     else:
-        target_res_obj.metadata.relations.\
-                filter(type=relation_type, value=relation_value).all().delete()
+        target_res_obj.metadata.relations.filter(
+            type=relation_type, value=relation_value
+        ).all().delete()
 
     if set_res_modified:
         resource_modified(target_res_obj, last_change_user, overwrite_bag=False)
@@ -71,56 +77,57 @@ def update_collection_list_csv(collection_obj):
         for f in collection_obj.files.all():
             delete_resource_file_only(collection_obj, f)
 
-        if collection_obj.resources.count() > 0 or collection_obj.deleted_resources.count() > 0:
+        if (
+            collection_obj.resources.count() > 0
+            or collection_obj.deleted_resources.count() > 0
+        ):
             # prepare csv content
             # create headers
-            csv_header_row = ['Title',
-                              'Type',
-                              'ID',
-                              'URL',
-                              'Owners',
-                              'Sharing Status'
-                              ]
+            csv_header_row = ["Title", "Type", "ID", "URL", "Owners", "Sharing Status"]
             csv_content_list.append(csv_header_row)
             # create rows for currently contained resources
             for res in collection_obj.resources.all():
-                csv_data_row = [res.metadata.title,
-                                res.resource_type,
-                                res.short_id,
-                                get_landing_page_url_template().format(res.short_id),
-                                _get_owners_string(list(res.raccess.owners.all())),
-                                _get_sharing_status_string(res)
-                                ]
+                csv_data_row = [
+                    res.metadata.title,
+                    res.resource_type,
+                    res.short_id,
+                    get_landing_page_url_template().format(res.short_id),
+                    _get_owners_string(list(res.raccess.owners.all())),
+                    _get_sharing_status_string(res),
+                ]
                 csv_content_list.append(csv_data_row)
 
             # create rows for deleted resources
             for deleted_res_log in collection_obj.deleted_resources:
-                csv_data_row = [deleted_res_log.resource_title,
-                                deleted_res_log.resource_type,
-                                deleted_res_log.resource_id,
-                                DELETED_RES_STRING,
-                                _get_owners_string(list(deleted_res_log.resource_owners.all()))
-                                if deleted_res_log.resource_owners.count() > 0
-                                else DELETED_RES_STRING,
-                                DELETED_RES_STRING
-                                ]
+                csv_data_row = [
+                    deleted_res_log.resource_title,
+                    deleted_res_log.resource_type,
+                    deleted_res_log.resource_id,
+                    DELETED_RES_STRING,
+                    _get_owners_string(list(deleted_res_log.resource_owners.all()))
+                    if deleted_res_log.resource_owners.count() > 0
+                    else DELETED_RES_STRING,
+                    DELETED_RES_STRING,
+                ]
                 csv_content_list.append(csv_data_row)
 
             # create a new csv on django server
             tmp_dir = tempfile.mkdtemp()
             csv_full_path = os.path.join(tmp_dir, csv_full_name)
-            with open(csv_full_path, 'w') as csv_file_handle:
+            with open(csv_full_path, "w") as csv_file_handle:
                 w = csv.writer(csv_file_handle)
                 for row in csv_content_list:
                     w.writerow(row)
 
             # push the new csv file to irods bag
-            files = (UploadedFile(file=open(csv_full_path, 'rb'), name=csv_full_name))
+            files = UploadedFile(file=open(csv_full_path, "rb"), name=csv_full_name)
             add_resource_files(collection_obj.short_id, files)
 
     except Exception as ex:
-        logger.error("Failed to update_collection_list_csv in {}"
-                     "Error:{} ".format(short_key, str(ex)))
+        logger.error(
+            "Failed to update_collection_list_csv in {}"
+            "Error:{} ".format(short_key, str(ex))
+        )
         raise Exception("update_collection_list_csv error: " + str(ex))
     finally:
         if tmp_dir is not None:
@@ -138,15 +145,22 @@ def get_collectable_resources(user, coll_resource):
     # check that user can view resources.
 
     collectable_resources = get_my_resources_list(user)
-    collectable_resources = collectable_resources \
-        .filter(Q(raccess__shareable=True) |  # shareable and viewable, --or--
-                Q(raccess__discoverable=True) |  # discoverable, public, and/or published --or--
-                Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER)) \
-        .exclude(short_id=coll_resource.short_id) \
-        .exclude(id__in=coll_resource.resources.values_list("id", flat=True))  # no duplicates!
+    collectable_resources = (
+        collectable_resources.filter(
+            Q(raccess__shareable=True)
+            | Q(raccess__discoverable=True)  # shareable and viewable, --or--
+            | Q(  # discoverable, public, and/or published --or--
+                r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER
+            )
+        )
+        .exclude(short_id=coll_resource.short_id)
+        .exclude(id__in=coll_resource.resources.values_list("id", flat=True))
+    )  # no duplicates!
 
-    collectable_resources = collectable_resources.only('short_id', 'title', 'resource_type', 'created')
-    collectable_resources = collectable_resources.select_related('raccess')
+    collectable_resources = collectable_resources.only(
+        "short_id", "title", "resource_type", "created"
+    )
+    collectable_resources = collectable_resources.select_related("raccess")
 
     return collectable_resources
 
@@ -162,7 +176,7 @@ def _get_owners_string(owners_list):
         name_list.append(name_str)
     if len(name_list) > 1:
         # csv.writer can correctly handle comma in string. No need to add extra quotes here.
-        return ', '.join(name_list)
+        return ", ".join(name_list)
     else:
         return name_list[0]
 

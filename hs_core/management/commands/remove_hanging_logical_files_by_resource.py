@@ -10,14 +10,17 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # ID of a resource for which hanging logical files to be deleted
-        parser.add_argument('resource_id', type=str, help=('Required. The existing id (short_id) of'
-                                                           ' the resource'))
+        parser.add_argument(
+            "resource_id",
+            type=str,
+            help=("Required. The existing id (short_id) of" " the resource"),
+        )
 
     def handle(self, *args, **options):
 
-        if not options['resource_id']:
-            raise CommandError('resource_id argument is required')
-        res_id = options['resource_id']
+        if not options["resource_id"]:
+            raise CommandError("resource_id argument is required")
+        res_id = options["resource_id"]
         try:
             res = get_resource_by_shortkey(res_id, or_404=False)
         except ObjectDoesNotExist:
@@ -27,5 +30,7 @@ class Command(BaseCommand):
             raise CommandError("Resource is not of CompositeResource type")
 
         total_deleted_aggregations = res.cleanup_aggregations()
-        msg = "{} logical file(s) were deleted for resource id:{}".format(total_deleted_aggregations, res_id)
+        msg = "{} logical file(s) were deleted for resource id:{}".format(
+            total_deleted_aggregations, res_id
+        )
         self.stdout.write(self.style.SUCCESS(msg))

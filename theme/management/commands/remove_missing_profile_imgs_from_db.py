@@ -10,6 +10,10 @@ class Command(BaseCommand):
         ups = UserProfile.objects.only("picture", "user").all()
         for profile in ups:
             if profile.user.is_active:
-                if profile.picture and not profile.picture.storage.exists(profile.picture.name):
+                if profile.picture and not profile.picture.storage.exists(
+                    profile.picture.name
+                ):
                     profile.picture.delete()
-                    print(f"Removed profile picture reference for user {profile.user.id}: {profile.user.username}")
+                    print(
+                        f"Removed profile picture reference for user {profile.user.id}: {profile.user.username}"
+                    )

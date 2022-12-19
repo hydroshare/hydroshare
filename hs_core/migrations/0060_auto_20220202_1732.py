@@ -8,24 +8,59 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0059_auto_20211216_1427'),
+        ("hs_core", "0059_auto_20211216_1427"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='source',
+            name="source",
             unique_together=set([]),
         ),
         migrations.RemoveField(
-            model_name='source',
-            name='content_type',
+            model_name="source",
+            name="content_type",
         ),
         migrations.AlterField(
-            model_name='relation',
-            name='type',
-            field=models.CharField(choices=[('isPartOf', 'The content of this resource is part of'), ('hasPart', 'This resource includes'), ('isExecutedBy', 'The content of this resource can be executed by'), ('isCreatedBy', 'The content of this resource was created by a related App or software program'), ('isVersionOf', 'This resource updates and replaces a previous version'), ('isReplacedBy', 'This resource has been replaced by a newer version'), ('isDescribedBy', 'This resource is described by'), ('conformsTo', 'This resource conforms to established standard described by'), ('hasFormat', 'This resource has a related resource in another format'), ('isFormatOf', 'This resource is a different format of'), ('isRequiredBy', 'This resource is required by'), ('requires', 'This resource requires'), ('isReferencedBy', 'This resource is referenced by'), ('references', 'The content of this resource references'), ('replaces', 'This resource replaces'), ('source', 'The content of this resource is derived from')], max_length=100),
+            model_name="relation",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("isPartOf", "The content of this resource is part of"),
+                    ("hasPart", "This resource includes"),
+                    ("isExecutedBy", "The content of this resource can be executed by"),
+                    (
+                        "isCreatedBy",
+                        "The content of this resource was created by a related App or software program",
+                    ),
+                    (
+                        "isVersionOf",
+                        "This resource updates and replaces a previous version",
+                    ),
+                    (
+                        "isReplacedBy",
+                        "This resource has been replaced by a newer version",
+                    ),
+                    ("isDescribedBy", "This resource is described by"),
+                    (
+                        "conformsTo",
+                        "This resource conforms to established standard described by",
+                    ),
+                    (
+                        "hasFormat",
+                        "This resource has a related resource in another format",
+                    ),
+                    ("isFormatOf", "This resource is a different format of"),
+                    ("isRequiredBy", "This resource is required by"),
+                    ("requires", "This resource requires"),
+                    ("isReferencedBy", "This resource is referenced by"),
+                    ("references", "The content of this resource references"),
+                    ("replaces", "This resource replaces"),
+                    ("source", "The content of this resource is derived from"),
+                ],
+                max_length=100,
+            ),
         ),
         migrations.DeleteModel(
-            name='Source',
+            name="Source",
         ),
     ]

@@ -8,13 +8,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0049_auto_20200610_1938'),
+        ("hs_core", "0049_auto_20200610_1938"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='baseresource',
-            name='doi',
-            field=models.CharField(blank=True, db_index=True, default='', help_text="Permanent identifier. Never changes once it's been set.", max_length=128),
+            model_name="baseresource",
+            name="doi",
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                default="",
+                help_text="Permanent identifier. Never changes once it's been set.",
+                max_length=128,
+            ),
         ),
     ]

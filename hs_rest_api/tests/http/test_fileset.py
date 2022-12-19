@@ -9,7 +9,6 @@ from hs_file_types.models import FileSetLogicalFile
 
 
 class TestFileSetEndpoint(HSRESTTestCase, CompositeResourceTestMixin):
-
     def setUp(self):
         super(TestFileSetEndpoint, self).setUp()
 
@@ -18,8 +17,8 @@ class TestFileSetEndpoint(HSRESTTestCase, CompositeResourceTestMixin):
 
         self.res_title = "Test Generic File Type"
         self.logical_file_type_name = "FileSetLogicalFile"
-        base_file_path = 'hs_file_types/tests/{}'
-        self.generic_file_name = 'generic_file.txt'
+        base_file_path = "hs_file_types/tests/{}"
+        self.generic_file_name = "generic_file.txt"
         self.generic_file = base_file_path.format(self.generic_file_name)
 
     def test_fileset_create_remove(self):
@@ -27,10 +26,12 @@ class TestFileSetEndpoint(HSRESTTestCase, CompositeResourceTestMixin):
         aggregation through the api"""
 
         self.create_composite_resource()
-        new_folder = 'fileset_folder'
+        new_folder = "fileset_folder"
         ResourceFile.create_folder(self.composite_resource, new_folder)
         # add the the txt file to the resource at the above folder
-        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        self.add_file_to_resource(
+            file_to_add=self.generic_file, upload_folder=new_folder
+        )
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -41,9 +42,14 @@ class TestFileSetEndpoint(HSRESTTestCase, CompositeResourceTestMixin):
         self.assertEqual(FileSetLogicalFile.objects.count(), 0)
         # set folder to fileset logical file type (aggregation)
 
-        set_type_url = reverse('set_file_type_public', kwargs={"pk": self.composite_resource.short_id,
-                                                               "file_path": "",
-                                                               "hs_file_type": "FileSet"})
+        set_type_url = reverse(
+            "set_file_type_public",
+            kwargs={
+                "pk": self.composite_resource.short_id,
+                "file_path": "",
+                "hs_file_type": "FileSet",
+            },
+        )
         self.client.post(set_type_url, data={"folder_path": new_folder})
         res_file = self.composite_resource.files.first()
         # file has the same folder
@@ -53,9 +59,14 @@ class TestFileSetEndpoint(HSRESTTestCase, CompositeResourceTestMixin):
         # aggregation dataset name should be same as the folder name
         self.assertEqual(res_file.logical_file.dataset_name, new_folder)
 
-        remove_agg_url = reverse('remove_aggregation_public', kwargs={"resource_id": self.composite_resource.short_id,
-                                                                      "file_path": new_folder,
-                                                                      "hs_file_type": "FileSetLogicalFile"})
+        remove_agg_url = reverse(
+            "remove_aggregation_public",
+            kwargs={
+                "resource_id": self.composite_resource.short_id,
+                "file_path": new_folder,
+                "hs_file_type": "FileSetLogicalFile",
+            },
+        )
         self.client.post(remove_agg_url)
         self.assertEqual(FileSetLogicalFile.objects.count(), 0)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -67,10 +78,12 @@ class TestFileSetEndpoint(HSRESTTestCase, CompositeResourceTestMixin):
         aggregation through the api"""
 
         self.create_composite_resource()
-        new_folder = 'fileset_folder'
+        new_folder = "fileset_folder"
         ResourceFile.create_folder(self.composite_resource, new_folder)
         # add the the txt file to the resource at the above folder
-        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        self.add_file_to_resource(
+            file_to_add=self.generic_file, upload_folder=new_folder
+        )
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -81,9 +94,14 @@ class TestFileSetEndpoint(HSRESTTestCase, CompositeResourceTestMixin):
         self.assertEqual(FileSetLogicalFile.objects.count(), 0)
         # set folder to fileset logical file type (aggregation)
 
-        set_type_url = reverse('set_file_type_public', kwargs={"pk": self.composite_resource.short_id,
-                                                               "file_path": "",
-                                                               "hs_file_type": "FileSet"})
+        set_type_url = reverse(
+            "set_file_type_public",
+            kwargs={
+                "pk": self.composite_resource.short_id,
+                "file_path": "",
+                "hs_file_type": "FileSet",
+            },
+        )
         self.client.post(set_type_url, data={"folder_path": new_folder})
         res_file = self.composite_resource.files.first()
         # file has the same folder
@@ -93,9 +111,14 @@ class TestFileSetEndpoint(HSRESTTestCase, CompositeResourceTestMixin):
         # aggregation dataset name should be same as the folder name
         self.assertEqual(res_file.logical_file.dataset_name, new_folder)
 
-        delete_agg_url = reverse('delete_aggregation_public', kwargs={"resource_id": self.composite_resource.short_id,
-                                                                      "file_path": new_folder,
-                                                                      "hs_file_type": "FileSetLogicalFile"})
+        delete_agg_url = reverse(
+            "delete_aggregation_public",
+            kwargs={
+                "resource_id": self.composite_resource.short_id,
+                "file_path": new_folder,
+                "hs_file_type": "FileSetLogicalFile",
+            },
+        )
         self.client.delete(delete_agg_url)
         self.assertEqual(FileSetLogicalFile.objects.count(), 0)
         self.assertEqual(self.composite_resource.files.all().count(), 0)

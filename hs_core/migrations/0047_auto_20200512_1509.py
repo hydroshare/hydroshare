@@ -10,14 +10,20 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0046_auto_20191104_2035'),
+        ("hs_core", "0046_auto_20191104_2035"),
     ]
 
     default_last_changed_by_id = 1
     operations = [
         migrations.AlterField(
-            model_name='baseresource',
-            name='last_changed_by',
-            field=models.ForeignKey(default=1, help_text='The person who last changed the resource', on_delete=django.db.models.deletion.CASCADE, related_name='last_changed_hs_core_baseresource', to=settings.AUTH_USER_MODEL),
+            model_name="baseresource",
+            name="last_changed_by",
+            field=models.ForeignKey(
+                default=1,
+                help_text="The person who last changed the resource",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="last_changed_hs_core_baseresource",
+                to=settings.AUTH_USER_MODEL,
+            ),
         )
     ]

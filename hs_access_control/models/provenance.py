@@ -23,20 +23,32 @@ class ProvenanceBase(models.Model):
     called from the specific "provenance" classes when needed.
     """
 
-    exhibit = models.BooleanField(default=False)  # whether to exhibit the result as a product
+    exhibit = models.BooleanField(
+        default=False
+    )  # whether to exhibit the result as a product
 
     class Meta:
         abstract = True
 
     def __str__(self):
         """print name for debugging"""
-        return 'grantee=' + str(self.grantee) + \
-               ', entity=' + str(self.entity) + \
-               ', privilege=' + PrivilegeCodes.NAMES[self.privilege] + \
-               ' (' + str(self.privilege) + ')' + \
-               ', grantor=' + str(self.grantor) + \
-               ', start=' + str(self.start) + \
-               ', undone=' + str(self.undone)
+        return (
+            "grantee="
+            + str(self.grantee)
+            + ", entity="
+            + str(self.entity)
+            + ", privilege="
+            + PrivilegeCodes.NAMES[self.privilege]
+            + " ("
+            + str(self.privilege)
+            + ")"
+            + ", grantor="
+            + str(self.grantor)
+            + ", start="
+            + str(self.start)
+            + ", undone="
+            + str(self.undone)
+        )
 
     @classmethod
     def __get_current_start(cls, **kwargs):
@@ -50,11 +62,9 @@ class ProvenanceBase(models.Model):
             UserGroupProvenance.__get_current_start(group={X}, user={Y})
             GroupResourceProvenance.__get_current_start(resource={X}, group={Y})
         """
-        result = cls.objects\
-            .filter(**kwargs)\
-            .aggregate(Max('start'))
+        result = cls.objects.filter(**kwargs).aggregate(Max("start"))
         # This can be None if there is no start pair
-        return result['start__max']
+        return result["start__max"]
 
     @classmethod
     def get_current_record(cls, **kwargs):
@@ -78,8 +88,7 @@ class ProvenanceBase(models.Model):
         start = cls.__get_current_start(**kwargs)
         # Then, fetch that unique record.
         if start is not None:
-            return cls.objects\
-                .get(start=start, **kwargs)
+            return cls.objects.get(start=start, **kwargs)
         else:
             return None
 
@@ -144,11 +153,10 @@ class ProvenanceBase(models.Model):
             assert len(kwargs) == 2
         last = cls.__get_current_start(**kwargs)
         if last is not None:
-            result = cls.objects\
-                .filter(start__lt=last,
-                        **kwargs) \
-                .aggregate(Max('start'))
-            return result['start__max']
+            result = cls.objects.filter(start__lt=last, **kwargs).aggregate(
+                Max("start")
+            )
+            return result["start__max"]
         else:
             return None
 
@@ -208,11 +216,11 @@ class ProvenanceBase(models.Model):
         Supplementary logic is necessary
         """
         if __debug__:
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
+            assert "grantor" in kwargs
+            assert isinstance(kwargs["grantor"], User)
             assert len(kwargs) == 3
-        grantor = kwargs['grantor']
-        del kwargs['grantor']
+        grantor = kwargs["grantor"]
+        del kwargs["grantor"]
         current = cls.get_current_record(**kwargs)
         if current is None:
             raise PermissionDenied("No privilege to undo")
@@ -224,16 +232,17 @@ class ProvenanceBase(models.Model):
         previous = cls.__get_prev_record(**kwargs)
         if previous is not None:
             # create a rollback record that reinstates the previous privilege.
-            cls.update(privilege=previous.privilege,
-                       grantor=previous.grantor,
-                       undone=True,
-                       **kwargs)
+            cls.update(
+                privilege=previous.privilege,
+                grantor=previous.grantor,
+                undone=True,
+                **kwargs
+            )
         else:
             # put in a record revoking all privilege -- cannot be undone
-            cls.update(privilege=PrivilegeCodes.NONE,
-                       grantor=None,
-                       undone=True,
-                       **kwargs)
+            cls.update(
+                privilege=PrivilegeCodes.NONE, grantor=None, undone=True, **kwargs
+            )
 
     @classmethod
     def share(cls, **kwargs):
@@ -317,46 +326,55 @@ class UserGroupProvenance(ProvenanceBase):
     An "undone" field allows one-step undo but prohibits further undo.
 
     """
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE,
-                             null=False,
-                             editable=False,
-                             related_name='u2ugq',
-                             help_text='user to be granted privilege')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="u2ugq",
+        help_text="user to be granted privilege",
+    )
 
-    group = models.ForeignKey(Group, on_delete=models.CASCADE,
-                              null=False,
-                              editable=False,
-                              related_name='g2ugq',
-                              help_text='group to which privilege applies')
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="g2ugq",
+        help_text="group to which privilege applies",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=True,
-                                editable=False,
-                                related_name='x2ugq',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        editable=False,
+        related_name="x2ugq",
+        help_text="grantor of privilege",
+    )
 
-    undone = models.BooleanField(editable=False,
-                                 default=False,
-                                 null=False,
-                                 help_text='already undone by undo')
+    undone = models.BooleanField(
+        editable=False, default=False, null=False, help_text="already undone by undo"
+    )
 
     class Meta:
-        unique_together = ('user', 'group', 'start')
+        unique_together = ("user", "group", "start")
 
     @property
     def grantee(self):
-        """ make printing of privilege records work properly in superclass"""
+        """make printing of privilege records work properly in superclass"""
         return self.user
 
     @property
     def entity(self):
-        """ make printing of privilege records work properly in superclass"""
+        """make printing of privilege records work properly in superclass"""
         return self.group
 
     @classmethod
@@ -378,11 +396,13 @@ class UserGroupProvenance(ProvenanceBase):
         # users are those last granted a privilege over the entity by the grantor
         # This syntax is curious due to undesirable semantics of .exclude.
         # All conditions on the filter must be specified in the same filter statement.
-        selected = User.objects.filter(u2ugq__group=group)\
-                               .annotate(start=Max('u2ugq__start'))\
-                               .filter(u2ugq__start=F('start'),
-                                       u2ugq__grantor=grantor,
-                                       u2ugq__undone=False)
+        selected = (
+            User.objects.filter(u2ugq__group=group)
+            .annotate(start=Max("u2ugq__start"))
+            .filter(
+                u2ugq__start=F("start"), u2ugq__grantor=grantor, u2ugq__undone=False
+            )
+        )
         # launder out annotations used to select users
         return User.objects.filter(pk__in=selected).exclude(pk=grantor.pk)
 
@@ -398,13 +418,13 @@ class UserGroupProvenance(ProvenanceBase):
             assert isinstance(group, Group)
             assert isinstance(user, User)
             assert grantor is None or isinstance(grantor, User)
-            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            assert (
+                privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            )
 
-        super(UserGroupProvenance, cls).update(group=group,
-                                               user=user,
-                                               privilege=privilege,
-                                               grantor=grantor,
-                                               undone=undone)
+        super(UserGroupProvenance, cls).update(
+            group=group, user=user, privilege=privilege, grantor=grantor, undone=undone
+        )
 
 
 class UserResourceProvenance(ProvenanceBase):
@@ -423,42 +443,52 @@ class UserResourceProvenance(ProvenanceBase):
     An "undone" field allows one-step undo but prohibits further undo.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE,
-                             null=False,
-                             editable=False,
-                             related_name='u2urq',
-                             help_text='user to be granted privilege')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="u2urq",
+        help_text="user to be granted privilege",
+    )
 
-    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
-                                 null=False,
-                                 editable=False,
-                                 related_name='r2urq',
-                                 help_text='resource to which privilege applies')
+    resource = models.ForeignKey(
+        BaseResource,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="r2urq",
+        help_text="resource to which privilege applies",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=True,
-                                editable=False,
-                                related_name='x2urq',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        editable=False,
+        related_name="x2urq",
+        help_text="grantor of privilege",
+    )
 
-    exhibit = models.BooleanField(default=False,
-                                  null=False,
-                                  editable=False,
-                                  help_text='exhibit resource as product')
+    exhibit = models.BooleanField(
+        default=False,
+        null=False,
+        editable=False,
+        help_text="exhibit resource as product",
+    )
 
-    undone = models.BooleanField(editable=False,
-                                 default=False,
-                                 null=False,
-                                 help_text='already undone by undo')
+    undone = models.BooleanField(
+        editable=False, default=False, null=False, help_text="already undone by undo"
+    )
 
     class Meta:
-        unique_together = ('user', 'resource', 'start')
+        unique_together = ("user", "resource", "start")
 
     @property
     def grantee(self):
@@ -470,7 +500,7 @@ class UserResourceProvenance(ProvenanceBase):
 
     @classmethod
     def get_undo_users(cls, resource, grantor):
-        """ get the users for which a specific user can roll back privilege """
+        """get the users for which a specific user can roll back privilege"""
 
         if __debug__:
             assert isinstance(grantor, User)
@@ -479,11 +509,13 @@ class UserResourceProvenance(ProvenanceBase):
         # users are those last granted a privilege over the resource by the grantor
         # This syntax is curious due to undesirable semantics of .exclude.
         # All conditions on the filter must be specified in the same filter statement.
-        selected = User.objects.filter(u2urq__resource=resource)\
-                               .annotate(start=Max('u2urq__start'))\
-                               .filter(u2urq__start=F('start'),
-                                       u2urq__grantor=grantor,
-                                       u2urq__undone=False)
+        selected = (
+            User.objects.filter(u2urq__resource=resource)
+            .annotate(start=Max("u2urq__start"))
+            .filter(
+                u2urq__start=F("start"), u2urq__grantor=grantor, u2urq__undone=False
+            )
+        )
         # launder out annotations used to select users
         return User.objects.filter(pk__in=selected).exclude(pk=grantor.pk)
 
@@ -501,14 +533,18 @@ class UserResourceProvenance(ProvenanceBase):
             assert isinstance(resource, BaseResource)
             assert isinstance(user, User)
             assert grantor is None or isinstance(grantor, User)
-            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            assert (
+                privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            )
 
-        super(UserResourceProvenance, cls).update(resource=resource,
-                                                  user=user,
-                                                  privilege=privilege,
-                                                  grantor=grantor,
-                                                  undone=undone,
-                                                  exhibit=exhibit)
+        super(UserResourceProvenance, cls).update(
+            resource=resource,
+            user=user,
+            privilege=privilege,
+            grantor=grantor,
+            undone=undone,
+            exhibit=exhibit,
+        )
 
 
 class GroupResourceProvenance(ProvenanceBase):
@@ -532,42 +568,52 @@ class GroupResourceProvenance(ProvenanceBase):
 
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    group = models.ForeignKey(Group, on_delete=models.CASCADE,
-                              null=False,
-                              editable=False,
-                              related_name='g2grq',
-                              help_text='group to be granted privilege')
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="g2grq",
+        help_text="group to be granted privilege",
+    )
 
-    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
-                                 null=False,
-                                 editable=False,
-                                 related_name='r2grq',
-                                 help_text='resource to which privilege applies')
+    resource = models.ForeignKey(
+        BaseResource,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="r2grq",
+        help_text="resource to which privilege applies",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=True,
-                                editable=False,
-                                related_name='x2grq',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        editable=False,
+        related_name="x2grq",
+        help_text="grantor of privilege",
+    )
 
-    exhibit = models.BooleanField(default=False,
-                                  null=False,
-                                  editable=False,
-                                  help_text='exhibit resource as product')
+    exhibit = models.BooleanField(
+        default=False,
+        null=False,
+        editable=False,
+        help_text="exhibit resource as product",
+    )
 
-    undone = models.BooleanField(editable=False,
-                                 default=False,
-                                 null=False,
-                                 help_text='already undone by undo')
+    undone = models.BooleanField(
+        editable=False, default=False, null=False, help_text="already undone by undo"
+    )
 
     class Meta:
-        unique_together = ('group', 'resource', 'start')
+        unique_together = ("group", "resource", "start")
 
     @property
     def grantee(self):
@@ -579,7 +625,7 @@ class GroupResourceProvenance(ProvenanceBase):
 
     @classmethod
     def get_undo_groups(cls, resource, grantor):
-        """ get the groups for which a specific user can roll back privilege """
+        """get the groups for which a specific user can roll back privilege"""
 
         if __debug__:
             assert isinstance(grantor, User)
@@ -590,11 +636,13 @@ class GroupResourceProvenance(ProvenanceBase):
         # All conditions on the filter must be specified in the same filter statement.
         # We wish to avoid the state INITIAL, which cannot be undone.
         # This is accomplished by setting a NULL grantor for INITIAL.
-        selected = Group.objects.filter(g2grq__resource=resource)\
-            .annotate(start=Max('g2grq__start'))\
-            .filter(g2grq__start=F('start'),
-                    g2grq__grantor=grantor,
-                    g2grq__undone=False)
+        selected = (
+            Group.objects.filter(g2grq__resource=resource)
+            .annotate(start=Max("g2grq__start"))
+            .filter(
+                g2grq__start=F("start"), g2grq__grantor=grantor, g2grq__undone=False
+            )
+        )
 
         # launder out annotations used to select users
         return Group.objects.filter(pk__in=selected)
@@ -610,14 +658,18 @@ class GroupResourceProvenance(ProvenanceBase):
             assert isinstance(resource, BaseResource)
             assert isinstance(group, Group)
             assert grantor is None or isinstance(grantor, User)
-            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            assert (
+                privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            )
 
-        super(GroupResourceProvenance, cls).update(resource=resource,
-                                                   group=group,
-                                                   privilege=privilege,
-                                                   grantor=grantor,
-                                                   undone=undone,
-                                                   exhibit=exhibit)
+        super(GroupResourceProvenance, cls).update(
+            resource=resource,
+            group=group,
+            privilege=privilege,
+            grantor=grantor,
+            undone=undone,
+            exhibit=exhibit,
+        )
 
 
 class UserCommunityProvenance(ProvenanceBase):
@@ -638,46 +690,55 @@ class UserCommunityProvenance(ProvenanceBase):
     An "undone" field allows one-step undo but prohibits further undo.
 
     """
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    community = models.ForeignKey(Community, on_delete=models.CASCADE,
-                                  null=False,
-                                  editable=False,
-                                  related_name='c2ucq',
-                                  help_text='community to be granted privilege')
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="c2ucq",
+        help_text="community to be granted privilege",
+    )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE,
-                             null=False,
-                             editable=False,
-                             related_name='u2ucq',
-                             help_text='user to which privilege applies')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="u2ucq",
+        help_text="user to which privilege applies",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=True,
-                                editable=False,
-                                related_name='x2ucq',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        editable=False,
+        related_name="x2ucq",
+        help_text="grantor of privilege",
+    )
 
-    undone = models.BooleanField(editable=False,
-                                 default=False,
-                                 null=False,
-                                 help_text='already undone by undo')
+    undone = models.BooleanField(
+        editable=False, default=False, null=False, help_text="already undone by undo"
+    )
 
     class Meta:
-        unique_together = ('community', 'user', 'start')
+        unique_together = ("community", "user", "start")
 
     @property
     def grantee(self):
-        """ make printing of privilege records work properly in superclass"""
+        """make printing of privilege records work properly in superclass"""
         return self.community
 
     @property
     def entity(self):
-        """ make printing of privilege records work properly in superclass"""
+        """make printing of privilege records work properly in superclass"""
         return self.user
 
     @classmethod
@@ -699,11 +760,13 @@ class UserCommunityProvenance(ProvenanceBase):
         # users are those last granted a privilege over the entity by the grantor
         # This syntax is curious due to undesirable semantics of .exclude.
         # All conditions on the filter must be specified in the same filter statement.
-        selected = User.objects.filter(u2ucq__community=community)\
-                               .annotate(start=Max('u2ucq__start'))\
-                               .filter(u2ucq__start=F('start'),
-                                       u2ucq__grantor=grantor,
-                                       u2ucq__undone=False)
+        selected = (
+            User.objects.filter(u2ucq__community=community)
+            .annotate(start=Max("u2ucq__start"))
+            .filter(
+                u2ucq__start=F("start"), u2ucq__grantor=grantor, u2ucq__undone=False
+            )
+        )
         return selected
 
     @classmethod
@@ -722,13 +785,17 @@ class UserCommunityProvenance(ProvenanceBase):
             assert isinstance(user, User)
             assert isinstance(community, Community)
             assert grantor is None or isinstance(grantor, User)
-            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            assert (
+                privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            )
 
-        super(UserCommunityProvenance, cls).update(user=user,
-                                                   community=community,
-                                                   privilege=privilege,
-                                                   grantor=grantor,
-                                                   undone=undone)
+        super(UserCommunityProvenance, cls).update(
+            user=user,
+            community=community,
+            privilege=privilege,
+            grantor=grantor,
+            undone=undone,
+        )
 
 
 class GroupCommunityProvenance(ProvenanceBase):
@@ -749,46 +816,55 @@ class GroupCommunityProvenance(ProvenanceBase):
     An "undone" field allows one-step undo but prohibits further undo.
 
     """
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    community = models.ForeignKey(Community, on_delete=models.CASCADE,
-                                  null=False,
-                                  editable=False,
-                                  related_name='c2gcq',
-                                  help_text='group to be granted privilege')
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="c2gcq",
+        help_text="group to be granted privilege",
+    )
 
-    group = models.ForeignKey(Group, on_delete=models.CASCADE,
-                              null=False,
-                              editable=False,
-                              related_name='g2gcq',
-                              help_text='group to which privilege applies')
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="g2gcq",
+        help_text="group to which privilege applies",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=True,
-                                editable=False,
-                                related_name='x2gcq',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        editable=False,
+        related_name="x2gcq",
+        help_text="grantor of privilege",
+    )
 
-    undone = models.BooleanField(editable=False,
-                                 default=False,
-                                 null=False,
-                                 help_text='already undone by undo')
+    undone = models.BooleanField(
+        editable=False, default=False, null=False, help_text="already undone by undo"
+    )
 
     class Meta:
-        unique_together = ('community', 'group', 'start')
+        unique_together = ("community", "group", "start")
 
     @property
     def grantee(self):
-        """ make printing of privilege records work properly in superclass"""
+        """make printing of privilege records work properly in superclass"""
         return self.community
 
     @property
     def entity(self):
-        """ make printing of privilege records work properly in superclass"""
+        """make printing of privilege records work properly in superclass"""
         return self.group
 
     @classmethod
@@ -810,11 +886,13 @@ class GroupCommunityProvenance(ProvenanceBase):
         # users are those last granted a privilege over the entity by the grantor
         # This syntax is curious due to undesirable semantics of .exclude.
         # All conditions on the filter must be specified in the same filter statement.
-        selected = Group.objects.filter(g2gcq__community=community)\
-                               .annotate(start=Max('g2gcq__start'))\
-                               .filter(g2gcq__start=F('start'),
-                                       g2gcq__grantor=grantor,
-                                       g2gcq__undone=False)
+        selected = (
+            Group.objects.filter(g2gcq__community=community)
+            .annotate(start=Max("g2gcq__start"))
+            .filter(
+                g2gcq__start=F("start"), g2gcq__grantor=grantor, g2gcq__undone=False
+            )
+        )
         return selected
 
     @classmethod
@@ -833,13 +911,17 @@ class GroupCommunityProvenance(ProvenanceBase):
             assert isinstance(group, Group)
             assert isinstance(community, Community)
             assert grantor is None or isinstance(grantor, User)
-            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            assert (
+                privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            )
 
-        super(GroupCommunityProvenance, cls).update(group=group,
-                                                    community=community,
-                                                    privilege=privilege,
-                                                    grantor=grantor,
-                                                    undone=undone)
+        super(GroupCommunityProvenance, cls).update(
+            group=group,
+            community=community,
+            privilege=privilege,
+            grantor=grantor,
+            undone=undone,
+        )
 
 
 class CommunityResourceProvenance(ProvenanceBase):
@@ -860,51 +942,62 @@ class CommunityResourceProvenance(ProvenanceBase):
     An "undone" field allows one-step undo but prohibits further undo.
 
     """
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
+
+    privilege = models.IntegerField(
+        choices=PrivilegeCodes.CHOICES, editable=False, default=PrivilegeCodes.VIEW
+    )
 
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
-    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
-                                  null=False,
-                                  editable=False,
-                                  related_name='r2crq',
-                                  help_text='community to be granted privilege')
+    resource = models.ForeignKey(
+        BaseResource,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="r2crq",
+        help_text="community to be granted privilege",
+    )
 
-    community = models.ForeignKey(Community, on_delete=models.CASCADE,
-                                  null=False,
-                                  editable=False,
-                                  related_name='c2crq',
-                                  help_text='community to which privilege applies')
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        null=False,
+        editable=False,
+        related_name="c2crq",
+        help_text="community to which privilege applies",
+    )
 
-    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
-                                null=True,
-                                editable=False,
-                                related_name='x2crq',
-                                help_text='grantor of privilege')
+    grantor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        editable=False,
+        related_name="x2crq",
+        help_text="grantor of privilege",
+    )
 
-    exhibit = models.BooleanField(default=False,
-                                  null=False,
-                                  editable=False,
-                                  help_text='exhibit resource as product')
+    exhibit = models.BooleanField(
+        default=False,
+        null=False,
+        editable=False,
+        help_text="exhibit resource as product",
+    )
 
-    undone = models.BooleanField(editable=False,
-                                 default=False,
-                                 null=False,
-                                 help_text='already undone by undo')
+    undone = models.BooleanField(
+        editable=False, default=False, null=False, help_text="already undone by undo"
+    )
 
     class Meta:
-        unique_together = ('resource', 'community', 'start')
+        unique_together = ("resource", "community", "start")
 
     @property
     def grantee(self):
-        """ make printing of privilege records work properly in superclass"""
+        """make printing of privilege records work properly in superclass"""
         return self.resource
 
     @property
     def entity(self):
-        """ make printing of privilege records work properly in superclass"""
+        """make printing of privilege records work properly in superclass"""
         return self.community
 
     @classmethod
@@ -926,15 +1019,19 @@ class CommunityResourceProvenance(ProvenanceBase):
         # users are those last granted a privilege over the entity by the grantor
         # This syntax is curious due to undesirable semantics of .exclude.
         # All conditions on the filter must be specified in the same filter statement.
-        selected = BaseResource.objects.filter(r2crq__community=community)\
-                                       .annotate(start=Max('r2crq__start'))\
-                                       .filter(r2crq__start=F('start'),
-                                               r2crq__grantor=grantor,
-                                               r2crq__undone=False)
+        selected = (
+            BaseResource.objects.filter(r2crq__community=community)
+            .annotate(start=Max("r2crq__start"))
+            .filter(
+                r2crq__start=F("start"), r2crq__grantor=grantor, r2crq__undone=False
+            )
+        )
         return selected
 
     @classmethod
-    def update(cls, community, resource, privilege, grantor, undone=False, exhibit=False):
+    def update(
+        cls, community, resource, privilege, grantor, undone=False, exhibit=False
+    ):
         """
         Add a provenance record to the provenance chain.
 
@@ -949,11 +1046,15 @@ class CommunityResourceProvenance(ProvenanceBase):
             assert isinstance(community, Community)
             assert isinstance(resource, BaseResource)
             assert grantor is None or isinstance(grantor, User)
-            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            assert (
+                privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            )
 
-        super(CommunityResourceProvenance, cls).update(community=community,
-                                                       resource=resource,
-                                                       privilege=privilege,
-                                                       grantor=grantor,
-                                                       undone=undone,
-                                                       exhibit=exhibit)
+        super(CommunityResourceProvenance, cls).update(
+            community=community,
+            resource=resource,
+            privilege=privilege,
+            grantor=grantor,
+            undone=undone,
+            exhibit=exhibit,
+        )

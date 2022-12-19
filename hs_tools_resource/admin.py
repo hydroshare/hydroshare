@@ -3,9 +3,17 @@ from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from mezzanine.pages.admin import Page
 
-from .models import ToolMetaData, AppHomePageUrl, \
-    HelpPageUrl, TestingProtocolUrl, SourceCodeUrl, IssuesPageUrl, \
-    MailingListUrl, Roadmap, ShowOnOpenWithList
+from .models import (
+    ToolMetaData,
+    AppHomePageUrl,
+    HelpPageUrl,
+    TestingProtocolUrl,
+    SourceCodeUrl,
+    IssuesPageUrl,
+    MailingListUrl,
+    Roadmap,
+    ShowOnOpenWithList,
+)
 
 
 class InlineAppHomePageUrlAdmin(GenericTabularInline):

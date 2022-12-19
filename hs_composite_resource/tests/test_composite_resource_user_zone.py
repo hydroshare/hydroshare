@@ -6,7 +6,10 @@ from django.conf import settings
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import resource_file_add_process, resource_file_add_pre_process
+from hs_core.hydroshare.utils import (
+    resource_file_add_process,
+    resource_file_add_pre_process,
+)
 from hs_core.views.utils import create_folder
 
 from hs_core.testing import TestCaseCommonUtilities
@@ -19,20 +22,22 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         super(CompositeResourceTest, self).setUp()
         super(CompositeResourceTest, self).assert_federated_irods_available()
 
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.user = hydroshare.create_account(
-            'user1@nowhere.com',
-            username='user1',
-            first_name='Creator_FirstName',
-            last_name='Creator_LastName',
+            "user1@nowhere.com",
+            username="user1",
+            first_name="Creator_FirstName",
+            last_name="Creator_LastName",
             superuser=False,
-            groups=[self.group]
+            groups=[self.group],
         )
 
         super(CompositeResourceTest, self).create_irods_user_in_user_zone()
 
-        self.raster_file_name = 'small_logan.tif'
-        self.raster_file = 'hs_composite_resource/tests/data/{}'.format(self.raster_file_name)
+        self.raster_file_name = "small_logan.tif"
+        self.raster_file = "hs_composite_resource/tests/data/{}".format(
+            self.raster_file_name
+        )
 
         # transfer this valid tif file to user zone space for testing
         # only need to test that tif file stored in iRODS user zone space can be used to create a
@@ -43,7 +48,9 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         # as long as the tif file in iRODS user zone space can be read with metadata extracted
         # correctly, other functionalities are done with the same common functions regardless of
         # where the tif file comes from, either from local disk or from a federated user zone
-        irods_target_path = '/' + settings.HS_USER_IRODS_ZONE + '/home/' + self.user.username + '/'
+        irods_target_path = (
+            "/" + settings.HS_USER_IRODS_ZONE + "/home/" + self.user.username + "/"
+        )
         file_list_dict = {self.raster_file: irods_target_path + self.raster_file_name}
         super(CompositeResourceTest, self).save_files_to_user_zone(file_list_dict)
 
@@ -62,26 +69,36 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(BaseResource.objects.count(), 0)
 
         self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
+            resource_type="CompositeResource",
             owner=self.user,
-            title='Test Composite Resource With Files Added From Federated Zone',
-            auto_aggregate=False
+            title="Test Composite Resource With Files Added From Federated Zone",
+            auto_aggregate=False,
         )
 
         # there should not be any GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
         # add a file to the resource
-        fed_test_file_full_path = '/{zone}/home/{username}/{fname}'.format(
-            zone=settings.HS_USER_IRODS_ZONE, username=self.user.username,
-            fname=self.raster_file_name)
+        fed_test_file_full_path = "/{zone}/home/{username}/{fname}".format(
+            zone=settings.HS_USER_IRODS_ZONE,
+            username=self.user.username,
+            fname=self.raster_file_name,
+        )
         res_upload_files = []
-        resource_file_add_pre_process(resource=self.composite_resource, files=res_upload_files,
-                                      source_names=[fed_test_file_full_path], user=self.user,
-                                      folder='')
-        resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
-                                  source_names=[fed_test_file_full_path], user=self.user,
-                                  auto_aggregate=False)
+        resource_file_add_pre_process(
+            resource=self.composite_resource,
+            files=res_upload_files,
+            source_names=[fed_test_file_full_path],
+            user=self.user,
+            folder="",
+        )
+        resource_file_add_process(
+            resource=self.composite_resource,
+            files=res_upload_files,
+            source_names=[fed_test_file_full_path],
+            user=self.user,
+            auto_aggregate=False,
+        )
 
         # there should be one resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
@@ -89,7 +106,9 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # create the generic aggregation (logical file)
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         # check that the resource file is associated with GenericLogicalFile
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.has_logical_file, True)
@@ -104,12 +123,21 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         new_folder = "my-new-folder"
         new_folder_path = os.path.join("data", "contents", new_folder)
         create_folder(self.composite_resource.short_id, new_folder_path)
-        resource_file_add_pre_process(resource=self.composite_resource, files=res_upload_files,
-                                      source_names=[fed_test_file_full_path], user=self.user,
-                                      folder=new_folder)
-        resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
-                                  source_names=[fed_test_file_full_path], user=self.user,
-                                  folder=new_folder, auto_aggregate=False)
+        resource_file_add_pre_process(
+            resource=self.composite_resource,
+            files=res_upload_files,
+            source_names=[fed_test_file_full_path],
+            user=self.user,
+            folder=new_folder,
+        )
+        resource_file_add_process(
+            resource=self.composite_resource,
+            files=res_upload_files,
+            source_names=[fed_test_file_full_path],
+            user=self.user,
+            folder=new_folder,
+            auto_aggregate=False,
+        )
 
         self.assertEqual(self.composite_resource.files.all().count(), 2)
 

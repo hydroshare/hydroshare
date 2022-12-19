@@ -10,42 +10,59 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0031_auto_20210606_2052'),
+        ("hs_access_control", "0031_auto_20210606_2052"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='groupcommunityinvite',
-            name='community',
+            model_name="groupcommunityinvite",
+            name="community",
         ),
         migrations.RemoveField(
-            model_name='groupcommunityinvite',
-            name='community_owner',
+            model_name="groupcommunityinvite",
+            name="community_owner",
         ),
         migrations.RemoveField(
-            model_name='groupcommunityinvite',
-            name='group',
+            model_name="groupcommunityinvite",
+            name="group",
         ),
         migrations.RemoveField(
-            model_name='groupcommunityinvite',
-            name='group_owner',
+            model_name="groupcommunityinvite",
+            name="group_owner",
         ),
         migrations.AlterField(
-            model_name='groupcommunityrequest',
-            name='community_owner',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='invite_gcc', to=settings.AUTH_USER_MODEL),
+            model_name="groupcommunityrequest",
+            name="community_owner",
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="invite_gcc",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='groupcommunityrequest',
-            name='group_owner',
-            field=models.ForeignKey(default=None, editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='invite_gcg', to=settings.AUTH_USER_MODEL),
+            model_name="groupcommunityrequest",
+            name="group_owner",
+            field=models.ForeignKey(
+                default=None,
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="invite_gcg",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='groupcommunityrequest',
-            name='privilege',
-            field=models.IntegerField(choices=[(1, 'Owner'), (2, 'Change'), (3, 'View')], editable=False, null=True),
+            model_name="groupcommunityrequest",
+            name="privilege",
+            field=models.IntegerField(
+                choices=[(1, "Owner"), (2, "Change"), (3, "View")],
+                editable=False,
+                null=True,
+            ),
         ),
         migrations.DeleteModel(
-            name='GroupCommunityInvite',
+            name="GroupCommunityInvite",
         ),
     ]

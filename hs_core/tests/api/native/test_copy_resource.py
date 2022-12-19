@@ -17,75 +17,81 @@ from hs_file_types.models import GeoRasterLogicalFile
 class TestCopyResource(TestCase):
     def setUp(self):
         super(TestCopyResource, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
 
         # create a user who is the owner of the resource to be copied
         self.owner = hydroshare.create_account(
-            'owner@gmail.edu',
-            username='owner',
-            first_name='owner_firstname',
-            last_name='owner_lastname',
+            "owner@gmail.edu",
+            username="owner",
+            first_name="owner_firstname",
+            last_name="owner_lastname",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         # create a user who is NOT the owner of the resource to be copied
         self.nonowner = hydroshare.create_account(
-            'nonowner@gmail.com',
-            username='nonowner',
-            first_name='nonowner_firstname',
-            last_name='nonowner_lastname',
+            "nonowner@gmail.com",
+            username="nonowner",
+            first_name="nonowner_firstname",
+            last_name="nonowner_lastname",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         # create a generic resource
         self.res_generic = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.owner,
-            title='Test Generic Resource'
+            title="Test Generic Resource",
         )
 
-        test_file1 = open('test1.txt', 'w')
+        test_file1 = open("test1.txt", "w")
         test_file1.write("Test text file in test1.txt")
         test_file1.close()
-        test_file2 = open('test2.txt', 'w')
+        test_file2 = open("test2.txt", "w")
         test_file2.write("Test text file in test2.txt")
         test_file2.close()
-        self.test_file1 = open('test1.txt', 'rb')
-        self.test_file2 = open('test2.txt', 'rb')
+        self.test_file1 = open("test1.txt", "rb")
+        self.test_file2 = open("test2.txt", "rb")
 
-        hydroshare.add_resource_files(self.res_generic.short_id, self.test_file1, self.test_file2)
+        hydroshare.add_resource_files(
+            self.res_generic.short_id, self.test_file1, self.test_file2
+        )
 
         # create a generic empty resource with one license that prohibits derivation
-        statement = 'This resource is shared under the Creative Commons Attribution-NoDerivs CC ' \
-                    'BY-ND.'
-        url = 'http://creativecommons.org/licenses/by-nd/4.0/'
+        statement = (
+            "This resource is shared under the Creative Commons Attribution-NoDerivs CC "
+            "BY-ND."
+        )
+        url = "http://creativecommons.org/licenses/by-nd/4.0/"
         metadata = []
-        metadata.append({'rights': {'statement': statement, 'url': url}})
+        metadata.append({"rights": {"statement": statement, "url": url}})
         self.res_generic_lic_nd = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.owner,
-            title='Test Generic Resource',
-            metadata=metadata
+            title="Test Generic Resource",
+            metadata=metadata,
         )
 
         # create a generic empty resource with another license that prohibits derivation
-        statement = 'This resource is shared under the Creative Commons ' \
-                    'Attribution-NoCommercial-NoDerivs CC BY-NC-ND.'
-        url = 'http://creativecommons.org/licenses/by-nc-nd/4.0/'
+        statement = (
+            "This resource is shared under the Creative Commons "
+            "Attribution-NoCommercial-NoDerivs CC BY-NC-ND."
+        )
+        url = "http://creativecommons.org/licenses/by-nc-nd/4.0/"
         metadata = []
-        metadata.append({'rights': {'statement': statement, 'url': url}})
+        metadata.append({"rights": {"statement": statement, "url": url}})
         self.res_generic_lic_nc_nd = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.owner,
-            title='Test Generic Resource',
-            metadata=metadata
+            title="Test Generic Resource",
+            metadata=metadata,
         )
 
-        raster_file = 'hs_core/tests/data/cea.tif'
+        raster_file = "hs_core/tests/data/cea.tif"
         temp_dir = tempfile.mkdtemp()
-        self.temp_raster_file = os.path.join(temp_dir, 'cea.tif')
+        self.temp_raster_file = os.path.join(temp_dir, "cea.tif")
         shutil.copy(raster_file, self.temp_raster_file)
 
     def tearDown(self):
@@ -104,30 +110,31 @@ class TestCopyResource(TestCase):
     def test_copy_generic_resource(self):
         # ensure a nonowner who does not have permission to view a resource cannot copy it
         with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_generic.short_id,
-                                             self.nonowner,
-                                             action='copy')
+            hydroshare.create_empty_resource(
+                self.res_generic.short_id, self.nonowner, action="copy"
+            )
         # ensure resource cannot be copied if the license does not allow derivation by a non-owner
         with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_generic_lic_nd.short_id,
-                                             self.nonowner,
-                                             action='copy')
+            hydroshare.create_empty_resource(
+                self.res_generic_lic_nd.short_id, self.nonowner, action="copy"
+            )
 
         with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_generic_lic_nc_nd.short_id,
-                                             self.nonowner,
-                                             action='copy')
+            hydroshare.create_empty_resource(
+                self.res_generic_lic_nc_nd.short_id, self.nonowner, action="copy"
+            )
 
         # add key/value metadata to original resource
-        self.res_generic.extra_metadata = {'variable': 'temp', 'units': 'deg F'}
+        self.res_generic.extra_metadata = {"variable": "temp", "units": "deg F"}
         self.res_generic.save()
 
         # give nonowner view privilege so nonowner can create a new copy of this resource
-        self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner,
-                                                    PrivilegeCodes.VIEW)
-        new_res_generic = hydroshare.create_empty_resource(self.res_generic.short_id,
-                                                           self.nonowner,
-                                                           action='copy')
+        self.owner.uaccess.share_resource_with_user(
+            self.res_generic, self.nonowner, PrivilegeCodes.VIEW
+        )
+        new_res_generic = hydroshare.create_empty_resource(
+            self.res_generic.short_id, self.nonowner, action="copy"
+        )
         # test to make sure the new copied empty resource has no content files
         self.assertEqual(new_res_generic.files.all().count(), 0)
 
@@ -143,42 +150,64 @@ class TestCopyResource(TestCase):
         for f in new_res_generic.files.all():
             new_res_file_list.append(f.resource_file.name)
         for f in self.res_generic.files.all():
-            ori_res_no_id_file_path = f.resource_file.name[len(self.res_generic.short_id):]
+            ori_res_no_id_file_path = f.resource_file.name[
+                len(self.res_generic.short_id) :
+            ]
             new_res_file_path = new_res_generic.short_id + ori_res_no_id_file_path
-            self.assertIn(new_res_file_path, new_res_file_list,
-                          msg='resource content path is not created correctly '
-                              'for new copied resource')
+            self.assertIn(
+                new_res_file_path,
+                new_res_file_list,
+                msg="resource content path is not created correctly "
+                "for new copied resource",
+            )
 
         # test key/value metadata copied over
-        self.assertEqual(new_res_generic.extra_metadata, self.res_generic.extra_metadata)
+        self.assertEqual(
+            new_res_generic.extra_metadata, self.res_generic.extra_metadata
+        )
         # test science metadata elements are copied from the original resource to the new copied
         # resource
-        self.assertEqual(new_res_generic.metadata.title.value,
-                         self.res_generic.metadata.title.value,
-                         msg='metadata title is not copied over to the new copied resource')
-        self.assertEqual(new_res_generic.creator, self.nonowner,
-                         msg='creator is not copied over to the new copied resource')
+        self.assertEqual(
+            new_res_generic.metadata.title.value,
+            self.res_generic.metadata.title.value,
+            msg="metadata title is not copied over to the new copied resource",
+        )
+        self.assertEqual(
+            new_res_generic.creator,
+            self.nonowner,
+            msg="creator is not copied over to the new copied resource",
+        )
 
         # test to make sure a new unique identifier has been created for the new copied resource
         self.assertIsNotNone(
             new_res_generic.short_id,
-            msg='Unique identifier has not been created for new copied resource.')
+            msg="Unique identifier has not been created for new copied resource.",
+        )
         self.assertNotEqual(new_res_generic.short_id, self.res_generic.short_id)
 
         # test to make sure the new copied resource has the correct identifier
-        self.assertEqual(new_res_generic.metadata.identifiers.all().count(), 1,
-                         msg="Number of identifier elements not equal to 1.")
-        self.assertIn('hydroShareIdentifier',
-                      [id.name for id in new_res_generic.metadata.identifiers.all()],
-                      msg="hydroShareIdentifier name was not found for new copied resource.")
-        id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
-                                         new_res_generic.short_id)
-        self.assertIn(id_url, [id.url for id in new_res_generic.metadata.identifiers.all()],
-                      msg="Identifier url was not found for new copied resource.")
+        self.assertEqual(
+            new_res_generic.metadata.identifiers.all().count(),
+            1,
+            msg="Number of identifier elements not equal to 1.",
+        )
+        self.assertIn(
+            "hydroShareIdentifier",
+            [id.name for id in new_res_generic.metadata.identifiers.all()],
+            msg="hydroShareIdentifier name was not found for new copied resource.",
+        )
+        id_url = "{}/resource/{}".format(
+            hydroshare.utils.current_site_url(), new_res_generic.short_id
+        )
+        self.assertIn(
+            id_url,
+            [id.url for id in new_res_generic.metadata.identifiers.all()],
+            msg="Identifier url was not found for new copied resource.",
+        )
 
         # test to make sure the new copied resource is linked with the original resource via
         # 'source' type relation metadata element and contains the citation of the resource from which the copy was made
-        relation_meta = new_res_generic.metadata.relations.filter(type='source').first()
+        relation_meta = new_res_generic.metadata.relations.filter(type="source").first()
         derived_from = _get_relation_meta_derived_from(self.res_generic)
         self.assertEqual(relation_meta.value, derived_from)
 
@@ -191,14 +220,14 @@ class TestCopyResource(TestCase):
         logical file type object contains. Here we are not testing resource level metadata copy
         as that has been tested in separate unit tests"""
 
-        self.raster_obj = open(self.temp_raster_file, 'rb')
-        files = [UploadedFile(file=self.raster_obj, name='cea.tif')]
+        self.raster_obj = open(self.temp_raster_file, "rb")
+        files = [UploadedFile(file=self.raster_obj, name="cea.tif")]
         self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
+            resource_type="CompositeResource",
             owner=self.owner,
-            title='Test Composite Resource',
+            title="Test Composite Resource",
             files=files,
-            auto_aggregate=False
+            auto_aggregate=False,
         )
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -208,33 +237,41 @@ class TestCopyResource(TestCase):
         self.assertEqual(res_file.has_logical_file, False)
 
         # set the tif file to GeoRasterFile type
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.owner, res_file.id)
+        GeoRasterLogicalFile.set_file_type(
+            self.composite_resource, self.owner, res_file.id
+        )
 
         # ensure a nonowner who does not have permission to view a resource cannot copy it
         with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.composite_resource.short_id,
-                                             self.nonowner,
-                                             action='copy')
+            hydroshare.create_empty_resource(
+                self.composite_resource.short_id, self.nonowner, action="copy"
+            )
         # give nonowner view privilege so nonowner can create a new copy of this resource
-        self.owner.uaccess.share_resource_with_user(self.composite_resource, self.nonowner,
-                                                    PrivilegeCodes.VIEW)
+        self.owner.uaccess.share_resource_with_user(
+            self.composite_resource, self.nonowner, PrivilegeCodes.VIEW
+        )
 
         orig_res_file = self.composite_resource.files.first()
         orig_geo_raster_lfo = orig_res_file.logical_file
 
         # add some key value metadata
-        orig_geo_raster_lfo.metadata.extra_metadata = {'key-1': 'value-1', 'key-2': 'value-2'}
+        orig_geo_raster_lfo.metadata.extra_metadata = {
+            "key-1": "value-1",
+            "key-2": "value-2",
+        }
 
         # create a copy of the composite resource
-        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
-                                                                  self.nonowner,
-                                                                  action='copy')
-        new_composite_resource = hydroshare.copy_resource(self.composite_resource,
-                                                          new_composite_resource)
+        new_composite_resource = hydroshare.create_empty_resource(
+            self.composite_resource.short_id, self.nonowner, action="copy"
+        )
+        new_composite_resource = hydroshare.copy_resource(
+            self.composite_resource, new_composite_resource
+        )
 
         self.assertEqual(new_composite_resource.files.count(), 2)
-        self.assertEqual(self.composite_resource.files.count(),
-                         new_composite_resource.files.count())
+        self.assertEqual(
+            self.composite_resource.files.count(), new_composite_resource.files.count()
+        )
         # check that there is 2 GeoRasterLogicalFile objects
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 2)
 
@@ -248,64 +285,94 @@ class TestCopyResource(TestCase):
         for res_file in self.composite_resource.files.all():
             file_path, base_file_name = res_file.full_path, res_file.file_name
             expected_file_path = "{}/data/contents/{}"
-            expected_file_path = expected_file_path.format(self.composite_resource.root_path,
-                                                           base_file_name)
+            expected_file_path = expected_file_path.format(
+                self.composite_resource.root_path, base_file_name
+            )
             self.assertEqual(file_path, expected_file_path)
 
         for res_file in new_composite_resource.files.all():
             file_path, base_file_name = res_file.full_path, res_file.file_name
             expected_file_path = "{}/data/contents/{}"
-            expected_file_path = expected_file_path.format(new_composite_resource.root_path,
-                                                           base_file_name)
+            expected_file_path = expected_file_path.format(
+                new_composite_resource.root_path, base_file_name
+            )
             self.assertEqual(file_path, expected_file_path)
 
         # both logical file objects should have 2 resource files
-        self.assertEqual(orig_geo_raster_lfo.files.count(), copy_geo_raster_lfo.files.count())
+        self.assertEqual(
+            orig_geo_raster_lfo.files.count(), copy_geo_raster_lfo.files.count()
+        )
         self.assertEqual(orig_geo_raster_lfo.files.count(), 2)
 
         # both logical file objects should have same dataset_name
-        self.assertEqual(orig_geo_raster_lfo.dataset_name, copy_geo_raster_lfo.dataset_name)
+        self.assertEqual(
+            orig_geo_raster_lfo.dataset_name, copy_geo_raster_lfo.dataset_name
+        )
         # both should have same key/value metadata
-        self.assertEqual(orig_geo_raster_lfo.metadata.extra_metadata,
-                         copy_geo_raster_lfo.metadata.extra_metadata)
+        self.assertEqual(
+            orig_geo_raster_lfo.metadata.extra_metadata,
+            copy_geo_raster_lfo.metadata.extra_metadata,
+        )
 
         # both logical file objects should have same coverage metadata
-        self.assertEqual(orig_geo_raster_lfo.metadata.coverages.count(),
-                         copy_geo_raster_lfo.metadata.coverages.count())
+        self.assertEqual(
+            orig_geo_raster_lfo.metadata.coverages.count(),
+            copy_geo_raster_lfo.metadata.coverages.count(),
+        )
 
         self.assertEqual(orig_geo_raster_lfo.metadata.coverages.count(), 1)
         org_spatial_coverage = orig_geo_raster_lfo.metadata.spatial_coverage
         copy_spatial_coverage = copy_geo_raster_lfo.metadata.spatial_coverage
         self.assertEqual(org_spatial_coverage.type, copy_spatial_coverage.type)
-        self.assertEqual(org_spatial_coverage.type, 'box')
-        self.assertEqual(org_spatial_coverage.value['projection'],
-                         copy_spatial_coverage.value['projection'])
-        self.assertEqual(org_spatial_coverage.value['units'],
-                         copy_spatial_coverage.value['units'])
-        self.assertEqual(org_spatial_coverage.value['northlimit'],
-                         copy_spatial_coverage.value['northlimit'])
-        self.assertEqual(org_spatial_coverage.value['eastlimit'],
-                         copy_spatial_coverage.value['eastlimit'])
-        self.assertEqual(org_spatial_coverage.value['southlimit'],
-                         copy_spatial_coverage.value['southlimit'])
-        self.assertEqual(org_spatial_coverage.value['westlimit'],
-                         copy_spatial_coverage.value['westlimit'])
+        self.assertEqual(org_spatial_coverage.type, "box")
+        self.assertEqual(
+            org_spatial_coverage.value["projection"],
+            copy_spatial_coverage.value["projection"],
+        )
+        self.assertEqual(
+            org_spatial_coverage.value["units"], copy_spatial_coverage.value["units"]
+        )
+        self.assertEqual(
+            org_spatial_coverage.value["northlimit"],
+            copy_spatial_coverage.value["northlimit"],
+        )
+        self.assertEqual(
+            org_spatial_coverage.value["eastlimit"],
+            copy_spatial_coverage.value["eastlimit"],
+        )
+        self.assertEqual(
+            org_spatial_coverage.value["southlimit"],
+            copy_spatial_coverage.value["southlimit"],
+        )
+        self.assertEqual(
+            org_spatial_coverage.value["westlimit"],
+            copy_spatial_coverage.value["westlimit"],
+        )
 
         # both logical file objects should have same original coverage
         org_orig_coverage = orig_geo_raster_lfo.metadata.originalCoverage
         copy_orig_coverage = copy_geo_raster_lfo.metadata.originalCoverage
-        self.assertEqual(org_orig_coverage.value['projection'],
-                         copy_orig_coverage.value['projection'])
-        self.assertEqual(org_orig_coverage.value['units'],
-                         copy_orig_coverage.value['units'])
-        self.assertEqual(org_orig_coverage.value['northlimit'],
-                         copy_orig_coverage.value['northlimit'])
-        self.assertEqual(org_orig_coverage.value['eastlimit'],
-                         copy_orig_coverage.value['eastlimit'])
-        self.assertEqual(org_orig_coverage.value['southlimit'],
-                         copy_orig_coverage.value['southlimit'])
-        self.assertEqual(org_orig_coverage.value['westlimit'],
-                         copy_orig_coverage.value['westlimit'])
+        self.assertEqual(
+            org_orig_coverage.value["projection"],
+            copy_orig_coverage.value["projection"],
+        )
+        self.assertEqual(
+            org_orig_coverage.value["units"], copy_orig_coverage.value["units"]
+        )
+        self.assertEqual(
+            org_orig_coverage.value["northlimit"],
+            copy_orig_coverage.value["northlimit"],
+        )
+        self.assertEqual(
+            org_orig_coverage.value["eastlimit"], copy_orig_coverage.value["eastlimit"]
+        )
+        self.assertEqual(
+            org_orig_coverage.value["southlimit"],
+            copy_orig_coverage.value["southlimit"],
+        )
+        self.assertEqual(
+            org_orig_coverage.value["westlimit"], copy_orig_coverage.value["westlimit"]
+        )
 
         # both logical file objects should have same cell information metadata
         orig_cell_info = orig_geo_raster_lfo.metadata.cellInformation
@@ -318,8 +385,10 @@ class TestCopyResource(TestCase):
 
         # both logical file objects should have same band information metadata
         self.assertEqual(orig_geo_raster_lfo.metadata.bandInformations.count(), 1)
-        self.assertEqual(orig_geo_raster_lfo.metadata.bandInformations.count(),
-                         copy_geo_raster_lfo.metadata.bandInformations.count())
+        self.assertEqual(
+            orig_geo_raster_lfo.metadata.bandInformations.count(),
+            copy_geo_raster_lfo.metadata.bandInformations.count(),
+        )
         orig_band_info = orig_geo_raster_lfo.metadata.bandInformations.first()
         copy_band_info = copy_geo_raster_lfo.metadata.bandInformations.first()
         self.assertEqual(orig_band_info.noDataValue, copy_band_info.noDataValue)

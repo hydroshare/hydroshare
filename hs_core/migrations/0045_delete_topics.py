@@ -8,11 +8,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0044_auto_20190701_2207'),
+        ("hs_core", "0044_auto_20190701_2207"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='Topics',
+            name="Topics",
         ),
     ]

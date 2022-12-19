@@ -25,28 +25,30 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's, or none to check all resources
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
         # Named (optional) arguments
         parser.add_argument(
-            '--log',
-            action='store_true',  # True for presence, False for absence
-            dest='log',  # value is options['log']
-            help='log errors to system log',
+            "--log",
+            action="store_true",  # True for presence, False for absence
+            dest="log",  # value is options['log']
+            help="log errors to system log",
         )
 
     def handle(self, *args, **options):
 
         logger = logging.getLogger(__name__)
-        log_errors = options['log']
-        echo_errors = not options['log']
+        log_errors = options["log"]
+        echo_errors = not options["log"]
 
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        if len(options["resource_ids"]) > 0:  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 try:
                     r = BaseResource.objects.get(short_id=rid)
                 except BaseResource.DoesNotExist:
-                    msg = "Resource with id {} not found in Django Resources".format(rid)
+                    msg = "Resource with id {} not found in Django Resources".format(
+                        rid
+                    )
                     if log_errors:
                         logger.info(msg)
                     if echo_errors:
@@ -55,41 +57,55 @@ class Command(BaseCommand):
 
                 # Pabitra: Not sure why are we skipping other resource types
                 # Alva: cannot preserve file integrity constraints for other file types.
-                if r.resource_type != 'CompositeResource' and \
-                   r.resource_type != 'GenericResource':
-                    print(("resource {} has type {}: skipping".format(r.short_id,
-                                                                      r.resource_type)))
+                if (
+                    r.resource_type != "CompositeResource"
+                    and r.resource_type != "GenericResource"
+                ):
+                    print(
+                        (
+                            "resource {} has type {}: skipping".format(
+                                r.short_id, r.resource_type
+                            )
+                        )
+                    )
                 else:
-                    print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
-                          .format(rid, str(r.files.all().count())))
+                    print(
+                        "LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})".format(
+                            rid, str(r.files.all().count())
+                        )
+                    )
                     # get the typed resource
                     try:
                         resource = r.get_content_model()
                     except Exception as e:
-                        msg = "resource {} has no proxy resource: {}"\
-                              .format(r.short_id, e.value)
+                        msg = "resource {} has no proxy resource: {}".format(
+                            r.short_id, e.value
+                        )
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
                             print(msg)
-                        msg = "... affected resource {} has type {}, title '{}'"\
-                              .format(r.short_id, r.resource_type, r.title)
+                        msg = "... affected resource {} has type {}, title '{}'".format(
+                            r.short_id, r.resource_type, r.title
+                        )
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
                             print(msg)
                         continue
 
-                    _, count = ingest_irods_files(resource,
-                                                  logger,
-                                                  stop_on_error=False,
-                                                  echo_errors=not options['log'],
-                                                  log_errors=options['log'],
-                                                  return_errors=False)
+                    _, count = ingest_irods_files(
+                        resource,
+                        logger,
+                        stop_on_error=False,
+                        echo_errors=not options["log"],
+                        log_errors=options["log"],
+                        return_errors=False,
+                    )
                     if count:
-                        msg = "... affected resource {} has type {}, title '{}'"\
-                              .format(resource.short_id, resource.resource_type,
-                                      resource.title)
+                        msg = "... affected resource {} has type {}, title '{}'".format(
+                            resource.short_id, resource.resource_type, resource.title
+                        )
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
@@ -100,41 +116,55 @@ class Command(BaseCommand):
             for r in BaseResource.objects.all():
                 # Pabitra: Not sure why are we skipping other resource types
                 # Alva: cannot preserve file integrity constraints for other file types.
-                if r.resource_type == 'CompositeResource' or \
-                   r.resource_type == 'GenericResource':
-                    print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
-                          .format(r.short_id, str(r.files.all().count())))
+                if (
+                    r.resource_type == "CompositeResource"
+                    or r.resource_type == "GenericResource"
+                ):
+                    print(
+                        "LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})".format(
+                            r.short_id, str(r.files.all().count())
+                        )
+                    )
                     try:
                         # get the typed resource
                         resource = r.get_content_model()
                     except Exception as e:
-                        msg = "resource {} has no proxy resource: {}"\
-                              .format(r.short_id, e.value)
+                        msg = "resource {} has no proxy resource: {}".format(
+                            r.short_id, e.value
+                        )
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
                             print(msg)
-                        msg = "... affected resource {} has type {}, title '{}'"\
-                              .format(r.short_id, r.resource_type, r.title)
+                        msg = "... affected resource {} has type {}, title '{}'".format(
+                            r.short_id, r.resource_type, r.title
+                        )
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
                             print(msg)
                         continue  # next resource
 
-                    _, count = ingest_irods_files(resource,
-                                                  logger,
-                                                  stop_on_error=False,
-                                                  echo_errors=not options['log'],
-                                                  log_errors=options['log'],
-                                                  return_errors=False)
+                    _, count = ingest_irods_files(
+                        resource,
+                        logger,
+                        stop_on_error=False,
+                        echo_errors=not options["log"],
+                        log_errors=options["log"],
+                        return_errors=False,
+                    )
                     if count:
-                        msg = "... affected resource {} has type {}, title '{}'"\
-                              .format(resource.short_id, resource.resource_type, resource.title)
+                        msg = "... affected resource {} has type {}, title '{}'".format(
+                            resource.short_id, resource.resource_type, resource.title
+                        )
                         if log_errors:
                             logger.info(msg)
                         if echo_errors:
                             print(msg)
 
                 else:
-                    print("resource {} has type {}: skipping".format(r.short_id, r.resource_type))
+                    print(
+                        "resource {} has type {}: skipping".format(
+                            r.short_id, r.resource_type
+                        )
+                    )

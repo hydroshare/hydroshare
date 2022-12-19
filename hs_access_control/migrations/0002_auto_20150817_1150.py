@@ -22,7 +22,7 @@ def undo_migrate_users(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0001_initial'),
+        ("hs_access_control", "0001_initial"),
     ]
 
     operations = [

@@ -10,7 +10,7 @@ from hs_core.management.utils import check_irods_files
 
 
 def debug_resource(short_id):
-    """ Debug view for resource depicts output of various integrity checking scripts """
+    """Debug view for resource depicts output of various integrity checking scripts"""
 
     try:
         res = BaseResource.objects.get(short_id=short_id)
@@ -20,15 +20,27 @@ def debug_resource(short_id):
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
 
-    irods_issues, irods_errors = check_irods_files(resource, log_errors=False, return_errors=True)
+    irods_issues, irods_errors = check_irods_files(
+        resource, log_errors=False, return_errors=True
+    )
 
     print("resource: {}".format(short_id))
     print("resource type: {}".format(resource.resource_type))
-    print("resource creator: {} {}".format(resource.creator.first_name, resource.creator.last_name))
-    print("resource irods bag modified: {}".format(str(resource.getAVU('bag_modified'))))
-    print("resource irods isPublic: {}".format(str(resource.getAVU('isPublic'))))
-    print("resource irods resourceType: {}".format(str(resource.getAVU('resourceType'))))
-    print("resource irods quotaUserName: {}".format(str(resource.getAVU('quotaUserName'))))
+    print(
+        "resource creator: {} {}".format(
+            resource.creator.first_name, resource.creator.last_name
+        )
+    )
+    print(
+        "resource irods bag modified: {}".format(str(resource.getAVU("bag_modified")))
+    )
+    print("resource irods isPublic: {}".format(str(resource.getAVU("isPublic"))))
+    print(
+        "resource irods resourceType: {}".format(str(resource.getAVU("resourceType")))
+    )
+    print(
+        "resource irods quotaUserName: {}".format(str(resource.getAVU("quotaUserName")))
+    )
     if irods_errors:
         print("iRODS errors:")
         for e in irods_issues:
@@ -36,13 +48,19 @@ def debug_resource(short_id):
     else:
         print("No iRODS errors")
 
-    if resource.resource_type == 'CompositeResource':
+    if resource.resource_type == "CompositeResource":
         print("Resource file logical files:")
         for res_file in resource.files.all():
             if res_file.has_logical_file:
-                print(("    {} logical file {} is [{}]".format(res_file.short_path,
-                                                               str(type(res_file.logical_file)),
-                                                               str(res_file.logical_file.id))))
+                print(
+                    (
+                        "    {} logical file {} is [{}]".format(
+                            res_file.short_path,
+                            str(type(res_file.logical_file)),
+                            str(res_file.logical_file.id),
+                        )
+                    )
+                )
 
     # context = {
     #     'shortkey': shortkey,
@@ -67,19 +85,19 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's: none does nothing.
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
         # Named (optional) arguments
         parser.add_argument(
-            '--log',
-            action='store_true',  # True for presence, False for absence
-            dest='log',           # value is options['log']
-            help='log errors to system log',
+            "--log",
+            action="store_true",  # True for presence, False for absence
+            dest="log",  # value is options['log']
+            help="log errors to system log",
         )
 
     def handle(self, *args, **options):
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        if len(options["resource_ids"]) > 0:  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 debug_resource(rid)
         else:
             print("No resources to check.")

@@ -8,13 +8,13 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor
 
 class CollectionResource(BaseResource):
 
-    objects = ResourceManager('CollectionResource')
+    objects = ResourceManager("CollectionResource")
 
-    discovery_content_type = 'Collection'  # used during discovery
+    discovery_content_type = "Collection"  # used during discovery
 
     class Meta:
         proxy = True
-        verbose_name = 'Collection Resource'
+        verbose_name = "Collection Resource"
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -33,7 +33,9 @@ class CollectionResource(BaseResource):
 
     @property
     def can_be_public_or_discoverable(self):
-        return self.metadata.has_all_required_elements() and (self.resources.count() > 0)
+        return self.metadata.has_all_required_elements() and (
+            self.resources.count() > 0
+        )
 
     @property
     def deleted_resources(self):
@@ -54,18 +56,20 @@ class CollectionResource(BaseResource):
         if self.raccess.published:
             return False
 
-        return self.can_be_public_or_discoverable and \
-               self.are_all_contained_resources_published
+        return (
+            self.can_be_public_or_discoverable
+            and self.are_all_contained_resources_published
+        )
 
     @property
     def update_text_file(self):
-        return self.extra_data.get('update_text_file', 'True')
+        return self.extra_data.get("update_text_file", "True")
 
     def set_update_text_file(self, flag):
         """Sets the flag to indicate if the text file needs to be updated or not.
         :param  flag:   value must be either 'True' or 'False'
         """
-        self.extra_data = {'update_text_file': flag}
+        self.extra_data = {"update_text_file": flag}
         self.save()
 
 
@@ -79,4 +83,4 @@ class CollectionDeletedResource(models.Model):
     collection = models.ForeignKey(BaseResource, on_delete=models.CASCADE)
     resource_id = models.CharField(max_length=32)
     resource_type = models.CharField(max_length=50)
-    resource_owners = models.ManyToManyField(User, related_name='collectionDeleted')
+    resource_owners = models.ManyToManyField(User, related_name="collectionDeleted")

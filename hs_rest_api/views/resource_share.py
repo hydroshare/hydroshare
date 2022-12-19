@@ -1,4 +1,3 @@
-
 import logging
 from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
@@ -14,11 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 class ShareResourceUser(APIView):
-
     @swagger_auto_schema(operation_description="Set user privileges of a resource")
     def post(self, request, pk, privilege, user_id):
-        res, _, user = authorize(request, pk,
-                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        res, _, user = authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
+        )
         to_user = hs_core_utils.user_from_id(user_id)
         privilege_code = PrivilegeCodes.from_string(privilege)
         if not privilege_code:
@@ -32,11 +31,11 @@ class ShareResourceUser(APIView):
 
 
 class ShareResourceGroup(APIView):
-
     @swagger_auto_schema(operation_description="Set group privileges of a resource")
     def post(self, request, pk, privilege, group_id):
-        res, _, user = authorize(request, pk,
-                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        res, _, user = authorize(
+            request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
+        )
         to_group = hs_core_utils.group_from_id(group_id)
         privilege_code = PrivilegeCodes.from_string(privilege)
         if not privilege_code:

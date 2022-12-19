@@ -9,5 +9,5 @@ class AppsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(AppsView, self).get_context_data(**kwargs)
 
-        context['webapp_resources'] = ToolResource.get_approved_apps()
+        context["webapp_resources"] = ToolResource.get_approved_apps()
         return context

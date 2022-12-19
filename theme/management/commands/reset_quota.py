@@ -9,8 +9,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         istorage = IrodsStorage()
         # reset quota for data zone
-        root_path = '/{}/home/{}'.format(settings.IRODS_ZONE, settings.IRODS_USERNAME)
-        istorage.setAVU(root_path, 'resetQuotaDir', 1)
+        root_path = "/{}/home/{}".format(settings.IRODS_ZONE, settings.IRODS_USERNAME)
+        istorage.setAVU(root_path, "resetQuotaDir", 1)
         # reset quota for user zone
-        user_root_path = '/{}/home/{}'.format(settings.HS_USER_IRODS_ZONE, settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
-        istorage.setAVU(user_root_path, 'resetQuotaDir', 1)
+        user_root_path = "/{}/home/{}".format(
+            settings.HS_USER_IRODS_ZONE, settings.HS_IRODS_PROXY_USER_IN_USER_ZONE
+        )
+        istorage.setAVU(user_root_path, "resetQuotaDir", 1)

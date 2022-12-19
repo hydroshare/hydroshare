@@ -1,4 +1,3 @@
-
 import unittest
 
 from django.contrib.auth.models import Group
@@ -11,22 +10,20 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestPublishResource, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         # create a user
         self.user = hydroshare.create_account(
-            'creator@usu.edu',
-            username='creator',
-            first_name='Creator_FirstName',
-            last_name='Creator_LastName',
+            "creator@usu.edu",
+            username="creator",
+            first_name="Creator_FirstName",
+            last_name="Creator_LastName",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         # create a resource
         self.res = hydroshare.create_resource(
-            'GenericResource',
-            self.user,
-            'Test Resource'
+            "GenericResource", self.user, "Test Resource"
         )
 
     # TODO: This test needs to be enabled once the publish_resource() function is updated to register resource DOI
@@ -34,23 +31,14 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
     @unittest.skip
     def test_publish_resource(self):
         # check status prior to publishing the resource
-        self.assertFalse(
-            self.res.raccess.published,
-            msg='The resource is published'
-        )
+        self.assertFalse(self.res.raccess.published, msg="The resource is published")
 
-        self.assertFalse(
-            self.res.raccess.immutable,
-            msg='The resource is frozen'
-        )
+        self.assertFalse(self.res.raccess.immutable, msg="The resource is frozen")
 
-        self.assertFalse(
-            self.res.doi,
-            msg='doi is assigned'
-        )
+        self.assertFalse(self.res.doi, msg="doi is assigned")
 
         # there should not be published date type metadata element
-        self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
+        self.assertFalse(self.res.metadata.dates.filter(type="published").exists())
 
         # publish resource - this is the api we are testing
         hydroshare.publish_resource(self.res.short_id)
@@ -58,21 +46,18 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
 
         # test publish state
         self.assertTrue(
-            self.pub_res.raccess.published,
-            msg='The resource is not published'
+            self.pub_res.raccess.published, msg="The resource is not published"
         )
 
         # test frozen state
         self.assertTrue(
-            self.pub_res.raccess.immutable,
-            msg='The resource is not frozen'
+            self.pub_res.raccess.immutable, msg="The resource is not frozen"
         )
 
         # test if doi is assigned
         self.assertTrue(
-            self.pub_res.doi,
-            msg='No doi is assigned with the published resource.'
+            self.pub_res.doi, msg="No doi is assigned with the published resource."
         )
 
         # there should now published date type metadata element
-        self.assertTrue(self.pub_res.metadata.dates.filter(type='published').exists())
+        self.assertTrue(self.pub_res.metadata.dates.filter(type="published").exists())

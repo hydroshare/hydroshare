@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0026_auto_20200603_2110'),
+        ("hs_access_control", "0026_auto_20200603_2110"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='groupmembershiprequest',
-            name='redeemed',
+            model_name="groupmembershiprequest",
+            name="redeemed",
             field=models.BooleanField(default=False),
         ),
     ]

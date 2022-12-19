@@ -6,13 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0067_merge_20221104_1342'),
+        ("hs_core", "0067_merge_20221104_1342"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='date',
-            name='type',
-            field=models.CharField(choices=[('created', 'Created'), ('modified', 'Modified'), ('valid', 'Valid'), ('available', 'Available'), ('review_started', 'Review Started'), ('published', 'Published')], max_length=20),
+            model_name="date",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("created", "Created"),
+                    ("modified", "Modified"),
+                    ("valid", "Valid"),
+                    ("available", "Available"),
+                    ("review_started", "Review Started"),
+                    ("published", "Published"),
+                ],
+                max_length=20,
+            ),
         ),
     ]

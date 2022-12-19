@@ -9,13 +9,15 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('hs_collection_resource', '0001_initial'),
+        ("hs_collection_resource", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='collectiondeletedresource',
-            name='resource_owners',
-            field=models.ManyToManyField(related_name='collectionDeleted', to=settings.AUTH_USER_MODEL),
+            model_name="collectiondeletedresource",
+            name="resource_owners",
+            field=models.ManyToManyField(
+                related_name="collectionDeleted", to=settings.AUTH_USER_MODEL
+            ),
         ),
     ]

@@ -15,22 +15,22 @@ from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 class TestUpdateKeyValueMetadata(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestUpdateKeyValueMetadata, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        self.username = 'john'
-        self.password = 'jhmypassword'
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
+        self.username = "john"
+        self.password = "jhmypassword"
         self.user = hydroshare.create_account(
-            'john@gmail.com',
+            "john@gmail.com",
             username=self.username,
-            first_name='John',
-            last_name='Clarson',
+            first_name="John",
+            last_name="Clarson",
             superuser=False,
             password=self.password,
-            groups=[]
+            groups=[],
         )
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.user,
-            title='Generic Resource Key/Value Metadata Testing'
+            title="Generic Resource Key/Value Metadata Testing",
         )
 
     def tearDown(self):
@@ -45,35 +45,39 @@ class TestUpdateKeyValueMetadata(MockIRODSTestCaseMixin, ViewTestCase):
         self.assertEqual(self.gen_res.extra_metadata, {})
 
         # create key/value metadata
-        url_params = {'shortkey': self.gen_res.short_id}
-        post_data = {'key1': 'key-1', 'value1': 'value-1'}
-        url = reverse('update_key_value_metadata', kwargs=url_params)
+        url_params = {"shortkey": self.gen_res.short_id}
+        post_data = {"key1": "key-1", "value1": "value-1"}
+        url = reverse("update_key_value_metadata", kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
         # make it a ajax request
-        request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
+        request.META["HTTP_X_REQUESTED_WITH"] = "XMLHttpRequest"
         self.set_request_message_attributes(request)
         response = update_key_value_metadata(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_dict = json.loads(response.content.decode())
-        self.assertEqual(response_dict['status'], 'success')
+        self.assertEqual(response_dict["status"], "success")
         self.gen_res.refresh_from_db()
         self.assertEqual(self.gen_res.extra_metadata, post_data)
 
         # update key/value metadata
-        url_params = {'shortkey': self.gen_res.short_id}
-        post_data = {'key1A': 'key-1A', 'value1': 'value-1',
-                     'key1B': 'key-1B', 'value1B': 'value-1B'}
-        url = reverse('update_key_value_metadata', kwargs=url_params)
+        url_params = {"shortkey": self.gen_res.short_id}
+        post_data = {
+            "key1A": "key-1A",
+            "value1": "value-1",
+            "key1B": "key-1B",
+            "value1B": "value-1B",
+        }
+        url = reverse("update_key_value_metadata", kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
         # make it a ajax request
-        request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
+        request.META["HTTP_X_REQUESTED_WITH"] = "XMLHttpRequest"
         self.set_request_message_attributes(request)
         response = update_key_value_metadata(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_dict = json.loads(response.content.decode())
-        self.assertEqual(response_dict['status'], 'success')
+        self.assertEqual(response_dict["status"], "success")
         self.gen_res.refresh_from_db()
         self.assertEqual(self.gen_res.extra_metadata, post_data)
 

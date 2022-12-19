@@ -14,30 +14,31 @@ from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWI
 from .utils import CompositeResourceTestMixin
 
 
-class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
-                          CompositeResourceTestMixin):
+class GenericFileTypeTest(
+    MockIRODSTestCaseMixin, TransactionTestCase, CompositeResourceTestMixin
+):
     def setUp(self):
         super(GenericFileTypeTest, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.user = hydroshare.create_account(
-            'user1@nowhere.com',
-            username='user1',
-            first_name='Creator_FirstName',
-            last_name='Creator_LastName',
+            "user1@nowhere.com",
+            username="user1",
+            first_name="Creator_FirstName",
+            last_name="Creator_LastName",
             superuser=False,
-            groups=[self.group]
+            groups=[self.group],
         )
 
         self.res_title = "Test Generic File Type"
         self.logical_file_type_name = "GenericLogicalFile"
 
-        self.generic_file_name = 'generic_file.txt'
-        self.raster_zip_file_name = 'logan_vrt_small.zip'
-        self.generic_file = 'hs_file_types/tests/{}'.format(self.generic_file_name)
+        self.generic_file_name = "generic_file.txt"
+        self.raster_zip_file_name = "logan_vrt_small.zip"
+        self.generic_file = "hs_file_types/tests/{}".format(self.generic_file_name)
 
     def test_create_aggregation_1(self):
         """Test that we can create a generic aggregation from a resource file that
-        exists at the root of the folder hierarchy """
+        exists at the root of the folder hierarchy"""
 
         self.create_composite_resource(self.generic_file)
         # there should be one resource file
@@ -47,10 +48,12 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.has_logical_file, False)
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         # set file to generic logical file type (aggregation)
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
         # file has no folder
-        self.assertEqual(res_file.file_folder, '')
+        self.assertEqual(res_file.file_folder, "")
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
         gen_aggr = GenericLogicalFile.objects.first()
@@ -61,13 +64,15 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_create_aggregation_2(self):
         """Test that we can create a generic aggregation from a resource file that
-        exists in a folder """
+        exists in a folder"""
 
         self.create_composite_resource()
-        new_folder = 'generic_folder'
+        new_folder = "generic_folder"
         ResourceFile.create_folder(self.composite_resource, new_folder)
         # add the the txt file to the resource at the above folder
-        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        self.add_file_to_resource(
+            file_to_add=self.generic_file, upload_folder=new_folder
+        )
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -77,7 +82,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.has_logical_file, False)
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         # set file to generic logical file type (aggregation)
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
         # file has the same folder
         self.assertEqual(res_file.file_folder, new_folder)
@@ -88,10 +95,10 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_aggregation_metadata(self):
         """Test that we can create the following metadata for a generic aggregation
-           coverage (spatial and temporal)
-           key/value metadata
-           title (dataset_name)
-           keywords
+        coverage (spatial and temporal)
+        key/value metadata
+        title (dataset_name)
+        keywords
         """
 
         self.create_composite_resource(self.generic_file)
@@ -100,7 +107,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # set file to generic logical file type
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
         logical_file = res_file.logical_file
@@ -122,21 +131,27 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should not be any extra_metadata (key/value) at this point
         self.assertEqual(logical_file.metadata.extra_metadata, {})
         # create key/vale metadata
-        logical_file.metadata.extra_metadata = {'key1': 'value 1', 'key2': 'value 2'}
+        logical_file.metadata.extra_metadata = {"key1": "value 1", "key2": "value 2"}
         logical_file.metadata.save()
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata.extra_metadata,
-                         {'key1': 'value 1', 'key2': 'value 2'})
+        self.assertEqual(
+            logical_file.metadata.extra_metadata, {"key1": "value 1", "key2": "value 2"}
+        )
 
         # update key/value metadata
-        logical_file.metadata.extra_metadata = {'key1': 'value 1', 'key2': 'value 2',
-                                                'key 3': 'value3'}
+        logical_file.metadata.extra_metadata = {
+            "key1": "value 1",
+            "key2": "value 2",
+            "key 3": "value3",
+        }
         logical_file.metadata.save()
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata.extra_metadata,
-                         {'key1': 'value 1', 'key2': 'value 2', 'key 3': 'value3'})
+        self.assertEqual(
+            logical_file.metadata.extra_metadata,
+            {"key1": "value 1", "key2": "value 2", "key 3": "value3"},
+        )
 
         # delete key/value metadata
         logical_file.metadata.extra_metadata = {}
@@ -147,48 +162,63 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test keywords
         self.assertEqual(logical_file.metadata.keywords, [])
-        logical_file.metadata.keywords = ['kw-1', 'kw-2']
+        logical_file.metadata.keywords = ["kw-1", "kw-2"]
         logical_file.metadata.save()
-        self.assertIn('kw-1', logical_file.metadata.keywords)
-        self.assertIn('kw-2', logical_file.metadata.keywords)
+        self.assertIn("kw-1", logical_file.metadata.keywords)
+        self.assertIn("kw-2", logical_file.metadata.keywords)
 
         # test coverage element CRUD
-        res_file = [f for f in self.composite_resource.files.all()
-                    if f.logical_file_type_name == self.logical_file_type_name][0]
+        res_file = [
+            f
+            for f in self.composite_resource.files.all()
+            if f.logical_file_type_name == self.logical_file_type_name
+        ][0]
 
         gen_logical_file = res_file.logical_file
-        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
-        temp_cov = gen_logical_file.metadata.create_element('coverage', type='period',
-                                                            value=value_dict)
-        self.assertEqual(temp_cov.value['name'], 'Name for period coverage')
-        self.assertEqual(temp_cov.value['start'], '1/1/2000')
-        self.assertEqual(temp_cov.value['end'], '12/12/2012')
+        value_dict = {
+            "name": "Name for period coverage",
+            "start": "1/1/2000",
+            "end": "12/12/2012",
+        }
+        temp_cov = gen_logical_file.metadata.create_element(
+            "coverage", type="period", value=value_dict
+        )
+        self.assertEqual(temp_cov.value["name"], "Name for period coverage")
+        self.assertEqual(temp_cov.value["start"], "1/1/2000")
+        self.assertEqual(temp_cov.value["end"], "12/12/2012")
         # update temporal coverage
-        value_dict = {'start': '10/1/2010', 'end': '12/1/2016'}
-        gen_logical_file.metadata.update_element('coverage', temp_cov.id, type='period',
-                                                 value=value_dict)
+        value_dict = {"start": "10/1/2010", "end": "12/1/2016"}
+        gen_logical_file.metadata.update_element(
+            "coverage", temp_cov.id, type="period", value=value_dict
+        )
         temp_cov = gen_logical_file.metadata.temporal_coverage
-        self.assertEqual(temp_cov.value['name'], 'Name for period coverage')
-        self.assertEqual(temp_cov.value['start'], '10/1/2010')
-        self.assertEqual(temp_cov.value['end'], '12/1/2016')
+        self.assertEqual(temp_cov.value["name"], "Name for period coverage")
+        self.assertEqual(temp_cov.value["start"], "10/1/2010")
+        self.assertEqual(temp_cov.value["end"], "12/1/2016")
 
         # add spatial coverage
-        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
-        spatial_cov = gen_logical_file.metadata.create_element('coverage', type='point',
-                                                               value=value_dict)
-        self.assertEqual(spatial_cov.value['projection'], 'WGS 84 EPSG:4326')
-        self.assertEqual(spatial_cov.value['units'], 'Decimal degree')
-        self.assertEqual(spatial_cov.value['north'], 12.6789)
-        self.assertEqual(spatial_cov.value['east'], 56.45678)
+        value_dict = {"east": "56.45678", "north": "12.6789", "units": "Decimal degree"}
+        spatial_cov = gen_logical_file.metadata.create_element(
+            "coverage", type="point", value=value_dict
+        )
+        self.assertEqual(spatial_cov.value["projection"], "WGS 84 EPSG:4326")
+        self.assertEqual(spatial_cov.value["units"], "Decimal degree")
+        self.assertEqual(spatial_cov.value["north"], 12.6789)
+        self.assertEqual(spatial_cov.value["east"], 56.45678)
         # update spatial coverage
-        value_dict = {'east': '-156.45678', 'north': '45.6789', 'units': 'Decimal degree'}
-        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point',
-                                                 value=value_dict)
+        value_dict = {
+            "east": "-156.45678",
+            "north": "45.6789",
+            "units": "Decimal degree",
+        }
+        gen_logical_file.metadata.update_element(
+            "coverage", spatial_cov.id, type="point", value=value_dict
+        )
         spatial_cov = logical_file.metadata.spatial_coverage
-        self.assertEqual(spatial_cov.value['projection'], 'WGS 84 EPSG:4326')
-        self.assertEqual(spatial_cov.value['units'], 'Decimal degree')
-        self.assertEqual(spatial_cov.value['north'], 45.6789)
-        self.assertEqual(spatial_cov.value['east'], -156.45678)
+        self.assertEqual(spatial_cov.value["projection"], "WGS 84 EPSG:4326")
+        self.assertEqual(spatial_cov.value["units"], "Decimal degree")
+        self.assertEqual(spatial_cov.value["north"], 45.6789)
+        self.assertEqual(spatial_cov.value["east"], -156.45678)
 
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -207,92 +237,144 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # set file to generic logical file type
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
         gen_logical_file = res_file.logical_file
         # add spatial coverage
-        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
-        spatial_cov = gen_logical_file.metadata.create_element('coverage', type='point',
-                                                               value=value_dict)
-        self.assertEqual(spatial_cov.value['north'], 12.6789)
-        self.assertEqual(spatial_cov.value['east'], 56.45678)
+        value_dict = {"east": "56.45678", "north": "12.6789", "units": "Decimal degree"}
+        spatial_cov = gen_logical_file.metadata.create_element(
+            "coverage", type="point", value=value_dict
+        )
+        self.assertEqual(spatial_cov.value["north"], 12.6789)
+        self.assertEqual(spatial_cov.value["east"], 56.45678)
         # update spatial coverage
-        value_dict = {'east': '-156.45678', 'north': '45.6789', 'units': 'Decimal degree'}
-        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point',
-                                                 value=value_dict)
+        value_dict = {
+            "east": "-156.45678",
+            "north": "45.6789",
+            "units": "Decimal degree",
+        }
+        gen_logical_file.metadata.update_element(
+            "coverage", spatial_cov.id, type="point", value=value_dict
+        )
         spatial_cov = gen_logical_file.metadata.spatial_coverage
-        self.assertEqual(spatial_cov.value['north'], 45.6789)
-        self.assertEqual(spatial_cov.value['east'], -156.45678)
-        value_dict = {'east': '-181.45678', 'north': '12.6789', 'units': 'decimal deg'}
-        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+        self.assertEqual(spatial_cov.value["north"], 45.6789)
+        self.assertEqual(spatial_cov.value["east"], -156.45678)
+        value_dict = {"east": "-181.45678", "north": "12.6789", "units": "decimal deg"}
+        gen_logical_file.metadata.update_element(
+            "coverage", spatial_cov.id, type="point", value=value_dict
+        )
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_east_value = -181.45678 + 360
-        self.assertEqual(spatial_cov.value['east'], expected_east_value)
-        value_dict = {'east': '200.1122', 'north': '12.6789', 'units': 'decimal deg'}
-        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+        self.assertEqual(spatial_cov.value["east"], expected_east_value)
+        value_dict = {"east": "200.1122", "north": "12.6789", "units": "decimal deg"}
+        gen_logical_file.metadata.update_element(
+            "coverage", spatial_cov.id, type="point", value=value_dict
+        )
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_east_value = 200.1122 - 360
-        self.assertEqual(spatial_cov.value['east'], expected_east_value)
+        self.assertEqual(spatial_cov.value["east"], expected_east_value)
 
         # using invalid east value (>360)
         with self.assertRaises(ValidationError):
-            value_dict = {'east': '361.0', 'north': '12.6789', 'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+            value_dict = {"east": "361.0", "north": "12.6789", "units": "decimal deg"}
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="point", value=value_dict
+            )
 
         # using invalid east value (< -360)
         with self.assertRaises(ValidationError):
-            value_dict = {'east': '-361.0', 'north': '12.6789', 'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+            value_dict = {"east": "-361.0", "north": "12.6789", "units": "decimal deg"}
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="point", value=value_dict
+            )
 
-        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
-                      'westlimit': '16.6789',
-                      'units': 'decimal deg'}
+        value_dict = {
+            "northlimit": "56.45678",
+            "eastlimit": "120.6789",
+            "southlimit": "16.45678",
+            "westlimit": "16.6789",
+            "units": "decimal deg",
+        }
 
-        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+        gen_logical_file.metadata.update_element(
+            "coverage", spatial_cov.id, type="box", value=value_dict
+        )
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_east_value = 120.6789
-        self.assertEqual(spatial_cov.value['eastlimit'], expected_east_value)
+        self.assertEqual(spatial_cov.value["eastlimit"], expected_east_value)
         expected_west_value = 16.6789
-        self.assertEqual(spatial_cov.value['westlimit'], expected_west_value)
+        self.assertEqual(spatial_cov.value["westlimit"], expected_west_value)
 
-        value_dict = {'northlimit': '56.45678', 'eastlimit': '-181.6789', 'southlimit': '16.45678',
-                      'westlimit': '181.6789',
-                      'units': 'decimal deg'}
+        value_dict = {
+            "northlimit": "56.45678",
+            "eastlimit": "-181.6789",
+            "southlimit": "16.45678",
+            "westlimit": "181.6789",
+            "units": "decimal deg",
+        }
 
-        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+        gen_logical_file.metadata.update_element(
+            "coverage", spatial_cov.id, type="box", value=value_dict
+        )
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_east_value = -181.6789 + 360
-        self.assertEqual(spatial_cov.value['eastlimit'], expected_east_value)
+        self.assertEqual(spatial_cov.value["eastlimit"], expected_east_value)
         expected_west_value = 181.6789 - 360
-        self.assertEqual(spatial_cov.value['westlimit'], expected_west_value)
+        self.assertEqual(spatial_cov.value["westlimit"], expected_west_value)
 
         # using invalid eastlimt value (< -360)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '-361.6789', 'southlimit': '16.45678',
-                          'westlimit': '181.6789',
-                          'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "-361.6789",
+                "southlimit": "16.45678",
+                "westlimit": "181.6789",
+                "units": "decimal deg",
+            }
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="box", value=value_dict
+            )
 
         # using invalid eastlimit value (> 360)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '361.6789', 'southlimit': '16.45678',
-                          'westlimit': '181.6789',
-                          'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "361.6789",
+                "southlimit": "16.45678",
+                "westlimit": "181.6789",
+                "units": "decimal deg",
+            }
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="box", value=value_dict
+            )
 
         # using invalid westlimit value (> 360)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '16.45678',
-                          'westlimit': '361.6789',
-                          'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "-180.6789",
+                "southlimit": "16.45678",
+                "westlimit": "361.6789",
+                "units": "decimal deg",
+            }
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="box", value=value_dict
+            )
 
         # using invalid westlimit value (< -360)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '16.45678',
-                          'westlimit': '-361.6789',
-                          'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "181.6789",
+                "southlimit": "16.45678",
+                "westlimit": "-361.6789",
+                "units": "decimal deg",
+            }
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="box", value=value_dict
+            )
 
     def test_spatial_coverage_create_long_extent(self):
         """
@@ -304,93 +386,119 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # set file to generic logical file type
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
         gen_logical_file = res_file.logical_file
         metadata = gen_logical_file.metadata
         # add a point type coverage
-        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
-        metadata.create_element('coverage', type='point', value=value_dict)
+        value_dict = {"east": "56.45678", "north": "12.6789", "units": "decimal deg"}
+        metadata.create_element("coverage", type="point", value=value_dict)
         spatial_cov = gen_logical_file.metadata.spatial_coverage
-        self.assertEqual(spatial_cov.value['east'], 56.45678)
+        self.assertEqual(spatial_cov.value["east"], 56.45678)
         spatial_cov.delete()
 
-        value_dict = {'east': '-181.45678', 'north': '12.6789', 'units': 'decimal deg'}
-        metadata.create_element('coverage', type='point', value=value_dict)
+        value_dict = {"east": "-181.45678", "north": "12.6789", "units": "decimal deg"}
+        metadata.create_element("coverage", type="point", value=value_dict)
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_east_value = -181.45678 + 360
-        self.assertEqual(spatial_cov.value['east'], expected_east_value)
+        self.assertEqual(spatial_cov.value["east"], expected_east_value)
         spatial_cov.delete()
         self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
 
-        value_dict = {'east': '200.1122', 'north': '12.6789', 'units': 'decimal deg'}
-        metadata.create_element('coverage', type='point', value=value_dict)
+        value_dict = {"east": "200.1122", "north": "12.6789", "units": "decimal deg"}
+        metadata.create_element("coverage", type="point", value=value_dict)
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_east_value = 200.1122 - 360
-        self.assertEqual(spatial_cov.value['east'], expected_east_value)
+        self.assertEqual(spatial_cov.value["east"], expected_east_value)
         spatial_cov.delete()
         self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
         # using invalid east value (>360)
         with self.assertRaises(ValidationError):
-            value_dict = {'east': '361.0', 'north': '12.6789', 'units': 'decimal deg'}
-            metadata.create_element('coverage', type='point', value=value_dict)
+            value_dict = {"east": "361.0", "north": "12.6789", "units": "decimal deg"}
+            metadata.create_element("coverage", type="point", value=value_dict)
 
         # using invalid east value (< -360)
         with self.assertRaises(ValidationError):
-            value_dict = {'east': '-361.0', 'north': '12.6789', 'units': 'decimal deg'}
-            metadata.create_element('coverage', type='point', value=value_dict)
+            value_dict = {"east": "-361.0", "north": "12.6789", "units": "decimal deg"}
+            metadata.create_element("coverage", type="point", value=value_dict)
 
-        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
-                      'westlimit': '16.6789',
-                      'units': 'decimal deg'}
+        value_dict = {
+            "northlimit": "56.45678",
+            "eastlimit": "120.6789",
+            "southlimit": "16.45678",
+            "westlimit": "16.6789",
+            "units": "decimal deg",
+        }
 
-        metadata.create_element('coverage', type='box', value=value_dict)
+        metadata.create_element("coverage", type="box", value=value_dict)
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_east_value = 120.6789
-        self.assertEqual(spatial_cov.value['eastlimit'], expected_east_value)
+        self.assertEqual(spatial_cov.value["eastlimit"], expected_east_value)
         expected_west_value = 16.6789
-        self.assertEqual(spatial_cov.value['westlimit'], expected_west_value)
+        self.assertEqual(spatial_cov.value["westlimit"], expected_west_value)
         spatial_cov.delete()
         self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
-        value_dict = {'northlimit': '56.45678', 'eastlimit': '-181.6789', 'southlimit': '16.45678',
-                      'westlimit': '181.6789',
-                      'units': 'decimal deg'}
+        value_dict = {
+            "northlimit": "56.45678",
+            "eastlimit": "-181.6789",
+            "southlimit": "16.45678",
+            "westlimit": "181.6789",
+            "units": "decimal deg",
+        }
 
-        metadata.create_element('coverage', type='box', value=value_dict)
+        metadata.create_element("coverage", type="box", value=value_dict)
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_east_value = -181.6789 + 360
-        self.assertEqual(spatial_cov.value['eastlimit'], expected_east_value)
+        self.assertEqual(spatial_cov.value["eastlimit"], expected_east_value)
         expected_west_value = 181.6789 - 360
-        self.assertEqual(spatial_cov.value['westlimit'], expected_west_value)
+        self.assertEqual(spatial_cov.value["westlimit"], expected_west_value)
         spatial_cov.delete()
         self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
         # using invalid eastlimt value (< -360)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '-361.6789', 'southlimit': '16.45678',
-                          'westlimit': '181.6789',
-                          'units': 'decimal deg'}
-            metadata.create_element('coverage', type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "-361.6789",
+                "southlimit": "16.45678",
+                "westlimit": "181.6789",
+                "units": "decimal deg",
+            }
+            metadata.create_element("coverage", type="box", value=value_dict)
 
         # using invalid eastlimit value (> 360)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '361.6789', 'southlimit': '16.45678',
-                          'westlimit': '181.6789',
-                          'units': 'decimal deg'}
-            metadata.create_element('coverage', type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "361.6789",
+                "southlimit": "16.45678",
+                "westlimit": "181.6789",
+                "units": "decimal deg",
+            }
+            metadata.create_element("coverage", type="box", value=value_dict)
 
         # using invalid westlimit value (> 360)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '16.45678',
-                          'westlimit': '361.6789',
-                          'units': 'decimal deg'}
-            metadata.create_element('coverage', type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "-180.6789",
+                "southlimit": "16.45678",
+                "westlimit": "361.6789",
+                "units": "decimal deg",
+            }
+            metadata.create_element("coverage", type="box", value=value_dict)
 
         # using invalid westlimit value (< -360)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '16.45678',
-                          'westlimit': '-361.6789',
-                          'units': 'decimal deg'}
-            metadata.create_element('coverage', type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "181.6789",
+                "southlimit": "16.45678",
+                "westlimit": "-361.6789",
+                "units": "decimal deg",
+            }
+            metadata.create_element("coverage", type="box", value=value_dict)
 
     def test_spatial_coverage_update_lat_extent(self):
         """
@@ -402,81 +510,127 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # set file to generic logical file type
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
         gen_logical_file = res_file.logical_file
         # add spatial coverage
-        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
-        spatial_cov = gen_logical_file.metadata.create_element('coverage', type='point',
-                                                               value=value_dict)
-        self.assertEqual(spatial_cov.value['north'], 12.6789)
-        self.assertEqual(spatial_cov.value['east'], 56.45678)
+        value_dict = {"east": "56.45678", "north": "12.6789", "units": "Decimal degree"}
+        spatial_cov = gen_logical_file.metadata.create_element(
+            "coverage", type="point", value=value_dict
+        )
+        self.assertEqual(spatial_cov.value["north"], 12.6789)
+        self.assertEqual(spatial_cov.value["east"], 56.45678)
         # update spatial coverage
-        value_dict = {'east': '-156.45678', 'north': '45.6789', 'units': 'Decimal degree'}
-        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point',
-                                                 value=value_dict)
+        value_dict = {
+            "east": "-156.45678",
+            "north": "45.6789",
+            "units": "Decimal degree",
+        }
+        gen_logical_file.metadata.update_element(
+            "coverage", spatial_cov.id, type="point", value=value_dict
+        )
         spatial_cov = gen_logical_file.metadata.spatial_coverage
-        self.assertEqual(spatial_cov.value['north'], 45.6789)
-        self.assertEqual(spatial_cov.value['east'], -156.45678)
-        value_dict = {'east': '60.45678', 'north': '-89.6789', 'units': 'decimal deg'}
-        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+        self.assertEqual(spatial_cov.value["north"], 45.6789)
+        self.assertEqual(spatial_cov.value["east"], -156.45678)
+        value_dict = {"east": "60.45678", "north": "-89.6789", "units": "decimal deg"}
+        gen_logical_file.metadata.update_element(
+            "coverage", spatial_cov.id, type="point", value=value_dict
+        )
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_north_value = -89.6789
-        self.assertEqual(spatial_cov.value['north'], expected_north_value)
-        value_dict = {'east': '200.1122', 'north': '89.6789', 'units': 'decimal deg'}
-        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+        self.assertEqual(spatial_cov.value["north"], expected_north_value)
+        value_dict = {"east": "200.1122", "north": "89.6789", "units": "decimal deg"}
+        gen_logical_file.metadata.update_element(
+            "coverage", spatial_cov.id, type="point", value=value_dict
+        )
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_north_value = 89.6789
-        self.assertEqual(spatial_cov.value['north'], expected_north_value)
+        self.assertEqual(spatial_cov.value["north"], expected_north_value)
 
         # using invalid north value (>90)
         with self.assertRaises(ValidationError):
-            value_dict = {'east': '75.120', 'north': '90.6789', 'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+            value_dict = {"east": "75.120", "north": "90.6789", "units": "decimal deg"}
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="point", value=value_dict
+            )
 
         # using invalid north value (< -90)
         with self.assertRaises(ValidationError):
-            value_dict = {'east': '20.120', 'north': '-90.6789', 'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+            value_dict = {"east": "20.120", "north": "-90.6789", "units": "decimal deg"}
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="point", value=value_dict
+            )
 
-        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
-                      'westlimit': '16.6789',
-                      'units': 'decimal deg'}
+        value_dict = {
+            "northlimit": "56.45678",
+            "eastlimit": "120.6789",
+            "southlimit": "16.45678",
+            "westlimit": "16.6789",
+            "units": "decimal deg",
+        }
 
-        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+        gen_logical_file.metadata.update_element(
+            "coverage", spatial_cov.id, type="box", value=value_dict
+        )
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_north_value = 56.45678
-        self.assertEqual(spatial_cov.value['northlimit'], expected_north_value)
+        self.assertEqual(spatial_cov.value["northlimit"], expected_north_value)
         expected_south_value = 16.45678
-        self.assertEqual(spatial_cov.value['southlimit'], expected_south_value)
+        self.assertEqual(spatial_cov.value["southlimit"], expected_south_value)
 
         # using invalid northlimt value (< -90)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '-90.45678', 'eastlimit': '-120.6789', 'southlimit': '16.45678',
-                          'westlimit': '181.6789',
-                          'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "-90.45678",
+                "eastlimit": "-120.6789",
+                "southlimit": "16.45678",
+                "westlimit": "181.6789",
+                "units": "decimal deg",
+            }
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="box", value=value_dict
+            )
 
         # using invalid northlimit value (> 90)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '90.45678', 'eastlimit': '61.6789', 'southlimit': '16.45678',
-                          'westlimit': '181.6789',
-                          'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "90.45678",
+                "eastlimit": "61.6789",
+                "southlimit": "16.45678",
+                "westlimit": "181.6789",
+                "units": "decimal deg",
+            }
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="box", value=value_dict
+            )
 
         # using invalid southlimit value (> 90)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '90.45678',
-                          'westlimit': '61.6789',
-                          'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "-180.6789",
+                "southlimit": "90.45678",
+                "westlimit": "61.6789",
+                "units": "decimal deg",
+            }
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="box", value=value_dict
+            )
 
         # using invalid southlimit value (< -90)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '-90.45678',
-                          'westlimit': '-61.6789',
-                          'units': 'decimal deg'}
-            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "181.6789",
+                "southlimit": "-90.45678",
+                "westlimit": "-61.6789",
+                "units": "decimal deg",
+            }
+            gen_logical_file.metadata.update_element(
+                "coverage", spatial_cov.id, type="box", value=value_dict
+            )
 
     def test_spatial_coverage_create_lat_extent(self):
         """
@@ -488,82 +642,104 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # set file to generic logical file type
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
         gen_logical_file = res_file.logical_file
         metadata = gen_logical_file.metadata
         # add a point type coverage
-        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
-        metadata.create_element('coverage', type='point', value=value_dict)
+        value_dict = {"east": "56.45678", "north": "12.6789", "units": "decimal deg"}
+        metadata.create_element("coverage", type="point", value=value_dict)
         spatial_cov = gen_logical_file.metadata.spatial_coverage
-        self.assertEqual(spatial_cov.value['east'], 56.45678)
+        self.assertEqual(spatial_cov.value["east"], 56.45678)
         spatial_cov.delete()
 
-        value_dict = {'east': '-181.45678', 'north': '89.6789', 'units': 'decimal deg'}
-        metadata.create_element('coverage', type='point', value=value_dict)
+        value_dict = {"east": "-181.45678", "north": "89.6789", "units": "decimal deg"}
+        metadata.create_element("coverage", type="point", value=value_dict)
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_north_value = 89.6789
-        self.assertEqual(spatial_cov.value['north'], expected_north_value)
+        self.assertEqual(spatial_cov.value["north"], expected_north_value)
         spatial_cov.delete()
         self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
 
-        value_dict = {'east': '200.1122', 'north': '-89.6789', 'units': 'decimal deg'}
-        metadata.create_element('coverage', type='point', value=value_dict)
+        value_dict = {"east": "200.1122", "north": "-89.6789", "units": "decimal deg"}
+        metadata.create_element("coverage", type="point", value=value_dict)
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_north_value = -89.6789
-        self.assertEqual(spatial_cov.value['north'], expected_north_value)
+        self.assertEqual(spatial_cov.value["north"], expected_north_value)
         spatial_cov.delete()
         self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
         # using invalid north value (>90)
         with self.assertRaises(ValidationError):
-            value_dict = {'east': '61.0', 'north': '90.6789', 'units': 'decimal deg'}
-            metadata.create_element('coverage', type='point', value=value_dict)
+            value_dict = {"east": "61.0", "north": "90.6789", "units": "decimal deg"}
+            metadata.create_element("coverage", type="point", value=value_dict)
 
         # using invalid north value (< -90)
         with self.assertRaises(ValidationError):
-            value_dict = {'east': '61.0', 'north': '-90.6789', 'units': 'decimal deg'}
-            metadata.create_element('coverage', type='point', value=value_dict)
+            value_dict = {"east": "61.0", "north": "-90.6789", "units": "decimal deg"}
+            metadata.create_element("coverage", type="point", value=value_dict)
 
-        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
-                      'westlimit': '16.6789',
-                      'units': 'decimal deg'}
+        value_dict = {
+            "northlimit": "56.45678",
+            "eastlimit": "120.6789",
+            "southlimit": "16.45678",
+            "westlimit": "16.6789",
+            "units": "decimal deg",
+        }
 
-        metadata.create_element('coverage', type='box', value=value_dict)
+        metadata.create_element("coverage", type="box", value=value_dict)
         spatial_cov = gen_logical_file.metadata.spatial_coverage
         expected_north_value = 56.45678
-        self.assertEqual(spatial_cov.value['northlimit'], expected_north_value)
+        self.assertEqual(spatial_cov.value["northlimit"], expected_north_value)
         expected_south_value = 16.45678
-        self.assertEqual(spatial_cov.value['southlimit'], expected_south_value)
+        self.assertEqual(spatial_cov.value["southlimit"], expected_south_value)
         spatial_cov.delete()
         self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
 
         # using invalid northlimt value (< -90)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '-90.45678', 'eastlimit': '-61.6789', 'southlimit': '16.45678',
-                          'westlimit': '181.6789',
-                          'units': 'decimal deg'}
-            metadata.create_element('coverage', type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "-90.45678",
+                "eastlimit": "-61.6789",
+                "southlimit": "16.45678",
+                "westlimit": "181.6789",
+                "units": "decimal deg",
+            }
+            metadata.create_element("coverage", type="box", value=value_dict)
 
         # using invalid northlimit value (> 90)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '90.45678', 'eastlimit': '61.6789', 'southlimit': '16.45678',
-                          'westlimit': '181.6789',
-                          'units': 'decimal deg'}
-            metadata.create_element('coverage', type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "90.45678",
+                "eastlimit": "61.6789",
+                "southlimit": "16.45678",
+                "westlimit": "181.6789",
+                "units": "decimal deg",
+            }
+            metadata.create_element("coverage", type="box", value=value_dict)
 
         # using invalid southlimit value (> 90)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '90.45678',
-                          'westlimit': '61.6789',
-                          'units': 'decimal deg'}
-            metadata.create_element('coverage', type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "-180.6789",
+                "southlimit": "90.45678",
+                "westlimit": "61.6789",
+                "units": "decimal deg",
+            }
+            metadata.create_element("coverage", type="box", value=value_dict)
 
         # using invalid southlimit value (< -90)
         with self.assertRaises(ValidationError):
-            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '-90.45678',
-                          'westlimit': '-61.6789',
-                          'units': 'decimal deg'}
-            metadata.create_element('coverage', type='box', value=value_dict)
+            value_dict = {
+                "northlimit": "56.45678",
+                "eastlimit": "181.6789",
+                "southlimit": "-90.45678",
+                "westlimit": "-61.6789",
+                "units": "decimal deg",
+            }
+            metadata.create_element("coverage", type="box", value=value_dict)
 
     def test_delete_aggregation_coverage(self):
         """Here we are testing deleting of temporal and spatial coverage for a single file
@@ -576,31 +752,41 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # set file to generic logical file type - single file aggregation
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
 
         sf_aggr = GenericLogicalFile.objects.first()
 
         # test deleting spatial coverage
         self.assertEqual(sf_aggr.metadata.spatial_coverage, None)
-        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
-        sf_aggr.metadata.create_element('coverage', type='point', value=value_dict)
+        value_dict = {"east": "56.45678", "north": "12.6789", "units": "Decimal degree"}
+        sf_aggr.metadata.create_element("coverage", type="point", value=value_dict)
         self.assertNotEqual(sf_aggr.metadata.spatial_coverage, None)
         self.assertTrue(sf_aggr.metadata.is_dirty)
         sf_aggr.metadata.is_dirty = False
         sf_aggr.metadata.save()
-        sf_aggr.metadata.delete_element('coverage', sf_aggr.metadata.spatial_coverage.id)
+        sf_aggr.metadata.delete_element(
+            "coverage", sf_aggr.metadata.spatial_coverage.id
+        )
         self.assertEqual(sf_aggr.metadata.spatial_coverage, None)
         self.assertTrue(sf_aggr.metadata.is_dirty)
 
         # test deleting temporal coverage
         self.assertEqual(sf_aggr.metadata.temporal_coverage, None)
-        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
-        sf_aggr.metadata.create_element('coverage', type='period', value=value_dict)
+        value_dict = {
+            "name": "Name for period coverage",
+            "start": "1/1/2000",
+            "end": "12/12/2012",
+        }
+        sf_aggr.metadata.create_element("coverage", type="period", value=value_dict)
         self.assertTrue(sf_aggr.metadata.is_dirty)
         sf_aggr.metadata.is_dirty = False
         sf_aggr.metadata.save()
         self.assertNotEqual(sf_aggr.metadata.temporal_coverage, None)
-        sf_aggr.metadata.delete_element('coverage', sf_aggr.metadata.temporal_coverage.id)
+        sf_aggr.metadata.delete_element(
+            "coverage", sf_aggr.metadata.temporal_coverage.id
+        )
         self.assertEqual(sf_aggr.metadata.temporal_coverage, None)
         self.assertTrue(sf_aggr.metadata.is_dirty)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -618,7 +804,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # check that the resource file is associated with GenericLogicalFile
         self.assertEqual(res_file.has_logical_file, False)
         # set file to generic logical file type
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
 
@@ -626,36 +814,43 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.aggregation_name, res_file.file_name)
 
         # test the aggregation name after moving the file into a folder
-        new_folder = 'generic_folder'
-        create_folder(self.composite_resource.short_id, 'data/contents/{}'.format(new_folder))
-        src_path = 'data/contents/{}'.format(res_file.file_name)
-        tgt_path = 'data/contents/{0}/{1}'.format(new_folder, res_file.file_name)
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      src_path, tgt_path)
+        new_folder = "generic_folder"
+        create_folder(
+            self.composite_resource.short_id, "data/contents/{}".format(new_folder)
+        )
+        src_path = "data/contents/{}".format(res_file.file_name)
+        tgt_path = "data/contents/{0}/{1}".format(new_folder, res_file.file_name)
+        move_or_rename_file_or_folder(
+            self.user, self.composite_resource.short_id, src_path, tgt_path
+        )
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        expected_aggregation_name = '{0}/{1}'.format(new_folder, res_file.file_name)
+        expected_aggregation_name = "{0}/{1}".format(new_folder, res_file.file_name)
         self.assertEqual(logical_file.aggregation_name, expected_aggregation_name)
 
         # test the aggregation name after renaming the file
-        src_path = 'data/contents/{0}/{1}'.format(new_folder, res_file.file_name)
-        tgt_path = 'data/contents/{0}/{1}_1{2}'.format(new_folder, base_file_name, ext)
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      src_path, tgt_path)
+        src_path = "data/contents/{0}/{1}".format(new_folder, res_file.file_name)
+        tgt_path = "data/contents/{0}/{1}_1{2}".format(new_folder, base_file_name, ext)
+        move_or_rename_file_or_folder(
+            self.user, self.composite_resource.short_id, src_path, tgt_path
+        )
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        expected_aggregation_name = '{0}/{1}_1{2}'.format(new_folder, base_file_name, ext)
+        expected_aggregation_name = "{0}/{1}_1{2}".format(
+            new_folder, base_file_name, ext
+        )
         self.assertEqual(logical_file.aggregation_name, expected_aggregation_name)
 
         # test the aggregation name after renaming the folder
-        folder_rename = '{}_1'.format(new_folder)
-        src_path = 'data/contents/{}'.format(new_folder)
-        tgt_path = 'data/contents/{}'.format(folder_rename)
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      src_path, tgt_path)
+        folder_rename = "{}_1".format(new_folder)
+        src_path = "data/contents/{}".format(new_folder)
+        tgt_path = "data/contents/{}".format(folder_rename)
+        move_or_rename_file_or_folder(
+            self.user, self.composite_resource.short_id, src_path, tgt_path
+        )
         logical_file = res_file.logical_file
-        expected_aggregation_name = '{0}/{1}'.format(folder_rename, res_file.file_name)
+        expected_aggregation_name = "{0}/{1}".format(folder_rename, res_file.file_name)
         self.assertEqual(logical_file.aggregation_name, expected_aggregation_name)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -673,59 +868,77 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # check that the resource file is associated with GenericLogicalFile
         self.assertEqual(res_file.has_logical_file, False)
         # set file to generic logical file type
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
 
         logical_file = res_file.logical_file
         # file name without extension
         res_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_meta_path = '{0}{1}'.format(res_file_name, METADATA_FILE_ENDSWITH)
-        expected_map_path = '{0}{1}'.format(res_file_name, RESMAP_FILE_ENDSWITH)
+        expected_meta_path = "{0}{1}".format(res_file_name, METADATA_FILE_ENDSWITH)
+        expected_map_path = "{0}{1}".format(res_file_name, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
         # test xml file paths after moving the file into a folder
-        new_folder = 'test_folder'
-        create_folder(self.composite_resource.short_id, 'data/contents/{}'.format(new_folder))
-        src_path = 'data/contents/{}'.format(res_file.file_name)
-        tgt_path = 'data/contents/{0}/{1}'.format(new_folder, res_file.file_name)
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      src_path, tgt_path)
+        new_folder = "test_folder"
+        create_folder(
+            self.composite_resource.short_id, "data/contents/{}".format(new_folder)
+        )
+        src_path = "data/contents/{}".format(res_file.file_name)
+        tgt_path = "data/contents/{0}/{1}".format(new_folder, res_file.file_name)
+        move_or_rename_file_or_folder(
+            self.user, self.composite_resource.short_id, src_path, tgt_path
+        )
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name, METADATA_FILE_ENDSWITH)
-        expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name, RESMAP_FILE_ENDSWITH)
+        expected_meta_path = "{0}/{1}{2}".format(
+            new_folder, res_file_name, METADATA_FILE_ENDSWITH
+        )
+        expected_map_path = "{0}/{1}{2}".format(
+            new_folder, res_file_name, RESMAP_FILE_ENDSWITH
+        )
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
         # test xml file paths after renaming the file
-        src_path = 'data/contents/{0}/{1}'.format(new_folder, res_file.file_name)
-        tgt_path = 'data/contents/{0}/{1}_1{2}'.format(new_folder, base_file_name, ext)
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      src_path, tgt_path)
+        src_path = "data/contents/{0}/{1}".format(new_folder, res_file.file_name)
+        tgt_path = "data/contents/{0}/{1}_1{2}".format(new_folder, base_file_name, ext)
+        move_or_rename_file_or_folder(
+            self.user, self.composite_resource.short_id, src_path, tgt_path
+        )
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name, METADATA_FILE_ENDSWITH)
-        expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name, RESMAP_FILE_ENDSWITH)
+        expected_meta_path = "{0}/{1}{2}".format(
+            new_folder, res_file_name, METADATA_FILE_ENDSWITH
+        )
+        expected_map_path = "{0}/{1}{2}".format(
+            new_folder, res_file_name, RESMAP_FILE_ENDSWITH
+        )
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
         # test the xml file path after renaming the folder
-        folder_rename = '{}_1'.format(new_folder)
-        src_path = 'data/contents/{}'.format(new_folder)
-        tgt_path = 'data/contents/{}'.format(folder_rename)
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      src_path, tgt_path)
+        folder_rename = "{}_1".format(new_folder)
+        src_path = "data/contents/{}".format(new_folder)
+        tgt_path = "data/contents/{}".format(folder_rename)
+        move_or_rename_file_or_folder(
+            self.user, self.composite_resource.short_id, src_path, tgt_path
+        )
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_meta_path = '{0}/{1}{2}'.format(folder_rename, res_file_name,
-                                                 METADATA_FILE_ENDSWITH)
-        expected_map_path = '{0}/{1}{2}'.format(folder_rename, res_file_name, RESMAP_FILE_ENDSWITH)
+        expected_meta_path = "{0}/{1}{2}".format(
+            folder_rename, res_file_name, METADATA_FILE_ENDSWITH
+        )
+        expected_map_path = "{0}/{1}{2}".format(
+            folder_rename, res_file_name, RESMAP_FILE_ENDSWITH
+        )
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -740,7 +953,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
 
         # create generic aggregation
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
 
         # test that we have one logical file of type GenericLogicalFile Type as a result
         # of setting file type (aggregation)
@@ -749,8 +964,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = GenericLogicalFile.objects.first()
         self.assertEqual(logical_file.files.all().count(), 1)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
-        self.assertEqual(set(self.composite_resource.files.all()),
-                         set(logical_file.files.all()))
+        self.assertEqual(
+            set(self.composite_resource.files.all()), set(logical_file.files.all())
+        )
 
         # delete the aggregation (logical file) object using the remove_aggregation function
         logical_file.remove_aggregation()
@@ -770,18 +986,21 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource(self.generic_file)
         res_file = self.composite_resource.files.first()
         base_file_name, ext = os.path.splitext(res_file.file_name)
-        self.assertEqual(res_file.file_name, 'generic_file.txt')
+        self.assertEqual(res_file.file_name, "generic_file.txt")
         # create generic aggregation
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         # file should not be in a folder
-        self.assertEqual(res_file.file_folder, '')
+        self.assertEqual(res_file.file_folder, "")
         # test rename of file is allowed
-        src_path = 'data/contents/{}'.format(res_file.file_name)
+        src_path = "data/contents/{}".format(res_file.file_name)
         tgt_path = "data/contents/{0}_1{1}".format(base_file_name, ext)
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                      tgt_path)
+        move_or_rename_file_or_folder(
+            self.user, self.composite_resource.short_id, src_path, tgt_path
+        )
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_name, '{0}_1{1}'.format(base_file_name, ext))
+        self.assertEqual(res_file.file_name, "{0}_1{1}".format(base_file_name, ext))
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -792,19 +1011,24 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource(self.generic_file)
         res_file = self.composite_resource.files.first()
         base_file_name, ext = os.path.splitext(res_file.file_name)
-        self.assertEqual(res_file.file_name, 'generic_file.txt')
+        self.assertEqual(res_file.file_name, "generic_file.txt")
         # create generic aggregation
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         # file should not be in a folder
-        self.assertEqual(res_file.file_folder, '')
+        self.assertEqual(res_file.file_folder, "")
 
         # test moving the file to a new folder is allowed
-        new_folder = 'test_folder'
-        create_folder(self.composite_resource.short_id, 'data/contents/{}'.format(new_folder))
-        src_path = 'data/contents/{}'.format(res_file.file_name)
+        new_folder = "test_folder"
+        create_folder(
+            self.composite_resource.short_id, "data/contents/{}".format(new_folder)
+        )
+        src_path = "data/contents/{}".format(res_file.file_name)
         tgt_path = "data/contents/{0}/{1}".format(new_folder, res_file.file_name)
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                      tgt_path)
+        move_or_rename_file_or_folder(
+            self.user, self.composite_resource.short_id, src_path, tgt_path
+        )
         res_file = self.composite_resource.files.first()
         # file should in a folder
         self.assertEqual(res_file.file_folder, new_folder)
@@ -819,7 +1043,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource(self.generic_file)
         res_file = self.composite_resource.files.first()
         # set the file to generic logical file
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
         gen_logical_file = res_file.logical_file
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
@@ -831,11 +1057,19 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # logical file
         self.assertEqual(gen_logical_file.metadata.extra_metadata, {})
         # add temporal coverage
-        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
-        gen_logical_file.metadata.create_element('coverage', type='period', value=value_dict)
+        value_dict = {
+            "name": "Name for period coverage",
+            "start": "1/1/2000",
+            "end": "12/12/2012",
+        }
+        gen_logical_file.metadata.create_element(
+            "coverage", type="period", value=value_dict
+        )
         # add spatial coverage
-        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
-        gen_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
+        value_dict = {"east": "56.45678", "north": "12.6789", "units": "Decimal degree"}
+        gen_logical_file.metadata.create_element(
+            "coverage", type="point", value=value_dict
+        )
         # at this point there should be 2 coverage elements associated with
         # logical file
         self.assertEqual(gen_logical_file.metadata.coverages.count(), 2)
@@ -843,11 +1077,14 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # and 2 file type level
         self.assertEqual(Coverage.objects.count(), 4)
         # add key/value metadata
-        gen_logical_file.metadata.extra_metadata = {'key1': 'value 1', 'key2': 'value 2'}
+        gen_logical_file.metadata.extra_metadata = {
+            "key1": "value 1",
+            "key2": "value 2",
+        }
         gen_logical_file.metadata.save()
-        hydroshare.delete_resource_file(self.composite_resource.short_id,
-                                        res_file.id,
-                                        self.user)
+        hydroshare.delete_resource_file(
+            self.composite_resource.short_id, res_file.id, self.user
+        )
         # test that we don't have logical file of type GenericLogicalFile
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
@@ -859,7 +1096,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource(self.generic_file)
 
         res_file = self.composite_resource.files.first()
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
         res_file = self.composite_resource.files.first()
 
         self.assertEqual(1, GenericLogicalFile.objects.count())
@@ -871,7 +1110,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource(self.generic_file)
 
         res_file = self.composite_resource.files.first()
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
 
         self.assertEqual(1, GenericLogicalFile.objects.count())
         gen_logical_file = GenericLogicalFile.objects.first()
@@ -887,7 +1128,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource(self.generic_file)
 
         res_file = self.composite_resource.files.first()
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
 
         self.assertEqual(1, GenericLogicalFile.objects.count())
         gen_logical_file = GenericLogicalFile.objects.first()
@@ -906,7 +1149,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource(self.generic_file)
 
         res_file = self.composite_resource.files.first()
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
 
         self.assertEqual(1, GenericLogicalFile.objects.count())
         gen_logical_file = GenericLogicalFile.objects.first()
@@ -925,13 +1170,17 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource(self.generic_file)
 
         res_file = self.composite_resource.files.first()
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
 
         self.assertEqual(1, GenericLogicalFile.objects.count())
         gen_logical_file = GenericLogicalFile.objects.first()
 
-        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
-        gen_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
+        value_dict = {"east": "56.45678", "north": "12.6789", "units": "Decimal degree"}
+        gen_logical_file.metadata.create_element(
+            "coverage", type="point", value=value_dict
+        )
 
         # check expected generated metadata state updated coverages only
         self.assertEqual(1, gen_logical_file.metadata.coverages.count())
@@ -944,18 +1193,25 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource(self.generic_file)
 
         res_file = self.composite_resource.files.first()
-        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, res_file.id
+        )
 
         self.assertEqual(1, GenericLogicalFile.objects.count())
         gen_logical_file = GenericLogicalFile.objects.first()
 
-        gen_logical_file.metadata.extra_metadata = {'key1': 'value 1', 'key2': 'value 2'}
+        gen_logical_file.metadata.extra_metadata = {
+            "key1": "value 1",
+            "key2": "value 2",
+        }
         gen_logical_file.metadata.save()
 
         # check expected generated metadata state updated extra_metadata only
         self.assertEqual(0, gen_logical_file.metadata.coverages.count())
-        self.assertEqual({'key1': 'value 1', 'key2': 'value 2'},
-                         gen_logical_file.metadata.extra_metadata)
+        self.assertEqual(
+            {"key1": "value 1", "key2": "value 2"},
+            gen_logical_file.metadata.extra_metadata,
+        )
         self.assertEqual("generic_file", gen_logical_file.dataset_name)
         self.assertTrue(gen_logical_file.metadata.has_modified_metadata)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())

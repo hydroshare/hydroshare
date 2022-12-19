@@ -9,11 +9,11 @@ import hs_core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0001_initial'),
-        ('pages', '__first__'),
+        ("auth", "0001_initial"),
+        ("pages", "__first__"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('contenttypes', '0001_initial'),
-        ('hs_core', '0002_genericresource_resource_type'),
+        ("contenttypes", "0001_initial"),
+        ("hs_core", "0002_genericresource_resource_type"),
     ]
 
     operations = [

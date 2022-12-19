@@ -9,13 +9,19 @@ import hs_core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0024_baseresource_resource_federation_path'),
+        ("hs_core", "0024_baseresource_resource_federation_path"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='resourcefile',
-            name='fed_resource_file',
-            field=models.FileField(storage=django_irods.storage.IrodsStorage('federated'), max_length=500, null=True, upload_to=hs_core.models.get_path, blank=True),
+            model_name="resourcefile",
+            name="fed_resource_file",
+            field=models.FileField(
+                storage=django_irods.storage.IrodsStorage("federated"),
+                max_length=500,
+                null=True,
+                upload_to=hs_core.models.get_path,
+                blank=True,
+            ),
         ),
     ]

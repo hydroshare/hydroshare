@@ -12,12 +12,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's: none acts on everything.
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
     def handle(self, *args, **options):
 
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        if len(options["resource_ids"]) > 0:  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 sqs = SearchQuerySet().filter(short_id=rid)
                 for s in list(sqs):
                     print("SOLR FOR RESOURCE {}: {}".format(rid, s.text))

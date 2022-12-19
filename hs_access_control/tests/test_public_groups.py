@@ -1,4 +1,3 @@
-
 from django.test import TestCase
 from django.contrib.auth.models import Group
 
@@ -11,74 +10,85 @@ from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 
 
 class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
-
     def setUp(self):
         super(T01PublicGroups, self).setUp()
         global_reset()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.admin = hydroshare.create_account(
-            'admin@gmail.com',
-            username='admin',
-            first_name='administrator',
-            last_name='couch',
+            "admin@gmail.com",
+            username="admin",
+            first_name="administrator",
+            last_name="couch",
             superuser=True,
-            groups=[]
+            groups=[],
         )
 
         self.cat = hydroshare.create_account(
-            'cat@gmail.com',
-            username='cat',
-            first_name='not a dog',
-            last_name='last_name_cat',
+            "cat@gmail.com",
+            username="cat",
+            first_name="not a dog",
+            last_name="last_name_cat",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.cats = self.cat.uaccess.create_group(
-            title='cats', description="We are the cats")
+            title="cats", description="We are the cats"
+        )
 
         self.posts = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.cat,
-            title='all about scratching posts',
+            title="all about scratching posts",
             metadata=[],
         )
 
-        self.cat.uaccess.share_resource_with_group(self.posts, self.cats, PrivilegeCodes.VIEW)
+        self.cat.uaccess.share_resource_with_group(
+            self.posts, self.cats, PrivilegeCodes.VIEW
+        )
 
         self.dog = hydroshare.create_account(
-            'dog@gmail.com',
-            username='dog',
-            first_name='not a cat',
-            last_name='last_name_dog',
+            "dog@gmail.com",
+            username="dog",
+            first_name="not a cat",
+            last_name="last_name_dog",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.dogs = self.dog.uaccess.create_group(
-            title='dogs', description="We are the dogs")
+            title="dogs", description="We are the dogs"
+        )
 
         self.bones = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.dog,
-            title='all about bones',
+            title="all about bones",
             metadata=[],
         )
 
-        self.dog.uaccess.share_resource_with_group(self.bones, self.dogs, PrivilegeCodes.VIEW)
+        self.dog.uaccess.share_resource_with_group(
+            self.bones, self.dogs, PrivilegeCodes.VIEW
+        )
 
         self.pets = self.dog.uaccess.create_community(
-                'all kinds of pets',
-                'collaboration on how to be a better pet.')
+            "all kinds of pets", "collaboration on how to be a better pet."
+        )
 
         # Make cats and dogs part of community pets
-        self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)
-        self.cat.uaccess.share_group_with_user(self.cats, self.dog, PrivilegeCodes.OWNER)
-        self.dog.uaccess.share_community_with_group(self.pets, self.cats, PrivilegeCodes.VIEW)
+        self.dog.uaccess.share_community_with_group(
+            self.pets, self.dogs, PrivilegeCodes.VIEW
+        )
+        self.cat.uaccess.share_group_with_user(
+            self.cats, self.dog, PrivilegeCodes.OWNER
+        )
+        self.dog.uaccess.share_community_with_group(
+            self.pets, self.cats, PrivilegeCodes.VIEW
+        )
         self.cat.uaccess.unshare_group_with_user(self.cats, self.dog)
 
     def test_01_groups(self):
-        "basic function: groups appear and disappear according to access rules "
+        "basic function: groups appear and disappear according to access rules"
 
         # flag state
         self.assertFalse(self.posts.raccess.discoverable)
@@ -111,7 +121,7 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(is_equal_to_as_set([self.bones], resources))
 
     def test_02_communities(self):
-        "groups appear and disappear from communities according to access rules "
+        "groups appear and disappear from communities according to access rules"
 
         # flag state
         self.assertFalse(self.posts.raccess.discoverable)

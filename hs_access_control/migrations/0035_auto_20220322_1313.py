@@ -8,18 +8,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0034_resourceaccess_allow_private_sharing'),
+        ("hs_access_control", "0034_resourceaccess_allow_private_sharing"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='groupaccess',
-            name='requires_explanation',
-            field=models.BooleanField(default=False, editable=False, help_text='whether membership requests include explanation'),
+            model_name="groupaccess",
+            name="requires_explanation",
+            field=models.BooleanField(
+                default=False,
+                editable=False,
+                help_text="whether membership requests include explanation",
+            ),
         ),
         migrations.AddField(
-            model_name='groupmembershiprequest',
-            name='explanation',
+            model_name="groupmembershiprequest",
+            name="explanation",
             field=models.TextField(blank=True, max_length=300, null=True),
         ),
     ]

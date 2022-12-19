@@ -15,14 +15,16 @@ from theme.models import UserProfile
 from ... import models as hs_tracking
 
 # Add logger for stderr messages.
-err = logging.getLogger('stats-command')
+err = logging.getLogger("stats-command")
 err.setLevel(logging.ERROR)
 handler = logging.StreamHandler(stream=sys.stderr)
-formatter = logging.Formatter("%(asctime)s - "
-                              "%(levelname)s - "
-                              "%(funcName)s - "
-                              "line %(lineno)s - "
-                              "%(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - "
+    "%(levelname)s - "
+    "%(funcName)s - "
+    "line %(lineno)s - "
+    "%(message)s"
+)
 handler.setFormatter(formatter)
 err.addHandler(handler)
 
@@ -78,7 +80,7 @@ class Command(BaseCommand):
             action="store_true",
             help="dump tracking variables collected today",
         )
-        parser.add_argument('lookback-days', nargs='?', default=1)
+        parser.add_argument("lookback-days", nargs="?", default=1)
 
     def print_var(self, var_name, value, period=None):
         timestamp = timezone.now()
@@ -86,50 +88,61 @@ class Command(BaseCommand):
             print("{}: {} {}".format(timestamp, var_name, value))
         else:
             start, end = period
-            print(("{}: ({}/{}--{}/{}) {} {}".format(timestamp,
-                                                     start.year, start.month,
-                                                     end.year, end.month,
-                                                     var_name, value)))
+            print(
+                (
+                    "{}: ({}/{}--{}/{}) {} {}".format(
+                        timestamp,
+                        start.year,
+                        start.month,
+                        end.year,
+                        end.month,
+                        var_name,
+                        value,
+                    )
+                )
+            )
 
     def monthly_users_counts(self, start_date, end_date):
         profiles = User.objects.filter(date_joined__lte=end_date, is_active=True)
-        self.print_var("monthly_users_counts", profiles.count(),
-                       (start_date, end_date))
+        self.print_var("monthly_users_counts", profiles.count(), (start_date, end_date))
 
     def monthly_orgs_counts(self, start_date, end_date):
         profiles = UserProfile.objects.filter(user__date_joined__lte=end_date)
-        org_count = profiles.values('organization').distinct().count()
+        org_count = profiles.values("organization").distinct().count()
         self.print_var("monthly_orgs_counts", org_count, (start_date, end_date))
 
     def monthly_users_by_type(self, start_date, end_date):
-        user_types = UserProfile.objects.values('user_type').distinct()
-        for ut in [_['user_type'] for _ in user_types]:
+        user_types = UserProfile.objects.values("user_type").distinct()
+        for ut in [_["user_type"] for _ in user_types]:
             ut_users = User.objects.filter(userprofile__user_type=ut)
             sessions = hs_tracking.Session.objects.filter(
-                Q(begin__gte=start_date) &
-                Q(begin__lte=end_date) &
-                Q(visitor__user__in=ut_users)
+                Q(begin__gte=start_date)
+                & Q(begin__lte=end_date)
+                & Q(visitor__user__in=ut_users)
             )
-            self.print_var("active_{}".format(ut),
-                           sessions.count(), (end_date, start_date))
+            self.print_var(
+                "active_{}".format(ut), sessions.count(), (end_date, start_date)
+            )
 
     def users_details(self):
         w = csv.writer(sys.stdout)
         fields = [
-            'created date',
-            'first name',
-            'last name',
-            'email',
-            'user type',
-            'organization',
-            'last login',
-            'user id',
+            "created date",
+            "first name",
+            "last name",
+            "email",
+            "user type",
+            "organization",
+            "last login",
+            "user id",
         ]
         w.writerow(fields)
         for up in UserProfile.objects.filter(user__is_active=True):
-            last_login = up.user.last_login.strftime('%m/%d/%Y') if up.user.last_login else ""
+            last_login = (
+                up.user.last_login.strftime("%m/%d/%Y") if up.user.last_login else ""
+            )
             values = [
-                up.user.date_joined.strftime('%m/%d/%Y %H:%M:%S.%f'),
+                up.user.date_joined.strftime("%m/%d/%Y %H:%M:%S.%f"),
                 up.user.first_name,
                 up.user.last_name,
                 up.user.email,
@@ -143,27 +156,28 @@ class Command(BaseCommand):
     def resources_details(self):
         w = csv.writer(sys.stdout)
         fields = [
-            'creation date',
-            'title',
-            'resource type',
-            'size',
-            'publication status',
-            'user type',
-            'user id'
+            "creation date",
+            "title",
+            "resource type",
+            "size",
+            "publication status",
+            "user type",
+            "user id",
         ]
         w.writerow(fields)
         failed_resource_ids = []
         for r in BaseResource.objects.all():
             try:
                 values = [
-                    r.metadata.dates.get(type="created").
-                    start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
+                    r.metadata.dates.get(type="created").start_date.strftime(
+                        "%m/%d/%Y %H:%M:%S.%f"
+                    ),
                     r.metadata.title.value,
                     r.resource_type,
                     r.size,
                     r.raccess.sharing_status,
                     r.user.userprofile.user_type,
-                    r.user_id
+                    r.user_id,
                 ]
                 w.writerow([str(v) for v in values])
 
@@ -175,21 +189,18 @@ class Command(BaseCommand):
 
         # print all failed resources for debugging purposes
         for f in failed_resource_ids:
-            err.error('Error processing resource: %s' % f)
+            err.error("Error processing resource: %s" % f)
 
     def yesterdays_variables(self, lookback=1):
 
         today_start = timezone.datetime.now().replace(
-           hour=0,
-           minute=0,
-           second=0,
-           microsecond=0)
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
         # adjust start date for look-back option
         yesterday_start = today_start - datetime.timedelta(days=lookback)
         variables = hs_tracking.Variable.objects.filter(
-            timestamp__gte=yesterday_start,
-            timestamp__lt=today_start
+            timestamp__gte=yesterday_start, timestamp__lt=today_start
         )
         for v in variables:
             uid = v.session.visitor.user.id if v.session.visitor.user else None
@@ -198,41 +209,42 @@ class Command(BaseCommand):
             vals = self.dict_spc_to_pipe(v.value)
 
             # encode variables as key value pairs (except for timestamp)
-            values = [str(v.timestamp),
-                      'user_id=%s' % str(uid),
-                      'session_id=%s' % str(v.session.id),
-                      'action=%s' % str(v.name),
-                      vals]
-            print('|'.join(values))
+            values = [
+                str(v.timestamp),
+                "user_id=%s" % str(uid),
+                "session_id=%s" % str(v.session.id),
+                "action=%s" % str(v.name),
+                vals,
+            ]
+            print("|".join(values))
 
     def dict_spc_to_pipe(self, s):
 
         # exit early if pipes already exist
-        if '|' in s:
+        if "|" in s:
             return s
 
         # convert from space separated to pipe separated
-        groups = s.split('=')
+        groups = s.split("=")
 
         # need to take into account possible spaces in the dict values
-        formatted_str = ''
+        formatted_str = ""
         for i in range(1, len(groups)):
-            k = groups[i-1].split(' ')[-1]
+            k = groups[i - 1].split(" ")[-1]
             if i < len(groups) - 1:
-                v = ' '.join(groups[i].split(' ')[:-1])
-                formatted_str += '%s=%s|' % (k, v)
+                v = " ".join(groups[i].split(" ")[:-1])
+                formatted_str += "%s=%s|" % (k, v)
             else:
-                v = ' '.join(groups[i].split(' ')[:])
-                formatted_str += '%s=%s' % (k, v)
+                v = " ".join(groups[i].split(" ")[:])
+                formatted_str += "%s=%s" % (k, v)
         return formatted_str
 
     def handle(self, *args, **options):
         START_YEAR = 2016
         start_date = timezone.datetime(START_YEAR, 1, 1).date()
-        end_date = timezone.datetime.now().replace(hour=0,
-                                                   minute=0,
-                                                   second=0,
-                                                   microsecond=0)
+        end_date = timezone.datetime.now().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
         if options["monthly_users_counts"]:
             for month_end in month_year_iter(start_date, end_date):
@@ -249,4 +261,4 @@ class Command(BaseCommand):
         if options["resources_details"]:
             self.resources_details()
         if options["yesterdays_variables"]:
-            self.yesterdays_variables(lookback=int(options['lookback-days']))
+            self.yesterdays_variables(lookback=int(options["lookback-days"]))

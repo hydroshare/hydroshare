@@ -21,10 +21,9 @@ from hs_core.models import BaseResource
 import logging
 
 
-def check_django_metadata(self, stop_on_error=False,
-                          echo_errors=True,
-                          log_errors=False,
-                          return_errors=False):
+def check_django_metadata(
+    self, stop_on_error=False, echo_errors=True, log_errors=False, return_errors=False
+):
 
     # print("check_django_metadata: check {}".format(self.short_id))
     logger = logging.getLogger(__name__)
@@ -34,8 +33,9 @@ def check_django_metadata(self, stop_on_error=False,
 
     # skip federated resources if not configured to handle these
     if self.is_federated and not settings.REMOTE_USE_IRODS:
-        msg = "check_django_metadata: skipping check of federated resource {} in unfederated mode"\
-            .format(self.short_id)
+        msg = "check_django_metadata: skipping check of federated resource {} in unfederated mode".format(
+            self.short_id
+        )
         if echo_errors:
             print(msg)
         if log_errors:
@@ -83,37 +83,45 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's, or none to check all resources
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
         # Named (optional) arguments
         parser.add_argument(
-            '--log',
-            action='store_true',  # True for presence, False for absence
-            dest='log',  # value is options['log']
-            help='log errors to system log',
+            "--log",
+            action="store_true",  # True for presence, False for absence
+            dest="log",  # value is options['log']
+            help="log errors to system log",
         )
 
     def handle(self, *args, **options):
 
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        if len(options["resource_ids"]) > 0:  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 try:
                     resource = BaseResource.objects.get(short_id=rid)
                 except BaseResource.DoesNotExist:
-                    msg = "Resource with id {} not found in Django Resources".format(rid)
+                    msg = "Resource with id {} not found in Django Resources".format(
+                        rid
+                    )
                     print(msg)
                     continue
 
                 print("LOOKING FOR METADATA ERRORS FOR RESOURCE {}".format(rid))
-                check_django_metadata(resource, stop_on_error=False,
-                                      echo_errors=not options['log'],
-                                      log_errors=options['log'],
-                                      return_errors=False)
+                check_django_metadata(
+                    resource,
+                    stop_on_error=False,
+                    echo_errors=not options["log"],
+                    log_errors=options["log"],
+                    return_errors=False,
+                )
 
         else:  # check all resources
             print("LOOKING FOR METADATA ERRORS FOR ALL RESOURCES")
             for r in BaseResource.objects.all():
-                check_django_metadata(r, stop_on_error=False,
-                                      echo_errors=not options['log'],  # Don't both log and echo
-                                      log_errors=options['log'],
-                                      return_errors=False)
+                check_django_metadata(
+                    r,
+                    stop_on_error=False,
+                    echo_errors=not options["log"],  # Don't both log and echo
+                    log_errors=options["log"],
+                    return_errors=False,
+                )

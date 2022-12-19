@@ -7,48 +7,45 @@ from hs_core.testing import MockIRODSTestCaseMixin
 
 
 class TestHStore(MockIRODSTestCaseMixin, TestCase):
-
     def setUp(self):
         super(TestHStore, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         # create a user
         self.user = users.create_account(
-            'test_user@email.com',
-            username='testuser',
-            first_name='some_first_name',
-            last_name='some_last_name',
+            "test_user@email.com",
+            username="testuser",
+            first_name="some_first_name",
+            last_name="some_last_name",
             superuser=False,
-            groups=[])
+            groups=[],
+        )
 
         self.res = resource.create_resource(
-            'GenericResource',
-            self.user,
-            'My Test Resource'
-            )
+            "GenericResource", self.user, "My Test Resource"
+        )
 
     def test_extra_metadata(self):
         # create/add extra metadata
         self.assertEqual(self.res.extra_metadata, {})
-        self.res.extra_metadata = {'name': 'John Jackson'}
+        self.res.extra_metadata = {"name": "John Jackson"}
         self.res.save()
 
         self.assertNotEqual(self.res.extra_metadata, {})
-        self.assertEqual(self.res.extra_metadata['name'], 'John Jackson')
+        self.assertEqual(self.res.extra_metadata["name"], "John Jackson")
 
         # update extra metadata (add email)
-        self.res.extra_metadata = {'name': 'John Jackson', 'email': 'jj@gmail.com'}
+        self.res.extra_metadata = {"name": "John Jackson", "email": "jj@gmail.com"}
         self.res.save()
-        self.assertEqual(self.res.extra_metadata['name'], 'John Jackson')
-        self.assertEqual(self.res.extra_metadata['email'], 'jj@gmail.com')
+        self.assertEqual(self.res.extra_metadata["name"], "John Jackson")
+        self.assertEqual(self.res.extra_metadata["email"], "jj@gmail.com")
 
         # update extra metadata (remove email)
-        self.res.extra_metadata = {'name': 'John Jackson'}
+        self.res.extra_metadata = {"name": "John Jackson"}
         self.res.save()
-        self.assertEqual(self.res.extra_metadata['name'], 'John Jackson')
-        self.assertEqual(self.res.extra_metadata.get('email', None), None)
+        self.assertEqual(self.res.extra_metadata["name"], "John Jackson")
+        self.assertEqual(self.res.extra_metadata.get("email", None), None)
 
         # delete all extra metadata
         self.res.extra_metadata = {}
         self.res.save()
         self.assertEqual(self.res.extra_metadata, {})
-

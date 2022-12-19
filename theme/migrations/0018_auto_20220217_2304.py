@@ -9,13 +9,15 @@ import theme.utils
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('theme', '0017_phone_validation_message'),
+        ("theme", "0017_phone_validation_message"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='userprofile',
-            name='picture',
-            field=models.ImageField(blank=True, null=True, upload_to=theme.utils.get_upload_path_userprofile),
+            model_name="userprofile",
+            name="picture",
+            field=models.ImageField(
+                blank=True, null=True, upload_to=theme.utils.get_upload_path_userprofile
+            ),
         ),
     ]

@@ -7,7 +7,7 @@ from haystack.query import SearchQuerySet
 
 
 def debug_harvest():
-    sqs = SearchQuerySet().all().order_by('author_lower')
+    sqs = SearchQuerySet().all().order_by("author_lower")
     for s in sqs:
         print("author: " + s.author)
         print("author_lower: " + s.author_lower)

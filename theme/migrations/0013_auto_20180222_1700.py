@@ -7,18 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('theme', '0012_1_15_RC_merge'),
+        ("theme", "0012_1_15_RC_merge"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='userprofile',
-            name='email_opt_out',
+            model_name="userprofile",
+            name="email_opt_out",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='siteconfiguration',
-            name='copyright',
-            field=models.TextField(default='&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'),
+            model_name="siteconfiguration",
+            name="copyright",
+            field=models.TextField(
+                default='&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
+            ),
         ),
     ]

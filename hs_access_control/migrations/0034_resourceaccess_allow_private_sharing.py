@@ -8,13 +8,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0033_auto_20220217_2304'),
+        ("hs_access_control", "0033_auto_20220217_2304"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='resourceaccess',
-            name='allow_private_sharing',
-            field=models.BooleanField(default=False, help_text='whether to allow anonymous user to access private resource in view mode'),
+            model_name="resourceaccess",
+            name="allow_private_sharing",
+            field=models.BooleanField(
+                default=False,
+                help_text="whether to allow anonymous user to access private resource in view mode",
+            ),
         ),
     ]

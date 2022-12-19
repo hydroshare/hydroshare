@@ -13,30 +13,28 @@ class TestSetDownloadAgreement(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestSetDownloadAgreement, self).setUp()
 
-        self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.hs_group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         # create a user
         self.user_owner = hydroshare.create_account(
-            'test_user_owner@email.com',
-            username='mytestuserowner',
-            first_name='some_first_name_owner',
-            last_name='some_last_name_owner',
+            "test_user_owner@email.com",
+            username="mytestuserowner",
+            first_name="some_first_name_owner",
+            last_name="some_last_name_owner",
             superuser=False,
-            groups=[self.hs_group]
+            groups=[self.hs_group],
         )
         self.user_non_owner = hydroshare.create_account(
-            'test_user_non_owner@email.com',
-            username='mytestusernonowner',
-            first_name='some_first_name_non_owner',
-            last_name='some_last_name_non_owner',
+            "test_user_non_owner@email.com",
+            username="mytestusernonowner",
+            first_name="some_first_name_non_owner",
+            last_name="some_last_name_non_owner",
             superuser=False,
-            groups=[self.hs_group]
+            groups=[self.hs_group],
         )
 
         self.res = resource.create_resource(
-            'GenericResource',
-            self.user_owner,
-            'My Test Resource'
-            )
+            "GenericResource", self.user_owner, "My Test Resource"
+        )
 
     def tearDown(self):
         super(TestSetDownloadAgreement, self).tearDown()
@@ -54,14 +52,16 @@ class TestSetDownloadAgreement(MockIRODSTestCaseMixin, TestCase):
             self.res.set_require_download_agreement(self.user_non_owner, value=True)
 
         # give user_non_owner resource view permission
-        self.user_owner.uaccess.share_resource_with_user(self.res, self.user_non_owner,
-                                                         PrivilegeCodes.VIEW)
+        self.user_owner.uaccess.share_resource_with_user(
+            self.res, self.user_non_owner, PrivilegeCodes.VIEW
+        )
         with self.assertRaises(PermissionDenied):
             self.res.set_require_download_agreement(self.user_non_owner, value=True)
 
         # give user_non_owner resource edit permission
-        self.user_owner.uaccess.share_resource_with_user(self.res, self.user_non_owner,
-                                                         PrivilegeCodes.CHANGE)
+        self.user_owner.uaccess.share_resource_with_user(
+            self.res, self.user_non_owner, PrivilegeCodes.CHANGE
+        )
         with self.assertRaises(PermissionDenied):
             self.res.set_require_download_agreement(self.user_non_owner, value=True)
 

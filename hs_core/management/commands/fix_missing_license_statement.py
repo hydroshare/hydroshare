@@ -13,11 +13,15 @@ class Command(BaseCommand):
         for res in BaseResource.objects.all().iterator():
             res = res.get_content_model()
             if res.metadata is None:
-                print(f"Not fixing license. Metadata object is missing for this resource:{res.short_id}")
+                print(
+                    f"Not fixing license. Metadata object is missing for this resource:{res.short_id}"
+                )
                 continue
             rights = res.metadata.rights
             if rights is None:
-                print(f"Not fixing license. Rights metadata object is missing for this resource:{res.short_id}")
+                print(
+                    f"Not fixing license. Rights metadata object is missing for this resource:{res.short_id}"
+                )
                 continue
 
             if len(rights.statement.strip()) == 0:

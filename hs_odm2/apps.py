@@ -5,4 +5,4 @@ from django.apps import AppConfig
 
 
 class HsOdm2Config(AppConfig):
-    name = 'hs_odm2'
+    name = "hs_odm2"

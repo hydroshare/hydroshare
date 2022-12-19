@@ -9,22 +9,37 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
-        ('hs_core', '0055_auto_20201031_1727'),
+        ("contenttypes", "0002_remove_content_type_name"),
+        ("hs_core", "0055_auto_20201031_1727"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Citation',
+            name="Citation",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('object_id', models.PositiveIntegerField()),
-                ('value', models.TextField()),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='hs_core_citation_related', to='contenttypes.ContentType')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("object_id", models.PositiveIntegerField()),
+                ("value", models.TextField()),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="hs_core_citation_related",
+                        to="contenttypes.ContentType",
+                    ),
+                ),
             ],
         ),
         migrations.AlterUniqueTogether(
-            name='citation',
-            unique_together=set([('content_type', 'object_id')]),
+            name="citation",
+            unique_together=set([("content_type", "object_id")]),
         ),
     ]

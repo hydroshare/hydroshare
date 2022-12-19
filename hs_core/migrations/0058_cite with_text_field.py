@@ -8,18 +8,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0057_auto_20210104_2106'),
+        ("hs_core", "0057_auto_20210104_2106"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='relation',
-            name='value',
+            model_name="relation",
+            name="value",
             field=models.TextField(),
         ),
         migrations.AlterField(
-            model_name='source',
-            name='derived_from',
+            model_name="source",
+            name="derived_from",
             field=models.TextField(),
         ),
     ]

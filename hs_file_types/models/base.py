@@ -12,8 +12,28 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
 from django.db import models
 from django.forms.models import model_to_dict
-from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
-    span, a, form, button, label, textarea, h4, h3, _input, ul, li, p
+from dominate.tags import (
+    div,
+    legend,
+    table,
+    tr,
+    tbody,
+    thead,
+    td,
+    th,
+    span,
+    a,
+    form,
+    button,
+    label,
+    textarea,
+    h4,
+    h3,
+    _input,
+    ul,
+    li,
+    p,
+)
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from mezzanine.conf import settings
 from rdflib import Literal, Namespace, BNode, URIRef, Graph
@@ -21,8 +41,14 @@ from rdflib.namespace import DC
 
 from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
 from hs_core.hydroshare.resource import delete_resource_file
-from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
-    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
+from hs_core.hydroshare.utils import (
+    current_site_url,
+    get_resource_file_by_id,
+    set_dirty_bag_flag,
+    add_file_to_resource,
+    resource_modified,
+    get_file_from_irods,
+)
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
 from hs_core.signals import post_remove_file_aggregation
 
@@ -79,7 +105,7 @@ class NestedLogicalFileMixin(object):
 
 
 class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
-    """ base class for HydroShare file type metadata """
+    """base class for HydroShare file type metadata"""
 
     # one temporal coverage and one spatial coverage
     coverages = GenericRelation(Coverage)
@@ -87,7 +113,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     extra_metadata = HStoreField(default=dict)
 
     # keywords
-    keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=list)
+    keywords = ArrayField(
+        models.CharField(max_length=100, null=True, blank=True), default=list
+    )
     # to track if any metadata element has been modified to trigger file update
     is_dirty = models.BooleanField(default=False)
 
@@ -101,11 +129,11 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
     @classmethod
     def get_metadata_model_classes(cls):
-        return {'coverage': Coverage}
+        return {"coverage": Coverage}
 
     def get_metadata_elements(self):
         """returns a list of all metadata elements (instances of AbstractMetaDataElement)
-         associated with this file type metadata object.
+        associated with this file type metadata object.
         """
         return list(self.coverages.all())
 
@@ -131,7 +159,10 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
         root_div = div()
         with root_div:
-            h3("{} Content Metadata".format(self.logical_file.data_type), style="margin-bottom: 20px;")
+            h3(
+                "{} Content Metadata".format(self.logical_file.data_type),
+                style="margin-bottom: 20px;",
+            )
 
         if self.logical_file.dataset_name:
             root_div.add(self.get_dataset_name_html())
@@ -153,16 +184,20 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
     def get_keywords_html(self):
         """generates html for viewing keywords"""
-        keywords_div = div(cls='content-block')
+        keywords_div = div(cls="content-block")
         if self.keywords:
             with keywords_div:
-                legend('Keywords')
+                legend("Keywords")
                 with div(cls="tags"):
                     with ul(id="list-keywords-file-type", cls="tag-list custom-well"):
                         for kw in self.keywords:
                             with li():
-                                a(kw, cls="tag",
-                                  href="/search/?q=&selected_facets=subject_exact:" + kw)
+                                a(
+                                    kw,
+                                    cls="tag",
+                                    href="/search/?q=&selected_facets=subject_exact:"
+                                    + kw,
+                                )
         return keywords_div
 
     def get_key_value_metadata_html(self):
@@ -171,8 +206,10 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         if self.extra_metadata:
             extra_metadata_div = div(cls="content-block")
             with extra_metadata_div:
-                legend('Extended Metadata')
-                with table(cls="hs-table table dataTable no-footer", style="width: 100%"):
+                legend("Extended Metadata")
+                with table(
+                    cls="hs-table table dataTable no-footer", style="width: 100%"
+                ):
                     with thead():
                         with tr(cls="header-row"):
                             th("Key")
@@ -193,10 +230,13 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         included
         """
 
-        skip_coverage = kwargs.get('skip_coverage', False)
+        skip_coverage = kwargs.get("skip_coverage", False)
         root_div = div()
         with root_div:
-            h3("{} Content Metadata".format(self.logical_file.data_type), style="margin-bottom: 20px;")
+            h3(
+                "{} Content Metadata".format(self.logical_file.data_type),
+                style="margin-bottom: 20px;",
+            )
             if dataset_name_form:
                 self.get_dataset_name_form()
 
@@ -210,10 +250,12 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                     if self.logical_file.has_children_temporal_data:
                         with self.get_temporal_coverage_html_form():
                             with div():
-                                button("Set temporal coverage from folder contents",
-                                       type="button",
-                                       cls="btn btn-primary",
-                                       id="btn-update-aggregation-temporal-coverage")
+                                button(
+                                    "Set temporal coverage from folder contents",
+                                    type="button",
+                                    cls="btn btn-primary",
+                                    id="btn-update-aggregation-temporal-coverage",
+                                )
                     else:
                         self.get_temporal_coverage_html_form()
         return root_div
@@ -221,46 +263,82 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     def get_keywords_html_form(self):
         keywords_div = div(cls="content-block", id="filetype-keywords")
         action = "/hsapi/_internal/{0}/{1}/add-file-keyword-metadata/"
-        action = action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+        action = action.format(
+            self.logical_file.__class__.__name__, self.logical_file.id
+        )
         delete_action = "/hsapi/_internal/{0}/{1}/delete-file-keyword-metadata/"
-        delete_action = delete_action.format(self.logical_file.__class__.__name__,
-                                             self.logical_file.id)
+        delete_action = delete_action.format(
+            self.logical_file.__class__.__name__, self.logical_file.id
+        )
         with keywords_div:
             legend("Keywords")
-            with form(id="id-keywords-filetype", action=action, method="post",
-                      enctype="multipart/form-data"):
-                _input(id="id-delete-keyword-filetype-action", type="hidden",
-                           value=delete_action)
+            with form(
+                id="id-keywords-filetype",
+                action=action,
+                method="post",
+                enctype="multipart/form-data",
+            ):
+                _input(
+                    id="id-delete-keyword-filetype-action",
+                    type="hidden",
+                    value=delete_action,
+                )
                 with div(cls="tags"):
                     with div(id="add-keyword-wrapper", cls="input-group"):
-                        _input(id="txt-keyword-filetype", cls="form-control",
-                                   placeholder="keyword",
-                                   type="text", name="keywords")
+                        _input(
+                            id="txt-keyword-filetype",
+                            cls="form-control",
+                            placeholder="keyword",
+                            type="text",
+                            name="keywords",
+                        )
                         with span(cls="input-group-btn"):
-                            a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
-                              type="button")
+                            a(
+                                "Add",
+                                id="btn-add-keyword-filetype",
+                                cls="btn btn-success",
+                                type="button",
+                            )
                 with ul(id="lst-tags-filetype", cls="custom-well tag-list"):
                     for kw in self.keywords:
                         with li(cls="tag"):
                             span(kw)
                             with a():
-                                span(cls="glyphicon glyphicon-remove-circle icon-remove")
-            p("Duplicate. Keywords not added.", id="id-keywords-filetype-msg",
-              cls="text-danger small", style="display: none;")
+                                span(
+                                    cls="glyphicon glyphicon-remove-circle icon-remove"
+                                )
+            p(
+                "Duplicate. Keywords not added.",
+                id="id-keywords-filetype-msg",
+                cls="text-danger small",
+                style="display: none;",
+            )
 
     def get_spatial_coverage_form(self, allow_edit=False):
-        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage,
-                                              allow_edit=allow_edit, file_type=True)
+        return Coverage.get_spatial_html_form(
+            resource=None,
+            element=self.spatial_coverage,
+            allow_edit=allow_edit,
+            file_type=True,
+        )
 
     def get_temporal_coverage_form(self, allow_edit=True):
-        return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage,
-                                               file_type=True, allow_edit=allow_edit)
+        return Coverage.get_temporal_html_form(
+            resource=None,
+            element=self.temporal_coverage,
+            file_type=True,
+            allow_edit=allow_edit,
+        )
 
     def get_extra_metadata_html_form(self):
         def get_add_keyvalue_button():
-            add_key_value_btn = a(cls="btn btn-success", type="button", data_toggle="modal",
-                                  data_target="#add-keyvalue-filetype-modal",
-                                  style="margin-bottom:20px;")
+            add_key_value_btn = a(
+                cls="btn btn-success",
+                type="button",
+                data_toggle="modal",
+                data_target="#add-keyvalue-filetype-modal",
+                style="margin-bottom:20px;",
+            )
             with add_key_value_btn:
                 with span(cls="glyphicon glyphicon-plus"):
                     span("Add Key/Value", cls="button-label")
@@ -269,10 +347,11 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         if self.extra_metadata:
             root_div_extra = div(id="filetype-extra-metadata")
             with root_div_extra:
-                legend('Extended Metadata')
+                legend("Extended Metadata")
                 get_add_keyvalue_button()
-                with table(cls="hs-table table dataTable no-footer",
-                           style="width: 100%"):
+                with table(
+                    cls="hs-table table dataTable no-footer", style="width: 100%"
+                ):
                     with thead():
                         with tr(cls="header-row"):
                             th("Key")
@@ -286,17 +365,24 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                                 td(k)
                                 td(v)
                                 with td():
-                                    span(data_toggle="modal", data_placement="auto", title="Edit",
-                                         cls="btn-edit-icon glyphicon glyphicon-pencil "
-                                             "icon-blue table-icon",
-                                         data_target="#edit-keyvalue-filetype-modal"
-                                                     "-{}".format(counter))
-                                    span(data_toggle="modal", data_placement="auto",
-                                         title="Remove",
-                                         cls="btn-remove-icon glyphicon glyphicon-trash "
-                                             "btn-remove table-icon",
-                                         data_target="#delete-keyvalue-filetype-modal"
-                                                     "-{}".format(counter))
+                                    span(
+                                        data_toggle="modal",
+                                        data_placement="auto",
+                                        title="Edit",
+                                        cls="btn-edit-icon glyphicon glyphicon-pencil "
+                                        "icon-blue table-icon",
+                                        data_target="#edit-keyvalue-filetype-modal"
+                                        "-{}".format(counter),
+                                    )
+                                    span(
+                                        data_toggle="modal",
+                                        data_placement="auto",
+                                        title="Remove",
+                                        cls="btn-remove-icon glyphicon glyphicon-trash "
+                                        "btn-remove table-icon",
+                                        data_target="#delete-keyvalue-filetype-modal"
+                                        "-{}".format(counter),
+                                    )
 
                 self._get_add_key_value_modal_form()
                 self._get_edit_key_value_modal_forms()
@@ -305,7 +391,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         else:
             root_div_extra = div(id="filetype-extra-metadata", cls="content-block")
             with root_div_extra:
-                legend('Extended Metadata')
+                legend("Extended Metadata")
                 get_add_keyvalue_button()
                 self._get_add_key_value_modal_form()
             return root_div_extra
@@ -313,17 +399,25 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     def get_temporal_coverage_html_form(self):
         # Note: When using this form layout the context variable 'temp_form' must be
         # set prior to calling the template.render(context)
-        root_div = div(id="temporal-coverage-filetype", cls='content-block')
+        root_div = div(id="temporal-coverage-filetype", cls="content-block")
         with root_div:
-            with form(id="id-coverage-temporal-file-type", action="{{ temp_form.action }}",
-                      method="post", enctype="multipart/form-data"):
+            with form(
+                id="id-coverage-temporal-file-type",
+                action="{{ temp_form.action }}",
+                method="post",
+                enctype="multipart/form-data",
+            ):
                 div("{% crispy temp_form %}")
                 with div(cls="row", style="margin-top:10px;"):
-                    with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                 "col-md-2 col-xs-6"):
-                        button("Save changes", type="button",
-                               cls="btn btn-primary pull-right",
-                               style="display: none;")
+                    with div(
+                        cls="col-md-offset-10 col-xs-offset-6 " "col-md-2 col-xs-6"
+                    ):
+                        button(
+                            "Save changes",
+                            type="button",
+                            cls="btn btn-primary pull-right",
+                            style="display: none;",
+                        )
         return root_div
 
     def has_all_required_elements(self):
@@ -334,31 +428,42 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
     @classmethod
     def get_supported_element_names(cls):
-        return ['Coverage']
+        return ["Coverage"]
 
     def get_required_missing_elements(self):
         return []
 
     @property
     def has_metadata(self):
-        if not self.coverages.all() and not self.extra_metadata \
-                and not self.logical_file.dataset_name:
+        if (
+            not self.coverages.all()
+            and not self.extra_metadata
+            and not self.logical_file.dataset_name
+        ):
             return False
         return True
 
     @property
     def spatial_coverage(self):
-        return self.coverages.exclude(type='period').first()
+        return self.coverages.exclude(type="period").first()
 
     @property
     def temporal_coverage(self):
-        return self.coverages.filter(type='period').first()
+        return self.coverages.filter(type="period").first()
 
     def rdf_subject(self):
-        return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
+        return Namespace(
+            "{}/resource/{}#".format(
+                current_site_url(), self.logical_file.map_file_path
+            )
+        ).aggregation
 
     def rdf_metadata_subject(self):
-        return URIRef("{}/resource/{}#".format(current_site_url(), self.logical_file.metadata_file_path))
+        return URIRef(
+            "{}/resource/{}#".format(
+                current_site_url(), self.logical_file.metadata_file_path
+            )
+        )
 
     def rdf_type(self):
         return getattr(HSTERMS, self.logical_file.get_aggregation_type_name())
@@ -414,18 +519,28 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                 graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
                 graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
 
-        TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), aggregation_type)
-        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
+        TYPE_SUBJECT = getattr(
+            Namespace("{}/terms/".format(current_site_url())), aggregation_type
+        )
+        graph.add(
+            (
+                TYPE_SUBJECT,
+                RDFS1.label,
+                Literal(self.logical_file.get_aggregation_display_name()),
+            )
+        )
         graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
         return graph
 
     def create_element(self, element_model_name, **kwargs):
         resource = self.logical_file.resource
         if resource.raccess.published:
-            raise ValidationError("Aggregation metadata editing is not allowed for a published resource")
+            raise ValidationError(
+                "Aggregation metadata editing is not allowed for a published resource"
+            )
 
         model_type = self._get_metadata_element_model_type(element_model_name)
-        kwargs['content_object'] = self
+        kwargs["content_object"] = self
         element = model_type.model_class().create(**kwargs)
         self.is_dirty = True
 
@@ -452,9 +567,11 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     def update_element(self, element_model_name, element_id, **kwargs):
         resource = self.logical_file.resource
         if resource.raccess.published:
-            raise ValidationError("Aggregation metadata editing is not allowed for a published resource")
+            raise ValidationError(
+                "Aggregation metadata editing is not allowed for a published resource"
+            )
         model_type = self._get_metadata_element_model_type(element_model_name)
-        kwargs['content_object'] = self
+        kwargs["content_object"] = self
         model_type.model_class().update(element_id, **kwargs)
         self.is_dirty = True
         self.save()
@@ -473,7 +590,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     def delete_element(self, element_model_name, element_id):
         resource = self.logical_file.resource
         if resource.raccess.published:
-            raise ValidationError("Aggregation metadata editing is not allowed for a published resource")
+            raise ValidationError(
+                "Aggregation metadata editing is not allowed for a published resource"
+            )
         model_type = self._get_metadata_element_model_type(element_model_name)
         model_type.model_class().remove(element_id)
         self.is_dirty = True
@@ -488,19 +607,23 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     def _get_metadata_element_model_type(self, element_model_name):
         element_model_name = element_model_name.lower()
         if not self._is_valid_element(element_model_name):
-            raise ValidationError("Metadata element type:%s is not one of the "
-                                  "supported metadata elements for %s."
-                                  % (element_model_name, type(self)))
+            raise ValidationError(
+                "Metadata element type:%s is not one of the "
+                "supported metadata elements for %s." % (element_model_name, type(self))
+            )
 
-        unsupported_element_error = "Metadata element type:%s is not supported." \
-                                    % element_model_name
+        unsupported_element_error = (
+            "Metadata element type:%s is not supported." % element_model_name
+        )
         try:
-            model_type = ContentType.objects.get(app_label=self.model_app_label,
-                                                 model=element_model_name)
+            model_type = ContentType.objects.get(
+                app_label=self.model_app_label, model=element_model_name
+            )
         except ObjectDoesNotExist:
             try:
-                model_type = ContentType.objects.get(app_label='hs_core',
-                                                     model=element_model_name)
+                model_type = ContentType.objects.get(
+                    app_label="hs_core", model=element_model_name
+                )
             except ObjectDoesNotExist:
                 raise ValidationError(unsupported_element_error)
 
@@ -521,186 +644,333 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
     def get_dataset_name_form(self):
         form_action = "/hsapi/_internal/{0}/{1}/update-filetype-dataset-name/"
-        form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+        form_action = form_action.format(
+            self.logical_file.__class__.__name__, self.logical_file.id
+        )
         root_div = div()
-        dataset_name = self.logical_file.dataset_name if self.logical_file.dataset_name else ""
+        dataset_name = (
+            self.logical_file.dataset_name if self.logical_file.dataset_name else ""
+        )
         with root_div:
-            with form(action=form_action, id="filetype-dataset-name",
-                      method="post", enctype="multipart/form-data"):
+            with form(
+                action=form_action,
+                id="filetype-dataset-name",
+                method="post",
+                enctype="multipart/form-data",
+            ):
                 div("{% csrf_token %}")
                 with div(cls="form-group"):
                     with div(cls="control-group"):
-                        legend('Title')
+                        legend("Title")
                         with div(cls="controls"):
-                            _input(value=dataset_name,
-                                       cls="form-control input-sm textinput textInput",
-                                       id="file_dataset_name", maxlength="250",
-                                       name="dataset_name", type="text")
+                            _input(
+                                value=dataset_name,
+                                cls="form-control input-sm textinput textInput",
+                                id="file_dataset_name",
+                                maxlength="250",
+                                name="dataset_name",
+                                type="text",
+                            )
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
-                        button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
-                               style="display: none;", type="button")
+                        button(
+                            "Save changes",
+                            cls="btn btn-primary pull-right btn-form-submit",
+                            style="display: none;",
+                            type="button",
+                        )
         return root_div
 
     def _get_add_key_value_modal_form(self):
         form_action = "/hsapi/_internal/{0}/{1}/update-file-keyvalue-metadata/"
-        form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
-        modal_div = div(cls="modal fade", id="add-keyvalue-filetype-modal", tabindex="-1",
-                        role="dialog", aria_labelledby="add-key-value-metadata",
-                        aria_hidden="true")
+        form_action = form_action.format(
+            self.logical_file.__class__.__name__, self.logical_file.id
+        )
+        modal_div = div(
+            cls="modal fade",
+            id="add-keyvalue-filetype-modal",
+            tabindex="-1",
+            role="dialog",
+            aria_labelledby="add-key-value-metadata",
+            aria_hidden="true",
+        )
         with modal_div:
             with div(cls="modal-dialog", role="document"):
                 with div(cls="modal-content"):
-                    with form(action=form_action, id="add-keyvalue-filetype-metadata",
-                              method="post", enctype="multipart/form-data"):
+                    with form(
+                        action=form_action,
+                        id="add-keyvalue-filetype-metadata",
+                        method="post",
+                        enctype="multipart/form-data",
+                    ):
                         div("{% csrf_token %}")
                         with div(cls="modal-header"):
-                            button("x", type="button", cls="close", data_dismiss="modal",
-                                   aria_hidden="true")
-                            h4("Add Key/Value Metadata", cls="modal-title",
-                               id="add-key-value-metadata")
+                            button(
+                                "x",
+                                type="button",
+                                cls="close",
+                                data_dismiss="modal",
+                                aria_hidden="true",
+                            )
+                            h4(
+                                "Add Key/Value Metadata",
+                                cls="modal-title",
+                                id="add-key-value-metadata",
+                            )
                         with div(cls="modal-body"):
                             with div(cls="form-group"):
                                 with div(cls="control-group"):
-                                    label("Key", cls="control-label requiredField",
-                                          fr="file_extra_meta_name")
+                                    label(
+                                        "Key",
+                                        cls="control-label requiredField",
+                                        fr="file_extra_meta_name",
+                                    )
                                     with div(cls="controls"):
-                                        _input(cls="form-control input-sm textinput textInput",
-                                                   id="file_extra_meta_name", maxlength="100",
-                                                   name="name", type="text")
+                                        _input(
+                                            cls="form-control input-sm textinput textInput",
+                                            id="file_extra_meta_name",
+                                            maxlength="100",
+                                            name="name",
+                                            type="text",
+                                        )
                                 with div(cls="control-group"):
-                                    label("Value", cls="control-label requiredField",
-                                          fr="file_extra_meta_value")
+                                    label(
+                                        "Value",
+                                        cls="control-label requiredField",
+                                        fr="file_extra_meta_value",
+                                    )
                                     with div(cls="controls"):
-                                        textarea(cls="form-control input-sm textarea",
-                                                 cols="40", rows="10",
-                                                 id="file_extra_meta_value",
-                                                 style="resize: vertical;",
-                                                 name="value", type="text")
+                                        textarea(
+                                            cls="form-control input-sm textarea",
+                                            cols="40",
+                                            rows="10",
+                                            id="file_extra_meta_value",
+                                            style="resize: vertical;",
+                                            name="value",
+                                            type="text",
+                                        )
                         with div(cls="modal-footer"):
-                            button("Cancel", type="button", cls="btn btn-default",
-                                   data_dismiss="modal")
-                            button("OK", type="button", cls="btn btn-primary",
-                                   id="btn-confirm-add-metadata")  # TODO: TESTING
+                            button(
+                                "Cancel",
+                                type="button",
+                                cls="btn btn-default",
+                                data_dismiss="modal",
+                            )
+                            button(
+                                "OK",
+                                type="button",
+                                cls="btn btn-primary",
+                                id="btn-confirm-add-metadata",
+                            )  # TODO: TESTING
         return modal_div
 
     def _get_edit_key_value_modal_forms(self):
         # TODO: See if can use one modal dialog to edit any pair of key/value
         form_action = "/hsapi/_internal/{0}/{1}/update-file-keyvalue-metadata/"
-        form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+        form_action = form_action.format(
+            self.logical_file.__class__.__name__, self.logical_file.id
+        )
         counter = 0
         root_div = div(id="edit-keyvalue-filetype-modals")
         with root_div:
             for k, v in list(self.extra_metadata.items()):
                 counter += 1
-                modal_div = div(cls="modal fade",
-                                id="edit-keyvalue-filetype-modal-{}".format(counter),
-                                tabindex="-1",
-                                role="dialog", aria_labelledby="edit-key-value-metadata",
-                                aria_hidden="true")
+                modal_div = div(
+                    cls="modal fade",
+                    id="edit-keyvalue-filetype-modal-{}".format(counter),
+                    tabindex="-1",
+                    role="dialog",
+                    aria_labelledby="edit-key-value-metadata",
+                    aria_hidden="true",
+                )
                 with modal_div:
                     with div(cls="modal-dialog", role="document"):
                         with div(cls="modal-content"):
-                            form_id = "edit-keyvalue-filetype-metadata-{}".format(counter)
-                            with form(action=form_action,
-                                      id=form_id, data_counter="{}".format(counter),
-                                      method="post", enctype="multipart/form-data"):
+                            form_id = "edit-keyvalue-filetype-metadata-{}".format(
+                                counter
+                            )
+                            with form(
+                                action=form_action,
+                                id=form_id,
+                                data_counter="{}".format(counter),
+                                method="post",
+                                enctype="multipart/form-data",
+                            ):
                                 div("{% csrf_token %}")
                                 with div(cls="modal-header"):
-                                    button("x", type="button", cls="close", data_dismiss="modal",
-                                           aria_hidden="true")
-                                    h4("Update Key/Value Metadata", cls="modal-title",
-                                       id="edit-key-value-metadata")
+                                    button(
+                                        "x",
+                                        type="button",
+                                        cls="close",
+                                        data_dismiss="modal",
+                                        aria_hidden="true",
+                                    )
+                                    h4(
+                                        "Update Key/Value Metadata",
+                                        cls="modal-title",
+                                        id="edit-key-value-metadata",
+                                    )
                                 with div(cls="modal-body"):
                                     with div(cls="form-group"):
                                         with div(cls="control-group"):
-                                            label("Key(Original)",
-                                                  cls="control-label requiredField",
-                                                  fr="file_extra_meta_key_original")
+                                            label(
+                                                "Key(Original)",
+                                                cls="control-label requiredField",
+                                                fr="file_extra_meta_key_original",
+                                            )
                                             with div(cls="controls"):
-                                                _input(value=k, readonly="readonly",
-                                                           cls="form-control input-sm textinput "
-                                                               "textInput",
-                                                           id="file_extra_meta_key_original",
-                                                           maxlength="100",
-                                                           name="key_original", type="text")
+                                                _input(
+                                                    value=k,
+                                                    readonly="readonly",
+                                                    cls="form-control input-sm textinput "
+                                                    "textInput",
+                                                    id="file_extra_meta_key_original",
+                                                    maxlength="100",
+                                                    name="key_original",
+                                                    type="text",
+                                                )
                                         with div(cls="control-group"):
-                                            label("Key", cls="control-label requiredField",
-                                                  fr="file_extra_meta_key")
+                                            label(
+                                                "Key",
+                                                cls="control-label requiredField",
+                                                fr="file_extra_meta_key",
+                                            )
                                             with div(cls="controls"):
-                                                _input(value=k,
-                                                           cls="form-control input-sm textinput "
-                                                               "textInput",
-                                                           id="file_extra_meta_key", maxlength="100",
-                                                           name="key", type="text")
+                                                _input(
+                                                    value=k,
+                                                    cls="form-control input-sm textinput "
+                                                    "textInput",
+                                                    id="file_extra_meta_key",
+                                                    maxlength="100",
+                                                    name="key",
+                                                    type="text",
+                                                )
                                         with div(cls="control-group"):
-                                            label("Value", cls="control-label requiredField",
-                                                  fr="file_extra_meta_value")
+                                            label(
+                                                "Value",
+                                                cls="control-label requiredField",
+                                                fr="file_extra_meta_value",
+                                            )
                                             with div(cls="controls"):
-                                                textarea(v,
-                                                         cls="form-control input-sm textarea",
-                                                         cols="40", rows="10",
-                                                         id="file_extra_meta_value",
-                                                         style="resize: vertical;",
-                                                         name="value", type="text")
+                                                textarea(
+                                                    v,
+                                                    cls="form-control input-sm textarea",
+                                                    cols="40",
+                                                    rows="10",
+                                                    id="file_extra_meta_value",
+                                                    style="resize: vertical;",
+                                                    name="value",
+                                                    type="text",
+                                                )
                                 with div(cls="modal-footer"):
-                                    button("Cancel", type="button", cls="btn btn-default",
-                                           data_dismiss="modal")
-                                    button("OK", id="btn-confirm-edit-key-value",
-                                           type="button", cls="btn btn-primary")
+                                    button(
+                                        "Cancel",
+                                        type="button",
+                                        cls="btn btn-default",
+                                        data_dismiss="modal",
+                                    )
+                                    button(
+                                        "OK",
+                                        id="btn-confirm-edit-key-value",
+                                        type="button",
+                                        cls="btn btn-primary",
+                                    )
             return root_div
 
     def _get_delete_key_value_modal_forms(self):
         form_action = "/hsapi/_internal/{0}/{1}/delete-file-keyvalue-metadata/"
-        form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+        form_action = form_action.format(
+            self.logical_file.__class__.__name__, self.logical_file.id
+        )
         counter = 0
         root_div = div(id="delete-keyvalue-filetype-modals")
         with root_div:
             for k, v in list(self.extra_metadata.items()):
                 counter += 1
-                modal_div = div(cls="modal fade",
-                                id="delete-keyvalue-filetype-modal-{}".format(counter),
-                                tabindex="-1",
-                                role="dialog", aria_labelledby="delete-key-value-metadata",
-                                aria_hidden="true")
+                modal_div = div(
+                    cls="modal fade",
+                    id="delete-keyvalue-filetype-modal-{}".format(counter),
+                    tabindex="-1",
+                    role="dialog",
+                    aria_labelledby="delete-key-value-metadata",
+                    aria_hidden="true",
+                )
                 with modal_div:
                     with div(cls="modal-dialog", role="document"):
                         with div(cls="modal-content"):
-                            form_id = "delete-keyvalue-filetype-metadata-{}".format(counter)
-                            with form(action=form_action,
-                                      id=form_id,
-                                      method="post", enctype="multipart/form-data"):
+                            form_id = "delete-keyvalue-filetype-metadata-{}".format(
+                                counter
+                            )
+                            with form(
+                                action=form_action,
+                                id=form_id,
+                                method="post",
+                                enctype="multipart/form-data",
+                            ):
                                 div("{% csrf_token %}")
                                 with div(cls="modal-header"):
-                                    button("x", type="button", cls="close", data_dismiss="modal",
-                                           aria_hidden="true")
-                                    h4("Confirm to Delete Key/Value Metadata", cls="modal-title",
-                                       id="delete-key-value-metadata")
+                                    button(
+                                        "x",
+                                        type="button",
+                                        cls="close",
+                                        data_dismiss="modal",
+                                        aria_hidden="true",
+                                    )
+                                    h4(
+                                        "Confirm to Delete Key/Value Metadata",
+                                        cls="modal-title",
+                                        id="delete-key-value-metadata",
+                                    )
                                 with div(cls="modal-body"):
                                     with div(cls="form-group"):
                                         with div(cls="control-group"):
-                                            label("Key", cls="control-label requiredField",
-                                                  fr="file_extra_meta_name")
+                                            label(
+                                                "Key",
+                                                cls="control-label requiredField",
+                                                fr="file_extra_meta_name",
+                                            )
                                             with div(cls="controls"):
-                                                _input(cls="form-control input-sm textinput "
-                                                               "textInput", value=k,
-                                                           id="file_extra_meta_key", maxlength="100",
-                                                           name="key", type="text", readonly="readonly")
+                                                _input(
+                                                    cls="form-control input-sm textinput "
+                                                    "textInput",
+                                                    value=k,
+                                                    id="file_extra_meta_key",
+                                                    maxlength="100",
+                                                    name="key",
+                                                    type="text",
+                                                    readonly="readonly",
+                                                )
                                         with div(cls="control-group"):
-                                            label("Value", cls="control-label requiredField",
-                                                  fr="file_extra_meta_value")
+                                            label(
+                                                "Value",
+                                                cls="control-label requiredField",
+                                                fr="file_extra_meta_value",
+                                            )
                                             with div(cls="controls"):
-                                                textarea(v, cls="form-control input-sm textarea",
-                                                         cols="40", rows="10",
-                                                         id="file_extra_meta_value",
-                                                         style="resize: vertical;",
-                                                         name="value", type="text",
-                                                         readonly="readonly")
+                                                textarea(
+                                                    v,
+                                                    cls="form-control input-sm textarea",
+                                                    cols="40",
+                                                    rows="10",
+                                                    id="file_extra_meta_value",
+                                                    style="resize: vertical;",
+                                                    name="value",
+                                                    type="text",
+                                                    readonly="readonly",
+                                                )
                                 with div(cls="modal-footer"):
-                                    button("Cancel", type="button", cls="btn btn-default",
-                                           data_dismiss="modal")
-                                    button("Delete", type="button", cls="btn btn-danger",
-                                           id="btn-delete-key-value")  # TODO: TESTING
+                                    button(
+                                        "Cancel",
+                                        type="button",
+                                        cls="btn btn-default",
+                                        data_dismiss="modal",
+                                    )
+                                    button(
+                                        "Delete",
+                                        type="button",
+                                        cls="btn btn-danger",
+                                        id="btn-delete-key-value",
+                                    )  # TODO: TESTING
         return root_div
 
     @classmethod
@@ -711,12 +981,17 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
 
 class AbstractLogicalFile(models.Model):
-    """ base class for HydroShare file types """
+    """base class for HydroShare file types"""
 
-    resource = models.ForeignKey('hs_composite_resource.CompositeResource', on_delete=models.CASCADE)
+    resource = models.ForeignKey(
+        "hs_composite_resource.CompositeResource", on_delete=models.CASCADE
+    )
     # files associated with this logical file group
-    files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
-                            object_id_field='logical_file_object_id')
+    files = GenericRelation(
+        ResourceFile,
+        content_type_field="logical_file_content_type",
+        object_id_field="logical_file_object_id",
+    )
     # the dataset name will allow us to identify a logical file group on user interface
     dataset_name = models.CharField(max_length=255, null=True, blank=True)
     # this will be used for dc:type in resourcemetadata.xml
@@ -747,8 +1022,14 @@ class AbstractLogicalFile(models.Model):
         return logical_file
 
     @classmethod
-    def create_aggregation(cls, dataset_name, resource, res_files=None, new_files_to_upload=None,
-                           folder_path=''):
+    def create_aggregation(
+        cls,
+        dataset_name,
+        resource,
+        res_files=None,
+        new_files_to_upload=None,
+        folder_path="",
+    ):
         """Creates an aggregation
         :param  dataset_name  a value for setting the dataset_name attribute of the new aggregation
         :param  resource  an instance of CompositeResource in which the aggregation to be created
@@ -772,7 +1053,7 @@ class AbstractLogicalFile(models.Model):
             new_files_to_upload = []
         # add all new files to the resource
         for f in new_files_to_upload:
-            uploaded_file = UploadedFile(file=open(f, 'rb'), name=os.path.basename(f))
+            uploaded_file = UploadedFile(file=open(f, "rb"), name=os.path.basename(f))
 
             new_res_file = add_file_to_resource(
                 resource, uploaded_file, folder=folder_path, add_to_aggregation=False
@@ -830,7 +1111,9 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def url(self):
-        return os.path.join("/", "resource", self.resource.file_path, self.aggregation_name)
+        return os.path.join(
+            "/", "resource", self.resource.file_path, self.aggregation_name
+        )
 
     @classmethod
     def get_allowed_storage_file_types(cls):
@@ -853,7 +1136,7 @@ class AbstractLogicalFile(models.Model):
         return ""
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=""):
         """Sub classes must implement this method to create specific logical file (aggregation) type
         :param resource: an instance of resource type CompositeResource
         :param file_id: (optional) id of the resource file to be set as an aggregation type -
@@ -866,7 +1149,7 @@ class AbstractLogicalFile(models.Model):
         raise NotImplementedError()
 
     @classmethod
-    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=""):
         """Validation of *file_id* and *folder_path* for creating file type (aggregation)
 
         :param resource: an instance of resource type CompositeResource
@@ -880,21 +1163,35 @@ class AbstractLogicalFile(models.Model):
         """
 
         if file_id is None and not folder_path:
-            raise ValueError("Must specify id of the file or path of the folder to set as an "
-                             "aggregation type")
+            raise ValueError(
+                "Must specify id of the file or path of the folder to set as an "
+                "aggregation type"
+            )
 
         if file_id is not None and folder_path:
-            raise ValueError("Must specify either id of the file or path of the folder to set as an "
-                             "aggregation type, but not both.")
+            raise ValueError(
+                "Must specify either id of the file or path of the folder to set as an "
+                "aggregation type, but not both."
+            )
 
-        if cls.__name__ == 'FileSetLogicalFile' and not folder_path:
-            raise ValueError("Must specify path of the folder to set as a "
-                             "fileset aggregation type")
+        if cls.__name__ == "FileSetLogicalFile" and not folder_path:
+            raise ValueError(
+                "Must specify path of the folder to set as a "
+                "fileset aggregation type"
+            )
 
-        if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile', 'ModelInstanceLogicalFile'] \
-                and file_id is None:
-            raise ValueError("Must specify id of the file to set as an "
-                             "aggregation type")
+        if (
+            cls.__name__
+            not in [
+                "FileSetLogicalFile",
+                "ModelProgramLogicalFile",
+                "ModelInstanceLogicalFile",
+            ]
+            and file_id is None
+        ):
+            raise ValueError(
+                "Must specify id of the file to set as an " "aggregation type"
+            )
 
         res_file = None
         if file_id is not None:
@@ -909,9 +1206,11 @@ class AbstractLogicalFile(models.Model):
 
             if logical_file is not None:
                 if not logical_file.is_fileset and not logical_file.is_model_instance:
-                    msg = "Selected file {} is already part of an aggregation.".format(res_file.file_name)
+                    msg = "Selected file {} is already part of an aggregation.".format(
+                        res_file.file_name
+                    )
                     raise ValidationError(msg)
-                elif cls.__name__ == 'ModelProgramLogicalFile':
+                elif cls.__name__ == "ModelProgramLogicalFile":
                     if logical_file.is_model_instance:
                         msg = "Model program aggregation is not allowed within a model instance aggregation"
                         raise ValidationError(msg)
@@ -919,15 +1218,21 @@ class AbstractLogicalFile(models.Model):
             # user selected a folder to set aggregation - check if the specified folder exists
             storage = resource.get_irods_storage()
             if folder_path.startswith("data/contents/"):
-                folder_path = folder_path[len("data/contents/"):]
+                folder_path = folder_path[len("data/contents/") :]
             path_to_check = os.path.join(resource.file_path, folder_path)
             if not storage.exists(path_to_check):
                 msg = "Specified folder {} path does not exist in irods."
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)
 
-            if cls.__name__ in ("FileSetLogicalFile", "ModelInstanceLogicalFile", "ModelProgramLogicalFile"):
-                if not cls.can_set_folder_to_aggregation(resource=resource, dir_path=path_to_check):
+            if cls.__name__ in (
+                "FileSetLogicalFile",
+                "ModelInstanceLogicalFile",
+                "ModelProgramLogicalFile",
+            ):
+                if not cls.can_set_folder_to_aggregation(
+                    resource=resource, dir_path=path_to_check
+                ):
                     msg = "{} aggregation can't be created from the specified folder:{}"
                     if cls.__name__ == "FileSetLogicalFile":
                         msg = msg.format("Fileset", path_to_check)
@@ -970,17 +1275,17 @@ class AbstractLogicalFile(models.Model):
     @property
     def is_fileset(self):
         """Return True if this aggregation is a fileset aggregation, otherwise False"""
-        return self.get_aggregation_class_name() == 'FileSetLogicalFile'
+        return self.get_aggregation_class_name() == "FileSetLogicalFile"
 
     @property
     def is_model_program(self):
         """Return True if this aggregation is a model program aggregation, otherwise False"""
-        return self.get_aggregation_class_name() == 'ModelProgramLogicalFile'
+        return self.get_aggregation_class_name() == "ModelProgramLogicalFile"
 
     @property
     def is_model_instance(self):
         """Return True if this aggregation is a model instance aggregation, otherwise False"""
-        return self.get_aggregation_class_name() == 'ModelInstanceLogicalFile'
+        return self.get_aggregation_class_name() == "ModelInstanceLogicalFile"
 
     @property
     def is_dangling(self):
@@ -1019,7 +1324,7 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def has_metadata(self):
-        return hasattr(self, 'metadata')
+        return hasattr(self, "metadata")
 
     @property
     def size(self):
@@ -1076,26 +1381,22 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def metadata_short_file_path(self):
-        """File path of the aggregation metadata xml file relative to {resource_id}/data/contents/
-        """
+        """File path of the aggregation metadata xml file relative to {resource_id}/data/contents/"""
         return self.xml_file_short_path(resmap=False)
 
     @property
     def metadata_file_path(self):
-        """Full path of the aggregation metadata xml file starting with {resource_id}/data/contents/
-        """
+        """Full path of the aggregation metadata xml file starting with {resource_id}/data/contents/"""
         return os.path.join(self.resource.file_path, self.metadata_short_file_path)
 
     @property
     def map_short_file_path(self):
-        """File path of the aggregation map xml file relative to {resource_id}/data/contents/
-        """
+        """File path of the aggregation map xml file relative to {resource_id}/data/contents/"""
         return self.xml_file_short_path()
 
     @property
     def map_file_path(self):
-        """Full file path of the aggregation map xml file starting with {resource_id}/data/contents/
-        """
+        """Full file path of the aggregation map xml file starting with {resource_id}/data/contents/"""
         return os.path.join(self.resource.file_path, self.map_short_file_path)
 
     @property
@@ -1132,8 +1433,7 @@ class AbstractLogicalFile(models.Model):
         and made part of this aggregation
         """
         for fl in files_to_add:
-            uploaded_file = UploadedFile(file=open(fl, 'rb'),
-                                         name=os.path.basename(fl))
+            uploaded_file = UploadedFile(file=open(fl, "rb"), name=os.path.basename(fl))
             new_res_file = add_file_to_resource(
                 resource, uploaded_file, folder=upload_folder, add_to_aggregation=False
             )
@@ -1149,8 +1449,9 @@ class AbstractLogicalFile(models.Model):
         :param  folder: folder from which all files need to be made part of this aggregation
         """
 
-        res_files = ResourceFile.list_folder(resource=resource, folder=folder,
-                                             sub_folders=False)
+        res_files = ResourceFile.list_folder(
+            resource=resource, folder=folder, sub_folders=False
+        )
 
         for res_file in res_files:
             self.add_resource_file(res_file)
@@ -1169,10 +1470,9 @@ class AbstractLogicalFile(models.Model):
 
         for res_file in files_to_copy:
             source_path = res_file.storage_path
-            copied_res_file = ResourceFile.create(resource=resource,
-                                                  file=None,
-                                                  folder=tgt_folder,
-                                                  source=source_path)
+            copied_res_file = ResourceFile.create(
+                resource=resource, file=None, folder=tgt_folder, source=source_path
+            )
 
             # make the copied file as part of the aggregation/file type
             self.add_resource_file(copied_res_file)
@@ -1186,7 +1486,9 @@ class AbstractLogicalFile(models.Model):
         """
         copy_of_logical_file = type(self).create(copied_resource)
         copy_of_logical_file.dataset_name = self.dataset_name
-        copy_of_logical_file.metadata.extra_metadata = copy.deepcopy(self.metadata.extra_metadata)
+        copy_of_logical_file.metadata.extra_metadata = copy.deepcopy(
+            self.metadata.extra_metadata
+        )
         copy_of_logical_file.metadata.keywords = self.metadata.keywords
         copy_of_logical_file.metadata.save()
         copy_of_logical_file.extra_data = copy.deepcopy(self.extra_data)
@@ -1195,10 +1497,12 @@ class AbstractLogicalFile(models.Model):
         elements_to_copy = self.metadata.get_metadata_elements()
         for element in elements_to_copy:
             element_args = model_to_dict(element)
-            element_args.pop('content_type')
-            element_args.pop('id')
-            element_args.pop('object_id')
-            copy_of_logical_file.metadata.create_element(element.__class__.__name__, **element_args)
+            element_args.pop("content_type")
+            element_args.pop("id")
+            element_args.pop("object_id")
+            copy_of_logical_file.metadata.create_element(
+                element.__class__.__name__, **element_args
+            )
 
         return copy_of_logical_file
 
@@ -1235,7 +1539,9 @@ class AbstractLogicalFile(models.Model):
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
-                delete_resource_file(resource.short_id, f.id, user, delete_logical_file=False)
+                delete_resource_file(
+                    resource.short_id, f.id, user, delete_logical_file=False
+                )
 
         # delete logical file first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated
@@ -1302,13 +1608,11 @@ class AbstractLogicalFile(models.Model):
             parent_aggr.set_metadata_dirty()
 
         post_remove_file_aggregation.send(
-            sender=self.__class__,
-            resource=self.resource,
-            res_files=self.files.all()
+            sender=self.__class__, resource=self.resource, res_files=self.files.all()
         )
 
         self.resource.setAVU("bag_modified", True)
-        self.resource.setAVU('metadata_dirty', 'true')
+        self.resource.setAVU("metadata_dirty", "true")
 
     def get_parent(self):
         """Find the parent model instance or fileset aggregation of this aggregation
@@ -1321,7 +1625,9 @@ class AbstractLogicalFile(models.Model):
             # first check for a model instance aggregation in the path
             parent_aggr = self.resource.get_model_aggregation_in_path(parent_aggr_path)
             if parent_aggr is None:
-                parent_aggr = self.resource.get_fileset_aggregation_in_path(parent_aggr_path)
+                parent_aggr = self.resource.get_fileset_aggregation_in_path(
+                    parent_aggr_path
+                )
 
         return parent_aggr
 
@@ -1350,14 +1656,18 @@ class AbstractLogicalFile(models.Model):
     @property
     def has_children_spatial_data(self):
         """Returns True if any of the contained aggregation has spatial data, otherwise False"""
-        return any(child_aggr.metadata.spatial_coverage is not None for child_aggr in
-                   self.get_children())
+        return any(
+            child_aggr.metadata.spatial_coverage is not None
+            for child_aggr in self.get_children()
+        )
 
     @property
     def has_children_temporal_data(self):
         """Returns True if any of the contained aggregation has temporal data, otherwise False"""
-        return any(child_aggr.metadata.temporal_coverage is not None for child_aggr in
-                   self.get_children())
+        return any(
+            child_aggr.metadata.temporal_coverage is not None
+            for child_aggr in self.get_children()
+        )
 
     def set_metadata_dirty(self):
         self.metadata.is_dirty = True
@@ -1371,7 +1681,9 @@ class AbstractLogicalFile(models.Model):
         log = logging.getLogger()
 
         # create a temp dir where the xml files will be temporarily saved before copying to iRODS
-        tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
+        tmpdir = os.path.join(
+            settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex
+        )
         istorage = self.resource.get_irods_storage()
 
         if os.path.exists(tmpdir):
@@ -1379,17 +1691,17 @@ class AbstractLogicalFile(models.Model):
         os.makedirs(tmpdir)
 
         # create and copy the map and metadata xml documents for the aggregation
-        meta_from_file_name = os.path.join(tmpdir, 'metadata.xml')
-        map_from_file_name = os.path.join(tmpdir, 'map.xml')
+        meta_from_file_name = os.path.join(tmpdir, "metadata.xml")
+        map_from_file_name = os.path.join(tmpdir, "map.xml")
         try:
-            with open(meta_from_file_name, 'w') as out:
+            with open(meta_from_file_name, "w") as out:
                 out.write(self.metadata.get_xml())
             to_file_name = self.metadata_file_path
             istorage.saveFile(meta_from_file_name, to_file_name, True)
             log.debug("Aggregation metadata xml file:{} created".format(to_file_name))
 
             if create_map_xml:
-                with open(map_from_file_name, 'w') as out:
+                with open(map_from_file_name, "w") as out:
                     out.write(self.generate_map_xml())
                 to_file_name = self.map_file_path
                 istorage.saveFile(map_from_file_name, to_file_name, True)
@@ -1398,7 +1710,11 @@ class AbstractLogicalFile(models.Model):
             # resource map xml file has references to aggregation map xml file paths
             set_dirty_bag_flag(self.resource)
         except Exception as ex:
-            log.error("Failed to create aggregation metadata xml file. Error:{}".format(str(ex)))
+            log.error(
+                "Failed to create aggregation metadata xml file. Error:{}".format(
+                    str(ex)
+                )
+            )
             raise ex
         finally:
             shutil.rmtree(tmpdir)
@@ -1410,7 +1726,7 @@ class AbstractLogicalFile(models.Model):
 
         current_site_url = current_site_url()
         # This is the qualified resource url.
-        hs_res_url = os.path.join(current_site_url, 'resource', self.resource.file_path)
+        hs_res_url = os.path.join(current_site_url, "resource", self.resource.file_path)
         # this is the path to the resource metadata file for download
         aggr_metadata_file_path = self.metadata_short_file_path
         metadata_url = os.path.join(hs_res_url, aggr_metadata_file_path)
@@ -1421,16 +1737,17 @@ class AbstractLogicalFile(models.Model):
         res_map_url = encode_resource_url(res_map_url)
 
         # make the resource map:
-        utils.namespaces['citoterms'] = Namespace('http://purl.org/spar/cito/')
-        utils.namespaceSearchOrder.append('citoterms')
+        utils.namespaces["citoterms"] = Namespace("http://purl.org/spar/cito/")
+        utils.namespaceSearchOrder.append("citoterms")
 
-        ag_url = res_map_url + '#aggregation'
+        ag_url = res_map_url + "#aggregation"
         a = Aggregation(ag_url)
 
         # Set properties of the aggregation
         a._dc.title = self.dataset_name
-        agg_type_url = "{site}/terms/{aggr_type}"\
-            .format(site=current_site_url, aggr_type=self.get_aggregation_type_name())
+        agg_type_url = "{site}/terms/{aggr_type}".format(
+            site=current_site_url, aggr_type=self.get_aggregation_type_name()
+        )
         a._dcterms.type = URIRef(agg_type_url)
         a._citoterms.isDocumentedBy = metadata_url
         a._ore.isDescribedBy = res_map_url
@@ -1452,10 +1769,11 @@ class AbstractLogicalFile(models.Model):
         files = self.files.all()
         resFiles = []
         for n, f in enumerate(files):
-            res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            res_uri = "{hs_url}/resource/{res_id}/data/contents/{file_name}".format(
                 hs_url=current_site_url,
                 res_id=self.resource.short_id,
-                file_name=f.short_path)
+                file_name=f.short_path,
+            )
             res_uri = encode_resource_url(res_uri)
             resFiles.append(AggregatedResource(res_uri))
             resFiles[n]._ore.isAggregatedBy = ag_url
@@ -1469,17 +1787,19 @@ class AbstractLogicalFile(models.Model):
         # Create a description of the contained aggregations and add it to the aggregation
         child_ore_aggregations = []
         for n, child_aggr in enumerate(self.get_children()):
-            res_uri = '{hs_url}/resource/{res_id}/data/contents/{aggr_name}'.format(
+            res_uri = "{hs_url}/resource/{res_id}/data/contents/{aggr_name}".format(
                 hs_url=current_site_url,
                 res_id=self.resource.short_id,
-                aggr_name=child_aggr.map_short_file_path + '#aggregation')
+                aggr_name=child_aggr.map_short_file_path + "#aggregation",
+            )
             res_uri = encode_resource_url(res_uri)
             child_ore_aggr = Aggregation(res_uri)
             child_ore_aggregations.append(child_ore_aggr)
             child_ore_aggregations[n]._ore.isAggregatedBy = ag_url
             child_agg_type_url = "{site}/terms/{aggr_type}"
             child_agg_type_url = child_agg_type_url.format(
-                site=current_site_url, aggr_type=child_aggr.get_aggregation_type_name())
+                site=current_site_url, aggr_type=child_aggr.get_aggregation_type_name()
+            )
             child_ore_aggregations[n]._dcterms.type = URIRef(child_agg_type_url)
 
         # Add contained aggregations to the aggregation
@@ -1488,7 +1808,7 @@ class AbstractLogicalFile(models.Model):
 
         # Register a serializer with the aggregation, which creates a new ResourceMap that
         # needs a URI
-        serializer = RdfLibSerializer('xml')
+        serializer = RdfLibSerializer("xml")
         # resMap = a.register_serialization(serializer, res_map_url)
         a.register_serialization(serializer, res_map_url)
 
@@ -1496,8 +1816,10 @@ class AbstractLogicalFile(models.Model):
         remdoc = a.get_serialization()
         # remove this additional xml element - not sure why it gets added
         # <ore:aggregates rdf:resource="https://www.hydroshare.org/terms/[aggregation name]"/>
-        xml_element_to_replace = '<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
-        xml_string = remdoc.data.replace(xml_element_to_replace, '')
+        xml_element_to_replace = '<ore:aggregates rdf:resource="{}"/>\n'.format(
+            agg_type_url
+        )
+        xml_string = remdoc.data.replace(xml_element_to_replace, "")
         return xml_string
 
     def get_xml_file_name(self, resmap=True):
@@ -1549,8 +1871,17 @@ class FileTypeContext(object):
     :param  is_temp_file if True resource file specified by file_id will be retrieved from
     irods to temp directory
     """
-    def __init__(self, aggr_cls, user, resource, file_id=None, folder_path='',
-                 post_aggr_signal=None, is_temp_file=True):
+
+    def __init__(
+        self,
+        aggr_cls,
+        user,
+        resource,
+        file_id=None,
+        folder_path="",
+        post_aggr_signal=None,
+        is_temp_file=True,
+    ):
 
         self.aggr_cls = aggr_cls
         self.user = user
@@ -1572,11 +1903,14 @@ class FileTypeContext(object):
         self.temp_file = None
 
         self.res_file, self.folder_path = self.aggr_cls._validate_set_file_type_inputs(
-            self.resource, self.file_id, self.folder_path)
+            self.resource, self.file_id, self.folder_path
+        )
 
         if self.is_temp_file:
             # need to get the file from irods to temp dir
-            self.temp_file = get_file_from_irods(resource=self.resource, file_path=self.res_file.storage_path)
+            self.temp_file = get_file_from_irods(
+                resource=self.resource, file_path=self.res_file.storage_path
+            )
             self.temp_dir = os.path.dirname(self.temp_file)
         return self  # control returned to the caller
 
@@ -1597,7 +1931,7 @@ class FileTypeContext(object):
                 self.post_aggr_signal.send(
                     sender=AbstractLogicalFile,
                     resource=self.resource,
-                    file=self.logical_file
+                    file=self.logical_file,
                 )
 
         # delete res files

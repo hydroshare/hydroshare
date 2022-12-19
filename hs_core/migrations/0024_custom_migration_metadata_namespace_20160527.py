@@ -1,5 +1,3 @@
-
-
 import logging
 
 from django.db import migrations
@@ -21,18 +19,20 @@ def migrate_namespace_for_source_and_relation(apps, schema_editor):
         # need to regenerate xml file only for those resources that have either 'source' or 'relation' metadata
         if len(res.metadata.sources.all()) > 0 or len(res.metadata.relations.all()) > 0:
             resource_modified(res, res.creator)
-            log_msg = "Namespace for either 'source' or 'relation' metadata element was updated for resource " \
-                      "with ID:{} and type:{}."
+            log_msg = (
+                "Namespace for either 'source' or 'relation' metadata element was updated for resource "
+                "with ID:{} and type:{}."
+            )
             log_msg = log_msg.format(res.short_id, res.resource_type)
             log.info(log_msg)
             # TODO: after debugging remove the print
-            print (log_msg)
+            print(log_msg)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0023_merge'),
+        ("hs_core", "0023_merge"),
     ]
 
     operations = [

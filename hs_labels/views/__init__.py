@@ -1,9 +1,9 @@
-
 import json
 
 from django.http import HttpResponse
 
 from hs_core.views import authorize, ACTION_TO_AUTHORIZE
+
 
 def resource_labeling_action(request, shortkey=None, *args, **kwargs):
     """
@@ -15,23 +15,25 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
            or 'FOLDER' and action is 'CREATE'
 
     """
-    LABEL = 'LABEL'
-    FAVORITE = 'FAVORITE'
-    MINE = 'MINE'
-    SAVEDLABEL = 'SAVEDLABEL'
+    LABEL = "LABEL"
+    FAVORITE = "FAVORITE"
+    MINE = "MINE"
+    SAVEDLABEL = "SAVEDLABEL"
     OPENWITHAPP = "OPENWITHAPP"
 
     # TODO: clear all labels, clear all saved labels
     res = None
     if shortkey:
-        res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        res, _, user = authorize(
+            request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
+        )
     else:
         user = request.user
 
-    action = request.POST['action']
+    action = request.POST["action"]
 
-    label_type = request.POST['label_type']
-    label = request.POST.get('label', None)
+    label_type = request.POST["label_type"]
+    label = request.POST.get("label", None)
     err_msg = None
 
     # TODO: Use form for input data validation
@@ -46,7 +48,7 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
         elif len(label) >= 75:
             err_msg = "The label is too long (> 75 characters)"
     elif label_type != SAVEDLABEL and shortkey is None:
-            err_msg = "Resource ID is missing"
+        err_msg = "Resource ID is missing"
 
     # pre-check resource type for OPENWITHAPP action
     if label_type == OPENWITHAPP:
@@ -55,7 +57,7 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
 
     if err_msg is None:
         try:
-            if action == 'CREATE':
+            if action == "CREATE":
                 if label_type == LABEL:
                     user.ulabels.label_resource(res, label)
                 elif label_type == SAVEDLABEL:
@@ -66,7 +68,7 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
                     user.ulabels.claim_resource(res)
                 elif label_type == OPENWITHAPP:
                     user.ulabels.add_open_with_app(res)
-            elif action == 'DELETE':
+            elif action == "DELETE":
                 if label_type == LABEL:
                     user.ulabels.unlabel_resource(res, label)
                 elif label_type == SAVEDLABEL:
@@ -81,9 +83,13 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
             err_msg = str(exp)
 
     if err_msg:
-        ajax_response_data = {'status': 'error', 'message': err_msg}
+        ajax_response_data = {"status": "error", "message": err_msg}
     else:
-        ajax_response_data = {'status': 'success', 'label_type': label_type, 'action': action,
-                              'resource_id': shortkey}
+        ajax_response_data = {
+            "status": "success",
+            "label_type": label_type,
+            "action": action,
+            "resource_id": shortkey,
+        }
 
     return HttpResponse(json.dumps(ajax_response_data))

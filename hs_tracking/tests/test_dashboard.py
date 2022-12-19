@@ -8,53 +8,54 @@ from django.test import Client
 
 
 class TestDashboard(TestCase):
-
     def setUp(self):
         self.hostname = socket.gethostname()
         self.resource_url = "/resource/{res_id}/"
-        self.client = Client(HTTP_USER_AGENT='Mozilla/5.0')  # fake use of a real browser
+        self.client = Client(
+            HTTP_USER_AGENT="Mozilla/5.0"
+        )  # fake use of a real browser
 
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
 
         self.admin = hydroshare.create_account(
-            'admin@gmail.com',
-            username='admin',
-            first_name='administrator',
-            last_name='couch',
+            "admin@gmail.com",
+            username="admin",
+            first_name="administrator",
+            last_name="couch",
             superuser=True,
-            groups=[]
+            groups=[],
         )
 
         self.dog = hydroshare.create_account(
-            'dog@gmail.com',
-            username='dog',
-            password='foobar',
-            first_name='a little arfer',
-            last_name='last_name_dog',
+            "dog@gmail.com",
+            username="dog",
+            password="foobar",
+            first_name="a little arfer",
+            last_name="last_name_dog",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         # set up a logged-in session
         # self.client.force_authenticate(user=self.dog)
-        self.client.login(username='dog', password='foobar')
+        self.client.login(username="dog", password="foobar")
 
         self.resources_to_delete = []
         self.groups_to_delete = []
 
         self.holes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.dog,
-            title='all about dog holes',
+            title="all about dog holes",
             metadata=[],
         )
 
         self.resources_to_delete.append(self.holes.short_id)
 
         self.squirrels = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.dog,
-            title='where to find squirrels',
+            title="where to find squirrels",
             metadata=[],
         )
 
@@ -68,13 +69,13 @@ class TestDashboard(TestCase):
         self.dog.delete()
 
     def test_blank(self):
-        """ nothing in tracking database at beginning """
+        """nothing in tracking database at beginning"""
 
         stuff = Variable.recent_resources(self.dog)
         self.assertEqual(stuff.count(), 0)
 
     def test_view(self):
-        """ a view gets recorded """
+        """a view gets recorded"""
 
         response = self.client.get(self.resource_url.format(res_id=self.holes.short_id))
 

@@ -24,7 +24,7 @@ from hs_core.models import Party
 
 from hydroshare import settings as hydroshare_settings
 
-COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
+COMMENT_MAX_LENGTH = getattr(settings, "COMMENT_MAX_LENGTH", 3000)
 
 
 # This form.py is added by Hong Yi for customizing comments in HydroShare
@@ -35,8 +35,10 @@ class CommentDetailsForm(CommentSecurityForm):
     """
     Handles the specific details of the comment (name, comment, etc.).
     """
-    comment = forms.CharField(label=_('Comment'), widget=forms.Textarea,
-                              max_length=COMMENT_MAX_LENGTH)
+
+    comment = forms.CharField(
+        label=_("Comment"), widget=forms.Textarea, max_length=COMMENT_MAX_LENGTH
+    )
 
     def get_comment_object(self):
         """
@@ -85,26 +87,35 @@ class CommentDetailsForm(CommentSecurityForm):
         Check that a submitted comment isn't a duplicate. This might be caused
         by someone posting a comment twice. If it is a dup, silently return the *previous* comment.
         """
-        possible_duplicates = self.get_comment_model()._default_manager.using(
-            self.target_object._state.db
-        ).filter(
-            content_type=new.content_type,
-            object_pk=new.object_pk,
-            user_name=new.user_name,
-            user_email=new.user_email,
-            user_url=new.user_url,
+        possible_duplicates = (
+            self.get_comment_model()
+            ._default_manager.using(self.target_object._state.db)
+            .filter(
+                content_type=new.content_type,
+                object_pk=new.object_pk,
+                user_name=new.user_name,
+                user_email=new.user_email,
+                user_url=new.user_url,
+            )
         )
         for old in possible_duplicates:
-            if old.submit_date.date() == new.submit_date.date() and old.comment == new.comment:
+            if (
+                old.submit_date.date() == new.submit_date.date()
+                and old.comment == new.comment
+            ):
                 return old
 
         return new
 
 
 class CommentForm(CommentDetailsForm):
-    honeypot = forms.CharField(required=False,
-                               label=_('If you enter anything in this field '
-                                       'your comment will be treated as spam'))
+    honeypot = forms.CharField(
+        required=False,
+        label=_(
+            "If you enter anything in this field "
+            "your comment will be treated as spam"
+        ),
+    )
 
     def clean_honeypot(self):
         """Check that nothing's been entered into the honeypot."""
@@ -116,7 +127,6 @@ class CommentForm(CommentDetailsForm):
 
 # added by Hong Yi for customizing THreadedCommentForm
 class ThreadedCommentForm(CommentForm, Html5Mixin):
-
     def __init__(self, request, *args, **kwargs):
         """
         Set some initial field values from cookies or the logged in
@@ -146,25 +156,33 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         comment.ip_address = ip_for_request(request)
         comment.replied_to_id = self.data.get("replied_to")
         comment.save()
-        comment_was_posted.send(sender=comment.__class__, comment=comment,
-                                request=request)
+        comment_was_posted.send(
+            sender=comment.__class__, comment=comment, request=request
+        )
         notify_emails = split_addresses(settings.COMMENTS_NOTIFICATION_EMAILS)
         notify_emails.append(obj.user.email)
         reply_to_comment = comment.replied_to
         if reply_to_comment is not None:
             notify_emails.append(reply_to_comment.user.email)
         if notify_emails:
-            subject = "[HydroShare Support] New comment by {c_name} for: {res_obj}".format(
-                c_name=comment.user_name, res_obj=str(obj))
+            subject = (
+                "[HydroShare Support] New comment by {c_name} for: {res_obj}".format(
+                    c_name=comment.user_name, res_obj=str(obj)
+                )
+            )
             context = {
                 "comment": comment,
                 "comment_url": add_cache_bypass(comment.get_absolute_url()),
                 "request": request,
                 "obj": obj,
             }
-            send_mail_template(subject, "email/comment_notification",
-                               settings.DEFAULT_FROM_EMAIL, notify_emails,
-                               context)
+            send_mail_template(
+                subject,
+                "email/comment_notification",
+                settings.DEFAULT_FROM_EMAIL,
+                notify_emails,
+                context,
+            )
 
         return comment
 
@@ -174,6 +192,7 @@ class RatingForm(CommentSecurityForm):
     Form for a rating. Subclasses ``CommentSecurityForm`` to make use
     of its easy setup for generic relations.
     """
+
     value = 1
 
     def __init__(self, request, *args, **kwargs):
@@ -226,14 +245,14 @@ class RatingForm(CommentSecurityForm):
 class SignupForm(forms.ModelForm):
     class Meta:
         model = User
-        exclude = ['last_login', 'date_joined', 'password']
+        exclude = ["last_login", "date_joined", "password"]
 
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
     organization = forms.CharField(required=True)
     user_type = forms.CharField(required=True)
-    country = forms.CharField(label='Country', required=True)
-    state = forms.CharField(label='State/Province', required=True)
+    country = forms.CharField(label="Country", required=True)
+    state = forms.CharField(label="State/Province", required=True)
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -242,12 +261,12 @@ class SignupForm(forms.ModelForm):
     def verify_captcha(self):
         url = hydroshare_settings.RECAPTCHA_VERIFY_URL
         values = {
-            'secret': hydroshare_settings.RECAPTCHA_SECRET_KEY,
-            'response': self.request.POST.get('g-recaptcha-response')
+            "secret": hydroshare_settings.RECAPTCHA_SECRET_KEY,
+            "response": self.request.POST.get("g-recaptcha-response"),
         }
         response = requests.post(url, values)
         result = response.json()
-        if(result["success"]):
+        if result["success"]:
             return (True, [])
 
         return (False, result["error-codes"])
@@ -267,19 +286,19 @@ class SignupForm(forms.ModelForm):
             raise forms.ValidationError("Password must be confirmed")
 
     def clean_user_type(self):
-        data = self.cleaned_data['user_type']
+        data = self.cleaned_data["user_type"]
         if len(data.strip()) == 0:
             raise forms.ValidationError("User type is a required field.")
         return data
 
     def clean_country(self):
-        data = self.cleaned_data['country']
+        data = self.cleaned_data["country"]
         if len(data.strip()) == 0:
             raise forms.ValidationError("Country is a required field.")
         return data
 
     def clean_state(self):
-        data = self.cleaned_data['state']
+        data = self.cleaned_data["state"]
         if len(data.strip()) == 0:
             raise forms.ValidationError("State is a required field.")
         return data
@@ -287,16 +306,16 @@ class SignupForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         data = self.cleaned_data
         return create_account(
-            email=data['email'],
-            username=data['username'],
-            organization=data['organization'],
-            first_name=data['first_name'],
-            last_name=data['last_name'],
+            email=data["email"],
+            username=data["username"],
+            organization=data["organization"],
+            first_name=data["first_name"],
+            last_name=data["last_name"],
             superuser=False,
-            password=data['password'],
-            user_type=data['user_type'],
-            country=data['country'],
-            state=data['state'],
+            password=data["password"],
+            user_type=data["user_type"],
+            country=data["country"],
+            state=data["state"],
             active=False,
         )
 
@@ -304,18 +323,18 @@ class SignupForm(forms.ModelForm):
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email']
+        fields = ["first_name", "last_name", "email"]
 
     def clean_first_name(self):
-        data = self.cleaned_data['first_name']
+        data = self.cleaned_data["first_name"]
         return data.strip()
 
     def clean_last_name(self):
-        data = self.cleaned_data['last_name']
+        data = self.cleaned_data["last_name"]
         return data.strip()
 
     def clean_email(self):
-        data = self.cleaned_data['email']
+        data = self.cleaned_data["email"]
         if len(data.strip()) == 0:
             raise forms.ValidationError("Email is a required field.")
         return data
@@ -324,30 +343,30 @@ class UserForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(UserProfileForm, self).__init__(*args, **kwargs)
-        self.fields['identifiers'].required = False
+        self.fields["identifiers"].required = False
 
     class Meta:
         model = UserProfile
-        exclude = ['user', 'public', 'create_irods_user_account']
+        exclude = ["user", "public", "create_irods_user_account"]
 
     def clean_organization(self):
-        data = self.cleaned_data['organization']
+        data = self.cleaned_data["organization"]
         if data is None or len(data.strip()) == 0:
             raise forms.ValidationError("Organization is a required field.")
         return data
 
     def clean_country(self):
-        data = self.cleaned_data['country']
+        data = self.cleaned_data["country"]
         if data is None or len(data.strip()) == 0:
             raise forms.ValidationError("Country is a required field.")
         return data
 
     def clean_state(self):
-        data = self.cleaned_data['state']
+        data = self.cleaned_data["state"]
         if data is None or len(data.strip()) == 0:
             raise forms.ValidationError("State is a required field.")
         return data
 
     def clean_identifiers(self):
-        data = self.cleaned_data['identifiers']
+        data = self.cleaned_data["identifiers"]
         return Party.validate_identifiers(data)

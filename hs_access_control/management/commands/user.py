@@ -20,7 +20,7 @@ def shorten(title, length):
     if len(title) <= length:
         return title
     else:
-        return title[0:19]+'...'
+        return title[0:19] + "..."
 
 
 class Command(BaseCommand):
@@ -29,15 +29,15 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a command to execute
-        parser.add_argument('username', type=str)
+        parser.add_argument("username", type=str)
 
     def handle(self, *args, **options):
 
-        if options['username'] is None:
+        if options["username"] is None:
             usage()
             exit(1)
 
-        username = options['username']
+        username = options["username"]
 
         user = user_from_name(username)
         if user is None:
@@ -47,17 +47,20 @@ class Command(BaseCommand):
         print("resources: [on my resources landing page]")
         print("  OWNED by user {}:".format(user.username))
         resources = user.uaccess.get_resources_with_explicit_access(
-                PrivilegeCodes.OWNER, via_user=True, via_group=False, via_community=False)
+            PrivilegeCodes.OWNER, via_user=True, via_group=False, via_community=False
+        )
         for r in resources:
             print("     resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
         print("  EDITABLE by user {}:".format(user.username))
         resources = user.uaccess.get_resources_with_explicit_access(
-                PrivilegeCodes.CHANGE, via_user=True, via_group=False, via_community=False)
+            PrivilegeCodes.CHANGE, via_user=True, via_group=False, via_community=False
+        )
         for r in resources:
             print("     resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
         print("  VIEWABLE by user {}:".format(user.username))
         resources = user.uaccess.get_resources_with_explicit_access(
-                PrivilegeCodes.VIEW, via_user=True, via_group=False, via_community=False)
+            PrivilegeCodes.VIEW, via_user=True, via_group=False, via_community=False
+        )
         for r in resources:
             print("     resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
         print("groups: [on my resources landing page]")
@@ -68,19 +71,39 @@ class Command(BaseCommand):
             print("        PUBLISHED and in group '{}' (id={})".format(g.name, g.id))
             resources = g.gaccess.view_resources.filter(raccess__published=True)
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        DISCOVERABLE and in group '{}' (id={})".format(g.name, g.id))
             resources = g.gaccess.view_resources.filter(raccess__discoverable=True)
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        EDITABLE by group '{}' (id={})".format(g.name, g.id))
-            resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+            resources = g.gaccess.get_resources_with_explicit_access(
+                PrivilegeCodes.CHANGE
+            )
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        VIEWABLE by group '{}' (id={})".format(g.name, g.id))
-            resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+            resources = g.gaccess.get_resources_with_explicit_access(
+                PrivilegeCodes.VIEW
+            )
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        VIEWABLE by group '{}' (id={})".format(g.name, g.id))
 
         print("  EDITABLE by user {}:".format(user.username))
@@ -90,19 +113,39 @@ class Command(BaseCommand):
             print("        PUBLISHED and in group '{}' (id={})".format(g.name, g.id))
             resources = g.gaccess.view_resources.filter(raccess__published=True)
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        DISCOVERABLE and in group '{}' (id={})".format(g.name, g.id))
             resources = g.gaccess.view_resources.filter(raccess__discoverable=True)
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        EDITABLE by group '{}' (id={})".format(g.name, g.id))
-            resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+            resources = g.gaccess.get_resources_with_explicit_access(
+                PrivilegeCodes.CHANGE
+            )
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        VIEWABLE by group '{}' (id={})".format(g.name, g.id))
-            resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+            resources = g.gaccess.get_resources_with_explicit_access(
+                PrivilegeCodes.VIEW
+            )
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        VIEWABLE by group '{}' (id={})".format(g.name, g.id))
 
         print("  VIEWABLE by {}:".format(user.username))
@@ -112,125 +155,299 @@ class Command(BaseCommand):
             print("        PUBLISHED and in group '{}' (id={})".format(g.name, g.id))
             resources = g.gaccess.view_resources.filter(raccess__published=True)
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        DISCOVERABLE and in group '{}' (id={})".format(g.name, g.id))
             resources = g.gaccess.view_resources.filter(raccess__discoverable=True)
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        EDITABLE by group '{}' (id={})".format(g.name, g.id))
-            resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+            resources = g.gaccess.get_resources_with_explicit_access(
+                PrivilegeCodes.CHANGE
+            )
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
             print("        VIEWABLE by group '{}' (id={})".format(g.name, g.id))
-            resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+            resources = g.gaccess.get_resources_with_explicit_access(
+                PrivilegeCodes.VIEW
+            )
             for r in resources:
-                print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                print(
+                    "           resource '{}' ({})".format(
+                        shorten(r.title, 20), r.short_id
+                    )
+                )
 
         print("communities: [on community landing page]")
         print("   OWNED by {}".format(user.username))
-        communities = user.uaccess.get_communities_with_explicit_access(PrivilegeCodes.OWNER)
+        communities = user.uaccess.get_communities_with_explicit_access(
+            PrivilegeCodes.OWNER
+        )
         for c in communities:
             print("     community '{}' (id={})".format(c.name, c.id))
 
         print("   {} has EDIT membership:".format(user.username))
-        communities = user.uaccess.get_communities_with_explicit_membership(PrivilegeCodes.CHANGE)
+        communities = user.uaccess.get_communities_with_explicit_membership(
+            PrivilegeCodes.CHANGE
+        )
         for c in communities:
             print("     community '{}' (id={})".format(c.name, c.id))
             print("        groups where {} is granted edit:".format(user.username))
             groups = c.get_groups_with_explicit_access(PrivilegeCodes.CHANGE)
             for g in groups:
                 print("     group '{}' (id={})".format(g.name, g.id))
-                print("        PUBLISHED and in group '{}' (id={})".format(g.name, g.id))
+                print(
+                    "        PUBLISHED and in group '{}' (id={})".format(g.name, g.id)
+                )
                 resources = g.gaccess.view_resources.filter(raccess__published=True)
                 for r in resources:
-                    print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
-                print("        DISCOVERABLE and in group '{}' (id={})".format(g.name, g.id))
-                resources = g.gaccess.view_resources.filter(raccess__discoverable=True,
-                                                            raccess__published=False)
+                    print(
+                        "           resource '{}' ({})".format(
+                            shorten(r.title, 20), r.short_id
+                        )
+                    )
+                print(
+                    "        DISCOVERABLE and in group '{}' (id={})".format(
+                        g.name, g.id
+                    )
+                )
+                resources = g.gaccess.view_resources.filter(
+                    raccess__discoverable=True, raccess__published=False
+                )
                 for r in resources:
-                    print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                    print(
+                        "           resource '{}' ({})".format(
+                            shorten(r.title, 20), r.short_id
+                        )
+                    )
                 print("        EDITABLE by group '{}' (id={})".format(g.name, g.id))
-                resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+                resources = g.gaccess.get_resources_with_explicit_access(
+                    PrivilegeCodes.CHANGE
+                )
                 for r in resources:
-                    print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                    print(
+                        "           resource '{}' ({})".format(
+                            shorten(r.title, 20), r.short_id
+                        )
+                    )
                 print("        VIEWABLE by group '{}' (id={})".format(g.name, g.id))
-                resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+                resources = g.gaccess.get_resources_with_explicit_access(
+                    PrivilegeCodes.VIEW
+                )
                 for r in resources:
-                    print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                    print(
+                        "           resource '{}' ({})".format(
+                            shorten(r.title, 20), r.short_id
+                        )
+                    )
 
             print("        groups where {} is granted view:".format(user.username))
             groups = c.get_groups_with_explicit_access(PrivilegeCodes.VIEW)
             for g in groups:
                 print("     group '{}' (id={})".format(g.name, g.id))
-                print("        PUBLISHED and in group '{}' (id={})".format(g.name, g.id))
+                print(
+                    "        PUBLISHED and in group '{}' (id={})".format(g.name, g.id)
+                )
                 resources = g.gaccess.view_resources.filter(raccess__published=True)
                 for r in resources:
-                    print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
-                print("        DISCOVERABLE and in group '{}' (id={})".format(g.name, g.id))
-                resources = g.gaccess.view_resources.filter(raccess__discoverable=True,
-                                                            raccess__published=False)
+                    print(
+                        "           resource '{}' ({})".format(
+                            shorten(r.title, 20), r.short_id
+                        )
+                    )
+                print(
+                    "        DISCOVERABLE and in group '{}' (id={})".format(
+                        g.name, g.id
+                    )
+                )
+                resources = g.gaccess.view_resources.filter(
+                    raccess__discoverable=True, raccess__published=False
+                )
                 for r in resources:
-                    print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                    print(
+                        "           resource '{}' ({})".format(
+                            shorten(r.title, 20), r.short_id
+                        )
+                    )
                 print("        EDITABLE by group '{}' (id={})".format(g.name, g.id))
-                resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+                resources = g.gaccess.get_resources_with_explicit_access(
+                    PrivilegeCodes.CHANGE
+                )
                 for r in resources:
-                    print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                    print(
+                        "           resource '{}' ({})".format(
+                            shorten(r.title, 20), r.short_id
+                        )
+                    )
                 print("        VIEWABLE by group '{}' (id={})".format(g.name, g.id))
-                resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+                resources = g.gaccess.get_resources_with_explicit_access(
+                    PrivilegeCodes.VIEW
+                )
                 for r in resources:
-                    print("           resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
+                    print(
+                        "           resource '{}' ({})".format(
+                            shorten(r.title, 20), r.short_id
+                        )
+                    )
 
         print("   {} has VIEW membership:".format(user.username))
-        communities = user.uaccess.get_communities_with_explicit_membership(PrivilegeCodes.VIEW)
+        communities = user.uaccess.get_communities_with_explicit_membership(
+            PrivilegeCodes.VIEW
+        )
         for c in communities:
             print("     community '{}' (id={})".format(c.name, c.id))
             print("        groups where {} has edit:".format(user.username))
             groups = c.get_groups_with_explicit_access(PrivilegeCodes.CHANGE)
             for g in groups:
                 print("           group '{}' (id={})".format(g.name, g.id))
-                print("              PUBLISHED and in group '{}' (id={})".format(g.name, g.id))
+                print(
+                    "              PUBLISHED and in group '{}' (id={})".format(
+                        g.name, g.id
+                    )
+                )
                 resources = g.gaccess.view_resources.filter(raccess__published=True)
                 for r in resources:
-                    print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                        r.short_id)))
-                print(("              DISCOVERABLE and in group '{}' (id={})".format(g.name, g.id)))
-                resources = g.gaccess.view_resources.filter(raccess__discoverable=True,
-                                                            raccess__published=False)
+                    print(
+                        (
+                            "                 resource '{}' ({})".format(
+                                shorten(r.title, 20), r.short_id
+                            )
+                        )
+                    )
+                print(
+                    (
+                        "              DISCOVERABLE and in group '{}' (id={})".format(
+                            g.name, g.id
+                        )
+                    )
+                )
+                resources = g.gaccess.view_resources.filter(
+                    raccess__discoverable=True, raccess__published=False
+                )
                 for r in resources:
-                    print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                        r.short_id)))
-                print(("              EDITABLE by group '{}' (id={})".format(g.name, g.id)))
-                resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+                    print(
+                        (
+                            "                 resource '{}' ({})".format(
+                                shorten(r.title, 20), r.short_id
+                            )
+                        )
+                    )
+                print(
+                    (
+                        "              EDITABLE by group '{}' (id={})".format(
+                            g.name, g.id
+                        )
+                    )
+                )
+                resources = g.gaccess.get_resources_with_explicit_access(
+                    PrivilegeCodes.CHANGE
+                )
                 for r in resources:
-                    print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                        r.short_id)))
-                print(("              VIEWABLE by group '{}' (id={})".format(g.name, g.id)))
-                resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+                    print(
+                        (
+                            "                 resource '{}' ({})".format(
+                                shorten(r.title, 20), r.short_id
+                            )
+                        )
+                    )
+                print(
+                    (
+                        "              VIEWABLE by group '{}' (id={})".format(
+                            g.name, g.id
+                        )
+                    )
+                )
+                resources = g.gaccess.get_resources_with_explicit_access(
+                    PrivilegeCodes.VIEW
+                )
                 for r in resources:
-                    print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                        r.short_id)))
+                    print(
+                        (
+                            "                 resource '{}' ({})".format(
+                                shorten(r.title, 20), r.short_id
+                            )
+                        )
+                    )
             print(("        groups where {} has view:".format(user.username)))
             groups = c.get_groups_with_explicit_access(PrivilegeCodes.VIEW)
             for g in groups:
                 print("           group '{}' (id={})".format(g.name, g.id))
-                print("              PUBLISHED and in group '{}' (id={})".format(g.name, g.id))
+                print(
+                    "              PUBLISHED and in group '{}' (id={})".format(
+                        g.name, g.id
+                    )
+                )
                 resources = g.gaccess.view_resources.filter(raccess__published=True)
                 for r in resources:
-                    print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                        r.short_id)))
-                print(("              DISCOVERABLE and in group '{}' (id={})".format(g.name, g.id)))
-                resources = g.gaccess.view_resources.filter(raccess__discoverable=True,
-                                                            raccess__published=False)
+                    print(
+                        (
+                            "                 resource '{}' ({})".format(
+                                shorten(r.title, 20), r.short_id
+                            )
+                        )
+                    )
+                print(
+                    (
+                        "              DISCOVERABLE and in group '{}' (id={})".format(
+                            g.name, g.id
+                        )
+                    )
+                )
+                resources = g.gaccess.view_resources.filter(
+                    raccess__discoverable=True, raccess__published=False
+                )
                 for r in resources:
-                    print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                        r.short_id)))
-                print(("              EDITABLE by group '{}' (id={})".format(g.name, g.id)))
-                resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+                    print(
+                        (
+                            "                 resource '{}' ({})".format(
+                                shorten(r.title, 20), r.short_id
+                            )
+                        )
+                    )
+                print(
+                    (
+                        "              EDITABLE by group '{}' (id={})".format(
+                            g.name, g.id
+                        )
+                    )
+                )
+                resources = g.gaccess.get_resources_with_explicit_access(
+                    PrivilegeCodes.CHANGE
+                )
                 for r in resources:
-                    print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                        r.short_id)))
-                print(("              VIEWABLE by group '{}' (id={})".format(g.name, g.id)))
-                resources = g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+                    print(
+                        (
+                            "                 resource '{}' ({})".format(
+                                shorten(r.title, 20), r.short_id
+                            )
+                        )
+                    )
+                print(
+                    (
+                        "              VIEWABLE by group '{}' (id={})".format(
+                            g.name, g.id
+                        )
+                    )
+                )
+                resources = g.gaccess.get_resources_with_explicit_access(
+                    PrivilegeCodes.VIEW
+                )
                 for r in resources:
-                    print(("                 resource '{}' ({})".format(shorten(r.title, 20),
-                                                                        r.short_id)))
+                    print(
+                        (
+                            "                 resource '{}' ({})".format(
+                                shorten(r.title, 20), r.short_id
+                            )
+                        )
+                    )

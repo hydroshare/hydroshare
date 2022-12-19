@@ -8,18 +8,39 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0050_auto_20200611_1912'),
+        ("hs_core", "0050_auto_20200611_1912"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TaskNotification',
+            name="TaskNotification",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('task_id', models.CharField(max_length=50, unique=True)),
-                ('name', models.CharField(blank=True, max_length=1000)),
-                ('payload', models.CharField(blank=True, max_length=1000)),
-                ('status', models.CharField(choices=[('progress', 'Progress'), ('failed', 'Failed'), ('aborted', 'Aborted'), ('completed', 'Completed'), ('delivered', 'Delivered')], default='progress', max_length=20)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("task_id", models.CharField(max_length=50, unique=True)),
+                ("name", models.CharField(blank=True, max_length=1000)),
+                ("payload", models.CharField(blank=True, max_length=1000)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("progress", "Progress"),
+                            ("failed", "Failed"),
+                            ("aborted", "Aborted"),
+                            ("completed", "Completed"),
+                            ("delivered", "Delivered"),
+                        ],
+                        default="progress",
+                        max_length=20,
+                    ),
+                ),
             ],
         ),
     ]

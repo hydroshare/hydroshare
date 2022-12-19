@@ -8,14 +8,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0036_auto_20220510_1213'),
+        ("hs_access_control", "0036_auto_20220510_1213"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='resourceaccess',
-            name='review_pending',
-            field=models.BooleanField(default=False, help_text='whether resource is under metadata review'),
+            model_name="resourceaccess",
+            name="review_pending",
+            field=models.BooleanField(
+                default=False, help_text="whether resource is under metadata review"
+            ),
         ),
-        migrations.RunSQL("ALTER TABLE hs_access_control_resourceaccess ALTER COLUMN review_pending SET DEFAULT FALSE;"),
+        migrations.RunSQL(
+            "ALTER TABLE hs_access_control_resourceaccess ALTER COLUMN review_pending SET DEFAULT FALSE;"
+        ),
     ]

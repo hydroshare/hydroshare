@@ -18,7 +18,7 @@ from hs_file_types.models.fileset import FileSetLogicalFile
 def delete_hanging_logical_files(logical_files):
     count = 0
     for lf in logical_files:
-        if not hasattr(lf, 'resource'):
+        if not hasattr(lf, "resource"):
             lf.delete()
             count = count + 1
         elif not lf.files.all():

@@ -27,30 +27,33 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's, or none to check all resources
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
         # Named (optional) arguments
         parser.add_argument(
-            '--log',
-            action='store_true',  # True for presence, False for absence
-            dest='log',  # value is options['log']
-            help='log errors to system log',
+            "--log",
+            action="store_true",  # True for presence, False for absence
+            dest="log",  # value is options['log']
+            help="log errors to system log",
         )
 
     def handle(self, *args, **options):
 
         logger = logging.getLogger(__name__)
-        log_errors = options['log']
-        echo_errors = not options['log']
+        log_errors = options["log"]
+        echo_errors = not options["log"]
 
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        if len(options["resource_ids"]) > 0:  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 try:
                     resource = get_resource_by_shortkey(rid)
-                    repair_resource(resource, logger,
-                                    echo_errors=echo_errors,
-                                    log_errors=log_errors,
-                                    return_errors=False)
+                    repair_resource(
+                        resource,
+                        logger,
+                        echo_errors=echo_errors,
+                        log_errors=log_errors,
+                        return_errors=False,
+                    )
                 except BaseResource.NotFoundException:
                     msg = "resource {} not found".format(rid)
                     print(msg)
@@ -61,10 +64,13 @@ class Command(BaseCommand):
             for r in BaseResource.objects.all():
                 try:
                     resource = get_resource_by_shortkey(r.short_id)
-                    repair_resource(resource, logger,
-                                    echo_errors=echo_errors,
-                                    log_errors=log_errors,
-                                    return_errors=False)
+                    repair_resource(
+                        resource,
+                        logger,
+                        echo_errors=echo_errors,
+                        log_errors=log_errors,
+                        return_errors=False,
+                    )
                 except BaseResource.NotFoundException:
                     msg = "resource {} not found".format(r.short_id)
                     print(msg)

@@ -14,14 +14,14 @@ from theme.models import QuotaMessage
 class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
     def setUp(self):
         super(TestAddResourceFiles, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.user = create_account(
-            'shauntheta@gmail.com',
-            username='shaun',
-            first_name='Shaun',
-            last_name='Livingston',
+            "shauntheta@gmail.com",
+            username="shaun",
+            first_name="Shaun",
+            last_name="Livingston",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         # create files
@@ -29,15 +29,15 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         self.n2 = "test2.txt"
         self.n3 = "test3.txt"
 
-        test_file = open(self.n1, 'w')
+        test_file = open(self.n1, "w")
         test_file.write("Test text file in test1.txt")
         test_file.close()
 
-        test_file = open(self.n2, 'w')
+        test_file = open(self.n2, "w")
         test_file.write("Test text file in test2.txt")
         test_file.close()
 
-        test_file = open(self.n3, 'w')
+        test_file = open(self.n3, "w")
         test_file.write("Test text file in test3.txt")
         test_file.close()
 
@@ -60,10 +60,12 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
     def test_add_files(self):
         # create a resource
-        res = create_resource(resource_type='GenericResource',
-                              owner=self.user,
-                              title='Test Resource',
-                              metadata=[],)
+        res = create_resource(
+            resource_type="GenericResource",
+            owner=self.user,
+            title="Test Resource",
+            metadata=[],
+        )
 
         self.assertEqual(0, res.size)
 
@@ -77,7 +79,7 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         # add each file of resource to list
         file_list = []
         for f in res.files.all():
-            file_list.append(f.resource_file.name.split('/')[-1])
+            file_list.append(f.resource_file.name.split("/")[-1])
 
         # check if the file name is in the list of files
         self.assertTrue(self.n1 in file_list, "file 1 has not been added")
@@ -87,10 +89,12 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
     def test_add_files_over_quota(self):
         # create a resource
-        res = create_resource(resource_type='GenericResource',
-                              owner=self.user,
-                              title='Test Resource',
-                              metadata=[],)
+        res = create_resource(
+            resource_type="GenericResource",
+            owner=self.user,
+            title="Test Resource",
+            metadata=[],
+        )
 
         if not QuotaMessage.objects.exists():
             QuotaMessage.objects.create()
@@ -107,19 +111,22 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         # and quota enforce flag is set to True
         files = [self.myfile1, self.myfile2, self.myfile3]
         with self.assertRaises(QuotaException):
-            resource_file_add_pre_process(resource=res, files=files,
-                                          user=self.user,
-                                          extract_metadata=False)
+            resource_file_add_pre_process(
+                resource=res, files=files, user=self.user, extract_metadata=False
+            )
 
         qmsg.enforce_quota = False
         qmsg.save()
         # add files should not raise quota exception since enforce_quota flag is set to False
         try:
-            resource_file_add_pre_process(resource=res, files=files,
-                                          user=self.user,
-                                          extract_metadata=False)
+            resource_file_add_pre_process(
+                resource=res, files=files, user=self.user, extract_metadata=False
+            )
         except QuotaException as ex:
-            self.fail("add resource file action should not raise QuotaException for "
-                      "over quota cases if quota is not enforced - Quota Exception: " + str(ex))
+            self.fail(
+                "add resource file action should not raise QuotaException for "
+                "over quota cases if quota is not enforced - Quota Exception: "
+                + str(ex)
+            )
 
         res.delete()

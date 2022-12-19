@@ -1,4 +1,3 @@
-
 from django.test import TestCase
 from django.contrib.auth.models import Group
 
@@ -10,82 +9,86 @@ from hs_access_control.tests.utilities import global_reset
 
 
 class T13Delete(MockIRODSTestCaseMixin, TestCase):
-
     def setUp(self):
         super(T13Delete, self).setUp()
         global_reset()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.admin = hydroshare.create_account(
-            'admin@gmail.com',
-            username='admin',
-            first_name='administrator',
-            last_name='couch',
+            "admin@gmail.com",
+            username="admin",
+            first_name="administrator",
+            last_name="couch",
             superuser=True,
-            groups=[]
+            groups=[],
         )
 
         self.cat = hydroshare.create_account(
-            'cat@gmail.com',
-            username='cat',
-            first_name='not a dog',
-            last_name='last_name_cat',
+            "cat@gmail.com",
+            username="cat",
+            first_name="not a dog",
+            last_name="last_name_cat",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.dog = hydroshare.create_account(
-            'dog@gmail.com',
-            username='dog',
-            first_name='a little arfer',
-            last_name='last_name_dog',
+            "dog@gmail.com",
+            username="dog",
+            first_name="a little arfer",
+            last_name="last_name_dog",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.bat = hydroshare.create_account(
-            'bat@gmail.com',
-            username='bat',
-            first_name='not a man',
-            last_name='last_name_bat',
+            "bat@gmail.com",
+            username="bat",
+            first_name="not a man",
+            last_name="last_name_bat",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.nobody = hydroshare.create_account(
-            'nobody@gmail.com',
-            username='nobody',
-            first_name='no one in particular',
-            last_name='last_name_nobody',
+            "nobody@gmail.com",
+            username="nobody",
+            first_name="no one in particular",
+            last_name="last_name_nobody",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.wombat = hydroshare.create_account(
-            'wombat@gmail.com',
-            username='wombat',
-            first_name='some random ombat',
-            last_name='last_name_wombat',
+            "wombat@gmail.com",
+            username="wombat",
+            first_name="some random ombat",
+            last_name="last_name_wombat",
             superuser=False,
-            groups=[]
+            groups=[],
         )
 
         self.verdi = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type="GenericResource",
             owner=self.dog,
-            title='Guiseppe Verdi',
+            title="Guiseppe Verdi",
             metadata=[],
         )
 
         self.operas = self.dog.uaccess.create_group(
-            title="operas", description="We are the operas")
+            title="operas", description="We are the operas"
+        )
         self.dog.uaccess.share_resource_with_user(
-            self.verdi, self.cat, PrivilegeCodes.CHANGE)
+            self.verdi, self.cat, PrivilegeCodes.CHANGE
+        )
         self.dog.uaccess.share_resource_with_group(
-            self.verdi, self.operas, PrivilegeCodes.CHANGE)
+            self.verdi, self.operas, PrivilegeCodes.CHANGE
+        )
         self.singers = self.dog.uaccess.create_group(
-            title='singers', description="We are the singers")
+            title="singers", description="We are the singers"
+        )
         self.dog.uaccess.share_group_with_user(
-            self.singers, self.cat, PrivilegeCodes.CHANGE)
+            self.singers, self.cat, PrivilegeCodes.CHANGE
+        )
 
     def test_01_delete_resource(self):
         """Delete works for resources: privileges are deleted with resource"""

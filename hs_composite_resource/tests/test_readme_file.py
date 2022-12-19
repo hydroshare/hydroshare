@@ -13,14 +13,14 @@ from hs_core.views.utils import create_folder
 class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(TestReadmeResourceFile, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
         self.user = hydroshare.create_account(
-            'user1@nowhere.com',
-            username='user1',
-            first_name='Creator_FirstName',
-            last_name='Creator_LastName',
+            "user1@nowhere.com",
+            username="user1",
+            first_name="Creator_FirstName",
+            last_name="Creator_LastName",
             superuser=False,
-            groups=[self.group]
+            groups=[self.group],
         )
         # create readme files
         self.readme_txt = "readme.txt"
@@ -30,27 +30,31 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         self.some_txt = "some.txt"
         self.some_md = "some.md"
 
-        self.readme_txt_file = open(self.readme_txt, 'w')
+        self.readme_txt_file = open(self.readme_txt, "w")
         self.readme_txt_file.write("This is a readme text file")
         self.readme_txt_file.close()
 
-        self.README_TXT_file = open(self.README_TXT, 'w')
-        self.README_TXT_file.write("This is a readme text file with file name in uppercase")
+        self.README_TXT_file = open(self.README_TXT, "w")
+        self.README_TXT_file.write(
+            "This is a readme text file with file name in uppercase"
+        )
         self.README_TXT_file.close()
 
-        self.README_MD_file = open(self.README_MD, 'w')
-        self.README_MD_file.write("##This is a readme markdown file file name in uppercase")
+        self.README_MD_file = open(self.README_MD, "w")
+        self.README_MD_file.write(
+            "##This is a readme markdown file file name in uppercase"
+        )
         self.README_MD_file.close()
 
-        self.readme_md_file = open(self.readme_md, 'w')
+        self.readme_md_file = open(self.readme_md, "w")
         self.readme_md_file.write("##This is a readme markdown file")
         self.readme_md_file.close()
 
-        self.some_txt_file = open(self.some_txt, 'w')
+        self.some_txt_file = open(self.some_txt, "w")
         self.some_txt_file.write("This is NOT a readme text file")
         self.some_txt_file.close()
 
-        self.some_md_file = open(self.some_md, 'w')
+        self.some_md_file = open(self.some_md, "w")
         self.some_md_file.write("##This is NOT a readme markdown file")
         self.some_md_file.close()
 
@@ -124,7 +128,7 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertNotEqual(self.composite_resource.readme_file, None)
         self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
         # check that the readme.md file is the readme file for the resource
-        self.assertEqual(self.composite_resource.readme_file.file_name, 'readme.md')
+        self.assertEqual(self.composite_resource.readme_file.file_name, "readme.md")
 
     def test_readme_file_4(self):
         """Test that when we upload a readme.txt or a readme.md file to a folder,
@@ -231,7 +235,7 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.count(), 1)
         # Update the readme file_folder to an empty string
         file = self.composite_resource.files.first()
-        file.file_folder = ''
+        file.file_folder = ""
         file.save()
         # resource has a readme file
         self.assertNotEqual(self.composite_resource.readme_file, None)
@@ -239,16 +243,17 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def _create_composite_resource(self):
         self.composite_resource = hydroshare.create_resource(
-             resource_type='CompositeResource',
-             owner=self.user,
-             title='Test Readme File'
-         )
+            resource_type="CompositeResource", owner=self.user, title="Test Readme File"
+        )
 
-    def _add_files_to_resource(self, files_to_add, upload_folder=''):
+    def _add_files_to_resource(self, files_to_add, upload_folder=""):
         files_to_upload = []
         for fl in files_to_add:
-            file_to_upload = UploadedFile(file=open(fl, 'rb'), name=os.path.basename(fl))
+            file_to_upload = UploadedFile(
+                file=open(fl, "rb"), name=os.path.basename(fl)
+            )
             files_to_upload.append(file_to_upload)
-        added_resource_files = add_resource_files(self.composite_resource.short_id,
-                                                  *files_to_upload, folder=upload_folder)
+        added_resource_files = add_resource_files(
+            self.composite_resource.short_id, *files_to_upload, folder=upload_folder
+        )
         return added_resource_files

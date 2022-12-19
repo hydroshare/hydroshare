@@ -19,14 +19,14 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of resource id's, or none to check all resources
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        parser.add_argument("resource_ids", nargs="*", type=str)
 
         # Named (optional) arguments
         parser.add_argument(
-            '--log',
-            action='store_true',  # True for presence, False for absence
-            dest='log',           # value is options['log']
-            help='log errors to system log',
+            "--log",
+            action="store_true",  # True for presence, False for absence
+            dest="log",  # value is options['log']
+            help="log errors to system log",
         )
 
     def handle(self, *args, **options):
@@ -42,23 +42,33 @@ class Command(BaseCommand):
                 # this is needed to generate aggregation level xml files
                 aggregation.metadata.is_dirty = True
                 aggregation.metadata.save()
-            print("> GENERATING BAG FILES FOR COMPOSITE RESOURCE:{}".format(resource.short_id))
+            print(
+                "> GENERATING BAG FILES FOR COMPOSITE RESOURCE:{}".format(
+                    resource.short_id
+                )
+            )
             create_bag_metadata_files(resource)
-            print(">> GENERATED BAG FILES FOR COMPOSITE RESOURCE:{}".format(resource.short_id))
+            print(
+                ">> GENERATED BAG FILES FOR COMPOSITE RESOURCE:{}".format(
+                    resource.short_id
+                )
+            )
             # re-set metadata status
             for aggregation in resource.logical_files:
                 aggregation.metadata.is_dirty = metadata_status[aggregation.id]
                 aggregation.metadata.save()
 
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
+        if len(options["resource_ids"]) > 0:  # an array of resource short_id to check.
+            for rid in options["resource_ids"]:
                 try:
                     resource = CompositeResource.objects.get(short_id=rid)
                     resource_counter += 1
                     generate_bag_files(resource)
                     resource_counter_success += 1
                 except CompositeResource.DoesNotExist:
-                    msg = "Resource with id {} not found in Django Resources".format(rid)
+                    msg = "Resource with id {} not found in Django Resources".format(
+                        rid
+                    )
                     print(msg)
                     continue
 
@@ -75,4 +85,8 @@ class Command(BaseCommand):
                     continue
 
         print(">> {} COMPOSITE RESOURCES PROCESSED.".format(resource_counter))
-        print(">> BAG FILES GENERATED FOR {} COMPOSITE RESOURCES.".format(resource_counter_success))
+        print(
+            ">> BAG FILES GENERATED FOR {} COMPOSITE RESOURCES.".format(
+                resource_counter_success
+            )
+        )
