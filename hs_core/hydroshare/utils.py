@@ -461,7 +461,7 @@ async def get_jsonld_from_geoconnex(relation, client):
     id = relative_id.split("/")[1]
     url = f"/collections/{collection}/items/{id}?" \
                "f=jsonld&lang=en-US&skipGeometry=true"
-    print(f"CHECKING RELATION '{relation.text}'")
+    logger.debug(f"CHECKING RELATION '{relation.text}'")
     async with client.get(url) as resp:
         return await _save_relation(relation, await resp.json())
 
@@ -475,7 +475,7 @@ async def update_geoconnex_texts(relations=[]):
             get_jsonld_from_geoconnex(relation, client)
             for relation in relations
         ])
-    print("DONE CHECKING RELATIONS")
+    logger.debug("DONE CHECKING RELATIONS")
 
 
 def copy_and_create_metadata(src_res, dest_res):
