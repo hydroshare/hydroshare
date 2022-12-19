@@ -669,7 +669,6 @@ def __ingest_irods_directory(
                         msg = "ingest_irods_files: logical file for {} has type {}, not needed".format(
                             res_file.storage_path,
                             type(res_file.logical_file).__name__,
-                            file_type.__name__,
                         )
                         if echo_errors:
                             print(msg)

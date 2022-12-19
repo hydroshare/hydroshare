@@ -289,7 +289,7 @@ class TestCaseCommonUtilities(object):
 
         # >> testing folder name collision upon unzip
         # create a folder 'sub_test_dir' same as the folder we expect the unzip to create
-        create_folder(res.short_id, f"data/contents/sub_test_dir")
+        create_folder(res.short_id, "data/contents/sub_test_dir")
         # unzip should fail due to folder name (sub_test_dir) collision
         with self.assertRaises(FileOverrideException):
             unzip_file(
@@ -300,7 +300,7 @@ class TestCaseCommonUtilities(object):
             )
 
         # remove the conflicting folder (sub_test_dir) to test that unzip should work after that
-        remove_folder(user, res.short_id, f"data/contents/sub_test_dir")
+        remove_folder(user, res.short_id, "data/contents/sub_test_dir")
         # unzip should work now
         unzip_file(
             user,

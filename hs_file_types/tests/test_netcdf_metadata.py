@@ -52,7 +52,8 @@ class NetCDFFileTypeTest(
             f"{test_file_base_path}/data/{self.netcdf_no_coverage_file_name}"
         )
         self.netcdf_sphere_lambert_conformal_conic_file_name = "sample.nc"
-        self.netcdf_sphere_lambert_conformal_conic_file = f"{test_file_base_path}/data/{self.netcdf_sphere_lambert_conformal_conic_file_name}"
+        self.netcdf_sphere_lambert_conformal_conic_file = f"{test_file_base_path}/data/"
+        f"{self.netcdf_sphere_lambert_conformal_conic_file_name}"
 
     def test_create_aggregation_from_nc_file_1(self):
         # here we are using a valid nc file for setting it

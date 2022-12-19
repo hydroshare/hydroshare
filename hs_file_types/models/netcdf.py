@@ -1127,7 +1127,7 @@ def add_metadata_to_list(
     # add rights (applies only to NetCDF resource type)
     if extracted_core_meta.get("rights") and file_meta_list is None:
         raw_info = extracted_core_meta.get("rights")
-        b = re.search("(?P<url>https?://[^\s]+)", raw_info)
+        b = re.search("(?P<url>https?://[^\s]+)", raw_info) # noqa
         url = b.group("url") if b else ""
         statement = raw_info.replace(url, "") if url else raw_info
         rights = {"rights": {"statement": statement, "url": url}}
