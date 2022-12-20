@@ -4597,7 +4597,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         # delete ingested default citation
         citation_regex = re.compile(
-            "(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}" # noqa
+            "(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}"  # noqa
         )
         ingested_citation = self.citation.first()
         if ingested_citation and citation_regex.match(ingested_citation.value):

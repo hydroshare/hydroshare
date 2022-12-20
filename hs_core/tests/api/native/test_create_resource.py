@@ -30,7 +30,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             'test_user@email.com',
             username='mytestuser',
             first_name='some_first_name',
-            middle_name='ì', # testing international character
+            middle_name='ì',  # testing international character
             last_name='some_last_name',
             superuser=False,
             groups=[self.hs_group]
@@ -76,7 +76,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             'GenericResource',
             self.user,
             'My Test Resource'
-            )
+        )
 
         self.assertEqual(res.resource_type, 'GenericResource')
         self.assertTrue(isinstance(res, GenericResource))
@@ -94,7 +94,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             self.user,
             'My Test Resource',
             files=(self.file_one,)
-            )
+        )
 
         # test resource has one file
         self.assertEqual(new_res.files.all().count(), 1)
@@ -125,7 +125,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             self.user,
             'My Test Resource',
             files=(self.file_one, self.file_two)
-            )
+        )
 
         # test resource has 2 files
         self.assertEqual(new_res.files.all().count(), 2, msg="Number of content files is not equal to 2")
@@ -151,7 +151,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                                                       'end': '12/12/2012'}}},
             {'coverage': {'type': 'point', 'value': {'name': 'Name for point coverage', 'east': '56.45678',
                                                      'north': '12.6789', 'units': 'deg'}}},
-            {'identifier': {'name': 'someIdentifier', 'url':"http://some.org/001"}},
+            {'identifier': {'name': 'someIdentifier', 'url': "http://some.org/001"}},
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
             {'rights': {'statement': 'This is the rights statement for this resource',
                         'url': 'http://rights.org/001'}},
@@ -246,7 +246,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                                      owner=self.user,
                                      title='My Test Resource',
                                      metadata=metadata_dict
-                                    )
+                                     )
 
     def test_create_resource_with_metadata_for_type(self):
         # trying to create a resource with metadata for type element should ignore the provided type element data
@@ -380,8 +380,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # Create a resource with zipfile, do not un-pack
         payload = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
-                                        content_type='application/zip',
-                                        size=os.stat(zip_path).st_size)
+                                          content_type='application/zip',
+                                          size=os.stat(zip_path).st_size)
         res = resource.create_resource('GenericResource',
                                        self.user,
                                        'My Test resource',
@@ -394,8 +394,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # Create a resource with zipfile, un-pack
         payload2 = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
-                                        content_type='application/zip',
-                                        size=os.stat(zip_path).st_size)
+                                           content_type='application/zip',
+                                           size=os.stat(zip_path).st_size)
         res = resource.create_resource('GenericResource',
                                        self.user,
                                        'My Test resource',

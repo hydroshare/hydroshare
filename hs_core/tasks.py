@@ -81,7 +81,7 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s())
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
-                                    send_over_quota_emails.s())
+                                 send_over_quota_emails.s())
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
         sender.add_periodic_task(crontab(day_of_month=1), monthly_group_membership_requests_cleanup.s())
         sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
@@ -357,7 +357,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         msg = "Unable to add zip file contents to non-existent resource {pk}."
         msg = msg.format(pk=pk)
         logger.error(msg)
-    except: # noqa
+    except:  # noqa
         exc_info = "".join(traceback.format_exception(*sys.exc_info()))
         if resource:
             resource.file_unpack_status = 'Error'
@@ -431,7 +431,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 
         if aggregation:
             try:
-                istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
+                istorage.copyFiles(aggregation.map_file_path, temp_folder_name)
             except SessionException:
                 logger.error("cannot copy {}".format(aggregation.map_file_path))
             try:
@@ -750,8 +750,8 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                     logical_files = list(resource.logical_files)
                     lf = logical_files[[i.aggregation_name for i in
                                         logical_files].index(
-                                                    url["layer_name"].encode()
-                                                )]
+                        url["layer_name"].encode()
+                    )]
                     lf.metadata.extra_metadata["Web Services URL"] = url["message"]
                     lf.metadata.save()
 

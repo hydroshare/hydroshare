@@ -503,9 +503,9 @@ class UserAccess(models.Model):
         return Group.objects.filter(
             # owners can see inactive groups they own
             Q(g2ugp__user=self.user, g2ugp__privilege=PrivilegeCodes.OWNER)
-            | # noqa
-            # everyone else can see only active groups they are in
-            Q(gaccess__active=True, g2ugp__user=self.user)
+ # noqa
+ # everyone else can see only active groups they are in
+            | Q(gaccess__active=True, g2ugp__user=self.user)
         ).distinct()
 
     def owns_group(self, this_group):
@@ -768,7 +768,6 @@ class UserAccess(models.Model):
     #  __check_share_community_with_group
     #  __check_share_group_with_user
     def __check_share_group(self, this_group, this_privilege, user=None):
-
         """
         Raise exception if a given user cannot share this group with a given privilege.
 
@@ -1197,9 +1196,9 @@ class UserAccess(models.Model):
         return BaseResource.objects.filter(
             # direct access
             Q(r2urp__user=self.user)
-            | # noqa
-            # access via a group
-            Q(r2grp__group__gaccess__active=True, r2grp__group__g2ugp__user=self.user)
+ # noqa
+ # access via a group
+            | Q(r2grp__group__gaccess__active=True, r2grp__group__g2ugp__user=self.user)
         ).distinct()
 
     @property
@@ -1243,16 +1242,16 @@ class UserAccess(models.Model):
         return BaseResource.objects.filter(
             # user owns resource invariant of immutable flag 4/9/2021
             Q(r2urp__user=self.user, r2urp__privilege=PrivilegeCodes.OWNER)
-            | # noqa
-            # user has direct access and resource is not immutable
-            Q(
+ # noqa
+ # user has direct access and resource is not immutable
+            | Q(
                 raccess__immutable=False,
                 r2urp__user=self.user,
                 r2urp__privilege__lte=PrivilegeCodes.CHANGE,
             )
-            | # noqa
-            # user has direct access through being a member of a group
-            Q(
+ # noqa
+ # user has direct access through being a member of a group
+            | Q(
                 raccess__immutable=False,
                 r2grp__group__gaccess__active=True,
                 r2grp__group__g2ugp__user=self.user,
@@ -1263,7 +1262,6 @@ class UserAccess(models.Model):
     def get_resources_with_explicit_access(
         self, this_privilege, via_user=True, via_group=False, via_community=False
     ):
-
         """
         Get a list of resources over which the user has the specified privilege
 
@@ -1661,7 +1659,6 @@ class UserAccess(models.Model):
             return False
 
     def __check_share_resource(self, this_resource, this_privilege, user=None):
-
         """
         Raise exception if a given user cannot share this resource with a given privilege.
 
@@ -1947,7 +1944,6 @@ class UserAccess(models.Model):
         )
 
     def can_unshare_resource_with_user(self, this_resource, this_user):
-
         """
                 Check whether one can dissociate a specific user from a resource
 

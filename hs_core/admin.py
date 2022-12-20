@@ -13,6 +13,7 @@ class UserCreationFormExtended(UserCreationForm):
         super(UserCreationFormExtended, self).__init__(*args, **kwargs)
         self.fields['email'] = forms.EmailField(label=_("E-mail"), max_length=75)
 
+
 UserAdmin.add_form = UserCreationFormExtended
 UserAdmin.readonly_fields = ('username',)
 UserAdmin.add_fieldsets = (
@@ -26,8 +27,10 @@ UserAdmin.list_display = [
     'is_active', 'date_joined', 'last_login'
 ]
 
+
 class InlineResourceFiles(GenericTabularInline):
     model = ResourceFile
+
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)

@@ -23,15 +23,16 @@ class UserAutocomplete(autocomplete_light.AutocompleteModelBase):
 
         return label
 
+
 autocomplete_light.register(User, UserAutocomplete)
 
 
 class GroupAutocomplete(autocomplete_light.AutocompleteModelBase):
-    search_fields=['name']
+    search_fields = ['name']
 
     def choices_for_request(self):
         self.choices = self.choices.filter(gaccess__active=True).exclude(name='Hydroshare Author')
         return super(GroupAutocomplete, self).choices_for_request()
 
-autocomplete_light.register(Group, GroupAutocomplete)
 
+autocomplete_light.register(Group, GroupAutocomplete)

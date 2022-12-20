@@ -62,10 +62,10 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "name": "Creator 1",
                 "organization": None
             }, {
-                    "name": "Creator 2",
-                    "organization": "USU",
-                    "identifiers": {"ORCID": "https://orcid.org/011",
-                                    "ResearchGateID": "https://www.researchgate.net/001"}
+                "name": "Creator 2",
+                "organization": "USU",
+                "identifiers": {"ORCID": "https://orcid.org/011",
+                                "ResearchGateID": "https://www.researchgate.net/001"}
             }],
             "coverages": [{
                 "type": "box",
@@ -99,18 +99,18 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "funding_agencies": [
-                 {
-                     "agency_name": "NSF",
-                     "award_title": "Cyber Infrastructure",
-                     "award_number": "NSF-101-20-6789",
-                     "agency_url": "https://www.nsf.gov",
-                 },
-                 {
-                     "agency_name": "NSF2",
-                     "award_title": "Cyber Infrastructure2",
-                     "award_number": "NSF-123",
-                     "agency_url": "https://www.google.com",
-                 }
+                {
+                    "agency_name": "NSF",
+                    "award_title": "Cyber Infrastructure",
+                    "award_number": "NSF-101-20-6789",
+                    "agency_url": "https://www.nsf.gov",
+                },
+                {
+                    "agency_name": "NSF2",
+                    "award_title": "Cyber Infrastructure2",
+                    "award_number": "NSF-123",
+                    "agency_url": "https://www.google.com",
+                }
             ]
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
@@ -227,18 +227,18 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "funding_agencies": [
-                 {
-                     "agency_name": "NSF",
-                     "award_title": "Cyber Infrastructure",
-                     "award_number": "NSF-101-20-6789",
-                     "agency_url": "https://www.nsf.gov",
-                 },
-                 {
-                     "agency_name": "NSF2",
-                     "award_title": "Cyber Infrastructure2",
-                     "award_number": "NSF-123",
-                     "agency_url": "https://www.google.com",
-                 }
+                {
+                    "agency_name": "NSF",
+                    "award_title": "Cyber Infrastructure",
+                    "award_number": "NSF-101-20-6789",
+                    "agency_url": "https://www.nsf.gov",
+                },
+                {
+                    "agency_name": "NSF2",
+                    "award_title": "Cyber Infrastructure2",
+                    "award_number": "NSF-123",
+                    "agency_url": "https://www.google.com",
+                }
             ]
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
@@ -495,6 +495,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             owner=self.user,
             title="Testing bulk metadata update for resource type - {}".format(resource_type),
             files=files
-            )
+        )
         resource_post_create_actions(resource=self.resource, user=self.user,
                                      metadata=self.resource.metadata)

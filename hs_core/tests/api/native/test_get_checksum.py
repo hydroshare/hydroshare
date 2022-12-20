@@ -31,4 +31,3 @@ class TestGetChecksum(MockIRODSTestCaseMixin, TestCase):
     def test_get_checksum(self):
         with self.assertRaises(NotImplementedError):
             hydroshare.get_checksum(self.res.short_id)
-

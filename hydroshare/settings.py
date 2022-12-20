@@ -1,8 +1,9 @@
 # TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+from PIL import ImageFile
+import os
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
 TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
 
-import os
 
 # import importlib
 
@@ -121,7 +122,11 @@ USE_TZ = True
 LANGUAGE_CODE = "en"
 
 # Supported languages
-_ = lambda s: s
+
+
+def _(s): return s
+
+
 LANGUAGES = (("en", _("English")),)
 
 # A boolean that turns on/off debug mode. When set to ``True``, stack traces
@@ -205,7 +210,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # PATHS #
 #########
 
-import os
 
 # Full filesystem path to the project.
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -259,7 +263,6 @@ THUMBNAIL_DUMMY_SOURCE = STATIC_URL + "img/home-page/step4.png"
 THUMBNAIL_DUMMY_RATIO = 1
 
 # Allow PIL to ignore imgs with lots of metadata
-from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 

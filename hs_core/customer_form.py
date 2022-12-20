@@ -1,6 +1,6 @@
 from haystack.forms import FacetedSearchForm
-from crispy_forms.layout import * # noqa
-from crispy_forms.bootstrap import * # noqa
+from crispy_forms.layout import *  # noqa
+from crispy_forms.bootstrap import *  # noqa
 
 
 class MyForm(FacetedSearchForm):

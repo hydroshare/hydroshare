@@ -57,7 +57,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_file_level_keys_add_custom(self):
         custom_url = 'https://www.google.com?' \
-                  'file_id=${custom_KEY}'
+            'file_id=${custom_KEY}'
 
         post_data = {'value': custom_url}
         url_params = {'element_name': "requesturlbasefile", 'shortkey': self.resWebApp.short_id}
@@ -151,7 +151,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_aggregation_level_keys_add_custom(self):
         custom_url = 'https://www.google.com?' \
-                  'file_id=${HS_CUSTOM}'
+            'file_id=${HS_CUSTOM}'
 
         post_data = {'value': custom_url}
         url_params = {'element_name': "requesturlbaseaggregation",
@@ -245,7 +245,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_resource_level_keys_add_custom(self):
         custom_url = 'https://www.google.com?' \
-                  'file_id=${CUSTOM_KEY}'
+            'file_id=${CUSTOM_KEY}'
 
         post_data = {'value': custom_url}
         url_params = {'element_name': "requesturlbase", 'shortkey': self.resWebApp.short_id}

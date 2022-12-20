@@ -31,7 +31,7 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
             'GenericResource',
             self.user,
             'My Test Resource'
-            )
+        )
 
         # there should be one resource at this point
         self.assertEqual(GenericResource.objects.all().count(), 1, msg="Number of resources not equal to 1")
@@ -68,8 +68,3 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
 
         resource.delete_resource(new_res.short_id)
         self.assertEqual(len(SearchQuerySet().all()), current_index_count)
-
-
-
-
-

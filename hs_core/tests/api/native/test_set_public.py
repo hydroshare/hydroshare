@@ -43,7 +43,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             self.user,
             'My Test Resource',
             files=(self.file_one,)
-            )
+        )
 
     def tearDown(self):
         super(TestCreateResource, self).tearDown()

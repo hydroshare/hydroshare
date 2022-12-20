@@ -68,8 +68,8 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
         self.dog.uaccess.share_resource_with_group(self.bones, self.dogs, PrivilegeCodes.VIEW)
 
         self.pets = self.dog.uaccess.create_community(
-                'all kinds of pets',
-                'collaboration on how to be a better pet.')
+            'all kinds of pets',
+            'collaboration on how to be a better pet.')
 
         # Make cats and dogs part of community pets
         self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)

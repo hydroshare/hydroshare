@@ -31,14 +31,14 @@ class GroupCommunityRequest(models.Model):
     '''
 
     # target
-    group = models.ForeignKey(Group, on_delete=models.CASCADE,  editable=False, null=False)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, editable=False, null=False)
     # source
-    community = models.ForeignKey(Community, on_delete=models.CASCADE,  editable=False, null=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, editable=False, null=False)
     # invitee
-    group_owner = models.ForeignKey(User, on_delete=models.CASCADE,  editable=False, null=True, default=None,
+    group_owner = models.ForeignKey(User, on_delete=models.CASCADE, editable=False, null=True, default=None,
                                     related_name='invite_gcg')
     # inviter
-    community_owner = models.ForeignKey(User, on_delete=models.CASCADE,  editable=False, null=True,
+    community_owner = models.ForeignKey(User, on_delete=models.CASCADE, editable=False, null=True,
                                         related_name='invite_gcc')
 
     # when request was made
@@ -76,7 +76,6 @@ class GroupCommunityRequest(models.Model):
 
     @classmethod
     def create_or_update(cls, **kwargs):
-
         '''
         Request a group to be included in a community. This can only be done by agreement between
         a community owner and a group owner.
@@ -113,13 +112,13 @@ class GroupCommunityRequest(models.Model):
 
         '''
         if __debug__:
-            assert('group' in kwargs)
-            assert(isinstance(kwargs['group'], Group))
-            assert(kwargs['group'].gaccess.active)
-            assert('community' in kwargs)
-            assert(isinstance(kwargs['community'], Community))
-            assert('requester' in kwargs)
-            assert(isinstance(kwargs['requester'], User))
+            assert ('group' in kwargs)
+            assert (isinstance(kwargs['group'], Group))
+            assert (kwargs['group'].gaccess.active)
+            assert ('community' in kwargs)
+            assert (isinstance(kwargs['community'], Community))
+            assert ('requester' in kwargs)
+            assert (isinstance(kwargs['requester'], User))
 
         approved = False  # whether auto-approved
         group = kwargs['group']
@@ -313,13 +312,13 @@ class GroupCommunityRequest(models.Model):
         '''
         requests = cls.objects.filter(redeemed=False)
         if responder is not None:
-            assert(isinstance(responder, User))
+            assert (isinstance(responder, User))
             requests = requests.filter(Q(group_owner__isnull=True,
                                          group__g2ugp__user=responder,
-                                         group__g2ugp__privilege=PrivilegeCodes.OWNER) |
-                                       Q(community_owner__isnull=True,
-                                         community__c2ucp__user=responder,
-                                         community__c2ucp__privilege=PrivilegeCodes.OWNER))
+                                         group__g2ugp__privilege=PrivilegeCodes.OWNER)
+                                       | Q(community_owner__isnull=True,
+                                           community__c2ucp__user=responder,
+                                           community__c2ucp__privilege=PrivilegeCodes.OWNER))
         return requests
 
     @classmethod
@@ -330,11 +329,11 @@ class GroupCommunityRequest(models.Model):
         '''
         requests = cls.objects.filter(redeemed=False)
         if requester is not None:
-            assert(isinstance(requester, User))
+            assert (isinstance(requester, User))
             requests = requests.filter(Q(group__g2ugp__user=requester,
-                                         group__g2ugp__privilege=PrivilegeCodes.OWNER) |
-                                       Q(community__c2ucp__user=requester,
-                                         community__c2ucp__privilege=PrivilegeCodes.OWNER))
+                                         group__g2ugp__privilege=PrivilegeCodes.OWNER)
+                                       | Q(community__c2ucp__user=requester,
+                                           community__c2ucp__privilege=PrivilegeCodes.OWNER))
         return requests
 
     @classmethod
@@ -349,8 +348,8 @@ class GroupCommunityRequest(models.Model):
         This either returns a single object or None if there is none.
         '''
         if __debug__:
-            assert('group' in kwargs)
-            assert('community' in kwargs)
+            assert ('group' in kwargs)
+            assert ('community' in kwargs)
 
         group = kwargs['group']
         community = kwargs['community']
@@ -362,7 +361,7 @@ class GroupCommunityRequest(models.Model):
 
     def approve(self, responder, privilege=PrivilegeCodes.VIEW):
         ''' approve a request as the owner of the other side of the transaction '''
-        assert(isinstance(responder, User))
+        assert (isinstance(responder, User))
         if self.redeemed:
             message = "Request is completed and cannot be approved."
             return message, False
@@ -400,7 +399,7 @@ class GroupCommunityRequest(models.Model):
 
     def decline(self, responder):
         ''' decline a request, as the owner of the other side of the transaction '''
-        assert(isinstance(responder, User))
+        assert (isinstance(responder, User))
         if self.redeemed:
             message = "Request is completed and cannot be declined."
             return message, False
@@ -449,14 +448,14 @@ class GroupCommunityRequest(models.Model):
 
         '''
         if __debug__:
-            assert('group' in kwargs)
-            assert(isinstance(kwargs['group'], Group))
-            assert(kwargs['group'].gaccess.active)
-            assert('community_owner' in kwargs)
-            assert(isinstance(kwargs['community_owner'], User))
-            assert(kwargs['community_owner'].is_active)
-            assert('community' in kwargs)
-            assert(isinstance(kwargs['community'], Community))
+            assert ('group' in kwargs)
+            assert (isinstance(kwargs['group'], Group))
+            assert (kwargs['group'].gaccess.active)
+            assert ('community_owner' in kwargs)
+            assert (isinstance(kwargs['community_owner'], User))
+            assert (kwargs['community_owner'].is_active)
+            assert ('community' in kwargs)
+            assert (isinstance(kwargs['community'], Community))
 
         group = kwargs['group']
         community = kwargs['community']
