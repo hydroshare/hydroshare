@@ -278,8 +278,8 @@ class Variable(models.Model):
         return User.objects\
             .filter(visitor__session__variable__resource=resource,
                     visitor__session__variable__name='visit',
-                    visitor__session__variable__timestamp__gte=(datetime.now() -
-                                                                timedelta(days)))\
+                    visitor__session__variable__timestamp__gte=(datetime.now()
+                                                                - timedelta(days)))\
             .distinct()\
             .annotate(last_accessed=models.Max('visitor__session__variable__timestamp'))\
             .filter(visitor__session__variable__timestamp=F('last_accessed'))\
