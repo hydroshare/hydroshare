@@ -925,6 +925,15 @@ function typeQueryStrings () {
     var searchQuery = "";
 
     if (type) {
+        if (type === "composite resource") {
+            type = "resource";
+        }
+        else if (type === "collection resource") {
+            type = "collection";
+        }
+        else if (type === "web app resource") {
+            type = "app connector";
+        }
         searchQuery = searchQuery + " [type:" + type + "]";
     }
 
