@@ -128,7 +128,7 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
 
     if res.resource_type != "CompositeResource":
         err_msg = "Aggregation type can be set only for files in a resource."
-        response_data['message'] = err_msg
+        response_data["message"] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     try:
@@ -587,7 +587,7 @@ def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     res = aggregation.resource
     if res.resource_type != "CompositeResource":
         err_msg = "Aggregation type can be deleted only in a resource."
-        response_data['message'] = err_msg
+        response_data["message"] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     if hs_file_type not in FILE_TYPE_MAP:
@@ -669,7 +669,7 @@ def move_aggregation(
     res = aggregation.resource
     if res.resource_type != "CompositeResource":
         err_msg = "Aggregation type can be deleted only in a resource."
-        response_data['message'] = err_msg
+        response_data["message"] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     if tgt_path:
@@ -1657,7 +1657,7 @@ def update_model_instance_metadata_json(request, file_type_id, **kwargs):
 @login_required
 def update_model_instance_meta_schema(request, file_type_id, **kwargs):
     """copies the metadata schema from the associated model
-       program aggregation over to the model instance aggregation"""
+    program aggregation over to the model instance aggregation"""
 
     # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
     if "error_response" in kwargs and kwargs["error_response"]:

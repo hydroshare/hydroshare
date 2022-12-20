@@ -3,7 +3,7 @@ from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from mezzanine.conf import settings
-from mezzanine.core.views import direct_to_template # noqa
+from mezzanine.core.views import direct_to_template  # noqa
 from mezzanine.pages.views import page
 
 import hs_communities.views.communities
@@ -33,7 +33,7 @@ urlpatterns = i18n_patterns(
         GroupAuthorizationView.as_view(),
         name="group-authorize",
     ),
-    url("^r/(?P<shortkey>[A-z0-9\-_]+)", hs_core_views.short_url), # noqa
+    url("^r/(?P<shortkey>[A-z0-9\-_]+)", hs_core_views.short_url),  # noqa
     url(
         r"^tracking/reports/profiles/$",
         tracking.VisitorProfileReport.as_view(),
@@ -225,7 +225,10 @@ urlpatterns += [
     # url("^$", "mezzanine.blog.views.blog_post_list", name="home"),
     # Override Mezzanine URLs here, before the Mezzanine URL include
     url("^accounts/signup/", theme.signup),
-    url("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", theme.signup_verify), # noqa
+    url(
+        "^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)",  # noqa
+        theme.signup_verify,
+    ),
     # MEZZANINE'S URLS
     # ----------------
     # ADD YOUR OWN URLPATTERNS *ABOVE* THE LINE BELOW.

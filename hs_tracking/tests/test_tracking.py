@@ -452,7 +452,7 @@ class UtilsTests(TestCase):
             ("_______@example.com", "com"),
             ("email@example.co.uk", "co.uk"),
             ("firstname-lastname@example.com", "com"),
-            ('much."more\ unusual"@example.com', "com"), # noqa
+            ('much."more\ unusual"@example.com', "com"),  # noqa
             ('very.unusual."@".unusual.com@example.com', "com"),
             (
                 'very."(),:;<>[]".VERY."very@\\ "very".unusual@strange.example.com',

@@ -15,10 +15,11 @@ from hs_access_control.models.privilege import PrivilegeCodes
 
 register = template.Library()
 
-RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Resource",
-                                     "CollectionResource": "Collection",
-                                     "ToolResource": "App Connector"
-                                     }
+RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {
+    "CompositeResource": "Resource",
+    "CollectionResource": "Collection",
+    "ToolResource": "App Connector",
+}
 
 
 @register.filter

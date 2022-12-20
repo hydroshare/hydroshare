@@ -25,7 +25,7 @@ class ToolResource(BaseResource):
     objects = ResourceManager("ToolResource")
 
     # used during discovery as well as in all other places in UI where resource type is displayed
-    display_name = 'App Connector'
+    display_name = "App Connector"
 
     class Meta:
         proxy = True

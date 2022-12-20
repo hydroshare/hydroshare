@@ -41,8 +41,10 @@ def get_SupportedResTypes_choices():
     This function generates a list of resource types currently supported for web app
     """
 
-    supported_resource_types = [[CompositeResource.__name__, CompositeResource.display_name],
-                                [CollectionResource.__name__, CollectionResource.display_name]]
+    supported_resource_types = [
+        [CompositeResource.__name__, CompositeResource.display_name],
+        [CollectionResource.__name__, CollectionResource.display_name],
+    ]
 
     return supported_resource_types
 

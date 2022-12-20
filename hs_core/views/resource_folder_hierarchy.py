@@ -411,7 +411,9 @@ def zip_aggregation_file(request, res_id=None):
         )
 
     if resource.resource_type != "CompositeResource":
-        err_msg = f"{resource.display_name} type doesn't support zipping of aggregation."
+        err_msg = (
+            f"{resource.display_name} type doesn't support zipping of aggregation."
+        )
         return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
     aggregation_path = resolve_request(request).get("aggregation_path", None)

@@ -50,7 +50,7 @@ def _process_resource_coverage_action(request, resource_id, coverage_type, actio
 
     if res.resource_type != "CompositeResource":
         err_msg = "Coverage can be {}d only for resource.".format(action)
-        response_data['message'] = err_msg
+        response_data["message"] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     if coverage_type.lower() not in ("temporal", "spatial"):

@@ -188,7 +188,8 @@ class TestRequest(TestCase):
         expected = (
             "Request approved to connect group '{}' to community '{}'"
             " because there is a matching request.".format(
-                self.cats.name, self.pets.name,
+                self.cats.name,
+                self.pets.name,
             )
         )
         self.assertEqual(message, expected)

@@ -2485,8 +2485,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     def update_index(self):
         """updates previous versions of a resource (self) in index"""
-        prev_version_resource_relation_meta = Relation.objects.filter(type='isReplacedBy',
-                                                                      value__contains=self.short_id).first()
+        prev_version_resource_relation_meta = Relation.objects.filter(
+            type="isReplacedBy", value__contains=self.short_id
+        ).first()
         if prev_version_resource_relation_meta:
             prev_version_res = prev_version_resource_relation_meta.metadata.resource
             if prev_version_res.raccess.discoverable or prev_version_res.raccess.public:
@@ -3964,7 +3965,7 @@ class BaseResource(Page, AbstractResource):
     collections = models.ManyToManyField("BaseResource", related_name="resources")
 
     # used during discovery as well as in all other places in UI where resource type is displayed
-    display_name = 'Generic'
+    display_name = "Generic"
 
     class Meta:
         """Define meta properties for BaseResource model."""
@@ -4610,7 +4611,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         # delete ingested default citation
         citation_regex = re.compile(
-            "(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}" # noqa
+            "(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}"  # noqa
         )
         ingested_citation = self.citation.first()
         if ingested_citation and citation_regex.match(ingested_citation.value):
@@ -4833,10 +4834,15 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         missing_recommended_elements = []
         if not self.funding_agencies.count():
-            missing_recommended_elements.append('Funding Agency')
-        if not self.resource.readme_file and self.resource.resource_type == "CompositeResource":
-            missing_recommended_elements.append('Readme file containing variables, '
-                                                'abbreviations/acronyms, and non-standard file formats')
+            missing_recommended_elements.append("Funding Agency")
+        if (
+            not self.resource.readme_file
+            and self.resource.resource_type == "CompositeResource"
+        ):
+            missing_recommended_elements.append(
+                "Readme file containing variables, "
+                "abbreviations/acronyms, and non-standard file formats"
+            )
         if not self.coverages.count():
             missing_recommended_elements.append(
                 "Coverage that describes locations that are related to the dataset"

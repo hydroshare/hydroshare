@@ -1539,7 +1539,7 @@ go to http://{domain}/verify/{token}/ and verify your account.
 
         context = {"is_email_sent": True}
         return render(request, "pages/verify-account.html", context)
-    except: # noqa
+    except:  # noqa
         pass  # FIXME should log this instead of ignoring it.
 
 

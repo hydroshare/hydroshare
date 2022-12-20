@@ -135,7 +135,7 @@ class Session(object):
                 os.path.join(self.session_path, "irods_environment.json")
             ):
                 return True
-        except: # noqa
+        except:  # noqa
             return False
         else:
             return False

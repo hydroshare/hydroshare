@@ -45,7 +45,7 @@ class CommunityView(TemplateView):
             is_admin = UserCommunityPrivilege.objects.filter(
                 user=u, community=community, privilege=PrivilegeCodes.OWNER
             ).exists()
-        except: # noqa
+        except:  # noqa
             is_admin = False
 
         return {
@@ -168,7 +168,7 @@ class TopicsView(TemplateView):
             try:
                 delete_topic = Topic.objects.get(id=request.POST.get("id"))
                 delete_topic.delete(keep_parents=False)
-            except: # noqa
+            except:  # noqa
                 print("error")
         else:
             print(

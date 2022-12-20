@@ -3525,7 +3525,7 @@ class CompositeResourceTest(
                 zip_file_rel_path,
                 renamed_folder,
             )
-        except: # noqa
+        except:  # noqa
             self.fail("Exception thrown while renaming a folder.")
 
     def test_unzip_folder_clash(self):

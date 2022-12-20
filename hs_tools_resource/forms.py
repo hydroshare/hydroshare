@@ -673,10 +673,11 @@ class SupportedResTypeFormHelper(BaseFormHelper):
     ):
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
-        layout = Layout(MetadataField('supported_res_types'))
-        kwargs['element_name_label'] = 'Support'
-        super(SupportedResTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                         element_name, layout, *args, **kwargs)
+        layout = Layout(MetadataField("supported_res_types"))
+        kwargs["element_name_label"] = "Support"
+        super(SupportedResTypeFormHelper, self).__init__(
+            allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs
+        )
 
 
 class SupportedResTypesForm(ModelForm):
@@ -692,9 +693,12 @@ class SupportedResTypesForm(ModelForm):
     ):
         model_instance = kwargs.get("instance")
         super(SupportedResTypesForm, self).__init__(*args, **kwargs)
-        self.fields['supported_res_types'].label = "Choose what this app connector supports (can act on):"
-        self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id,
-                                                 element_name='SupportedResTypes')
+        self.fields[
+            "supported_res_types"
+        ].label = "Choose what this app connector supports (can act on):"
+        self.helper = SupportedResTypeFormHelper(
+            allow_edit, res_short_id, element_id, element_name="SupportedResTypes"
+        )
 
         if model_instance:
             supported_res_types = model_instance.supported_res_types.all()
@@ -793,11 +797,11 @@ class SupportedSharingStatusFormHelper(BaseFormHelper):
     ):
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
-        layout = Layout(MetadataField('sharing_status'))
-        kwargs['element_name_label'] = 'Sharing Status'
-        super(SupportedSharingStatusFormHelper, self). \
-            __init__(allow_edit, res_short_id, element_id,
-                     element_name, layout, *args, **kwargs)
+        layout = Layout(MetadataField("sharing_status"))
+        kwargs["element_name_label"] = "Sharing Status"
+        super(SupportedSharingStatusFormHelper, self).__init__(
+            allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs
+        )
 
 
 class SupportedSharingStatusForm(ModelForm):
@@ -813,9 +817,12 @@ class SupportedSharingStatusForm(ModelForm):
     ):
         model_instance = kwargs.get("instance")
         super(SupportedSharingStatusForm, self).__init__(*args, **kwargs)
-        self.fields['sharing_status'].label = "Choose the sharing status required by this app connector:"
-        self.helper = SupportedSharingStatusFormHelper(allow_edit, res_short_id, element_id,
-                                                       element_name='SupportedSharingStatus')
+        self.fields[
+            "sharing_status"
+        ].label = "Choose the sharing status required by this app connector:"
+        self.helper = SupportedSharingStatusFormHelper(
+            allow_edit, res_short_id, element_id, element_name="SupportedSharingStatus"
+        )
         if model_instance:
             supported_sharing_status = model_instance.sharing_status.all()
             if len(supported_sharing_status) > 0:

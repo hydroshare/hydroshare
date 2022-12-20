@@ -311,9 +311,12 @@ class UserProfile(models.Model):
         max_length=1024, null=True, blank=True, default="Unspecified"
     )
     subject_areas = models.CharField(
-        max_length=1024, null=True, blank=True,
+        max_length=1024,
+        null=True,
+        blank=True,
         help_text='A comma-separated list of subject areas you are interested in researching. e.g. \
-            "Computer Science, Hydrology, Water Management"')
+            "Computer Science, Hydrology, Water Management"',
+    )
     organization = models.CharField(
         max_length=1024,
         null=True,

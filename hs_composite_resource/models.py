@@ -40,7 +40,7 @@ class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
     # used during discovery as well as in all other places in UI where resource type is displayed
-    display_name = 'Resource'
+    display_name = "Resource"
 
     class Meta:
         verbose_name = "Composite Resource"

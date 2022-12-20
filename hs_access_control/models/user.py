@@ -503,7 +503,7 @@ class UserAccess(models.Model):
         return Group.objects.filter(
             # owners can see inactive groups they own
             Q(g2ugp__user=self.user, g2ugp__privilege=PrivilegeCodes.OWNER)
-            | # noqa
+            |  # noqa
             # everyone else can see only active groups they are in
             Q(gaccess__active=True, g2ugp__user=self.user)
         ).distinct()
@@ -1197,7 +1197,7 @@ class UserAccess(models.Model):
         return BaseResource.objects.filter(
             # direct access
             Q(r2urp__user=self.user)
-            | # noqa
+            |  # noqa
             # access via a group
             Q(r2grp__group__gaccess__active=True, r2grp__group__g2ugp__user=self.user)
         ).distinct()
@@ -1243,14 +1243,14 @@ class UserAccess(models.Model):
         return BaseResource.objects.filter(
             # user owns resource invariant of immutable flag 4/9/2021
             Q(r2urp__user=self.user, r2urp__privilege=PrivilegeCodes.OWNER)
-            | # noqa
+            |  # noqa
             # user has direct access and resource is not immutable
             Q(
                 raccess__immutable=False,
                 r2urp__user=self.user,
                 r2urp__privilege__lte=PrivilegeCodes.CHANGE,
             )
-            | # noqa
+            |  # noqa
             # user has direct access through being a member of a group
             Q(
                 raccess__immutable=False,
