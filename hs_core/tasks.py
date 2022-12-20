@@ -6,6 +6,7 @@ import traceback
 import zipfile
 import logging
 import json
+import asyncio
 
 from celery.signals import task_postrun
 from datetime import datetime, timedelta, date
@@ -78,6 +79,7 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.debug("Periodic tasks are disabled in SETTINGS")
     else:
         sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=1, day_of_month=1), update_from_geoconnex_task.s())
         sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s())
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
@@ -194,6 +196,12 @@ def manage_task_hourly():
         subject = 'Notification of pending DOI deposition/activation of published resources'
         # send email for people monitoring and follow-up as needed
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+
+
+@celery_app.task(ignore_result=True)
+def update_from_geoconnex_task():
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(utils.update_geoconnex_texts())
 
 
 @celery_app.task(ignore_result=True)

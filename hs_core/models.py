@@ -42,6 +42,7 @@ from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.pages.managers import PageManager
 from mezzanine.pages.models import Page
+from pyld import jsonld
 from rdflib import Literal, BNode, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 
@@ -1090,64 +1091,10 @@ class Date(AbstractMetaDataElement):
         dt.delete()
 
 
-@rdf_terms(DC.relation)
-class Relation(AbstractMetaDataElement):
-    """Define Relation custom metadata model."""
-
-    SOURCE_TYPES = (
-        (RelationTypes.isPartOf.value, "The content of this resource is part of"),
-        (RelationTypes.hasPart.value, "This resource includes"),
-        (
-            RelationTypes.isExecutedBy.value,
-            "The content of this resource can be executed by",
-        ),
-        (
-            RelationTypes.isCreatedBy.value,
-            "The content of this resource was created by a related App or software program",
-        ),
-        (
-            RelationTypes.isVersionOf.value,
-            "This resource updates and replaces a previous version",
-        ),
-        (
-            RelationTypes.isReplacedBy.value,
-            "This resource has been replaced by a newer version",
-        ),
-        (RelationTypes.isDescribedBy.value, "This resource is described by"),
-        (
-            RelationTypes.conformsTo.value,
-            "This resource conforms to established standard described by",
-        ),
-        (
-            RelationTypes.hasFormat.value,
-            "This resource has a related resource in another format",
-        ),
-        (RelationTypes.isFormatOf.value, "This resource is a different format of"),
-        (RelationTypes.isRequiredBy.value, "This resource is required by"),
-        (RelationTypes.requires.value, "This resource requires"),
-        (RelationTypes.isReferencedBy.value, "This resource is referenced by"),
-        (RelationTypes.references.value, "The content of this resource references"),
-        (RelationTypes.replaces.value, "This resource replaces"),
-        (RelationTypes.source.value, "The content of this resource is derived from"),
-        (RelationTypes.relation.value, "The content of this resource is related to"),
-        (RelationTypes.isSimilarTo.value, "The content of this resource is similar to"),
-    )
-
-    # these are hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = (
-        RelationTypes.isExecutedBy,
-        RelationTypes.isCreatedBy,
-        RelationTypes.isDescribedBy,
-        RelationTypes.isSimilarTo,
-    )
-    NOT_USER_EDITABLE = (
-        RelationTypes.isVersionOf,
-        RelationTypes.isReplacedBy,
-        RelationTypes.isPartOf,
-        RelationTypes.hasPart,
-        RelationTypes.replaces,
-    )
-    term = "Relation"
+class AbstractRelation(AbstractMetaDataElement):
+    """Define Abstract Relation class."""
+    SOURCE_TYPES = ()
+    term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.TextField()
 
@@ -1166,34 +1113,6 @@ class Relation(AbstractMetaDataElement):
     def type_description(self):
         return dict(self.SOURCE_TYPES)[self.type]
 
-    def rdf_triples(self, subject, graph):
-        if self.type == RelationTypes.relation.value:
-            # avoid creating empty nodes for "relations" that only contain a URI
-            graph.add((subject, self.get_class_term(), URIRef(self.value)))
-        else:
-            relation_node = BNode()
-            graph.add((subject, self.get_class_term(), relation_node))
-            if self.type in self.HS_RELATION_TERMS:
-                graph.add(
-                    (relation_node, getattr(HSTERMS, self.type), Literal(self.value))
-                )
-            else:
-                graph.add(
-                    (relation_node, getattr(DCTERMS, self.type), Literal(self.value))
-                )
-
-    @classmethod
-    def ingest_rdf(cls, graph, subject, content_object):
-        for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
-            for _, p, o in graph.triples((relation_node, None, None)):
-                type_term = p
-                value = o
-                break
-            if type_term:
-                type = type_term.split("/")[-1]
-                value = str(value)
-                Relation.create(type=type, value=value, content_object=content_object)
-
     @classmethod
     def create(cls, **kwargs):
         """Define custom create method for Relation class."""
@@ -1210,17 +1129,14 @@ class Relation(AbstractMetaDataElement):
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
 
         # avoid creating duplicate element (same type and same value)
-        if Relation.objects.filter(
-            type=kwargs["type"],
-            value=kwargs["value"],
-            object_id=metadata_obj.id,
-            content_type=metadata_type,
-        ).exists():
-            raise ValidationError(
-                "Relation element of the same type " "and value already exists."
-            )
+        if cls.objects.filter(type=kwargs['type'],
+                                   value=kwargs['value'],
+                                   object_id=metadata_obj.id,
+                                   content_type=metadata_type).exists():
+            raise ValidationError('Relation element of the same type '
+                                  'and value already exists.')
 
-        return super(Relation, cls).create(**kwargs)
+        return super(AbstractRelation, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -1234,15 +1150,13 @@ class Relation(AbstractMetaDataElement):
             raise ValidationError("Invalid relation type:%s" % kwargs["type"])
 
         # avoid changing this relation to an existing relation of same type and same value
-        rel = Relation.objects.get(id=element_id)
-        metadata_obj = kwargs["content_object"]
+        rel = cls.objects.get(id=element_id)
+        metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
-        qs = Relation.objects.filter(
-            type=kwargs["type"],
-            value=kwargs["value"],
-            object_id=metadata_obj.id,
-            content_type=metadata_type,
-        )
+        qs = cls.objects.filter(type=kwargs['type'],
+                                     value=kwargs['value'],
+                                     object_id=metadata_obj.id,
+                                     content_type=metadata_type)
 
         if qs.exists() and qs.first() != rel:
             # this update will create a duplicate relation element
@@ -1250,7 +1164,130 @@ class Relation(AbstractMetaDataElement):
                 "A relation element of the same type and value already exists."
             )
 
-        super(Relation, cls).update(element_id, **kwargs)
+        super(AbstractRelation, cls).update(element_id, **kwargs)
+
+    class Meta:
+        abstract = True
+
+
+@rdf_terms(DC.relation)
+class Relation(AbstractRelation):
+    """Define Relation custom metadata model."""
+
+    SOURCE_TYPES = (
+        (RelationTypes.isPartOf.value, 'The content of this resource is part of'),
+        (RelationTypes.hasPart.value, 'This resource includes'),
+        (RelationTypes.isExecutedBy.value, 'The content of this resource can be executed by'),
+        (RelationTypes.isCreatedBy.value,
+         'The content of this resource was created by a related App or software program'),
+        (RelationTypes.isVersionOf.value, 'This resource updates and replaces a previous version'),
+        (RelationTypes.isReplacedBy.value, 'This resource has been replaced by a newer version'),
+        (RelationTypes.isDescribedBy.value, 'This resource is described by'),
+        (RelationTypes.conformsTo.value, 'This resource conforms to established standard described by'),
+        (RelationTypes.hasFormat.value, 'This resource has a related resource in another format'),
+        (RelationTypes.isFormatOf.value, 'This resource is a different format of'),
+        (RelationTypes.isRequiredBy.value, 'This resource is required by'),
+        (RelationTypes.requires.value, 'This resource requires'),
+        (RelationTypes.isReferencedBy.value, 'This resource is referenced by'),
+        (RelationTypes.references.value, 'The content of this resource references'),
+        (RelationTypes.replaces.value, 'This resource replaces'),
+        (RelationTypes.source.value, 'The content of this resource is derived from'),
+        (RelationTypes.isSimilarTo.value, 'The content of this resource is similar to')
+    )
+
+    # these are hydroshare custom terms that are not Dublin Core terms
+    HS_RELATION_TERMS = (RelationTypes.isExecutedBy, RelationTypes.isCreatedBy, RelationTypes.isDescribedBy,
+                         RelationTypes.isSimilarTo)
+    NOT_USER_EDITABLE = (RelationTypes.isVersionOf, RelationTypes.isReplacedBy,
+                         RelationTypes.isPartOf, RelationTypes.hasPart, RelationTypes.replaces)
+    term = 'Relation'
+    type = models.CharField(max_length=100, choices=SOURCE_TYPES)
+    value = models.TextField()
+
+    @classmethod
+    def create(cls, **kwargs):
+        return super(Relation, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        return super(Relation, cls).update(element_id, **kwargs)
+
+    def rdf_triples(self, subject, graph):
+        relation_node = BNode()
+        graph.add((subject, self.get_class_term(), relation_node))
+        if self.type in self.HS_RELATION_TERMS:
+            graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+        else:
+            graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
+            for _, p, o in graph.triples((relation_node, None, None)):
+                type_term = p
+                value = o
+                break
+            if type_term:
+                type = type_term.split('/')[-1]
+                value = str(value)
+                Relation.create(type=type, value=value, content_object=content_object)
+
+
+@rdf_terms(HSTERMS.geospatialRelation, text=HSTERMS.relation_name)
+class GeospatialRelation(AbstractRelation):
+
+    SOURCE_TYPES = (
+        (RelationTypes.relation.value, 'The content of this resource is related to'),
+    )
+
+    term = 'GeospatialRelation'
+    type = models.CharField(max_length=100, choices=SOURCE_TYPES)
+    value = models.TextField()
+    text = models.TextField(max_length=100)
+
+    @classmethod
+    def create(cls, **kwargs):
+        return super(GeospatialRelation, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        return super(GeospatialRelation, cls).update(element_id, **kwargs)
+
+    def rdf_triples(self, subject, graph):
+        relation_node = BNode()
+        graph.add((subject, self.get_class_term(), relation_node))
+        graph.add((relation_node, getattr(DCTERMS, self.type), URIRef(self.value)))
+        graph.add((relation_node, self.get_field_term("text"), Literal(self.text)))
+
+    def update_from_geoconnex_response(self, json_response):
+        relative_id = self.value.split("ref/").pop()
+        contexts = json_response['@context']
+        for context in contexts:
+            compacted = jsonld.compact(json_response, context)
+            try:
+                name = compacted['schema:name']
+            except KeyError:
+                continue
+            text = f"{name} [{relative_id}]"
+            if self.text != text:
+                print(f"Updating {self.value}, '{self.text}' to '{text}'.")
+                self.text = text
+                self.save()
+            else:
+                print(f"Not updating relation '{self.value}'. Geoconnex API matches HS.")
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
+            type = value = name = None
+            for _, p, o in graph.triples((relation_node, None, None)):
+                if p == cls.get_field_term("text"):
+                    name = o
+                else:
+                    type = p.split('/')[-1]
+                    value = str(o)
+            if name and value and type:
+                GeospatialRelation.create(type=type, value=value, text=name, content_object=content_object)
 
 
 @rdf_terms(DC.identifier)
@@ -2398,6 +2435,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             self.raccess.discoverable = value
             self.raccess.save()
             self.set_public(False)
+            self.update_index()
 
     def set_public(self, value, user=None):
         """Set the public flag for a resource.
@@ -2456,7 +2494,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 self.raccess.discoverable = value
             self.raccess.save()
             post_raccess_change.send(sender=self, resource=self)
-
+            self.update_index()
             # public changed state: set isPublic metadata AVU accordingly
             if value != old_value:
                 self.setAVU("isPublic", self.raccess.public)
@@ -2481,6 +2519,17 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
                 if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
                     run_script_to_update_hyrax_input_files(self.short_id)
+
+    def update_index(self):
+        """updates previous versions of a resource (self) in index"""
+        prev_version_resource_relation_meta = Relation.objects.filter(type='isReplacedBy',
+                                                                      value__contains=self.short_id).first()
+        if prev_version_resource_relation_meta:
+            prev_version_res = prev_version_resource_relation_meta.metadata.resource
+            if prev_version_res.raccess.discoverable or prev_version_res.raccess.public:
+                # saving to trigger index update for this previous version of resource
+                prev_version_res.save()
+            prev_version_res.update_index()
 
     def set_require_download_agreement(self, user, value):
         """Set resource require_download_agreement flag to True or False.
@@ -3951,7 +4000,8 @@ class BaseResource(Page, AbstractResource):
 
     collections = models.ManyToManyField("BaseResource", related_name="resources")
 
-    discovery_content_type = "Generic Resource"  # used during discovery
+    # used during discovery as well as in all other places in UI where resource type is displayed
+    display_name = 'Generic'
 
     class Meta:
         """Define meta properties for BaseResource model."""
@@ -4207,8 +4257,8 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def discovery_content_type(self):
-        """Return verbose name of content type."""
-        return self.get_content_model().discovery_content_type
+        """Return name used for the content type in discovery/solr search."""
+        return self.get_content_model().display_name
 
     @property
     def can_be_submitted_for_metadata_review(self):
@@ -4494,6 +4544,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     _language = GenericRelation(Language)
     subjects = GenericRelation(Subject)
     relations = GenericRelation(Relation)
+    geospatialrelations = GenericRelation(GeospatialRelation)
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
     _publisher = GenericRelation(Publisher)
@@ -4699,27 +4750,30 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             for relation in metadata.pop("relations"):
                 parsed_metadata.append({"relation": relation})
 
+        if 'geospatialrelations' in keys_to_update:
+            for relation in metadata.pop('geospatialrelations'):
+                parsed_metadata.append({"geospatialrelation": relation})
+
     @classmethod
     def get_supported_element_names(cls):
         """Return a list of supported metadata element names."""
-        return [
-            "Description",
-            "Citation",
-            "Creator",
-            "Contributor",
-            "Coverage",
-            "Format",
-            "Rights",
-            "Title",
-            "Type",
-            "Date",
-            "Identifier",
-            "Language",
-            "Subject",
-            "Relation",
-            "Publisher",
-            "FundingAgency",
-        ]
+        return ['Description',
+                'Citation',
+                'Creator',
+                'Contributor',
+                'Coverage',
+                'Format',
+                'Rights',
+                'Title',
+                'Type',
+                'Date',
+                'Identifier',
+                'Language',
+                'Subject',
+                'Relation',
+                'GeospatialRelation',
+                'Publisher',
+                'FundingAgency']
 
     @classmethod
     def get_form_errors_as_string(cls, form):
@@ -4820,12 +4874,10 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         missing_recommended_elements = []
         if not self.funding_agencies.count():
-            missing_recommended_elements.append("Funding Agency")
-        if not self.resource.readme_file:
-            missing_recommended_elements.append(
-                "Readme file containing variables, "
-                "abbreviations/acronyms, and non-standard file formats"
-            )
+            missing_recommended_elements.append('Funding Agency')
+        if not self.resource.readme_file and self.resource.resource_type == "CompositeResource":
+            missing_recommended_elements.append('Readme file containing variables, '
+                                                'abbreviations/acronyms, and non-standard file formats')
         if not self.coverages.count():
             missing_recommended_elements.append(
                 "Coverage that describes locations that are related to the dataset"
@@ -4895,27 +4947,20 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         :param  user: user who is updating metadata
         :return:
         """
-        from .forms import (
-            TitleValidationForm,
-            AbstractValidationForm,
-            LanguageValidationForm,
-            RightsValidationForm,
-            CreatorValidationForm,
-            ContributorValidationForm,
-            RelationValidationForm,
-            FundingAgencyValidationForm,
-        )
+        from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
+            RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
+            RelationValidationForm, GeospatialRelationValidationForm, FundingAgencyValidationForm
 
-        validation_forms_mapping = {
-            "title": TitleValidationForm,
-            "description": AbstractValidationForm,
-            "language": LanguageValidationForm,
-            "rights": RightsValidationForm,
-            "creator": CreatorValidationForm,
-            "contributor": ContributorValidationForm,
-            "relation": RelationValidationForm,
-            "fundingagency": FundingAgencyValidationForm,
-        }
+        validation_forms_mapping = {'title': TitleValidationForm,
+                                    'description': AbstractValidationForm,
+                                    'language': LanguageValidationForm,
+                                    'rights': RightsValidationForm,
+                                    'creator': CreatorValidationForm,
+                                    'contributor': ContributorValidationForm,
+                                    'relation': RelationValidationForm,
+                                    'geospatialrelation': GeospatialRelationValidationForm,
+                                    'fundingagency': FundingAgencyValidationForm
+                                    }
         # updating non-repeatable elements
         with transaction.atomic():
             for element_name in ("title", "description", "language", "rights"):
@@ -4928,14 +4973,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                             err_string = self.get_form_errors_as_string(validation_form)
                             raise ValidationError(err_string)
                 self.update_non_repeatable_element(element_name, metadata)
-            for element_name in (
-                "creator",
-                "contributor",
-                "coverage",
-                "source",
-                "relation",
-                "subject",
-            ):
+            for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation',
+                                 'geospatialrelation', 'subject'):
                 subjects = []
                 for dict_item in metadata:
                     if element_name in dict_item:

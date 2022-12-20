@@ -8,6 +8,9 @@ from uuid import uuid4
 from urllib.parse import quote
 import errno
 import urllib
+import aiohttp
+import asyncio
+from asgiref.sync import sync_to_async
 
 from urllib.request import pathname2url, url2pathname
 
@@ -26,7 +29,7 @@ from mezzanine.conf import settings
 
 from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
     post_add_files_to_resource
-from hs_core.models import AbstractResource, BaseResource, ResourceFile
+from hs_core.models import AbstractResource, BaseResource, ResourceFile, GeospatialRelation
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 from django_irods.icommands import SessionException
@@ -440,6 +443,39 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         # clone contained_res list of original collection and add to new collection
         # note that new collection resource will not contain "deleted resources"
         tgt_res.resources.set(src_res.resources.all())
+
+
+@sync_to_async
+def _get_relations():
+    return list(GeospatialRelation.objects.all())
+
+
+@sync_to_async
+def _save_relation(relation, json):
+    return relation.update_from_geoconnex_response(json)
+
+
+async def get_jsonld_from_geoconnex(relation, client):
+    relative_id = relation.value.split("ref/").pop()
+    collection = relative_id.split("/")[0]
+    id = relative_id.split("/")[1]
+    url = f"/collections/{collection}/items/{id}?" \
+               "f=jsonld&lang=en-US&skipGeometry=true"
+    logger.debug(f"CHECKING RELATION '{relation.text}'")
+    async with client.get(url) as resp:
+        return await _save_relation(relation, await resp.json())
+
+
+async def update_geoconnex_texts(relations=[]):
+    # Task to update Relations from Geoconnex API
+    if not relations:
+        relations = await _get_relations()
+    async with aiohttp.ClientSession("https://reference.geoconnex.us") as client:
+        await asyncio.gather(*[
+            get_jsonld_from_geoconnex(relation, client)
+            for relation in relations
+        ])
+    logger.debug("DONE CHECKING RELATIONS")
 
 
 def copy_and_create_metadata(src_res, dest_res):

@@ -129,6 +129,7 @@ class ParseSQ(object):
         'language',
         'source',
         'relation',
+        'geospatialrelation'
         'resource_type',
         'content_type',
         'comment',
