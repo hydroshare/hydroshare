@@ -49,7 +49,8 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
             {'identifier': {'name': 'someIdentifier', 'url': "http://some.org/002"}},
             {'identifier': {'name': 'hydroShareIdentifier', 'url': "http://hydroshare.org/001"}},   # will be ignored
             {'language': {'code': 'fre'}},
-            {'geospatialrelation': {'type': 'relation', 'value': 'https://geoconnex.us/ref/dams/1083460', 'text': 'Bonnie Meade [dams/1083460]'}},
+            {'geospatialrelation': {'type': 'relation', 'value': 'https://geoconnex.us/ref/dams/1083460',
+                                    'text': 'Bonnie Meade [dams/1083460]'}},
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
             {'rights': {'statement': 'This is the rights statement for this resource', 'url': 'http://rights.ord/001'}},
             {'subject': {'value': 'sub-1'}},

@@ -1130,9 +1130,9 @@ class AbstractRelation(AbstractMetaDataElement):
 
         # avoid creating duplicate element (same type and same value)
         if cls.objects.filter(type=kwargs['type'],
-                                   value=kwargs['value'],
-                                   object_id=metadata_obj.id,
-                                   content_type=metadata_type).exists():
+                              value=kwargs['value'],
+                              object_id=metadata_obj.id,
+                              content_type=metadata_type).exists():
             raise ValidationError('Relation element of the same type '
                                   'and value already exists.')
 
@@ -1154,9 +1154,9 @@ class AbstractRelation(AbstractMetaDataElement):
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
         qs = cls.objects.filter(type=kwargs['type'],
-                                     value=kwargs['value'],
-                                     object_id=metadata_obj.id,
-                                     content_type=metadata_type)
+                                value=kwargs['value'],
+                                object_id=metadata_obj.id,
+                                content_type=metadata_type)
 
         if qs.exists() and qs.first() != rel:
             # this update will create a duplicate relation element

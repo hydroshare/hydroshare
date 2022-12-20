@@ -2173,13 +2173,14 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # at this point there should not be any relation elements
         self.assertEqual(self.res.metadata.relations.all().count(), 0,
                          msg="Resource has relation element(s) after deleting all.")
-    
+
     def test_geospatialrelation(self):
         # at this point there should not be any geospatialrelation elements
-        self.assertEqual(self.res.metadata.geospatialrelations.all().count(), 0, msg="Resource has geospatialrelation element(s).")
+        self.assertEqual(self.res.metadata.geospatialrelations.all().count(),
+                         0, msg="Resource has geospatialrelation element(s).")
 
         # add a geospatialrelation element
-        resource.create_metadata_element(self.res.short_id,'geospatialrelation', type='relation',
+        resource.create_metadata_element(self.res.short_id, 'geospatialrelation', type='relation',
                                          value='https://geoconnex.us/ref/dams/001')
         # at this point there should be 1 geospatialrelation element
         self.assertEqual(self.res.metadata.geospatialrelations.all().count(), 1,
@@ -2188,7 +2189,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                       msg="No geospatialrelation element of type 'relation' was found")
 
         # add another geospatialrelation element
-        resource.create_metadata_element(self.res.short_id,'geospatialrelation', type='relation',
+        resource.create_metadata_element(self.res.short_id, 'geospatialrelation', type='relation',
                                          value='https://geoconnex.us/ref/dams/002')
 
         # at this point there should be 2 geospatialrelation elements
@@ -2206,8 +2207,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test update geospatialrelation type raises exception
         rel_to_update = self.res.metadata.geospatialrelations.first()
-        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'geospatialrelation', rel_to_update.id,
-                                                                              type='isVersionOf', value="dummy value 2"))
+        self.assertRaises(Exception,
+                          lambda: resource.update_metadata_element(self.res.short_id, 'geospatialrelation',
+                                                                   rel_to_update.id, type='isVersionOf',
+                                                                   value="dummy value 2"))
 
         # test update geospatialrelation value
         rel_to_update = self.res.metadata.geospatialrelations.all().filter(type='relation').first()
@@ -2240,14 +2243,14 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that it is possible to delete all geospatialrelation elements
         for rel in self.res.metadata.geospatialrelations.all():
-            resource.delete_metadata_element(self.res.short_id,'geospatialrelation', rel.id)
+            resource.delete_metadata_element(self.res.short_id, 'geospatialrelation', rel.id)
 
         # at this point there should not be any geospatialrelation elements
         self.assertEqual(self.res.metadata.geospatialrelations.all().count(), 0,
                          msg="Resource has geospatialrelation element(s) after deleting all.")
-        
+
         # add a geospatialrelation element
-        resource.create_metadata_element(self.res.short_id,'geospatialrelation', type='relation',
+        resource.create_metadata_element(self.res.short_id, 'geospatialrelation', type='relation',
                                          value='https://geoconnex.us/ref/dams/001')
 
         # test update geospatialrelation value
@@ -2266,7 +2269,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # at this point there should not be any geospatialrelation elements
         self.assertEqual(self.res.metadata.geospatialrelations.all().count(), 0,
                          msg="Resource has geospatialrelation element(s) after deleting all.")
-    
 
     def test_funding_agency(self):
         # at this point there should not be any funding agency elements

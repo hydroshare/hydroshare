@@ -79,9 +79,9 @@ class TestContentTypes(MockIRODSTestCaseMixin,
 
         types = get_content_types(self.res)
         self.assertTrue(is_equal_to_as_set(
-                            types[0],
-                            ['Resource', 'Document', 'Presentation', 'Spreadsheet',
-                             'Jupyter Notebook']))
+            types[0],
+            ['Resource', 'Document', 'Presentation', 'Spreadsheet',
+             'Jupyter Notebook']))
 
         self.assertTrue(is_equal_to_as_set(types[1], []))  # no left-over extensions
 
