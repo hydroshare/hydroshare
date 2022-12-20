@@ -72,7 +72,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 self.handle_save(BaseResource, newbase)
             except Exception:
                 logger.exception("{} exception: {}".format(type(instance), e))
-
         elif isinstance(instance, AbstractMetaDataElement):
             if isinstance(instance.metadata, AbstractFileMetaData):
                 try:
