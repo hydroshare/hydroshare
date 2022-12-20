@@ -394,6 +394,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.metadata.formats.count(), 0)
         # there should not be any relation element
         self.assertEqual(self.composite_resource.metadata.relations.count(), 0)
+        # there should not be any geospatialrelation element
+        self.assertEqual(self.composite_resource.metadata.geospatialrelations.count(), 0)
         # there should be 1 rights element
         self.assertNotEqual(self.composite_resource.metadata.rights, None)
         # there should not be any subject elements
@@ -472,6 +474,12 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                 value='http://hydroshare.org/resource/001')
         # there should be 1 relation element
         self.assertEqual(self.composite_resource.metadata.relations.count(), 1)
+
+        # add a geospatial relation element
+        metadata.create_element('geospatialrelation', type='relation',
+                                value='https://geoconnex.us/ref/dams/1083460')
+        # there should be 1 geospatial relation element
+        self.assertEqual(self.composite_resource.metadata.geospatialrelations.count(), 1)
 
         # add 2 subject elements
         metadata.create_element('subject', value='sub-1')
@@ -969,6 +977,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # add a relation element of uri type
         metadata.create_element('relation', type='isPartOf',
                                 value='http://hydroshare.org/resource/001')
+        # add a geospatial relation element
+        metadata.create_element('geospatialrelation', type='relation',
+                                value='https://geoconnex.us/ref/dams/1083460')
 
         # add 2 subject elements
         metadata.create_element('subject', value='sub-1')
