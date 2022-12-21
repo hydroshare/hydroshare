@@ -193,13 +193,19 @@
                                     {#        Country       #}
                                     <fieldset>
                                         <label>Country *</label>
-                                        <select id="country" name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
+                                        <select onchange="$('#state').bfhstates({country: this.value, state: 'CA'})" id="country" name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
                                     </fieldset>
 
                                     {#        State       #}
                                     <fieldset>
-                                        <label>State/Province *</label>
-                                        <select name="state" class="form-control form-required input-medium bfh-states" data-country="country" data-state="{{ profile.state }}"></select>
+                                        <label>State/Province</label>
+                                        {% if  profile.state and profile.state != 'None' %}
+                                            <select id="state" name="state" class="form-control bfh-states" value="{{ profile.state }}" data-country="country" data-state="{{ profile.state }}">
+                                                <option value="{{ profile.state }}">{{ profile.state }}</option>
+                                            </select>
+                                        {% else %}
+                                            <select id="state" name="state" class="form-control input-medium bfh-states" data-country="country"></select>
+                                        {% endif %}
                                     </fieldset>
                                 </div>
 
