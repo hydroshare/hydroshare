@@ -15,6 +15,7 @@ def autocomplete(request):
     # Party calculations are expensive and complicated. Deferring to focus on lower hanging fruit
     #
     parties = []
+
     def get_party_type(party):
         if Contributor.objects.filter(id=party.id).exists():
             return 'Contributor'

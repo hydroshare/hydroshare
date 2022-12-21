@@ -571,7 +571,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # collection should have 1 resource
         self.assertEqual(self.resCollection.resources.count(), 1)
         self.assertEqual(self.resCollection.resources.all()[0].resource_type.lower(),
-                          "collectionresource")
+                         "collectionresource")
 
     def test_update_collection_for_deleted_resources(self):
         self.assertEqual(self.resCollection.resources.count(), 0)
@@ -625,7 +625,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # test clear deleted_resources through view
         url_to_update_collection_for_deleted_resources = \
             self.url_to_update_collection_for_deleted_resources.format(
-             self.resCollection.short_id)
+                self.resCollection.short_id)
 
         # log out User 1
         self.api_client.logout()
@@ -971,7 +971,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.api_client.login(username='user1', password='mypassword1')
         # add 2 private member resources to collection
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list':  [self.resGen1.short_id, self.resGen2.short_id]}, )
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id]}, )
         resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 2)
@@ -995,7 +995,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.api_client.login(username='user1', password='mypassword1')
         # add 2 private member resources to collection
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list':  [self.resGen1.short_id, self.resGen2.short_id]}, )
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id]}, )
         resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 2)

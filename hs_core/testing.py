@@ -48,11 +48,12 @@ class MockIRODSTestCaseMixin(object):
 
 class TestCaseCommonUtilities(object):
     """Enable common utilities for iRODS testing."""
+
     def assert_federated_irods_available(self):
         """assert federated iRODS is available before proceeding with federation-related tests."""
-        self.assertTrue(settings.REMOTE_USE_IRODS and
-                        settings.HS_USER_ZONE_HOST == 'users.local.org' and
-                        settings.IRODS_HOST == 'data.local.org',
+        self.assertTrue(settings.REMOTE_USE_IRODS
+                        and settings.HS_USER_ZONE_HOST == 'users.local.org'
+                        and settings.IRODS_HOST == 'data.local.org',
                         "irods docker containers are not set up properly for federation testing")
         self.irods_fed_storage = IrodsStorage('federated')
         self.irods_storage = IrodsStorage()

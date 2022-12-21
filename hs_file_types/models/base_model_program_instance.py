@@ -521,8 +521,8 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                 else:
                     # if any of the files is part of a model instance aggr or fileset - folder can't be
                     # set to model instance
-                    return not any(res_file.has_logical_file and (res_file.logical_file.is_model_instance or
-                                                                  res_file.logical_file.is_fileset) for
+                    return not any(res_file.has_logical_file and (res_file.logical_file.is_model_instance
+                                                                  or res_file.logical_file.is_fileset) for
                                    res_file in files_in_path)
 
             # path has no files - can't set the folder to aggregation

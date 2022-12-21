@@ -29,7 +29,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         from hs_file_types.models import AbstractFileMetaData
         from django.contrib.postgres.fields import HStoreField
 
-
         if isinstance(instance, BaseResource):
             if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'):
                 # work around for failure of super(BaseResource, instance) to work properly.
@@ -47,7 +46,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                         except NotHandled:
                             logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
                                              str(type(instance)), newbase.short_id)
-
 
                     # if object is private or becoming private, delete from index
                     else:  # not to be shown in discover

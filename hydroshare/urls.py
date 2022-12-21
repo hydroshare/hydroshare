@@ -1,5 +1,6 @@
 
 
+from django.views.static import serve
 from autocomplete_light import shortcuts as autocomplete_light
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
@@ -74,7 +75,8 @@ urlpatterns = i18n_patterns(
     url(r'^sitemap', include('hs_sitemap.urls')),
     url(r'^groups', hs_core_views.FindGroupsView.as_view(), name='groups'),
     url(r'^communities/$', hs_communities.views.communities.FindCommunitiesView.as_view(), name='communities'),
-    url(r'^community/(?P<community_id>[0-9]+)/$', hs_communities.views.communities.CommunityView.as_view(), name='community'),
+    url(r'^community/(?P<community_id>[0-9]+)/$',
+        hs_communities.views.communities.CommunityView.as_view(), name='community'),
     url(r'^collaborate/$', hs_communities.views.communities.CollaborateView.as_view(), name='collaborate'),
     url(r'^my-resources/$', hs_core_views.my_resources, name='my_resources'),
     url(r'^my-resources-counts/$', hs_core_views.my_resources_filter_counts, name='my_resources_counts'),
@@ -88,7 +90,7 @@ urlpatterns = i18n_patterns(
 if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
     urlpatterns += i18n_patterns(
         url("^admin/media-library/", include("%s.urls" %
-                                        settings.PACKAGE_NAME_FILEBROWSER)),
+                                             settings.PACKAGE_NAME_FILEBROWSER)),
     )
 
 urlpatterns += hsapi_urlpatterns + hsapi2_urlpatterns
@@ -106,18 +108,17 @@ urlpatterns += [
 urlpatterns += [
     url(r'^robots\.txt', include('robots.urls')),
 ]
-from django.views.static import serve
 if settings.DEBUG is False:   # if DEBUG is True it will be served automatically
-  urlpatterns += [
-  url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
-]
+    urlpatterns += [
+        url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
+    ]
 
 if 'heartbeat' in settings.INSTALLED_APPS:
-  from heartbeat.urls import urlpatterns as heartbeat_urls
+    from heartbeat.urls import urlpatterns as heartbeat_urls
 
-  urlpatterns += [
-    url(r'^heartbeat/', include(heartbeat_urls))
-  ]
+    urlpatterns += [
+        url(r'^heartbeat/', include(heartbeat_urls))
+    ]
 
 urlpatterns += [
     # We don't want to presume how your homepage works, so here are a

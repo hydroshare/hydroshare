@@ -221,8 +221,8 @@ class UserGroupPrivilege(PrivilegeBase):
     def __str__(self):
         """ Return printed depiction for debugging """
         return str.format("<user '{}' (id={}) holds {} ({})" +
-                          " over group '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+                          " over group '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.user.username), str(self.user.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -404,8 +404,8 @@ class UserResourcePrivilege(PrivilegeBase):
     def __str__(self):
         """ Return printed depiction for debugging """
         return str.format("<user '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+                          " over resource '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.user.username), str(self.user.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -575,8 +575,8 @@ class GroupResourcePrivilege(PrivilegeBase):
     def __str__(self):
         """ Return printed depiction for debugging """
         return str.format("<group '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+                          " over resource '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.group.name), str(self.group.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -725,8 +725,8 @@ class UserCommunityPrivilege(PrivilegeBase):
     def __str__(self):
         """ Return printed depiction for debugging """
         return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over user '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+                          " over user '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.community.name), str(self.community.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -912,8 +912,8 @@ class GroupCommunityPrivilege(PrivilegeBase):
     def __str__(self):
         """ Return printed depiction for debugging """
         return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over group '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+                          " over group '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.community.name), str(self.community.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -1099,8 +1099,8 @@ class CommunityResourcePrivilege(PrivilegeBase):
     def __str__(self):
         """ Return printed depiction for debugging """
         return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+                          " over resource '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.community.name), str(self.community.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),

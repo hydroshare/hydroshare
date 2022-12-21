@@ -40,7 +40,7 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
             'GenericResource',
             self.user1,
             'My Test Resource'
-            )
+        )
 
         self.assertTrue(res.creator == self.user1)
         self.assertTrue(res.get_quota_holder() == self.user1)

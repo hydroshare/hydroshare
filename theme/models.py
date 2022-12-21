@@ -59,9 +59,9 @@ class SiteConfiguration(SiteRelated):
         '''
         Set has_social_network_links
         '''
-        if (self.twitter_link or self.facebook_link or self.pinterest_link or
-            self.youtube_link or self.github_link or self.linkedin_link or
-            self.vk_link or self.gplus_link):
+        if (self.twitter_link or self.facebook_link or self.pinterest_link
+            or self.youtube_link or self.github_link or self.linkedin_link
+                or self.vk_link or self.gplus_link):
             self.has_social_network_links = True
         else:
             self.has_social_network_links = False
@@ -92,16 +92,16 @@ class HomePage(Page):
     slide_in_three_icon = models.CharField(max_length=50, blank=True)
     slide_in_three = models.CharField(max_length=200, blank=True)
     header_background = FileField(verbose_name=_("Header Background"),
-        upload_to=upload_to("theme.HomePage.header_background", "homepage"),
-        format="Image", max_length=255, blank=True)
+                                  upload_to=upload_to("theme.HomePage.header_background", "homepage"),
+                                  format="Image", max_length=255, blank=True)
     header_image = FileField(verbose_name=_("Header Image (optional)"),
-        upload_to=upload_to("theme.HomePage.header_image", "homepage"),
-        format="Image", max_length=255, blank=True, null=True)
+                             upload_to=upload_to("theme.HomePage.header_image", "homepage"),
+                             format="Image", max_length=255, blank=True, null=True)
     welcome_heading = models.CharField(max_length=100, default="Welcome")
     content = RichTextField()
     recent_blog_heading = models.CharField(max_length=100, default="Latest blog posts")
     number_recent_posts = models.PositiveIntegerField(default=3,
-        help_text="Number of recent blog posts to show")
+                                                      help_text="Number of recent blog posts to show")
 
     # The following date fields are used for duration during which the message will be displayed
     message_start_date = models.DateField(null=True, help_text="Date from which the message will "
@@ -141,15 +141,15 @@ class IconBox(Orderable):
     '''
     An icon box on a HomePage
     '''
-    homepage = models.ForeignKey(HomePage, on_delete=models.CASCADE,  related_name="boxes")
+    homepage = models.ForeignKey(HomePage, on_delete=models.CASCADE, related_name="boxes")
     icon = models.CharField(max_length=50,
-        help_text="Enter the name of a font awesome icon, i.e. "
-                  "fa-eye. A list is available here "
-                  "http://fontawesome.io/")
+                            help_text="Enter the name of a font awesome icon, i.e. "
+                            "fa-eye. A list is available here "
+                            "http://fontawesome.io/")
     title = models.CharField(max_length=200)
     link_text = models.CharField(max_length=100)
     link = models.CharField(max_length=2000, blank=True,
-        help_text="Optional, if provided clicking the box will go here.")
+                            help_text="Optional, if provided clicking the box will go here.")
 
 
 class QuotaMessage(models.Model):
@@ -221,6 +221,7 @@ class UserQuota(models.Model):
     # soft quota limit and thus grace period has not started. When grace period is 0, quota
     # enforcement takes place
     remaining_grace_period = models.IntegerField(default=-1)
+
     class Meta:
         verbose_name = _("User quota")
         verbose_name_plural = _("User quotas")
@@ -228,7 +229,7 @@ class UserQuota(models.Model):
 
     @property
     def used_percent(self):
-        return self.used_value*100.0/self.allocated_value
+        return self.used_value * 100.0 / self.allocated_value
 
     def update_used_value(self, size):
         """

@@ -46,7 +46,7 @@ from .forms import SignupForm
 
 
 class UserProfileView(TemplateView):
-    template_name='accounts/profile.html'
+    template_name = 'accounts/profile.html'
 
     def get_context_data(self, **kwargs):
         u = User.objects.none()
@@ -81,14 +81,14 @@ class UserProfileView(TemplateView):
                 else:
                     # filter out any resources the requesting user doesn't have access
                     resources = resources.filter(
-                        Q(pk__in=self.request.user.uaccess.view_resources) |
-                        Q(raccess__public=True) |
-                        Q(raccess__discoverable=True))
+                        Q(pk__in=self.request.user.uaccess.view_resources)
+                        | Q(raccess__public=True)
+                        | Q(raccess__discoverable=True))
             else:
                 # for anonymous requesting user show only resources that are either public or
                 # discoverable
-                resources = resources.filter(Q(raccess__public=True) |
-                                             Q(raccess__discoverable=True))
+                resources = resources.filter(Q(raccess__public=True)
+                                             | Q(raccess__discoverable=True))
 
         # get resource attributes used in profile page
         resources = resources.only('title', 'resource_type', 'created')
@@ -114,6 +114,7 @@ class UserPasswordResetView(TemplateView):
             return HttpResponseRedirect(reverse('password_reset_url'))
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
+
 
 def landingPage(request, template="pages/homepage.html"):
     return render(request, template)
@@ -185,8 +186,8 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
         except ValidationError as e:
             if str(e) == "Email already in use.":
                 messages.error(request, '<p>An account with this email already exists.  Log in '
-                                'or click <a href="' + reverse("mezzanine_password_reset") +
-                               '" >here</a> to reset password',
+                               'or click <a href="' + reverse("mezzanine_password_reset")
+                               + '" >here</a> to reset password',
                                extra_tags="html")
             else:
                 messages.error(request, str(e))
@@ -202,7 +203,7 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
                     info(request, _("A verification email has been sent to " + new_user.email +
                                     " with a link that must be clicked prior to your account "
                                     "being activated. If you do not receive this email please "
-                                    "check that you entered your address correctly, or your " 
+                                    "check that you entered your address correctly, or your "
                                     "spam folder as sometimes the email gets flagged as spam. "
                                     "If you entered an incorrect email address, please request "
                                     "an account again."))
@@ -316,7 +317,7 @@ def update_user_profile(request, profile_user_id):
                     send_mail(subject="Change of HydroShare email address.",
                               message=message,
                               html_message=message,
-                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email],
+                              from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email],
                               fail_silently=True)
             else:
                 errors = {}
@@ -560,6 +561,7 @@ def email_verify_password_reset(request, uidb36=None, token=None):
             messages.error(request, _("The link you clicked is no longer valid, please request a password reset link."))
             return HttpResponseRedirect('/accounts/password/reset/')
 
+
 @login_required()
 def delete_resource_comment(request, id):
     comment = get_object_or_404(Comment, id=id)
@@ -571,10 +573,11 @@ def delete_resource_comment(request, id):
         raise HttpResponseForbidden()
     return HttpResponseRedirect(comment.content_object.get_absolute_url())
 
+
 @login_required
 def deactivate_user(request):
     user = request.user
-    
+
     # redeem existing membership requests
     member_requests = user.uaccess.group_membership_requests.all()
     for req in member_requests:
@@ -584,6 +587,7 @@ def deactivate_user(request):
     messages.success(request, "Your account has been successfully deactivated.")
     return HttpResponseRedirect('/accounts/logout/')
 
+
 @login_required
 def delete_irods_account(request):
     if request.method == 'POST':
@@ -591,7 +595,7 @@ def delete_irods_account(request):
         try:
             exec_cmd = "{0} {1}".format(settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD, user.username)
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE, pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
-                            exec_cmd=exec_cmd)
+                                     exec_cmd=exec_cmd)
             for out_str in output:
                 if 'ERROR:' in out_str.upper():
                     # there is an error from icommand run, report the error
@@ -605,14 +609,14 @@ def delete_irods_account(request):
             user_profile.create_irods_user_account = False
             user_profile.save()
             return JsonResponse(
-                    {"success": "iRODS account {0} is deleted successfully".format(user.username)},
-                    status=status.HTTP_200_OK
+                {"success": "iRODS account {0} is deleted successfully".format(user.username)},
+                status=status.HTTP_200_OK
             )
         except Exception as ex:
             return JsonResponse(
-                    {"error": str(ex) + ' - iRODS server failed to delete this iRODS account. '
-                    'If this issue persists, please notify help@cuahsi.org.'},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": str(ex) + ' - iRODS server failed to delete this iRODS account. '
+                 'If this issue persists, please notify help@cuahsi.org.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -629,9 +633,9 @@ def create_irods_account(request):
                                      pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
             for out_str in output:
-                if 'bash:' in out_str or ('ERROR:' in out_str.upper() and \
-                        not 'CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME' in out_str.upper()):
-                    # there is an error from icommand run which is not about the fact 
+                if 'bash:' in out_str or ('ERROR:' in out_str.upper()
+                                          and not 'CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME' in out_str.upper()):
+                    # there is an error from icommand run which is not about the fact
                     # that the user already exists, report the error
                     return JsonResponse(
                         {"error": 'iRODS server failed to create this iRODS account {0}. '
@@ -643,14 +647,14 @@ def create_irods_account(request):
             user_profile.create_irods_user_account = True
             user_profile.save()
             return JsonResponse(
-                    {"success": "iRODS account {0} was created successfully".format(user.username)},
-                    status=status.HTTP_200_OK
+                {"success": "iRODS account {0} was created successfully".format(user.username)},
+                status=status.HTTP_200_OK
             )
         except Exception as ex:
             return JsonResponse(
-                    {"error": str(ex) + ' - iRODS server failed to create this iRODS account. '
-                    'If this issue persists, please notify help@cuahsi.org.'},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": str(ex) + ' - iRODS server failed to create this iRODS account. '
+                 'If this issue persists, please notify help@cuahsi.org.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     else:
         return JsonResponse(

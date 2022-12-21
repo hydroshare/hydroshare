@@ -105,7 +105,7 @@ class CompositeResource(BaseResource):
             NetCDFLogicalFile.type_name(): self.netcdflogicalfile_set.all(),
             TimeSeriesLogicalFile.type_name(): self.timeserieslogicalfile_set.all(),
             RefTimeseriesLogicalFile.type_name(): self.reftimeserieslogicalfile_set.all()
-            }
+        }
 
         if logical_file_class_name in class_name_to_query_mappings:
             return class_name_to_query_mappings[logical_file_class_name]
@@ -334,7 +334,7 @@ class CompositeResource(BaseResource):
                 return res_file.logical_file
 
             raise ObjectDoesNotExist(
-                    "No matching aggregation was found for name:{}".format(name))
+                "No matching aggregation was found for name:{}".format(name))
 
     def get_fileset_aggregation_in_path(self, path):
         """Get the first fileset aggregation in the path moving up (towards the root)in the path
@@ -484,8 +484,8 @@ class CompositeResource(BaseResource):
 
         This is true if it is listed as metadata in any logical file.
         """
-        if not (file_path.endswith(METADATA_FILE_ENDSWITH) or
-                file_path.endswith(RESMAP_FILE_ENDSWITH)):
+        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
+                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
             return False
         for logical_file in self.logical_files:
             if logical_file.metadata_file_path == file_path or \
@@ -670,9 +670,9 @@ class CompositeResource(BaseResource):
             try:
                 resource_data_types = [lf.data_type for lf in self.logical_files]
                 service_url = (
-                        f'{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/' +
-                        '{}?request=GetCapabilities'
-                    )
+                    f'{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/'
+                    + '{}?request=GetCapabilities'
+                )
                 if 'GeographicFeature' in resource_data_types:
                     wfs_url = service_url.format('wfs')
                     wms_url = service_url.format('wms')

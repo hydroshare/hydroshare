@@ -628,7 +628,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
 
 class NetCDFLogicalFile(AbstractLogicalFile):
-    metadata = models.OneToOneField(NetCDFFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
+    metadata = models.OneToOneField(NetCDFFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "Multidimensional"
 
     @classmethod

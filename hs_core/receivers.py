@@ -134,7 +134,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
                 # for creator or contributor who is not a hydroshare user the 'hydroshare_user_id'
                 # key might be missing in the POST form data
                 if field_name == 'hydroshare_user_id':
-                    matching_key = [key for key in request.POST if '-'+field_name in key]
+                    matching_key = [key for key in request.POST if '-' + field_name in key]
                     if matching_key:
                         matching_key = matching_key[0]
                     else:
@@ -142,11 +142,11 @@ def metadata_element_pre_update_handler(sender, **kwargs):
                 elif field_name == 'identifiers':
                     matching_key = 'identifiers'
                 else:
-                    matching_key = [key for key in request.POST if '-'+field_name in key][0]
+                    matching_key = [key for key in request.POST if '-' + field_name in key][0]
 
                 form_data[field_name] = post_data_dict[matching_key]
             else:
-                matching_key = [key for key in request.POST if '-'+field_name in key][0]
+                matching_key = [key for key in request.POST if '-' + field_name in key][0]
                 form_data[field_name] = request.POST[matching_key]
 
         element_form = element_validation_form(form_data)

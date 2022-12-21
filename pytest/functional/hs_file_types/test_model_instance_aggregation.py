@@ -600,7 +600,7 @@ def test_auto_update_temporal_coverage_from_children(composite_resource_with_mi_
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] == \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
 
     assert not resource.dangling_aggregations_exist()
 
@@ -638,7 +638,7 @@ def test_no_auto_update_temporal_coverage_from_children(composite_resource_with_
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] != \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
 
     assert not resource.dangling_aggregations_exist()
 
@@ -674,7 +674,7 @@ def test_update_temporal_coverage_from_children(composite_resource_with_mi_aggre
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] != \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
 
     # update temporal coverage for model instance from contained aggregations
     mi_aggr.update_temporal_coverage()
@@ -682,7 +682,7 @@ def test_update_temporal_coverage_from_children(composite_resource_with_mi_aggre
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] == \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
 
     assert not resource.dangling_aggregations_exist()
 

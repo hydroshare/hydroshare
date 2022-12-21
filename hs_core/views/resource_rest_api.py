@@ -240,7 +240,7 @@ class ResourceListCreate(generics.ListCreateAPIView):
         response_data = {'resource_type': resource_type, 'resource_id': resource.short_id,
                          'message': post_creation_error_msg}
 
-        return Response(data=response_data,  status=status.HTTP_201_CREATED)
+        return Response(data=response_data, status=status.HTTP_201_CREATED)
 
     pagination_class = PageNumberPagination
     pagination_class.page_size_query_param = 'count'

@@ -9,6 +9,7 @@ class ToolResourceMeta(GenericResourceMeta):
     """
     Lightweight class for representing metadata of ToolResource instances.
     """
+
     def __init__(self):
         super(ToolResourceMeta, self).__init__()
 
