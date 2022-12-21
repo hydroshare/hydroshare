@@ -365,7 +365,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         msg = "Unable to add zip file contents to non-existent resource {pk}."
         msg = msg.format(pk=pk)
         logger.error(msg)
-    except:
+    except: # noqa
         exc_info = "".join(traceback.format_exception(*sys.exc_info()))
         if resource:
             resource.file_unpack_status = 'Error'

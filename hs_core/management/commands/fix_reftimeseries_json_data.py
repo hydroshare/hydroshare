@@ -25,6 +25,6 @@ class Command(BaseCommand):
                 print()
                 aggr_counter += 1
             else:
-                print(f"Aggregation json file was not found")
+                print("Aggregation json file was not found")
 
         print(f"Number of Ref Timeseries Aggregations updated:{aggr_counter}")
