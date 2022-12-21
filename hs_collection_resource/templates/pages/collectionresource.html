@@ -1,5 +1,5 @@
 {% extends "pages/genericresource.html" %}
-{% load pages_tags mezzanine_tags crispy_forms_tags hydroshare_tags%}
+{% load pages_tags mezzanine_tags crispy_forms_tags hydroshare_tags %}
 
 {% block extra_css %}
     {{ block.super }}
@@ -55,7 +55,15 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {{ res.resource_type }}
+                                            {% if res.resource_type == "CompositeResource" %}
+                                                Resource
+                                            {% elif res.resource_type == "CollectionResource" %}
+                                                Collection
+                                            {% elif res.resource_type == "ToolResource" %}
+                                                App Connector
+                                            {% else %}
+                                                {{ res.resource_type }}
+                                            {% endif %}
                                         </td>
                                         <td>
                                             {% with raccess.owners.all|first as owner %}
@@ -214,7 +222,15 @@
                                       {% endwith %}
                                     </td>
                                     <td>
-                                        {{ res.resource_type }}
+                                        {% if res.resource_type == "CompositeResource" %}
+                                            Resource
+                                        {% elif res.resource_type == "CollectionResource" %}
+                                            Collection
+                                        {% elif res.resource_type == "ToolResource" %}
+                                            App Connector
+                                        {% else %}
+                                            {{ res.resource_type }}
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% with res.deleted_by as deleted_by %}

@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='userstoredlabels',
             name='user',
-            field=models.ForeignKey(related_name='ul2usl', to=settings.AUTH_USER_MODEL, help_text='user who stored the label'),
+            field=models.ForeignKey(related_name='ul2usl', on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL, help_text='user who stored the label'),
             preserve_default=True,
         ),
         migrations.AlterUniqueTogether(

@@ -6,7 +6,7 @@ import shutil
 import logging
 import json
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect
@@ -157,7 +157,7 @@ class ResourceListCreate(generics.ListCreateAPIView):
 
     # Override the create() method from the CreateAPIView class
     def create(self, request, *args, **kwargs):
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             raise NotAuthenticated()
 
         resource_create_request_validator = serializers.ResourceCreateRequestValidator(
@@ -259,13 +259,13 @@ class ResourceListCreate(generics.ListCreateAPIView):
             raise ValidationError(detail=resource_list_request_validator.errors)
 
         filter_parms = resource_list_request_validator.validated_data
-        filter_parms['user'] = (self.request.user if self.request.user.is_authenticated() else None)
+        filter_parms['user'] = (self.request.user if self.request.user.is_authenticated else None)
         if len(filter_parms['type']) == 0:
             filter_parms['type'] = None
         else:
             filter_parms['type'] = list(filter_parms['type'])
 
-        filter_parms['public'] = not self.request.user.is_authenticated()
+        filter_parms['public'] = not self.request.user.is_authenticated
 
         return hydroshare.get_resource_list(**filter_parms)
 

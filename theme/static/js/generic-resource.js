@@ -274,10 +274,10 @@ $(document).ready(function () {
     $("#agree-chk").on('click', function(e) {
         e.stopImmediatePropagation();
         if (e.currentTarget.checked) {
-            $('#publish-btn').removeAttr('disabled');
+            $('#publish-btn-2').removeAttr('disabled');
         }
         else {
-            $('#publish-btn').attr('disabled', 'disabled');
+            $('#publish-btn-2').attr('disabled', 'disabled');
         }
     });
 

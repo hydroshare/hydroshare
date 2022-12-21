@@ -1,5 +1,5 @@
 from django.contrib import sitemaps
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 
 class PagesSitemap(sitemaps.Sitemap):

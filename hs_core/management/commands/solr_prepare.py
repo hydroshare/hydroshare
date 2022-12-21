@@ -72,6 +72,8 @@ def debug_harvest():
         pprint(ind.prepare_source(obj))
         print('relation')
         pprint(ind.prepare_relation(obj))
+        print('geospatialrelation')
+        pprint(ind.prepare_geospatialrelation(obj))
         print('resource_type')
         pprint(ind.prepare_resource_type(obj))
         print('comment')

@@ -41,48 +41,50 @@ class AbstractCVLookupTable(models.Model):
 
 
 class CVVariableType(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_variable_types")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_variable_types")
 
 
 class CVVariableName(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_variable_names")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_variable_names")
 
 
 class CVSpeciation(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_speciations")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_speciations")
 
 
 class CVElevationDatum(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_elevation_datums")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,
+                                 related_name="cv_elevation_datums")
 
 
 class CVSiteType(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_site_types")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_site_types")
 
 
 class CVMethodType(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_method_types")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_method_types")
 
 
 class CVUnitsType(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_units_types")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_units_types")
 
 
 class CVStatus(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_statuses")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_statuses")
 
 
 class CVMedium(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_mediums")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_mediums")
 
 
 class CVAggregationStatistic(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_aggregation_statistics")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,
+                                 related_name="cv_aggregation_statistics")
 
 
 class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
     # for associating an metadata element with one or more time series
-    series_ids = ArrayField(models.CharField(max_length=36, null=True, blank=True), default=[])
+    series_ids = ArrayField(models.CharField(max_length=36, null=True, blank=True), default=list)
     # to track if element has been modified to trigger sqlite file update
     is_dirty = models.BooleanField(default=False)
 
@@ -777,7 +779,7 @@ class TimeSeriesMetaDataMixin(models.Model):
     # for storing data column name (key) and number of data points (value) for that column
     # this field is set to an empty dict once metadata changes are written to the blank sqlite
     # file as part of the sync operation
-    value_counts = HStoreField(default={})
+    value_counts = HStoreField(default=dict)
 
     class Meta:
         abstract = True
@@ -2135,7 +2137,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):
-    metadata = models.OneToOneField(TimeSeriesFileMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(TimeSeriesFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
     data_type = "TimeSeries"
 
     @classmethod

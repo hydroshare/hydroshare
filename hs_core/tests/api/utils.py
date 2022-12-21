@@ -1,6 +1,5 @@
 import os
-import zipfile
-from pathlib import Path
+import shutil
 
 from django.core.files.uploadedfile import UploadedFile
 
@@ -19,21 +18,14 @@ class MyTemporaryUploadedFile(UploadedFile):
     def temporary_file_path(self):
         return self.orig_name
 
-def zip_up(ziph, root_directory, directory=""):
-    full_path = Path(os.path.join(root_directory, directory))
-    dirs = [str(item) for item in full_path.iterdir() if item.is_dir()]
-    files = [str(item) for item in full_path.iterdir() if item.is_file()]
-    for file in files:
-        ziph.write(file, arcname=os.path.join(directory, os.path.basename(file)))
-    for d in dirs:
-        zip_up(ziph, root_directory, os.path.join(directory, os.path.basename(d)))
-
 
 def prepare_resource(folder, res, user, extracted_directory, test_bag_path):
     from hs_core.views.utils import unzip_file
 
-    zipf = zipfile.ZipFile(test_bag_path, 'w')
-    zip_up(zipf, os.path.join(extracted_directory, folder))
+    dir_to_zip = os.path.join(extracted_directory, folder)
+    # remove '.zip' extension from the zip file path as the extension will be added by make_archive call
+    zip_to_file_path = test_bag_path[:-4]
+    shutil.make_archive(zip_to_file_path, 'zip', dir_to_zip)
 
     bag_file_name = os.path.basename(test_bag_path)
     files_to_upload = [UploadedFile(file=open(test_bag_path, 'rb'),

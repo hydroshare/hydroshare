@@ -665,17 +665,20 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         for res_file in self.composite_resource.files.all():
             base_file_name, ext = os.path.splitext(res_file.file_name)
             self.assertEqual(res_file.file_folder, expected_folder_path)
-            if expected_folder_path is not None:
+
+            if expected_folder_path:
                 src_path = 'data/contents/{0}/{1}'.format(expected_folder_path, res_file.file_name)
             else:
                 src_path = 'data/contents/{}'.format(res_file.file_name)
 
-            new_file_name = 'some_netcdf.{}'.format(ext)
+            new_file_name = 'some_netcdf{}'.format(ext)
+
             self.assertNotEqual(res_file.file_name, new_file_name)
-            if expected_folder_path is not None:
+            if expected_folder_path:
                 tgt_path = 'data/contents/{}/{}'.format(expected_folder_path, new_file_name)
             else:
                 tgt_path = 'data/contents/{}'.format(new_file_name)
+
             with self.assertRaises(DRF_ValidationError):
                 move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                               tgt_path)

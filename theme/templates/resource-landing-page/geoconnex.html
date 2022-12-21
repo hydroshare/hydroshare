@@ -4,7 +4,7 @@
 <link rel='stylesheet' type='text/css' href="{% static 'css/geoconnex.css' %}">
 {% endblock %}
 
-{% if resource_edit_mode or inspecific_relations %}
+{% if resource_edit_mode or geospatial_relations %}
     <div class="col-xs-12 content-block" id="app-geoconnex">
         <h3>Related Geospatial Features</h3>
         <p>
@@ -317,5 +317,6 @@
 {% block extra_js %}
     <script src="https://unpkg.com/axios@0.26.1/dist/axios.min.js"></script>
     <script src="https://unpkg.com/vuetify@2.6.4/dist/vuetify.min.js"></script>
+    <script src="https://unpkg.com/jsonld@8.1.0/dist/jsonld.min.js"></script>
     <script type="text/javascript" src="{% static 'js/hs-vue/geoconnex.js' %}"></script>
 {% endblock %}
