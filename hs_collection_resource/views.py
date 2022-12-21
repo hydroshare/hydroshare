@@ -25,10 +25,10 @@ def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
                                                         needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         if collection_res.resource_type.lower() != "collectionresource":
-            raise Exception(f"Resource {shortkey} is not a collection resource.")
+            raise Exception(f"{shortkey} is not a collection.")
 
         if collection_res.raccess.published:
-            raise Exception(f"Resource {shortkey} is a published collection resource and can't be changed")
+            raise Exception(f"Collection {shortkey} is a published collection and can't be changed")
 
         collectable_resources = get_collectable_resources(user, collection_res)
         context = {'collectable_resources': collectable_resources}
@@ -78,7 +78,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
             if collection_res_obj.resource_type.lower() != "collectionresource":
-                raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+                raise Exception(f"{shortkey} is not a collection.")
 
             if collection_res_obj.raccess.published:
                 raise Exception("Resources of a published collection can't be changed")
@@ -224,7 +224,7 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
                             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
             if collection_res.resource_type.lower() != "collectionresource":
-                raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+                raise Exception(f"{shortkey} is not a collection.")
 
             new_coverage_list = _update_collection_coverages(collection_res)
             ajax_response_data['new_coverage_list'] = new_coverage_list
@@ -258,7 +258,7 @@ def calculate_collection_coverages(request, shortkey, *args, **kwargs):
                         needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
         if collection_res.resource_type.lower() != "collectionresource":
-            raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+            raise Exception(f"{shortkey} is not a collection.")
 
         new_coverage_list = _calculate_collection_coverages(collection_res)
         ajax_response_data['new_coverage_list'] = new_coverage_list

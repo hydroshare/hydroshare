@@ -108,6 +108,7 @@ class TestCreateResource(HSRESTTestCase):
         contributor
         source,
         relation,
+        geospatialrelation,
         identifier,
         fundingagency
 
@@ -154,6 +155,11 @@ class TestCreateResource(HSRESTTestCase):
         # relation
         metadata.append({'relation': {'type': 'isPartOf',
                                       'value': 'http://hydroshare.org/resource/001'}})
+
+        # geospatialrelation
+        metadata.append({'geospatialrelation': {'type': 'relation',
+                                                'value': 'https://geoconnex.us/ref/dams/1083460',
+                                                'text': 'Bonnie Meade [dams/1083460]'}})
 
         # identifier
         metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})
@@ -215,6 +221,13 @@ class TestCreateResource(HSRESTTestCase):
         relation = resource.metadata.relations.all().first()
         self.assertEqual(relation.type, 'isPartOf')
         self.assertEqual(relation.value, 'http://hydroshare.org/resource/001')
+
+        # there should be 1 geospatialrelation element
+        self.assertEqual(resource.metadata.geospatialrelations.all().count(), 1)
+        geospatialrelation = resource.metadata.geospatialrelations.all().first()
+        self.assertEqual(geospatialrelation.type, 'relation')
+        self.assertEqual(geospatialrelation.value, 'https://geoconnex.us/ref/dams/1083460')
+        self.assertEqual(geospatialrelation.text, 'Bonnie Meade [dams/1083460]')
 
         # there should be 2 identifiers
         self.assertEqual(resource.metadata.identifiers.all().count(), 2)

@@ -11,7 +11,7 @@ from hs_collection_resource.utils import update_collection_list_csv
 def pre_add_files_to_resource_handler(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
     validate_files_dict['are_files_valid'] = False
-    validate_files_dict['message'] = 'Content files are not allowed in Collection resource'
+    validate_files_dict['message'] = 'Content files are not allowed in a collection'
 
 
 @receiver(pre_check_bag_flag, sender=CollectionResource)

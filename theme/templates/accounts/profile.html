@@ -313,7 +313,7 @@
                                                             <span class="text-muted"> shared </span>
                                                             <span><a href="{{ res.get_absolute_url }}">{{ metadata.title }}</a></span>
                                                         </div>
-                                                        <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
+                                                        <h5><span class="text-muted">Type: </span>{{ res|resource_type }}</h5>
                                                         <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
                                                     </div>
                                                     {% with abstract=metadata.description %}
@@ -623,60 +623,16 @@
                                             <td><span>All</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
-                                        <tr id="badge-collection" data-type="type-Collection Resource">
+                                        <tr id="badge-collection" data-type="type-Collection">
                                             <td><span>Collection</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
-                                        <tr id="badge-composite" data-type="type-Composite Resource">
-                                            <td><span>Composite Resource</span></td>
+                                        <tr id="badge-composite" data-type="type-Resource">
+                                            <td><span>Resource</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
-                                        <tr id="badge-generic" data-type="type-Generic">
-                                            <td><span>Generic</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                         <tr id="badge-geographic-feature" data-type="type-Geographic Feature (ESRI Shapefiles)">
-                                            <td><span>Geographic Feature</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-geographic" data-type="type-Geographic Raster">
-                                            <td><span>Geographic Raster</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-his" data-type="type-HIS Referenced Time Series">
-                                            <td><span>HIS Referenced Time Series</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-model-instance" data-type="type-Model Instance Resource">
-                                            <td><span>Model Instance</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-model-program" data-type="type-Model Program Resource">
-                                            <td><span>Model Program</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-modflow" data-type="type-MODFLOW Model Instance Resource">
-                                            <td><span>MODFLOW Model Instance Resource</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
-                                            <td><span>Multidimensional (NetCDF)</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-script" data-type="type-Script Resource">
-                                            <td><span>Script Resource</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
-                                            <td><span>SWAT Model Instance</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-time-series" data-type="type-Time Series">
-                                            <td><span>Time Series</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-web-app" data-type="type-Web App Resource">
-                                            <td><span>Web App</span></td>
+                                        <tr id="badge-web-app" data-type="type-App Connector">
+                                            <td><span>App Connector</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
                                     </tbody>
