@@ -2207,8 +2207,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test update geospatialrelation type raises exception
         rel_to_update = self.res.metadata.geospatialrelations.first()
-        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'geospatialrelation', rel_to_update.id,
-                                                                              type='isVersionOf', value="dummy value 2"))
+        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'geospatialrelation',
+                                                                              rel_to_update.id,
+                                                                              type='isVersionOf',
+                                                                              value="dummy value 2"))
 
         # test update geospatialrelation value
         rel_to_update = self.res.metadata.geospatialrelations.all().filter(type='relation').first()

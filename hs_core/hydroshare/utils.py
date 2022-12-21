@@ -460,7 +460,7 @@ async def get_jsonld_from_geoconnex(relation, client):
     collection = relative_id.split("/")[0]
     id = relative_id.split("/")[1]
     url = f"/collections/{collection}/items/{id}?" \
-               "f=jsonld&lang=en-US&skipGeometry=true"
+        "f=jsonld&lang=en-US&skipGeometry=true"
     logger.debug(f"CHECKING RELATION '{relation.text}'")
     async with client.get(url) as resp:
         return await _save_relation(relation, await resp.json())
