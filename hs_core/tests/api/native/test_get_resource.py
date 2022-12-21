@@ -25,13 +25,13 @@ class TestGetResource(TestCase):
             'GenericResource',
             self.user,
             'My Test Resource'
-            )
+        )
 
     def test_get_resource(self):
         # function to test: hydroshare.get_resource() which returns a Bags object (not the actual bag file)
         # TODO: Don't see any useful way of using the hydroshare.get_resource() function
         # One can't do much with a Bags object. For downloading a bag we are using resource.bag_url.
         # So it is better that we delete the get_resource() function and remove this test
-        
+
         res = utils.get_resource_by_shortkey(self.res.short_id)
         self.assertTrue(res is not None)

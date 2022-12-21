@@ -594,7 +594,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # make a new copy of web app
         new_web_app = create_empty_resource(self.resWebApp.short_id, self.user,
-                                               action='copy')
+                                            action='copy')
 
         new_web_app = copy_resource(self.resWebApp, new_web_app)
 

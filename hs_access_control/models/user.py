@@ -5,8 +5,8 @@ from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, \
-        UserGroupPrivilege, UserResourcePrivilege, GroupResourcePrivilege, \
-        UserCommunityPrivilege, GroupCommunityPrivilege, CommunityResourcePrivilege
+    UserGroupPrivilege, UserResourcePrivilege, GroupResourcePrivilege, \
+    UserCommunityPrivilege, GroupCommunityPrivilege, CommunityResourcePrivilege
 from hs_access_control.models.group import GroupAccess, GroupMembershipRequest
 from hs_access_control.models.exceptions import PolymorphismError
 from hs_access_control.models.community import Community
@@ -51,7 +51,7 @@ class Feature(models.Model):
     A UI customization can be enabled or disabled, and is a property of a User.
 
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE,  null=True, related_name='feature')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='feature')
     feature = models.IntegerField(choices=FeatureCodes.CHOICES, default=FeatureCodes.NONE)
     enabled = models.BooleanField(null=False, blank=False, default=False)
 
@@ -227,8 +227,8 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return GroupMembershipRequest.objects.filter(Q(request_from=self.user) |
-                                                     Q(invitation_to=self.user)) \
+        return GroupMembershipRequest.objects.filter(Q(request_from=self.user)
+                                                     | Q(invitation_to=self.user)) \
             .filter(group_to_join__gaccess__active=True).filter(redeemed=False)
 
     def create_group(self, title, description, auto_approve=False, requires_explanation=False, purpose=None):
@@ -315,10 +315,10 @@ class UserAccess(models.Model):
 
         return Group.objects.filter(Q(g2ugp__user=self.user,
                                       g2ugp__privilege__lte=PrivilegeCodes.VIEW,
-                                      gaccess__active=True) |
-                                    Q(g2ugp__user=self.user,
-                                      gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER)).distinct()
+                                      gaccess__active=True)
+                                    | Q(g2ugp__user=self.user,
+                                        gaccess__active=False,
+                                        g2ugp__privilege=PrivilegeCodes.OWNER)).distinct()
 
     @property
     def edit_groups(self):
@@ -346,11 +346,11 @@ class UserAccess(models.Model):
 
         return Group.objects.filter(Q(g2ugp__user=self.user,
                                       g2ugp__privilege__lte=PrivilegeCodes.CHANGE,
-                                      gaccess__active=True) |
-                                    Q(g2ugp__user=self.user,
-                                      gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER))\
-                            .distinct()
+                                      gaccess__active=True)
+                                    | Q(g2ugp__user=self.user,
+                                        gaccess__active=False,
+                                        g2ugp__privilege=PrivilegeCodes.OWNER))\
+            .distinct()
 
     @property
     def owned_groups(self):
@@ -391,11 +391,11 @@ class UserAccess(models.Model):
 
         return Group.objects.filter(Q(g2ugp__user=self.user,
                                       g2ugp__privilege__lte=PrivilegeCodes.VIEW,
-                                      gaccess__active=True) |
-                                    Q(g2ugp__user=self.user,
-                                      gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER)).select_related('gaccess')\
-                            .distinct()
+                                      gaccess__active=True)
+                                    | Q(g2ugp__user=self.user,
+                                        gaccess__active=False,
+                                        g2ugp__privilege=PrivilegeCodes.OWNER)).select_related('gaccess')\
+            .distinct()
 
     #################################
     # access checks for groups
@@ -423,12 +423,12 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         return Group.objects.filter(
-                # owners can see inactive groups they own
-                Q(g2ugp__user=self.user,
-                  g2ugp__privilege=PrivilegeCodes.OWNER) |
-                # everyone else can see only active groups they are in
-                Q(gaccess__active=True,
-                  g2ugp__user=self.user)).distinct()
+            # owners can see inactive groups they own
+            Q(g2ugp__user=self.user,
+              g2ugp__privilege=PrivilegeCodes.OWNER)
+            # everyone else can see only active groups they are in
+            | Q(gaccess__active=True,
+                g2ugp__user=self.user)).distinct()
 
     def owns_group(self, this_group):
         """
@@ -551,7 +551,7 @@ class UserAccess(models.Model):
             raise PermissionDenied("Group is not active")
 
         return this_group.gaccess.discoverable or this_group.gaccess.public or \
-               self.can_view_group(this_group)
+            self.can_view_group(this_group)
 
     def can_change_group_flags(self, this_group):
         """
@@ -682,7 +682,6 @@ class UserAccess(models.Model):
     #  __check_share_community_with_group
     #  __check_share_group_with_user
     def __check_share_group(self, this_group, this_privilege, user=None):
-
         """
         Raise exception if a given user cannot share this group with a given privilege.
 
@@ -951,9 +950,9 @@ class UserAccess(models.Model):
         if not UserGroupPrivilege.objects.filter(group=this_group,
                                                  privilege=PrivilegeCodes.OWNER,
                                                  user=this_user).exists()\
-            or UserGroupPrivilege.objects.filter(group=this_group,
-                                                 privilege=PrivilegeCodes.OWNER) \
-                                         .exclude(user=this_user).exists():
+                or UserGroupPrivilege.objects.filter(group=this_group,
+                                                     privilege=PrivilegeCodes.OWNER) \
+                .exclude(user=this_user).exists():
             return True
         else:
             raise PermissionDenied("Cannot remove sole owner of group")
@@ -1001,7 +1000,7 @@ class UserAccess(models.Model):
                 users_to_exclude = User.objects.filter(is_active=True,
                                                        u2ugp__group=this_group,
                                                        u2ugp__privilege=PrivilegeCodes.OWNER)\
-                                               .values('pk')
+                    .values('pk')
                 return access_group.members.exclude(pk__in=Subquery(users_to_exclude))
             else:
                 return access_group.members
@@ -1052,7 +1051,7 @@ class UserAccess(models.Model):
                     g2ugp__privilege=this_privilege)\
             .exclude(pk__in=Subquery(Group.objects.filter(g2ugp__user=self.user,
                                                           g2ugp__privilege__lt=this_privilege)
-                                                  .values("pk")))
+                                     .values("pk")))
 
         # filter out inactive groups for non owner privileges
         if this_privilege != PrivilegeCodes.OWNER:
@@ -1082,10 +1081,10 @@ class UserAccess(models.Model):
 
         return BaseResource.objects.filter(
             # direct access
-            Q(r2urp__user=self.user) |
+            Q(r2urp__user=self.user)
             # access via a group
-            Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2ugp__user=self.user)).distinct()
+            | Q(r2grp__group__gaccess__active=True,
+                r2grp__group__g2ugp__user=self.user)).distinct()
 
     @property
     def owned_resources(self):
@@ -1127,20 +1126,19 @@ class UserAccess(models.Model):
         return BaseResource.objects.filter(
             # user owns resource invariant of immutable flag 4/9/2021
             Q(r2urp__user=self.user,
-              r2urp__privilege=PrivilegeCodes.OWNER) |
+              r2urp__privilege=PrivilegeCodes.OWNER)
             # user has direct access and resource is not immutable
-            Q(raccess__immutable=False,
-              r2urp__user=self.user,
-              r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
+            | Q(raccess__immutable=False,
+                r2urp__user=self.user,
+                r2urp__privilege__lte=PrivilegeCodes.CHANGE)
             # user has direct access through being a member of a group
-            Q(raccess__immutable=False,
-              r2grp__group__gaccess__active=True,
-              r2grp__group__g2ugp__user=self.user,
-              r2grp__privilege=PrivilegeCodes.CHANGE)).distinct()
+            | Q(raccess__immutable=False,
+                r2grp__group__gaccess__active=True,
+                r2grp__group__g2ugp__user=self.user,
+                r2grp__privilege=PrivilegeCodes.CHANGE)).distinct()
 
     def get_resources_with_explicit_access(self, this_privilege,
                                            via_user=True, via_group=False, via_community=False):
-
         """
         Get a list of resources over which the user has the specified privilege
 
@@ -1278,7 +1276,7 @@ class UserAccess(models.Model):
                     # exclude higher privilege
                     excluded = BaseResource.objects.filter(r2urp__privilege=PrivilegeCodes.OWNER,
                                                            r2urp__user=self.user)\
-                                                   .values('pk')
+                        .values('pk')
 
                     return BaseResource.objects.filter(incl)\
                                                .exclude(pk__in=Subquery(excluded))\
@@ -1523,7 +1521,6 @@ class UserAccess(models.Model):
             return False
 
     def __check_share_resource(self, this_resource, this_privilege, user=None):
-
         """
         Raise exception if a given user cannot share this resource with a given privilege.
 
@@ -1769,7 +1766,6 @@ class UserAccess(models.Model):
                                       grantor=self.user)
 
     def can_unshare_resource_with_user(self, this_resource, this_user):
-
         """
         Check whether one can dissociate a specific user from a resource
 
@@ -1837,9 +1833,9 @@ class UserAccess(models.Model):
         if not UserResourcePrivilege.objects.filter(resource=this_resource,
                                                     privilege=PrivilegeCodes.OWNER,
                                                     user=this_user).exists()\
-            or UserResourcePrivilege.objects.filter(resource=this_resource,
-                                                    privilege=PrivilegeCodes.OWNER) \
-                                            .exclude(user=this_user).exists():
+                or UserResourcePrivilege.objects.filter(resource=this_resource,
+                                                        privilege=PrivilegeCodes.OWNER) \
+                .exclude(user=this_user).exists():
             return True
         else:
             raise PermissionDenied("Cannot remove sole owner of group")
@@ -1984,7 +1980,7 @@ class UserAccess(models.Model):
                 users_to_exclude = User.objects.filter(is_active=True,
                                                        u2urp__resource=this_resource,
                                                        u2urp__privilege=PrivilegeCodes.OWNER)\
-                                               .values('pk')
+                    .values('pk')
                 return access_resource.view_users.exclude(pk__in=Subquery(users_to_exclude))
             elif qholder:
                 return access_resource.view_users.exclude(id=qholder.id)
@@ -2079,7 +2075,7 @@ class UserAccess(models.Model):
             users_to_exclude = User.objects.filter(is_active=True,
                                                    u2ugp__group=this_group,
                                                    u2ugp__privilege=PrivilegeCodes.OWNER)\
-                                           .values('pk')
+                .values('pk')
             return candidates.exclude(pk__in=Subquery(users_to_exclude))
         else:
             return candidates
@@ -2207,7 +2203,7 @@ class UserAccess(models.Model):
             users_to_exclude = User.objects.filter(is_active=True,
                                                    u2urp__resource=this_resource,
                                                    u2urp__privilege=PrivilegeCodes.OWNER)\
-                                           .values('pk')
+                .values('pk')
             return candidates.exclude(pk__in=Subquery(users_to_exclude))
         else:
             return candidates
@@ -2594,7 +2590,7 @@ class UserAccess(models.Model):
             return True
 
         return self.user.is_superuser or \
-                self.view_communities.filter(id=this_community.id).exists()
+            self.view_communities.filter(id=this_community.id).exists()
 
     def can_view_community_metadata(self, this_community):
         """
@@ -2921,9 +2917,9 @@ class UserAccess(models.Model):
         if not UserCommunityPrivilege.objects.filter(community=this_community,
                                                      privilege=PrivilegeCodes.OWNER,
                                                      user=this_user).exists()\
-            or UserCommunityPrivilege.objects.filter(community=this_community,
-                                                     privilege=PrivilegeCodes.OWNER)\
-                                             .exclude(user=this_user).exists():
+                or UserCommunityPrivilege.objects.filter(community=this_community,
+                                                         privilege=PrivilegeCodes.OWNER)\
+                .exclude(user=this_user).exists():
             return True
         else:
             raise PermissionDenied("Cannot remove sole owner of community")
@@ -2969,7 +2965,7 @@ class UserAccess(models.Model):
                 users_to_exclude = User.objects.filter(is_active=True,
                                                        u2ugp__community=this_community,
                                                        u2ugp__privilege=PrivilegeCodes.OWNER)\
-                                               .values('pk')
+                    .values('pk')
                 return access_community.members.exclude(pk__in=Subquery(users_to_exclude))
             else:
                 return access_community.members
@@ -2981,7 +2977,7 @@ class UserAccess(models.Model):
                 if not UserCommunityPrivilege.objects.filter(user=self.user,
                                                              community=this_community,
                                                              privilege=PrivilegeCodes.OWNER)\
-                                                     .exists():
+                        .exists():
                     # return a QuerySet containing only self
                     return User.objects.filter(uaccess=self)
                 else:
@@ -3273,7 +3269,7 @@ class UserAccess(models.Model):
             users_to_exclude = User.objects.filter(is_active=True,
                                                    u2ucp__community=this_community,
                                                    u2ucp__privilege=PrivilegeCodes.OWNER)\
-                                           .values('pk')
+                .values('pk')
             return candidates.exclude(pk__in=Subquery(users_to_exclude))
         else:
             return candidates
@@ -3812,9 +3808,9 @@ class UserAccess(models.Model):
             .filter(c2ucp__user=self.user,
                     c2ucp__privilege=this_privilege)\
             .exclude(pk__in=Subquery(Community.objects.filter(
-                                        c2ucp__user=self.user,
-                                        c2ucp__privilege__lt=this_privilege)
-                                     .values("pk")))
+                c2ucp__user=self.user,
+                c2ucp__privilege__lt=this_privilege)
+                .values("pk")))
 
         return selected
 
@@ -3836,9 +3832,9 @@ class UserAccess(models.Model):
             .filter(c2gcp__group__g2ugp__user=self.user,
                     c2gcp__privilege=this_privilege)\
             .exclude(pk__in=Subquery(Community.objects.filter(
-                                        c2gcp__group__g2ugp__user=self.user,
-                                        c2gcp__privilege__lt=this_privilege)
-                                     .values("pk")))
+                c2gcp__group__g2ugp__user=self.user,
+                c2gcp__privilege__lt=this_privilege)
+                .values("pk")))
 
         return selected
 

@@ -246,14 +246,14 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
 
     # skip resources that do not exist in iRODS
     elif not istorage.exists(resource.root_path):
-            msg = "root path {} does not exist in iRODS".format(resource.root_path)
-            ecount += 1
-            if echo_errors:
-                print(msg)
-            if log_errors:
-                logger.error(msg)
-            if return_errors:
-                errors.append(msg)
+        msg = "root path {} does not exist in iRODS".format(resource.root_path)
+        ecount += 1
+        if echo_errors:
+            print(msg)
+        if log_errors:
+            logger.error(msg)
+        if return_errors:
+            errors.append(msg)
 
     else:
         # Step 2: does every file in Django refer to an existing file in iRODS?
@@ -279,24 +279,24 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
         from hs_composite_resource.models import CompositeResource as CR
         if isinstance(resource, CR):
             for lf in resource.logical_files:
-                    for f in lf.files.all():
-                        try:
-                            f.resource_file.size
-                        except:
-                            ecount += 1
-                            msg = "check_resource: file {} does not exist on irods" \
-                                .format(f.storage_path.encode('ascii', 'replace'))
+                for f in lf.files.all():
+                    try:
+                        f.resource_file.size
+                    except:
+                        ecount += 1
+                        msg = "check_resource: file {} does not exist on irods" \
+                            .format(f.storage_path.encode('ascii', 'replace'))
+                        print(msg)
+                        if clean_django:
+                            f.delete()
+                        if echo_errors:
                             print(msg)
-                            if clean_django:
-                                f.delete()
-                            if echo_errors:
-                                print(msg)
-                            if log_errors:
-                                logger.error(msg)
-                            if return_errors:
-                                errors.append(msg)
-                            if stop_on_error:
-                                raise ValidationError(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
         # Step 4: does every iRODS file correspond to a record in files?
         error2, ecount2 = __check_irods_directory(resource, resource.file_path, logger,
                                                   stop_on_error=stop_on_error,

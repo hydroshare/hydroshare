@@ -127,7 +127,7 @@ class TestResourceFile(HSRESTTestCase):
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        url2 = str.format('/hsapi/resource/{}/folders/folder/path/', self.pid )
+        url2 = str.format('/hsapi/resource/{}/folders/folder/path/', self.pid)
         response = self.client.get(url2, {})
         content = json.loads(response.content.decode())
         self.assertEqual(len(content['files']), 1)

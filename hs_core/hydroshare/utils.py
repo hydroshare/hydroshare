@@ -747,7 +747,7 @@ def validate_user_quota(user_or_username, size):
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
                                 files=(), metadata=None,
                                 requesting_user=None, **kwargs):
-    from.resource import check_resource_type
+    from .resource import check_resource_type
     from hs_core.views.utils import validate_metadata
 
     if not resource_title:
@@ -787,10 +787,10 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
 
-    return page_url_dict, resource_title,  metadata
+    return page_url_dict, resource_title, metadata
 
 
-def resource_post_create_actions(resource, user, metadata,  **kwargs):
+def resource_post_create_actions(resource, user, metadata, **kwargs):
     # receivers need to change the values of this dict if file validation fails
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     # Send post-create resource signal
@@ -878,7 +878,7 @@ def get_user_party_name(user):
     if user.last_name and user.first_name:
         if user_profile.middle_name:
             party_name = '%s, %s %s' % (user.last_name, user.first_name,
-                                            user_profile.middle_name)
+                                        user_profile.middle_name)
         else:
             party_name = '%s, %s' % (user.last_name, user.first_name)
     elif user.last_name:
@@ -910,7 +910,7 @@ def get_party_data_from_user(user):
 def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
                                   source_names=[], **kwargs):
     if __debug__:
-        assert(isinstance(source_names, list))
+        assert (isinstance(source_names, list))
 
     if resource.raccess.published and not user.is_superuser:
         raise ValidationError("Only admin can add files to a published resource")
@@ -937,7 +937,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
 
     from .resource import add_resource_files
     if __debug__:
-        assert(isinstance(source_names, list))
+        assert (isinstance(source_names, list))
 
     if resource.raccess.published and not user.is_superuser:
         raise ValidationError("Only admin can add files to a published resource")
@@ -1116,6 +1116,7 @@ class ZipContents(object):
     Extract the contents of a zip file one file at a time
     using a generator.
     """
+
     def __init__(self, zip_file):
         self.zip_file = zip_file
 
@@ -1174,8 +1175,8 @@ def check_aggregations(resource, res_files):
 
         # check files for aggregation creation
         for res_file in res_files:
-            if not res_file.has_logical_file or (res_file.logical_file.is_fileset or
-                                                 res_file.logical_file.is_model_instance):
+            if not res_file.has_logical_file or (res_file.logical_file.is_fileset
+                                                 or res_file.logical_file.is_model_instance):
                 # create aggregation from file 'res_file'
                 logical_file = set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                                      fail_feedback=False)

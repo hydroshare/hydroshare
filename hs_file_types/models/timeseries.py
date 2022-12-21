@@ -41,15 +41,15 @@ class AbstractCVLookupTable(models.Model):
 
 
 class CVVariableType(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_variable_types")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE, related_name="cv_variable_types")
 
 
 class CVVariableName(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_variable_names")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE, related_name="cv_variable_names")
 
 
 class CVSpeciation(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_speciations")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE, related_name="cv_speciations")
 
 
 class CVElevationDatum(AbstractCVLookupTable):
@@ -58,23 +58,23 @@ class CVElevationDatum(AbstractCVLookupTable):
 
 
 class CVSiteType(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_site_types")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE, related_name="cv_site_types")
 
 
 class CVMethodType(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_method_types")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE, related_name="cv_method_types")
 
 
 class CVUnitsType(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_units_types")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE, related_name="cv_units_types")
 
 
 class CVStatus(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_statuses")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE, related_name="cv_statuses")
 
 
 class CVMedium(AbstractCVLookupTable):
-    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE,  related_name="cv_mediums")
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', on_delete=models.CASCADE, related_name="cv_mediums")
 
 
 class CVAggregationStatistic(AbstractCVLookupTable):
@@ -362,8 +362,8 @@ class VariableTimeseries(TimeSeriesAbstractMetaDataElement):
         element = cls.objects.get(id=element_id)
         # check that we are not creating variable elements with duplicate variable_code value
         if 'variable_code' in kwargs:
-            if any(kwargs['variable_code'].lower() ==
-                   variable.variable_code.lower() and variable.id != element.id for variable in
+            if any(kwargs['variable_code'].lower()
+                   == variable.variable_code.lower() and variable.id != element.id for variable in
                    element.metadata.variables):
                 raise ValidationError("There is already a variable element "
                                       "with variable_code:{}".format(kwargs['variable_code']))
@@ -471,8 +471,8 @@ class Method(TimeSeriesAbstractMetaDataElement):
         element = cls.objects.get(id=element_id)
         # check that we are not creating method elements with duplicate method_code value
         if 'method_code' in kwargs:
-            if any(kwargs['method_code'].lower() ==
-                    method.method_code.lower() and method.id != element.id for method in
+            if any(kwargs['method_code'].lower()
+                    == method.method_code.lower() and method.id != element.id for method in
                     element.metadata.methods):
                 raise ValidationError("There is already a method element "
                                       "with method_code:{}".format(kwargs['method_code']))
@@ -578,9 +578,9 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
         # check that we are not creating processinglevel elements with duplicate
         # processing_level_code value
         if 'processing_level_code' in kwargs:
-            if any(kwargs['processing_level_code'] ==
-                    pro_level.processing_level_code and
-                    pro_level.id != element.id for pro_level in
+            if any(kwargs['processing_level_code']
+                    == pro_level.processing_level_code
+                    and pro_level.id != element.id for pro_level in
                    element.metadata.processing_levels):
                 err_msg = "There is already a processinglevel element with processing_level_code:{}"
                 err_msg = err_msg.format(kwargs['processing_level_code'])
@@ -1532,8 +1532,8 @@ class TimeSeriesMetaDataMixin(models.Model):
             header = next(csv_reader)
             first_row_data = next(csv_reader)
             second_row_data = next(csv_reader)
-            time_interval = (parser.parse(second_row_data[0]) -
-                             parser.parse(first_row_data[0])).seconds / 60
+            time_interval = (parser.parse(second_row_data[0])
+                             - parser.parse(first_row_data[0])).seconds / 60
 
         with open(temp_csv_file, 'r') as fl_obj:
             csv_reader = csv.reader(fl_obj, delimiter=',')
@@ -2137,7 +2137,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):
-    metadata = models.OneToOneField(TimeSeriesFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
+    metadata = models.OneToOneField(TimeSeriesFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "TimeSeries"
 
     @classmethod
@@ -2370,8 +2370,8 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         *resource_files*
         """
 
-        res_files = [f for f in resource_files if f.extension.lower() == '.sqlite' or
-                     f.extension.lower() == '.csv']
+        res_files = [f for f in resource_files if f.extension.lower() == '.sqlite'
+                     or f.extension.lower() == '.csv']
         return res_files[0] if res_files else None
 
     @classmethod
@@ -2981,8 +2981,8 @@ def _extract_creators_contributors(resource, cur):
     authors_data_dict = {}
     author_ids_already_used = []
     for result in results:
-        if is_create_multiple_author_elements or (len(resource.metadata.creators.all()) == 1 and
-                                                  len(resource.metadata.contributors.all()) == 0):
+        if is_create_multiple_author_elements or (len(resource.metadata.creators.all()) == 1
+                                                  and len(resource.metadata.contributors.all()) == 0):
             cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?",
                         (result["FeatureActionID"],))
             feature_actions = cur.fetchall()
@@ -3519,7 +3519,7 @@ def _create_cv_term(element, cv_term_class, cv_term_str, element_metadata_cv_ter
                 data_dict[cv_term_str] = data_dict[cv_term_str].strip()
                 term = _generate_term_from_name(data_dict[cv_term_str])
                 cv_term = cv_term_class.objects.create(
-                        metadata=element.metadata, term=term, name=data_dict[cv_term_str])
+                    metadata=element.metadata, term=term, name=data_dict[cv_term_str])
                 cv_term.is_dirty = True
                 cv_term.save()
 

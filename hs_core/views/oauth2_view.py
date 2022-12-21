@@ -9,6 +9,7 @@ class GroupRequiredMixin(AccessMixin):
     Verify that the current user is in the specified group.
     Redirects to authorization group page if user is not part of the group.
     """
+
     def dispatch(self, request, *args, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
 

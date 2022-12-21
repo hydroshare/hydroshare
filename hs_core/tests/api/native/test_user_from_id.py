@@ -47,8 +47,3 @@ class TestUserFromId(TestCase):
             self.user,
             msg='lookup by user id failed'
         )
-
-
-
-
-

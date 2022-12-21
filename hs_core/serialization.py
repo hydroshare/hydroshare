@@ -169,7 +169,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
         raise HsDeserializationException(str(ex))
 
     # Add additional metadata
-    assert(resource is not None)
+    assert (resource is not None)
 
     try:
         rm.write_metadata_to_resource(resource, update_creators=True,
@@ -201,6 +201,7 @@ class GenericResourceMeta(object):
     resource-specific GenericResourceMeta implementations after I get your
     comments and suggestions on this approach.
     """
+
     def __init__(self):
         self.root_uri = None
         # From resource map
@@ -298,7 +299,7 @@ class GenericResourceMeta(object):
                     msg = msg.format(res_meta['type'], bag_content_path)
                     raise GenericResourceMeta.ResourceMetaException(msg)
 
-                assert(instance is not None)
+                assert (instance is not None)
 
                 # Populate core metadata
                 instance.id = res_meta['id']
@@ -358,19 +359,22 @@ class GenericResourceMeta(object):
         # Get resource type
         type_lit = g.value(res_agg, rdflib.namespace.DCTERMS.type)
         if type_lit is None:
-            raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource type found in resource map {0}".format(rmap_path))
         # Type literal is represented as 'http://example.com/terms/GenericResource', we want the part after
         # the final '/', or 'GenericResource'
         res_type_part = str(type_lit).rpartition('/')
         if res_type_part[1] == '':
-            raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource type found in resource map {0}".format(rmap_path))
         res_meta['type'] = res_type_part[-1]
         logger.debug("\tType is {0}".format(res_meta['type']))
 
         # Get resource title
         title_lit = g.value(res_agg, rdflib.namespace.DC.title)
         if title_lit is None:
-            raise GenericResourceMeta.ResourceMetaException("No resource title found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource title found in resource map {0}".format(rmap_path))
         res_meta['title'] = str(title_lit)
         logger.debug("\tTitle is {0}".format(res_meta['title']))
 
@@ -392,7 +396,8 @@ class GenericResourceMeta(object):
             res_meta['files'].append(o.split(res_root_uri_withslash)[1])
 
         if res_meta_path is None:
-            raise GenericResourceMeta.ResourceMetaException("No resource metadata found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource metadata found in resource map {0}".format(rmap_path))
 
         logger.debug("\tResource metadata path {0}".format(res_meta_path))
 
@@ -409,9 +414,11 @@ class GenericResourceMeta(object):
         """
         self.rmeta_path = os.path.join(self.bag_content_path, self.res_meta_path)
         if not os.path.exists(self.rmeta_path):
-            raise GenericResourceMeta.ResourceMetaException("Resource metadata {0} does not exist".format(self.rmeta_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "Resource metadata {0} does not exist".format(self.rmeta_path))
         if not os.access(self.rmeta_path, os.R_OK):
-            raise GenericResourceMeta.ResourceMetaException("Unable to read resource metadata {0}".format(self.rmeta_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "Unable to read resource metadata {0}".format(self.rmeta_path))
 
         # Parse metadata using RDFLib
         self._rmeta_graph = Graph()
@@ -929,7 +936,7 @@ class GenericResourceMeta(object):
                     msg = "User ID {0} is not an integer. User URI was {1}."
                     raise GenericResourceMeta.ResourceMetaException(msg)
 
-                assert(pk is not None)
+                assert (pk is not None)
                 self.id = pk
 
             self.uri = uri

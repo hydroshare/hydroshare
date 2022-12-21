@@ -587,7 +587,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
-    metadata = models.OneToOneField(GeoRasterFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
+    metadata = models.OneToOneField(GeoRasterFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "GeographicRaster"
 
     @classmethod
@@ -676,8 +676,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             return ""
 
         # check if there are multiple tif files, then there has to be one vrt file
-        tif_files = [f for f in files if f.extension.lower() == ".tif" or f.extension.lower() ==
-                     ".tiff"]
+        tif_files = [f for f in files if f.extension.lower() == ".tif" or f.extension.lower()
+                     == ".tiff"]
         if len(tif_files) > 1:
             if len(vrt_files) != 1:
                 return ""
@@ -927,8 +927,8 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
 
             for vrt_ref_raster_name in file_names_in_vrt:
                 if vrt_ref_raster_name in file_names \
-                        or (os.path.split(vrt_ref_raster_name)[0] == '.' and
-                            os.path.split(vrt_ref_raster_name)[1] in file_names):
+                        or (os.path.split(vrt_ref_raster_name)[0] == '.'
+                            and os.path.split(vrt_ref_raster_name)[1] in file_names):
                     continue
                 else:
                     msg = "The file {tif} which is listed in the {vrt} file is missing."

@@ -22,6 +22,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
     tests just to make sure metadata extraction works to extract metadata from files coming from
     a federated user zone.
     """
+
     def setUp(self):
         super(TestUserZoneIRODSFederation, self).setUp()
         super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
@@ -116,7 +117,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # test resource deletion
         hydroshare.resource.delete_resource(res.short_id)
         self.assertEqual(BaseResource.objects.all().count(), 0,
-                          msg='Number of resources not equal to 0')
+                         msg='Number of resources not equal to 0')
         # test to make sure original files still exist after resource deletion
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
         self.assertTrue(self.irods_storage.exists(user_path + self.file_two))

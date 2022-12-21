@@ -464,7 +464,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 class ModelProgramLogicalFile(AbstractModelLogicalFile):
     """ One file or more than one file in a specific folder can be part of this aggregation """
 
-    metadata = models.OneToOneField(ModelProgramFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
+    metadata = models.OneToOneField(ModelProgramFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "Model Program"
 
     @classmethod

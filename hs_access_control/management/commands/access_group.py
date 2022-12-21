@@ -14,7 +14,7 @@ Please connect to the bash shell for the hydroshare container before running the
 from django.core.management.base import BaseCommand
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
 from hs_access_control.management.utilities import group_from_name_or_id, \
-        user_from_name
+    user_from_name
 from django.contrib.auth.models import Group
 
 

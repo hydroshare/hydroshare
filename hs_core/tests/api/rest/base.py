@@ -27,14 +27,14 @@ class HSRESTTestCase(APITestCase):
         self.user = users.create_account(
             'test_user@email.com',
             username='testuser',
-            password='foobar', 
+            password='foobar',
             first_name='some_first_name',
             last_name='some_last_name',
             organization='RENCI',
             superuser=False)
 
         self.client.force_authenticate(user=self.user)
-        self.client.login(username='testuser', password='foobar') 
+        self.client.login(username='testuser', password='foobar')
 
         self.resources_to_delete = []
         self.groups_to_delete = []
@@ -69,7 +69,6 @@ class HSRESTTestCase(APITestCase):
         """
         url = reverse('get_task_status', kwargs={'task_id': task_id})
         return self.client.get(url, follow=True)
-
 
     def getResourceFile(self, res_id, file_name, exhaust_stream=True):
         """Get resource file from iRODS, following redirects
@@ -194,8 +193,8 @@ class SciMetaTestCase(HSRESTTestCase):
         :return: Test client HTTP response.
         """
         params = {'file': (self.RESOURCE_METADATA,
-                          open(scimeta_path),
-                          'application/xml')}
+                           open(scimeta_path),
+                           'application/xml')}
         url = "/hsapi/scimeta/{pid}/".format(pid=pk)
         response = self.client.put(url, params)
         if should_succeed:
@@ -221,4 +220,3 @@ class ResMapTestCase(HSRESTTestCase):
     RESOURCE_METADATA = 'resourcemap.xml'
     RESOURCE_METADATA_OLD = 'resourcemap_old.xml'
     RESOURCE_METADATA_UPDATED = 'resourcemap_updated.xml'
-

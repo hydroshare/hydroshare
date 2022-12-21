@@ -182,7 +182,7 @@ def update_account(user, **kwargs):
     user_update = dict()
     update_keys = [x for x in list(kwargs.keys()) if hasattr(user, str(x))]
     for key in update_keys:
-            user_update[key] = kwargs[key]
+        user_update[key] = kwargs[key]
     for k, v in list(user_update.items()):
         setattr(user, k, v)
     user.save()
@@ -191,6 +191,8 @@ def update_account(user, **kwargs):
     return user.username
 
 # Pabitra: This one seems to be not used anywhere. Can I delete it?
+
+
 def list_users(query=None, status=None, start=None, count=None):
     """
     List the users that match search criteria.
@@ -219,7 +221,7 @@ def list_users(query=None, status=None, start=None, count=None):
     qs = qs.filter(active=True) if status == 'active' else qs
     qs = qs.filter(is_staff=True) if status == 'staff' else qs
     if start and count:
-        qs = qs[start:start+count]
+        qs = qs[start:start + count]
     elif start:
         qs = qs[start:]
     elif count:
@@ -245,46 +247,46 @@ def set_group_active_status(user, group_id, status):
 
 
 def get_discoverable_groups():
-        """
-        Get a list of all groups marked discoverable or public.
+    """
+    Get a list of all groups marked discoverable or public.
 
-        :return: List of discoverable groups.
+    :return: List of discoverable groups.
 
-        A user can view owners and abstract for a discoverable group.
-        Usage:
-        ------
-            # fetch information about each discoverable or public group
-            groups = GroupAccess.get_discoverable_groups()
-            for g in groups:
-                owners = g.owners
-                # abstract = g.abstract
-                if g.public:
-                    # expose group list
-                    members = g.members.all()
-                else:
-                    members = [] # can't see them.
-        """
-        return Group.objects.filter(Q(gaccess__discoverable=True) | Q(gaccess__public=True))
+    A user can view owners and abstract for a discoverable group.
+    Usage:
+    ------
+        # fetch information about each discoverable or public group
+        groups = GroupAccess.get_discoverable_groups()
+        for g in groups:
+            owners = g.owners
+            # abstract = g.abstract
+            if g.public:
+                # expose group list
+                members = g.members.all()
+            else:
+                members = [] # can't see them.
+    """
+    return Group.objects.filter(Q(gaccess__discoverable=True) | Q(gaccess__public=True))
 
 
 def get_public_groups():
-        """
-        Get a list of all groups marked public.
+    """
+    Get a list of all groups marked public.
 
-        :return: List of public groups.
+    :return: List of public groups.
 
-        All users can list the members of a public group.  Public implies discoverable but not vice-versa.
-        Usage:
-        ------
-            # fetch information about each public group
-            groups = GroupAccess.get_public_groups()
-            for g in groups:
-                owners = g.owners
-                # abstract = g.abstract
-                members = g.members.all()
-                # now display member information
-        """
-        return Group.objects.filter(gaccess__public=True)
+    All users can list the members of a public group.  Public implies discoverable but not vice-versa.
+    Usage:
+    ------
+        # fetch information about each public group
+        groups = GroupAccess.get_public_groups()
+        for g in groups:
+            owners = g.owners
+            # abstract = g.abstract
+            members = g.members.all()
+            # now display member information
+    """
+    return Group.objects.filter(gaccess__public=True)
 
 
 def get_resource_list(creator=None, group=None, user=None, owner=None, from_date=None,
@@ -358,7 +360,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
 
     if coverage_type in ('box', 'point'):
-        if not north or not west or not south or not east: \
+        if not north or not west or not south or not east:
             raise ValueError("coverage queries must have north, west, south, and east params")
 
         coverages = set()
@@ -468,8 +470,8 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
                         # if some non-admin authenticated user is asking for resources owned by another user then
                         # get other user's owned resources that are public or discoverable, or if requesting user
                         # has access to those private resources
-                        query.append(Q(pk__in=user.uaccess.view_resources) | Q(raccess__public=True) |
-                                     Q(raccess__discoverable=True))
+                        query.append(Q(pk__in=user.uaccess.view_resources) | Q(raccess__public=True)
+                                     | Q(raccess__discoverable=True))
         else:
             if user.is_superuser:
                 # admin sees all resources
@@ -477,8 +479,8 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
             elif is_editable:
                 query.append(Q(pk__in=user.uaccess.edit_resources))
             else:
-                query.append(Q(pk__in=user.uaccess.view_resources) | Q(raccess__public=True) |
-                             Q(raccess__discoverable=True))
+                query.append(Q(pk__in=user.uaccess.view_resources) | Q(raccess__public=True)
+                             | Q(raccess__discoverable=True))
     else:
         query.append(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
