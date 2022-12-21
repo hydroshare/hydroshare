@@ -9,7 +9,7 @@ from collections import Counter
 
 
 class HydroshareSiteMetrics(TemplateView):
-    template_name = 'hs_metrics/hydrosharesitemetrics.html'
+    template_name = "hs_metrics/hydrosharesitemetrics.html"
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
@@ -27,8 +27,7 @@ class HydroshareSiteMetrics(TemplateView):
         self.n_agencies = 0
         self.agencies = set()
         self.n_core_contributors = 6  # fixme need to track (use GItHub API Key) https://api.github.com/teams/328946
-        # fixme need to track (use GitHub API Key) https://api.github.com/teams/964835
-        self.n_extension_contributors = 10
+        self.n_extension_contributors = 10  # fixme need to track (use GH API Key) https://api.github.com/teams/964835
         self.n_citations = 0  # fixme hard to quantify
         self.resource_type_counts = Counter()
         self.user_titles = Counter()
@@ -74,7 +73,7 @@ class HydroshareSiteMetrics(TemplateView):
         self.user_subject_areas = list(self.user_subject_areas.items())
         self.resource_type_counts = list(self.resource_type_counts.items())
         self.user_titles = list(self.user_titles.items())
-        ctx['metrics'] = self
+        ctx["metrics"] = self
         return ctx
 
     def get_all_resources(self):
@@ -87,8 +86,11 @@ class HydroshareSiteMetrics(TemplateView):
 
     def get_resource_stats(self):
         for resource in self.get_all_resources():
-            resource_type_name = resource._meta.verbose_name if hasattr(
-                resource._meta, 'verbose_name') else resource._meta.model_name
+            resource_type_name = (
+                resource._meta.verbose_name
+                if hasattr(resource._meta, "verbose_name")
+                else resource._meta.model_name
+            )
             self.resource_type_counts[resource_type_name] += 1
             self.n_resources += 1
 
@@ -99,7 +101,7 @@ class HydroshareSiteMetrics(TemplateView):
         # FIXME revisit this with the hs_party application
 
         for profile in UserProfile.objects.all():
-            if profile.organization_type in ('Government', 'Commercial'):
+            if profile.organization_type in ("Government", "Commercial"):
                 self.agencies.add(profile.organization)
             else:
                 self.host_institutions.add(profile.organization)
@@ -108,7 +110,9 @@ class HydroshareSiteMetrics(TemplateView):
             self.user_titles[profile.title] += 1
 
             if profile.subject_areas:
-                self.user_subject_areas.update(a.strip() for a in profile.subject_areas.split(','))
+                self.user_subject_areas.update(
+                    a.strip() for a in profile.subject_areas.split(",")
+                )
 
         self.n_host_institutions = len(self.host_institutions)
         self.n_agencies = len(self.agencies)

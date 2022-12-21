@@ -270,7 +270,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     try:
         citation_id = content_model.metadata.citation.first().id
-    except:
+    except: # noqa
         citation_id = None
 
     context = {

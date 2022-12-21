@@ -352,10 +352,10 @@ body = openapi.Schema(
     properties={
         'input_coll_path': openapi.Schema(type=openapi.TYPE_STRING, description='the relative path under res_id/data/ \
             contents to be zipped'),
-        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path of \
-            the generated zip file name'),
-        'remove_original_after_zip': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='whether original files will \
-            be deleted after zipping')
+        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path \
+            of the generated zip file name'),
+        'remove_original_after_zip': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='whether original files \
+            will be deleted after zipping')
     }
 )
 
@@ -391,8 +391,8 @@ body = openapi.Schema(
     properties={
         'aggregation_path': openapi.Schema(type=openapi.TYPE_STRING, description='the relative path under res_id/data/ \
             contents to be zipped'),
-        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path of \
-            the generated zip file name')
+        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path \
+            of the generated zip file name')
     }
 )
 

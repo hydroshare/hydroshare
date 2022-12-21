@@ -846,7 +846,7 @@ def _validate_json_file(res_json_file):
         json_file_content = res_json_file.fed_resource_file.read()
     try:
         json_data = json.loads(json_file_content)
-    except:
+    except: # noqa
         raise Exception("Not a json file")
     try:
         # validate json_data based on the schema

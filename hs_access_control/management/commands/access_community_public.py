@@ -61,8 +61,8 @@ class Command(BaseCommand):
         print("community is {} (id={})".format(community.name, community.id))
         stuff = community.public_resources
         for r in stuff:
-            print(("{} '{}' '{}' type='{}' group='{}' (id={}) published={} public={} " +
-                  "discoverable={} created='{}' updated='{}' first author='{}'")
+            print(("{} '{}' '{}' type='{}' group='{}' (id={}) published={} public={} "
+                  + "discoverable={} created='{}' updated='{}' first author='{}'")
                   .format(r.short_id,
                           shorten(r.title, 20),
                           # equivalently: shorten(r.content_object._title.first().value, 20),

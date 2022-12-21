@@ -1547,8 +1547,8 @@ def _set_element_code_selection_form_field(form, form_field_name, form_field_lab
             element_code_choices = tuple([(form.initial[element_code_att_name],
                                           element_display_str.format(
                 code_att_name=str(form.initial[element_code_att_name]),
-                name_att_name=form.initial[element_name_att_name]))] +
-                element_code_choices + [("----", "----")])
+                name_att_name=form.initial[element_name_att_name]))]
+                + element_code_choices + [("----", "----")])
 
         else:
             element_code_choices = [(getattr(element, element_code_att_name),

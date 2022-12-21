@@ -902,7 +902,7 @@ def extract_metadata(shp_file_full_path):
 
         metadata_dict["geometryinformation"] = geometryinformation
         return metadata_dict
-    except:
+    except: # noqa
         raise ValidationError("Parsing of shapefiles failed!")
 
 

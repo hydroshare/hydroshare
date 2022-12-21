@@ -282,7 +282,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                 for f in lf.files.all():
                     try:
                         f.resource_file.size
-                    except:
+                    except: # noqa
                         ecount += 1
                         msg = "check_resource: file {} does not exist on irods" \
                             .format(f.storage_path.encode('ascii', 'replace'))
@@ -572,8 +572,7 @@ def __ingest_irods_directory(resource,
                             raise ValidationError(msg)
                     elif res_file.has_logical_file and file_type is None:
                         msg = "ingest_irods_files: logical file for {} has type {}, not needed"\
-                            .format(res_file.storage_path, type(res_file.logical_file).__name__,
-                                    file_type.__name__)
+                            .format(res_file.storage_path, type(res_file.logical_file).__name__)
                         if echo_errors:
                             print(msg)
                         if log_errors:

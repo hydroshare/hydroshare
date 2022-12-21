@@ -231,7 +231,7 @@ class SearchAPI(APIView):
                     pt['westlimit'] = result.westlimit
 
                 geodata.append(pt)
-            except:
+            except: # noqa
                 pass  # HydroShare production contains dirty data, this handling is in place, until data cleaned
 
             resources.append({

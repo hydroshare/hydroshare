@@ -343,7 +343,7 @@ def update_metadata_schema_for_model_instance(request, resource_id, aggregation_
 
     mp_aggr = aggr.metadata.executed_by
     if not mp_aggr.metadata_schema_json:
-        err_msg = f"Metadata schema is missing for the linked model program aggregation"
+        err_msg = "Metadata schema is missing for the linked model program aggregation"
         return JsonResponse(data=err_msg, safe=False, status=status.HTTP_400_BAD_REQUEST)
 
     aggr.metadata_schema_json = mp_aggr.metadata_schema_json
@@ -1356,7 +1356,7 @@ def update_model_instance_meta_schema(request, file_type_id, **kwargs):
         try:
             metadata_json_schema = logical_file.metadata_schema_json
             jsonschema.Draft4Validator(metadata_json_schema).validate(metadata.metadata_json)
-        except jsonschema.ValidationError as ex:
+        except jsonschema.ValidationError:
             # delete existing invalid metadata
             metadata.metadata_json = {}
 
