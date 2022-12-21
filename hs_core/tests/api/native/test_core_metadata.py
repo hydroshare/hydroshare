@@ -167,7 +167,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          address=cr_address,
                                          phone=cr_phone,
                                          homepage=cr_homepage,
-                                        )
+                                         )
 
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
         self.assertNotEqual(cr_mike, None)
@@ -230,26 +230,26 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                              )
 
         # delete Mike's home page
-        resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id, homepage=None)
+        resource.update_metadata_element(self.res.short_id, 'creator', cr_mike.id, homepage=None)
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
         self.assertEqual(cr_mike.homepage, None)
 
         # test that the resource must have at least one creator - trying to delete the last creator should fail
         # delete John
-        resource.delete_metadata_element(self.res.short_id, 'creator', cr_john.id )
+        resource.delete_metadata_element(self.res.short_id, 'creator', cr_john.id)
         self.assertEqual(Creator.objects.filter(id=cr_john.id).first(), None)
 
         # trying to update (hydroshare_user_id) hydroshare user identifier to a different identifier should
         # raise exception
         with self.assertRaises(ValidationError):
-            resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id,
+            resource.update_metadata_element(self.res.short_id, 'creator', cr_mike.id,
                                              hydroshare_user_id=self.user.id)
 
         # however, it should be possible to to update (hydroshare_user_id) hydroshare identifier to empty string
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
         self.assertEqual(cr_mike.hydroshare_user_id, self.party_user.id)
         self.assertTrue(cr_mike.is_active_user)
-        resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id, hydroshare_user_id=None)
+        resource.update_metadata_element(self.res.short_id, 'creator', cr_mike.id, hydroshare_user_id=None)
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
         self.assertEqual(cr_mike.hydroshare_user_id, None)
         self.assertFalse(cr_mike.is_active_user)
@@ -276,19 +276,19 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                              )
 
         # delete Mike
-        resource.delete_metadata_element(self.res.short_id, 'creator', cr_mike.id )
+        resource.delete_metadata_element(self.res.short_id, 'creator', cr_mike.id)
         self.assertEqual(Creator.objects.filter(id=cr_mike.id).first(), None)
 
         # deleting the last user should raise exception
-        self.assertRaises(Exception, lambda :resource.delete_metadata_element(self.res.short_id, 'creator',
-                                                                              self.user.id ))
+        self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id, 'creator',
+                                                                               self.user.id))
 
     def test_contributor(self):
         # initially there should be no contributors
         self.assertEqual(self.res.metadata.contributors.all().count(), 0, msg='Number of contributors not equal to 0')
 
         # add a contributor element
-        resource.create_metadata_element(self.res.short_id,'contributor', name='John Smith')
+        resource.create_metadata_element(self.res.short_id, 'contributor', name='John Smith')
         # number of contributors at this point should be 1
         self.assertEqual(self.res.metadata.contributors.all().count(), 1, msg='Number of contributors not equal to 1')
         self.assertIn('John Smith', [con.name for con in self.res.metadata.contributors.all()],
@@ -298,8 +298,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         metadata_type = ContentType.objects.get_for_model(self.res.metadata)
         con_john = Contributor.objects.filter(name='John Smith', object_id=self.res.metadata.id,
                                               content_type__pk=metadata_type.id).first()
-        kwargs = {'email':'jsmith@gmail.com'}
-        resource.update_metadata_element(self.res.short_id,'contributor', con_john.id, **kwargs)
+        kwargs = {'email': 'jsmith@gmail.com'}
+        resource.update_metadata_element(self.res.short_id, 'contributor', con_john.id, **kwargs)
 
         self.assertIn('jsmith@gmail.com', [con.email for con in self.res.metadata.contributors.all()],
                       msg="Contributor 'John Smith' email was not found")
@@ -395,11 +395,11 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                              )
         # test that all resource contributors can be deleted
         # delete John
-        resource.delete_metadata_element(self.res.short_id, 'contributor', con_john.id )
+        resource.delete_metadata_element(self.res.short_id, 'contributor', con_john.id)
         self.assertEqual(Contributor.objects.filter(id=con_john.id).first(), None)
 
         # delete Mike
-        resource.delete_metadata_element(self.res.short_id, 'contributor', con_mike.id )
+        resource.delete_metadata_element(self.res.short_id, 'contributor', con_mike.id)
         self.assertEqual(Contributor.objects.filter(id=con_mike.id).first(), None)
 
         # number of contributors at this point should be 0
@@ -435,7 +435,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         kwargs = {'identifiers': {'ORCID': 'http://orcid.org/LH001'}}
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id, 'creator',
-                                                 cr_lisa.id, **kwargs)
+                                             cr_lisa.id, **kwargs)
 
         # test that the url for Google Scholar must start with https://scholar.google.com/
         kwargs = {'identifiers': {'GoogleScholarID': 'https://scholar.google.org/LH001'}}
@@ -451,7 +451,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that multiple identifiers can be created for one creator
         kwargs = {'identifiers': {'ResearchGateID': 'https://www.researchgate.net/LH001',
-                                 'ORCID': 'https://orcid.org/LH001'}}
+                                  'ORCID': 'https://orcid.org/LH001'}}
 
         resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
         # lisa should have 2 external profile link
@@ -465,13 +465,13 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that duplicate identifier name is not allowed - should raise validation error
         kwargs = {'identifiers': {'ORCID': 'https://www.researchgate.net/LH001',
-                                 'orcid': 'https://orcid.org/LH001'}}
+                                  'orcid': 'https://orcid.org/LH001'}}
         with self.assertRaises(ValidationError):
-            resource.update_metadata_element(self.res.short_id,'creator', cr_lisa.id, **kwargs)
+            resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
 
         # test that duplicate identifier link is not allowed - should raise validation error
         kwargs = {'identifiers': {'researchGate': 'https://www.researchgate.net/LH001',
-                                 'ORCID': 'https://www.researchgate.net/LH001'}}
+                                  'ORCID': 'https://www.researchgate.net/LH001'}}
         with self.assertRaises(ValidationError):
             resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
 
@@ -520,15 +520,15 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
     def test_title(self):
         # test that a 2nd title can't be added
-        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'title',
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'title',
                                                                               value="another title"))
 
         # test that the existing title can't be deleted
-        self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id,'title',
+        self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id, 'title',
                                                                               self.res.metadata.title.id))
 
         # test that title can be updated
-        resource.update_metadata_element(self.res.short_id,'title', self.res.metadata.title.id, value="another title")
+        resource.update_metadata_element(self.res.short_id, 'title', self.res.metadata.title.id, value="another title")
         self.assertEqual(self.res.metadata.title.value, 'another title')
 
     def test_coverage(self):
@@ -543,36 +543,36 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.coverages.all().count(), 1, msg="Number of coverages not equal to 1.")
 
         # add another period type coverage - which raise an exception
-        value_dict = {'name':'Name for period coverage', 'start':'1/1/2002', 'end':'12/12/2013'}
-        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'coverage',
+        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2002', 'end': '12/12/2013'}
+        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id, 'coverage',
                                                                                type='period', value=value_dict))
 
         # test that the name is optional
         self.res.metadata.coverages.all()[0].delete()
-        value_dict = {'start':'1/1/2000', 'end':'12/12/2012'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict)
+        value_dict = {'start': '1/1/2000', 'end': '12/12/2012'}
+        resource.create_metadata_element(self.res.short_id, 'coverage', type='period', value=value_dict)
         # there should be now one coverage element
         self.assertEqual(self.res.metadata.coverages.all().count(), 1, msg="Number of coverages not equal to 1.")
 
         # add a point type coverage
-        value_dict = {'east':'56.45678', 'north':'12.6789', 'units': 'decimal deg'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        resource.create_metadata_element(self.res.short_id, 'coverage', type='point', value=value_dict)
 
         # there should be now 2 coverage elements
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total overages not equal 2.")
 
         # test that the name, elevation, zunits and projection are optional
         self.res.metadata.coverages.get(type='point').delete()
-        value_dict = {'east':'56.45678', 'north':'12.6789', 'units': 'decimal deg', 'name': 'Little bear river',
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg', 'name': 'Little bear river',
                       'elevation': '34.6789', 'zunits': 'rad deg', 'projection': 'NAD83'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+        resource.create_metadata_element(self.res.short_id, 'coverage', type='point', value=value_dict)
         # there should be now 2 coverage elements
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total coverages not equal 2.")
 
         # add a box type coverage - this should raise an exception as we already have a point type coverage
-        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789',
-                      'units': 'decimal deg' }
-        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'coverage',
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '12.6789', 'southlimit': '16.45678', 'westlimit': '16.6789',
+                      'units': 'decimal deg'}
+        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id, 'coverage',
                                                                                type='box', value=value_dict))
 
         self.assertIn('point', [cov.type for cov in self.res.metadata.coverages.all()],
@@ -583,12 +583,12 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # test coverage element can't be deleted - raises exception
         cov_pt = self.res.metadata.coverages.all().filter(type='point').first()
         self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id, 'coverage',
-                                                                               cov_pt.id ))
+                                                                               cov_pt.id))
 
         # change the point coverage to type box
-        value_dict = {'northlimit':'56.45678', 'eastlimit':'120.6789','southlimit':'16.45678', 'westlimit':'16.6789',
-                      'units':'decimal deg' }
-        resource.update_metadata_element(self.res.short_id,'coverage', cov_pt.id, type='box', value=value_dict)
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678', 'westlimit': '16.6789',
+                      'units': 'decimal deg'}
+        resource.update_metadata_element(self.res.short_id, 'coverage', cov_pt.id, type='box', value=value_dict)
         self.assertIn('box', [cov.type for cov in self.res.metadata.coverages.all()],
                       msg="Coverage type 'box' does not exist")
         self.assertIn('period', [cov.type for cov in self.res.metadata.coverages.all()],
@@ -596,7 +596,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that the name, uplimit, downlimit, zunits and projection are optional
         self.res.metadata.coverages.get(type='box').delete()
-        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789','southlimit': '16.45678', 'westlimit': '16.6789',
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678', 'westlimit': '16.6789',
                       'units': 'decimal deg', 'name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
                       'zunits': 'decimal deg', 'projection': 'NAD83'}
         resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
@@ -611,23 +611,23 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # value for 'east' should be >= -360 and <= 360 and 'north' >= -90 and <= 90
         value_dict = {'east': '360.45678', 'north': '50', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='point', value=value_dict)
 
         value_dict = {'east': '-360.45678', 'north': '50', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='point', value=value_dict)
 
         value_dict = {'east': '120.45678', 'north': '91', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='point', value=value_dict)
 
         value_dict = {'east': '120.45678', 'north': '-91', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='point', value=value_dict)
 
         # now create coverage of type 'point' with all valid data
         value_dict = {'east': '120.45678', 'north': '0.0', 'units': 'decimal deg'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+        resource.create_metadata_element(self.res.short_id, 'coverage', type='point', value=value_dict)
         self.assertEqual(self.res.metadata.coverages.filter(type='point').count(), 1)
 
         # for box type coverage test valid data for 'northlimit', 'southlimit', 'eastlimit' and 'westlimit'
@@ -635,58 +635,58 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res.metadata.coverages.get(type='point').delete()
         # valid value for 'northlimit' should be in the range of -90 to 90
         value_dict = {'northlimit': '91.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
-                      'westlimit': '16.6789', 'units': 'decimal deg' }
+                      'westlimit': '16.6789', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         value_dict = {'northlimit': '-91.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
                       'westlimit': '16.6789', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         # value for 'southlimit' should be in the range of -90 to 90
         value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '-91.45678',
-                      'westlimit': '16.6789', 'units': 'decimal deg' }
+                      'westlimit': '16.6789', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '91.45678',
-                      'westlimit': '16.6789', 'units': 'decimal deg' }
+                      'westlimit': '16.6789', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         # value for 'northlimit' must be greater than 'southlimit'
         value_dict = {'northlimit': '70.45678', 'eastlimit': '120.6789', 'southlimit': '80.45678',
-                      'westlimit': '16.6789', 'units': 'decimal deg' }
+                      'westlimit': '16.6789', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         # value for 'eastlimit should be in the range of -360 to 360
         value_dict = {'northlimit': '80.45678', 'eastlimit': '360.6789', 'southlimit': '70.45678',
-                      'westlimit': '16.6789', 'units': 'decimal deg' }
+                      'westlimit': '16.6789', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         value_dict = {'northlimit': '80.45678', 'eastlimit': '-360.6789', 'southlimit': '70.45678',
-                      'westlimit': '16.6789', 'units': 'decimal deg' }
+                      'westlimit': '16.6789', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         # value for 'westlimit' must be in the range of -360 to 360
         value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
-                      'westlimit': '-360.6789', 'units': 'decimal deg' }
+                      'westlimit': '-360.6789', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
-                      'westlimit': '360.6789', 'units': 'decimal deg' }
+                      'westlimit': '360.6789', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
-            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+            resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         # now create with all valid data including west > east and limits set to zero
         value_dict = {'northlimit': '80.45678', 'eastlimit': '0', 'southlimit': '0',
-                      'westlimit': '130.6789', 'units': 'decimal deg' }
-        resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+                      'westlimit': '130.6789', 'units': 'decimal deg'}
+        resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         self.assertEqual(self.res.metadata.coverages.filter(type='box').count(), 1)
 
@@ -699,18 +699,18 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                       msg="Date element type 'Modified' does not exist")
 
         # add another date of type 'created' - which should raise an exception
-        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'date',
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'date',
                                                                               type='created',
                                                                               start_date=parser.parse("8/10/2014")))
 
         # add another date of type 'modified' - which should raise an exception
-        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'date',
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'date',
                                                                               type='modified',
                                                                               start_date=parser.parse("8/10/2014")))
 
         # add another date of type 'published' - which should raise an exception since the resource is not yet
         # published.
-        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'date',
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'date',
                                                                               type='published',
                                                                               start_date=parser.parse("8/10/2014")))
 
@@ -731,7 +731,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res.raccess.public = True
         self.res.raccess.published = False
         self.res.raccess.save()
-        resource.create_metadata_element(self.res.short_id,'date', type='available',
+        resource.create_metadata_element(self.res.short_id, 'date', type='available',
                                          start_date=parser.parse("8/10/2014"))
         self.assertIn('available', [dt.type for dt in self.res.metadata.dates.all()],
                       msg="Date element type 'Available' does not exist")
@@ -755,25 +755,26 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # update of created date is not allowed
         dt_created = self.res.metadata.dates.all().filter(type='created').first()
         self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'date', dt_created.id,
-                                                                             start_date=parser.parse('8/10/2014')))
+                                                                              start_date=parser.parse('8/10/2014')))
 
         # update of modified date should not change to what the user specifies
         # it should always match with resource update date value
         dt_modified = self.res.metadata.dates.all().filter(type='modified').first()
-        resource.update_metadata_element(self.res.short_id,'date', dt_modified.id, start_date=parser.parse('8/10/2014'))
+        resource.update_metadata_element(self.res.short_id, 'date', dt_modified.id,
+                                         start_date=parser.parse('8/10/2014'))
         dt_modified = self.res.metadata.dates.all().filter(type='modified').first()
         self.assertNotEqual(dt_modified.start_date.date(), parser.parse('8/10/2014').date())
         self.assertEqual(self.res.updated.date(), dt_modified.start_date.date())
 
         # test the date type can't be changed - it does not through any exception though - it just ignores
-        resource.update_metadata_element(self.res.short_id,'date', dt_modified.id, type='valid',
+        resource.update_metadata_element(self.res.short_id, 'date', dt_modified.id, type='valid',
                                          start_date=parser.parse('8/10/2013'))
         self.assertIn('modified', [dt.type for dt in self.res.metadata.dates.all()],
                       msg="Date element type 'Modified' does not exist")
 
         # test that date value for date type 'valid' can be changed
         dt_valid = self.res.metadata.dates.all().filter(type='valid').first()
-        resource.update_metadata_element(self.res.short_id,'date', dt_valid.id, start_date=parser.parse('8/10/2011'),
+        resource.update_metadata_element(self.res.short_id, 'date', dt_valid.id, start_date=parser.parse('8/10/2011'),
                                          end_date=parser.parse('8/11/2012'))
         dt_valid = self.res.metadata.dates.all().filter(type='valid').first()
         self.assertEqual(dt_valid.start_date.date(), parser.parse('8/10/2011').date())
@@ -781,7 +782,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that date value for date type 'available' can be changed
         dt_available = self.res.metadata.dates.all().filter(type='available').first()
-        resource.update_metadata_element(self.res.short_id,'date', dt_available.id,
+        resource.update_metadata_element(self.res.short_id, 'date', dt_available.id,
                                          start_date=parser.parse('8/11/2011'))
         dt_available = self.res.metadata.dates.all().filter(type='available').first()
         self.assertEqual(dt_available.start_date.date(), parser.parse('8/11/2011').date())
@@ -795,24 +796,24 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # trying to delete date type 'created' should raise exception
         dt_created = self.res.metadata.dates.all().filter(type='created').first()
-        self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id,'date', dt_created.id))
+        self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id, 'date', dt_created.id))
 
         # trying to delete date type 'modified' should raise exception
         dt_modified = self.res.metadata.dates.all().filter(type='modified').first()
-        self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id,'date',
+        self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id, 'date',
                                                                               dt_modified.id))
 
         # trying to delete date type 'published' should work
         dt_published = self.res.metadata.dates.all().filter(type='published').first()
-        resource.delete_metadata_element(self.res.short_id,'date', dt_published.id)
+        resource.delete_metadata_element(self.res.short_id, 'date', dt_published.id)
 
         # trying to delete date type 'available' should work
         dt_available = self.res.metadata.dates.all().filter(type='available').first()
-        resource.delete_metadata_element(self.res.short_id,'date', dt_available.id)
+        resource.delete_metadata_element(self.res.short_id, 'date', dt_available.id)
 
         # trying to delete date type 'valid' should work
         dt_valid = self.res.metadata.dates.all().filter(type='valid').first()
-        resource.delete_metadata_element(self.res.short_id,'date', dt_valid.id)
+        resource.delete_metadata_element(self.res.short_id, 'date', dt_valid.id)
 
     def test_description(self):
 
@@ -820,20 +821,20 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.description, None, msg='Abstract exists for the resource')
 
         # create a abstract for the resource
-        resource.create_metadata_element(self.res.short_id,'description', abstract='new abstract for the resource')
+        resource.create_metadata_element(self.res.short_id, 'description', abstract='new abstract for the resource')
 
         # update the abstract
-        resource.update_metadata_element(self.res.short_id,'description', self.res.metadata.description.id,
+        resource.update_metadata_element(self.res.short_id, 'description', self.res.metadata.description.id,
                                          abstract='Updated generic resource')
         self.assertEqual(self.res.metadata.description.abstract, 'Updated generic resource')
 
         # test adding a 2nd description element - should raise an exception
-        self.assertRaises(Exception, lambda :resource.create_metadata_element(self.res.short_id,'description',
-                                                                              abstract='new abstract for the resource'))
+        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id, 'description',
+                                                                               abstract='new abstract for the resource'))
 
         # delete the abstract - should raise exception
-        self.assertRaises(Exception, lambda :resource.delete_metadata_element(self.res.short_id,'description',
-                                                                              self.res.metadata.description.id))
+        self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id, 'description',
+                                                                               self.res.metadata.description.id))
 
     def test_format(self):
         # when a resource is created with no content files, there should not be any formats elements
@@ -849,12 +850,12 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # duplicate formats are not allowed - exception is thrown
         format_CSV = 'text/csv'
-        self.assertRaises(Exception, lambda:resource.create_metadata_element(self.res.short_id,'format',
-                                                                             value=format_CSV))
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'format',
+                                                                              value=format_CSV))
 
         # test that a resource can have multiple formats
         format_zip = 'zip'
-        resource.create_metadata_element(self.res.short_id,'format', value=format_zip)
+        resource.create_metadata_element(self.res.short_id, 'format', value=format_zip)
         self.assertEqual(self.res.metadata.formats.all().count(), 2, msg="Number of format elements not equal to 2.")
         self.assertIn(format_csv, [fmt.value for fmt in self.res.metadata.formats.all()],
                       msg="Format element with value of %s does not exist." % format_csv)
@@ -870,7 +871,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that it is possible to delete all format elements
         for fmt in self.res.metadata.formats.all():
-            resource.delete_metadata_element(self.res.short_id,'format', fmt.id)
+            resource.delete_metadata_element(self.res.short_id, 'format', fmt.id)
 
         # there should not be any format elements at this point
         self.assertEqual(self.res.metadata.formats.all().count(), 0, msg="Number of format elements not equal to 0.")
@@ -890,7 +891,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          owner=self.user,
                                          title='Generic resource',
                                          files=(file_obj_1,)
-                                        )
+                                         )
         format_CSV = 'text/plain'
         # there should be only one format element at this point
         self.assertEqual(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
@@ -907,7 +908,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          owner=self.user,
                                          title='Generic resource',
                                          files=(file_obj_1, file_obj_2)
-                                        )
+                                         )
 
         # there should be only one format element at this point
         self.assertEqual(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
@@ -926,7 +927,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          owner=self.user,
                                          title='Generic resource',
                                          files=(file_obj_1, file_obj_3)
-                                        )
+                                         )
         # there should be two format elements at this point
         self.assertEqual(res.metadata.formats.all().count(), 2, msg="Number of format elements is not equal to 2")
         fmt_element = res.metadata.formats.all().filter(value__iexact=format_CSV).first()
@@ -949,7 +950,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          owner=self.user,
                                          title='Generic resource',
                                          files=(file_obj_1,)
-                                        )
+                                         )
         format_CSV = 'text/plain'
         # there should be only one format element at this point
         self.assertEqual(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
@@ -957,10 +958,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(fmt_element.value, format_CSV)
 
         # there should be only one file
-        self.assertEqual(res.files.all().count(), 1) 
-        
-        # that file should be file_one.txt 
-        self.assertEqual(res.files.all()[0].short_path, "file_one.txt") 
+        self.assertEqual(res.files.all().count(), 1)
+
+        # that file should be file_one.txt
+        self.assertEqual(res.files.all()[0].short_path, "file_one.txt")
 
         # delete resource file
         hydroshare.delete_resource_file(res.short_id, file_obj_1.name, self.user)
@@ -980,7 +981,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         hydroshare.add_resource_files(res.short_id, file_obj_1, file_obj_2)
 
         # the two files have the same format
-        self.assertEqual(res.files.all().count(), 2) 
+        self.assertEqual(res.files.all().count(), 2)
 
         # there should be one format element at this point for this resource
         self.assertEqual(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
@@ -1012,7 +1013,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                       msg="Identifier url was not found.")
 
         # add another identifier
-        resource.create_metadata_element(self.res.short_id,'identifier',
+        resource.create_metadata_element(self.res.short_id, 'identifier',
                                          name='someIdentifier', url="http://some.org/001")
         self.assertEqual(self.res.metadata.identifiers.all().count(), 2,
                          msg="Number of identifier elements not equal to 2.")
@@ -1020,7 +1021,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                       msg="Identifier name was not found.")
 
         # identifier name needs to be unique - this one should raise an exception
-        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'identifier',
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'identifier',
                                                                               name='someIdentifier',
                                                                               url="http://some.org/001"))
 
@@ -1043,13 +1044,13 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res.doi = ''
         self.res.save()
         url_doi = "https://doi.org/10.4211/hs.{res_id}".format(res_id=self.res.short_id)
-        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'identifier',
-                                                                              name='DOI',  url=url_doi))
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'identifier',
+                                                                              name='DOI', url=url_doi))
 
         # test adding identifier 'DOI' when the resource has a DOI and that should work
         self.res.doi = 'doi1000100010001'
         self.res.save()
-        resource.create_metadata_element(self.res.short_id,'identifier', name='DOI', url=url_doi)
+        resource.create_metadata_element(self.res.short_id, 'identifier', name='DOI', url=url_doi)
 
         # test that Identifier name 'DOI' can't be changed - should raise exception
         doi_idf = self.res.metadata.identifiers.all().filter(name='DOI').first()
@@ -1083,15 +1084,15 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                      "English.")
 
         # no more than one language element per resource - raises exception
-        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'language',
+        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id, 'language',
                                                                                code='fre'))
 
         # should be able to update language
-        resource.update_metadata_element(self.res.short_id,'language', self.res.metadata.language.id, code='fre')
+        resource.update_metadata_element(self.res.short_id, 'language', self.res.metadata.language.id, code='fre')
         self.assertEqual(self.res.metadata.language.code, 'fre', msg="Resource has a language that is not French.")
 
         # it should be possible to delete the language element
-        resource.delete_metadata_element(self.res.short_id,'language', self.res.metadata.language.id)
+        resource.delete_metadata_element(self.res.short_id, 'language', self.res.metadata.language.id)
         self.assertEqual(self.res.metadata.language, None, msg="Resource has a language element.")
 
     def test_publisher(self):
@@ -1180,7 +1181,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.relations.all().count(), 0, msg="Resource has relation element(s).")
 
         # add a relation element of uri type
-        resource.create_metadata_element(self.res.short_id,'relation', type='isPartOf',
+        resource.create_metadata_element(self.res.short_id, 'relation', type='isPartOf',
                                          value='http://hydroshare.org/resource/001')
         # at this point there should be 1 relation element
         self.assertEqual(self.res.metadata.relations.all().count(), 1,
@@ -1189,7 +1190,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                       msg="No relation element of type 'isPartOF' was found")
 
         # add another relation element of uri type
-        resource.create_metadata_element(self.res.short_id,'relation', type='isReferencedBy',
+        resource.create_metadata_element(self.res.short_id, 'relation', type='isReferencedBy',
                                          value='http://hydroshare.org/resource/002')
 
         # at this point there should be 2 relation elements
@@ -1202,7 +1203,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # add another relation element with isHostedBy type
         resource.create_metadata_element(self.res.short_id, 'relation', type='source',
-                                value='https://www.cuahsi.org/')
+                                         value='https://www.cuahsi.org/')
 
         # at this point there should be 3 relation elements
         self.assertEqual(self.res.metadata.relations.all().count(), 3,
@@ -1261,7 +1262,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that it is possible to delete all relation elements
         for rel in self.res.metadata.relations.all():
-            resource.delete_metadata_element(self.res.short_id,'relation', rel.id)
+            resource.delete_metadata_element(self.res.short_id, 'relation', rel.id)
 
         # at this point there should not be any relation elements
         self.assertEqual(self.res.metadata.relations.all().count(), 0,
@@ -1391,14 +1392,14 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # at this point there should not be any funding agency elements
         self.assertEqual(self.res.metadata.funding_agencies.all().count(), 0)
         # add a funding agency element with only the required name value type
-        resource.create_metadata_element(self.res.short_id,'fundingagency', agency_name='NSF')
+        resource.create_metadata_element(self.res.short_id, 'fundingagency', agency_name='NSF')
         # at this point there should be one funding agency element
         self.assertEqual(self.res.metadata.funding_agencies.all().count(), 1)
         # test the name of the funding agency is NSF
         agency_element = self.res.metadata.funding_agencies.all().first()
         self.assertEqual(agency_element.agency_name, 'NSF')
         # add another funding agency element with only the required name value type
-        resource.create_metadata_element(self.res.short_id,'fundingagency', agency_name='USDA')
+        resource.create_metadata_element(self.res.short_id, 'fundingagency', agency_name='USDA')
         # at this point there should be 2 funding agency element
         self.assertEqual(self.res.metadata.funding_agencies.all().count(), 2)
         # there should be one funding agency with name USDA
@@ -1439,7 +1440,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that it is possible to delete all funding agency elements
         for agency in self.res.metadata.funding_agencies.all():
-            resource.delete_metadata_element(self.res.short_id,'fundingagency', agency.id)
+            resource.delete_metadata_element(self.res.short_id, 'fundingagency', agency.id)
 
         # at this point there should not be any funding agency element
         self.assertEqual(self.res.metadata.funding_agencies.all().count(), 0)
@@ -1462,7 +1463,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                               url='http://rights.ord/001'))
 
         # deleting rights element is not allowed - exception
-        self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id,'rights',
+        self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id, 'rights',
                                                                                self.res.metadata.rights.id))
 
         # should be able to update the rights element
@@ -1482,7 +1483,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res.metadata.subjects.all().delete()
 
         # add a subject element
-        resource.create_metadata_element(self.res.short_id,'subject', value='sub-1')
+        resource.create_metadata_element(self.res.short_id, 'subject', value='sub-1')
 
         # there should be 1 subject element for this resource
         self.assertEqual(self.res.metadata.subjects.all().count(), 1, msg="Number of subject elements found not be 1.")
@@ -1490,7 +1491,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                       msg="Subject element with value of %s does not exist." % 'sub-1')
 
         # add another subject element
-        resource.create_metadata_element(self.res.short_id,'subject', value='sub-2')
+        resource.create_metadata_element(self.res.short_id, 'subject', value='sub-2')
 
         # there should be 2 subject elements for this resource
         self.assertEqual(self.res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 1.")
@@ -1565,7 +1566,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          phone=cr_phone,
                                          homepage=cr_homepage,
                                          identifiers=identifiers
-                                        )
+                                         )
 
         # add another creator with only the name
         self.res.metadata.create_element('creator', name='Lisa Holley')
@@ -1587,12 +1588,12 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          address=con_address,
                                          phone=con_phone,
                                          homepage=con_homepage,
-                                        )
+                                         )
         # add another creator with only the name
         self.res.metadata.create_element('contributor', name='Andrew Smith')
 
         # add a period type coverage
-        value_dict = {'name':'fall season' , 'start':'1/1/2000', 'end':'12/12/2012'}
+        value_dict = {'name': 'fall season' , 'start': '1/1/2000', 'end': '12/12/2012'}
         self.res.metadata.create_element('coverage', type='period', value=value_dict)
 
         # TODO: add a point type coverage
@@ -1601,8 +1602,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # self.res.metadata.create_element('coverage', type='point', value=value_dict)
 
         # TODO: test box type coverage - uncomment this one and comment the above point type test
-        value_dict = {'northlimit':'56.45678', 'eastlimit':'120.6789','southlimit':'16.45678', 'westlimit':'16.6789',
-                      'units': 'decimal deg','name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678', 'westlimit': '16.6789',
+                      'units': 'decimal deg', 'name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
                       'zunits': 'decimal deg', 'projection': 'NAD83'}
         self.res.metadata.create_element('coverage', type='box', value=value_dict)
 
@@ -1615,7 +1616,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res.metadata.create_element('format', value=format_csv)
 
         # add 'DOI' identifier
-        self.res.doi='doi1000100010001'
+        self.res.doi = 'doi1000100010001'
         self.res.save()
         self.res.metadata.create_element('identifier', name='DOI', url="https://doi.org/001")
 
@@ -1633,7 +1634,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         publisher_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)"
         url_CUAHSI = 'https://www.cuahsi.org'
-        self.res.raccess.published=True
+        self.res.raccess.published = True
         self.res.raccess.save()
         self.res.metadata.create_element('publisher', name=publisher_CUAHSI, url=url_CUAHSI)
 
@@ -1663,7 +1664,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         container = RDF_ROOT.find('hsterms:GenericResource', namespaces=self.res.metadata.NAMESPACES)
 
         self.assertNotEqual(container, None, msg="Root 'hsterms:GenericResource' element was not found.")
-        #res_uri = 'http://hydroshare.org/resource/%s' % self.res.short_id
+        # res_uri = 'http://hydroshare.org/resource/%s' % self.res.short_id
         res_uri = '{}/resource/{}'.format(hydroshare.utils.current_site_url(), self.res.short_id)
 
         self.assertEqual(container.get('{%s}about' % self.res.metadata.NAMESPACES['rdf']), res_uri,
@@ -1680,15 +1681,15 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # TODO: check all other elements (their text values and/or attribute values)
 
-        #abstract_sub_element = RDF_ROOT.find('.//dcterms:abstract', namespaces=self.res.metadata.NAMESPACES)
+        # abstract_sub_element = RDF_ROOT.find('.//dcterms:abstract', namespaces=self.res.metadata.NAMESPACES)
         # self.assertEqual(abstract_sub_element.text, self.res.metadata.description.abstract,
         #                  msg="'Description element abstract attribute value did not match.")
 
-        #print (abstract_sub_element.text)
-        #print(self.res.metadata.description.abstract)
-        #print (container.get('{%s}title' % self.res.metadata.NAMESPACES['dc']))
-        #print self.res.metadata.get_xml()
-        #print (bad)
+        # print (abstract_sub_element.text)
+        # print(self.res.metadata.description.abstract)
+        # print (container.get('{%s}title' % self.res.metadata.NAMESPACES['dc']))
+        # print self.res.metadata.get_xml()
+        # print (bad)
 
     def test_metadata_delete_on_resource_delete(self):
         # when a resource is deleted all the associated metadata elements should be deleted
@@ -1701,15 +1702,15 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         resource.create_metadata_element(self.res.short_id, 'contributor', name='John Smith')
         # add a period type coverage
         value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict)
+        resource.create_metadata_element(self.res.short_id, 'coverage', type='period', value=value_dict)
         # add another identifier
-        resource.create_metadata_element(self.res.short_id,'identifier',
+        resource.create_metadata_element(self.res.short_id, 'identifier',
                                          name='someIdentifier', url="http://some.org/001")
 
         core_metadata_obj = self.res.metadata
         # add a relation element of uri type
-        resource.create_metadata_element(self.res.short_id,'relation', type='isPartOf',
-                                value='http://hydroshare.org/resource/001')
+        resource.create_metadata_element(self.res.short_id, 'relation', type='isPartOf',
+                                         value='http://hydroshare.org/resource/001')
 
         # add publisher element
         self.res.raccess.published = True

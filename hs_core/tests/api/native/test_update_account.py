@@ -22,7 +22,7 @@ class UpdateAccountTest(unittest.TestCase):
             last_name='john',
             superuser=True,
             groups=[]
-            )
+        )
 
         pic_file = "photo.tif"
         cv_file = "cv.pdf"

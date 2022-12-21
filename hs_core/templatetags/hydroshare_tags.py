@@ -245,7 +245,7 @@ def to_int(value):
 @register.filter
 def relative_irods_path(fed_irods_file_name):
     idx = fed_irods_file_name.find('/data/contents/')
-    return fed_irods_file_name[idx+1:]
+    return fed_irods_file_name[idx + 1:]
 
 
 @register.filter
@@ -270,16 +270,16 @@ def res_uuid_from_res_path(path):
     prefix_str = 'resource/'
     prefix_idx = path.find(prefix_str)
     if prefix_idx >= 0:
-        sidx = prefix_idx+len(prefix_str)
+        sidx = prefix_idx + len(prefix_str)
         # resource uuid is 32 bits
-        return path[sidx:sidx+32]
+        return path[sidx:sidx + 32]
     else:
         return path
 
 
 @register.filter
 def remove_last_char(statement):
-    return statement[:len(statement)-1]
+    return statement[:len(statement) - 1]
 
 
 @register.filter

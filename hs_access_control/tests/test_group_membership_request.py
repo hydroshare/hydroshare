@@ -766,7 +766,7 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(
             self.kelly_group_member.uaccess.group_membership_requests.count(), 0)
         self.assertNotIn(kelly_membership_request,
-                            self.modeling_group.gaccess.group_membership_requests)
+                         self.modeling_group.gaccess.group_membership_requests)
 
     def test_super_user(self):
         # super user/ admin can send invitation, accept/decline request to join

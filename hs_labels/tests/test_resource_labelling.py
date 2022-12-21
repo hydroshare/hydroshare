@@ -8,6 +8,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_labels.models import UserLabels, ResourceLabels, \
     UserResourceLabels, UserResourceFlags, UserStoredLabels, FlagCodes
 
+
 def global_reset():
     UserResourceLabels.objects.all().delete()
     UserResourceFlags.objects.all().delete()
@@ -15,6 +16,7 @@ def global_reset():
     UserLabels.objects.all().delete()
     ResourceLabels.objects.all().delete()
     BaseResource.objects.all().delete()
+
 
 def match_lists_as_sets(l1, l2):
     """ return True if two lists contain the same content as sets
@@ -26,7 +28,8 @@ def match_lists_as_sets(l1, l2):
     Lists are treated as multisets, in the sense that order is unimportant.
     """
     return len(set(l1) & set(l2)) == len(set(l1))\
-       and len(set(l1) | set(l2)) == len(set(l1))
+        and len(set(l1) | set(l2)) == len(set(l1))
+
 
 def match_nested_dicts(d1, d2):
     """
@@ -41,23 +44,29 @@ def match_nested_dicts(d1, d2):
     """
     # pprint(d1)
     # pprint(d2)
-    if not isinstance(d1, dict): return False
-    if not isinstance(d2, dict): return False
+    if not isinstance(d1, dict):
+        return False
+    if not isinstance(d2, dict):
+        return False
     # print("got two dicts")
-    if not match_lists_as_sets(list(d1.keys()), list(d2.keys())): return False
+    if not match_lists_as_sets(list(d1.keys()), list(d2.keys())):
+        return False
     # print("same keys")
     for k in d1:
         # print("key is ", k)
         # print("type of d1[k] is ", type(d1[k]))
         # print("type of d2[k] is ", type(d2[k]))
-        if type(d1[k]) != type(d2[k]): return False
+        if type(d1[k]) != type(d2[k]):
+            return False
         if isinstance(d1[k], dict) and isinstance(d2[k], dict):
             # print("checking dicts against one another")
-            if not match_nested_dicts(d1[k], d2[k]): return False
+            if not match_nested_dicts(d1[k], d2[k]):
+                return False
         else:
             # print("checking base values")
-            return d1[k]==d2[k]
+            return d1[k] == d2[k]
     return True
+
 
 def match_nested_lists(l1, l2):
     """ Match nested lists term for term
@@ -70,15 +79,21 @@ def match_nested_lists(l1, l2):
     lists in question can only contain other lists or objects for which == is a valid
     comparison.
     """
-    if not isinstance(l1, list): return False
-    if not isinstance(l2, list): return False
-    if len(l1) != len(l2): return False
+    if not isinstance(l1, list):
+        return False
+    if not isinstance(l2, list):
+        return False
+    if len(l1) != len(l2):
+        return False
     for i in range(len(l1)):
         if isinstance(l1[i], list) and isinstance(l2[i], list):
-            if not match_nested_lists(l1[i], l2[i]): return False
+            if not match_nested_lists(l1[i], l2[i]):
+                return False
         elif not isinstance(l1[i], list) and not isinstance(l2[i], list):
-            if l1[i] != l2[i]: return False
-        else: return False
+            if l1[i] != l2[i]:
+                return False
+        else:
+            return False
     return True
 
 
@@ -152,7 +167,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists_as_sets(cat.ulabels.get_flagged_resources(FlagCodes.FAVORITE), []))
         self.assertFalse(scratching.rlabels.is_flagged(cat, FlagCodes.MINE))
         self.assertFalse(scratching.rlabels.is_flagged(cat, FlagCodes.FAVORITE))
-        cat.ulabels.flag_resource(scratching, FlagCodes.MINE) 
+        cat.ulabels.flag_resource(scratching, FlagCodes.MINE)
         self.assertTrue(match_lists_as_sets(cat.ulabels.my_resources, [scratching]))
         self.assertTrue(match_lists_as_sets(cat.ulabels.favorited_resources, []))
         self.assertTrue(match_lists_as_sets(cat.ulabels.get_flagged_resources(FlagCodes.MINE), [scratching]))
@@ -313,5 +328,3 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists_as_sets(cat.ulabels.get_resources_with_label("cool"), [scratching, bones]))
         cat.ulabels.remove_resource_label("cool")
         self.assertTrue(match_lists_as_sets(cat.ulabels.get_resources_with_label("cool"), []))
-
-

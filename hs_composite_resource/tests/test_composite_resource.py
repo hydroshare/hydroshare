@@ -521,7 +521,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(agency_element.agency_url, 'http://www.nsf.gov')
         some_idf = self.composite_resource.metadata.identifiers.all().filter(
             name='someIdentifier').first()
-        metadata.update_element('identifier', some_idf.id,  name='someOtherIdentifier')
+        metadata.update_element('identifier', some_idf.id, name='someOtherIdentifier')
         some_idf = self.composite_resource.metadata.identifiers.all().filter(
             name='someOtherIdentifier').first()
         self.assertNotEqual(some_idf, None)
@@ -553,7 +553,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                       'westlimit': '16.6789',
                       'units': 'decimal deg'}
         cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
-        metadata.update_element('coverage', cov_pt.id, type='box',  value=value_dict)
+        metadata.update_element('coverage', cov_pt.id, type='box', value=value_dict)
         cov_pt = self.composite_resource.metadata.coverages.all().filter(type='point').first()
         self.assertEqual(cov_pt, None)
         cov_box = self.composite_resource.metadata.coverages.all().filter(type='box').first()
@@ -1708,8 +1708,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test renaming a folder that contains resource files that are part of the
         # GeoRasterLogicalFile is allowed
         folder_rename = '{}_1'.format(res_file.file_folder)
-        src_full_path = os.path.join(self.composite_resource.file_path,  res_file.file_folder)
-        tgt_full_path = os.path.join(self.composite_resource.file_path,  folder_rename)
+        src_full_path = os.path.join(self.composite_resource.file_path, res_file.file_folder)
+        tgt_full_path = os.path.join(self.composite_resource.file_path, folder_rename)
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), True)

@@ -89,7 +89,7 @@ def verify(request, *args, **kwargs):
     u = User.objects.get(pk=pk)
     if u.email == email:
         if not u.is_active:
-            u.is_active=True
+            u.is_active = True
             u.save()
             u.groups.add(Group.objects.get(name="Hydroshare Author"))
         from django.contrib.auth import login
@@ -170,7 +170,7 @@ def change_quota_holder(request, shortkey):
     new_holder_u = User.objects.filter(username=new_holder_uname).first()
     if not new_holder_u:
         ajax_response_data['message'] = "Unable to change quota holder. " \
-                                     "Please verify that the selected user still has access to this resource."
+            "Please verify that the selected user still has access to this resource."
         return JsonResponse(ajax_response_data)
 
     res = utils.get_resource_by_shortkey(shortkey)
@@ -404,7 +404,10 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource", type=openapi.TYPE_STRING)
+
+
 @swagger_auto_schema(method='get', operation_description="Gets all key/value metadata for the resource",
                      responses={200: "key/value metadata"}, manual_parameters=[res_id])
 @swagger_auto_schema(method='post', operation_description="Updates key/value metadata for the resource",
@@ -415,7 +418,7 @@ def update_key_value_metadata_public(request, id):
     Update resource key/value metadata pair
 
     Metadata to be updated should be included as key/value pairs in the REST request
-    
+
     :param request:
     :param id: id of the resource to be updated
     :return: HttpResponse with status code
@@ -791,8 +794,8 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
         task_dict = get_or_create_task_notification(task_id, name='resource delete', payload=shortkey,
                                                     username=user.username)
         pre_delete_resource.send(sender=type(res), request=request, user=user,
-                                  resource_shortkey=shortkey, resource=res,
-                                  resource_title=res.metadata.title, resource_type=res.resource_type, **kwargs)
+                                 resource_shortkey=shortkey, resource=res,
+                                 resource_title=res.metadata.title, resource_type=res.resource_type, **kwargs)
         return JsonResponse(task_dict)
     else:
         try:
@@ -800,8 +803,8 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             res.set_discoverable(False)
             hydroshare.delete_resource(shortkey, request_username=request.user.username)
             pre_delete_resource.send(sender=type(res), request=request, user=user,
-                                      resource_shortkey=shortkey, resource=res,
-                                      resource_title=res.metadata.title, resource_type=res.resource_type, **kwargs)
+                                     resource_shortkey=shortkey, resource=res,
+                                     resource_title=res.metadata.title, resource_type=res.resource_type, **kwargs)
             return HttpResponseRedirect('/my-resources/')
         except ValidationError as ex:
             request.session['validation_error'] = str(ex)
@@ -829,7 +832,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
                                       raises_exception=False)
     if not authorized:
         return JsonResponse(
-        {"error": "You are not authorized to replicate this resource."}, status=status.HTTP_401_UNAUTHORIZED
+            {"error": "You are not authorized to replicate this resource."}, status=status.HTTP_401_UNAUTHORIZED
         )
 
     task = replicate_resource_bag_to_user_zone_task.apply_async((shortkey, user.username))
@@ -852,7 +855,8 @@ def copy_resource(request, shortkey, *args, **kwargs):
     if request.is_ajax():
         task = copy_resource_task.apply_async((shortkey, None, user.username))
         task_id = task.task_id
-        task_dict = get_or_create_task_notification(task_id, name='resource copy', payload=shortkey, username=user.username)
+        task_dict = get_or_create_task_notification(
+            task_id, name='resource copy', payload=shortkey, username=user.username)
         return JsonResponse(task_dict)
     else:
         try:
@@ -861,7 +865,11 @@ def copy_resource(request, shortkey, *args, **kwargs):
         except utils.ResourceCopyException:
             return HttpResponseRedirect(res.get_absolute_url())
 
-res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be copied", type=openapi.TYPE_STRING)
+
+res_id = openapi.Parameter('id', openapi.IN_PATH,
+                           description="Id of the resource to be copied", type=openapi.TYPE_STRING)
+
+
 @swagger_auto_schema(method='post', operation_description="Copy a resource",
                      responses={202: "Returns the resource ID of the newly created resource"}, manual_parameters=[res_id])
 @api_view(['POST'])
@@ -906,7 +914,11 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
                                                          'this resource: ' + str(ex)
             return HttpResponseRedirect(res.get_absolute_url())
 
-res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be versioned", type=openapi.TYPE_STRING)
+
+res_id = openapi.Parameter('id', openapi.IN_PATH,
+                           description="Id of the resource to be versioned", type=openapi.TYPE_STRING)
+
+
 @swagger_auto_schema(method='post', operation_description="Create a new version of a resource",
                      responses={202: "Returns the resource ID of the new version"}, manual_parameters=[res_id])
 @api_view(['POST'])
@@ -931,6 +943,7 @@ def publish(request, shortkey, *args, **kwargs):
         request.session['validation_error'] = str(exp)
         logger.warn(str(exp))
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 def submit_for_review(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to submit for review
@@ -1003,7 +1016,10 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     return JsonResponse(ajax_response_data)
 
 
-res_id = openapi.Parameter('id', openapi.IN_PATH, description="Id of the resource to be flagged", type=openapi.TYPE_STRING)
+res_id = openapi.Parameter('id', openapi.IN_PATH,
+                           description="Id of the resource to be flagged", type=openapi.TYPE_STRING)
+
+
 @swagger_auto_schema(method='post', operation_description="Set resource flag to 'Public'",
                      responses={202: "Returns the resource ID of the new version"}, manual_parameters=[res_id])
 @api_view(['POST'])
@@ -1201,9 +1217,9 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
 
 def verify_account(request, *args, **kwargs):
     context = {
-            'username' : request.GET['username'],
-            'email' : request.GET['email']
-        }
+        'username' : request.GET['username'],
+        'email' : request.GET['email']
+    }
     return render(request, 'pages/verify-account.html', context)
 
 
@@ -1218,16 +1234,16 @@ def resend_verification_email(request):
 This is an automated email from Hydroshare.org. If you requested a Hydroshare account, please
 go to http://{domain}/verify/{token}/ and verify your account.
 """.format(
-            domain=Site.objects.get_current().domain,
-            token=token
-        ))
+                domain=Site.objects.get_current().domain,
+                token=token
+            ))
 
         context = {
             'is_email_sent' : True
         }
         return render(request, 'pages/verify-account.html', context)
     except:
-        pass # FIXME should log this instead of ignoring it.
+        pass  # FIXME should log this instead of ignoring it.
 
 
 class FilterForm(forms.Form):
@@ -1310,6 +1326,7 @@ class GroupUpdateForm(GroupForm):
 
 class PatchedChoiceWidget(autocomplete_light.ChoiceWidget):
     """Patching the render() function of ChoiceWidget class to work with Django 3.2"""
+
     def __init__(self, autocomplete=None, widget_js_attributes=None,
                  autocomplete_js_attributes=None, extra_context=None, registry=None,
                  widget_template=None, widget_attrs=None, *args,
@@ -1400,12 +1417,12 @@ def create_resource(request, *args, **kwargs):
 
     try:
         resource = hydroshare.create_resource(
-                resource_type=request.POST['resource-type'],
-                owner=request.user,
-                title=res_title,
-                metadata=metadata,
-                files=resource_files,
-                content=res_title, full_paths=full_paths, auto_aggregate=auto_aggregate
+            resource_type=request.POST['resource-type'],
+            owner=request.user,
+            title=res_title,
+            metadata=metadata,
+            files=resource_files,
+            content=res_title, full_paths=full_paths, auto_aggregate=auto_aggregate
         )
     except SessionException as ex:
         ajax_response_data['message'] = ex.stderr
@@ -1479,6 +1496,7 @@ def update_user_group(request, group_id, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 @login_required
 def delete_user_group(request, group_id, *args, **kwargs):
     """This one is not really deleting the group object, rather setting the active status
@@ -1504,6 +1522,7 @@ def restore_user_group(request, group_id, *args, **kwargs):
                                 " this group.")
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 @login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
@@ -1662,6 +1681,7 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
             return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
     return redirect("/")
 
+
 def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs):
     """
     View for the link in the verification email that was sent to a user
@@ -1676,7 +1696,7 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
         user = authenticate(uidb36=uidb36, token=token, is_active=True)
         if user is None:
             messages.error(request, "The link you clicked has expired. Please manually navigate to the resouce "
-                            "to complete the metadata review.")
+                           "to complete the metadata review.")
     else:
         user = request.user
 
@@ -1689,10 +1709,11 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
         res.raccess.save()
         if action == "approve":
             hydroshare.publish_resource(user, shortkey)
-            messages.success(request, "Publication request was accepted. " \
+            messages.success(request, "Publication request was accepted. "
                              "An email will be sent notifiying the resource owner(s) once the DOI activates.")
         else:
-            messages.warning(request, "Publication request was rejected. Please send an email to the resource owner indicating why.")
+            messages.warning(
+                request, "Publication request was rejected. Please send an email to the resource owner indicating why.")
             res.metadata.dates.all().filter(type='review_started').delete()
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 
@@ -1744,7 +1765,7 @@ def get_file(request, *args, **kwargs):
     name = kwargs['name']
     session = RodsSession("./", "/usr/bin")
     session.runCmd("iinit")
-    session.runCmd('iget', [ name, 'tempfile.' + name ])
+    session.runCmd('iget', [name, 'tempfile.' + name])
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
 
 
@@ -1755,7 +1776,10 @@ def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
 
-uid = openapi.Parameter('user_identifier', openapi.IN_PATH, description="email, username, or id of the user for which data is needed", type=openapi.TYPE_STRING)
+uid = openapi.Parameter('user_identifier', openapi.IN_PATH,
+                        description="email, username, or id of the user for which data is needed", type=openapi.TYPE_STRING)
+
+
 @swagger_auto_schema(method='get', operation_description="Get user data",
                      responses={200: "Returns JsonResponse containing user data"}, manual_parameters=[uid])
 @api_view(['GET'])
@@ -1950,15 +1974,15 @@ class FindGroupsView(TemplateView):
 
                     if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
                         g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                         g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+                            g.gaccess.group_membership_requests.filter(invitation_to=u).first()
             return {
                 'profile_user': u,
                 'groups': groups
             }
         else:
             # for anonymous user
-            groups = Group.objects.filter(Q(gaccess__active=True) &
-                                          (Q(gaccess__discoverable=True) |
+            groups = Group.objects.filter(Q(gaccess__active=True)
+                                          & (Q(gaccess__discoverable=True) |
                                           Q(gaccess__public=True))).exclude(name="Hydroshare Author")
 
             for g in groups:
@@ -2037,7 +2061,7 @@ class GroupView(TemplateView):
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
             g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
-            # This will exclude requests from inactive users made for themselves 
+            # This will exclude requests from inactive users made for themselves
             # as well as invitations from innactive users to others
             g.gaccess.active_group_membership_requests = g.gaccess.group_membership_requests.filter(
                 Q(request_from__is_active=True),
@@ -2065,12 +2089,13 @@ class GroupView(TemplateView):
                 'add_view_user_form': AddUserForm(),
             }
 
+
 @login_required
 def my_resources_filter_counts(request, *args, **kwargs):
     """
     View for counting resources that belong to a given user.
     """
-    filter=request.GET.getlist('filter', default=None)
+    filter = request.GET.getlist('filter', default=None)
     u = User.objects.get(pk=request.user.id)
 
     filter_counts = get_my_resources_filter_counts(u)
@@ -2078,6 +2103,7 @@ def my_resources_filter_counts(request, *args, **kwargs):
     return JsonResponse({
         'filter_counts': filter_counts
     })
+
 
 @login_required
 def my_resources(request, *args, **kwargs):
@@ -2088,7 +2114,7 @@ def my_resources(request, *args, **kwargs):
     """
 
     if not request.is_ajax():
-        filter=request.GET.getlist('f', default=[])
+        filter = request.GET.getlist('f', default=[])
     else:
         filter = [request.GET['new_filter']]
     u = User.objects.get(pk=request.user.id)
@@ -2097,7 +2123,7 @@ def my_resources(request, *args, **kwargs):
         # add default filters
         filter = ['owned', 'discovered', 'favorites']
 
-    if 'shared' in filter: 
+    if 'shared' in filter:
         filter.remove('shared')
         filter.append('viewable')
         filter.append('editable')
@@ -2115,8 +2141,8 @@ def my_resources(request, *args, **kwargs):
     else:
         from django.template.loader import render_to_string
         trows = render_to_string(
-                    'includes/my-resources-trows.html',
-                      context, request)
+            'includes/my-resources-trows.html',
+            context, request)
         return JsonResponse({
             "trows": trows,
         })

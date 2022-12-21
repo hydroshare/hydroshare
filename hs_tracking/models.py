@@ -93,7 +93,7 @@ class Visitor(models.Model):
 
 class Session(models.Model):
     begin = models.DateTimeField(auto_now_add=True)
-    visitor = models.ForeignKey(Visitor, on_delete=models.CASCADE,  related_name='session')
+    visitor = models.ForeignKey(Visitor, on_delete=models.CASCADE, related_name='session')
     # TODO: hostname = models.CharField(null=True, default=None, max_length=256)
 
     objects = SessionManager()
@@ -125,7 +125,7 @@ class Variable(models.Model):
 
     from hs_core.models import BaseResource
 
-    session = models.ForeignKey(Session, on_delete=models.CASCADE,  related_name='variable')
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='variable')
     timestamp = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=32)
     type = models.IntegerField(choices=TYPE_CHOICES)
@@ -221,10 +221,10 @@ class Variable(models.Model):
         """
         # TODO: document actions like labeling and commenting (currently these are 'visit's)
         return BaseResource.objects.filter(
-                variable__session__visitor__user=user,
-                variable__timestamp__gte=(datetime.now()-timedelta(days)),
-                variable__resource__isnull=False,
-                variable__name='visit')\
+            variable__session__visitor__user=user,
+            variable__timestamp__gte=(datetime.now() - timedelta(days)),
+            variable__resource__isnull=False,
+            variable__name='visit')\
             .only('short_id', 'created')\
             .distinct()\
             .annotate(public=F('raccess__public'),
@@ -250,10 +250,10 @@ class Variable(models.Model):
         if today is None:
             today = datetime.now()
         return BaseResource.objects.filter(
-                variable__timestamp__gte=(today-timedelta(days)),
-                variable__timestamp__lt=(today),
-                variable__resource__isnull=False,
-                variable__name='visit')\
+            variable__timestamp__gte=(today - timedelta(days)),
+            variable__timestamp__lt=(today),
+            variable__resource__isnull=False,
+            variable__name='visit')\
             .distinct()\
             .annotate(users=models.Count('variable__session__visitor__user'))\
             .annotate(public=F('raccess__public'),

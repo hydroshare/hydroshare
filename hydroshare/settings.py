@@ -1,10 +1,11 @@
 
-#TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+# TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+from PIL import ImageFile
+import sys
+import os
 TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
 
-import os
-import sys
 # import importlib
 
 local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
@@ -122,7 +123,11 @@ USE_TZ = True
 LANGUAGE_CODE = "en"
 
 # Supported languages
-_ = lambda s: s
+
+
+def _(s): return s
+
+
 LANGUAGES = (
     ('en', _('English')),
 )
@@ -208,7 +213,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # PATHS #
 #########
 
-import os
 
 # Full filesystem path to the project.
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -262,7 +266,6 @@ THUMBNAIL_DUMMY_SOURCE = STATIC_URL + 'img/home-page/step4.png'
 THUMBNAIL_DUMMY_RATIO = 1
 
 # Allow PIL to ignore imgs with lots of metadata
-from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
@@ -369,7 +372,7 @@ APPS_TO_NOT_RUN = (
 # List of processors used by RequestContext to populate the context.
 # Each one should be a callable that takes the request object as its
 # only parameter and returns a dictionary to add to the context.
-#TEMPLATE_CONTEXT_PROCESSORS = ()
+# TEMPLATE_CONTEXT_PROCESSORS = ()
 
 TEMPLATES = [
     {
@@ -562,7 +565,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/django.log',
             'formatter': 'verbose',
-            'maxBytes': 1024*1024*15,  # 15MB
+            'maxBytes': 1024 * 1024 * 15,  # 15MB
             'backupCount': 10,
         },
         'hydrosharelog': {
@@ -570,7 +573,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/hydroshare.log',
             'formatter': 'verbose',
-            'maxBytes': 1024*1024*15,  # 15MB
+            'maxBytes': 1024 * 1024 * 15,  # 15MB
             'backupCount': 10,
         },
         'celerylog': {
@@ -578,7 +581,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/celery.log',
             'formatter': 'verbose',
-            'maxBytes': 1024*1024*15,  # 15MB
+            'maxBytes': 1024 * 1024 * 15,  # 15MB
             'backupCount': 10,
         },
     },
@@ -727,15 +730,15 @@ SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
 # Categorization in discovery of content types
-# according to file extension of otherwise unaggregated files. 
-DISCOVERY_EXTENSION_CONTENT_TYPES = { 
+# according to file extension of otherwise unaggregated files.
+DISCOVERY_EXTENSION_CONTENT_TYPES = {
     'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf', 'tex', 'latex']),
     'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
     'Presentation': set(['ppt', 'pptx', 'odp']),
     'Jupyter Notebook': set(['ipynb']),
     'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
     'Multidimensional (NetCDF)': set(['nc'])
-} 
+}
 
 HSWS_ACTIVATED = False
 
@@ -791,8 +794,8 @@ else:
 ####################
 # Allow Unicode printout to terminals
 ####################
-#import codecs
-#sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-#sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+# import codecs
+# sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+# sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
 MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = "/hydroshare/hs_file_types/model_meta_schema_templates"

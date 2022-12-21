@@ -16,7 +16,7 @@ def shorten(title, length):
     if len(title) <= length:
         return title
     else:
-        return title[0:19]+'...'
+        return title[0:19] + '...'
 
 
 def access_type(thing):

@@ -45,7 +45,7 @@ class CommunityView(TemplateView):
             is_admin = UserCommunityPrivilege.objects.filter(user=u,
                                                              community=community,
                                                              privilege=PrivilegeCodes.OWNER)\
-                                                     .exists()
+                .exists()
         except:
             is_admin = False
 
@@ -104,7 +104,7 @@ class MyCommunitiesView(TemplateView):
             g.join_request = None
             if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
                 g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+                    g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
         comms_member_of = [self.group_to_community(g, Community.objects.all()) for g in grps_member_of]
         return {

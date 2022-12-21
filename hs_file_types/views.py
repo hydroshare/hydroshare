@@ -1273,7 +1273,7 @@ def update_model_program_metadata(request, file_type_id, **kwargs):
 
     mp_validation_form.update_metadata(metadata)
     refresh_metadata = len(mp_validation_form.cleaned_data['mi_json_schema_file']) > 0 \
-                       or len(mp_validation_form.cleaned_data['mi_json_schema_template']) > 0
+        or len(mp_validation_form.cleaned_data['mi_json_schema_template']) > 0
 
     resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)

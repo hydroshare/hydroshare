@@ -5,6 +5,7 @@ from django.http import HttpResponse
 
 from hs_core.views import authorize, ACTION_TO_AUTHORIZE
 
+
 def resource_labeling_action(request, shortkey=None, *args, **kwargs):
     """
     This must be a POST request. The following data needs to be passed as part of the POST request:
@@ -46,7 +47,7 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
         elif len(label) >= 75:
             err_msg = "The label is too long (> 75 characters)"
     elif label_type != SAVEDLABEL and shortkey is None:
-            err_msg = "Resource ID is missing"
+        err_msg = "Resource ID is missing"
 
     # pre-check resource type for OPENWITHAPP action
     if label_type == OPENWITHAPP:

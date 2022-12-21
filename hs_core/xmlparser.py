@@ -23,8 +23,8 @@ class CatalogedExpatParser(ExpatParser):
 
         source = self._ent_handler.resolveEntity(pubid, sysid)
         source = saxutils.prepare_input_source(source,
-                                               self._source.getSystemId() or
-                                               "")
+                                               self._source.getSystemId()
+                                               or "")
 
         # If an entry does not exist in the xml cache, create it.
         filepath = os.path.join(XML_CACHE, base64.urlsafe_b64encode(pubid))

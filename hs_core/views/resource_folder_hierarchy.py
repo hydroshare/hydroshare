@@ -181,8 +181,8 @@ def data_store_structure(request):
                                      'aggregation_appkey': aggregation_appkey,
                                      'main_file': f.logical_file.get_main_file.file_name,
                                      'preview_data_url': f.logical_file.metadata.get_preview_data_url(
-                                        resource=resource,
-                                        folder_path=f_store_path
+                                         resource=resource,
+                                         folder_path=f_store_path
                                      ),
                                      'url': f.logical_file.url})
             logical_file = f.logical_file
@@ -383,6 +383,7 @@ def data_store_folder_zip_public(request, pk):
     :return: JsonResponse with zip file or empty string
     '''
     return data_store_folder_zip(request, res_id=pk)
+
 
 rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
 body = openapi.Schema(
@@ -589,6 +590,7 @@ def data_store_add_reference(request):
         return JsonResponse({'status': 'success', 'file_id': file_id})
     else:
         return JsonResponse({'message': msg}, status=ret_status)
+
 
 body = openapi.Schema(
     type=openapi.TYPE_OBJECT,

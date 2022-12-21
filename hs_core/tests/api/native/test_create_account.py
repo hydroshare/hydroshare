@@ -20,7 +20,7 @@ class CreateAccountTest(TestCase):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
     def test_basic_superuser(self):
-        username, first_name, last_name, password = 'shaunjl', 'shaun','joseph','mypass'
+        username, first_name, last_name, password = 'shaunjl', 'shaun', 'joseph', 'mypass'
         user = hydroshare.create_account(
             'shaun@gmail.com',
             username=username,
@@ -29,7 +29,7 @@ class CreateAccountTest(TestCase):
             superuser=True,
             password=password,
             active=True
-            )
+        )
 
         users_in_db = User.objects.all()
         db_user = users_in_db[0]
@@ -46,7 +46,7 @@ class CreateAccountTest(TestCase):
         self.assertTrue(user.is_superuser)
 
     def test_basic_user(self):
-        username, first_name, last_name, password = 'shaunjl', 'shaun','joseph','mypass'
+        username, first_name, last_name, password = 'shaunjl', 'shaun', 'joseph', 'mypass'
         user = hydroshare.create_account(
             'shaun@gmail.com',
             username=username,
@@ -55,7 +55,7 @@ class CreateAccountTest(TestCase):
             superuser=False,
             password=password,
             active=True
-            )
+        )
 
         users_in_db = User.objects.all()
         db_user = users_in_db[0]
@@ -81,13 +81,13 @@ class CreateAccountTest(TestCase):
             first_name=first_name,
             last_name=last_name,
             groups=groups
-            )
+        )
 
         g0 = user.uaccess.create_group(title='group0', description='This is group0')
         g1 = user.uaccess.create_group(title='group1', description='This is group1')
         g2 = user.uaccess.create_group(title='group2', description='This is group2')
 
-        # TODO from @alvacouch: no order assumption -> poor test. 
+        # TODO from @alvacouch: no order assumption -> poor test.
         user_groups = list(Group.objects.filter(g2ugp__user=user))
 
         groups = [g0, g1, g2]
@@ -105,7 +105,7 @@ class CreateAccountTest(TestCase):
             first_name=first_name,
             last_name=last_name,
             organization=organization
-            )
+        )
 
         user = UserProfile.objects.filter(user__username='shaunjl').first()
         self.assertEqual(user.organization, 'org with, comma;another org;single')
@@ -136,7 +136,7 @@ class CreateAccountTest(TestCase):
         self.assertEqual(user.state, state)
 
     def test_case_in_username(self):
-        username, first_name, last_name, password = 'shaunjl', 'shaun','joseph','mypass'
+        username, first_name, last_name, password = 'shaunjl', 'shaun', 'joseph', 'mypass'
         user = hydroshare.create_account(
             'shaun@gmail.com',
             username=username,
@@ -145,7 +145,7 @@ class CreateAccountTest(TestCase):
             superuser=False,
             password=password,
             active=True
-            )
+        )
 
         users_in_db = User.objects.all()
         db_user = users_in_db[0]
@@ -179,7 +179,7 @@ class CreateAccountTest(TestCase):
             pass
 
     def test_case_in_email(self):
-        username, first_name, last_name, password = 'shaunjl', 'shaun','joseph','mypass'
+        username, first_name, last_name, password = 'shaunjl', 'shaun', 'joseph', 'mypass'
         user = hydroshare.create_account(
             'shaun@gmail.com',
             username=username,
@@ -188,7 +188,7 @@ class CreateAccountTest(TestCase):
             superuser=False,
             password=password,
             active=True
-            )
+        )
 
         users_in_db = User.objects.all()
         db_user = users_in_db[0]

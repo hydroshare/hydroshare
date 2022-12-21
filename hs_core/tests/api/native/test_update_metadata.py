@@ -17,7 +17,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
             first_name='shaun',
             last_name='john',
             superuser=False,
-            )
+        )
 
         self.res = hydroshare.create_resource('GenericResource', self.user, 'Test Resource')
 
@@ -105,11 +105,11 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # there should 1 coverage element of type 'period'
         self.assertEqual(self.res.metadata.coverages.filter(type='period').count(), 1,
-                          msg="Number of coverage elements of type 'period is not equal to 1")
+                         msg="Number of coverage elements of type 'period is not equal to 1")
 
         # there should 1 coverage element of type 'point'
         self.assertEqual(self.res.metadata.coverages.filter(type='point').count(), 1,
-                          msg="Number of coverage elements of type 'point' is not equal to 1")
+                         msg="Number of coverage elements of type 'point' is not equal to 1")
 
         cov_period = self.res.metadata.coverages.filter(type='period').first()
         self.assertEqual(cov_period.value['name'], 'Name for period coverage')
@@ -160,12 +160,12 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
 
     def test_update_science_metadata_coverage_type_box(self):
         metadata_dict = [
-             {'coverage': {'type': 'period', 'value': {'name': 'Name for period coverage', 'start': '1/1/2000',
-                                                       'end': '12/12/2012'}}},
-             {'coverage': {'type': 'box', 'value': {'name': 'Name for box coverage', 'northlimit': '56.45678',
-                                                    'eastlimit': '130.6789', 'southlimit': '16.45678',
-                                                    'westlimit': '16.6789', 'units': 'decimal deg'}}},
-         ]
+            {'coverage': {'type': 'period', 'value': {'name': 'Name for period coverage', 'start': '1/1/2000',
+                                                      'end': '12/12/2012'}}},
+            {'coverage': {'type': 'box', 'value': {'name': 'Name for box coverage', 'northlimit': '56.45678',
+                                                   'eastlimit': '130.6789', 'southlimit': '16.45678',
+                                                   'westlimit': '16.6789', 'units': 'decimal deg'}}},
+        ]
 
         # there should be 0 coverage elements
         self.assertEqual(self.res.metadata.coverages.all().count(), 0, msg="Number of coverages not equal to 0.")
@@ -221,7 +221,3 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.identifiers.filter(name='hydroShareIdentifier').count(), 1)
         hs_identifier = self.res.metadata.identifiers.filter(name='hydroShareIdentifier').first()
         self.assertNotEqual(hs_identifier.url, "http://hydroshare.org/001")
-
-
-
-
