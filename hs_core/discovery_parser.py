@@ -261,7 +261,7 @@ class ParseSQ(object):
                     nextday_object = thisday_object + timedelta(days=1)
                     nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
                     self.sq = self.apply_operand(SQ(**{search_field + '__gte': thisday})
-                                                 & SQ(**{search_fie ld + '__lt': nextday}))
+                                                 & SQ(**{search_field + '__lt': nextday}))
                 elif search_operator == '<=':  # include whole day of target date
                     nextday_object = thisday_object + timedelta(days=1)
                     nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")

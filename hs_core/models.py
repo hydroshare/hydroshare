@@ -689,7 +689,7 @@ class Party(AbstractMetaDataElement):
                     raise ValidationError("Invalid data found for identifiers. "
                                           "{} not a supported identifier.". format(name))
             # validate identifier values - check for duplicate links
-            links = [l.lower() for l in list(identifiers.values())]
+            links = [link.lower() for link in list(identifiers.values())]
             if len(links) != len(set(links)):
                 raise ValidationError("Invalid data found for identifiers. "
                                       "Duplicate identifier links found.")
@@ -4120,7 +4120,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         res.extra_metadata = copy.deepcopy(extra_metadata)
 
         # delete ingested default citation
-        citation_regex = re.compile("(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}")
+        citation_regex = re.compile("(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}") # noqa
         ingested_citation = self.citation.first()
         if ingested_citation and citation_regex.match(ingested_citation.value):
             self.citation.first().delete()

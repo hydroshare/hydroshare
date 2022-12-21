@@ -368,8 +368,8 @@ class GroupAccess(models.Model):
         """
         res = BaseResource.objects.filter(r2grp__group__gaccess=self,
                                           r2grp__group__gaccess__active=True)\
-            .filter(Q(raccess__public=True) |
-                    Q(raccess__published=True)
+            .filter(Q(raccess__public=True)
+                    | Q(raccess__published=True)
                     | Q(raccess__discoverable=True))\
             .filter(r2urp__privilege=PrivilegeCodes.OWNER,
                     r2urp__user__u2ugp__group=self.group)\

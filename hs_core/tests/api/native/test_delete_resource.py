@@ -5,7 +5,6 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 from haystack.query import SearchQuerySet
 
-from hs_composite_resource.models import CompositeResource
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
 from hs_core.models import GenericResource

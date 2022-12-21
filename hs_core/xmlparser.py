@@ -40,7 +40,7 @@ class CatalogedExpatParser(ExpatParser):
 
         try:
             xmlreader.IncrementalParser.parse(self, source)
-        except:
+        except: # noqa
             return 0  # FIXME: save error info here?
 
         (self._parser, self._source) = self._entity_stack[-1]

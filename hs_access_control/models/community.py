@@ -86,10 +86,10 @@ class Community(models.Model):
             .filter(Q(r2grp__group__g2gcp__community=self,
                       r2grp__group__gaccess__active=True,
                       r2urp__privilege=PrivilegeCodes.OWNER,  # owned by member of community
-                      r2urp__user__u2ugp__group__g2gcp__community=self) |
-                    Q(r2crp__community=self))\
-            .filter(Q(raccess__public=True) |
-                    Q(raccess__published=True)
+                      r2urp__user__u2ugp__group__g2gcp__community=self)
+                    | Q(r2crp__community=self))\
+            .filter(Q(raccess__public=True)
+                    | Q(raccess__published=True)
                     | Q(raccess__discoverable=True))\
             .annotate(group_name=F("r2grp__group__name"),
                       group_id=F("r2grp__group__id"),
