@@ -193,13 +193,13 @@
                                     {#        Country       #}
                                     <fieldset>
                                         <label>Country *</label>
-                                        <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
+                                        <select id="country" name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
                                     </fieldset>
 
                                     {#        State       #}
                                     <fieldset>
                                         <label>State/Province *</label>
-                                        <input name="state" class="form-control form-required" {% if  profile.state and profile.state != 'None' %} value="{{ profile.state }}" {% endif %}>
+                                        <select name="state" class="form-control form-required input-medium bfh-states" data-country="country" data-state="{{ profile.state }}"></select>
                                     </fieldset>
                                 </div>
 
