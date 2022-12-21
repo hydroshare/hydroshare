@@ -245,6 +245,14 @@ function getUrlVars()
     return vars;
 }
 
+function updateStatesList(country){
+    // TODO 4232
+    // const currentState = $('#state').val() || null;
+    alert(currentState)
+    // $('#state').replaceWith(`<select id="state" name="state" class="form-control input-medium bfh-states" data-country="country"></select>`);
+    // $('#state').bfhstates({country: country});
+}
+
 $(document).ready(function () {
     // Multiple orgs are a string delimited by ";" --wrap them so we can style them
     $("#organization").splitAndWrapWithClass(";", "organization-divider");
