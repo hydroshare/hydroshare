@@ -176,8 +176,6 @@ $(document).ready(function () {
             var missing_profile_fields = [];
             if(!user.organization)
                 missing_profile_fields.push('Organization')
-            if(!user.state)
-                missing_profile_fields.push('Subnational Division')
             if(!user.country)
                 missing_profile_fields.push('Nation')
             if(!user.user_type)

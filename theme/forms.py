@@ -233,7 +233,7 @@ class SignupForm(forms.ModelForm):
     organization = forms.CharField(required=True)
     user_type = forms.CharField(required=True)
     country = forms.CharField(label='Nation', required=True)
-    state = forms.CharField(label='Subnational Division (State, Province, Region, etc)', required=True)
+    state = forms.CharField(label='Subnational Division (State, Province, Region, etc)', required=False)
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -280,8 +280,6 @@ class SignupForm(forms.ModelForm):
 
     def clean_state(self):
         data = self.cleaned_data['state']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("Subnational Division is a required field.")
         return data
 
     def save(self, *args, **kwargs):
@@ -344,8 +342,6 @@ class UserProfileForm(forms.ModelForm):
 
     def clean_state(self):
         data = self.cleaned_data['state']
-        if data is None or len(data.strip()) == 0:
-            raise forms.ValidationError("Subnational Division is a required field.")
         return data
 
     def clean_identifiers(self):
