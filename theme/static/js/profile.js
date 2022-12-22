@@ -260,13 +260,29 @@ function isStateInCountry(stateCode, country){
 
 function checkForInvalidStates(country){
     const oldState = OLD_STATE || null;
+    if (!oldState || oldState === 'None') return;
     country = country || $("#country").val()
+    const stateField = $('#state');
     if ( !isStateInCountry(oldState, country)){
-        $('#state').append($('<option>', {
-            value: '',
+        stateField.append($('<option>', {
+            value: oldState,
             text: oldState
         }));
-        $('#state').val('').change().addClass('form-invalid').parent().append(errorLabel("Entry is no longer valid -- please update."));
+        stateField.val(oldState)
+            .change()
+            .addClass('form-invalid')
+            .parent().append(errorLabel("No longer valid, please update."));
+
+        // clear the message once changed
+        stateField.on('change', function(){
+            $(this).siblings('.error-label').remove();
+            $(this).removeClass('form-invalid');
+        });
+    }
+
+    // Update for view mode
+    if (! $('#db-state').text()) {
+        $('#db-state').text(OLD_STATE);
     }
 }
 
