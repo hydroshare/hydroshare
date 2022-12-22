@@ -690,7 +690,7 @@ class Party(AbstractMetaDataElement):
                     raise ValidationError("Invalid data found for identifiers. "
                                           "{} not a supported identifier.". format(name))
             # validate identifier values - check for duplicate links
-            links = [l.lower() for l in list(identifiers.values())]
+            links = [link.lower() for link in list(identifiers.values())]
             if len(links) != len(set(links)):
                 raise ValidationError("Invalid data found for identifiers. "
                                       "Duplicate identifier links found.")
@@ -1033,9 +1033,9 @@ class AbstractRelation(AbstractMetaDataElement):
 
         # avoid creating duplicate element (same type and same value)
         if cls.objects.filter(type=kwargs['type'],
-                                   value=kwargs['value'],
-                                   object_id=metadata_obj.id,
-                                   content_type=metadata_type).exists():
+                              value=kwargs['value'],
+                              object_id=metadata_obj.id,
+                              content_type=metadata_type).exists():
             raise ValidationError('Relation element of the same type '
                                   'and value already exists.')
 
@@ -1057,9 +1057,9 @@ class AbstractRelation(AbstractMetaDataElement):
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
         qs = cls.objects.filter(type=kwargs['type'],
-                                     value=kwargs['value'],
-                                     object_id=metadata_obj.id,
-                                     content_type=metadata_type)
+                                value=kwargs['value'],
+                                object_id=metadata_obj.id,
+                                content_type=metadata_type)
 
         if qs.exists() and qs.first() != rel:
             # this update will create a duplicate relation element
@@ -2044,7 +2044,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # this is to establish a relationship between a resource and
     # any metadata container object (e.g., CoreMetaData object)
     object_id = models.PositiveIntegerField(null=True, blank=True)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,  null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     extra_metadata = HStoreField(default=dict)
@@ -2322,8 +2322,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         from hs_core.hydroshare.utils import validate_user_quota
 
         if __debug__:
-            assert(isinstance(setter, User))
-            assert(isinstance(new_holder, User))
+            assert (isinstance(setter, User))
+            assert (isinstance(new_holder, User))
         if not setter.uaccess.owns_resource(self) or \
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
@@ -3008,7 +3008,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
                 if __debug__:
-                    assert(isinstance(source, str))
+                    assert (isinstance(source, str))
                 # source is a path to an iRODS file to be copied here.
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
@@ -3592,8 +3592,8 @@ class DiscoverableResourceManager(models.Manager):
     def get_queryset(self):
         """Extend Django model Manager to filter for public or discoverable resources."""
         return super(DiscoverableResourceManager, self).get_queryset().filter(
-            Q(raccess__discoverable=True) |
-            Q(raccess__public=True))
+            Q(raccess__discoverable=True)
+            | Q(raccess__public=True))
 
 
 # remove RichText parent class from the parameters for Django inplace editing to work;
@@ -4206,7 +4206,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         res.extra_metadata = copy.deepcopy(extra_metadata)
 
         # delete ingested default citation
-        citation_regex = re.compile("(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}")
+        citation_regex = re.compile("(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}")  # noqa
         ingested_citation = self.citation.first()
         if ingested_citation and citation_regex.match(ingested_citation.value):
             self.citation.first().delete()

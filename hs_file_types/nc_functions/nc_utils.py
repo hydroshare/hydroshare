@@ -93,7 +93,7 @@ def get_nc_variables_coordinate_type_mapping(nc_dataset):
             var_coor_type_name = get_nc_variable_coordinate_type(var_obj) + variables_type
             nc_variables_coordinate_type_mapping[var_name] = var_coor_type_name
             if hasattr(var_obj, 'bounds') and nc_dataset.variables.get(var_obj.bounds, None):
-                var_coor_bounds_type_name = var_coor_type_name+'_bnd'
+                var_coor_bounds_type_name = var_coor_type_name + '_bnd'
                 nc_variables_coordinate_type_mapping[var_obj.bounds] = var_coor_bounds_type_name
 
     return nc_variables_coordinate_type_mapping
@@ -289,8 +289,8 @@ def get_nc_coordinate_bounds_variables(nc_dataset):
     nc_auxiliary_coordinate_variables = get_nc_auxiliary_coordinate_variables(nc_dataset)
     nc_coordinate_bounds_variables = {}
     for var_name, var_obj in \
-            list(dict(list(nc_coordinate_variables.items()) +
-                 list(nc_auxiliary_coordinate_variables.items())).items()):
+            list(dict(list(nc_coordinate_variables.items())
+                 + list(nc_auxiliary_coordinate_variables.items())).items()):
         if hasattr(var_obj, 'bounds') and nc_dataset.variables.get(var_obj.bounds, None):
             nc_coordinate_bounds_variables[var_obj.bounds] = nc_dataset.variables[var_obj.bounds]
 
@@ -351,7 +351,7 @@ def get_nc_grid_mapping_variable_name(nc_dataset):
     nc_all_variables = nc_dataset.variables
     nc_grid_mapping_variable_name = ''
     for var_name, var_obj in list(nc_all_variables.items()):
-        if hasattr(var_obj, 'grid_mapping_name')and var_obj.grid_mapping_name:
+        if hasattr(var_obj, 'grid_mapping_name') and var_obj.grid_mapping_name:
             nc_grid_mapping_variable_name = var_name
 
     return nc_grid_mapping_variable_name
@@ -500,7 +500,7 @@ def get_nc_grid_mapping_projection_import_string_dict(nc_dataset):
                     try:
                         num_value = sorted([float(x) for x in str_value])
                         if num_value.__len__() <= 2:
-                            proj_info_list.extend(['lat_{0}={1}'.format(i+1, j)
+                            proj_info_list.extend(['lat_{0}={1}'.format(i + 1, j)
                                                    for i, j in enumerate(num_value)])
                     except Exception:
                         pass

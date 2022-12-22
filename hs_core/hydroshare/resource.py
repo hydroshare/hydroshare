@@ -28,7 +28,7 @@ from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
 
-FILE_SIZE_LIMIT = 1*(1024 ** 3)
+FILE_SIZE_LIMIT = 1 * (1024 ** 3)
 FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
@@ -262,7 +262,7 @@ def get_related(pk):
 
 
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
 
 def get_checksum(pk):
@@ -677,7 +677,7 @@ def add_resource_files(pk, *files, **kwargs):
     auto_aggregate = kwargs.pop('auto_aggregate', True)
 
     if __debug__:
-        assert(isinstance(source_names, list))
+        assert (isinstance(source_names, list))
 
     folder = kwargs.pop('folder', '')
     user = kwargs.pop('user', None)
@@ -1045,7 +1045,7 @@ def submit_resource_for_review(request, pk):
         )
     from hs_core.views.utils import send_action_to_take_email
     send_action_to_take_email(request, user=user_to, user_from=request.user,
-                                action_type='metadata_review', resource=resource)
+                              action_type='metadata_review', resource=resource)
     resource.raccess.review_pending = True
     resource.raccess.immutable = True
     resource.raccess.save()

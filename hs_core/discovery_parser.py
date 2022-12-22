@@ -20,7 +20,7 @@ class MatchingBracketsNotFoundError(Exception):
         self.value = value
 
     def __str__(self):
-        return "Matching brackets were not found: "+self.value
+        return "Matching brackets were not found: " + self.value
 
 
 class InequalityNotAllowedError(Exception):
@@ -261,23 +261,23 @@ class ParseSQ(object):
                     # limit creation date to one day by generating two inequalities
                     nextday_object = thisday_object + timedelta(days=1)
                     nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    self.sq = self.apply_operand(SQ(**{search_field+'__gte': thisday}) &
-                                                 SQ(**{search_field+'__lt': nextday}))
+                    self.sq = self.apply_operand(SQ(**{search_field + '__gte': thisday})
+                                                 & SQ(**{search_field + '__lt': nextday}))
                 elif search_operator == '<=':  # include whole day of target date
                     nextday_object = thisday_object + timedelta(days=1)
                     nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
                     self.sq = self.apply_operand(
-                        SQ(**{search_field+"__lt": nextday}))
+                        SQ(**{search_field + "__lt": nextday}))
                 elif search_operator == '>':  # include whole day of target date
                     nextday_object = thisday_object + timedelta(days=1)
                     nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
                     self.sq = self.apply_operand(
-                        SQ(**{search_field+"__gte": nextday}))
+                        SQ(**{search_field + "__gte": nextday}))
                 else:
                     self.sq = self.apply_operand(
-                        SQ(**{search_field+inequality_qualifier: thisday}))
+                        SQ(**{search_field + inequality_qualifier: thisday}))
             else:
-                self.sq = self.apply_operand(SQ(**{search_field+inequality_qualifier: word}))
+                self.sq = self.apply_operand(SQ(**{search_field + inequality_qualifier: word}))
             # remove unquoted text from query
             self.query = tail(self.query)
 
@@ -297,7 +297,7 @@ class ParseSQ(object):
             parser = ParseSQ(use_default=self.Default_Operator,
                              handle_logic=self.handle_logic,
                              handle_fields=self.handle_fields)
-            self.sq = self.apply_operand(parser.parse(self.query[1:i-1]))
+            self.sq = self.apply_operand(parser.parse(self.query[1:i - 1]))
         else:
             raise MatchingBracketsNotFoundError("Parentheses must match in '{}'."
                                                 .format(self.query))

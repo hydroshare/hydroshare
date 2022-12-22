@@ -238,8 +238,8 @@ def create_bag_metadata_files(resource):
         for contained_res in resource.resources.all():
             contained_res_id = contained_res.short_id
             resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(
-                    hs_url=current_site_url,
-                    res_id=contained_res_id)
+                hs_url=current_site_url,
+                res_id=contained_res_id)
 
             ar = AggregatedResource(resource_map_url)
             ar._ore.isAggregatedBy = ag_url

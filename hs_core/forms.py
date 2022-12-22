@@ -24,37 +24,37 @@ class Helper(object):
         """
         modal_title = "Add %s" % element_name.title()
         layout = Layout(
-                        HTML('<div class="modal fade" id="add-element-dialog" tabindex="-1" '
-                             'role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
-                             '<div class="modal-dialog">'
-                             '<div class="modal-content">'),
-                        HTML('<form action="{{ form.action }}" '
-                             'method="POST" enctype="multipart/form-data"> '),
-                        HTML('{% csrf_token %} '
-                             '<input name="resource-mode" type="hidden" value="edit"/>'
-                             '<div class="modal-header">'
-                             '<button type="button" class="close" '
-                             'data-dismiss="modal" aria-hidden="true">&times;'
-                             '</button>'),
-                        HTML('<h4 class="modal-title" id="myModalLabel"> Add Element </h4>'),
-                        HTML('</div>'
-                             '<div class="modal-body">'
-                             '{% csrf_token %}'
-                             '<div class="form-group">'),
-                        HTML('{% load crispy_forms_tags %} {% crispy add_creator_modal_form %} '),
-                        HTML('</div>'
-                             '</div>'
-                             '<div class="modal-footer">'
-                             '<button type="button" class="btn btn-default" '
-                             'data-dismiss="modal">Close</button>'
-                             '<button type="submit" class="btn btn-primary">'
-                             'Save changes</button>'
-                             '</div>'
-                             '</form>'
-                             '</div>'
-                             '</div>'
-                             '</div>')
-                        )
+            HTML('<div class="modal fade" id="add-element-dialog" tabindex="-1" '
+                 'role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+                 '<div class="modal-dialog">'
+                 '<div class="modal-content">'),
+            HTML('<form action="{{ form.action }}" '
+                 'method="POST" enctype="multipart/form-data"> '),
+            HTML('{% csrf_token %} '
+                 '<input name="resource-mode" type="hidden" value="edit"/>'
+                 '<div class="modal-header">'
+                 '<button type="button" class="close" '
+                 'data-dismiss="modal" aria-hidden="true">&times;'
+                 '</button>'),
+            HTML('<h4 class="modal-title" id="myModalLabel"> Add Element </h4>'),
+            HTML('</div>'
+                 '<div class="modal-body">'
+                 '{% csrf_token %}'
+                 '<div class="form-group">'),
+            HTML('{% load crispy_forms_tags %} {% crispy add_creator_modal_form %} '),
+            HTML('</div>'
+                 '</div>'
+                 '<div class="modal-footer">'
+                 '<button type="button" class="btn btn-default" '
+                 'data-dismiss="modal">Close</button>'
+                 '<button type="submit" class="btn btn-primary">'
+                 'Save changes</button>'
+                 '</div>'
+                 '</form>'
+                 '</div>'
+                 '</div>'
+                 '</div>')
+        )
 
         layout[0] = HTML('<div class="modal fade" id="add-%s-dialog" tabindex="-1" role="dialog" '
                          'aria-labelledby="myModalLabel" aria-hidden="true">'
@@ -74,31 +74,31 @@ class Helper(object):
 # the 1st and the 3rd HTML layout objects get replaced in MetaDataElementDeleteForm class
 def _get_modal_confirm_delete_matadata_element():
     layout = Layout(
-                    HTML('<div class="modal fade" id="delete-metadata-element-dialog" '
-                         'tabindex="-1" role="dialog" aria-labelledby="myModalLabel" '
-                         'aria-hidden="true">'),
-                    HTML('<div class="modal-dialog">'
-                         '<div class="modal-content">'
-                         '<div class="modal-header">'
-                         '<button type="button" class="close" data-dismiss="modal" '
-                         'aria-hidden="true">&times;</button>'
-                         '<h4 class="modal-title" id="myModalLabel">'
-                         'Delete metadata element</h4>'
-                         '</div>'
-                         '<div class="modal-body">'
-                         '<strong>Are you sure you want to delete this metadata '
-                         'element?</strong>'
+        HTML('<div class="modal fade" id="delete-metadata-element-dialog" '
+             'tabindex="-1" role="dialog" aria-labelledby="myModalLabel" '
+             'aria-hidden="true">'),
+        HTML('<div class="modal-dialog">'
+             '<div class="modal-content">'
+             '<div class="modal-header">'
+             '<button type="button" class="close" data-dismiss="modal" '
+             'aria-hidden="true">&times;</button>'
+             '<h4 class="modal-title" id="myModalLabel">'
+             'Delete metadata element</h4>'
+             '</div>'
+             '<div class="modal-body">'
+             '<strong>Are you sure you want to delete this metadata '
+             'element?</strong>'
 
-                         '</div>'
-                         '<div class="modal-footer">'
-                         '<button type="button" class="btn btn-default" '
-                         'data-dismiss="modal">Cancel</button>'),
-                    HTML('<a type="button" class="btn btn-danger" href="">Delete</a>'),
-                    HTML('</div>'
-                         '</div>'
-                         '</div>'
-                         '</div>'),
-                    )
+             '</div>'
+             '<div class="modal-footer">'
+             '<button type="button" class="btn btn-default" '
+             'data-dismiss="modal">Cancel</button>'),
+        HTML('<a type="button" class="btn btn-danger" href="">Delete</a>'),
+        HTML('</div>'
+             '</div>'
+             '</div>'
+             '</div>'),
+    )
     return layout
 
 
@@ -578,7 +578,7 @@ class BaseFormHelper(FormHelper):
     """Render non-repeatable element related forms."""
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
-                 element_layout=None,  *args, **kwargs):
+                 element_layout=None, *args, **kwargs):
         """Render non-repeatable element related forms."""
         coverage_type = kwargs.pop('coverage', None)
         element_name_label = kwargs.pop('element_name_label', None)
@@ -616,22 +616,22 @@ class BaseFormHelper(FormHelper):
             element_name = "Abstract"
         if res_short_id and allow_edit:
             self.layout = Layout(
-                            Fieldset(element_name,
-                                     element_layout,
-                                     HTML('<div style="margin-top:10px">'),
-                                     HTML('<button type="button" '
-                                          'class="btn btn-primary pull-right btn-form-submit" '
-                                          'return false;">Save changes</button>'),
-                                     HTML('</div>')
-                                     ),
-                         )  # TODO: TESTING
+                Fieldset(element_name,
+                         element_layout,
+                         HTML('<div style="margin-top:10px">'),
+                         HTML('<button type="button" '
+                              'class="btn btn-primary pull-right btn-form-submit" '
+                              'return false;">Save changes</button>'),
+                         HTML('</div>')
+                         ),
+            )  # TODO: TESTING
         else:
             self.form_tag = False
             self.layout = Layout(
-                            Fieldset(element_name,
-                                     element_layout,
-                                     ),
-                          )
+                Fieldset(element_name,
+                         element_layout,
+                         ),
+            )
 
 
 class TitleValidationForm(forms.Form):
@@ -657,11 +657,11 @@ class SubjectsFormHelper(BaseFormHelper):
         """
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('value', css_class=field_width),
-                 )
+            Field('value', css_class=field_width),
+        )
 
         super(SubjectsFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                 element_name, layout,  *args, **kwargs)
+                                                 element_name, layout, *args, **kwargs)
 
 
 class SubjectsForm(forms.Form):
@@ -702,11 +702,11 @@ class AbstractFormHelper(BaseFormHelper):
         """
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('abstract', css_class=field_width),
-                 )
+            Field('abstract', css_class=field_width),
+        )
 
         super(AbstractFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                 element_name, layout,  *args, **kwargs)
+                                                 element_name, layout, *args, **kwargs)
 
 
 class AbstractForm(ModelForm):
@@ -761,7 +761,7 @@ class CoverageTemporalFormHelper(BaseFormHelper):
         kwargs['coverage'] = 'temporal'
 
         super(CoverageTemporalFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                         element_name, layout,  *args, **kwargs)
+                                                         element_name, layout, *args, **kwargs)
 
 
 class CoverageTemporalForm(forms.Form):
@@ -849,7 +849,7 @@ class CoverageSpatialFormHelper(BaseFormHelper):
             layout.append(field)
         kwargs['coverage'] = 'spatial'
         super(CoverageSpatialFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                        element_name, layout,  *args, **kwargs)
+                                                        element_name, layout, *args, **kwargs)
 
 
 class CoverageSpatialForm(forms.Form):

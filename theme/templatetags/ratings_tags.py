@@ -26,10 +26,10 @@ def rating_for(context, obj):
         context["you_rated"] = False
     else:
         try:
-            rating_instance = rating_manager.get(user=user)
+            _ = rating_manager.get(user=user)
         except Rating.DoesNotExist:
             context["you_rated"] = False
-        else: # rating for the requesting user exists
+        else:  # rating for the requesting user exists
             context["you_rated"] = True
 
     for f in ("average", "count", "sum"):

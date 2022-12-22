@@ -24,7 +24,7 @@ class TestHStore(MockIRODSTestCaseMixin, TestCase):
             'GenericResource',
             self.user,
             'My Test Resource'
-            )
+        )
 
     def test_extra_metadata(self):
         # create/add extra metadata
@@ -51,4 +51,3 @@ class TestHStore(MockIRODSTestCaseMixin, TestCase):
         self.res.extra_metadata = {}
         self.res.save()
         self.assertEqual(self.res.extra_metadata, {})
-
