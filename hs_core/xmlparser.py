@@ -4,6 +4,7 @@ import base64
 import os.path
 from io import StringIO
 from xml.sax import xmlreader, saxutils
+# TODO: should we use defusedxml.sax?
 from xml.sax.expatreader import ExpatParser
 
 from django.conf import settings

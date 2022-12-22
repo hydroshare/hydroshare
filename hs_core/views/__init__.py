@@ -1,6 +1,6 @@
 import json
 import datetime
-import pytz
+from dateutil import tz
 import logging
 from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
@@ -889,7 +889,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         return HttpResponseRedirect(res.get_absolute_url())
     # lock the resource to prevent concurrent new version creation since only one new version for an
     # obsoleted resource is allowed
-    res.locked_time = datetime.datetime.now(pytz.utc)
+    res.locked_time = datetime.datetime.now(tz.UTC)
     res.save()
     if request.is_ajax():
         task = create_new_version_resource_task.apply_async((shortkey, user.username))

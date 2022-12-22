@@ -30,7 +30,7 @@ from django.forms.models import model_to_dict
 from django.utils.timezone import now
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
-from lxml import etree
+import defusedxml.ElementTree as etree
 from markdown import markdown
 from mezzanine.conf import settings as s
 from mezzanine.core.managers import PublishedManager
@@ -4795,7 +4795,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
          element) Example: [('first_name', 'firstName'), 'phone', 'email']
          # xml sub-elements names: firstName, phone, email
         """
-        from lxml import etree
 
         if isinstance(md_element, tuple):
             element_name = md_element[1]

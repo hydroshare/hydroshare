@@ -1078,7 +1078,7 @@ def add_metadata_element_to_xml(root, md_element, md_fields):
      [('first_name', 'firstName'), 'phone', 'email']
      # xml sub-elements names: firstName, phone, email
     """
-    from lxml import etree
+    import defusedxml.ElementTree as etree
     from hs_core.models import CoreMetaData
 
     name_spaces = CoreMetaData.NAMESPACES

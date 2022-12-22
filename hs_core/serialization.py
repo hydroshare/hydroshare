@@ -1,6 +1,7 @@
 import os
 import heapq
 import xml.sax
+# TODO: should we use defusedxml.sax?
 import urllib.parse
 import logging
 

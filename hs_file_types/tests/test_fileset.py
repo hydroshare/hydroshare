@@ -1471,10 +1471,10 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # fs_aggr.update_spatial_coverage()
         # fileset aggregation should now have spatial coverage
         self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.0500269597691)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.57773718106195)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286029891)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084055)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.05002695977342)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.57773718106199)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030317)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406)
 
         # upload a nc file to the new_folder - folder that represents the above fileset
         # aggregation
@@ -1517,10 +1517,10 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # fileset aggregation should now have spatial coverage
         self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.0500269597691)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.57773718106195)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286029891)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084055)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.05002695977342)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.57773718106199)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030317)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406)
 
         # upload a nc file to the new_folder - folder that represents the above fileset
         # aggregation
@@ -1534,10 +1534,10 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # update fileset aggregation spatial coverage from the contained 2 aggregations
         fs_aggr.update_spatial_coverage()
         # test fileset aggregation spatial coverage data
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.0500269597691)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.50594036845686)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.8639080745171)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084055)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.05002695977342)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.5059403684569)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.86390807452128)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 

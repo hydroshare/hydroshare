@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-import pytz
+from dateutil import tz
 
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
@@ -466,7 +466,7 @@ class IrodsStorage(Storage):
             raise ValidationError("{} cannot be found in iRODS".format(name))
         # remove potential '\n' from stdout
         timestamp = float(stdout.split("\n", 1)[0])
-        utc_dt = datetime.fromtimestamp(timestamp, pytz.utc)
+        utc_dt = datetime.fromtimestamp(timestamp, tz.UTC)
         return utc_dt
 
     def isFile(self, path):

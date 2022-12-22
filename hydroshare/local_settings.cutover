@@ -18,7 +18,7 @@ SECRET_KEY = \
 NEVERCACHE_KEY = \
     "7b205669-41dd-40db-9b96-c6f93b66123496a56be1-607f-4dbf-bf62-3315fb353ce6f12a7d28-06ad-4ef7-9266-b5ea66ed2519"
 
-ALLOWED_HOSTS = "*"
+ALLOWED_HOSTS = ['*']
 
 # for Django/Mezzanine comments and ratings to require user login
 COMMENTS_ACCOUNT_REQUIRED = True
