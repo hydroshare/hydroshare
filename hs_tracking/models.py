@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.utils import timezone
 
 from django.db import models
 from django.db.models import F
@@ -30,6 +31,7 @@ class SessionManager(models.Manager):
         if signed_id:
             tracking_id = signing.loads(signed_id)
             cut_off = datetime.now() - timedelta(seconds=SESSION_TIMEOUT)
+            cut_off = timezone.make_aware(cut_off)
             session = None
 
             try:
