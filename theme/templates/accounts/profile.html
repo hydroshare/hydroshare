@@ -193,21 +193,13 @@
                                     {#        Country       #}
                                     <fieldset>
                                         <label>Nation *</label>
-                                        <select onchange="updateStatesList(this.value)" id="country" name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
+                                        <select id="country" name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
                                     </fieldset>
 
                                     {#        State       #}
                                     <fieldset>
                                         <label>Subnational Division (State, Province, Region, etc) *</label>
-                                        {% if  profile.state and profile.state != 'None' %}
-                                        <!-- TODO 4232 -->
-                                            <!-- <select id="state" name="state" class="form-control" data-country="{{ profile.country }}" data-state="{{ profile.state }}"> -->
-                                                <select id="state" name="state" class="form-control input-medium form-required bfh-states" value="{{ profile.state }}" data-country="country" data-state="{{ profile.state }}"></select>
-                                                <!-- <option value="{{ profile.state }}">{{ profile.state }}</option> -->
-                                            </select>
-                                        {% else %}
-                                            <select id="state" name="state" class="form-control input-medium form-required bfh-states" data-country="country"></select>
-                                        {% endif %}
+                                        <select id="state" name="state" class="form-control input-medium form-required bfh-states" data-country="country" data-state="{{ profile.state }}"></select>
                                     </fieldset>
                                 </div>
 
@@ -379,7 +371,6 @@
                                                     <tr>
                                                         <td><span class="text-muted">Subnational Division:</span></td>
                                                         <td><span class="bfh-states" data-state="{{ profile.state }}" data-country="{{ profile.country }}"></span></td>
-                                                        <!-- TODO 4232 -->
                                                     </tr>
                                                 {% endif %}
                                                 <tr>
@@ -910,6 +901,9 @@
 
 {% block extra_js %}
     {{ block.super }}
+    <script>
+        var OLD_STATE = "{{ profile_user.userprofile.state }}";
+    </script>
     <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/profile.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/jquery.tagsinput-revisited.min.js' %}"></script>

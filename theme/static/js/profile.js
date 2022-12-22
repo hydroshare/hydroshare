@@ -245,12 +245,29 @@ function getUrlVars()
     return vars;
 }
 
-function updateStatesList(country){
-    // TODO 4232
-    // const currentState = $('#state').val() || null;
-    alert(currentState)
-    // $('#state').replaceWith(`<select id="state" name="state" class="form-control input-medium bfh-states" data-country="country"></select>`);
-    // $('#state').bfhstates({country: country});
+function isStateInCountry(stateCode, country){
+    let stateName = ""
+    for (state in BFHStatesList[country]) {
+        if (BFHStatesList[country].hasOwnProperty(state)) {
+            if (BFHStatesList[country][state].code === stateCode) {
+                stateName = BFHStatesList[country][state].name;
+                break;
+            }
+        }
+    }
+    return stateName;
+}
+
+function checkForInvalidStates(country){
+    const oldState = OLD_STATE || null;
+    country = country || $("#country").val()
+    if ( !isStateInCountry(oldState, country)){
+        $('#state').append($('<option>', {
+            value: '',
+            text: oldState
+        }));
+        $('#state').val('').change().addClass('form-invalid').parent().append(errorLabel("Entry is no longer valid -- please update."));
+    }
 }
 
 $(document).ready(function () {
@@ -385,4 +402,5 @@ $(document).ready(function () {
         // clear out the edit query params so edit mode isn't reopened on save
         history.pushState('', document.title, window.location.pathname);
     }
+    checkForInvalidStates();
 });

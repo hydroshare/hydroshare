@@ -17133,7 +17133,6 @@ var BFHTimezonesList = {
     },
 
     loadStates: function (country) {
-      // TODO: 4232
       var value,
           state;
 
@@ -17238,7 +17237,6 @@ var BFHTimezonesList = {
       country = this.options.country;
       stateCode = this.options.state;
       stateName = '';
-      // TODO 4232
 
       for (state in BFHStatesList[country]) {
         if (BFHStatesList[country].hasOwnProperty(state)) {
