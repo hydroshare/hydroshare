@@ -232,8 +232,8 @@ class SignupForm(forms.ModelForm):
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
     organization = forms.CharField(required=True)
     user_type = forms.CharField(required=True)
-    country = forms.CharField(label='Country', required=True)
-    state = forms.CharField(label='State/Province', required=True)
+    country = forms.CharField(label='Nation', required=True)
+    state = forms.CharField(label='Subnational Division (State, Province, Region, etc)', required=True)
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -275,13 +275,13 @@ class SignupForm(forms.ModelForm):
     def clean_country(self):
         data = self.cleaned_data['country']
         if len(data.strip()) == 0:
-            raise forms.ValidationError("Country is a required field.")
+            raise forms.ValidationError("Nation is a required field.")
         return data
 
     def clean_state(self):
         data = self.cleaned_data['state']
         if len(data.strip()) == 0:
-            raise forms.ValidationError("State is a required field.")
+            raise forms.ValidationError("Subnational Division is a required field.")
         return data
 
     def save(self, *args, **kwargs):
@@ -339,13 +339,13 @@ class UserProfileForm(forms.ModelForm):
     def clean_country(self):
         data = self.cleaned_data['country']
         if data is None or len(data.strip()) == 0:
-            raise forms.ValidationError("Country is a required field.")
+            raise forms.ValidationError("Nation is a required field.")
         return data
 
     def clean_state(self):
         data = self.cleaned_data['state']
         if data is None or len(data.strip()) == 0:
-            raise forms.ValidationError("State is a required field.")
+            raise forms.ValidationError("Subnational Division is a required field.")
         return data
 
     def clean_identifiers(self):
