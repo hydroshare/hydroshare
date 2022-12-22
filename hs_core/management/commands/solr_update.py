@@ -56,8 +56,8 @@ class Command(BaseCommand):
         else:
             sqs = SearchQuerySet().all()
             print("SOLR count = {}".format(sqs.count()))
-            dqs = BaseResource.objects.filter(Q(raccess__discoverable=True) |
-                                              Q(raccess__public=True)).select_related('raccess')
+            dqs = BaseResource.objects.filter(Q(raccess__discoverable=True)
+                                              | Q(raccess__public=True)).select_related('raccess')
             print("Django count = {}".format(dqs.count()))
 
             # what is in Django that isn't in SOLR
@@ -95,7 +95,7 @@ class Command(BaseCommand):
 
                 if res_show_in_discover and r.short_id not in found_in_solr:
                     print("{} {} NOT FOUND in SOLR: adding to index".format(
-                            r.short_id, resource.discovery_content_type))
+                        r.short_id, resource.discovery_content_type))
                     if not options['debug']:
                         try:
                             ind.update_object(r)

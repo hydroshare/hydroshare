@@ -122,7 +122,7 @@ def get_content_types(res):
         path = f.short_path
         path = path.split(".")  # determine last extension
         if len(path) > 1:
-            ext = path[len(path)-1]
+            ext = path[len(path) - 1]
             if len(ext) <= 5:  # skip obviously non-MIME extensions
                 all_exts.add(ext.lower())
             else:
@@ -201,6 +201,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     identifier = indexes.MultiValueField(stored=False)
     language = indexes.CharField(stored=False)
     relation = indexes.MultiValueField(stored=False)
+    geospatialrelations = indexes.MultiValueField(stored=False)
     resource_type = indexes.FacetCharField()
     content_type = fields.FacetMultiValueField()
     content_exts = fields.FacetMultiValueField()
@@ -490,9 +491,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 # TODO: this returns the box center, not the extent
                 # TODO: probably better to call this something different.
                 elif coverage.type == 'box':
-                    return (float(coverage.value["eastlimit"]) +
-                            float(coverage.value["westlimit"])) / 2
-        return None
+                    return (float(coverage.value["eastlimit"])
+                            + float(coverage.value["westlimit"])) / 2
+        else:
+            return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_north(self, obj):
@@ -504,9 +506,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     return float(coverage.value["north"])
                 # TODO: This returns the box center, not the extent
                 elif coverage.type == 'box':
-                    return (float(coverage.value["northlimit"]) +
-                            float(coverage.value["southlimit"])) / 2
-        return None
+                    return (float(coverage.value["northlimit"])
+                            + float(coverage.value["southlimit"])) / 2
+        else:
+            return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_northlimit(self, obj):
@@ -602,6 +605,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if self._has_metadata(obj):
             self._cache_queryset(obj, 'cached_relations', obj.metadata.relations.all())
             return [relation.value.strip() for relation in obj.cached_relations]
+
+        return []
+
+    def prepare_geospatialrelation(self, obj):
+        """Return resource geospatialrelations if exists, otherwise return empty array."""
+        if self._has_metadata(obj):
+            return [relation.text.strip() for relation in obj.metadata.geospatialrelations.all()]
 
         return []
 

@@ -278,13 +278,13 @@ class VariableFormHelper(FormHelper):
                      Field('method', css_class=field_width),
                      Field('missing_value', css_class=field_width)
                      ),
-            )
+        )
 
 
 class VariableForm(ModelForm):
     """Form for displaying variable metadata for netcdf aggregation"""
 
-    def __init__(self, allow_edit=True, res_short_id=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, *args, **kwargs):
         super(VariableForm, self).__init__(*args, **kwargs)
         self.helper = VariableFormHelper()
         self.delete_modal_form = None
@@ -517,28 +517,28 @@ class BandBaseFormHelper(FormHelper):
 
         if res_short_id and element_id:
             self.layout = Layout(
-                            Fieldset(element_name,
-                                     element_layout,
-                                     HTML("""
+                Fieldset(element_name,
+                         element_layout,
+                         HTML("""
                                      <div style="margin-top:10px">
                                      <button type="submit" class="btn btn-primary">
                                      Save changes</button>
                                      </div>
                                      """)
-                                     )
-                                )
+                         )
+            )
         else:
             self.layout = Layout(
-                            Fieldset(element_name,
-                                     element_layout,
-                                     )
-                                )
+                Fieldset(element_name,
+                         element_layout,
+                         )
+            )
 
 
 class BandInfoFormHelper(BandBaseFormHelper):
     """"Helper form form for displaying/editing band information metadata of raster aggregation"""
 
-    def __init__(self, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the
         # order these fields will be displayed
@@ -797,51 +797,51 @@ class SiteFormHelper(BaseFormHelper):
         file_type = kwargs.pop('file_type', False)
         field_width = 'form-control input-sm'
         common_layout = Layout(
-                            Field('selected_series_id', css_class=field_width, type="hidden"),
-                            Field('available_sites', css_class=field_width, type="hidden"),
-                            Field('site_code', css_class=field_width,
-                                  id=_get_field_id('site_code', file_type=file_type),
-                                  title="A brief and unique code that identifies the site at "
-                                        "which the data were collected (e.g., 'USU-LBR-Mendon' "
-                                        "or '10109000')."),
-                            Field('site_name', css_class=field_width,
-                                  id=_get_field_id('site_name', file_type=file_type),
-                                  title="A brief but descriptive name for the site (e.g., "
-                                        "'Little Bear River at Mendon Road near Mendon, Utah')."),
-                            Field('organization', css_class=field_width,
-                                  id=_get_field_id('organization', file_type=file_type),),
-                            Field('elevation_m', css_class=field_width,
-                                  id=_get_field_id('elevation_m', file_type=file_type),
-                                  title="The elevation of the site in meters (e.g., 1345)."),
+            Field('selected_series_id', css_class=field_width, type="hidden"),
+            Field('available_sites', css_class=field_width, type="hidden"),
+            Field('site_code', css_class=field_width,
+                  id=_get_field_id('site_code', file_type=file_type),
+                  title="A brief and unique code that identifies the site at "
+                  "which the data were collected (e.g., 'USU-LBR-Mendon' "
+                  "or '10109000')."),
+            Field('site_name', css_class=field_width,
+                  id=_get_field_id('site_name', file_type=file_type),
+                  title="A brief but descriptive name for the site (e.g., "
+                  "'Little Bear River at Mendon Road near Mendon, Utah')."),
+            Field('organization', css_class=field_width,
+                  id=_get_field_id('organization', file_type=file_type),),
+            Field('elevation_m', css_class=field_width,
+                  id=_get_field_id('elevation_m', file_type=file_type),
+                  title="The elevation of the site in meters (e.g., 1345)."),
 
-                            Field('elevation_datum', css_class=field_width,
-                                  id=_get_field_id('elevation_datum', file_type=file_type),
-                                  title="The datum to which the site elevation is referenced "
-                                        "(e.g., 'NGVD29').\n"
-                                        "Select 'Other...' to specify a new elevation datum term."),
+            Field('elevation_datum', css_class=field_width,
+                  id=_get_field_id('elevation_datum', file_type=file_type),
+                  title="The datum to which the site elevation is referenced "
+                  "(e.g., 'NGVD29').\n"
+                  "Select 'Other...' to specify a new elevation datum term."),
 
-                            Field('site_type', css_class=field_width,
-                                  id=_get_field_id('site_type', file_type=file_type),
-                                  title="A controlled vocabulary term that describes the type of "
-                                        "data collection site (e.g., 'Stream').\n"
-                                        "Select 'Other...' to specify a new site type term."),
-                            Field('latitude', css_class=field_width,
-                                  id=_get_field_id('latitude', file_type=file_type),
-                                  title="The latitude coordinate of the site location using the "
-                                        "WGS84 datum (e.g., 43.1111).",
-                                  data_map_item="latitude"),
-                            Field('longitude', css_class=field_width,
-                                  id=_get_field_id('longitude', file_type=file_type),
-                                  title="The longitude coordinate of the site location using the "
-                                        "WGS84 datum (e.g., -111.2334).",
-                                  data_map_item="longitude"),
-                     )
+            Field('site_type', css_class=field_width,
+                  id=_get_field_id('site_type', file_type=file_type),
+                  title="A controlled vocabulary term that describes the type of "
+                  "data collection site (e.g., 'Stream').\n"
+                  "Select 'Other...' to specify a new site type term."),
+            Field('latitude', css_class=field_width,
+                  id=_get_field_id('latitude', file_type=file_type),
+                  title="The latitude coordinate of the site location using the "
+                  "WGS84 datum (e.g., 43.1111).",
+                  data_map_item="latitude"),
+            Field('longitude', css_class=field_width,
+                  id=_get_field_id('longitude', file_type=file_type),
+                  title="The longitude coordinate of the site location using the "
+                  "WGS84 datum (e.g., -111.2334).",
+                  data_map_item="longitude"),
+        )
         layout = _set_form_helper_layout(common_layout=common_layout, element_name="site",
                                          is_show_element_code_selection=show_site_code_selection,
                                          field_css=field_width)
 
         super(SiteFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
-                                             layout,  *args, **kwargs)
+                                             layout, *args, **kwargs)
 
 
 class SiteForm(ModelForm):
@@ -958,38 +958,38 @@ class VariableTimeseriesFormHelper(BaseFormHelper):
         file_type = kwargs.pop('file_type', False)
         field_width = 'form-control input-sm'
         common_layout = Layout(
-                     Field('selected_series_id', css_class=field_width, type="hidden"),
-                     Field('available_variables', css_class=field_width, type="hidden"),
-                     Field('variable_code', css_class=field_width,
-                           id=_get_field_id('variable_code', file_type=file_type),
-                           title="A brief and unique code that identifies the measured "
-                                 "variable (e.g., 'Temp')."),
-                     Field('variable_name', css_class=field_width,
-                           id=_get_field_id('variable_name', file_type=file_type),
-                           title="A brief but descriptive name of the variable that was measured "
-                                 "selected from a controlled vocabulary of variable names "
-                                 "(e.g., 'Temperature').\n"
-                                 "Select 'Other...' to specify a new variable name term."),
-                     Field('variable_type', css_class=field_width,
-                           id=_get_field_id('variable_type', file_type=file_type),
-                           title="A term selected from a controlled vocabulary that describes the "
-                                 "type of variable that was measured (e.g., 'Water quality').\n"
-                                 "Select 'Other...' to specify a new variable type term."),
-                     Field('no_data_value', css_class=field_width,
-                           id=_get_field_id('no_data_value', file_type=file_type),
-                           title="A numeric value that is used to represent 'NoData' values "
-                                 "in the time series (e.g., -9999)."),
-                     Field('variable_definition', css_class=field_width,
-                           id=_get_field_id('variable_definition', file_type=file_type),
-                           title="An optional, longer text description of the variable "
-                                 "(e.g., 'Water temperature')."),
-                     Field('speciation', css_class=field_width,
-                           id=_get_field_id('speciation', file_type=file_type),
-                           title="A term describing the chemical speciation of the resulting data "
-                                 "values. For most continuous time series from environmental "
-                                 "sensors, this will be 'Not Applicable'.\n"
-                                 "Select 'Other...' to specify a new speciation term."),
-                )
+            Field('selected_series_id', css_class=field_width, type="hidden"),
+            Field('available_variables', css_class=field_width, type="hidden"),
+            Field('variable_code', css_class=field_width,
+                  id=_get_field_id('variable_code', file_type=file_type),
+                  title="A brief and unique code that identifies the measured "
+                  "variable (e.g., 'Temp')."),
+            Field('variable_name', css_class=field_width,
+                  id=_get_field_id('variable_name', file_type=file_type),
+                  title="A brief but descriptive name of the variable that was measured "
+                  "selected from a controlled vocabulary of variable names "
+                  "(e.g., 'Temperature').\n"
+                  "Select 'Other...' to specify a new variable name term."),
+            Field('variable_type', css_class=field_width,
+                  id=_get_field_id('variable_type', file_type=file_type),
+                  title="A term selected from a controlled vocabulary that describes the "
+                  "type of variable that was measured (e.g., 'Water quality').\n"
+                  "Select 'Other...' to specify a new variable type term."),
+            Field('no_data_value', css_class=field_width,
+                  id=_get_field_id('no_data_value', file_type=file_type),
+                  title="A numeric value that is used to represent 'NoData' values "
+                  "in the time series (e.g., -9999)."),
+            Field('variable_definition', css_class=field_width,
+                  id=_get_field_id('variable_definition', file_type=file_type),
+                  title="An optional, longer text description of the variable "
+                  "(e.g., 'Water temperature')."),
+            Field('speciation', css_class=field_width,
+                  id=_get_field_id('speciation', file_type=file_type),
+                  title="A term describing the chemical speciation of the resulting data "
+                  "values. For most continuous time series from environmental "
+                  "sensors, this will be 'Not Applicable'.\n"
+                  "Select 'Other...' to specify a new speciation term."),
+        )
 
         layout = _set_form_helper_layout(
             common_layout=common_layout, element_name="variable",
@@ -997,7 +997,7 @@ class VariableTimeseriesFormHelper(BaseFormHelper):
             field_css=field_width)
 
         super(VariableTimeseriesFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                           element_name, layout,  *args, **kwargs)
+                                                           element_name, layout, *args, **kwargs)
 
 
 class VariableTimeseriesForm(ModelForm):
@@ -1099,40 +1099,40 @@ class MethodFormHelper(BaseFormHelper):
         file_type = kwargs.pop('file_type', False)
         field_width = 'form-control input-sm'
         common_layout = Layout(
-                         Field('selected_series_id', css_class=field_width, type="hidden"),
-                         Field('available_methods', css_class=field_width, type="hidden"),
-                         Field('method_code', css_class=field_width,
-                               id=_get_field_id('method_code', file_type=file_type),
-                               title="A brief and unique code that identifies the method used to "
-                                     "create the observations (e.g., 'Hydrolab')."),
-                         Field('method_name', css_class=field_width,
-                               id=_get_field_id('method_name', file_type=file_type),
-                               title="A brief but descriptive name for the method used to create "
-                                     "the observations (e.g., 'Hydrolab MiniSonde 5')."),
-                         Field('method_type', css_class=field_width,
-                               id=_get_field_id('method_type', file_type=file_type),
-                               title="A term selected from a controlled vocabulary to describe the "
-                                     "type of method used to create the observations. For "
-                                     "sensor measurements use 'Instrument deployment'.\n"
-                                     "Select 'Other...' to specify a new method type term."),
-                         Field('method_description', css_class=field_width,
-                               id=_get_field_id('method_description', file_type=file_type),
-                               title="A longer text description of the method "
-                                     "(e.g., 'Water temperature measured using a "
-                                     "Hydrolab Multiparameter Sonde')."),
-                         Field('method_link', css_class=field_width,
-                               id=_get_field_id('method_link', file_type=file_type),
-                               title="A URL link to a website that contains more information "
-                                     "about or a detailed description of the method "
-                                     "(e.g., 'http://www.hydrolab.com')."),
-                         )
+            Field('selected_series_id', css_class=field_width, type="hidden"),
+            Field('available_methods', css_class=field_width, type="hidden"),
+            Field('method_code', css_class=field_width,
+                  id=_get_field_id('method_code', file_type=file_type),
+                  title="A brief and unique code that identifies the method used to "
+                  "create the observations (e.g., 'Hydrolab')."),
+            Field('method_name', css_class=field_width,
+                  id=_get_field_id('method_name', file_type=file_type),
+                  title="A brief but descriptive name for the method used to create "
+                  "the observations (e.g., 'Hydrolab MiniSonde 5')."),
+            Field('method_type', css_class=field_width,
+                  id=_get_field_id('method_type', file_type=file_type),
+                  title="A term selected from a controlled vocabulary to describe the "
+                  "type of method used to create the observations. For "
+                  "sensor measurements use 'Instrument deployment'.\n"
+                  "Select 'Other...' to specify a new method type term."),
+            Field('method_description', css_class=field_width,
+                  id=_get_field_id('method_description', file_type=file_type),
+                  title="A longer text description of the method "
+                  "(e.g., 'Water temperature measured using a "
+                  "Hydrolab Multiparameter Sonde')."),
+            Field('method_link', css_class=field_width,
+                  id=_get_field_id('method_link', file_type=file_type),
+                  title="A URL link to a website that contains more information "
+                  "about or a detailed description of the method "
+                  "(e.g., 'http://www.hydrolab.com')."),
+        )
 
         layout = _set_form_helper_layout(common_layout=common_layout, element_name="method",
                                          is_show_element_code_selection=show_method_code_selection,
                                          field_css=field_width)
 
         super(MethodFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
-                                               layout,  *args, **kwargs)
+                                               layout, *args, **kwargs)
 
 
 class MethodForm(ModelForm):
@@ -1215,22 +1215,22 @@ class ProcessingLevelFormHelper(BaseFormHelper):
         file_type = kwargs.pop('file_type', False)
         field_width = 'form-control input-sm'
         common_layout = Layout(
-                     Field('selected_series_id', css_class=field_width, type="hidden"),
-                     Field('available_processinglevels', css_class=field_width, type="hidden"),
-                     Field('processing_level_code', css_class=field_width,
-                           id=_get_field_id('processing_level_code', file_type=file_type),
-                           title="A brief and unique code that identifies the processing level "
-                                 "of the observations (e.g., 'QC1')."),
-                     Field('definition', css_class=field_width,
-                           id=_get_field_id('definition', file_type=file_type),
-                           title="A brief description of the processing level "
-                                 "(e.g., 'Quality Controlled Data')."),
-                     Field('explanation', css_class=field_width,
-                           id=_get_field_id('explanation', file_type=file_type),
-                           title="A longer text description of the processing level that provides "
-                                 "more detail about how the processing was done "
-                                 "(e.g., 'Data that have passed quality control processing')."),
-                     )
+            Field('selected_series_id', css_class=field_width, type="hidden"),
+            Field('available_processinglevels', css_class=field_width, type="hidden"),
+            Field('processing_level_code', css_class=field_width,
+                  id=_get_field_id('processing_level_code', file_type=file_type),
+                  title="A brief and unique code that identifies the processing level "
+                  "of the observations (e.g., 'QC1')."),
+            Field('definition', css_class=field_width,
+                  id=_get_field_id('definition', file_type=file_type),
+                  title="A brief description of the processing level "
+                  "(e.g., 'Quality Controlled Data')."),
+            Field('explanation', css_class=field_width,
+                  id=_get_field_id('explanation', file_type=file_type),
+                  title="A longer text description of the processing level that provides "
+                  "more detail about how the processing was done "
+                  "(e.g., 'Data that have passed quality control processing')."),
+        )
 
         layout = _set_form_helper_layout(
             common_layout=common_layout,
@@ -1310,44 +1310,44 @@ class TimeSeriesResultFormHelper(BaseFormHelper):
         file_type = kwargs.pop('file_type', False)
         field_width = 'form-control input-sm'
         layout = Layout(
-                     Field('selected_series_id', css_class=field_width, type="hidden"),
-                     Field('units_type', css_class=field_width,
-                           id=_get_field_id('units_type', file_type=file_type),
-                           title="A term selected from a controlled vocabulary that describes the "
-                                 "type of units used for the Time Series result values "
-                                 "(e.g., 'Temperature').\n"
-                                 "Select 'Other...' to specify a new units type term."),
-                     Field('units_name', css_class=field_width,
-                           id=_get_field_id('units_name', file_type=file_type),
-                           title="A brief, but descriptive name of the units used for the "
-                                 "Time Series result values (e.g., 'Degrees Celsius')."),
-                     Field('units_abbreviation', css_class=field_width,
-                           id=_get_field_id('units_abbreviation', file_type=file_type),
-                           title="A text abbreviation for the units (e.g., 'Deg. C')."),
-                     Field('status', css_class=field_width,
-                           id=_get_field_id('status', file_type=file_type),
-                           title="A term selected from a controlled vocabulary to describe the "
-                                 "status of the time series. Completed datasets use 'Complete'. "
-                                 "Where data collection is ongoing, use 'Ongoing'.\n"
-                                 "Select 'Other...' to specify a new status term."),
-                     Field('sample_medium', css_class=field_width,
-                           id=_get_field_id('sample_medium', file_type=file_type),
-                           title="A term selected from a controlled vocabulary to specify the "
-                                 "environmental medium in which the observation was made "
-                                 "(e.g., 'Liquid aqueous').\n"
-                                 "Select 'Other...' to specify a new sample medium term."),
-                     Field('value_count', css_class=field_width,
-                           id=_get_field_id('value_count', file_type=file_type),
-                           title="The total number of data values in the Time Series "
-                                 "(e.g., 24205)."),
-                     Field('aggregation_statistics', css_class=field_width,
-                           id=_get_field_id('aggregation_statistics', file_type=file_type),
-                           title="An indication of whether the values are 'Continuous' or "
-                                 "represent recorded values of some statistic aggregated over a "
-                                 "time interval (e.g., 'Average').\n"
-                                 "Select 'Other...' to specify a new aggregation statistics term."),
-                     Field('series_label', css_class=field_width, type="hidden"),
-                     )
+            Field('selected_series_id', css_class=field_width, type="hidden"),
+            Field('units_type', css_class=field_width,
+                  id=_get_field_id('units_type', file_type=file_type),
+                  title="A term selected from a controlled vocabulary that describes the "
+                  "type of units used for the Time Series result values "
+                  "(e.g., 'Temperature').\n"
+                  "Select 'Other...' to specify a new units type term."),
+            Field('units_name', css_class=field_width,
+                  id=_get_field_id('units_name', file_type=file_type),
+                  title="A brief, but descriptive name of the units used for the "
+                  "Time Series result values (e.g., 'Degrees Celsius')."),
+            Field('units_abbreviation', css_class=field_width,
+                  id=_get_field_id('units_abbreviation', file_type=file_type),
+                  title="A text abbreviation for the units (e.g., 'Deg. C')."),
+            Field('status', css_class=field_width,
+                  id=_get_field_id('status', file_type=file_type),
+                  title="A term selected from a controlled vocabulary to describe the "
+                  "status of the time series. Completed datasets use 'Complete'. "
+                  "Where data collection is ongoing, use 'Ongoing'.\n"
+                  "Select 'Other...' to specify a new status term."),
+            Field('sample_medium', css_class=field_width,
+                  id=_get_field_id('sample_medium', file_type=file_type),
+                  title="A term selected from a controlled vocabulary to specify the "
+                  "environmental medium in which the observation was made "
+                  "(e.g., 'Liquid aqueous').\n"
+                  "Select 'Other...' to specify a new sample medium term."),
+            Field('value_count', css_class=field_width,
+                  id=_get_field_id('value_count', file_type=file_type),
+                  title="The total number of data values in the Time Series "
+                  "(e.g., 24205)."),
+            Field('aggregation_statistics', css_class=field_width,
+                  id=_get_field_id('aggregation_statistics', file_type=file_type),
+                  title="An indication of whether the values are 'Continuous' or "
+                  "represent recorded values of some statistic aggregated over a "
+                  "time interval (e.g., 'Average').\n"
+                  "Select 'Other...' to specify a new aggregation statistics term."),
+            Field('series_label', css_class=field_width, type="hidden"),
+        )
         kwargs['element_name_label'] = 'Time Series Result'
         super(TimeSeriesResultFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                          element_name, layout, *args, **kwargs)
@@ -1546,9 +1546,9 @@ def _set_element_code_selection_form_field(form, form_field_name, form_field_lab
 
             element_code_choices = tuple([(form.initial[element_code_att_name],
                                           element_display_str.format(
-                                            code_att_name=str(form.initial[element_code_att_name]),
-                                            name_att_name=form.initial[element_name_att_name]))] +
-                                         element_code_choices + [("----", "----")])
+                code_att_name=str(form.initial[element_code_att_name]),
+                name_att_name=form.initial[element_name_att_name]))]
+                + element_code_choices + [("----", "----")])
 
         else:
             element_code_choices = [(getattr(element, element_code_att_name),
@@ -1578,7 +1578,7 @@ def _set_form_helper_layout(common_layout, element_name, is_show_element_code_se
     form_field_name = "{}_code_choices".format(element_name)
     if is_show_element_code_selection:
         element_choice_help = "Select '----' for a new {} or any other option to use an " \
-                        "existing {} for this series".format(element_name, element_name)
+            "existing {} for this series".format(element_name, element_name)
 
         layout = Layout(
             Field(form_field_name, css_class=field_css, title=element_choice_help),

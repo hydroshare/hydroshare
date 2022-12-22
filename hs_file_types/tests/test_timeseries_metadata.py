@@ -802,7 +802,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                                      METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{}_1/{}{}'.format(new_folder,  base_sqlite_file_name,
+        expected_map_file_path = '{}_1/{}{}'.format(new_folder, base_sqlite_file_name,
                                                     RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 

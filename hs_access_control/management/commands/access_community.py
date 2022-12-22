@@ -15,9 +15,9 @@ from django.core.management.base import BaseCommand
 from django.core.files import File
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes, \
-        UserGroupPrivilege, UserCommunityPrivilege, GroupCommunityPrivilege
+    UserGroupPrivilege, UserCommunityPrivilege, GroupCommunityPrivilege
 from hs_access_control.management.utilities import community_from_name_or_id, \
-        group_from_name_or_id, user_from_name
+    group_from_name_or_id, user_from_name
 from hs_access_control.models.invite import GroupCommunityRequest
 import os
 from pprint import pprint

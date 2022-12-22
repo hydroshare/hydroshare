@@ -44,7 +44,7 @@ def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type
         target_res_obj.metadata.create_element("relation", **meta_dict)
     else:
         target_res_obj.metadata.relations.\
-                filter(type=relation_type, value=relation_value).all().delete()
+            filter(type=relation_type, value=relation_value).all().delete()
 
     if set_res_modified:
         resource_modified(target_res_obj, last_change_user, overwrite_bag=False)
@@ -139,9 +139,9 @@ def get_collectable_resources(user, coll_resource):
 
     collectable_resources = get_my_resources_list(user)
     collectable_resources = collectable_resources \
-        .filter(Q(raccess__shareable=True) |  # shareable and viewable, --or--
-                Q(raccess__discoverable=True) |  # discoverable, public, and/or published --or--
-                Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER)) \
+        .filter(Q(raccess__shareable=True)  # shareable and viewable, --or--
+                | Q(raccess__discoverable=True)  # discoverable, public, and/or published --or--
+                | Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER)) \
         .exclude(short_id=coll_resource.short_id) \
         .exclude(id__in=coll_resource.resources.values_list("id", flat=True))  # no duplicates!
 

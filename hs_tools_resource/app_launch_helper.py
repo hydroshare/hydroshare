@@ -139,7 +139,7 @@ def _check_user_can_view_app(request_obj, tool_res_obj):
 
 def _check_open_with_app(tool_res_obj, request_obj):
     return _check_webapp_in_user_open_with_list(tool_res_obj, request_obj) or \
-           _check_webapp_is_approved(tool_res_obj)
+        _check_webapp_is_approved(tool_res_obj)
 
 
 def _check_webapp_in_user_open_with_list(tool_res_obj, request_obj):

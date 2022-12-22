@@ -9,6 +9,7 @@
 {% for format in object.metadata.formats.all %}{{ format.value }} {% endfor %}
 {% for ident in object.metadata.identifiers.all %}{{ ident.value }} {% endfor %}
 {% for relation in object.metadata.relations.all %}{{ relation.value }} {% endfor %}
+{% for relation in object.metadata.geospatialrelations.all %}{{ relation.text }} {% endfor %}
 {{ object.verbose_name }}
 {% for f in object.logical_files %} {{ f.get_discovery_content_type }} {% endfor %} 
 {% for f in object.netcdflogicalfile_set.all %} 

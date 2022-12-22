@@ -48,11 +48,12 @@ class MockIRODSTestCaseMixin(object):
 
 class TestCaseCommonUtilities(object):
     """Enable common utilities for iRODS testing."""
+
     def assert_federated_irods_available(self):
         """assert federated iRODS is available before proceeding with federation-related tests."""
-        self.assertTrue(settings.REMOTE_USE_IRODS and
-                        settings.HS_USER_ZONE_HOST == 'users.local.org' and
-                        settings.IRODS_HOST == 'data.local.org',
+        self.assertTrue(settings.REMOTE_USE_IRODS
+                        and settings.HS_USER_ZONE_HOST == 'users.local.org'
+                        and settings.IRODS_HOST == 'data.local.org',
                         "irods docker containers are not set up properly for federation testing")
         self.irods_fed_storage = IrodsStorage('federated')
         self.irods_storage = IrodsStorage()
@@ -220,13 +221,13 @@ class TestCaseCommonUtilities(object):
 
         # >> testing folder name collision upon unzip
         # create a folder 'sub_test_dir' same as the folder we expect the unzip to create
-        create_folder(res.short_id, f'data/contents/sub_test_dir')
+        create_folder(res.short_id, 'data/contents/sub_test_dir')
         # unzip should fail due to folder name (sub_test_dir) collision
         with self.assertRaises(FileOverrideException):
             unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', bool_remove_original=False)
 
         # remove the conflicting folder (sub_test_dir) to test that unzip should work after that
-        remove_folder(user, res.short_id, f'data/contents/sub_test_dir')
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
         # unzip should work now
         unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', bool_remove_original=False)
 

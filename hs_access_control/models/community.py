@@ -86,11 +86,11 @@ class Community(models.Model):
             .filter(Q(r2grp__group__g2gcp__community=self,
                       r2grp__group__gaccess__active=True,
                       r2urp__privilege=PrivilegeCodes.OWNER,  # owned by member of community
-                      r2urp__user__u2ugp__group__g2gcp__community=self) |
-                    Q(r2crp__community=self))\
-            .filter(Q(raccess__public=True) |
-                    Q(raccess__published=True) |
-                    Q(raccess__discoverable=True))\
+                      r2urp__user__u2ugp__group__g2gcp__community=self)
+                    | Q(r2crp__community=self))\
+            .filter(Q(raccess__public=True)
+                    | Q(raccess__published=True)
+                    | Q(raccess__discoverable=True))\
             .annotate(group_name=F("r2grp__group__name"),
                       group_id=F("r2grp__group__id"),
                       public=F("raccess__public"),
@@ -163,7 +163,7 @@ class Community(models.Model):
             return Group.objects.filter(g2gcp__community=self, g2gcp__privilege=privilege)
         else:
             return Group.objects.filter(g2gcp__community=self, g2gcp__privilege=privilege)\
-                    .exclude(g2ugp__user=user)
+                .exclude(g2ugp__user=user)
 
     def is_superuser(self, user):
         """
@@ -191,8 +191,8 @@ class Community(models.Model):
                 return BaseResource.objects.none()
             # direct access without group assocation with resource
             return BaseResource.objects.filter(
-               Q(r2crp__community=self, r2crp__community__c2urp__user=user) |
-               Q(r2crp__community=self, r2crp__community__c2gcp__group__g2ugp__user=user))\
+                Q(r2crp__community=self, r2crp__community__c2urp__user=user)
+                | Q(r2crp__community=self, r2crp__community__c2gcp__group__g2ugp__user=user))\
                 .distinct()
 
         # if user is a member, member privileges apply regardless of superuser privileges

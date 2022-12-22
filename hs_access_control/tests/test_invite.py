@@ -76,8 +76,8 @@ class TestRequest(TestCase):
 
         # communities to use
         self.pets = self.dog.uaccess.create_community(
-                'all kinds of pets',
-                'collaboration on how to be a better pet.')
+            'all kinds of pets',
+            'collaboration on how to be a better pet.')
 
     def test_community_invite_group_to_community(self):
         "share community with group according to invitation protocol"
@@ -114,7 +114,7 @@ class TestRequest(TestCase):
 
         expected = "Request approved to connect group '{}' to community '{}'"\
                    " because there is a matching request."\
-                   .format(self.cats.name, self.pets.name, 'approved')
+                   .format(self.cats.name, self.pets.name)
         self.assertEqual(message, expected)
 
         self.assertTrue(isinstance(request, GroupCommunityRequest))
@@ -159,12 +159,12 @@ class TestRequest(TestCase):
         self.assertFalse(self.cats in self.pets.member_groups)
 
         message, approved = GroupCommunityRequest.create_or_update(
-                requester=self.dog, community=self.pets, group=self.cats)
+            requester=self.dog, community=self.pets, group=self.cats)
         request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
 
         expected = "Request approved to connect group '{}' to community '{}'"\
                    " because there is a matching request."\
-                   .format(self.cats.name, self.pets.name, 'approved')
+                   .format(self.cats.name, self.pets.name)
         self.assertEqual(message, expected)
 
         self.assertTrue(isinstance(request, GroupCommunityRequest))
@@ -399,7 +399,7 @@ class TestRequest(TestCase):
         self.assertFalse(self.cats in self.pets.member_groups)
 
         message, approved = GroupCommunityRequest.create_or_update(
-           group=self.cats, community=self.pets, requester=self.cat)
+            group=self.cats, community=self.pets, requester=self.cat)
         request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
 
         expected = "Request approved to connect group '{}' to community '{}'"\

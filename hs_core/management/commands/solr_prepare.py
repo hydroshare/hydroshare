@@ -13,8 +13,8 @@ from pprint import pprint
 
 def debug_harvest():
     ind = BaseResourceIndex()
-    for obj in BaseResource.objects.filter(Q(raccess__discoverable=True) |
-                                           Q(raccess__public=True)).distinct():
+    for obj in BaseResource.objects.filter(Q(raccess__discoverable=True)
+                                           | Q(raccess__public=True)).distinct():
         print(("TESTING RESOURCE {}".format(obj.title)))
         print('sample_medium')
         pprint(ind.prepare_sample_medium(obj))
@@ -72,6 +72,8 @@ def debug_harvest():
         pprint(ind.prepare_source(obj))
         print('relation')
         pprint(ind.prepare_relation(obj))
+        print('geospatialrelation')
+        pprint(ind.prepare_geospatialrelation(obj))
         print('resource_type')
         pprint(ind.prepare_resource_type(obj))
         print('comment')

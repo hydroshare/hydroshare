@@ -8,12 +8,12 @@ logger = logging.getLogger(__name__)
 
 class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
 
-    """ 
-    Customized for the fact that all indexed resources are subclasses of BaseResource. 
-    Notes: 
-    1. RealtimeSignalProcessor already plumbs in all class updates. We might want to be more specific. 
-    2. The class sent to this is a subclass of BaseResource, or another class. 
-    3. Thus, we want to capture cases in which it is an appropriate instance, and respond. 
+    """
+    Customized for the fact that all indexed resources are subclasses of BaseResource.
+    Notes:
+    1. RealtimeSignalProcessor already plumbs in all class updates. We might want to be more specific.
+    2. The class sent to this is a subclass of BaseResource, or another class.
+    3. Thus, we want to capture cases in which it is an appropriate instance, and respond.
     """
 
     def handle_save(self, sender, instance, **kwargs):
@@ -93,6 +93,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
 
     def handle_delete(self, sender, instance, **kwargs):
         """
-        Ignore delete events as this is accomplished separately. 
+        Ignore delete events as this is accomplished separately.
         """
         pass

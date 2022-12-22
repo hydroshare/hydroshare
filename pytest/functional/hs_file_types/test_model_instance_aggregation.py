@@ -501,10 +501,10 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # model aggr should now have spatial coverage
     assert mi_aggr.metadata.spatial_coverage is not None
-    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
-    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106195
-    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286029891
-    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
+    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106199
+    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
+    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
 
     # auto create a netcdf aggregation inside the model instance aggregation
     assert NetCDFLogicalFile.objects.count() == 0
@@ -520,10 +520,10 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     # update model instance aggregation spatial coverage from the contained 2 aggregations
     mi_aggr.update_spatial_coverage()
     # test model instance aggregation spatial coverage data
-    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
-    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.50594036845686
-    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.8639080745171
-    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
+    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.5059403684569
+    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.86390807452128
+    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
     assert not resource.dangling_aggregations_exist()
 
 
@@ -561,10 +561,10 @@ def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_m
     gr_aggr = GeoRasterLogicalFile.objects.first()
     # raster aggr should have spatial coverage
     assert gr_aggr.metadata.spatial_coverage is not None
-    assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
-    assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106195
-    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286029891
-    assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
+    assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106199
+    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
+    assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
     # check model instance spatial coverage has not been updated
     assert mi_aggr.metadata.spatial_coverage.value['east'] == value_dict['east']
     assert mi_aggr.metadata.spatial_coverage.value['north'] == value_dict['north']
@@ -600,7 +600,7 @@ def test_auto_update_temporal_coverage_from_children(composite_resource_with_mi_
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] == \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
 
     assert not resource.dangling_aggregations_exist()
 
@@ -638,7 +638,7 @@ def test_no_auto_update_temporal_coverage_from_children(composite_resource_with_
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] != \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
 
     assert not resource.dangling_aggregations_exist()
 
@@ -674,7 +674,7 @@ def test_update_temporal_coverage_from_children(composite_resource_with_mi_aggre
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] != \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
 
     # update temporal coverage for model instance from contained aggregations
     mi_aggr.update_temporal_coverage()
@@ -682,7 +682,7 @@ def test_update_temporal_coverage_from_children(composite_resource_with_mi_aggre
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] == \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
 
     assert not resource.dangling_aggregations_exist()
 
