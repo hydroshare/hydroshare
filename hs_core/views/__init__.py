@@ -1836,7 +1836,7 @@ def update_user_community(request, community_id, *args, **kwargs):
             community_form.update(community_to_update, request)
             messages.success(request, "Community update was successful.")
         except PermissionDenied:
-            err_msg = f"You don't have permission to update community"
+            err_msg = "You don't have permission to update community"
             messages.error(request, err_msg)
         except Exception as ex:
             messages.error(request, f"Community update errors:{str(ex)}.")
@@ -2628,7 +2628,7 @@ def request_new_community(request, *args, **kwargs):
                                               on_event=CommunityRequestEvents.CREATED).send()
             return HttpResponseRedirect(reverse('my_communities'))
         except PermissionDenied:
-            err_msg = f"You don't have permission to request new community"
+            err_msg = "You don't have permission to request new community"
             messages.error(request, err_msg)
         except Exception as ex:
             messages.error(request, f"Community request errors:{str(ex)}.")

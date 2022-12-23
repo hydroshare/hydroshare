@@ -65,8 +65,8 @@ class TestViews(TransactionTestCase):
 
         # community to use
         self.pets = self.cat.uaccess.create_community(
-                'all kinds of pets',
-                'collaboration on how to be a more effective pet.')
+            'all kinds of pets',
+            'collaboration on how to be a more effective pet.')
 
         self.pets.active = True
         self.pets.save()

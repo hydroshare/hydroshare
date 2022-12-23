@@ -188,7 +188,7 @@ class GroupView(View):
             req_params['action'] = action
         cid = kwargs.get('cid', None)
         if action is not None and cid is None:
-            err_msg = f"id for the community is missing"
+            err_msg = "id for the community is missing"
             return err_msg, req_params
 
         if cid is not None:
@@ -197,7 +197,7 @@ class GroupView(View):
 
         gid = kwargs.get('gid', None)
         if gid is None:
-            err_msg = f"id for the group is not provided"
+            err_msg = "id for the group is not provided"
             return err_msg, req_params
 
         gid = int(gid)
@@ -369,8 +369,8 @@ class CommunityView(View):
                     return err_message
                 return no_error
         else:
-            err_message = "user '{}' does not own community '{}'"\
-                      .format(user.username, community.name)
+            err_message = "user '{}' does not own community '{}'" \
+                .format(user.username, community.name)
             return err_message
 
     def validate_request_parameters(self, kwargs):
@@ -387,7 +387,7 @@ class CommunityView(View):
             req_params['action'] = action
         cid = kwargs.get('cid', None)
         if cid is None:
-            err_msg = f"id for the community is not provided"
+            err_msg = "id for the community is not provided"
             return err_msg, req_params
         else:
             cid = int(cid)
@@ -395,7 +395,7 @@ class CommunityView(View):
 
         gid = kwargs.get('gid', None)
         if gid is None and action != CommunityActions.OWNER and action is not None:
-            err_msg = f"id for the group is not provided"
+            err_msg = "id for the group is not provided"
             return err_msg, req_params
 
         if gid is not None:
@@ -404,16 +404,16 @@ class CommunityView(View):
 
         uid = kwargs.get('uid', None)
         if uid is None and action == CommunityActions.OWNER and action is not None:
-            err_msg = f"id for the community owner is not provided"
+            err_msg = "id for the community owner is not provided"
             return err_msg, req_params
         req_params['uid'] = uid
 
         addrem = kwargs.get('addrem', None)
         if addrem is None and action == CommunityActions.OWNER:
-            err_msg = f"action related to ownership of the community is not provided"
+            err_msg = "action related to ownership of the community is not provided"
             return err_msg, req_params
         if addrem is not None and addrem not in (CommunityActions.ADD.value, CommunityActions.REMOVE.value):
-            err_msg = f"provided action is not a valid action related to ownership of the community"
+            err_msg = "provided action is not a valid action related to ownership of the community"
             return err_msg, req_params
 
         if addrem is not None:
@@ -617,7 +617,7 @@ class CommunityRequestView(View):
 
         crid = kwargs.get('crid', None)
         if crid is None and action != CommunityRequestActions.REQUEST:
-            err_msg = f"id for the community request is not provided"
+            err_msg = "id for the community request is not provided"
             return err_msg, req_params
 
         if crid is not None:
@@ -628,7 +628,7 @@ class CommunityRequestView(View):
                 err_msg = f"No existing request to create a new community was found for the id:{crid}"
                 return err_msg, req_params
             if action == CommunityRequestActions.REQUEST:
-                err_msg = f"Invalid action"
+                err_msg = "Invalid action"
                 return err_msg, req_params
 
             req_params['crid'] = crid

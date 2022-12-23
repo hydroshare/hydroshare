@@ -2769,10 +2769,10 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         raw_community = Community.objects.create(
-                name=title,
+            name=title,
             description=description,
             purpose=purpose,
-auto_approve_resource=auto_approve_resource,
+            auto_approve_resource=auto_approve_resource,
             auto_approve_group=auto_approve_group,
             email=email,
             url=url,
