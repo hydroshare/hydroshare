@@ -265,7 +265,7 @@ class MyCommunitiesView(TemplateView):
             group.join_request = None
             if group.join_request_waiting_owner_action or group.join_request_waiting_user_action:
                 group.join_request = group.gaccess.group_membership_requests.filter(request_from=user).first() or \
-                                     group.gaccess.group_membership_requests.filter(invitation_to=user).first()
+                    group.gaccess.group_membership_requests.filter(invitation_to=user).first()
 
         communities_member_of = [self.group_to_community(g, Community.objects.all()) for g in groups_member_of]
 
