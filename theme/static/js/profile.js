@@ -246,16 +246,10 @@ function getUrlVars()
 }
 
 function isStateInCountry(stateCode, country){
-    let stateName = ""
-    for (state in BFHStatesList[country]) {
-        if (BFHStatesList[country].hasOwnProperty(state)) {
-            if (BFHStatesList[country][state].code === stateCode) {
-                stateName = BFHStatesList[country][state].name;
-                break;
-            }
-        }
-    }
-    return stateName;
+    if (!BFHStatesList.hasOwnProperty(country)) return false;
+    const asArray = Object.entries(BFHStatesList[country]);
+    const filtered = asArray.filter(([key, state]) => state.code === stateCode);
+    return filtered.length > 0;
 }
 
 function checkForInvalidStates(country){
@@ -266,17 +260,19 @@ function checkForInvalidStates(country){
     if ( !isStateInCountry(oldState, country)){
         stateField.append($('<option>', {
             value: oldState,
-            text: oldState
+            text: oldState,
+            class: "old-state-option"
         }));
         stateField.val(oldState)
             .change()
             .addClass('form-invalid')
             .parent().append(errorLabel("No longer valid, please update."));
 
-        // clear the message once changed
-        stateField.on('change', function(){
+        // Register one-time listener to clear the message and old option
+        stateField.one('change', function(){
             $(this).siblings('.error-label').remove();
             $(this).removeClass('form-invalid');
+            $(".old-state-option").remove();
         });
     }
 
