@@ -5,13 +5,14 @@ from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.utils.translation import gettext_lazy as _
 
-from .models import *
+from .models import ResourceFile, User, GenericResource
 
 
 class UserCreationFormExtended(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super(UserCreationFormExtended, self).__init__(*args, **kwargs)
         self.fields['email'] = forms.EmailField(label=_("E-mail"), max_length=75)
+
 
 UserAdmin.add_form = UserCreationFormExtended
 UserAdmin.readonly_fields = ('username',)
@@ -26,8 +27,10 @@ UserAdmin.list_display = [
     'is_active', 'date_joined', 'last_login'
 ]
 
+
 class InlineResourceFiles(GenericTabularInline):
     model = ResourceFile
+
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)

@@ -3,8 +3,8 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 
 from hs_access_control.models import PrivilegeCodes, GroupCommunityPrivilege,\
-        GroupCommunityProvenance, UserCommunityPrivilege, UserCommunityProvenance, \
-        GroupResourcePrivilege, CommunityResourcePrivilege, CommunityResourceProvenance
+    GroupCommunityProvenance, UserCommunityPrivilege, UserCommunityProvenance, \
+    GroupResourcePrivilege, CommunityResourcePrivilege, CommunityResourceProvenance
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_core import hydroshare
 
@@ -158,11 +158,11 @@ class TestCommunities(TestCase):
 
         # two communities to use
         self.pets = self.dog.uaccess.create_community(
-                'all kinds of pets',
-                'collaboration on how to be a better pet.')
+            'all kinds of pets',
+            'collaboration on how to be a better pet.')
         self.pests = self.bat.uaccess.create_community(
-                'all kinds of pests',
-                'collaboration on how to be a more effective pest.')
+            'all kinds of pests',
+            'collaboration on how to be a more effective pest.')
 
         # make the communities active
         self.pets.active = True
@@ -362,9 +362,9 @@ class TestCommunities(TestCase):
         self.assertTrue(self.dog.uaccess.can_share_community_with_user(self.pets, self.dog2,
                                                                        PrivilegeCodes.CHANGE))
         self.dog.uaccess.share_community_with_user(self.pets, self.dog2,
-                                                    PrivilegeCodes.CHANGE)
+                                                   PrivilegeCodes.CHANGE)
         self.dog.uaccess.share_community_with_user(self.pets, self.cat2,
-                                                    PrivilegeCodes.VIEW)
+                                                   PrivilegeCodes.VIEW)
 
         self.assertEqual(self.pets.get_effective_user_privilege(self.dog2),
                          PrivilegeCodes.CHANGE)
@@ -372,7 +372,7 @@ class TestCommunities(TestCase):
                          PrivilegeCodes.VIEW)
 
         self.assertTrue(self.dog.uaccess.can_undo_share_community_with_user(self.pets,
-                                                                             self.dog2))
+                                                                            self.dog2))
 
         self.dog.uaccess.undo_share_community_with_user(self.pets, self.dog2)
 

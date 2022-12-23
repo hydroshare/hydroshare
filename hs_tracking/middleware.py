@@ -5,7 +5,7 @@ from . import utils
 import re
 
 RESOURCE_RE = re.compile('resource/([0-9a-f]{32})/')  # parser for resource id
-BAG_RE = re.compile('bags/([0-9a-f]{32})\.zip')  # parser for resource id
+BAG_RE = re.compile('bags/([0-9a-f]{32})\.zip')  # parser for resource id # noqa
 LANDING_RE = re.compile('resource/([0-9a-f]{32})/$')  # reference to resource home page
 REST_RE = re.compile('/hsapi/')  # reference to REST or internal
 INTERNAL_RE = re.compile('/hsapi/_internal/')  # reference to an internal page

@@ -4,7 +4,7 @@ from future.builtins import int
 from collections import defaultdict
 
 from django.urls import reverse
-from django.template.defaultfilters import linebreaksbr, urlize
+from django.template.defaultfilters import linebreaksbr
 
 from mezzanine import template
 from mezzanine.conf import settings

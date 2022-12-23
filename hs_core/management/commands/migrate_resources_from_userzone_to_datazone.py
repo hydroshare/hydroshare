@@ -59,7 +59,7 @@ class Command(BaseCommand):
                                   'resource {}'.format(resource.short_id))
                             break
                         elif file_path.startswith(resource.resource_federation_path):
-                            file_path = file_path[len(resource.resource_federation_path)+1:]
+                            file_path = file_path[len(resource.resource_federation_path) + 1:]
                             res_file.resource_file.name = file_path
                             res_file.fed_resource_file.name = ''
                             res_file.save()

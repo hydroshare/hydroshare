@@ -64,15 +64,15 @@
     "creator": {{ creators | creator_json_ld_element | safe }},
     {# There is discussion about adding more linked data fields for referenced items #} 
     {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
-    {% if inspecific_relations %}
+    {% if geospatial_relations %}
     "about": [
-    {% for inspecific_relation in inspecific_relations %}{% if inspecific_relation.value|is_url %}
+    {% for geospatial_relation in geospatial_relations %}{% if geospatial_relation.value|is_url %}
       {
-        "@id": "{{ inspecific_relation.value | escapejs }}",
+        "@id": "{{ geospatial_relation.value | escapejs }}",
         {# We might eventually want to encode related features with more specificity than generic https://schema.org/Place #}
         {# Examples include https://schema.org/Landform and https://schema.org/BodyOfWater #}
         "@type": "Place",
-        "url": "{{ inspecific_relation.value | escapejs }}"
+        "url": "{{ geospatial_relation.value | escapejs }}"
       }{%if not forloop.last%},{%endif%}
     {% endif %}{% endfor %}
     ],
@@ -1058,11 +1058,11 @@
             },
           {% endfor %}
       ];
-      const RELATIONS = [
-        {% for relation in inspecific_relations %}
+      const GEOSPATIAL_RELATIONS = [
+        {% for relation in geospatial_relations %}
             {
                 "value": "{{ relation.value| escapejs}}",
-                "type": "{{ relation.type }}",
+                "text": "{{ relation.text }}",
                 "id": "{{ relation.id }}"
             },
         {% endfor %}

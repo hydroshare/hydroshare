@@ -400,7 +400,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile):
     """ One file or more than one file in a specific folder can be part of this aggregation """
 
-    metadata = models.OneToOneField(ModelInstanceFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
+    metadata = models.OneToOneField(ModelInstanceFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "Model Instance"
 
     @classmethod

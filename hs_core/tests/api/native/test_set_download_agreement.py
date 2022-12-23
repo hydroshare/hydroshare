@@ -36,7 +36,7 @@ class TestSetDownloadAgreement(MockIRODSTestCaseMixin, TestCase):
             'GenericResource',
             self.user_owner,
             'My Test Resource'
-            )
+        )
 
     def tearDown(self):
         super(TestSetDownloadAgreement, self).tearDown()

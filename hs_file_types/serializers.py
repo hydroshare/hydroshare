@@ -224,7 +224,7 @@ class ModelInstanceMetaSerializer(BaseAggregationMetaSerializer):
             # validate against the the schema
             mi_aggr = self.context.get('mi_aggr')
             if not mi_aggr.metadata_schema_json:
-                raise serializers.ValidationError(f"Metadata schema is missing")
+                raise serializers.ValidationError("Metadata schema is missing")
 
             meta_json = value
             try:

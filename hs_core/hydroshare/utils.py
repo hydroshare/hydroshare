@@ -8,6 +8,9 @@ from uuid import uuid4
 from urllib.parse import quote
 import errno
 import urllib
+import aiohttp
+import asyncio
+from asgiref.sync import sync_to_async
 
 from urllib.request import pathname2url, url2pathname
 
@@ -27,7 +30,7 @@ from mezzanine.conf import settings
 
 from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
     post_add_files_to_resource
-from hs_core.models import AbstractResource, BaseResource, ResourceFile
+from hs_core.models import AbstractResource, BaseResource, ResourceFile, GeospatialRelation
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 from django_irods.icommands import SessionException
@@ -461,6 +464,39 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         tgt_res.resources.set(src_res.resources.all())
 
 
+@sync_to_async
+def _get_relations():
+    return list(GeospatialRelation.objects.all())
+
+
+@sync_to_async
+def _save_relation(relation, json):
+    return relation.update_from_geoconnex_response(json)
+
+
+async def get_jsonld_from_geoconnex(relation, client):
+    relative_id = relation.value.split("ref/").pop()
+    collection = relative_id.split("/")[0]
+    id = relative_id.split("/")[1]
+    url = f"/collections/{collection}/items/{id}?" \
+        "f=jsonld&lang=en-US&skipGeometry=true"
+    logger.debug(f"CHECKING RELATION '{relation.text}'")
+    async with client.get(url) as resp:
+        return await _save_relation(relation, await resp.json())
+
+
+async def update_geoconnex_texts(relations=[]):
+    # Task to update Relations from Geoconnex API
+    if not relations:
+        relations = await _get_relations()
+    async with aiohttp.ClientSession("https://reference.geoconnex.us") as client:
+        await asyncio.gather(*[
+            get_jsonld_from_geoconnex(relation, client)
+            for relation in relations
+        ])
+    logger.debug("DONE CHECKING RELATIONS")
+
+
 def copy_and_create_metadata(src_res, dest_res):
     """
     Copy metadata from source resource to target resource except identifier, publisher, and date
@@ -730,7 +766,7 @@ def validate_user_quota(user_or_username, size):
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
                                 files=(), metadata=None,
                                 requesting_user=None, **kwargs):
-    from.resource import check_resource_type
+    from .resource import check_resource_type
     from hs_core.views.utils import validate_metadata
 
     if not resource_title:
@@ -770,10 +806,10 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
 
-    return page_url_dict, resource_title,  metadata
+    return page_url_dict, resource_title, metadata
 
 
-def resource_post_create_actions(resource, user, metadata,  **kwargs):
+def resource_post_create_actions(resource, user, metadata, **kwargs):
     # receivers need to change the values of this dict if file validation fails
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     # Send post-create resource signal
@@ -861,7 +897,7 @@ def get_user_party_name(user):
     if user.last_name and user.first_name:
         if user_profile.middle_name:
             party_name = '%s, %s %s' % (user.last_name, user.first_name,
-                                            user_profile.middle_name)
+                                        user_profile.middle_name)
         else:
             party_name = '%s, %s' % (user.last_name, user.first_name)
     elif user.last_name:
@@ -893,7 +929,7 @@ def get_party_data_from_user(user):
 def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
                                   source_names=[], **kwargs):
     if __debug__:
-        assert(isinstance(source_names, list))
+        assert (isinstance(source_names, list))
 
     if resource.raccess.published and not user.is_superuser:
         raise ValidationError("Only admin can add files to a published resource")
@@ -920,7 +956,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
 
     from .resource import add_resource_files
     if __debug__:
-        assert(isinstance(source_names, list))
+        assert (isinstance(source_names, list))
 
     if resource.raccess.published and not user.is_superuser:
         raise ValidationError("Only admin can add files to a published resource")
@@ -1061,7 +1097,7 @@ def add_metadata_element_to_xml(root, md_element, md_fields):
      [('first_name', 'firstName'), 'phone', 'email']
      # xml sub-elements names: firstName, phone, email
     """
-    from lxml import etree
+    import defusedxml.ElementTree as etree
     from hs_core.models import CoreMetaData
 
     name_spaces = CoreMetaData.NAMESPACES
@@ -1099,6 +1135,7 @@ class ZipContents(object):
     Extract the contents of a zip file one file at a time
     using a generator.
     """
+
     def __init__(self, zip_file):
         self.zip_file = zip_file
 
@@ -1157,8 +1194,8 @@ def check_aggregations(resource, res_files):
 
         # check files for aggregation creation
         for res_file in res_files:
-            if not res_file.has_logical_file or (res_file.logical_file.is_fileset or
-                                                 res_file.logical_file.is_model_instance):
+            if not res_file.has_logical_file or (res_file.logical_file.is_fileset
+                                                 or res_file.logical_file.is_model_instance):
                 # create aggregation from file 'res_file'
                 logical_file = set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                                      fail_feedback=False)

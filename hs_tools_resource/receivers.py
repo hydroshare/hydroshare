@@ -1,17 +1,17 @@
 from django.dispatch import receiver
 
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
-                            pre_create_resource
+    pre_create_resource
 
 from hs_tools_resource.models import ToolResource
-from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionForm, \
-                                    UrlValidationForm, \
-                                    SupportedSharingStatusValidationForm, RoadmapForm, \
-                                    ShowOnOpenWithListForm, SupportedAggTypesValidationForm, \
-                                    SupportedFileExtensionsValidationForm, \
-                                    AppAggregationLevelUrlValidationForm, \
-                                    AppResourceLevelUrlValidationForm, \
-                                    AppFileLevelUrlValidationForm, ToolIconValidationForm
+from hs_tools_resource.forms import SupportedResTypesValidationForm, VersionForm, \
+    UrlValidationForm, \
+    SupportedSharingStatusValidationForm, RoadmapForm, \
+    ShowOnOpenWithListForm, SupportedAggTypesValidationForm, \
+    SupportedFileExtensionsValidationForm, \
+    AppAggregationLevelUrlValidationForm, \
+    AppResourceLevelUrlValidationForm, \
+    AppFileLevelUrlValidationForm, ToolIconValidationForm
 
 from .default_icon import default_icon_data_url
 

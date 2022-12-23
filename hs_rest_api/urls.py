@@ -26,17 +26,17 @@ hsapi_urlpatterns = [
 ]
 
 schema_view_yasg = get_schema_view(
-   openapi.Info(
-      title="Hydroshare API",
-      default_version='v1',
-      description="Hydroshare Rest API",
-      terms_of_service="https://help.hydroshare.org/about-hydroshare/policies/terms-of-use/",
-      contact=openapi.Contact(email="help@cuahsi.org"),
-   ),
-   validators=[],
-   public=True,
-   permission_classes=(permissions.AllowAny,),
-   patterns=hsapi_urlpatterns,
+    openapi.Info(
+        title="Hydroshare API",
+        default_version='v1',
+        description="Hydroshare Rest API",
+        terms_of_service="https://help.hydroshare.org/about-hydroshare/policies/terms-of-use/",
+        contact=openapi.Contact(email="help@cuahsi.org"),
+    ),
+    validators=[],
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+    patterns=hsapi_urlpatterns,
 )
 
 urlpatterns = [

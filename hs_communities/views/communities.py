@@ -18,14 +18,14 @@ logger = logging.getLogger(__name__)
 
 
 class CollaborateView(TemplateView):
-    template_name = 'pages/collaborate.html'
+    template_name = "pages/collaborate.html"
 
 
 class CommunityView(TemplateView):
-    template_name = 'hs_communities/community.html'
+    template_name = "hs_communities/community.html"
 
     def dispatch(self, *args, **kwargs):
-        self.template_name = 'hs_communities/community.html'
+        self.template_name = "hs_communities/community.html"
         return super(CommunityView, self).dispatch(*args, **kwargs)
 
     def hydroshare_denied(self, cid, gid=None):
@@ -64,18 +64,18 @@ class CommunityView(TemplateView):
         message = ''
         context = {}
 
-        if 'cid' in kwargs:
-            cid = int(kwargs['cid'])
+        if "cid" in kwargs:
+            cid = int(kwargs["cid"])
         else:
             cid = None
 
-        if 'gid' in kwargs:
-            gid = int(kwargs['gid'])
+        if "gid" in kwargs:
+            gid = int(kwargs["gid"])
         else:
             gid = None
 
-        if 'action' in kwargs:
-            action = kwargs['action']
+        if "action" in kwargs:
+            action = kwargs["action"]
         else:
             action = None
 
@@ -86,18 +86,18 @@ class CommunityView(TemplateView):
             user = self.request.user
             community = Community.objects.get(id=int(cid))
             community_resources = community.public_resources.distinct()
-            grpfilter = self.request.GET.get('grp')
+            grpfilter = self.request.GET.get("grp")
             is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
                                                                   privilege=PrivilegeCodes.OWNER).exists() else 0
 
-            context['community_resources'] = community_resources
-            context['grpfilter'] = grpfilter
-            context['is_admin'] = is_admin
-            context['czo_community'] = "CZO National" in community.name
+            context["community_resources"] = community_resources
+            context["grpfilter"] = grpfilter
+            context["is_admin"] = is_admin
+            context["czo_community"] = "CZO National" in community.name
 
             if action is not None:
                 group = Group.objects.get(id=int(gid))
-                if action == 'approve':  # approve a request from a group
+                if action == "approve":  # approve a request from a group
                     gcr = GroupCommunityRequest.objects.get(
                         community=community, group=group)
                     if gcr.redeemed:  # make it possible to approve a formerly declined request.
@@ -105,14 +105,14 @@ class CommunityView(TemplateView):
                     message, worked = gcr.approve(responder=user)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == 'decline':  # decline a request from a group
+                elif action == "decline":  # decline a request from a group
                     gcr = GroupCommunityRequest.objects.get(
                         community__id=int(cid),
-                        group__id=int(kwargs['gid']))
+                        group__id=int(kwargs["gid"]))
                     message, worked = gcr.decline(responder=user)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == 'invite':
+                elif action == "invite":
                     logger.debug("action is invite")
                     try:
                         message, worked = GroupCommunityRequest.create_or_update(
@@ -126,7 +126,7 @@ class CommunityView(TemplateView):
                         requester=user, group=group, community=community)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == 'retract':  # remove a pending request
+                elif action == "retract":  # remove a pending request
                     message, worked = GroupCommunityRequest.retract(
                          requester=user, group=group, community=community)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
@@ -137,70 +137,70 @@ class CommunityView(TemplateView):
 
             # build a JSON object that contains the results of the query
 
-            context['denied'] = denied
-            context['message'] = message
-            context['user'] = user_json(user)
-            context['community'] = community_json(community)
+            context["denied"] = denied
+            context["message"] = message
+            context["user"] = user_json(user)
+            context["community"] = community_json(community)
 
             # groups that can be invited are those that are not already invited or members.
-            context['groups'] = []
+            context["groups"] = []
             for g in Group.objects.filter(gaccess__active=True)\
                                   .exclude(invite_g2gcr__community=community)\
                                   .exclude(g2gcp__community=community)\
-                                  .order_by('name'):
-                context['groups'].append(group_json(g))
+                                  .order_by("name"):
+                context["groups"].append(group_json(g))
 
             # groups that have shared resources with the community
             raw_groups = community.groups_with_public_resources()
             shared_by_groups = []
             for g in raw_groups:
                 res_count = len([r for r in community_resources if r.group_name == g.name])
-                shared_by_groups.append({'id': str(g.id), 'name': str(g.name), 'res_count': str(res_count)})
-            context['shared_by_groups'] = shared_by_groups
+                shared_by_groups.append({"id": str(g.id), "name": str(g.name), "res_count": str(res_count)})
+            context["shared_by_groups"] = shared_by_groups
 
-            context['pending'] = []
+            context["pending"] = []
             for r in GroupCommunityRequest.objects.filter(
-                    community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
-                context['pending'].append(gcr_json(r))
+                    community=community, redeemed=False, group_owner__isnull=True).order_by("group__name"):
+                context["pending"].append(gcr_json(r))
 
             # requests that were declined by us
-            context['we_declined'] = []
+            context["we_declined"] = []
             for r in GroupCommunityRequest.objects.filter(
                     community=community, redeemed=True, approved=False,
-                    when_group__lt=F('when_community')).order_by('group__name'):
-                context['we_declined'].append(gcr_json(r))
+                    when_group__lt=F("when_community")).order_by("group__name"):
+                context["we_declined"].append(gcr_json(r))
 
             # requests that were declined by others
-            context['they_declined'] = []
+            context["they_declined"] = []
             for r in GroupCommunityRequest.objects.filter(
                     community=community, redeemed=True, approved=False,
-                    when_group__gt=F('when_community')).order_by('group__name'):
-                context['they_declined'].append(gcr_json(r))
+                    when_group__gt=F("when_community")).order_by("group__name"):
+                context["they_declined"].append(gcr_json(r))
 
             # group requests to be approved
-            context['approvals'] = []
+            context["approvals"] = []
             for r in GroupCommunityRequest.objects.filter(
                     community=Community.objects.get(id=int(cid)),
                     group__gaccess__active=True,
                     community_owner__isnull=True,
-                    redeemed=False).order_by('group__name'):
-                context['approvals'].append(gcr_json(r))
+                    redeemed=False).order_by("group__name"):
+                context["approvals"].append(gcr_json(r))
 
             # group members of community
-            context['members'] = []
-            for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
-                context['members'].append(group_json(g))
+            context["members"] = []
+            for g in Group.objects.filter(g2gcp__community=community).order_by("name"):
+                context["members"].append(group_json(g))
 
             return context
 
         else:  # non-empty denied means an error.
-            context['denied'] = denied
+            context["denied"] = denied
             logger.error(denied)
             return context
 
 
 class FindCommunitiesView(TemplateView):
-    template_name = 'hs_communities/find-communities.html'
+    template_name = "hs_communities/find-communities.html"
 
     def dispatch(self, *args, **kwargs):
         return super(FindCommunitiesView, self).dispatch(*args, **kwargs)
@@ -217,21 +217,21 @@ class FindCommunitiesView(TemplateView):
 
         if user_is_admin:
             admin_all_requests = []
-            for request in RequestCommunity.all_requests().order_by('-date_requested'):
+            for request in RequestCommunity.all_requests().order_by("-date_requested"):
                 admin_all_requests.append(cr_json(request))
-            context['admin_all_requests'] = admin_all_requests
-            context['admin_pending_requests'] = RequestCommunity.pending_requests().count()
+            context["admin_all_requests"] = admin_all_requests
+            context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
 
-        context['communities_list'] = Community.objects.filter(active=True)
-        context['user_pending_requests'] = user_pending_requests
-        context['user_is_admin'] = user_is_admin
+        context["communities_list"] = Community.objects.filter(active=True)
+        context["user_pending_requests"] = user_pending_requests
+        context["user_is_admin"] = user_is_admin
 
         return context
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class MyCommunitiesView(TemplateView):
-    template_name = 'hs_communities/my-communities.html'
+    template_name = "hs_communities/my-communities.html"
 
     def dispatch(self, *args, **kwargs):
         return super(MyCommunitiesView, self).dispatch(*args, **kwargs)
@@ -284,14 +284,14 @@ class MyCommunitiesView(TemplateView):
 
         if user_is_admin:
             admin_all_requests = []
-            for request in RequestCommunity.all_requests().order_by('-date_requested'):
+            for request in RequestCommunity.all_requests().order_by("-date_requested"):
                 admin_all_requests.append(cr_json(request))
-            context['admin_all_requests'] = admin_all_requests
-            context['admin_pending_requests'] = RequestCommunity.pending_requests().count()
+            context["admin_all_requests"] = admin_all_requests
+            context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
 
-        context['communities_list'] = [c for c in communities_member_of if c is not None]
-        context['user_pending_requests'] = user_pending_requests
-        context['user_is_admin'] = user_is_admin
+        context["communities_list"] = [c for c in communities_member_of if c is not None]
+        context["user_pending_requests"] = user_pending_requests
+        context["user_is_admin"] = user_is_admin
 
         return context
 
@@ -328,9 +328,9 @@ class CommunityCreationRequests(TemplateView):
                 admin_all_requests.append(cr_json(request))
 
             return {
-                'admin_all_requests': admin_all_requests,
-                'admin_pending_requests': RequestCommunity.pending_requests().count(),
-                'user_is_admin': self.request.user.is_superuser
+                "admin_all_requests": admin_all_requests,
+                "admin_pending_requests": RequestCommunity.pending_requests().count(),
+                "user_is_admin": self.request.user.is_superuser
             }
         else:
             logger.error(denied)
@@ -370,8 +370,8 @@ class CommunityCreationRequest(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
-        if 'rid' in kwargs:
-            rid = int(kwargs['rid'])
+        if "rid" in kwargs:
+            rid = int(kwargs["rid"])
         else:
             rid = None
 
@@ -379,24 +379,24 @@ class CommunityCreationRequest(TemplateView):
 
         if denied == "" and rid is not None:
             req = RequestCommunity.objects.get(id=int(rid))
-            context['community_request'] = cr_json(req)
+            context["community_request"] = cr_json(req)
 
             admin_all_requests = []
-            for request in RequestCommunity.all_requests().order_by('-date_requested'):
+            for request in RequestCommunity.all_requests().order_by("-date_requested"):
                 admin_all_requests.append(cr_json(request))
 
-            context['admin_all_requests'] = admin_all_requests
-            context['admin_pending_requests'] = RequestCommunity.pending_requests().count()
+            context["admin_all_requests"] = admin_all_requests
+            context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
         else:
-            context['denied'] = denied
+            context["denied"] = denied
             logger.error(denied)
 
-        context['user_is_admin'] = self.request.user.is_superuser
+        context["user_is_admin"] = self.request.user.is_superuser
 
         return context
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class TopicsView(TemplateView):
     """
     action: CREATE, READ, UPDATE, DELETE
@@ -404,40 +404,56 @@ class TopicsView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
-        if u.username not in ['czo_national', 'czo_sierra', 'czo_boulder', 'czo_christina', 'czo_luquillo', 'czo_eel',
-                              'czo_catalina-jemez', 'czo_reynolds', 'czo_calhoun', 'czo_shale-hills']:
-            return redirect('/' % request.path)
+        if u.username not in [
+            "czo_national",
+            "czo_sierra",
+            "czo_boulder",
+            "czo_christina",
+            "czo_luquillo",
+            "czo_eel",
+            "czo_catalina-jemez",
+            "czo_reynolds",
+            "czo_calhoun",
+            "czo_shale-hills",
+        ]:
+            return redirect("/" % request.path)
 
-        return render(request, 'pages/topics.html', {'topics_json': self.get_topics_data()})
+        return render(
+            request, "pages/topics.html", {"topics_json": self.get_topics_data()}
+        )
 
     def post(self, request, *args, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
-        if u.username != 'czo_national':
-            return redirect('/' % request.path)
+        if u.username != "czo_national":
+            return redirect("/" % request.path)
 
-        if request.POST.get('action') == 'CREATE':
+        if request.POST.get("action") == "CREATE":
             new_topic = Topic()
-            new_topic.name = request.POST.get('name').replace("--", "")
+            new_topic.name = request.POST.get("name").replace("--", "")
             new_topic.save()
-        elif request.POST.get('action') == 'UPDATE':
+        elif request.POST.get("action") == "UPDATE":
             try:
-                update_topic = Topic.objects.get(id=request.POST.get('id'))
-                update_topic.name = request.POST.get('name')
+                update_topic = Topic.objects.get(id=request.POST.get("id"))
+                update_topic.name = request.POST.get("name")
                 update_topic.save()
             except Exception as e:
                 print("TopicsView error updating topic {}".format(e))
-        elif request.POST.get('action') == 'DELETE':
+        elif request.POST.get("action") == "DELETE":
             try:
-                delete_topic = Topic.objects.get(id=request.POST.get('id'))
+                delete_topic = Topic.objects.get(id=request.POST.get("id"))
                 delete_topic.delete(keep_parents=False)
-            except:
+            except: # noqa
                 print("error")
         else:
-            print("TopicsView POST action not recognized should be CREATE UPDATE or DELETE")
+            print(
+                "TopicsView POST action not recognized should be CREATE UPDATE or DELETE"
+            )
 
-        return render(request, 'pages/topics.html')
+        return render(request, "pages/topics.html")
 
     def get_topics_data(self, **kwargs):
-        topics = Topic.objects.all().values_list('id', 'name', flat=False).order_by('name')
+        topics = (
+            Topic.objects.all().values_list("id", "name", flat=False).order_by("name")
+        )
         topics = list(topics)  # force QuerySet evaluation
         return mark_safe(escapejs(json.dumps(topics)))

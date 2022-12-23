@@ -19,6 +19,7 @@ from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 class TimeSeries(object):
     """represents a one timeseries metadata"""
+
     def __init__(self, network_name, site_name, site_code, latitude, longitude, variable_name,
                  variable_code, method_description, method_link, sample_medium, url, service_type,
                  reference_type, return_type, start_date, end_date, value_count):
@@ -142,6 +143,7 @@ class TimeSeries(object):
 
 class Site(object):
     """represents a site for timeseries data"""
+
     def __init__(self, name, code, latitude, longitude):
         self.name = name
         self.code = code
@@ -179,6 +181,7 @@ class Site(object):
 
 class Variable(object):
     """represents a variable for timeseries data"""
+
     def __init__(self, name, code):
         self.name = name
         self.code = code
@@ -208,6 +211,7 @@ class Variable(object):
 
 class Method(object):
     """represents a method for timeseries data"""
+
     def __init__(self, description, link):
         self.description = description
         self.link = link
@@ -215,6 +219,7 @@ class Method(object):
 
 class RefWebService(object):
     """represents a web service for timeseries data"""
+
     def __init__(self, url, service_type, reference_type, return_type):
         self.url = url
         self.service_type = service_type
@@ -620,7 +625,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 class RefTimeseriesLogicalFile(AbstractLogicalFile):
     """ Each resource file is assigned an instance of this logical file type on upload to
     Composite Resource """
-    metadata = models.OneToOneField(RefTimeseriesFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
+    metadata = models.OneToOneField(RefTimeseriesFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "referenceTimeseriesData"
 
     @classmethod
@@ -777,7 +782,7 @@ def _extract_metadata(resource, logical_file):
     # add resource level abstract if necessary
     logical_file_abstract = logical_file.metadata.get_abstract_from_json()
     if logical_file_abstract and resource.metadata.description is None:
-        resource.metadata.create_element('description',  abstract=logical_file_abstract)
+        resource.metadata.create_element('description', abstract=logical_file_abstract)
 
     # add resource level keywords
     logical_file_keywords = logical_file.metadata.get_keywords_from_json()
@@ -841,7 +846,7 @@ def _validate_json_file(res_json_file):
         json_file_content = res_json_file.fed_resource_file.read()
     try:
         json_data = json.loads(json_file_content)
-    except:
+    except: # noqa
         raise Exception("Not a json file")
     try:
         # validate json_data based on the schema
@@ -958,6 +963,7 @@ def _validate_json_data(json_data):
 def _check_for_empty_string(item_to_chk, item_name):
     if item_to_chk is not None and not item_to_chk.strip():
         raise ValidationError("{} has a value of empty string".format(item_name))
+
 
 TS_SCHEMA = {
     "$schema": "http://json-schema.org/draft-04/schema#",
