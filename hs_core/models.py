@@ -4417,35 +4417,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             missing_recommended_elements.append('Coverage that describes locations that are related to the dataset')
         return missing_recommended_elements
 
-    def delete_all_elements(self):
-        """Delete all metadata elements.
-
-        This method needs to be overriden by any subclass of this class if that class
-        has additional metadata elements
-        """
-        if self.title:
-            self.title.delete()
-        if self.description:
-            self.description.delete()
-        if self.language:
-            self.language.delete()
-        if self.rights:
-            self.rights.delete()
-        if self.publisher:
-            self.publisher.delete()
-        if self.type:
-            self.type.delete()
-
-        self.creators.all().delete()
-        self.contributors.all().delete()
-        self.dates.all().delete()
-        self.identifiers.all().delete()
-        self.coverages.all().delete()
-        self.formats.all().delete()
-        self.subjects.all().delete()
-        self.relations.all().delete()
-        self.funding_agencies.all().delete()
-
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         """Copy all metadata elements from another resource."""
         md_type = ContentType.objects.get_for_model(src_md)
