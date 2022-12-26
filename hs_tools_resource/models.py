@@ -757,6 +757,27 @@ class ToolMetaData(CoreMetaData):
     def _value_exists(self, field):
         return field and field.value
 
+    def delete_all_elements(self):
+        super(ToolMetaData, self).delete_all_elements()
+        self._url_base.all().delete()
+        self._url_base_aggregation.all().delete()
+        self._url_base_file.all().delete()
+        self._version.all().delete()
+        self._supported_res_types.all().delete()
+        self._supported_agg_types.all().delete()
+        self._tool_icon.all().delete()
+        self._supported_sharing_status.all().delete()
+        self._supported_file_extensions.all().delete()
+        self._homepage_url.all().delete()
+
+        self._testing_protocol_url.all().delete()
+        self._help_page_url.all().delete()
+        self._source_code_url.all().delete()
+        self._issues_page_url.all().delete()
+        self._mailing_list_url.all().delete()
+        self._roadmap.all().delete()
+        self.show_on_open_with_list.all().delete()
+
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
