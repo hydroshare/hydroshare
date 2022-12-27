@@ -1,4 +1,6 @@
 # TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+import sys
+
 from PIL import ImageFile
 import os
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
@@ -765,6 +767,21 @@ TASK_NAME_LIST = [
 local_settings = __import__(local_settings_module, globals(), locals(), ["*"])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
+
+if 'test' in sys.argv:
+    import logging
+
+    logging.disable(logging.CRITICAL)
+    DEBUG = False
+    TEMPLATE_DEBUG = False
+    DISABLE_HAYSTACK = True
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
+    OPTIONAL_APPS = (
+        PACKAGE_NAME_FILEBROWSER,
+        PACKAGE_NAME_GRAPPELLI,
+    )
 
 ####################
 # DYNAMIC SETTINGS #
