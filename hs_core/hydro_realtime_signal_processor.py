@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from haystack.signals import RealtimeSignalProcessor
 from haystack.exceptions import NotHandled
 import logging
@@ -20,6 +22,10 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         Given an individual model instance, determine which backends the
         update should be sent to & update the object on those backends.
         """
+        if getattr(settings, "DISABLE_HAYSTACK", False):
+            # haystack has been set to disable state (during test run) - so no need to index
+            return
+
         from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
         from hs_access_control.models import ResourceAccess
         from hs_file_types.models import AbstractFileMetaData
