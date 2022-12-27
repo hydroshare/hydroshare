@@ -22,14 +22,19 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         Given an individual model instance, determine which backends the
         update should be sent to & update the object on those backends.
         """
-        if getattr(settings, "DISABLE_HAYSTACK", False):
-            # haystack has been set to disable state (during test run) - so no need to index
-            return
 
         from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
         from hs_access_control.models import ResourceAccess
         from hs_file_types.models import AbstractFileMetaData
         from django.contrib.postgres.fields import HStoreField
+
+        if getattr(settings, "DISABLE_HAYSTACK", False):
+            # haystack has been set to disable state (during test run)
+            # a resource can be indexed as part of test run by setting one of the keywords as 'INDEX-FOR-TESTING'
+            if isinstance(instance, BaseResource) and not instance.metadata.subjects.filter(
+                    value="INDEX-FOR-TESTING").exists():
+                # no need to index
+                return
 
         if isinstance(instance, BaseResource):
             if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'):
