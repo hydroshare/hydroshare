@@ -60,7 +60,7 @@ from .utils import (
 )
 
 from hs_core.models import (
-    GenericResource,
+    BaseResource,
     resource_processor,
     CoreMetaData,
     Subject,
@@ -424,7 +424,7 @@ def _get_resource_sender(element_name, resource):
     ]
 
     if element_name in core_metadata_element_names:
-        sender_resource = GenericResource().__class__
+        sender_resource = BaseResource().__class__
     else:
         sender_resource = resource.__class__
 
@@ -1656,7 +1656,7 @@ class PatchedChoiceWidget(autocomplete_light.ChoiceWidget):
         return super(PatchedChoiceWidget, self).render(name, value, attrs)
 
 
-@processor_for(GenericResource)
+@processor_for(BaseResource)
 def add_generic_context(request, page):
     user = request.user
     user_zone_account_exist = utils.get_user_zone_status_info(user)
@@ -2174,7 +2174,7 @@ def get_file(request, *args, **kwargs):
     return HttpResponse(open(name), content_type="x-binary/octet-stream")
 
 
-processor_for(GenericResource)(resource_processor)
+processor_for(BaseResource)(resource_processor)
 
 
 def get_metadata_terms_page(request, *args, **kwargs):
