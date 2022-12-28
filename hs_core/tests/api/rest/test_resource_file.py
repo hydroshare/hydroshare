@@ -38,7 +38,7 @@ class TestResourceFile(HSRESTTestCase):
         payload = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
                                           content_type='application/zip',
                                           size=os.stat(zip_path).st_size)
-        res = resource.create_resource('GenericResource',
+        res = resource.create_resource('CompositeResource',
                                        self.user,
                                        'My Test resource',
                                        files=(payload,),

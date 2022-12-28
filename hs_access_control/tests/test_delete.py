@@ -70,7 +70,7 @@ class T13Delete(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.verdi = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='Guiseppe Verdi',
             metadata=[],

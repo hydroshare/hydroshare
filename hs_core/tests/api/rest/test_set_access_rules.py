@@ -28,7 +28,7 @@ class TestSetAccessRules(HSRESTTestCase):
         self.testGroup.delete()
 
     def test_get_access_rules_via_sysmeta(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         keywords = ('foo', 'bar')
         abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
@@ -49,7 +49,7 @@ class TestSetAccessRules(HSRESTTestCase):
         self.assertFalse(content['public'])
 
     def test_get_resource_access(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         keywords = ('foo', 'bar')
         abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
@@ -69,7 +69,7 @@ class TestSetAccessRules(HSRESTTestCase):
         self.assertEqual(self.user.id, response.data['users'][0]['user'])
 
     def test_set_and_delete_user_resource_access(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         keywords = ('foo', 'bar')
         abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
@@ -99,7 +99,7 @@ class TestSetAccessRules(HSRESTTestCase):
         self.assertEqual(1, len(get_response.data['users']))
 
     def test_set_and_delete_group_resource_access(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         keywords = ('foo', 'bar')
         abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
@@ -129,7 +129,7 @@ class TestSetAccessRules(HSRESTTestCase):
         self.assertEqual(0, len(get_response.data['groups']))
 
     def test_no_access(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         keywords = ('foo', 'bar')
         abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
@@ -150,7 +150,7 @@ class TestSetAccessRules(HSRESTTestCase):
         self.assertEqual("You do not have permission to perform this action.", put_response.data['detail'])
 
     def test_errors(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         keywords = ('foo', 'bar')
         abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'

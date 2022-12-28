@@ -32,10 +32,6 @@ class TestResourceTypeFileTypes(TestCase):
     def test_resource_type_supported_file_types(self):
         # here we are testing the get_supported_file_types_for_resource_type view function
 
-        # test for generic resource type
-        resp_json = self._make_request("GenericResource")
-        self.assertEqual(resp_json['file_types'], '".*"')
-
         # test for CollectionResource
         resp_json = self._make_request("CollectionResource")
         self.assertEqual(resp_json['file_types'], '[]')

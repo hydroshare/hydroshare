@@ -7,7 +7,7 @@ from haystack.query import SearchQuerySet
 
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
@@ -28,19 +28,19 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
 
     def test_delete_resource(self):
         new_res = resource.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource'
         )
 
         # there should be one resource at this point
-        self.assertEqual(GenericResource.objects.all().count(), 1, msg="Number of resources not equal to 1")
+        self.assertEqual(BaseResource.objects.all().count(), 1, msg="Number of resources not equal to 1")
 
         # delete the resource - this is the api we are testing
         resource.delete_resource(new_res.short_id)
 
         # there should be no resource at this point
-        self.assertEqual(GenericResource.objects.all().count(), 0, msg="Number of resources not equal to 0")
+        self.assertEqual(BaseResource.objects.all().count(), 0, msg="Number of resources not equal to 0")
 
     def test_delete_resource_public(self):
         # create files
@@ -54,7 +54,7 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
         self.file_one = open(file_one, "rb")
 
         new_res = resource.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource',
             files=(self.file_one,),

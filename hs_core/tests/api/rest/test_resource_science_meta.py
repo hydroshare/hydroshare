@@ -11,7 +11,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
     def setUp(self):
         super(TestResourceScienceMetadata, self).setUp()
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         res = resource.create_resource(self.rtype,
                                        self.user,
@@ -21,7 +21,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.resources_to_delete.append(self.pid)
 
         # create another resource for testing relation metadata
-        another_res = resource.create_resource('GenericResource',
+        another_res = resource.create_resource('CompositeResource',
                                                self.user,
                                                'My another Test resource')
         self.pid2 = another_res.short_id

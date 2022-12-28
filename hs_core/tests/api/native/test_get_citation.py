@@ -3,7 +3,7 @@ from datetime import date
 
 from hs_core.hydroshare import resource
 from django.contrib.auth.models import Group, User
-from hs_core.models import GenericResource, Creator
+from hs_core.models import BaseResource, Creator
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 
@@ -22,7 +22,7 @@ class TestGetCitation(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
             title='Generic resource',
             keywords=['kw1', 'kw2']
@@ -32,7 +32,8 @@ class TestGetCitation(MockIRODSTestCaseMixin, TestCase):
         super(TestGetCitation, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
-        GenericResource.objects.all().delete()
+        self.res.delete()
+        BaseResource.objects.all().delete()
         Creator.objects.all().delete()
 
     def test_one_author(self):

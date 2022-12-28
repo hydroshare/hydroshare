@@ -55,7 +55,7 @@ class TestCreateResource(HSRESTTestCase):
             self.assertGreater(int(response['Content-Length']), 0)
 
     def test_post_resource_get_sysmeta(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
                   'title': title,
@@ -113,7 +113,7 @@ class TestCreateResource(HSRESTTestCase):
         fundingagency
 
         """
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         metadata = []
         metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
@@ -246,7 +246,7 @@ class TestCreateResource(HSRESTTestCase):
 
     def test_resource_create_with_core_and_extra_metadata(self):
 
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         metadata = []
         metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
@@ -281,7 +281,7 @@ class TestCreateResource(HSRESTTestCase):
         self.resources_to_delete.append(res_id)
 
     def test_resource_create_with_extra_metadata(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         extra_metadata = {'latitude': '40', 'longitude': '-110'}
 
@@ -318,7 +318,7 @@ class TestCreateResource(HSRESTTestCase):
         :return:
         """
 
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         # test title
         metadata = []

@@ -1,7 +1,7 @@
 import json
 
 from django.test import TestCase, RequestFactory
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.urls import reverse
 
 from rest_framework import status
@@ -29,12 +29,13 @@ class TestResourceTypeFileTypes(TestCase):
 
         self.factory = RequestFactory()
 
+    def tearDown(self):
+        super(TestResourceTypeFileTypes, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+
     def test_resource_type_multiple_file_upload(self):
         # here we are testing the is_multiple_file_upload_allowed view function
-
-        # test for generic resource type
-        resp_json = self._make_request("GenericResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
 
         # test for CollectionResource
         resp_json = self._make_request("CollectionResource")

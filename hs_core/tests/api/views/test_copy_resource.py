@@ -28,7 +28,7 @@ class TestCopyResource(MockIRODSTestCaseMixin, ViewTestCase):
             groups=[]
         )
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
             title='Generic Resource Key/Value Metadata Testing'
         )

@@ -37,7 +37,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
                                           content_type='application/zip',
                                           size=os.stat(zip_path).st_size)
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         res = resource.create_resource(self.rtype,
                                        self.user,

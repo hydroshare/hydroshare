@@ -9,13 +9,14 @@ class TestCreateResourceVersion(HSRESTTestCase):
     def setUp(self):
         super(TestCreateResourceVersion, self).setUp()
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         res = resource.create_resource(self.rtype,
                                        self.user,
                                        self.title)
 
         self.pid = res.short_id
+        self.resources_to_delete(self.pid)
 
     def test_create_resource_version(self):
         version_url = "/hsapi/resource/%s/version/" % self.pid

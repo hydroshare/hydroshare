@@ -77,7 +77,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # test adding files from federated user zone to an empty resource
         # created in hydroshare zone
         res = hydroshare.resource.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
             title='My Test Generic Resource in HydroShare Zone'
         )
@@ -128,7 +128,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # create a resource in the default HydroShare data iRODS zone for aggregated quota
         # update testing
         res = hydroshare.resource.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource in Data Zone'
         )

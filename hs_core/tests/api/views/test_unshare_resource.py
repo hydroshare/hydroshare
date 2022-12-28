@@ -55,7 +55,7 @@ class TestUnshareResource(MockIRODSTestCaseMixin, TestCase):
             purpose="Testing group access to resource")
 
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.owner,
             title='Generic Resource Share Resource Testing'
         )
