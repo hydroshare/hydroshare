@@ -39,5 +39,5 @@ class TestGetResourceByShortkeyAPI(MockIRODSTestCaseMixin, TestCase):
         # do the test of the api
         self.assertEqual(
             self.resource,
-            hydroshare.get_resource_by_shortkey(resource.short_id)
+            hydroshare.get_resource_by_shortkey(self.resource.short_id)
         )

@@ -85,7 +85,6 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         self.assertTrue(self.n2 in file_list, "file 2 has not been added")
         self.assertTrue(self.n3 in file_list, "file 3 has not been added")
 
-
     def test_add_files_over_quota(self):
         # create a resource
         self.res = create_resource(resource_type='CompositeResource',
@@ -122,4 +121,3 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         except QuotaException as ex:
             self.fail("add resource file action should not raise QuotaException for "
                       "over quota cases if quota is not enforced - Quota Exception: " + str(ex))
-
