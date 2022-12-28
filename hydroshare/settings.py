@@ -772,16 +772,10 @@ if 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
-    DEBUG = False
-    TEMPLATE_DEBUG = False
     DISABLE_HAYSTACK = True
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
-    OPTIONAL_APPS = (
-        PACKAGE_NAME_FILEBROWSER,
-        PACKAGE_NAME_GRAPPELLI,
-    )
 
 ####################
 # DYNAMIC SETTINGS #
