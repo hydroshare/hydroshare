@@ -15,10 +15,6 @@
              data-toggle="tooltip" data-placement="right"
              alt="{{ resource_type }}" title="{{ resource_type }}"
              class="table-res-type-icon"/>
-    {% elif resource.resource_type == "GenericResource" %}
-        <img src="{% static 'img/resource-icons/generic48x48.png' %}"
-             data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
     {% endif %}
 {% endwith %}
 {#  Sharing Status icons #}
