@@ -108,7 +108,7 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         files = [self.myfile1, self.myfile2, self.myfile3]
         with self.assertRaises(QuotaException):
             resource_file_add_pre_process(resource=self.res, files=files,
-                                          user=self.user,
+                                          user=self.user, folder="",
                                           extract_metadata=False)
 
         qmsg.enforce_quota = False
@@ -116,7 +116,7 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         # add files should not raise quota exception since enforce_quota flag is set to False
         try:
             resource_file_add_pre_process(resource=self.res, files=files,
-                                          user=self.user,
+                                          user=self.user, folder="",
                                           extract_metadata=False)
         except QuotaException as ex:
             self.fail("add resource file action should not raise QuotaException for "

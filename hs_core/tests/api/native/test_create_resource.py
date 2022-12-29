@@ -343,7 +343,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         res = resource.create_resource('CompositeResource',
                                        self.user,
                                        'My Test resource',
-                                       files=(raster,))
+                                       files=(raster,), auto_aggregate=False)
         pid = res.short_id
 
         # get the resource by pid
@@ -365,7 +365,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         res = resource.create_resource('CompositeResource',
                                        self.user,
                                        'My Test resource',
-                                       files=(raster, text))
+                                       files=(raster, text), auto_aggregate=False)
         pid = res.short_id
 
         # get the resource by pid

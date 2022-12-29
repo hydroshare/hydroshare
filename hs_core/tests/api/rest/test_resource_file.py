@@ -7,6 +7,7 @@ import shutil
 from rest_framework import status
 
 from hs_core.hydroshare import resource
+from hs_core.models import ResourceFile
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from .base import HSRESTTestCase
 
@@ -38,12 +39,12 @@ class TestResourceFile(HSRESTTestCase):
         payload = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
                                           content_type='application/zip',
                                           size=os.stat(zip_path).st_size)
-        res = resource.create_resource('CompositeResource',
-                                       self.user,
-                                       'My Test resource',
-                                       files=(payload,),
-                                       unpack_file=True)
-        self.pid = res.short_id
+        self.res = resource.create_resource('CompositeResource',
+                                            self.user,
+                                            'My Test resource',
+                                            files=(payload,),
+                                            unpack_file=True)
+        self.pid = self.res.short_id
         self.resources_to_delete.append(self.pid)
 
     def tearDown(self):
@@ -115,7 +116,9 @@ class TestResourceFile(HSRESTTestCase):
         txt = open(txt_file_path, 'w')
         txt.write("Hello World, again.\n")
         txt.close()
-        # Upload the new resource file
+        # create the folder where the file will be uploaded
+        ResourceFile.create_folder(resource=self.res, folder="folder/path")
+        # Upload the new resource file to the above folder
 
         params = {
             'file': (txt_file_name, open(txt_file_path, 'rb'), 'text/plain'),

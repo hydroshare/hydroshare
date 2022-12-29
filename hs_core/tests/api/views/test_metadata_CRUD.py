@@ -66,7 +66,7 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
 
         # update title metadata
         self.assertEqual(self.gen_res.metadata.title.value,
-                         'Generic Resource Key/Value Metadata Testing')
+                         'Resource Key/Value Metadata Testing')
         title_element = self.gen_res.metadata.title
 
         url_params = {'shortkey': self.gen_res.short_id, 'element_name': 'title',

@@ -16,7 +16,7 @@ class TestCreateResourceVersion(HSRESTTestCase):
                                        self.title)
 
         self.pid = res.short_id
-        self.resources_to_delete(self.pid)
+        self.resources_to_delete.append(self.pid)
 
     def test_create_resource_version(self):
         version_url = "/hsapi/resource/%s/version/" % self.pid

@@ -57,7 +57,7 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
 
     def test_get_resource_instance(self):
         self.assertEqual(
-            utils.get_resource_instance('hs_core', 'CompositeResource', self.res.pk),
+            utils.get_resource_instance('hs_composite_resource', 'CompositeResource', self.res.pk),
             self.res
         )
 
