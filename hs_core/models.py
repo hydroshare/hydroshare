@@ -2450,8 +2450,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         for fl in self.files.all():
             # COUCH: delete of file objects now cascades.
             fl.delete(delete_logical_file=True)
-        # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
-        self.metadata.delete_all_elements()
         self.metadata.delete()
         hs_bagit.delete_files_and_bag(self)
         super(AbstractResource, self).delete()
@@ -3140,7 +3138,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                 self._size = self.fed_resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
-                logger.warn("file {} not found".format(self.storage_path))
+                logger.warning("file {} not found".format(self.storage_path))
                 self._size = 0
         else:
             if __debug__:
@@ -3150,9 +3148,9 @@ class ResourceFile(ResourceFileIRODSMixin):
                 self._size = self.resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
-                logger.warn("file {} not found".format(self.storage_path))
+                logger.warning("file {} not found".format(self.storage_path))
                 self._size = 0
-        self.save()
+        self.save(update_fields=["_size"])
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):
@@ -3836,15 +3834,14 @@ class BaseResource(Page, AbstractResource):
         Raises SessionException if iRODS fails.
         """
         # trigger file size read for files that haven't been set yet
-        for f in self.files.filter(_size__lt=0):
-            f.calculate_size()
-        # compute the total file size for the resource
-        res_size_dict = self.files.aggregate(Sum('_size'))
-        # handle case if no resource files
-        res_size = res_size_dict['_size__sum']
-        if not res_size:
-            # in case of no files
-            res_size = 0
+        res_size = 0
+        if self.files.count() > 0:
+            for f in self.files.filter(_size__lt=0):
+                f.calculate_size()
+            # compute the total file size for the resource
+            res_size_dict = self.files.aggregate(Sum('_size'))
+            res_size = res_size_dict['_size__sum']
+
         return res_size
 
     @property
