@@ -233,7 +233,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     extra = indexes.MultiValueField(stored=False)
 
     def _cache_queryset(self, obj, attribute_name, qs_to_cache):
-        # Here is the link why we are setting the a cached_attribute on obj (resource) to minimize DB queries
+        # Here is the link why we are setting a cached_attribute on obj (resource) to minimize DB queries
         # https://docs.djangoproject.com/en/1.11/topics/db/queries/#caching-and-querysets
         if not hasattr(obj, attribute_name):
             setattr(obj, attribute_name, qs_to_cache)
@@ -278,7 +278,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return metadata title if exists, otherwise return 'none'."""
 
         if self._has_metadata(obj):
-            self._cache_queryset(obj, 'cached_title', obj.metadata.title)
+            if not hasattr(obj, 'cached_title'):
+                self._cache_queryset(obj, 'cached_title', obj.metadata.title)
             title = obj.cached_title
             if title is not None and title.value is not None:
                 return title.value.lstrip()
