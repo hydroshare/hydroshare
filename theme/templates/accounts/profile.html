@@ -193,7 +193,7 @@
                                     {#        Country       #}
                                     <fieldset>
                                         <label>Country *</label>
-                                        <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
+                                        <select id="country" name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
                                     </fieldset>
 
                                     {#        State       #}
@@ -516,7 +516,8 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
+                                                    {# this assumes that the phone will be in the same country as the profile #}
+                                                    <input id="phone1" name="phone_1" class="form-control bfh-phone phone" data-country="country" type="tel" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
                                                 </div>
                                             </fieldset>
 
@@ -537,7 +538,8 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
+                                                    {# this assumes that the phone will be in the same country as the profile #}
+                                                    <input id="phone2" name="phone_2" class="form-control bfh-phone phone" data-country="country" type="tel" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
                                                 </div>
                                             </fieldset>
                                             <fieldset class="col-sm-12">
@@ -901,6 +903,9 @@
 
 {% block extra_js %}
     {{ block.super }}
+    <script>
+        var PHONES = {'phone_1': "{{profile_user.userprofile.phone_1}}", 'phone_2': "{{profile_user.userprofile.phone_2}}" };
+    </script>
     <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/profile.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/jquery.tagsinput-revisited.min.js' %}"></script>

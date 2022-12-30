@@ -245,6 +245,56 @@ function getUrlVars()
     return vars;
 }
 
+function isPhoneValidInCountry(phone, country){
+    if (!BFHPhoneFormatList.hasOwnProperty(country)) return false;
+    let BFHString = BFHPhoneFormatList[country];
+
+    // Turn the string into a regex
+    stringFormat = BFHString.replace(/\s/g, String.fromCharCode(92)+"s");
+    stringFormat = stringFormat.replace("+", String.fromCharCode(92)+"+");
+    stringFormat = stringFormat.replace("(", String.fromCharCode(92)+"(");
+    stringFormat = stringFormat.replace(")", String.fromCharCode(92)+")");
+    stringFormat = stringFormat.replace(/d/g, String.fromCharCode(92)+"d");
+    stringFormat = new RegExp(stringFormat);
+    return stringFormat.test(phone) || BFHString;
+}
+
+function isPhoneCountryCodeOnly(phone, country){
+    if (!BFHPhoneFormatList.hasOwnProperty(country)) return false;
+    let BFHString = BFHPhoneFormatList[country];
+    let stringFormat = BFHString.replace(/d/g, '');
+    stringFormat = stringFormat.replace(/[\(\)-]/g, '');
+    return phone.trim().length === stringFormat.trim().length
+}
+
+function resetPhoneValues(){
+    const oldPhones = PHONES || null;
+    if (!oldPhones || oldPhones === 'None') return;
+    $('input[type="tel"]').each(function(){
+        let phoneField = $(this);
+        if (oldPhones[phoneField[0].name] === 'None') return;
+        phoneField.val(oldPhones[phoneField[0].name]);
+    });
+    checkForInvalidPhones();
+}
+
+function checkForInvalidPhones(country){
+    country = country || $("#country").val()
+    $('input[type="tel"]').each(function(){
+        let phoneField = $(this);
+        phoneField.siblings('.error-label').remove();
+        phoneField.removeClass('form-invalid');
+        const phoneValidation = isPhoneValidInCountry(phoneField.val(), country);
+        const onlyCode = isPhoneCountryCodeOnly(phoneField.val(), country);
+        onlyCode ? phoneField.addClass('only-country-code') : phoneField.removeClass('only-country-code');
+        if ( phoneValidation !== true && !onlyCode){
+            phoneField
+                .addClass('form-invalid')
+                .parent().append(errorLabel(`Please update to format: [${phoneValidation}]`));
+        }
+    });
+}
+
 $(document).ready(function () {
     // Multiple orgs are a string delimited by ";" --wrap them so we can style them
     $("#organization").splitAndWrapWithClass(";", "organization-divider");
@@ -377,4 +427,19 @@ $(document).ready(function () {
         // clear out the edit query params so edit mode isn't reopened on save
         history.pushState('', document.title, window.location.pathname);
     }
+
+    // Event listeners for profile phone changes
+    $('input[type="tel"]').on('keyup', function(){
+        checkForInvalidPhones();
+    });
+    $('#country').on('change', function(){
+        resetPhoneValues();
+    });
+
+    $('.btn-save-profile').click(function(e){
+        // clear phones that only have country codes before submit
+        $('.only-country-code').val("");
+    });
+
+    resetPhoneValues();
 });
