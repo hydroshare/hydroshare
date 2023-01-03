@@ -1,8 +1,8 @@
-from django.conf import settings
-
-from haystack.signals import RealtimeSignalProcessor
-from haystack.exceptions import NotHandled
 import logging
+
+from django.conf import settings
+from haystack.exceptions import NotHandled
+from haystack.signals import RealtimeSignalProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -69,14 +69,15 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 newbase = instance.resource
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                logger.exception("{} exception: {}".format(type(instance), e))
+                logger.exception("{} exception: {}".format(type(instance), str(e)))
 
         elif isinstance(instance, CoreMetaData):
             try:
                 newbase = instance.resource
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                logger.exception("{} exception: {}".format(type(instance), e))
+                logger.exception("{} exception: {}".format(type(instance), str(e)))
+
         elif isinstance(instance, AbstractMetaDataElement):
             if isinstance(instance.metadata, AbstractFileMetaData):
                 try:
@@ -84,21 +85,21 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                     newbase = instance.metadata.logical_file.resource
                     self.handle_save(BaseResource, newbase)
                 except Exception as e:
-                    logger.exception("{} exception: {}".format(type(instance), e))
+                    logger.exception("{} exception: {}".format(type(instance), str(e)))
             else:
                 try:
                     # resolve the BaseResource corresponding to the metadata element.
                     newbase = instance.metadata.resource
                     self.handle_save(BaseResource, newbase)
                 except Exception as e:
-                    logger.exception("{} exception: {}".format(type(instance), e))
+                    logger.exception("{} exception: {}".format(type(instance), str(e)))
 
         elif isinstance(instance, HStoreField):
             try:
                 newbase = BaseResource.objects.get(extra_metadata=instance)
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                logger.exception("{} exception: {}".format(type(instance), e))
+                logger.exception("{} exception: {}".format(type(instance), str(e)))
 
     def handle_delete(self, sender, instance, **kwargs):
         """
