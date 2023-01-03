@@ -3476,7 +3476,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Check existence of logical file."""
         return self.logical_file is not None
 
-
     @property
     def logical_file(self):
         """Return content_object of logical file."""
