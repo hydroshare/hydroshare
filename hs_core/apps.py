@@ -13,5 +13,5 @@ class HSCoreAppConfig(AppConfig):
         """On application ready, import receivers for Django signals."""
         from . import receivers  # noqa
 
-        from hydroshare.health_check import HsHealthCheckBackend
-        plugin_dir.register(HsHealthCheckBackend)
+        from hydroshare.health_check import PeriodicTasksHealthCheck
+        plugin_dir.register(PeriodicTasksHealthCheck)

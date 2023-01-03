@@ -108,6 +108,7 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(day_of_month=1), monthly_group_membership_requests_cleanup.s())
         sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
         sender.add_periodic_task(crontab(day_of_week=1), task_notification_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=1), nightly_periodic_task_check.s())
 
 
 # Currently there are two different cleanups scheduled.
@@ -136,6 +137,12 @@ def nightly_zips_cleanup():
             istorage = IrodsStorage("federated")
             if istorage.exists(zips_daily_date):
                 istorage.delete(zips_daily_date)
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def nightly_periodic_task_check():
+    with open("celery/periodic_tasks_last_executed.txt", mode='w') as file:
+        file.write(timezone.now().strftime('%m/%d/%y %H:%M:%S'))
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
