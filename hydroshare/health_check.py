@@ -8,7 +8,7 @@ class PeriodicTasksHealthCheck(BaseHealthCheckBackend):
     def check_status(self):
         try:
             with open("celery/periodic_tasks_last_executed.txt", mode='r') as file:
-                datetime_string = file.read()
+                datetime_string = file.read().rstrip()
             dt = datetime.strptime(datetime_string, '%m/%d/%y %H:%M:%S')
             cutoff_date = datetime.now() - timedelta(days=1)
             if dt < cutoff_date:
