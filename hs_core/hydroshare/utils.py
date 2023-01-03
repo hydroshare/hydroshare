@@ -547,8 +547,8 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     # seems this is the best place to sync resource title with metadata title
     resource.title = resource.metadata.title.value
     resource.save()
-    if resource.metadata.dates.all().filter(type='modified'):
-        res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
+    res_modified_date = resource.metadata.dates.all().filter(type='modified').first()
+    if res_modified_date:
         resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:

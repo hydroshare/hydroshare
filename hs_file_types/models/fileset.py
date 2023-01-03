@@ -218,7 +218,7 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         for child_aggr in self.get_children():
             if child_aggr.is_fileset:
                 child_aggr.folder = new_folder + child_aggr.folder[len(old_folder):]
-                child_aggr.save()
+                child_aggr.save(update_fields=["folder"])
 
         # update self
         self.folder = new_folder + self.folder[len(old_folder):]

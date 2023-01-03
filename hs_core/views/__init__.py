@@ -718,8 +718,9 @@ def get_resource_metadata(request, shortkey, *args, **kwargs):
     )
     res_metadata = dict()
     res_metadata["title"] = resource.metadata.title.value
-    if resource.metadata.description:
-        res_metadata["abstract"] = resource.metadata.description.abstract
+    description = resource.metadata.description
+    if description:
+        res_metadata["abstract"] = description.abstract
     else:
         res_metadata["abstract"] = None
     creators = []
@@ -911,7 +912,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
         hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     except ValidationError as err:
         request.session["validation_error"] = str(err)
-        logger.warn(str(err))
+        logger.warning(str(err))
     finally:
         request.session["resource-mode"] = "edit"
 
@@ -939,14 +940,14 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
         except ValidationError as err:
             request.session["resource-mode"] = "edit"
             request.session["validation_error"] = str(err)
-            logger.warn(str(err))
+            logger.warning(str(err))
             return HttpResponseRedirect(request.META["HTTP_REFERER"])
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
             # ObjectDoesNotExist exception as legitimate in delete_multiple_files() without
             # raising this specific exception
-            logger.warn(str(ex))
+            logger.warning(str(ex))
             continue
 
     request.session["resource-mode"] = "edit"
@@ -1017,7 +1018,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             return HttpResponseRedirect("/my-resources/")
         except ValidationError as ex:
             request.session["validation_error"] = str(ex)
-            logger.warn(str(ex))
+            logger.warning(str(ex))
             return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
 
@@ -1192,7 +1193,7 @@ def publish(request, shortkey, *args, **kwargs):
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
-        logger.warn(str(exp))
+        logger.warning(str(exp))
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
 
@@ -1214,7 +1215,7 @@ def submit_for_review(request, shortkey, *args, **kwargs):
         hydroshare.submit_resource_for_review(request, shortkey)
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
-        logger.warn(str(exp))
+        logger.warning(str(exp))
     else:
         message = """Congratulations!
                 Your resource is under review for appropriate minimum metadata and to ensure that it adheres to
