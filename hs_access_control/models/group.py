@@ -227,7 +227,7 @@ class GroupAccess(models.Model):
         These include resources that are directly editable, as well as those editable
         via membership in a group.
         """
-        return BaseResource.objects.filter(self.__edit_resources_of_group)
+        return BaseResource.objects.filter(self.__edit_resources_of_group).select_related('raccess')
 
     @property
     def owned_resources(self):
@@ -239,7 +239,7 @@ class GroupAccess(models.Model):
         This is independent of whether the resource is editable by the group.
 
         """
-        return BaseResource.objects.filter(self.__owned_resources_of_group)
+        return BaseResource.objects.filter(self.__owned_resources_of_group).select_related('raccess')
 
     @property
     def group_membership_requests(self):

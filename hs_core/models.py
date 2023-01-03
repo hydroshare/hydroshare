@@ -613,7 +613,7 @@ class Party(AbstractMetaDataElement):
             party.is_active_user = user.is_active
         else:
             party.is_active_user = False
-        party.save()
+        party.save(update_fields=["is_active_user"])
 
         if isinstance(party, Creator) and creator_order is not None:
             if party.order != creator_order:
@@ -627,14 +627,14 @@ class Party(AbstractMetaDataElement):
                     if party.order > creator_order:
                         if res_cr.order < party.order and not res_cr.order < creator_order:
                             res_cr.order += 1
-                            res_cr.save()
+                            res_cr.save(update_fields=["order"])
                     else:
                         if res_cr.order > party.order and res_cr.order <= creator_order:
                             res_cr.order -= 1
-                            res_cr.save()
+                            res_cr.save(update_fields=["order"])
 
                 party.order = creator_order
-                party.save()
+                party.save(update_fields=["order"])
 
     @property
     def relative_uri(self):
@@ -664,7 +664,7 @@ class Party(AbstractMetaDataElement):
             for cr in creators_to_update:
                 if cr.order > party.order:
                     cr.order -= 1
-                    cr.save()
+                    cr.save(update_fields=["order"])
         party.delete()
 
     @classmethod
@@ -1171,11 +1171,8 @@ class GeospatialRelation(AbstractRelation):
                 continue
             text = f"{name} [{relative_id}]"
             if self.text != text:
-                print(f"Updating {self.value}, '{self.text}' to '{text}'.")
                 self.text = text
                 self.save()
-            else:
-                print(f"Not updating relation '{self.value}'. Geoconnex API matches HS.")
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
@@ -2062,11 +2059,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     def update_view_count(self, request):
         self.view_count += 1
-        self.save()
+        self.save(update_fields=["view_count"])
 
     def update_download_count(self):
         self.download_count += 1
-        self.save()
+        self.save(update_fields=["download_count"])
 
     # definition of resource logic
     @property
@@ -2098,8 +2095,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         and False otherwise
         """
         has_files = self.has_required_content_files()
+        if not has_files:
+            return False
+
         has_metadata = self.has_required_metadata
-        return has_files and has_metadata
+        return has_metadata
 
     def set_discoverable(self, value, user=None):
         """Set the discoverable flag for a resource.
@@ -2554,13 +2554,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         CITATION_ERROR = "Failed to generate citation."
 
-        first_author = self.metadata.creators.all().filter(order=1)[0]
+        creators = self.metadata.creators.all()
+        first_author = [cr for cr in creators if cr.order == 1][0]
         if first_author.organization and not first_author.name:
             citation_str_lst.append(first_author.organization + ", ")
         else:
             citation_str_lst.append(self.parse_citation_name(first_author.name, first_author=True))
 
-        other_authors = self.metadata.creators.all().filter(order__gt=1)
+        other_authors = [cr for cr in creators if cr.order > 1]
         for author in other_authors:
             if author.organization and not author.name:
                 citation_str_lst.append(author.organization + ", ")
@@ -2573,25 +2574,38 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             return CITATION_ERROR
 
-        if self.metadata.dates.all().filter(type='published'):
-            citation_date = self.metadata.dates.all().filter(type='published')[0]
-        elif self.metadata.dates.all().filter(type='modified'):
-            citation_date = self.metadata.dates.all().filter(type='modified')[0]
+        meta_dates = self.metadata.dates.all()
+        published_date = [dt for dt in meta_dates if dt.type == "published"]
+        citation_date = None
+        if published_date:
+            citation_date = published_date[0]
         else:
+            modified_date = [dt for dt in meta_dates if dt.type == "modified"]
+            if modified_date:
+                citation_date = modified_date[0]
+
+        if citation_date is None:
             return CITATION_ERROR
 
         citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
         citation_str_lst.append(self.metadata.title.value)
 
         isPendingActivation = False
-        if self.metadata.identifiers.all().filter(name="doi") and not forceHydroshareURI:
-            hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
+        identifiers = self.metadata.identifiers.all()
+        doi = [idn for idn in identifiers if idn.name == "doi"]
+        if doi:
+            doi = doi[0]
+
+        if doi and not forceHydroshareURI:
+            hs_identifier = doi
             if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
                 isPendingActivation = True
-        elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
-            hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         else:
-            return CITATION_ERROR
+            hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
+            if hs_identifier:
+                hs_identifier = hs_identifier[0]
+            else:
+                return CITATION_ERROR
 
         citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
@@ -3462,26 +3476,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Check existence of logical file."""
         return self.logical_file is not None
 
-    @property
-    def get_or_create_logical_file(self):
-        """
-        Create a logical file on the fly if it does not exist
-
-        This is a temporary fix just for release 1.14. It is expected that further
-        work on logical files will make this unnecessary.
-        """
-        # prevent import loops
-        from hs_file_types.models.generic import GenericLogicalFile
-        if self.content_object.resource_type == "CompositeResource":
-            if not self.has_logical_file:
-                logical_file = GenericLogicalFile.create()
-                self.logical_file_content_object = logical_file
-                self.save()
-                logger = logging.getLogger(__name__)
-                logger.warn("auto-create logical file for {}".format(self.storage_path))
-            return self.logical_file
-        else:
-            return None
 
     @property
     def logical_file(self):
@@ -4002,18 +3996,20 @@ class BaseResource(Page, AbstractResource):
                     relation_updated = True
             return relation_updated
 
-        replace_relation = self.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
+        relations = self.metadata.relations.all()
+        replace_relation = [rel for rel in relations if rel.type == RelationTypes.isReplacedBy]
         replace_relation_updated = False
-        if replace_relation is not None:
+        if replace_relation:
+            replace_relation = replace_relation[0]
             replace_relation_updated = _update_relation_meta(replace_relation)
 
         part_of_relation_updated = False
-        for part_of_relation in self.metadata.relations.filter(type=RelationTypes.isPartOf).all():
+        for part_of_relation in [rel for rel in relations if rel.type == RelationTypes.isPartOf]:
             if _update_relation_meta(part_of_relation):
                 part_of_relation_updated = True
 
         has_part_relation_updated = False
-        for has_part_relation in self.metadata.relations.filter(type=RelationTypes.hasPart).all():
+        for has_part_relation in [rel for rel in relations if rel.type == RelationTypes.hasPart]:
             if _update_relation_meta(has_part_relation):
                 has_part_relation_updated = True
 

@@ -125,7 +125,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         mp_aggr = self.logical_file
         for mi_metadata in mp_aggr.mi_metadata_objects.all():
             mi_metadata.is_dirty = True
-            mi_metadata.save()
+            mi_metadata.save(update_fields=["is_dirty"])
 
         super(ModelProgramFileMetaData, self).delete()
 
@@ -482,7 +482,7 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
 
         for mi_metadata in self.mi_metadata_objects.all():
             mi_metadata.is_dirty = True
-            mi_metadata.save()
+            mi_metadata.save(update_fields=["is_dirty"])
 
         super(ModelProgramLogicalFile, self).delete()
 
@@ -674,13 +674,13 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         """set metadata to dirty for all the model instances related to this model program instance"""
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
-            mi_meta.save()
+            mi_meta.save(update_fields=["is_dirty"])
 
     def set_metadata_dirty(self):
         super(ModelProgramLogicalFile, self).set_metadata_dirty()
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
-            mi_meta.save()
+            mi_meta.save(update_fields=["is_dirty"])
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
