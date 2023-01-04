@@ -141,7 +141,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             for res_file in res_files:
                 if res_file.has_logical_file:
                     res_file.logical_file_content_object = None
-                    res_file.save(update_fields=["logical_file_content_object"])
+                    res_file.save()
 
             # create a model program/instance logical file object
             logical_file = cls.create_aggregation(dataset_name=dataset_name,
@@ -370,7 +370,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         # resource files associated with the aggregation
         for res_file in self.files.all():
             res_file.logical_file_content_object = None
-            res_file.save(update_fields=["logical_file_content_object"])
+            res_file.save()
 
         # delete logical file (aggregation) first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated

@@ -1279,7 +1279,7 @@ class AbstractLogicalFile(models.Model):
         # resource files associated with the aggregation
         for res_file in self.files.all():
             res_file.logical_file_content_object = None
-            res_file.save(update_fields=["logical_file_content_object"])
+            res_file.save()
 
         # delete logical file (aggregation) first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated
