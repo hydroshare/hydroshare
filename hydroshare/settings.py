@@ -336,6 +336,15 @@ INSTALLED_APPS = (
     "markdown",
     "hs_communities",
     "hs_discover",
+    "health_check",
+    "health_check.db",
+    "health_check.cache",
+    "health_check.storage",
+    "health_check.contrib.migrations",
+    "health_check.contrib.celery",
+    "health_check.contrib.celery_ping",
+    "health_check.contrib.psutil",
+    "health_check.contrib.rabbitmq",
 )
 
 SWAGGER_SETTINGS = {
