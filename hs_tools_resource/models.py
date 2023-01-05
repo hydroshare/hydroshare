@@ -725,7 +725,9 @@ class ToolMetaData(CoreMetaData):
             return False
         return True
 
-    def get_required_missing_elements(self):  # show missing required meta
+    def get_required_missing_elements(self, desired_state='discoverable'):  # show missing required meta
+        if desired_state == 'published':
+            return []
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
 
         # At least one of the two metadata must exist: Home Page URL or App-launching URL Pattern

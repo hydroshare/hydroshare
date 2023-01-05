@@ -4361,19 +4361,19 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         return True
 
-    def get_required_missing_elements(self, desired_resource_state='discoverable'):
+    def get_required_missing_elements(self, desired_state='discoverable'):
         """Return a list of required missing metadata elements.
 
         This method needs to be overriden by any subclass of this class
         if they implement additional metadata elements that are required
         """
 
-        resource_states = ('discoverable', 'published')
-        if desired_resource_state not in resource_states:
+        resource_states = ('discoverable', 'public', 'published')
+        if desired_state not in resource_states:
             raise ValidationError(f"Desired resource state is not in: {','.join(resource_states)}")
 
         missing_required_elements = []
-        if desired_resource_state == 'discoverable':
+        if desired_state != 'published':
             if not self.title:
                 missing_required_elements.append('Title (at least 30 characters)')
             elif self.title.value.lower() == 'untitled resource':
@@ -4384,7 +4384,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 missing_required_elements.append('Rights')
             if self.subjects.count() == 0:
                 missing_required_elements.append('Keywords (at least 3)')
-        elif desired_resource_state == 'published':
+        else:
             if not self.title or len(self.title.value) < 30:
                 missing_required_elements.append('The title must be at least 30 characters.')
             if not self.description or len(self.description.abstract) < 150:
