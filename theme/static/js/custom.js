@@ -177,7 +177,7 @@ $(document).ready(function () {
             if(!user.organization)
                 missing_profile_fields.push('Organization')
             if(!user.country)
-                missing_profile_fields.push('Nation')
+                missing_profile_fields.push('Country')
             if(!user.user_type)
                 missing_profile_fields.push('User Type')
             if(missing_profile_fields.length) {

@@ -71,13 +71,13 @@
 
           {#        Country       #}
           <fieldset>
-              <small class="text-muted">Nation *</small>
+              <small class="text-muted">Country *</small>
               <select id="id_country" name="country" class="form-control form-required input-medium bfh-countries" data-country=""></select>
           </fieldset>
 
           {#        State       #}
           <div class="form-group">
-            <small class="text-muted">Subnational Division (State, Province, Region, etc)</small>
+            <small class="text-muted">State/Region</small>
             <select id="id_state" class="form-control bfh-states" name="state" data-country="id_country"></select>
           </div>
         </div>
@@ -152,7 +152,7 @@
             var requiredFieldsToCheck = ["#id_username", "#id_email", "#id_password1",
                 "#id_password2",  "[name='organization']", "#id_country"];
             var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', "Organization",
-                "Nation", "Subnational Division (State, Province, Region, etc)"];
+                "Country", "State/Region"];
             var empty = false;
             var missingFields = 'Data missing for:';
             var missingFieldCount = 0;

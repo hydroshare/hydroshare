@@ -192,13 +192,13 @@
 
                                     {#        Country       #}
                                     <fieldset>
-                                        <label>Nation *</label>
+                                        <label>Country *</label>
                                         <select id="country" name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
                                     </fieldset>
 
                                     {#        State       #}
                                     <fieldset>
-                                        <label>Subnational Division (State, Province, Region, etc)</label>
+                                        <label>State/Region</label>
                                         <select id="state" name="state" class="form-control input-medium bfh-states" data-country="country" data-state="{{ profile.state }}"></select>
                                     </fieldset>
                                 </div>
@@ -357,19 +357,19 @@
                                                 <tbody>
                                                 {% if profile.user_type and profile.user_type != "Unspecified"%}
                                                     <tr>
-                                                        <td><span class="text-muted">User type:</span></td>
+                                                        <td><span class="text-muted">User type</span></td>
                                                         <td id="db-user-type">{{ profile.user_type }}</td>
                                                     </tr>
                                                 {% endif %}
                                                 {% if profile.country and profile.country != "Unspecified" %}
                                                     <tr>
-                                                        <td><span class="text-muted">Nation:</span></td>
-                                                        <td><span class="bfh-countries" data-country="{{ profile.country }}"></span></td>
+                                                        <td><span class="text-muted">Country</span></td>
+                                                        <td>{{ profile.country }}</td>
                                                     </tr>
                                                 {% endif %}
                                                 {% if profile.state and profile.state != "Unspecified"%}
                                                     <tr>
-                                                        <td><span class="text-muted">Subnational Division:</span></td>
+                                                        <td><span class="text-muted">State/Region:</span></td>
                                                         <td><span id="db-state" class="bfh-states" data-state="{{ profile.state }}" data-country="{{ profile.country }}"></span></td>
                                                     </tr>
                                                 {% endif %}

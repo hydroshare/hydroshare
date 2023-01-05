@@ -6,8 +6,8 @@
         
         User Type: {{ user.userprofile.user_type }}
         Organization: {{ user.userprofile.organization }}
-        Nation: {{ user.userprofile.country }}
-        Subnational Division: {{ user.userprofile.state }}
+        Country: {{ user.userprofile.country }}
+        State/Region: {{ user.userprofile.state }}
         Email: {{ user.email }}
         {% if user.userprofile.title %}User Title: {{ user.userprofile.title }}{% endif %}
         {% if explanation %}Explanation: {{ explanation }}{% endif %}
