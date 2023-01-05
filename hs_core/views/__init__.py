@@ -2452,7 +2452,7 @@ class MyGroupsView(TemplateView):
         return super(MyGroupsView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        u = User.objects.get(pk=self.request.user.id)
+        u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
 
         groups = u.uaccess.my_groups
         group_membership_requests = (
@@ -2494,13 +2494,13 @@ class GroupView(TemplateView):
 
     def get_context_data(self, **kwargs):
         group_id = kwargs["group_id"]
-        g = Group.objects.get(pk=group_id)
+        g = Group.objects.select_related("gaccess").get(pk=group_id)
 
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
         for res in g.gaccess.view_resources:
-            grp = GroupResourcePrivilege.objects.get(resource=res, group=g)
+            grp = GroupResourcePrivilege.objects.select_related("grantor").get(resource=res, group=g)
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
@@ -2511,7 +2511,7 @@ class GroupView(TemplateView):
 
         if self.request.user.is_authenticated:
             group_members = g.gaccess.members
-            u = User.objects.get(pk=self.request.user.id)
+            u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
             u.is_group_editor = g in u.uaccess.edit_groups
             u.is_group_viewer = (
@@ -2575,7 +2575,7 @@ def my_resources_filter_counts(request, *args, **kwargs):
     View for counting resources that belong to a given user.
     """
     _ = request.GET.getlist("filter", default=None)
-    u = User.objects.get(pk=request.user.id)
+    u = User.objects.select_related("uaccess").get(pk=request.user.id)
 
     filter_counts = get_my_resources_filter_counts(u)
 
@@ -2594,7 +2594,7 @@ def my_resources(request, *args, **kwargs):
         filter = request.GET.getlist("f", default=[])
     else:
         filter = [request.GET["new_filter"]]
-    u = User.objects.get(pk=request.user.id)
+    u = User.objects.select_related("uaccess").get(pk=request.user.id)
 
     if not filter:
         # add default filters
