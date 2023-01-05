@@ -13,7 +13,8 @@ from django.conf import settings
 from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
-    CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm
+    CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm, \
+    GeospatialRelationValidationForm
 
 
 @receiver(post_save, sender=User)
@@ -69,6 +70,8 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 
     elif element_name == 'relation':
         element_form = RelationValidationForm(request.POST)
+    elif element_name == 'geospatialrelation':
+        element_form = GeospatialRelationValidationForm(request.POST)
     elif element_name == 'rights':
         element_form = RightsValidationForm(request.POST)
     elif element_name == 'language':
@@ -106,9 +109,9 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     request = kwargs['request']
     repeatable_elements = {'creator': CreatorValidationForm,
                            'contributor': ContributorValidationForm,
-                           'relation': RelationValidationForm
+                           'relation': RelationValidationForm,
+                           'geospatialrelation': GeospatialRelationValidationForm
                            }
-
     if element_name == 'title':
         element_form = TitleValidationForm(request.POST)
     elif element_name == "description":   # abstract

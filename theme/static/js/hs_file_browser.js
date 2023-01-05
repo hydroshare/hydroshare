@@ -275,11 +275,11 @@ function updateSelectionMenuContext() {
         uiActionStates.setModelInstanceFileType.disabled = true;
 
         const foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
-        if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
+        if(resourceType === 'Resource' && foldersSelected.length > 1) {
             uiActionStates.removeAggregation.disabled = true;
             uiActionStates.setFileSetFileType.disabled = true;
         }
-        if(resourceType !== 'Composite Resource') {
+        if(resourceType !== 'Resource') {
             uiActionStates.removeAggregation.disabled = true;
         }
         $("#fileTypeMetaData").html(file_metadata_alert);
@@ -505,7 +505,7 @@ function updateSelectionMenuContext() {
         uiActionStates.setModelInstanceFileType.disabled = true;
         uiActionStates.preview.disabled = true;
 
-        if (resourceType === 'Composite Resource') {
+        if (resourceType === 'Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
                 const logicalFileType = $(this).attr("data-logical-file-type");
                 //disable folder creation in aggregation folders
@@ -1065,7 +1065,7 @@ function showFileTypeMetadata(file_type_time_series, url){
         return;
     }
     resource_mode = resource_mode.toLowerCase();
-    if(RESOURCE_PUBLISHED) {
+    if(RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
         resource_mode = 'view';
     }
     var $url;
@@ -1675,7 +1675,7 @@ function refreshFileBrowser(name) {
         }).complete(function(res) {
             if (res.responseText) {
                 let extRefs = JSON.parse(res.responseText).filenames
-                if (extRefs.length && RESOURCE_MODE === 'Edit') {
+                if (extRefs.length && RESOURCE_MODE === 'Edit' && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
                     document.getElementById('edit-citation-control').style.display = 'block'
                 } else {
                     document.getElementById('edit-citation-control').style.display = 'none'
@@ -1778,7 +1778,7 @@ function warnExternalContent(shortId) {
 function onUploadSuccess(file, response) {
     // uploaded files can affect metadata in composite resource.
     // Use the json data returned from backend to update UI
-    if (RES_TYPE === 'Composite Resource') {
+    if (RES_TYPE === 'Resource') {
         updateResourceUI();
     }
     showCompletedMessage(response);
@@ -1870,7 +1870,7 @@ $(document).ready(function () {
     var mode = $("#hs-file-browser").attr("data-mode");
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
-    if (mode === "edit" && !RESOURCE_PUBLISHED) {
+    if (mode === "edit" && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
         no_metadata_alert +=
         '<div class="text-center">' +
             '<a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">' +
@@ -1974,7 +1974,7 @@ $(document).ready(function () {
                     pathLog.push(JSON.parse(sessionStorage.currentBrowsepath));
                     pathLogIndex = pathLog.length - 1;
 
-                    if (resourceType === 'Composite Resource') {
+                    if (resourceType === 'Resource') {
                         sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
                         refreshFileBrowser();
                     }
@@ -1986,6 +1986,19 @@ $(document).ready(function () {
 
                 // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
                 this.on("error", function (error, errorMessage) {
+                    let errorMsg = JSON.stringify(errorMessage);
+                    try {
+                        let errorMessageJSON = JSON.parse(errorMessage);
+                        if (errorMessageJSON.hasOwnProperty("validation_error")) {
+                            errorMsg = errorMessageJSON.validation_error;
+                        }
+                        else if(errorMessageJSON.hasOwnProperty("file_size_error")) {
+                            errorMsg = errorMessageJSON.file_size_error;
+                        }
+                    } catch (e) {
+
+                    }
+
                     $("#fb-alerts .upload-failed-alert").remove();
                     $("#hsDropzone").toggleClass("glow-blue", false);
 
@@ -1997,7 +2010,7 @@ $(document).ready(function () {
                                     '<strong>File Upload Failed</strong>'+
                                 '</div>'+
                                 '<div>'+
-                                    '<span>' + JSON.stringify(errorMessage) + '</span>' +
+                                    '<span>' + errorMsg + '</span>' +
                                 '</div>'+
                             '</div>').fadeIn(200);
                 });

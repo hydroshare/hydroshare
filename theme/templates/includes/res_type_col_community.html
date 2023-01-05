@@ -1,24 +1,24 @@
 {% load hydroshare_tags %}
-{% with resource_type=resource.resource_type %}
-    <span class="resource-type-text">{{ resource_type }}</span>
+{% with display_name=resource.display_name %}
+    <span class="resource-type-text">{{ display_name }}</span>
     {% if resource.resource_type == "CompositeResource" %}
         <img src="{% static 'img/resource-icons/composite48x48.png' %}"
              data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}"
+             alt="{{ display_name }}" title="{{ display_name }}"
              class="table-res-type-icon"/>
     {% elif resource.resource_type == "ToolResource" %}
         <img src="{% static 'img/resource-icons/webapp48x48.png' %}"
              data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+             alt="{{ display_name }}" title="{{ display_name }}" class="table-res-type-icon"/>
     {% elif resource.resource_type == "CollectionResource" %}
         <img src="{% static 'img/resource-icons/collection48x48.png' %}"
              data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}"
+             alt="{{ display_name }}" title="{{ display_name }}"
              class="table-res-type-icon"/>
     {% elif resource.resource_type == "GenericResource" %}
         <img src="{% static 'img/resource-icons/generic48x48.png' %}"
              data-toggle="tooltip" data-placement="right"
-             alt="{{ resource_type }}" title="{{ resource_type }}" class="table-res-type-icon"/>
+             alt="{{ display_name }}" title="{{ display_name }}" class="table-res-type-icon"/>
     {% endif %}
 {% endwith %}
 {#  Sharing Status icons #}

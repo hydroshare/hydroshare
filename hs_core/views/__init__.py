@@ -498,14 +498,17 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         except ValidationError as exp:
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session['validation_error'] = err_msg
+                            logger.warn(err_msg)
                         except Error as exp:
                             # some database error occurred
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session['validation_error'] = err_msg
+                            logger.warn(err_msg)
                         except Exception as exp:
                             # some other error occurred
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session['validation_error'] = err_msg
+                            logger.warn(err_msg)
 
                     if is_add_success:
                         resource_modified(res, request.user, overwrite_bag=False)
@@ -612,10 +615,12 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 except ValidationError as exp:
                     err_msg = err_msg.format(element_name, str(exp))
                     request.session['validation_error'] = err_msg
+                    logger.warn(err_msg)
                 except Error as exp:
                     # some database error occurred
                     err_msg = err_msg.format(element_name, str(exp))
                     request.session['validation_error'] = err_msg
+                    logger.warn(err_msg)
                 # TODO: it's brittle to embed validation logic at this level.
                 if element_name == 'title':
                     res.update_public_and_discoverable()
@@ -719,6 +724,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
         hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     except ValidationError as err:
         request.session['validation_error'] = str(err)
+        logger.warn(str(err))
     finally:
         request.session['resource-mode'] = 'edit'
 
@@ -742,6 +748,7 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
         except ValidationError as err:
             request.session['resource-mode'] = 'edit'
             request.session['validation_error'] = str(err)
+            logger.warn(str(err))
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
@@ -798,6 +805,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             return HttpResponseRedirect('/my-resources/')
         except ValidationError as ex:
             request.session['validation_error'] = str(ex)
+            logger.warn(str(ex))
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -915,15 +923,38 @@ def create_new_version_resource_public(request, pk):
 
 
 def publish(request, shortkey, *args, **kwargs):
-    # only resource owners are allowed to change resource flags (e.g published)
-    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
-
+    if not request.user.is_superuser:
+        raise ValidationError("Resource can only be published by an admin user")
     try:
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session['validation_error'] = str(exp)
+        logger.warn(str(exp))
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+def submit_for_review(request, shortkey, *args, **kwargs):
+    # only resource owners are allowed to submit for review
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+
+    missing = res.metadata.get_required_missing_elements('published')
+    if missing:
+        message = f"""This resource doesn't meet the minimum metadata standards for publication
+                and adherence to community guidelines. {' '.join(missing)}
+                """
+        messages.error(request, message)
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    try:
+        hydroshare.submit_resource_for_review(request, shortkey)
+    except ValidationError as exp:
+        request.session['validation_error'] = str(exp)
+        logger.warn(str(exp))
     else:
-        request.session['just_published'] = True
+        message = """Congratulations!
+                Your resource is under review for appropriate minimum metadata and to ensure that it adheres to community guidelines.
+                The review process will likely be complete within 1 business day, but not exceed 2 business days.
+                You will receive a notification via email once the review process has concluded."""
+        messages.success(request, message)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -1559,6 +1590,7 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
+
             send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
                                       group=group_to_join, membership_request=membership_request,
                                       explanation=explanation)
@@ -1630,6 +1662,40 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
             return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
     return redirect("/")
 
+def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs):
+    """
+    View for the link in the verification email that was sent to a user
+    when they request publication/metadata review.
+    User is logged in and the request for review is approved. Then the user is redirected to the resource landing page
+    for the resource that they just approved.
+
+    :param uidb36: ID of the user to whom the email was sent (part of the link in the email)
+    :param token: token that was part of the link in the email
+    """
+    if uidb36:
+        user = authenticate(uidb36=uidb36, token=token, is_active=True)
+        if user is None:
+            messages.error(request, "The link you clicked has expired. Please manually navigate to the resouce "
+                            "to complete the metadata review.")
+    else:
+        user = request.user
+
+    res = get_resource_by_shortkey(shortkey)
+    if not res.raccess.review_pending:
+        messages.error(request, f"This resource does not have a pending metadata review for you to { action }.")
+    else:
+        res.raccess.review_pending = False
+        res.raccess.immutable = False
+        res.raccess.save()
+        if action == "approve":
+            hydroshare.publish_resource(user, shortkey)
+            messages.success(request, "Publication request was accepted. " \
+                             "An email will be sent notifiying the resource owner(s) once the DOI activates.")
+        else:
+            messages.warning(request, "Publication request was rejected. Please send an email to the resource owner indicating why.")
+            res.metadata.dates.all().filter(type='review_started').delete()
+    return HttpResponseRedirect(f"/resource/{ res.short_id }/")
+
 
 @login_required
 def act_on_group_membership_request(request, membership_request_id, action, *args, **kwargs):
@@ -1689,7 +1755,7 @@ def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
 
-uid = openapi.Parameter('user_identifier', openapi.IN_PATH, description="id of the user for which data is needed", type=openapi.TYPE_INTEGER)
+uid = openapi.Parameter('user_identifier', openapi.IN_PATH, description="email, username, or id of the user for which data is needed", type=openapi.TYPE_STRING)
 @swagger_auto_schema(method='get', operation_description="Get user data",
                      responses={200: "Returns JsonResponse containing user data"}, manual_parameters=[uid])
 @api_view(['GET'])

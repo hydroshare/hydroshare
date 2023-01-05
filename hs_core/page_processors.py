@@ -82,7 +82,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     just_created = False
     just_copied = False
     create_resource_error = None
-    just_published = False
     if request:
         validation_error = check_for_validation(request)
 
@@ -97,10 +96,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         create_resource_error = request.session.get('resource_creation_error', None)
         if 'resource_creation_error' in request.session:
             del request.session['resource_creation_error']
-
-        just_published = request.session.get('just_published', False)
-        if 'just_published' in request.session:
-            del request.session['just_published']
 
     bag_url = content_model.bag_url
 
@@ -118,6 +113,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     topics = list(topics)  # force QuerySet evaluation
     content_model.update_relation_meta()
     creators = content_model.metadata.creators.all()
+
+    content_model.non_preferred_path_names = []
+    # whether the user has permission to change the model
+    can_change = content_model.can_change(request)
+    if can_change and not content_model.raccess.published:
+        # display of non-preferred paths is relevant for resource that is not yet published
+        content_model.non_preferred_path_names = content_model.get_non_preferred_path_names()
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -166,7 +168,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         abstract = content_model.metadata.description.abstract if \
             content_model.metadata.description else None
 
-        missing_metadata_elements = content_model.metadata.get_required_missing_elements()
+        missing_metadata_elements_for_publication = content_model.metadata.get_required_missing_elements('published')
+        missing_metadata_elements_for_discoverable = content_model.metadata.get_required_missing_elements()
+        recommended_missing_elements = content_model.metadata.get_recommended_missing_elements()
         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
         context = {
@@ -185,19 +189,20 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'keywords': keywords,
                    'language': language,
                    'rights': content_model.metadata.rights,
-                   'relations': content_model.metadata.relations.exclude(type="relation"),
-                   'inspecific_relations': content_model.metadata.relations.filter(type="relation"),
+                   'relations': content_model.metadata.relations.all(),
+                   'geospatial_relations': content_model.metadata.geospatialrelations.all(),
                    'show_relations_section': show_relations_section(content_model),
                    'fundingagencies': content_model.metadata.funding_agencies.all(),
                    'metadata_status': metadata_status,
-                   'missing_metadata_elements': missing_metadata_elements,
+                   'missing_metadata_elements_for_discoverable': missing_metadata_elements_for_discoverable,
+                   'missing_metadata_elements_for_publication': missing_metadata_elements_for_publication,
+                   'recommended_missing_elements': recommended_missing_elements,
                    'validation_error': validation_error if validation_error else None,
                    'resource_creation_error': create_resource_error,
                    'tool_homepage_url': tool_homepage_url,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
                    'just_copied': just_copied,
-                   'just_published': just_published,
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,
@@ -215,7 +220,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     # user requested the resource in EDIT MODE
 
     # whether the user has permission to change the model
-    can_change = content_model.can_change(request)
     if not can_change:
         raise PermissionDenied()
 
@@ -277,14 +281,15 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'title': content_model.metadata.title,
                'readme': readme,
                'contributors': content_model.metadata.contributors.all(),
-               'relations': content_model.metadata.relations.exclude(type="relation"),
-               'inspecific_relations': content_model.metadata.relations.filter(type="relation"),
+               'relations': content_model.metadata.relations.all(),
+               'geospatial_relations': content_model.metadata.geospatialrelations.all(),
                'fundingagencies': content_model.metadata.funding_agencies.all(),
                'temporal_coverage': temporal_coverage_data_dict,
                'spatial_coverage': spatial_coverage_data_dict,
                'keywords': keywords,
                'metadata_status': metadata_status,
-               'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
+               'missing_metadata_elements_for_discoverable': content_model.metadata.get_required_missing_elements(),
+               'recommended_missing_elements': content_model.metadata.get_recommended_missing_elements(),
                'citation': content_model.get_citation(forceHydroshareURI=False),
                'custom_citation': content_model.get_custom_citation(),
                'citation_id': citation_id,

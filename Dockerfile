@@ -10,6 +10,8 @@ RUN pip install deepdiff==1.7.0
 RUN pip install pytest-cov==3.0.0
 RUN pip install --upgrade rdflib==5.0.0
 RUN pip install -e git+https://github.com/hydroshare/hsmodels.git@0.5.3#egg=hsmodels
+RUN pip install aiohttp==3.8.3
+RUN pip install PyLD
 RUN pip install six==1.16.0
 RUN pip install sorl-thumbnail==12.8.0
 RUN pip install --upgrade Django==3.2.15

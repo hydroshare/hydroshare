@@ -10,6 +10,7 @@ import yaml
 from kombu import Queue, Exchange
 
 DEBUG = True
+DISABLE_TASK_EMAILS = True
 
 # DEVELOPMENT EXAMPLE ONLY - make these unique, and don't share with anybody
 SECRET_KEY = \

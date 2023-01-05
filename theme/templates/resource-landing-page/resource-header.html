@@ -30,7 +30,7 @@
                       </div>
 
                       <div v-if="res_mode === 'Edit'">
-                        {% if not cm.raccess.published %}
+                        {% if not cm.raccess.published_or_review_pending %}
                         <a :disabled="isUpdatingAuthor" type="button" id="btn-add-new-author"
                            class="btn btn-success btn-xs space-right-1x" data-toggle="modal"
                            data-target="#add-author-modal" title="Add Author">
@@ -99,12 +99,12 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Resource type:</th>
+                    <th>Type:</th>
                     <td>{{ cm|resource_type }}</td>
                 </tr>
                 <tr>
                     <th>Storage:</th>
-                    <td>The size of this resource is {{ cm.size|filesizeformat }}</td>
+                    <td>The size of this {{ cm|resource_type|lower }} is {{ cm.size|filesizeformat }}</td>
                 </tr>
                 <tr>
                     <th>Created:</th>

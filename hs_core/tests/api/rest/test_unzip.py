@@ -154,4 +154,4 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
     def test_unzip_unsuccessful(self):
         unzip_url = "/hsapi/resource/%s/functions/unzip/badpath/" % self.pid
         response = self.client.post(unzip_url, data={})
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
