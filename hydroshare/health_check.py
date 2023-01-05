@@ -15,7 +15,6 @@ class PeriodicTasksHealthCheck(BaseHealthCheckBackend):
                 self.add_error(f"Celery job last run {dt.strftime('%m/%d/%Y')}")
         except FileNotFoundError:
             self.add_error("periodic_tasks_last_executed.txt file not found")
-        pass
 
     def identifier(self):
         return self.__class__.__name__  # Display name on the endpoint.
