@@ -336,7 +336,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     def get_supported_element_names(cls):
         return ['Coverage']
 
-    def get_required_missing_elements(self):
+    def get_required_missing_elements(self, *args):
         return []
 
     @property
