@@ -88,13 +88,14 @@ def get_resource_instance(app, model_name, pk, or_404=True):
 
 def get_resource_by_shortkey(shortkey, or_404=True):
     try:
-        res = BaseResource.objects.get(short_id=shortkey)
+        res = BaseResource.objects.select_related("raccess").get(short_id=shortkey)
     except BaseResource.DoesNotExist:
         if or_404:
             raise Http404(shortkey)
         else:
             raise
     content = res.get_content_model()
+    content.raccess = res.raccess
     assert content, (res, res.content_model)
     return content
 
