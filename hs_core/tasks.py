@@ -747,18 +747,20 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                 resource = utils.get_resource_by_shortkey(res_id)
                 response_content = json.loads(response.content.decode())
 
-                for key, value in response_content["resource"].items():
-                    resource.extra_metadata[key] = value
-                    resource.save()
+                if "resource" in response_content:
+                    for key, value in response_content["resource"].items():
+                        resource.extra_metadata[key] = value
+                        resource.save()
 
-                for url in response_content["content"]:
-                    logical_files = list(resource.logical_files)
-                    lf = logical_files[[i.aggregation_name for i in
-                                        logical_files].index(
-                        url["layer_name"].encode()
-                    )]
-                    lf.metadata.extra_metadata["Web Services URL"] = url["message"]
-                    lf.metadata.save()
+                if "content" in response_content:
+                    for url in response_content["content"]:
+                        logical_files = list(resource.logical_files)
+                        lf = logical_files[[i.aggregation_name for i in
+                                            logical_files].index(
+                            url["layer_name"].encode()
+                        )]
+                        lf.metadata.extra_metadata["Web Services URL"] = url["message"]
+                        lf.metadata.save()
 
             except Exception as e:
                 logger.error(e)
