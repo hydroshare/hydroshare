@@ -750,9 +750,10 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                 resource = utils.get_resource_by_shortkey(res_id)
                 response_content = json.loads(response.content.decode())
 
-                for key, value in response_content["resource"].items():
-                    resource.extra_metadata[key] = value
-                    resource.save()
+                if "resource" in response_content:
+                    for key, value in response_content["resource"].items():
+                        resource.extra_metadata[key] = value
+                        resource.save()
 
                 for url in response_content["content"]:
                     logical_files = list(resource.logical_files)
