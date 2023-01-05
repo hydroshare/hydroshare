@@ -247,7 +247,7 @@ class SignupForm(forms.ModelForm):
         }
         response = requests.post(url, values)
         result = response.json()
-        if(result["success"]):
+        if (result["success"]):
             return (True, [])
 
         return (False, result["error-codes"])

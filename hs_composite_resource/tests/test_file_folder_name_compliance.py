@@ -151,8 +151,8 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         # check the filename is in english
         self.assertTrue(len(self.compliant_file_name_1) == len(self.compliant_file_name_1.encode()))
         # check the filename ois not in english
-        self.assertFalse(len(self.compliant_non_english_file_name) ==
-                         len(self.compliant_non_english_file_name.encode()))
+        self.assertFalse(len(self.compliant_non_english_file_name)
+                         == len(self.compliant_non_english_file_name.encode()))
 
     def test_add_non_compliant_files(self):
         """Here we are testing when a file that has a name which doesn't meet hydroshare requirements is uploaded

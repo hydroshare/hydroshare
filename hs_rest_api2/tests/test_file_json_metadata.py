@@ -54,7 +54,7 @@ class TestFileBasedJSON(HSRESTTestCase):
             'CompositeResource',
             self.user,
             'triceratops'
-            )
+        )
 
         self.test_bag_path = 'hs_rest_api2/tests/data/test_resource_metadata_files.zip'
 

@@ -35,7 +35,7 @@ class Command(BaseCommand):
                 if creator.order != index:
                     print("*" * 100)
                     print(f"Author out of order.\nR:{res.short_id}"
-                            f"\nExpected: {index}, got: {creator.order}")
+                          f"\nExpected: {index}, got: {creator.order}")
                     creator.order = index
                     creator.save()
                     is_dirty = True

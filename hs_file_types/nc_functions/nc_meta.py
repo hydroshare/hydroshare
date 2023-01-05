@@ -309,7 +309,7 @@ def check_lon_limit(westlimit, eastlimit):
         westlimit = -180
         eastlimit = 180
     elif westlimit > eastlimit:
-        if (180 - westlimit) >= (eastlimit+180):
+        if (180 - westlimit) >= (eastlimit + 180):
             eastlimit = 180
         else:
             westlimit = -180
@@ -392,7 +392,7 @@ def get_limits_info(nc_dataset, info_source):
         coor_type = coor_dir + info_source
         limit_meta = get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping)
         if limit_meta:
-            limits_info = dict(list(limits_info.items())+list(limit_meta.items()))
+            limits_info = dict(list(limits_info.items()) + list(limit_meta.items()))
         else:
             limits_info = {}
             break
@@ -416,7 +416,7 @@ def get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping):
     var_name_list = list(coor_type_mapping.keys())
     coor_type_list = list(coor_type_mapping.values())
 
-    for coor_type_name in [coor_type, coor_type+'_bnd']:
+    for coor_type_name in [coor_type, coor_type + '_bnd']:
         if coor_type_name in coor_type_list:
             index = coor_type_list.index(coor_type_name)
             var_name = var_name_list[index]

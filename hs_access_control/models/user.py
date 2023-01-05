@@ -4,9 +4,15 @@ from django.db.models import Q, Subquery
 from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
-from hs_access_control.models.privilege import PrivilegeCodes, \
-        UserGroupPrivilege, UserResourcePrivilege, GroupResourcePrivilege, \
-        UserCommunityPrivilege, GroupCommunityPrivilege, CommunityResourcePrivilege
+from hs_access_control.models.privilege import (
+    PrivilegeCodes,
+    UserGroupPrivilege,
+    UserResourcePrivilege,
+    GroupResourcePrivilege,
+    UserCommunityPrivilege,
+    GroupCommunityPrivilege,
+    CommunityResourcePrivilege,
+)
 from hs_access_control.models.group import GroupAccess, GroupMembershipRequest
 from hs_access_control.models.exceptions import PolymorphismError
 from hs_access_control.models.community import Community
@@ -27,21 +33,22 @@ class FeatureCodes(object):
         * 1 or FeatureCodes.CZO:
             CZO custom interface.
     """
+
     NONE = 0
     CZO = 1
     CHOICES = (
-        (NONE, 'None'),
-        (CZO, 'CZO'),
+        (NONE, "None"),
+        (CZO, "CZO"),
     )
     # Names of privileges for printing
-    NAMES = ('None', 'CZO')
+    NAMES = ("None", "CZO")
 
     @classmethod
     def from_string(self, privilege):
-        """ Converts a string representation to a PrivilegeCode """
-        if privilege.lower() == 'None':
+        """Converts a string representation to a PrivilegeCode"""
+        if privilege.lower() == "None":
             return self.NONE
-        if privilege.lower() == 'CZO':
+        if privilege.lower() == "CZO":
             return self.CZO
         return self.NONE
 
@@ -51,12 +58,17 @@ class Feature(models.Model):
     A UI customization can be enabled or disabled, and is a property of a User.
 
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE,  null=True, related_name='feature')
-    feature = models.IntegerField(choices=FeatureCodes.CHOICES, default=FeatureCodes.NONE)
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, related_name="feature"
+    )
+    feature = models.IntegerField(
+        choices=FeatureCodes.CHOICES, default=FeatureCodes.NONE
+    )
     enabled = models.BooleanField(null=False, blank=False, default=False)
 
     class Meta:
-        unique_together = ('user', 'feature')
+        unique_together = ("user", "feature")
 
 
 class UserAccess(models.Model):
@@ -70,17 +82,22 @@ class UserAccess(models.Model):
     Here the methods that require user permission are kept.
     """
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE,
-                                editable=False,
-                                null=False,
-                                related_name='uaccess',
-                                related_query_name='uaccess')
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        editable=False,
+        null=False,
+        related_name="uaccess",
+        related_query_name="uaccess",
+    )
 
     ##########################################
     # PUBLIC METHODS: groups
     ##########################################
 
-    def create_group_membership_request(self, this_group, this_user=None, explanation=None):
+    def create_group_membership_request(
+        self, this_group, this_user=None, explanation=None
+    ):
         """
         User request/invite to join a group
         :param this_group: group to join
@@ -118,42 +135,58 @@ class UserAccess(models.Model):
         if this_user is None:
             if this_group.gaccess.requires_explanation:
                 if not explanation:
-                    raise PermissionDenied("This group requires an explanation for requests")
+                    raise PermissionDenied(
+                        "This group requires an explanation for requests"
+                    )
                 elif len(explanation) > 300:
-                    raise PermissionDenied("Explanation too long. Shorten to 300 characters")
+                    raise PermissionDenied(
+                        "Explanation too long. Shorten to 300 characters"
+                    )
 
             # check if the user already has made a request to join this_group
-            if GroupMembershipRequest.objects.filter(request_from=self.user,
-                                                     group_to_join=this_group,
-                                                     redeemed=False).exists():
-                raise PermissionDenied("You already have a pending request to join this group")
+            if GroupMembershipRequest.objects.filter(
+                request_from=self.user, group_to_join=this_group, redeemed=False
+            ).exists():
+                raise PermissionDenied(
+                    "You already have a pending request to join this group"
+                )
             else:
-                membership_request = GroupMembershipRequest.objects.create(request_from=self.user,
-                                                                           group_to_join=this_group,
-                                                                           explanation=explanation)
+                membership_request = GroupMembershipRequest.objects.create(
+                    request_from=self.user,
+                    group_to_join=this_group,
+                    explanation=explanation,
+                )
                 # if group allows auto approval of membership request then approve the
                 # request immediately
                 if this_group.gaccess.auto_approve:
                     # let first group owner be the grantor for this membership request
-                    group_owner = this_group.gaccess.owners.order_by('u2ugp__start').first()
-                    group_owner.uaccess.act_on_group_membership_request(membership_request)
+                    group_owner = this_group.gaccess.owners.order_by(
+                        "u2ugp__start"
+                    ).first()
+                    group_owner.uaccess.act_on_group_membership_request(
+                        membership_request
+                    )
                     membership_request = None
                 return membership_request
         else:
             # group owner is inviting this_user to join this_group
             if not self.owns_group(this_group) and not self.user.is_superuser:
                 raise PermissionDenied(
-                    "You need to be a group owner to send invitation to join a group")
+                    "You need to be a group owner to send invitation to join a group"
+                )
 
-            if GroupMembershipRequest.objects.filter(group_to_join=this_group,
-                                                     invitation_to=this_user,
-                                                     redeemed=False).exists():
+            if GroupMembershipRequest.objects.filter(
+                group_to_join=this_group, invitation_to=this_user, redeemed=False
+            ).exists():
                 raise PermissionDenied(
-                    "You already have a pending invitation for this user to join this group")
+                    "You already have a pending invitation for this user to join this group"
+                )
             else:
-                return GroupMembershipRequest.objects.create(request_from=self.user,
-                                                             invitation_to=this_user,
-                                                             group_to_join=this_group)
+                return GroupMembershipRequest.objects.create(
+                    request_from=self.user,
+                    invitation_to=this_user,
+                    group_to_join=this_group,
+                )
 
     def act_on_group_membership_request(self, this_request, accept_request=True):
         """
@@ -176,8 +209,11 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        user_to_join_group = this_request.invitation_to if this_request.invitation_to \
+        user_to_join_group = (
+            this_request.invitation_to
+            if this_request.invitation_to
             else this_request.request_from
+        )
 
         if not user_to_join_group.is_active:
             this_request.redeemed = True
@@ -197,7 +233,8 @@ class UserAccess(models.Model):
                 pass
             else:
                 raise PermissionDenied(
-                    "You don't have permission to act on the group membership request")
+                    "You don't have permission to act on the group membership request"
+                )
         # invited user acting on membership invitation from a group owner
         elif this_request.invitation_to == self.user:
             membership_grantor = this_request.request_from.uaccess
@@ -207,13 +244,16 @@ class UserAccess(models.Model):
             pass
         else:
             raise PermissionDenied(
-                "You don't have permission to act on the group membership request")
+                "You don't have permission to act on the group membership request"
+            )
 
         if accept_request and membership_grantor is not None:
             # user initially joins a group with 'VIEW' privilege
-            membership_grantor.share_group_with_user(this_group=this_request.group_to_join,
-                                                     this_user=user_to_join_group,
-                                                     this_privilege=PrivilegeCodes.VIEW)
+            membership_grantor.share_group_with_user(
+                this_group=this_request.group_to_join,
+                this_user=user_to_join_group,
+                this_privilege=PrivilegeCodes.VIEW,
+            )
         this_request.redeemed = True
         this_request.save()
 
@@ -227,11 +267,22 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return GroupMembershipRequest.objects.filter(Q(request_from=self.user) |
-                                                     Q(invitation_to=self.user)) \
-            .filter(group_to_join__gaccess__active=True).filter(redeemed=False)
+        return (
+            GroupMembershipRequest.objects.filter(
+                Q(request_from=self.user) | Q(invitation_to=self.user)
+            )
+            .filter(group_to_join__gaccess__active=True)
+            .filter(redeemed=False)
+        )
 
-    def create_group(self, title, description, auto_approve=False, requires_explanation=False, purpose=None):
+    def create_group(
+        self,
+        title,
+        description,
+        auto_approve=False,
+        requires_explanation=False,
+        purpose=None,
+    ):
         """
         Create a group.
 
@@ -256,16 +307,22 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         raw_group = Group.objects.create(name=title)
-        GroupAccess.objects.create(group=raw_group, description=description,
-                                   auto_approve=auto_approve, purpose=purpose,
-                                   requires_explanation=requires_explanation)
+        GroupAccess.objects.create(
+            group=raw_group,
+            description=description,
+            auto_approve=auto_approve,
+            purpose=purpose,
+            requires_explanation=requires_explanation,
+        )
         raw_user = self.user
 
         # Must bootstrap access control system initially
-        UserGroupPrivilege.share(group=raw_group,
-                                 user=raw_user,
-                                 grantor=raw_user,
-                                 privilege=PrivilegeCodes.OWNER)
+        UserGroupPrivilege.share(
+            group=raw_group,
+            user=raw_user,
+            grantor=raw_user,
+            privilege=PrivilegeCodes.OWNER,
+        )
         return raw_group
 
     def delete_group(self, this_group):
@@ -313,12 +370,18 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return Group.objects.filter(Q(g2ugp__user=self.user,
-                                      g2ugp__privilege__lte=PrivilegeCodes.VIEW,
-                                      gaccess__active=True) |
-                                    Q(g2ugp__user=self.user,
-                                      gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER)).distinct()
+        return Group.objects.filter(
+            Q(
+                g2ugp__user=self.user,
+                g2ugp__privilege__lte=PrivilegeCodes.VIEW,
+                gaccess__active=True,
+            )
+            | Q(
+                g2ugp__user=self.user,
+                gaccess__active=False,
+                g2ugp__privilege=PrivilegeCodes.OWNER,
+            )
+        ).distinct()
 
     @property
     def edit_groups(self):
@@ -344,13 +407,18 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return Group.objects.filter(Q(g2ugp__user=self.user,
-                                      g2ugp__privilege__lte=PrivilegeCodes.CHANGE,
-                                      gaccess__active=True) |
-                                    Q(g2ugp__user=self.user,
-                                      gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER))\
-                            .distinct()
+        return Group.objects.filter(
+            Q(
+                g2ugp__user=self.user,
+                g2ugp__privilege__lte=PrivilegeCodes.CHANGE,
+                gaccess__active=True,
+            )
+            | Q(
+                g2ugp__user=self.user,
+                gaccess__active=False,
+                g2ugp__privilege=PrivilegeCodes.OWNER,
+            )
+        ).distinct()
 
     @property
     def owned_groups(self):
@@ -374,8 +442,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return Group.objects.filter(g2ugp__user=self.user,
-                                    g2ugp__privilege=PrivilegeCodes.OWNER)
+        return Group.objects.filter(
+            g2ugp__user=self.user, g2ugp__privilege=PrivilegeCodes.OWNER
+        )
 
     @property
     def my_groups(self):
@@ -389,13 +458,22 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return Group.objects.filter(Q(g2ugp__user=self.user,
-                                      g2ugp__privilege__lte=PrivilegeCodes.VIEW,
-                                      gaccess__active=True) |
-                                    Q(g2ugp__user=self.user,
-                                      gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER)).select_related('gaccess')\
-                            .distinct()
+        return (
+            Group.objects.filter(
+                Q(
+                    g2ugp__user=self.user,
+                    g2ugp__privilege__lte=PrivilegeCodes.VIEW,
+                    gaccess__active=True,
+                )
+                | Q(
+                    g2ugp__user=self.user,
+                    gaccess__active=False,
+                    g2ugp__privilege=PrivilegeCodes.OWNER,
+                )
+            )
+            .select_related("gaccess")
+            .distinct()
+        )
 
     #################################
     # access checks for groups
@@ -423,12 +501,11 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         return Group.objects.filter(
-                # owners can see inactive groups they own
-                Q(g2ugp__user=self.user,
-                  g2ugp__privilege=PrivilegeCodes.OWNER) |
-                # everyone else can see only active groups they are in
-                Q(gaccess__active=True,
-                  g2ugp__user=self.user)).distinct()
+            # owners can see inactive groups they own
+            Q(g2ugp__user=self.user, g2ugp__privilege=PrivilegeCodes.OWNER)
+            # everyone else can see only active groups they are in
+            | Q(gaccess__active=True, g2ugp__user=self.user)
+        ).distinct()
 
     def owns_group(self, this_group):
         """
@@ -454,9 +531,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return UserGroupPrivilege.objects.filter(group=this_group,
-                                                 privilege=PrivilegeCodes.OWNER,
-                                                 user=self.user).exists()
+        return UserGroupPrivilege.objects.filter(
+            group=this_group, privilege=PrivilegeCodes.OWNER, user=self.user
+        ).exists()
 
     def can_change_group(self, this_group):
         """
@@ -520,8 +597,11 @@ class UserAccess(models.Model):
 
         access_group = this_group.gaccess
 
-        return self.user.is_superuser or access_group.public \
+        return (
+            self.user.is_superuser
+            or access_group.public
             or this_group in self.view_groups
+        )
 
     def can_view_group_metadata(self, this_group):
         """
@@ -550,8 +630,11 @@ class UserAccess(models.Model):
         if not this_group.gaccess.active:
             raise PermissionDenied("Group is not active")
 
-        return this_group.gaccess.discoverable or this_group.gaccess.public or \
-               self.can_view_group(this_group)
+        return (
+            this_group.gaccess.discoverable
+            or this_group.gaccess.public
+            or self.can_view_group(this_group)
+        )
 
     def can_change_group_flags(self, this_group):
         """
@@ -656,8 +739,10 @@ class UserAccess(models.Model):
 
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_group, Group)
-            assert this_privilege >= PrivilegeCodes.OWNER \
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
                 and this_privilege <= PrivilegeCodes.VIEW
+            )
             if user is not None:
                 assert isinstance(user, User)
 
@@ -682,7 +767,6 @@ class UserAccess(models.Model):
     #  __check_share_community_with_group
     #  __check_share_group_with_user
     def __check_share_group(self, this_group, this_privilege, user=None):
-
         """
         Raise exception if a given user cannot share this group with a given privilege.
 
@@ -733,19 +817,25 @@ class UserAccess(models.Model):
             if user is not None:
                 # enforce non-idempotence for unprivileged users
                 if grantee_priv == this_privilege:
-                    raise PermissionDenied("Non-owners cannot reshare at existing privilege")
+                    raise PermissionDenied(
+                        "Non-owners cannot reshare at existing privilege"
+                    )
 
                 if this_privilege > grantee_priv and user != self.user:
-                    raise PermissionDenied("Non-owners cannot decrease privileges for others")
+                    raise PermissionDenied(
+                        "Non-owners cannot decrease privileges for others"
+                    )
 
         else:
             raise PermissionDenied("User must own group or have sharing privilege")
 
         # regardless of privilege, cannot remove last owner
         if user is not None:
-            if grantee_priv == PrivilegeCodes.OWNER \
-                    and this_privilege != PrivilegeCodes.OWNER \
-                    and access_group.owners.count() == 1:
+            if (
+                grantee_priv == PrivilegeCodes.OWNER
+                and this_privilege != PrivilegeCodes.OWNER
+                and access_group.owners.count() == 1
+            ):
                 raise PermissionDenied("Cannot remove sole owner of group")
 
         return True
@@ -831,7 +921,10 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_group, Group)
             assert isinstance(this_user, User)
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -843,8 +936,12 @@ class UserAccess(models.Model):
         # raise a PermissionDenied exception if user self is not allowed to do this.
         self.__check_share_group_with_user(this_group, this_user, this_privilege)
 
-        UserGroupPrivilege.share(group=this_group, user=this_user,
-                                 grantor=self.user, privilege=this_privilege)
+        UserGroupPrivilege.share(
+            group=this_group,
+            user=this_user,
+            grantor=self.user,
+            privilege=this_privilege,
+        )
 
     ####################################
     # (can_)unshare_group_with_user: check for and implement unshare
@@ -895,27 +992,27 @@ class UserAccess(models.Model):
 
     def can_unshare_group_with_user(self, this_group, this_user):
         """
-        Determines whether a group can be unshared.
+                Determines whether a group can be unshared.
 
-        :param this_group: group to be unshared.
-        :param this_user: user to which to deny access.
-        :return: Boolean: whether self can unshare this_group with this_user
+                :param this_group: group to be unshared.
+                :param this_user: user to which to deny access.
+                :return: Boolean: whether self can unshare this_group with this_user
 
-        Usage:
-        ------
+                Usage:
+                ------
 
-            if my_user.can_unshare_group_with_user(some_group, some_user):
-                # ...time passes, forms are created, requests are made...
-                my_user.unshare_group_with_user(some_group, some_user)
+                    if my_user.can_unshare_group_with_user(some_group, some_user):
+                        # ...time passes, forms are created, requests are made...
+                        my_user.unshare_group_with_user(some_group, some_user)
 
-        In practice:
-        ------------
+                In practice:
+                ------------
 
-        If this routine returns False, UserAccess.unshare_group_with_user is *guaranteed*
-        to raise an exception.
+                If this routine returns False, UserAccess.unshare_group_with_user is *guaranteed*
+                to raise an exception.
 
--       Note that can_unshare_X is parallel to unshare_X and returns False exactly
--       when unshare_X will raise an exception.
+        -       Note that can_unshare_X is parallel to unshare_X and returns False exactly
+        -       when unshare_X will raise an exception.
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_group, Group)
@@ -936,24 +1033,32 @@ class UserAccess(models.Model):
             return False
 
     def __check_unshare_group_with_user(self, this_group, this_user):
-        """ Check whether an unshare of a group with a user is permitted. """
+        """Check whether an unshare of a group with a user is permitted."""
 
         if not this_group.gaccess.members.filter(id=this_user.id).exists():
             raise PermissionDenied("User is not a member of the group")
 
         # Check for sufficient privilege
-        if not self.user.is_superuser \
-                and not self.owns_group(this_group) \
-                and not this_user == self.user:
-            raise PermissionDenied("You do not have permission to remove this sharing setting")
+        if (
+            not self.user.is_superuser
+            and not self.owns_group(this_group)
+            and not this_user == self.user
+        ):
+            raise PermissionDenied(
+                "You do not have permission to remove this sharing setting"
+            )
 
         # if this_user is not an OWNER, or there is another OWNER, OK.
-        if not UserGroupPrivilege.objects.filter(group=this_group,
-                                                 privilege=PrivilegeCodes.OWNER,
-                                                 user=this_user).exists()\
-            or UserGroupPrivilege.objects.filter(group=this_group,
-                                                 privilege=PrivilegeCodes.OWNER) \
-                                         .exclude(user=this_user).exists():
+        if (
+            not UserGroupPrivilege.objects.filter(
+                group=this_group, privilege=PrivilegeCodes.OWNER, user=this_user
+            ).exists()
+            or UserGroupPrivilege.objects.filter(
+                group=this_group, privilege=PrivilegeCodes.OWNER
+            )
+            .exclude(user=this_user)
+            .exists()
+        ):
             return True
         else:
             raise PermissionDenied("Cannot remove sole owner of group")
@@ -998,10 +1103,11 @@ class UserAccess(models.Model):
                 # get list of owners to exclude from main list
                 # This should be one user but can be two due to race conditions.
                 # Avoid races by excluding action in that case.
-                users_to_exclude = User.objects.filter(is_active=True,
-                                                       u2ugp__group=this_group,
-                                                       u2ugp__privilege=PrivilegeCodes.OWNER)\
-                                               .values('pk')
+                users_to_exclude = User.objects.filter(
+                    is_active=True,
+                    u2ugp__group=this_group,
+                    u2ugp__privilege=PrivilegeCodes.OWNER,
+                ).values("pk")
                 return access_group.members.exclude(pk__in=Subquery(users_to_exclude))
             else:
                 return access_group.members
@@ -1010,9 +1116,9 @@ class UserAccess(models.Model):
         elif access_group.members.filter(id=self.user.id).exists():
             if access_group.owners.count() == 1:
                 # if self is not an owner,
-                if not UserGroupPrivilege.objects.filter(user=self.user,
-                                                         group=this_group,
-                                                         privilege=PrivilegeCodes.OWNER).exists():
+                if not UserGroupPrivilege.objects.filter(
+                    user=self.user, group=this_group, privilege=PrivilegeCodes.OWNER
+                ).exists():
                     # return a QuerySet containing only self
                     return User.objects.filter(uaccess=self)
                 else:
@@ -1038,7 +1144,10 @@ class UserAccess(models.Model):
         Returns: QuerySet of group objects (QuerySet)
         """
         if __debug__:
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -1047,12 +1156,15 @@ class UserAccess(models.Model):
         # a) There is a privilege of X for the object for user.
         # b) There is no lower privilege for the object.
         # c) Thus X is the effective privilege of the object.
-        selected = Group.objects\
-            .filter(g2ugp__user=self.user,
-                    g2ugp__privilege=this_privilege)\
-            .exclude(pk__in=Subquery(Group.objects.filter(g2ugp__user=self.user,
-                                                          g2ugp__privilege__lt=this_privilege)
-                                                  .values("pk")))
+        selected = Group.objects.filter(
+            g2ugp__user=self.user, g2ugp__privilege=this_privilege
+        ).exclude(
+            pk__in=Subquery(
+                Group.objects.filter(
+                    g2ugp__user=self.user, g2ugp__privilege__lt=this_privilege
+                ).values("pk")
+            )
+        )
 
         # filter out inactive groups for non owner privileges
         if this_privilege != PrivilegeCodes.OWNER:
@@ -1082,10 +1194,10 @@ class UserAccess(models.Model):
 
         return BaseResource.objects.filter(
             # direct access
-            Q(r2urp__user=self.user) |
+            Q(r2urp__user=self.user)
             # access via a group
-            Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2ugp__user=self.user)).distinct()
+            | Q(r2grp__group__gaccess__active=True, r2grp__group__g2ugp__user=self.user)
+        ).distinct()
 
     @property
     def owned_resources(self):
@@ -1099,8 +1211,9 @@ class UserAccess(models.Model):
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
-        return BaseResource.objects.filter(r2urp__user=self.user,
-                                           r2urp__privilege=PrivilegeCodes.OWNER)
+        return BaseResource.objects.filter(
+            r2urp__user=self.user, r2urp__privilege=PrivilegeCodes.OWNER
+        )
 
     @property
     def edit_resources(self):
@@ -1126,21 +1239,25 @@ class UserAccess(models.Model):
 
         return BaseResource.objects.filter(
             # user owns resource invariant of immutable flag 4/9/2021
-            Q(r2urp__user=self.user,
-              r2urp__privilege=PrivilegeCodes.OWNER) |
+            Q(r2urp__user=self.user, r2urp__privilege=PrivilegeCodes.OWNER)
             # user has direct access and resource is not immutable
-            Q(raccess__immutable=False,
-              r2urp__user=self.user,
-              r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
+            | Q(
+                raccess__immutable=False,
+                r2urp__user=self.user,
+                r2urp__privilege__lte=PrivilegeCodes.CHANGE,
+            )
             # user has direct access through being a member of a group
-            Q(raccess__immutable=False,
-              r2grp__group__gaccess__active=True,
-              r2grp__group__g2ugp__user=self.user,
-              r2grp__privilege=PrivilegeCodes.CHANGE)).distinct()
+            | Q(
+                raccess__immutable=False,
+                r2grp__group__gaccess__active=True,
+                r2grp__group__g2ugp__user=self.user,
+                r2grp__privilege=PrivilegeCodes.CHANGE,
+            )
+        ).distinct()
 
-    def get_resources_with_explicit_access(self, this_privilege,
-                                           via_user=True, via_group=False, via_community=False):
-
+    def get_resources_with_explicit_access(
+        self, this_privilege, via_user=True, via_group=False, via_community=False
+    ):
         """
         Get a list of resources over which the user has the specified privilege
 
@@ -1184,7 +1301,10 @@ class UserAccess(models.Model):
 
         """
         if __debug__:
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -1194,9 +1314,9 @@ class UserAccess(models.Model):
 
         if this_privilege == PrivilegeCodes.OWNER:
             if via_user:
-                return BaseResource.objects\
-                    .filter(r2urp__privilege=this_privilege,
-                            r2urp__user=self.user)
+                return BaseResource.objects.filter(
+                    r2urp__privilege=this_privilege, r2urp__user=self.user
+                )
             else:
                 # groups and communities can't own resources
                 return BaseResource.objects.none()
@@ -1206,17 +1326,20 @@ class UserAccess(models.Model):
 
             # If something is immutable, CHANGE becomes VIEW
             if via_user:
-                incl = Q(raccess__immutable=False,
-                         r2urp__privilege=PrivilegeCodes.CHANGE,
-                         r2urp__user=self.user)
+                incl = Q(
+                    raccess__immutable=False,
+                    r2urp__privilege=PrivilegeCodes.CHANGE,
+                    r2urp__user=self.user,
+                )
                 # exclude owners; immutability doesn't matter for them
-                excl = Q(r2urp__privilege=PrivilegeCodes.OWNER,
-                         r2urp__user=self.user)
+                excl = Q(r2urp__privilege=PrivilegeCodes.OWNER, r2urp__user=self.user)
 
             if via_group:
-                gquery = Q(raccess__immutable=False,
-                           r2grp__privilege=PrivilegeCodes.CHANGE,
-                           r2grp__group__g2ugp__user=self.user)
+                gquery = Q(
+                    raccess__immutable=False,
+                    r2grp__privilege=PrivilegeCodes.CHANGE,
+                    r2grp__group__g2ugp__user=self.user,
+                )
                 if incl is not None:
                     incl = incl | gquery
                 else:
@@ -1226,10 +1349,12 @@ class UserAccess(models.Model):
             if incl is not None:
                 if excl:
                     # exclude owners; immutability doesn't matter for them
-                    excluded = BaseResource.objects.filter(excl).values('pk')
-                    return BaseResource.objects.filter(incl)\
-                                               .exclude(pk__in=Subquery(excluded))\
-                                               .distinct()
+                    excluded = BaseResource.objects.filter(excl).values("pk")
+                    return (
+                        BaseResource.objects.filter(incl)
+                        .exclude(pk__in=Subquery(excluded))
+                        .distinct()
+                    )
                 else:
                     return BaseResource.objects.filter(incl).distinct()
             else:
@@ -1241,33 +1366,36 @@ class UserAccess(models.Model):
 
             # pick up change and owner, use to override VIEW for groups
             if via_user:
-                incl = \
-                    Q(r2urp__privilege=PrivilegeCodes.VIEW,
-                      r2urp__user=self.user) | \
-                    Q(raccess__immutable=True,
-                      r2urp__privilege=PrivilegeCodes.CHANGE,
-                      r2urp__user=self.user)
-                excl = Q(r2urp__privilege=PrivilegeCodes.OWNER,
-                         r2urp__user=self.user)\
-
+                incl = Q(
+                    r2urp__privilege=PrivilegeCodes.VIEW, r2urp__user=self.user
+                ) | Q(
+                    raccess__immutable=True,
+                    r2urp__privilege=PrivilegeCodes.CHANGE,
+                    r2urp__user=self.user,
+                )
+                excl = Q(r2urp__privilege=PrivilegeCodes.OWNER, r2urp__user=self.user)
             if via_group:
-                gquery = \
-                    Q(r2grp__privilege=PrivilegeCodes.VIEW,
-                      r2grp__group__g2ugp__user=self.user,
-                      r2grp__group__gaccess__active=True) | \
-                    Q(raccess__immutable=True,
-                      r2grp__privilege=PrivilegeCodes.CHANGE,
-                      r2grp__group__g2ugp__user=self.user,
-                      r2grp__group__gaccess__active=True)
+                gquery = Q(
+                    r2grp__privilege=PrivilegeCodes.VIEW,
+                    r2grp__group__g2ugp__user=self.user,
+                    r2grp__group__gaccess__active=True,
+                ) | Q(
+                    raccess__immutable=True,
+                    r2grp__privilege=PrivilegeCodes.CHANGE,
+                    r2grp__group__g2ugp__user=self.user,
+                    r2grp__group__gaccess__active=True,
+                )
                 if incl is not None:
                     incl = incl | gquery
                 else:
                     incl = gquery
                 # exclude groups with true CHANGE privilege
-                gexcl = Q(raccess__immutable=False,
-                          r2grp__privilege=PrivilegeCodes.CHANGE,
-                          r2grp__group__g2ugp__user=self.user,
-                          r2grp__group__gaccess__active=True)
+                gexcl = Q(
+                    raccess__immutable=False,
+                    r2grp__privilege=PrivilegeCodes.CHANGE,
+                    r2grp__group__g2ugp__user=self.user,
+                    r2grp__group__gaccess__active=True,
+                )
                 if excl is not None:
                     excl = excl | gexcl
                 else:
@@ -1276,13 +1404,15 @@ class UserAccess(models.Model):
             if incl is not None:
                 if excl:
                     # exclude higher privilege
-                    excluded = BaseResource.objects.filter(r2urp__privilege=PrivilegeCodes.OWNER,
-                                                           r2urp__user=self.user)\
-                                                   .values('pk')
+                    excluded = BaseResource.objects.filter(
+                        r2urp__privilege=PrivilegeCodes.OWNER, r2urp__user=self.user
+                    ).values("pk")
 
-                    return BaseResource.objects.filter(incl)\
-                                               .exclude(pk__in=Subquery(excluded))\
-                                               .distinct()
+                    return (
+                        BaseResource.objects.filter(incl)
+                        .exclude(pk__in=Subquery(excluded))
+                        .distinct()
+                    )
                 else:
                     return BaseResource.objects.filter(incl).distinct()
             else:
@@ -1311,9 +1441,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return UserResourcePrivilege.objects.filter(resource=this_resource,
-                                                    privilege=PrivilegeCodes.OWNER,
-                                                    user=self.user).exists()
+        return UserResourcePrivilege.objects.filter(
+            resource=this_resource, privilege=PrivilegeCodes.OWNER, user=self.user
+        ).exists()
 
     def can_change_resource(self, this_resource):
         """
@@ -1506,8 +1636,10 @@ class UserAccess(models.Model):
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
-            assert this_privilege >= PrivilegeCodes.OWNER \
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
                 and this_privilege <= PrivilegeCodes.VIEW
+            )
             if user is not None:
                 assert isinstance(user, User)
 
@@ -1523,7 +1655,6 @@ class UserAccess(models.Model):
             return False
 
     def __check_share_resource(self, this_resource, this_privilege, user=None):
-
         """
         Raise exception if a given user cannot share this resource with a given privilege.
 
@@ -1585,23 +1716,35 @@ class UserAccess(models.Model):
             if user is not None:
                 # enforce non-idempotence for unprivileged users
                 if grantee_priv == this_privilege:
-                    raise PermissionDenied("Non-owners cannot reshare at existing privilege")
+                    raise PermissionDenied(
+                        "Non-owners cannot reshare at existing privilege"
+                    )
                 if this_privilege > grantee_priv and user != self.user:
-                    raise PermissionDenied("Non-owners cannot decrease privileges for others")
+                    raise PermissionDenied(
+                        "Non-owners cannot decrease privileges for others"
+                    )
 
         else:
             raise PermissionDenied("User must own resource or have sharing privilege")
 
         # regardless of privilege, cannot remove last owner or quota holder
         if user is not None:
-            if grantee_priv == PrivilegeCodes.OWNER and this_privilege != PrivilegeCodes.OWNER:
-                if access_resource.owners.count() == 1 and user in access_resource.owners:
+            if (
+                grantee_priv == PrivilegeCodes.OWNER
+                and this_privilege != PrivilegeCodes.OWNER
+            ):
+                if (
+                    access_resource.owners.count() == 1
+                    and user in access_resource.owners
+                ):
                     raise PermissionDenied("Cannot remove sole owner of resource")
                 qholder = this_resource.get_quota_holder()
                 if qholder:
                     if qholder == user:
-                        raise PermissionDenied("Cannot remove this resource's quota holder from "
-                                               "ownership")
+                        raise PermissionDenied(
+                            "Cannot remove this resource's quota holder from "
+                            "ownership"
+                        )
 
         return True
 
@@ -1619,7 +1762,9 @@ class UserAccess(models.Model):
         """
         return self.can_share_resource(this_resource, this_privilege, user=this_user)
 
-    def __check_share_resource_with_user(self, this_resource, this_user, this_privilege):
+    def __check_share_resource_with_user(
+        self, this_resource, this_user, this_privilege
+    ):
         """
 
         Raise exception if a given user cannot share this resource at a given privilege
@@ -1633,7 +1778,9 @@ class UserAccess(models.Model):
         This determines whether the current user can share a resource with
         a specific user.
         """
-        return self.__check_share_resource(this_resource, this_privilege, user=this_user)
+        return self.__check_share_resource(
+            this_resource, this_privilege, user=this_user
+        )
 
     def can_share_resource_with_group(self, this_resource, this_group, this_privilege):
         """
@@ -1650,8 +1797,10 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
             assert isinstance(this_group, Group)
-            assert this_privilege >= PrivilegeCodes.OWNER \
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
                 and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         access_group = this_group.gaccess
 
@@ -1661,12 +1810,16 @@ class UserAccess(models.Model):
             raise PermissionDenied("Group to share with is not active")
 
         try:
-            self.__check_share_resource_with_group(this_resource, this_group, this_privilege)
+            self.__check_share_resource_with_group(
+                this_resource, this_group, this_privilege
+            )
             return True
         except PermissionDenied:
             return False
 
-    def __check_share_resource_with_group(self, this_resource, this_group, this_privilege):
+    def __check_share_resource_with_group(
+        self, this_resource, this_group, this_privilege
+    ):
         """
         Raise exception if a given user cannot share this resource with a given group
         at a specific privilege.
@@ -1681,15 +1834,22 @@ class UserAccess(models.Model):
         """
         if this_privilege == PrivilegeCodes.OWNER:
             raise PermissionDenied("Groups cannot own resources")
-        if this_privilege < PrivilegeCodes.OWNER or this_privilege > PrivilegeCodes.VIEW:
+        if (
+            this_privilege < PrivilegeCodes.OWNER
+            or this_privilege > PrivilegeCodes.VIEW
+        ):
             raise PermissionDenied("Privilege level not valid")
 
         # check for user authorization
         if not self.can_share_resource(this_resource, this_privilege):
-            raise PermissionDenied("User has insufficient sharing privilege over resource")
+            raise PermissionDenied(
+                "User has insufficient sharing privilege over resource"
+            )
 
-        if not this_group.gaccess.members.filter(id=self.user.id).exists() and\
-           not self.user.is_superuser:
+        if (
+            not this_group.gaccess.members.filter(id=self.user.id).exists()
+            and not self.user.is_superuser
+        ):
             raise PermissionDenied("User is not a member of the group and not an admin")
 
         # At this point, the user is not an admin and an override has potentially been granted.
@@ -1697,10 +1857,13 @@ class UserAccess(models.Model):
 
         # enforce non-idempotence for unprivileged users
         try:
-            current_priv = GroupResourcePrivilege.objects.get(group=this_group,
-                                                              resource=this_resource).privilege
+            current_priv = GroupResourcePrivilege.objects.get(
+                group=this_group, resource=this_resource
+            ).privilege
             if current_priv == this_privilege:
-                raise PermissionDenied("Non-owners cannot reshare at existing privilege")
+                raise PermissionDenied(
+                    "Non-owners cannot reshare at existing privilege"
+                )
 
         except GroupResourcePrivilege.DoesNotExist:
             pass  # no problem if record does not exist
@@ -1726,7 +1889,10 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_user, User)
             assert isinstance(this_resource, BaseResource)
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -1735,8 +1901,12 @@ class UserAccess(models.Model):
 
         # check that this is allowed and raise exception otherwise.
         self.__check_share_resource_with_user(this_resource, this_user, this_privilege)
-        UserResourcePrivilege.share(resource=this_resource, user=this_user,
-                                    grantor=self.user, privilege=this_privilege)
+        UserResourcePrivilege.share(
+            resource=this_resource,
+            user=this_user,
+            grantor=self.user,
+            privilege=this_privilege,
+        )
 
     def unshare_resource_with_user(self, this_resource, this_user):
         """
@@ -1765,25 +1935,25 @@ class UserAccess(models.Model):
 
         # check that this is allowed and raise exception otherwise.
         self.__check_unshare_resource_with_user(this_resource, this_user)
-        UserResourcePrivilege.unshare(resource=this_resource, user=this_user,
-                                      grantor=self.user)
+        UserResourcePrivilege.unshare(
+            resource=this_resource, user=this_user, grantor=self.user
+        )
 
     def can_unshare_resource_with_user(self, this_resource, this_user):
-
         """
-        Check whether one can dissociate a specific user from a resource
+                Check whether one can dissociate a specific user from a resource
 
-        :param this_resource: resource to protect.
-        :param this_user: user to remove.
-        :return: Boolean: whether one can unshare this resource with this user.
+                :param this_resource: resource to protect.
+                :param this_user: user to remove.
+                :return: Boolean: whether one can unshare this resource with this user.
 
-        This checks if both of the following are true:
-            * self is administrator, or owns the resource.
-            * This act does not remove the last owner of the resource.
-        If not, it returns False
+                This checks if both of the following are true:
+                    * self is administrator, or owns the resource.
+                    * This act does not remove the last owner of the resource.
+                If not, it returns False
 
--       Note that can_unshare_X is parallel to unshare_X and returns False exactly
--       when __check_unshare_X and unshare_X will raise an exception.
+        -       Note that can_unshare_X is parallel to unshare_X and returns False exactly
+        -       when __check_unshare_X and unshare_X will raise an exception.
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
@@ -1803,43 +1973,52 @@ class UserAccess(models.Model):
 
     def __check_unshare_resource_with_user(self, this_resource, this_user):
         """
-        Check whether one can dissociate a specific user from a resource
+                Check whether one can dissociate a specific user from a resource
 
-        :param this_resource: resource to protect.
-        :param this_user: user to remove.
-        :return: Boolean: whether one can unshare this resource with this user.
+                :param this_resource: resource to protect.
+                :param this_user: user to remove.
+                :return: Boolean: whether one can unshare this resource with this user.
 
-        This checks if both of the following are true:
-            * self is administrator, or owns the resource.
-            * This act does not remove the last owner of the resource.
-        If not, it raises a PermissionDenied exception.
-        Otherwise, it returns True.
+                This checks if both of the following are true:
+                    * self is administrator, or owns the resource.
+                    * This act does not remove the last owner of the resource.
+                If not, it raises a PermissionDenied exception.
+                Otherwise, it returns True.
 
--       Note that can_unshare_X is parallel to unshare_X and returns False exactly
--       when __check_unshare_X and unshare_X will raise an exception.
+        -       Note that can_unshare_X is parallel to unshare_X and returns False exactly
+        -       when __check_unshare_X and unshare_X will raise an exception.
         """
         if not this_resource.raccess.view_users.filter(id=this_user.id).exists():
             raise PermissionDenied("User does not have access to the group")
 
         # Check for sufficient privilege
-        if not self.user.is_superuser \
-                and not self.owns_resource(this_resource) \
-                and not this_user == self.user:
-            raise PermissionDenied("You do not have permission to remove this sharing setting")
+        if (
+            not self.user.is_superuser
+            and not self.owns_resource(this_resource)
+            and not this_user == self.user
+        ):
+            raise PermissionDenied(
+                "You do not have permission to remove this sharing setting"
+            )
 
         qholder = this_resource.get_quota_holder()
         if qholder:
             if qholder == this_user:
-                raise PermissionDenied("Cannot remove this resource's quota holder from "
-                                       "ownership")
+                raise PermissionDenied(
+                    "Cannot remove this resource's quota holder from " "ownership"
+                )
 
         # if this_user is not an OWNER, or there is another OWNER, OK.
-        if not UserResourcePrivilege.objects.filter(resource=this_resource,
-                                                    privilege=PrivilegeCodes.OWNER,
-                                                    user=this_user).exists()\
-            or UserResourcePrivilege.objects.filter(resource=this_resource,
-                                                    privilege=PrivilegeCodes.OWNER) \
-                                            .exclude(user=this_user).exists():
+        if (
+            not UserResourcePrivilege.objects.filter(
+                resource=this_resource, privilege=PrivilegeCodes.OWNER, user=this_user
+            ).exists()
+            or UserResourcePrivilege.objects.filter(
+                resource=this_resource, privilege=PrivilegeCodes.OWNER
+            )
+            .exclude(user=this_user)
+            .exists()
+        ):
             return True
         else:
             raise PermissionDenied("Cannot remove sole owner of group")
@@ -1863,8 +2042,10 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
             assert isinstance(this_group, Group)
-            assert this_privilege >= PrivilegeCodes.OWNER \
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
                 and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         access_group = this_group.gaccess
         if not self.user.is_active:
@@ -1873,12 +2054,18 @@ class UserAccess(models.Model):
             raise PermissionDenied("Group to share with is not active")
 
         # validate the request as allowed
-        self.__check_share_resource_with_group(this_resource, this_group, this_privilege)
+        self.__check_share_resource_with_group(
+            this_resource, this_group, this_privilege
+        )
 
         # User is authorized and privilege is appropriate;
         # proceed to change the record if present.
-        GroupResourcePrivilege.share(resource=this_resource, group=this_group,
-                                     grantor=self.user, privilege=this_privilege)
+        GroupResourcePrivilege.share(
+            resource=this_resource,
+            group=this_group,
+            grantor=self.user,
+            privilege=this_privilege,
+        )
 
     def unshare_resource_with_group(self, this_resource, this_group):
         """
@@ -1905,26 +2092,28 @@ class UserAccess(models.Model):
 
         # check that this is allowed
         self.__check_unshare_resource_with_group(this_resource, this_group)
-        GroupResourcePrivilege.unshare(resource=this_resource, group=this_group, grantor=self.user)
+        GroupResourcePrivilege.unshare(
+            resource=this_resource, group=this_group, grantor=self.user
+        )
 
     def can_unshare_resource_with_group(self, this_resource, this_group):
         """
-        Check whether one can unshare a resource with a group.
+                Check whether one can unshare a resource with a group.
 
-        :param this_resource: resource to be protected.
-        :param this_group: group with which to unshare resource.
-        :return: Boolean
+                :param this_resource: resource to be protected.
+                :param this_group: group with which to unshare resource.
+                :return: Boolean
 
-        Unsharing will remove a user "this_group" from access to "this_resource" if one of the
-        following is true:
-            * self is an administrator.
-            * self owns the resource.
-            * self owns the group.
-        This routine returns False exactly when unshare_resource_with_group will raise a
-        PermissionDenied exception.
+                Unsharing will remove a user "this_group" from access to "this_resource" if one of the
+                following is true:
+                    * self is an administrator.
+                    * self owns the resource.
+                    * self owns the group.
+                This routine returns False exactly when unshare_resource_with_group will raise a
+                PermissionDenied exception.
 
--       Note that can_unshare_X is parallel to unshare_X and returns False exactly
--       when unshare_X will raise an exception.
+        -       Note that can_unshare_X is parallel to unshare_X and returns False exactly
+        -       when unshare_X will raise an exception.
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
@@ -1943,14 +2132,13 @@ class UserAccess(models.Model):
             return False
 
     def __check_unshare_resource_with_group(self, this_resource, this_group):
-        """ check that one can unshare a group with a resource, raise PermissionDenied if not """
+        """check that one can unshare a group with a resource, raise PermissionDenied if not"""
         if not this_resource.raccess.view_groups.filter(id=this_group.id).exists():
             raise PermissionDenied("Group does not have access to resource")
 
         # TODO: also authorize owners of the group and members of peer groups in communities
         # Check for sufficient privilege
-        if not self.user.is_superuser \
-                and not self.owns_resource(this_resource):
+        if not self.user.is_superuser and not self.owns_resource(this_resource):
             raise PermissionDenied("Insufficient privilege to unshare resource")
         return True
 
@@ -1981,11 +2169,14 @@ class UserAccess(models.Model):
                 # get list of owners to exclude from main list
                 # This should be one user but can be two due to race conditions.
                 # Avoid races by excluding whole action in that case.
-                users_to_exclude = User.objects.filter(is_active=True,
-                                                       u2urp__resource=this_resource,
-                                                       u2urp__privilege=PrivilegeCodes.OWNER)\
-                                               .values('pk')
-                return access_resource.view_users.exclude(pk__in=Subquery(users_to_exclude))
+                users_to_exclude = User.objects.filter(
+                    is_active=True,
+                    u2urp__resource=this_resource,
+                    u2urp__privilege=PrivilegeCodes.OWNER,
+                ).values("pk")
+                return access_resource.view_users.exclude(
+                    pk__in=Subquery(users_to_exclude)
+                )
             elif qholder:
                 return access_resource.view_users.exclude(id=qholder.id)
             else:
@@ -1995,11 +2186,11 @@ class UserAccess(models.Model):
         elif access_resource.view_users.filter(id=self.user.id).exists():
             if access_resource.owners.count() == 1:
                 # if self is not an owner,
-                if not UserResourcePrivilege.objects\
-                        .filter(user=self.user,
-                                resource=this_resource,
-                                privilege=PrivilegeCodes.OWNER)\
-                        .exists():
+                if not UserResourcePrivilege.objects.filter(
+                    user=self.user,
+                    resource=this_resource,
+                    privilege=PrivilegeCodes.OWNER,
+                ).exists():
                     # return a QuerySet containing only self
                     return User.objects.filter(uaccess=self)
                 else:
@@ -2032,11 +2223,15 @@ class UserAccess(models.Model):
 
         if self.user.is_superuser or self.owns_resource(this_resource):
             # all shared groups
-            return Group.objects.filter(g2grp__resource=this_resource, gaccess__active=True)
+            return Group.objects.filter(
+                g2grp__resource=this_resource, gaccess__active=True
+            )
         else:
-            return Group.objects.filter(g2ugp__user=self.user,
-                                        g2ugp__privilege=PrivilegeCodes.OWNER,
-                                        gaccess__active=True)
+            return Group.objects.filter(
+                g2ugp__user=self.user,
+                g2ugp__privilege=PrivilegeCodes.OWNER,
+                gaccess__active=True,
+            )
 
     #######################
     # "undo" system based upon provenance
@@ -2072,14 +2267,17 @@ class UserAccess(models.Model):
         if not this_group.gaccess.active:
             raise PermissionDenied("Group is not active")
 
-        candidates = UserGroupPrivilege.get_undo_users(group=this_group, grantor=self.user)
+        candidates = UserGroupPrivilege.get_undo_users(
+            group=this_group, grantor=self.user
+        )
         # figure out if group has a single owner
         if this_group.gaccess.owners.count() == 1:
             # get list of owners to exclude from main list
-            users_to_exclude = User.objects.filter(is_active=True,
-                                                   u2ugp__group=this_group,
-                                                   u2ugp__privilege=PrivilegeCodes.OWNER)\
-                                           .values('pk')
+            users_to_exclude = User.objects.filter(
+                is_active=True,
+                u2ugp__group=this_group,
+                u2ugp__privilege=PrivilegeCodes.OWNER,
+            ).values("pk")
             return candidates.exclude(pk__in=Subquery(users_to_exclude))
         else:
             return candidates
@@ -2159,10 +2357,14 @@ class UserAccess(models.Model):
 
         qual_undo = self.__get_group_undo_users(this_group)
         if qual_undo.filter(id=this_user.id).exists():
-            UserGroupPrivilege.undo_share(group=this_group, user=this_user, grantor=self.user)
+            UserGroupPrivilege.undo_share(
+                group=this_group, user=this_user, grantor=self.user
+            )
         else:
             # determine which exception to raise.
-            raw_undo = UserGroupPrivilege.get_undo_users(group=this_group, grantor=self.user)
+            raw_undo = UserGroupPrivilege.get_undo_users(
+                group=this_group, grantor=self.user
+            )
             if raw_undo.filter(id=this_user.id).exists():
                 raise PermissionDenied("Cannot remove last owner of group")
             else:
@@ -2200,20 +2402,23 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        candidates = UserResourcePrivilege.get_undo_users(resource=this_resource, grantor=self.user)
+        candidates = UserResourcePrivilege.get_undo_users(
+            resource=this_resource, grantor=self.user
+        )
         # figure out if group has a single owner
         if this_resource.raccess.owners.count() == 1:
             # get list of owners to exclude from main list
-            users_to_exclude = User.objects.filter(is_active=True,
-                                                   u2urp__resource=this_resource,
-                                                   u2urp__privilege=PrivilegeCodes.OWNER)\
-                                           .values('pk')
+            users_to_exclude = User.objects.filter(
+                is_active=True,
+                u2urp__resource=this_resource,
+                u2urp__privilege=PrivilegeCodes.OWNER,
+            ).values("pk")
             return candidates.exclude(pk__in=Subquery(users_to_exclude))
         else:
             return candidates
 
     def can_undo_share_resource_with_user(self, this_resource, this_user):
-        """ Check that a resource share can be undone """
+        """Check that a resource share can be undone"""
         if __debug__:
             assert isinstance(this_resource, BaseResource)
             assert isinstance(this_user, User)
@@ -2225,7 +2430,11 @@ class UserAccess(models.Model):
             # raise PermissionDenied("User is not active")
             return False
 
-        return self.__get_resource_undo_users(this_resource).filter(id=this_user.id).exists()
+        return (
+            self.__get_resource_undo_users(this_resource)
+            .filter(id=this_user.id)
+            .exists()
+        )
 
     def undo_share_resource_with_user(self, this_resource, this_user):
         """
@@ -2262,20 +2471,21 @@ class UserAccess(models.Model):
 
         qual_undo = self.__get_resource_undo_users(this_resource)
         if qual_undo.filter(id=this_user.id).exists():
-            UserResourcePrivilege.undo_share(resource=this_resource,
-                                             user=this_user,
-                                             grantor=self.user)
+            UserResourcePrivilege.undo_share(
+                resource=this_resource, user=this_user, grantor=self.user
+            )
         else:
             # determine which exception to raise.
-            raw_undo = UserResourcePrivilege.get_undo_users(resource=this_resource,
-                                                            grantor=self.user)
+            raw_undo = UserResourcePrivilege.get_undo_users(
+                resource=this_resource, grantor=self.user
+            )
             if raw_undo.filter(id=this_user.id).exists():
                 raise PermissionDenied("Cannot remove last owner of resource")
             else:
                 raise PermissionDenied("User did not grant last privilege")
 
     def __get_resource_undo_groups(self, this_resource):
-        """ get a list of groups that can be removed from resource privilege by self """
+        """get a list of groups that can be removed from resource privilege by self"""
         """
         Get a list of users whose privilege was granted by self and can be undone.
 
@@ -2304,10 +2514,12 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return GroupResourcePrivilege.get_undo_groups(resource=this_resource, grantor=self.user)
+        return GroupResourcePrivilege.get_undo_groups(
+            resource=this_resource, grantor=self.user
+        )
 
     def can_undo_share_resource_with_group(self, this_resource, this_group):
-        """ Check that a resource share can be undone """
+        """Check that a resource share can be undone"""
         if __debug__:
             assert isinstance(this_resource, BaseResource)
             assert isinstance(this_group, Group)
@@ -2319,7 +2531,11 @@ class UserAccess(models.Model):
             # raise PermissionDenied("Group is not active")
             return False
 
-        return self.__get_resource_undo_groups(this_resource).filter(id=this_group.id).exists()
+        return (
+            self.__get_resource_undo_groups(this_resource)
+            .filter(id=this_group.id)
+            .exists()
+        )
 
     def undo_share_resource_with_group(self, this_resource, this_group):
         """
@@ -2356,9 +2572,9 @@ class UserAccess(models.Model):
 
         qual_undo = self.__get_resource_undo_groups(this_resource)
         if qual_undo.filter(id=this_group.id).exists():
-            GroupResourcePrivilege.undo_share(resource=this_resource,
-                                              group=this_group,
-                                              grantor=self.user)
+            GroupResourcePrivilege.undo_share(
+                resource=this_resource, group=this_group, grantor=self.user
+            )
         else:
             raise PermissionDenied("User did not grant last privilege")
 
@@ -2369,107 +2585,162 @@ class UserAccess(models.Model):
     def share(self, **kwargs):
         if __debug__:
             assert len(kwargs) == 3
-            assert 'privilege' in kwargs and \
-                kwargs['privilege'] >= PrivilegeCodes.OWNER and \
-                kwargs['privilege'] <= PrivilegeCodes.NONE
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
-            assert 'user' not in kwargs or isinstance(kwargs['user'], User)
-            assert 'community' not in kwargs or isinstance(kwargs['community'], Community)
-        if 'resource' in kwargs and 'user' in kwargs:
-            return self.share_resource_with_user(kwargs['resource'], kwargs['user'],
-                                                 kwargs['privilege'])
-        elif 'resource' in kwargs and 'group' in kwargs:
-            return self.share_resource_with_group(kwargs['resource'], kwargs['group'],
-                                                  kwargs['privilege'])
-        elif 'group' in kwargs and 'user' in kwargs:
-            return self.share_group_with_user(kwargs['group'], kwargs['user'],
-                                              kwargs['privilege'])
-        elif 'group' in kwargs and 'community' in kwargs:
-            return self.share_community_with_group(kwargs['group'], kwargs['community'],
-                                                   kwargs['privilege'])
-        elif 'user' in kwargs and 'community' in kwargs:
-            return self.share_user_with_community(kwargs['user'], kwargs['community'],
-                                                  kwargs['privilege'])
+            assert (
+                "privilege" in kwargs
+                and kwargs["privilege"] >= PrivilegeCodes.OWNER
+                and kwargs["privilege"] <= PrivilegeCodes.NONE
+            )
+            assert "resource" not in kwargs or isinstance(
+                kwargs["resource"], BaseResource
+            )
+            assert "group" not in kwargs or isinstance(kwargs["group"], Group)
+            assert "user" not in kwargs or isinstance(kwargs["user"], User)
+            assert "community" not in kwargs or isinstance(
+                kwargs["community"], Community
+            )
+        if "resource" in kwargs and "user" in kwargs:
+            return self.share_resource_with_user(
+                kwargs["resource"], kwargs["user"], kwargs["privilege"]
+            )
+        elif "resource" in kwargs and "group" in kwargs:
+            return self.share_resource_with_group(
+                kwargs["resource"], kwargs["group"], kwargs["privilege"]
+            )
+        elif "group" in kwargs and "user" in kwargs:
+            return self.share_group_with_user(
+                kwargs["group"], kwargs["user"], kwargs["privilege"]
+            )
+        elif "group" in kwargs and "community" in kwargs:
+            return self.share_community_with_group(
+                kwargs["group"], kwargs["community"], kwargs["privilege"]
+            )
+        elif "user" in kwargs and "community" in kwargs:
+            return self.share_user_with_community(
+                kwargs["user"], kwargs["community"], kwargs["privilege"]
+            )
         else:
-            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
+            raise PolymorphismError(
+                str.format("No action for arguments {}", str(kwargs))
+            )
 
     def unshare(self, **kwargs):
         if __debug__:
             assert len(kwargs) == 2
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
-            assert 'user' not in kwargs or isinstance(kwargs['user'], User)
-        if 'resource' in kwargs and 'user' in kwargs:
-            return self.unshare_resource_with_user(kwargs['resource'], kwargs['user'])
-        elif 'resource' in kwargs and 'group' in kwargs:
-            return self.unshare_resource_with_group(kwargs['resource'], kwargs['group'])
-        elif 'group' in kwargs and 'user' in kwargs:
-            return self.unshare_group_with_user(kwargs['group'], kwargs['user'])
-        elif 'group' in kwargs and 'community' in kwargs:
-            return self.unshare_community_with_group(kwargs['group'], kwargs['community'])
-        elif 'user' in kwargs and 'community' in kwargs:
-            return self.unshare_user_with_community(kwargs['user'], kwargs['community'])
+            assert "resource" not in kwargs or isinstance(
+                kwargs["resource"], BaseResource
+            )
+            assert "group" not in kwargs or isinstance(kwargs["group"], Group)
+            assert "user" not in kwargs or isinstance(kwargs["user"], User)
+        if "resource" in kwargs and "user" in kwargs:
+            return self.unshare_resource_with_user(kwargs["resource"], kwargs["user"])
+        elif "resource" in kwargs and "group" in kwargs:
+            return self.unshare_resource_with_group(kwargs["resource"], kwargs["group"])
+        elif "group" in kwargs and "user" in kwargs:
+            return self.unshare_group_with_user(kwargs["group"], kwargs["user"])
+        elif "group" in kwargs and "community" in kwargs:
+            return self.unshare_community_with_group(
+                kwargs["group"], kwargs["community"]
+            )
+        elif "user" in kwargs and "community" in kwargs:
+            return self.unshare_user_with_community(kwargs["user"], kwargs["community"])
         else:
-            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
+            raise PolymorphismError(
+                str.format("No action for arguments {}", str(kwargs))
+            )
 
     def can_unshare(self, **kwargs):
         if __debug__:
             assert len(kwargs) == 2
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
-            assert 'user' not in kwargs or isinstance(kwargs['user'], User)
-        if 'resource' in kwargs and 'user' in kwargs:
-            return self.can_unshare_resource_with_user(kwargs['resource'], kwargs['user'])
-        elif 'resource' in kwargs and 'group' in kwargs:
-            return self.can_unshare_resource_with_group(kwargs['resource'], kwargs['group'])
-        elif 'group' in kwargs and 'user' in kwargs:
-            return self.can_unshare_group_with_user(kwargs['group'], kwargs['user'])
-        elif 'group' in kwargs and 'community' in kwargs:
-            return self.can_unshare_community_with_group(kwargs['group'], kwargs['community'])
-        elif 'user' in kwargs and 'community' in kwargs:
-            return self.can_unshare_user_with_community(kwargs['user'], kwargs['community'])
+            assert "resource" not in kwargs or isinstance(
+                kwargs["resource"], BaseResource
+            )
+            assert "group" not in kwargs or isinstance(kwargs["group"], Group)
+            assert "user" not in kwargs or isinstance(kwargs["user"], User)
+        if "resource" in kwargs and "user" in kwargs:
+            return self.can_unshare_resource_with_user(
+                kwargs["resource"], kwargs["user"]
+            )
+        elif "resource" in kwargs and "group" in kwargs:
+            return self.can_unshare_resource_with_group(
+                kwargs["resource"], kwargs["group"]
+            )
+        elif "group" in kwargs and "user" in kwargs:
+            return self.can_unshare_group_with_user(kwargs["group"], kwargs["user"])
+        elif "group" in kwargs and "community" in kwargs:
+            return self.can_unshare_community_with_group(
+                kwargs["group"], kwargs["community"]
+            )
+        elif "user" in kwargs and "community" in kwargs:
+            return self.can_unshare_user_with_community(
+                kwargs["user"], kwargs["community"]
+            )
         else:
-            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
+            raise PolymorphismError(
+                str.format("No action for arguments {}", str(kwargs))
+            )
 
     def undo_share(self, **kwargs):
         if __debug__:
             assert len(kwargs) == 2
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
-            assert 'user' not in kwargs or isinstance(kwargs['user'], User)
-        if 'resource' in kwargs and 'user' in kwargs:
-            return self.undo_share_resource_with_user(kwargs['resource'], kwargs['user'])
-        elif 'resource' in kwargs and 'group' in kwargs:
-            return self.undo_share_resource_with_group(kwargs['resource'], kwargs['group'])
-        elif 'group' in kwargs and 'user' in kwargs:
-            return self.undo_share_group_with_user(kwargs['group'], kwargs['user'])
-        elif 'group' in kwargs and 'community' in kwargs:
-            return self.undo_share_community_with_group(kwargs['group'], kwargs['community'])
-        elif 'user' in kwargs and 'community' in kwargs:
-            return self.undo_share_user_with_community(kwargs['user'], kwargs['community'])
+            assert "resource" not in kwargs or isinstance(
+                kwargs["resource"], BaseResource
+            )
+            assert "group" not in kwargs or isinstance(kwargs["group"], Group)
+            assert "user" not in kwargs or isinstance(kwargs["user"], User)
+        if "resource" in kwargs and "user" in kwargs:
+            return self.undo_share_resource_with_user(
+                kwargs["resource"], kwargs["user"]
+            )
+        elif "resource" in kwargs and "group" in kwargs:
+            return self.undo_share_resource_with_group(
+                kwargs["resource"], kwargs["group"]
+            )
+        elif "group" in kwargs and "user" in kwargs:
+            return self.undo_share_group_with_user(kwargs["group"], kwargs["user"])
+        elif "group" in kwargs and "community" in kwargs:
+            return self.undo_share_community_with_group(
+                kwargs["group"], kwargs["community"]
+            )
+        elif "user" in kwargs and "community" in kwargs:
+            return self.undo_share_user_with_community(
+                kwargs["user"], kwargs["community"]
+            )
         else:
-            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
+            raise PolymorphismError(
+                str.format("No action for arguments {}", str(kwargs))
+            )
 
     def can_undo_share(self, **kwargs):
         if __debug__:
             assert len(kwargs) == 2
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
-            assert 'user' not in kwargs or isinstance(kwargs['user'], User)
+            assert "resource" not in kwargs or isinstance(
+                kwargs["resource"], BaseResource
+            )
+            assert "group" not in kwargs or isinstance(kwargs["group"], Group)
+            assert "user" not in kwargs or isinstance(kwargs["user"], User)
 
-        if 'resource' in kwargs and 'user' in kwargs:
-            return self.can_undo_share_resource_with_user(kwargs['resource'], kwargs['user'])
-        elif 'resource' in kwargs and 'group' in kwargs:
-            return self.can_undo_share_resource_with_group(kwargs['resource'], kwargs['group'])
-        elif 'group' in kwargs and 'user' in kwargs:
-            return self.can_undo_share_group_with_user(kwargs['group'], kwargs['user'])
-        elif 'group' in kwargs and 'community' in kwargs:
-            return self.can_undo_share_community_with_group(kwargs['group'], kwargs['community'])
-        elif 'user' in kwargs and 'community' in kwargs:
-            return self.can_undo_share_user_with_community(kwargs['user'], kwargs['community'])
+        if "resource" in kwargs and "user" in kwargs:
+            return self.can_undo_share_resource_with_user(
+                kwargs["resource"], kwargs["user"]
+            )
+        elif "resource" in kwargs and "group" in kwargs:
+            return self.can_undo_share_resource_with_group(
+                kwargs["resource"], kwargs["group"]
+            )
+        elif "group" in kwargs and "user" in kwargs:
+            return self.can_undo_share_group_with_user(kwargs["group"], kwargs["user"])
+        elif "group" in kwargs and "community" in kwargs:
+            return self.can_undo_share_community_with_group(
+                kwargs["group"], kwargs["community"]
+            )
+        elif "user" in kwargs and "community" in kwargs:
+            return self.can_undo_share_user_with_community(
+                kwargs["user"], kwargs["community"]
+            )
         else:
-            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
+            raise PolymorphismError(
+                str.format("No action for arguments {}", str(kwargs))
+            )
 
     ##########################################
     # PUBLIC METHODS: community
@@ -2500,15 +2771,21 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        raw_community = Community.objects.create(name=title, description=description,
-                                                 purpose=purpose, auto_approve=auto_approve)
+        raw_community = Community.objects.create(
+            name=title,
+            description=description,
+            purpose=purpose,
+            auto_approve=auto_approve,
+        )
         raw_user = self.user
 
         # Must bootstrap access control system initially
-        UserCommunityPrivilege.share(community=raw_community,
-                                     user=raw_user,
-                                     grantor=raw_user,
-                                     privilege=PrivilegeCodes.OWNER)
+        UserCommunityPrivilege.share(
+            community=raw_community,
+            user=raw_user,
+            grantor=raw_user,
+            privilege=PrivilegeCodes.OWNER,
+        )
         return raw_community
 
     def owns_community(self, this_community):
@@ -2534,9 +2811,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return UserCommunityPrivilege.objects.filter(community=this_community,
-                                                     privilege=PrivilegeCodes.OWNER,
-                                                     user=self.user).exists()
+        return UserCommunityPrivilege.objects.filter(
+            community=this_community, privilege=PrivilegeCodes.OWNER, user=self.user
+        ).exists()
 
     def can_change_community(self, this_community):
         """
@@ -2593,8 +2870,10 @@ class UserAccess(models.Model):
         if self.user.is_superuser:
             return True
 
-        return self.user.is_superuser or \
-                self.view_communities.filter(id=this_community.id).exists()
+        return (
+            self.user.is_superuser
+            or self.view_communities.filter(id=this_community.id).exists()
+        )
 
     def can_view_community_metadata(self, this_community):
         """
@@ -2732,15 +3011,22 @@ class UserAccess(models.Model):
         if __debug__:
             assert isinstance(this_community, Community)
             assert isinstance(this_user, User)
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         try:
-            self.__check_share_community_with_user(this_community, this_user, this_privilege)
+            self.__check_share_community_with_user(
+                this_community, this_user, this_privilege
+            )
             return True
         except PermissionDenied:
             return False
 
-    def __check_share_community_with_user(self, this_community, this_user, this_privilege):
+    def __check_share_community_with_user(
+        self, this_community, this_user, this_privilege
+    ):
         """
 
         Raise exception if a given user cannot share this community with a given privilege
@@ -2755,7 +3041,10 @@ class UserAccess(models.Model):
         if __debug__:
             assert isinstance(this_community, Community)
             assert isinstance(this_user, User)
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -2799,13 +3088,22 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_community, Community)
             assert isinstance(this_user, User)
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         # raise a PermissionDenied exception if user self is not allowed to do this.
-        self.__check_share_community_with_user(this_community, this_user, this_privilege)
+        self.__check_share_community_with_user(
+            this_community, this_user, this_privilege
+        )
 
-        UserCommunityPrivilege.share(community=this_community, user=this_user,
-                                     grantor=self.user, privilege=this_privilege)
+        UserCommunityPrivilege.share(
+            community=this_community,
+            user=this_user,
+            grantor=self.user,
+            privilege=this_privilege,
+        )
 
     ####################################
     # (can_)unshare_community_with_user: check for and implement unshare
@@ -2850,7 +3148,9 @@ class UserAccess(models.Model):
             raise PermissionDenied("Grantee user is not active")
 
         self.__check_unshare_community_with_user(this_community, this_user)
-        UserCommunityPrivilege.unshare(community=this_community, user=this_user, grantor=self.user)
+        UserCommunityPrivilege.unshare(
+            community=this_community, user=this_user, grantor=self.user
+        )
 
     ####################################
     # (can_)unshare_community_with_user: check for and implement unshare
@@ -2912,18 +3212,26 @@ class UserAccess(models.Model):
             raise PermissionDenied("Grantee user is not active")
 
         # Check for sufficient privilege
-        if not self.user.is_superuser \
-                and not self.owns_community(this_community) \
-                and not this_user == self.user:
-            raise PermissionDenied("You do not have permission to remove this sharing setting")
+        if (
+            not self.user.is_superuser
+            and not self.owns_community(this_community)
+            and not this_user == self.user
+        ):
+            raise PermissionDenied(
+                "You do not have permission to remove this sharing setting"
+            )
 
         # if this_user is not an OWNER, or there is another OWNER, OK.
-        if not UserCommunityPrivilege.objects.filter(community=this_community,
-                                                     privilege=PrivilegeCodes.OWNER,
-                                                     user=this_user).exists()\
-            or UserCommunityPrivilege.objects.filter(community=this_community,
-                                                     privilege=PrivilegeCodes.OWNER)\
-                                             .exclude(user=this_user).exists():
+        if (
+            not UserCommunityPrivilege.objects.filter(
+                community=this_community, privilege=PrivilegeCodes.OWNER, user=this_user
+            ).exists()
+            or UserCommunityPrivilege.objects.filter(
+                community=this_community, privilege=PrivilegeCodes.OWNER
+            )
+            .exclude(user=this_user)
+            .exists()
+        ):
             return True
         else:
             raise PermissionDenied("Cannot remove sole owner of community")
@@ -2966,11 +3274,14 @@ class UserAccess(models.Model):
                 # get list of owners to exclude from main list
                 # This should be one user but can be two due to race conditions.
                 # Avoid races by excluding action in that case.
-                users_to_exclude = User.objects.filter(is_active=True,
-                                                       u2ugp__community=this_community,
-                                                       u2ugp__privilege=PrivilegeCodes.OWNER)\
-                                               .values('pk')
-                return access_community.members.exclude(pk__in=Subquery(users_to_exclude))
+                users_to_exclude = User.objects.filter(
+                    is_active=True,
+                    u2ugp__community=this_community,
+                    u2ugp__privilege=PrivilegeCodes.OWNER,
+                ).values("pk")
+                return access_community.members.exclude(
+                    pk__in=Subquery(users_to_exclude)
+                )
             else:
                 return access_community.members
 
@@ -2978,10 +3289,11 @@ class UserAccess(models.Model):
         elif access_community.members.filter(id=self.user.id).exists():
             if access_community.owners.count() == 1:
                 # if self is not an owner,
-                if not UserCommunityPrivilege.objects.filter(user=self.user,
-                                                             community=this_community,
-                                                             privilege=PrivilegeCodes.OWNER)\
-                                                     .exists():
+                if not UserCommunityPrivilege.objects.filter(
+                    user=self.user,
+                    community=this_community,
+                    privilege=PrivilegeCodes.OWNER,
+                ).exists():
                     # return a QuerySet containing only self
                     return User.objects.filter(uaccess=self)
                 else:
@@ -2997,8 +3309,9 @@ class UserAccess(models.Model):
     # (can_)share_community_with_group: check for and implement share
     ####################################
 
-    def can_share_community_with_group(self, this_community, this_group,
-                                       this_privilege=PrivilegeCodes.VIEW):
+    def can_share_community_with_group(
+        self, this_community, this_group, this_privilege=PrivilegeCodes.VIEW
+    ):
         """
         Return True if a given user can share this group with a specified group
         with a given privilege.
@@ -3025,13 +3338,16 @@ class UserAccess(models.Model):
         for the corresponding arguments -- *guaranteed*.
         """
         try:
-            self.__check_share_community_with_group(this_community, this_group, this_privilege)
+            self.__check_share_community_with_group(
+                this_community, this_group, this_privilege
+            )
             return True
         except PermissionDenied:
             return False
 
-    def __check_share_community_with_group(self, this_community, this_group,
-                                           this_privilege=PrivilegeCodes.VIEW):
+    def __check_share_community_with_group(
+        self, this_community, this_group, this_privilege=PrivilegeCodes.VIEW
+    ):
         """
         Check whether a share of a group with a community is permitted.
 
@@ -3055,8 +3371,9 @@ class UserAccess(models.Model):
         if not self.owns_community(this_community):
             raise PermissionDenied("User must own the community to be modified")
 
-    def share_community_with_group(self, this_community, this_group,
-                                   this_privilege=PrivilegeCodes.VIEW):
+    def share_community_with_group(
+        self, this_community, this_group, this_privilege=PrivilegeCodes.VIEW
+    ):
         """
         :param this_group: Group to be shared.
         :param this_community: Group with which to share.
@@ -3091,7 +3408,10 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_group, Group)
             assert isinstance(this_community, Community)
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -3099,10 +3419,16 @@ class UserAccess(models.Model):
             raise PermissionDenied("Group to be shared is not active")
 
         # raise a PermissionDenied exception if user self is not allowed to do this.
-        self.__check_share_community_with_group(this_community, this_group, this_privilege)
+        self.__check_share_community_with_group(
+            this_community, this_group, this_privilege
+        )
 
-        GroupCommunityPrivilege.share(community=this_community, group=this_group,
-                                      grantor=self.user, privilege=this_privilege)
+        GroupCommunityPrivilege.share(
+            community=this_community,
+            group=this_group,
+            grantor=self.user,
+            privilege=this_privilege,
+        )
 
     ####################################
     # (can_)unshare_community_with_group: check for and implement unshare
@@ -3207,8 +3533,9 @@ class UserAccess(models.Model):
             raise PermissionDenied("Affected Group is not active")
 
         self.__check_unshare_community_with_group(this_community, this_group)
-        GroupCommunityPrivilege.unshare(community=this_community, group=this_group,
-                                        grantor=self.user)
+        GroupCommunityPrivilege.unshare(
+            community=this_community, group=this_group, grantor=self.user
+        )
 
     def get_community_unshare_groups(self, this_community):
         """
@@ -3264,16 +3591,18 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        candidates = UserCommunityPrivilege.get_undo_users(community=this_community,
-                                                           grantor=self.user)
+        candidates = UserCommunityPrivilege.get_undo_users(
+            community=this_community, grantor=self.user
+        )
 
         # figure out if group has a single owner
         if this_community.owners.count() == 1:
             # get list of owners to exclude from main list
-            users_to_exclude = User.objects.filter(is_active=True,
-                                                   u2ucp__community=this_community,
-                                                   u2ucp__privilege=PrivilegeCodes.OWNER)\
-                                           .values('pk')
+            users_to_exclude = User.objects.filter(
+                is_active=True,
+                u2ucp__community=this_community,
+                u2ucp__privilege=PrivilegeCodes.OWNER,
+            ).values("pk")
             return candidates.exclude(pk__in=Subquery(users_to_exclude))
         else:
             return candidates
@@ -3310,7 +3639,11 @@ class UserAccess(models.Model):
             # raise PermissionDenied("Grantee user is not active")
             return False
 
-        return self.__get_community_undo_users(this_community).filter(id=this_user.id).exists()
+        return (
+            self.__get_community_undo_users(this_community)
+            .filter(id=this_user.id)
+            .exists()
+        )
 
     def undo_share_community_with_user(self, this_community, this_user):
         """
@@ -3347,8 +3680,9 @@ class UserAccess(models.Model):
 
         qual_undo = self.__get_community_undo_users(this_community)
         if qual_undo.filter(id=this_user.id).exists():
-            UserCommunityPrivilege.undo_share(user=this_user, community=this_community,
-                                              grantor=self.user)
+            UserCommunityPrivilege.undo_share(
+                user=this_user, community=this_community, grantor=self.user
+            )
         else:
             raise PermissionDenied("User did not grant last privilege")
 
@@ -3371,7 +3705,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return GroupCommunityPrivilege.get_undo_groups(community=this_community, grantor=self.user)
+        return GroupCommunityPrivilege.get_undo_groups(
+            community=this_community, grantor=self.user
+        )
 
     def can_undo_share_community_with_group(self, this_community, this_group):
         """
@@ -3405,7 +3741,11 @@ class UserAccess(models.Model):
             # raise PermissionDenied("Group is not active")
             return False
 
-        return self.__get_community_undo_groups(this_community).filter(id=this_group.id).exists()
+        return (
+            self.__get_community_undo_groups(this_community)
+            .filter(id=this_group.id)
+            .exists()
+        )
 
     def undo_share_community_with_group(self, this_community, this_group):
         """
@@ -3444,8 +3784,9 @@ class UserAccess(models.Model):
 
         qual_undo = self.__get_community_undo_groups(this_community)
         if qual_undo.filter(id=this_group.id).exists():
-            GroupCommunityPrivilege.undo_share(group=this_group, community=this_community,
-                                               grantor=self.user)
+            GroupCommunityPrivilege.undo_share(
+                group=this_group, community=this_community, grantor=self.user
+            )
         else:
             raise PermissionDenied("User did not grant last privilege")
 
@@ -3453,8 +3794,9 @@ class UserAccess(models.Model):
     # (can_)share_resource_with_community: check for and implement share
     ####################################
 
-    def can_share_resource_with_community(self, this_community, this_resource,
-                                          this_privilege=PrivilegeCodes.VIEW):
+    def can_share_resource_with_community(
+        self, this_community, this_resource, this_privilege=PrivilegeCodes.VIEW
+    ):
         """
         Return True if a given user can share this resource with a specified resource
         with a given privilege.
@@ -3481,13 +3823,16 @@ class UserAccess(models.Model):
         for the corresponding arguments -- *guaranteed*.
         """
         try:
-            self.__check_share_resource_with_community(this_community, this_resource, this_privilege)
+            self.__check_share_resource_with_community(
+                this_community, this_resource, this_privilege
+            )
             return True
         except PermissionDenied:
             return False
 
-    def __check_share_resource_with_community(self, this_community, this_resource,
-                                              this_privilege=PrivilegeCodes.VIEW):
+    def __check_share_resource_with_community(
+        self, this_community, this_resource, this_privilege=PrivilegeCodes.VIEW
+    ):
         """
         Check whether an unshare of a resource with a community is permitted.
 
@@ -3502,13 +3847,20 @@ class UserAccess(models.Model):
         # only owners of the original resources can share a resource with a community
         if this_privilege != PrivilegeCodes.VIEW:
             raise PermissionDenied("Communities can only view resources")
-        if this_community not in self.communities and not self.owns_community(this_community):
-            raise PermissionDenied("User must be a member or owner of the community to be modified")
+        if this_community not in self.communities and not self.owns_community(
+            this_community
+        ):
+            raise PermissionDenied(
+                "User must be a member or owner of the community to be modified"
+            )
         if not self.owns_resource(this_resource):
-            raise PermissionDenied("User must own the resource to be shared with a community")
+            raise PermissionDenied(
+                "User must own the resource to be shared with a community"
+            )
 
-    def share_resource_with_community(self, this_community, this_resource,
-                                      this_privilege=PrivilegeCodes.VIEW):
+    def share_resource_with_community(
+        self, this_community, this_resource, this_privilege=PrivilegeCodes.VIEW
+    ):
         """
         :param this_resource: resource to be shared.
         :param this_community: community with which to share.
@@ -3543,16 +3895,25 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
             assert isinstance(this_community, Community)
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
         # raise a PermissionDenied exception if user self is not allowed to do this.
-        self.__check_share_resource_with_community(this_community, this_resource, this_privilege)
+        self.__check_share_resource_with_community(
+            this_community, this_resource, this_privilege
+        )
 
-        CommunityResourcePrivilege.share(community=this_community, resource=this_resource,
-                                         grantor=self.user, privilege=this_privilege)
+        CommunityResourcePrivilege.share(
+            community=this_community,
+            resource=this_resource,
+            grantor=self.user,
+            privilege=this_privilege,
+        )
 
     ####################################
     # (can_)unshare_resource_with_community: check for and implement unshare
@@ -3615,9 +3976,10 @@ class UserAccess(models.Model):
             raise PermissionDenied("User is not an owner of the target community")
 
         # Check for sufficient privilege
-        if not self.user.is_superuser \
-                and not self.owns_resource(this_resource):
-            raise PermissionDenied("You do not have permission to remove this sharing setting")
+        if not self.user.is_superuser and not self.owns_resource(this_resource):
+            raise PermissionDenied(
+                "You do not have permission to remove this sharing setting"
+            )
 
         return True
 
@@ -3657,8 +4019,9 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         self.__check_unshare_resource_with_community(this_community, this_resource)
-        CommunityResourcePrivilege.unshare(community=this_community, resource=this_resource,
-                                           grantor=self.user)
+        CommunityResourcePrivilege.unshare(
+            community=this_community, resource=this_resource, grantor=self.user
+        )
 
     def get_community_unshare_resources(self, this_community):
         """
@@ -3714,7 +4077,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return CommunityResourcePrivilege.get_undo_resources(community=this_community, grantor=self.user)
+        return CommunityResourcePrivilege.get_undo_resources(
+            community=this_community, grantor=self.user
+        )
 
     def can_undo_share_resource_with_community(self, this_community, this_resource):
         """
@@ -3744,8 +4109,11 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return self.__get_community_undo_resources(this_community)\
-            .filter(id=this_resource.id).exists()
+        return (
+            self.__get_community_undo_resources(this_community)
+            .filter(id=this_resource.id)
+            .exists()
+        )
 
     def undo_share_resource_with_community(self, this_community, this_resource):
         """
@@ -3780,9 +4148,9 @@ class UserAccess(models.Model):
 
         qual_undo = self.__get_community_undo_resources(this_community)
         if qual_undo.filter(id=this_resource.id).exists():
-            CommunityResourcePrivilege.undo_share(resource=this_resource,
-                                                  community=this_community,
-                                                  grantor=self.user)
+            CommunityResourcePrivilege.undo_share(
+                resource=this_resource, community=this_community, grantor=self.user
+            )
         else:
             raise PermissionDenied("User did not grant last privilege")
 
@@ -3799,7 +4167,10 @@ class UserAccess(models.Model):
         Returns: QuerySet of Community objects (QuerySet)
         """
         if __debug__:
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -3808,13 +4179,15 @@ class UserAccess(models.Model):
         # a) There is a privilege of X for the object for user.
         # b) There is no lower privilege for the object.
         # c) Thus X is the effective privilege of the object.
-        selected = Community.objects\
-            .filter(c2ucp__user=self.user,
-                    c2ucp__privilege=this_privilege)\
-            .exclude(pk__in=Subquery(Community.objects.filter(
-                                        c2ucp__user=self.user,
-                                        c2ucp__privilege__lt=this_privilege)
-                                     .values("pk")))
+        selected = Community.objects.filter(
+            c2ucp__user=self.user, c2ucp__privilege=this_privilege
+        ).exclude(
+            pk__in=Subquery(
+                Community.objects.filter(
+                    c2ucp__user=self.user, c2ucp__privilege__lt=this_privilege
+                ).values("pk")
+            )
+        )
 
         return selected
 
@@ -3827,35 +4200,42 @@ class UserAccess(models.Model):
         Returns: QuerySet of Community objects (QuerySet)
         """
         if __debug__:
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+            assert (
+                this_privilege >= PrivilegeCodes.OWNER
+                and this_privilege <= PrivilegeCodes.VIEW
+            )
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        selected = Community.objects\
-            .filter(c2gcp__group__g2ugp__user=self.user,
-                    c2gcp__privilege=this_privilege)\
-            .exclude(pk__in=Subquery(Community.objects.filter(
-                                        c2gcp__group__g2ugp__user=self.user,
-                                        c2gcp__privilege__lt=this_privilege)
-                                     .values("pk")))
+        selected = Community.objects.filter(
+            c2gcp__group__g2ugp__user=self.user, c2gcp__privilege=this_privilege
+        ).exclude(
+            pk__in=Subquery(
+                Community.objects.filter(
+                    c2gcp__group__g2ugp__user=self.user,
+                    c2gcp__privilege__lt=this_privilege,
+                ).values("pk")
+            )
+        )
 
         return selected
 
     def customize(self, feature, enabled):
-        """ create or update a UI customization """
+        """create or update a UI customization"""
         # get_or_create is not atomic!
         with transaction.atomic():
             # ensure that a customization record with the feature exists
             record, create = Feature.objects.get_or_create(
-                defaults={'enabled': enabled}, user=self.user, feature=feature)
+                defaults={"enabled": enabled}, user=self.user, feature=feature
+            )
             # and set the enabled flag if the feature already exists.
             if not create:
                 record.enabled = enabled
                 record.save()
 
     def uncustomize(self, feature):
-        """ remove a custom UI option; this makes it unavailable to a user """
+        """remove a custom UI option; this makes it unavailable to a user"""
         try:
             record = Feature.objects.get(user=self.user, feature=feature)
             record.delete()
@@ -3875,7 +4255,8 @@ class UserAccess(models.Model):
 
     def group_community_invite(self, group, community):
         message, approved = GroupCommunityRequest(
-            group=group, community=community, requester=self.user)
+            group=group, community=community, requester=self.user
+        )
         return message
 
     def group_community_pending(self):
@@ -3885,9 +4266,13 @@ class UserAccess(models.Model):
         return GroupCommunityRequest.queued(self.user)
 
     def group_community_approve(self, request):
-        message, success = request.approve(responder=self.user, privilege=PrivilegeCodes.VIEW)
+        message, success = request.approve(
+            responder=self.user, privilege=PrivilegeCodes.VIEW
+        )
         return message
 
     def group_community_decline(self, request):
-        message, success = request.decline(responder=self.user, privilege=PrivilegeCodes.VIEW)
+        message, success = request.decline(
+            responder=self.user, privilege=PrivilegeCodes.VIEW
+        )
         return message

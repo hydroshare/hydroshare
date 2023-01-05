@@ -17,7 +17,7 @@ from hs_collection_resource.models import CollectionResource
 last_changed_by_user = None
 try:
     last_changed_by_user = User.objects.get(username='admin')
-except Exception as ex:
+except Exception:
     print("[{0}] Failed to get Admin user obj, set 'last_changed_by_user = None'\n")
 
 hasPart = "hasPart"
