@@ -2593,11 +2593,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         isPendingActivation = False
         identifiers = self.metadata.identifiers.all()
         doi = [idn for idn in identifiers if idn.name == "doi"]
-        if doi:
-            doi = doi[0]
 
         if doi and not forceHydroshareURI:
-            hs_identifier = doi
+            hs_identifier = doi[0]
             if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
                 isPendingActivation = True
         else:
