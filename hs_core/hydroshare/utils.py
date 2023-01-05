@@ -1045,7 +1045,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
                          'function')
 
     # TODO: generate this from data in ResourceFile rather than extension
-    if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
+    if not resource.metadata.formats.filter(value=file_format_type).exists():
         resource.metadata.create_element('format', value=file_format_type)
     ret.calculate_size()
 
