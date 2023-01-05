@@ -1,4 +1,5 @@
-from celery.task.control import inspect
+# from celery.app.control import inspect
+from hydroshare.hydrocelery import app as celery_app
 from celery.result import AsyncResult
 from django.db import transaction
 
@@ -8,7 +9,7 @@ import logging
 
 logger = logging.getLogger('django')
 
-celery_inspector = inspect()
+celery_inspector = celery_app.control.inspect()
 
 
 def _retrieve_task_id(job_name, res_id, job_dict):
