@@ -637,17 +637,17 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         except ValidationError as exp:
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session["validation_error"] = err_msg
-                            logger.warn(err_msg)
+                            logger.warning(err_msg)
                         except Error as exp:
                             # some database error occurred
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session["validation_error"] = err_msg
-                            logger.warn(err_msg)
+                            logger.warning(err_msg)
                         except Exception as exp:
                             # some other error occurred
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session["validation_error"] = err_msg
-                            logger.warn(err_msg)
+                            logger.warning(err_msg)
 
                     if is_add_success:
                         resource_modified(res, request.user, overwrite_bag=False)
@@ -774,12 +774,12 @@ def update_metadata_element(
                 except ValidationError as exp:
                     err_msg = err_msg.format(element_name, str(exp))
                     request.session["validation_error"] = err_msg
-                    logger.warn(err_msg)
+                    logger.warning(err_msg)
                 except Error as exp:
                     # some database error occurred
                     err_msg = err_msg.format(element_name, str(exp))
                     request.session["validation_error"] = err_msg
-                    logger.warn(err_msg)
+                    logger.warning(err_msg)
                 # TODO: it's brittle to embed validation logic at this level.
                 if element_name == "title":
                     res.update_public_and_discoverable()
