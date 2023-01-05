@@ -551,7 +551,7 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
                     jsonschema.Draft4Validator.check_schema(json_schema)
                 except jsonschema.SchemaError as ex:
                     is_schema_valid = False
-                    schema_err_msg = f"{ex.message}. Schema invalid field path:{str(list(ex.path))}"
+                    schema_err_msg = f"{str(ex)}. Schema invalid field path:{str(list(ex.path))}"
                     schema_err_msg = f"Not a valid JSON schema. Error:{schema_err_msg}"
                     validation_errors.append(schema_err_msg)
 
