@@ -467,7 +467,7 @@ class GenericResourceMeta(object):
                 msg += "(this may be okay if the resource metadata is being updated)."
                 msg = msg.format(title, self.title, title)
                 self.title = title
-                logger.warn(msg)
+                logger.warning(msg)
 
         # Get abstract
         for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DCTERMS.abstract, None)):

@@ -1312,7 +1312,7 @@ def update_model_instance_metadata_json(request, file_type_id, **kwargs):
         metadata_json_schema = logical_file.metadata_schema_json
         jsonschema.Draft4Validator(metadata_json_schema).validate(metadata_json)
     except jsonschema.ValidationError as ex:
-        schema_err_msg = "{}. Schema invalid field path:{}".format(ex.message, str(list(ex.path)))
+        schema_err_msg = "{}. Schema invalid field path:{}".format(str(ex), str(list(ex.path)))
         msg = "JSON metadata is not valid as per the associated metadata schema. Error: {}".format(schema_err_msg)
         error_response = {"status": "error", "message": msg}
         return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)

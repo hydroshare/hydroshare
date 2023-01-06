@@ -133,8 +133,8 @@ class ResourceAccess(models.Model):
 
         """
         return User.objects\
-                   .filter((self.__edit_users_from_individual)
-                           | (self.__edit_users_from_group)).distinct()
+                   .filter(self.__edit_users_from_individual
+                           | self.__edit_users_from_group).distinct()
 
     @property
     def __view_groups_from_group(self):

@@ -330,12 +330,15 @@ def rights_allows_copy(res, user):
     if not user.is_authenticated:
         return False
 
-    if not user.uaccess.owns_resource(res) and \
-            (res.metadata.rights.statement == "This resource is shared under the Creative "
-                                              "Commons Attribution-NoDerivs CC BY-ND."
-             or res.metadata.rights.statement == "This resource is shared under the Creative "
-                                              "Commons Attribution-NoCommercial-NoDerivs "
-                                              "CC BY-NC-ND."):
+    if user.uaccess.owns_resource(res):
+        return True
+
+    rights = res.metadata.rights
+    if (rights.statement == "This resource is shared under the Creative "
+                            "Commons Attribution-NoDerivs CC BY-ND."
+        or rights.statement == "This resource is shared under the Creative "
+                               "Commons Attribution-NoCommercial-NoDerivs "
+                               "CC BY-NC-ND."):
         return False
 
     return True

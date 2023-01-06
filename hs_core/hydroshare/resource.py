@@ -381,7 +381,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
-        files=(), create_metadata=True, create_bag=True, unpack_file=False, full_paths={},
+        files=(), create_metadata=True, create_bag=False, unpack_file=False, full_paths={},
         auto_aggregate=True, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to
@@ -463,7 +463,7 @@ def create_resource(
 
         # by default make resource private
         resource.slug = 'resource{0}{1}'.format('/', resource.short_id)
-        resource.save()
+        resource.save(update_fields=["slug", "resource_type"])
 
         if not metadata:
             metadata = []
@@ -475,6 +475,7 @@ def create_resource(
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
         resource_access.save()
+        resource.raccess = resource_access
         # use the built-in share routine to set initial provenance.
         UserResourcePrivilege.share(resource=resource, grantor=owner, user=owner,
                                     privilege=PrivilegeCodes.OWNER)
@@ -522,21 +523,23 @@ def create_resource(
                 resource.metadata.create_element('subject', value=keyword)
 
             resource.title = resource.metadata.title.value
-            resource.save()
+            resource.save(update_fields=["title"])
 
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take
             # a long time (~15 seconds to many minutes).
             add_zip_file_contents_to_resource_async(resource, files[0])
-        else:
+        elif len(files) > 0:
             # Add resource file(s) now
             # Note: this is done synchronously as it should only take a
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files, full_paths=full_paths,
-                               auto_aggregate=auto_aggregate)
+                               auto_aggregate=auto_aggregate, resource=resource)
+        else:
+            utils.create_empty_contents_directory(resource)
 
         if create_bag:
             hs_bagit.create_bag(resource)
@@ -669,7 +672,9 @@ def add_resource_files(pk, *files, **kwargs):
     This does **not** handle mutability; changes to immutable resources should be denied elsewhere.
 
     """
-    resource = utils.get_resource_by_shortkey(pk)
+    resource = kwargs.pop("resource", None)
+    if resource is None:
+        resource = utils.get_resource_by_shortkey(pk)
     ret = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})

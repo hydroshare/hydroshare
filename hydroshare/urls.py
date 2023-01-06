@@ -201,6 +201,9 @@ if "heartbeat" in settings.INSTALLED_APPS:
 
     urlpatterns += [url(r"^heartbeat/", include(heartbeat_urls))]
 
+if "health_check" in settings.INSTALLED_APPS:
+    urlpatterns += [url(r'^ht/', include('health_check.urls'))]
+
 urlpatterns += [
     # We don't want to presume how your homepage works, so here are a
     # few patterns you can use to set it up.

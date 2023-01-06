@@ -452,12 +452,15 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         html_string = super(NetCDFFileMetaData, self).get_html()
         if self.logical_file.resource.raccess.public:
             html_string += self._get_opendap_html()
-        if self.spatial_coverage:
-            html_string += self.spatial_coverage.get_html()
-        if self.originalCoverage:
-            html_string += self.originalCoverage.get_html()
-        if self.temporal_coverage:
-            html_string += self.temporal_coverage.get_html()
+        spatial_coverage = self.spatial_coverage
+        if spatial_coverage:
+            html_string += spatial_coverage.get_html()
+        originalCoverage = self.originalCoverage
+        if originalCoverage:
+            html_string += originalCoverage.get_html()
+        temporal_coverage = self.temporal_coverage
+        if temporal_coverage:
+            html_string += temporal_coverage.get_html()
         variable_legend = html_tags.legend("Variables")
         html_string += variable_legend.render()
         for variable in self.variables.all():
@@ -582,9 +585,10 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             "/hsapi/_internal/NetCDFLogicalFile/{0}/{1}/{2}/update-file-metadata/"
         )
         create_action = "/hsapi/_internal/NetCDFLogicalFile/{0}/{1}/add-file-metadata/"
-        if self.temporal_coverage:
+        temporal_coverage = self.temporal_coverage
+        if temporal_coverage:
             temp_action = update_action.format(
-                self.logical_file.id, "coverage", self.temporal_coverage.id
+                self.logical_file.id, "coverage", temporal_coverage.id
             )
         else:
             temp_action = create_action.format(self.logical_file.id, "coverage")
@@ -598,9 +602,10 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             allow_edit=allow_coverage_edit
         )
         if allow_coverage_edit:
-            if self.spatial_coverage:
+            spatial_coverage = self.spatial_coverage
+            if spatial_coverage:
                 temp_action = update_action.format(
-                    self.logical_file.id, "coverage", self.spatial_coverage.id
+                    self.logical_file.id, "coverage", spatial_coverage.id
                 )
             else:
                 temp_action = create_action.format(self.logical_file.id, "coverage")
