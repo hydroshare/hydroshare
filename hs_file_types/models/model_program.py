@@ -527,8 +527,8 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         is_schema_valid = True
         try:
             json_schema = json.loads(meta_schema)
-        except ValueError:
-            validation_errors.append("Schema is not valid JSON")
+        except ValueError as err:
+            validation_errors.append(f"Schema is not valid JSON. Error: {str(err)}")
             return json_schema, validation_errors
 
         if json_schema:
@@ -557,7 +557,10 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
                     jsonschema.Draft4Validator.check_schema(json_schema)
                 except jsonschema.SchemaError as ex:
                     is_schema_valid = False
-                    schema_err_msg = f"{str(ex)}. Schema invalid field path:{str(list(ex.path))}"
+                    err_paths = " -> ".join(list(ex.path))
+                    schema_errors = str(ex).split("\n")
+                    schema_errors = " ".join(schema_errors)
+                    schema_err_msg = f"{schema_errors}. Schema invalid field path:{err_paths}"
                     schema_err_msg = f"Not a valid JSON schema. Error:{schema_err_msg}"
                     validation_errors.append(schema_err_msg)
 
