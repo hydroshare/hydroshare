@@ -408,6 +408,12 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                                               "will be shown below when you "
                                                                               "save metadata.")
 
+                                        with dom_tags.div(cls="control-group"):
+                                            link = "https://help.hydroshare.org/modeling/" \
+                                                   "model-instance-metadata-schema/"
+                                            link_title = "Refer to Model Instance Metadata schema help page " \
+                                                         "for schema requirements."
+                                            dom_tags.a(link_title, href=link, target="_blank")
                                         # give an option to upload/select a json file for the metadata schema
                                         with dom_tags.div(cls="form-group"):
                                             with dom_tags.select(cls="form-control", name='mi_json_schema_template',
