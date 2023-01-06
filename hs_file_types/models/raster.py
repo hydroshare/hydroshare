@@ -431,14 +431,17 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         in view mode"""
 
         html_string = super(GeoRasterFileMetaData, self).get_html()
-        if self.spatial_coverage:
-            html_string += self.spatial_coverage.get_html()
-        if self.originalCoverage:
-            html_string += self.originalCoverage.get_html()
+        spatial_coverage = self.spatial_coverage
+        if spatial_coverage:
+            html_string += spatial_coverage.get_html()
+        originalCoverage = self.originalCoverage
+        if originalCoverage:
+            html_string += originalCoverage.get_html()
 
         html_string += self.cellInformation.get_html()
-        if self.temporal_coverage:
-            html_string += self.temporal_coverage.get_html()
+        temporal_coverage = self.temporal_coverage
+        if temporal_coverage:
+            html_string += temporal_coverage.get_html()
         band_legend = html_tags.legend("Band Information")
         html_string += band_legend.render()
         for band_info in self.bandInformations:
@@ -494,17 +497,19 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         update_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/{2}/update-file-metadata/"
         create_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/add-file-metadata/"
         spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
-        if self.spatial_coverage:
+        spatial_coverage = self.spatial_coverage
+        if spatial_coverage:
             form_action = update_action.format(self.logical_file.id, "coverage",
-                                               self.spatial_coverage.id)
+                                               spatial_coverage.id)
         else:
             form_action = create_action.format(self.logical_file.id, "coverage")
 
         spatial_cov_form.action = form_action
 
-        if self.temporal_coverage:
+        temporal_coverage = self.temporal_coverage
+        if temporal_coverage:
             form_action = update_action.format(self.logical_file.id, "coverage",
-                                               self.temporal_coverage.id)
+                                               temporal_coverage.id)
             temp_cov_form.action = form_action
         else:
             form_action = create_action.format(self.logical_file.id, "coverage")

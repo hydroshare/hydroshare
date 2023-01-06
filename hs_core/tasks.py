@@ -155,8 +155,9 @@ def manage_task_hourly():
     # retry metadata deposition
     failed_resources = BaseResource.objects.filter(raccess__published=True, doi__contains='failure')
     for res in failed_resources:
-        if res.metadata.dates.all().filter(type='published'):
-            pub_date = res.metadata.dates.all().filter(type='published')[0]
+        meta_published_date = res.metadata.dates.all().filter(type='published').first()
+        if meta_published_date:
+            pub_date = meta_published_date
             pub_date = pub_date.start_date.strftime('%m/%d/%Y')
             act_doi = get_activated_doi(res.doi)
             response = deposit_res_metadata_with_crossref(res)
@@ -181,8 +182,9 @@ def manage_task_hourly():
     pending_resources = BaseResource.objects.filter(raccess__published=True,
                                                     doi__contains='pending')
     for res in pending_resources:
-        if res.metadata.dates.all().filter(type='published'):
-            pub_date = res.metadata.dates.all().filter(type='published')[0]
+        meta_published_date = res.metadata.dates.all().filter(type='published').first()
+        if meta_published_date:
+            pub_date = meta_published_date
             pub_date = pub_date.start_date.strftime('%m/%d/%Y')
             act_doi = get_activated_doi(res.doi)
             main_url = get_crossref_url()
@@ -343,7 +345,7 @@ def send_over_quota_emails():
                                   [u.email, settings.DEFAULT_SUPPORT_EMAIL],
                                   html_message=msg_str)
                     except Exception as ex:
-                        logger.debug("Failed to send quota warning email: " + ex.message)
+                        logger.debug("Failed to send quota warning email: " + str(ex))
             else:
                 if uq.remaining_grace_period >= 0:
                     # turn grace period off now that the user is below quota soft limit
@@ -698,17 +700,18 @@ def delete_resource_task(resource_id, request_username=None):
     # when the most recent version of a resource in an obsolescence chain is deleted, the previous
     # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
     # relation element
-    if res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
-        is_version_of_res_link = \
-            res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().value
+    relation_is_version_of = res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first()
+    if relation_is_version_of:
+        is_version_of_res_link = relation_is_version_of.value
         idx = is_version_of_res_link.rindex('/')
         if idx == -1:
             obsolete_res_id = is_version_of_res_link
         else:
             obsolete_res_id = is_version_of_res_link[idx + 1:]
         obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
-        if obsolete_res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).exists():
-            eid = obsolete_res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first().id
+        relation_is_replaced_by = obsolete_res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
+        if relation_is_replaced_by:
+            eid = relation_is_replaced_by.id
             obsolete_res.metadata.delete_element('relation', eid)
             # also make this obsoleted resource editable if not published now that it becomes the latest version
             if not obsolete_res.raccess.published:

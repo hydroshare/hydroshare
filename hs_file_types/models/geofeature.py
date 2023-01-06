@@ -9,7 +9,6 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.template import Template, Context
 from django.utils.html import strip_tags
-# from dominate.tags import legend, table, tbody, tr, th, div
 from dominate import tags as html_tags
 from osgeo import ogr, osr
 from rdflib import RDF, BNode, Literal

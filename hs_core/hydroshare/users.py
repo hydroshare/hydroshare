@@ -138,8 +138,7 @@ def create_account(
         user_profile.state = state
         user_profile.save()
     # create default UserQuota object for the new user
-    uq = UserQuota.objects.create(user=u)
-    uq.save()
+    UserQuota.objects.create(user=u)
     return u
 
 
@@ -260,7 +259,7 @@ def list_users(query=None, status=None, start=None, count=None):
     qs = qs.filter(active=True) if status == "active" else qs
     qs = qs.filter(is_staff=True) if status == "staff" else qs
     if start and count:
-        qs = qs[start : start + count]
+        qs = qs[start: start + count]
     elif start:
         qs = qs[start:]
     elif count:
