@@ -275,7 +275,7 @@ class SignupForm(forms.ModelForm):
     def clean_country(self):
         data = self.cleaned_data['country']
         if len(data.strip()) == 0:
-            raise forms.ValidationError("Country/Region is a required field.")
+            raise forms.ValidationError("Country is a required field.")
         return data
 
     def clean_state(self):
@@ -337,7 +337,7 @@ class UserProfileForm(forms.ModelForm):
     def clean_country(self):
         data = self.cleaned_data['country']
         if data is None or len(data.strip()) == 0:
-            raise forms.ValidationError("Country/Region is a required field.")
+            raise forms.ValidationError("Country is a required field.")
         return data
 
     def clean_state(self):
