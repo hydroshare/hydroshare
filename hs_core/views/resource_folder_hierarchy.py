@@ -181,8 +181,8 @@ def data_store_structure(request):
                                      'aggregation_appkey': aggregation_appkey,
                                      'main_file': f.logical_file.get_main_file.file_name,
                                      'preview_data_url': f.logical_file.metadata.get_preview_data_url(
-                                        resource=resource,
-                                        folder_path=f_store_path
+                                         resource=resource,
+                                         folder_path=f_store_path
                                      ),
                                      'url': f.logical_file.url})
             logical_file = f.logical_file
@@ -352,10 +352,10 @@ body = openapi.Schema(
     properties={
         'input_coll_path': openapi.Schema(type=openapi.TYPE_STRING, description='the relative path under res_id/data/ \
             contents to be zipped'),
-        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path of \
-            the generated zip file name'),
-        'remove_original_after_zip': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='whether original files will \
-            be deleted after zipping')
+        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path \
+            of the generated zip file name'),
+        'remove_original_after_zip': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='whether original files \
+            will be deleted after zipping')
     }
 )
 
@@ -384,14 +384,15 @@ def data_store_folder_zip_public(request, pk):
     '''
     return data_store_folder_zip(request, res_id=pk)
 
+
 rid = openapi.Parameter('id', openapi.IN_PATH, description="id of the resource", type=openapi.TYPE_STRING)
 body = openapi.Schema(
     type=openapi.TYPE_OBJECT,
     properties={
         'aggregation_path': openapi.Schema(type=openapi.TYPE_STRING, description='the relative path under res_id/data/ \
             contents to be zipped'),
-        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path of \
-            the generated zip file name')
+        'output_zip_file_name': openapi.Schema(type=openapi.TYPE_STRING, description='the file name only with no path \
+            of the generated zip file name')
     }
 )
 
@@ -589,6 +590,7 @@ def data_store_add_reference(request):
         return JsonResponse({'status': 'success', 'file_id': file_id})
     else:
         return JsonResponse({'message': msg}, status=ret_status)
+
 
 body = openapi.Schema(
     type=openapi.TYPE_OBJECT,

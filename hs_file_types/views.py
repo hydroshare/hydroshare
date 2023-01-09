@@ -343,7 +343,7 @@ def update_metadata_schema_for_model_instance(request, resource_id, aggregation_
 
     mp_aggr = aggr.metadata.executed_by
     if not mp_aggr.metadata_schema_json:
-        err_msg = f"Metadata schema is missing for the linked model program aggregation"
+        err_msg = "Metadata schema is missing for the linked model program aggregation"
         return JsonResponse(data=err_msg, safe=False, status=status.HTTP_400_BAD_REQUEST)
 
     aggr.metadata_schema_json = mp_aggr.metadata_schema_json
@@ -1273,7 +1273,7 @@ def update_model_program_metadata(request, file_type_id, **kwargs):
 
     mp_validation_form.update_metadata(metadata)
     refresh_metadata = len(mp_validation_form.cleaned_data['mi_json_schema_file']) > 0 \
-                       or len(mp_validation_form.cleaned_data['mi_json_schema_template']) > 0
+        or len(mp_validation_form.cleaned_data['mi_json_schema_template']) > 0
 
     resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
@@ -1312,7 +1312,7 @@ def update_model_instance_metadata_json(request, file_type_id, **kwargs):
         metadata_json_schema = logical_file.metadata_schema_json
         jsonschema.Draft4Validator(metadata_json_schema).validate(metadata_json)
     except jsonschema.ValidationError as ex:
-        schema_err_msg = "{}. Schema invalid field path:{}".format(ex.message, str(list(ex.path)))
+        schema_err_msg = "{}. Schema invalid field path:{}".format(str(ex), str(list(ex.path)))
         msg = "JSON metadata is not valid as per the associated metadata schema. Error: {}".format(schema_err_msg)
         error_response = {"status": "error", "message": msg}
         return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
@@ -1356,7 +1356,7 @@ def update_model_instance_meta_schema(request, file_type_id, **kwargs):
         try:
             metadata_json_schema = logical_file.metadata_schema_json
             jsonschema.Draft4Validator(metadata_json_schema).validate(metadata.metadata_json)
-        except jsonschema.ValidationError as ex:
+        except jsonschema.ValidationError:
             # delete existing invalid metadata
             metadata.metadata_json = {}
 

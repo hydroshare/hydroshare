@@ -95,8 +95,9 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         agg_types = supported_aggr_types.get_supported_agg_types_str()
         tool_appkey = tool_res_obj.extra_metadata.get(tool_app_key, '')
 
-    if tool_metadata.supported_file_extensions:
-        file_extensions = tool_metadata.supported_file_extensions.value
+    supported_file_extensions = tool_metadata.supported_file_extensions
+    if supported_file_extensions:
+        file_extensions = supported_file_extensions.value
 
     if any([tool_url_resource_new is not None, tool_url_agg_new is not None, tool_url_file_new is not None]):
         tl = {'title': str(tool_res_obj.metadata.title.value),
@@ -139,7 +140,7 @@ def _check_user_can_view_app(request_obj, tool_res_obj):
 
 def _check_open_with_app(tool_res_obj, request_obj):
     return _check_webapp_in_user_open_with_list(tool_res_obj, request_obj) or \
-           _check_webapp_is_approved(tool_res_obj)
+        _check_webapp_is_approved(tool_res_obj)
 
 
 def _check_webapp_in_user_open_with_list(tool_res_obj, request_obj):

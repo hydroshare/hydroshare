@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
+import zoneinfo
 from hs_core.models import BaseResource
 from theme.models import UserProfile
 
@@ -33,7 +34,7 @@ def month_year_iter(start, end):
         y, m = divmod(ym, 12)
         m += 1
         d = monthrange(y, m)[1]
-        yield timezone.datetime(y, m, d, tzinfo=timezone.pytz.utc)
+        yield timezone.datetime(y, m, d, tzinfo=zoneinfo.ZoneInfo("UTC"))
 
 
 class Command(BaseCommand):
@@ -105,9 +106,9 @@ class Command(BaseCommand):
         for ut in [_['user_type'] for _ in user_types]:
             ut_users = User.objects.filter(userprofile__user_type=ut)
             sessions = hs_tracking.Session.objects.filter(
-                Q(begin__gte=start_date) &
-                Q(begin__lte=end_date) &
-                Q(visitor__user__in=ut_users)
+                Q(begin__gte=start_date)
+                & Q(begin__lte=end_date)
+                & Q(visitor__user__in=ut_users)
             )
             self.print_var("active_{}".format(ut),
                            sessions.count(), (end_date, start_date))
@@ -179,10 +180,10 @@ class Command(BaseCommand):
     def yesterdays_variables(self, lookback=1):
 
         today_start = timezone.datetime.now().replace(
-           hour=0,
-           minute=0,
-           second=0,
-           microsecond=0)
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0)
 
         # adjust start date for look-back option
         yesterday_start = today_start - datetime.timedelta(days=lookback)
@@ -216,7 +217,7 @@ class Command(BaseCommand):
         # need to take into account possible spaces in the dict values
         formatted_str = ''
         for i in range(1, len(groups)):
-            k = groups[i-1].split(' ')[-1]
+            k = groups[i - 1].split(' ')[-1]
             if i < len(groups) - 1:
                 v = ' '.join(groups[i].split(' ')[:-1])
                 formatted_str += '%s=%s|' % (k, v)

@@ -30,7 +30,7 @@ from django.forms.models import model_to_dict
 from django.utils.timezone import now
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
-from lxml import etree
+import defusedxml.ElementTree as etree
 from markdown import markdown
 from mezzanine.conf import settings as s
 from mezzanine.core.managers import PublishedManager
@@ -613,7 +613,7 @@ class Party(AbstractMetaDataElement):
             party.is_active_user = user.is_active
         else:
             party.is_active_user = False
-        party.save()
+        party.save(update_fields=["is_active_user"])
 
         if isinstance(party, Creator) and creator_order is not None:
             if party.order != creator_order:
@@ -627,14 +627,14 @@ class Party(AbstractMetaDataElement):
                     if party.order > creator_order:
                         if res_cr.order < party.order and not res_cr.order < creator_order:
                             res_cr.order += 1
-                            res_cr.save()
+                            res_cr.save(update_fields=["order"])
                     else:
                         if res_cr.order > party.order and res_cr.order <= creator_order:
                             res_cr.order -= 1
-                            res_cr.save()
+                            res_cr.save(update_fields=["order"])
 
                 party.order = creator_order
-                party.save()
+                party.save(update_fields=["order"])
 
     @property
     def relative_uri(self):
@@ -664,7 +664,7 @@ class Party(AbstractMetaDataElement):
             for cr in creators_to_update:
                 if cr.order > party.order:
                     cr.order -= 1
-                    cr.save()
+                    cr.save(update_fields=["order"])
         party.delete()
 
     @classmethod
@@ -690,7 +690,7 @@ class Party(AbstractMetaDataElement):
                     raise ValidationError("Invalid data found for identifiers. "
                                           "{} not a supported identifier.". format(name))
             # validate identifier values - check for duplicate links
-            links = [l.lower() for l in list(identifiers.values())]
+            links = [link.lower() for link in list(identifiers.values())]
             if len(links) != len(set(links)):
                 raise ValidationError("Invalid data found for identifiers. "
                                       "Duplicate identifier links found.")
@@ -1033,9 +1033,9 @@ class AbstractRelation(AbstractMetaDataElement):
 
         # avoid creating duplicate element (same type and same value)
         if cls.objects.filter(type=kwargs['type'],
-                                   value=kwargs['value'],
-                                   object_id=metadata_obj.id,
-                                   content_type=metadata_type).exists():
+                              value=kwargs['value'],
+                              object_id=metadata_obj.id,
+                              content_type=metadata_type).exists():
             raise ValidationError('Relation element of the same type '
                                   'and value already exists.')
 
@@ -1057,9 +1057,9 @@ class AbstractRelation(AbstractMetaDataElement):
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
         qs = cls.objects.filter(type=kwargs['type'],
-                                     value=kwargs['value'],
-                                     object_id=metadata_obj.id,
-                                     content_type=metadata_type)
+                                value=kwargs['value'],
+                                object_id=metadata_obj.id,
+                                content_type=metadata_type)
 
         if qs.exists() and qs.first() != rel:
             # this update will create a duplicate relation element
@@ -1171,11 +1171,8 @@ class GeospatialRelation(AbstractRelation):
                 continue
             text = f"{name} [{relative_id}]"
             if self.text != text:
-                print(f"Updating {self.value}, '{self.text}' to '{text}'.")
                 self.text = text
                 self.save()
-            else:
-                print(f"Not updating relation '{self.value}'. Geoconnex API matches HS.")
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
@@ -2044,7 +2041,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # this is to establish a relationship between a resource and
     # any metadata container object (e.g., CoreMetaData object)
     object_id = models.PositiveIntegerField(null=True, blank=True)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,  null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     extra_metadata = HStoreField(default=dict)
@@ -2062,11 +2059,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     def update_view_count(self, request):
         self.view_count += 1
-        self.save()
+        self.save(update_fields=["view_count"])
 
     def update_download_count(self):
         self.download_count += 1
-        self.save()
+        self.save(update_fields=["download_count"])
 
     # definition of resource logic
     @property
@@ -2098,8 +2095,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         and False otherwise
         """
         has_files = self.has_required_content_files()
+        if not has_files:
+            return False
+
         has_metadata = self.has_required_metadata
-        return has_files and has_metadata
+        return has_metadata
 
     def set_discoverable(self, value, user=None):
         """Set the discoverable flag for a resource.
@@ -2322,8 +2322,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         from hs_core.hydroshare.utils import validate_user_quota
 
         if __debug__:
-            assert(isinstance(setter, User))
-            assert(isinstance(new_holder, User))
+            assert (isinstance(setter, User))
+            assert (isinstance(new_holder, User))
         if not setter.uaccess.owns_resource(self) or \
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
@@ -2450,8 +2450,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         for fl in self.files.all():
             # COUCH: delete of file objects now cascades.
             fl.delete(delete_logical_file=True)
-        # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
-        self.metadata.delete_all_elements()
         self.metadata.delete()
         hs_bagit.delete_files_and_bag(self)
         super(AbstractResource, self).delete()
@@ -2554,13 +2552,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         CITATION_ERROR = "Failed to generate citation."
 
-        first_author = self.metadata.creators.all().filter(order=1)[0]
+        creators = self.metadata.creators.all()
+        first_author = [cr for cr in creators if cr.order == 1][0]
         if first_author.organization and not first_author.name:
             citation_str_lst.append(first_author.organization + ", ")
         else:
             citation_str_lst.append(self.parse_citation_name(first_author.name, first_author=True))
 
-        other_authors = self.metadata.creators.all().filter(order__gt=1)
+        other_authors = [cr for cr in creators if cr.order > 1]
         for author in other_authors:
             if author.organization and not author.name:
                 citation_str_lst.append(author.organization + ", ")
@@ -2573,25 +2572,36 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             return CITATION_ERROR
 
-        if self.metadata.dates.all().filter(type='published'):
-            citation_date = self.metadata.dates.all().filter(type='published')[0]
-        elif self.metadata.dates.all().filter(type='modified'):
-            citation_date = self.metadata.dates.all().filter(type='modified')[0]
+        meta_dates = self.metadata.dates.all()
+        published_date = [dt for dt in meta_dates if dt.type == "published"]
+        citation_date = None
+        if published_date:
+            citation_date = published_date[0]
         else:
+            modified_date = [dt for dt in meta_dates if dt.type == "modified"]
+            if modified_date:
+                citation_date = modified_date[0]
+
+        if citation_date is None:
             return CITATION_ERROR
 
         citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
         citation_str_lst.append(self.metadata.title.value)
 
         isPendingActivation = False
-        if self.metadata.identifiers.all().filter(name="doi") and not forceHydroshareURI:
-            hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
+        identifiers = self.metadata.identifiers.all()
+        doi = [idn for idn in identifiers if idn.name == "doi"]
+
+        if doi and not forceHydroshareURI:
+            hs_identifier = doi[0]
             if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
                 isPendingActivation = True
-        elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
-            hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         else:
-            return CITATION_ERROR
+            hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
+            if hs_identifier:
+                hs_identifier = hs_identifier[0]
+            else:
+                return CITATION_ERROR
 
         citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
@@ -3008,7 +3018,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
                 if __debug__:
-                    assert(isinstance(source, str))
+                    assert (isinstance(source, str))
                 # source is a path to an iRODS file to be copied here.
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
@@ -3140,7 +3150,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                 self._size = self.fed_resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
-                logger.warn("file {} not found".format(self.storage_path))
+                logger.warning("file {} not found".format(self.storage_path))
                 self._size = 0
         else:
             if __debug__:
@@ -3150,9 +3160,9 @@ class ResourceFile(ResourceFileIRODSMixin):
                 self._size = self.resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
-                logger.warn("file {} not found".format(self.storage_path))
+                logger.warning("file {} not found".format(self.storage_path))
                 self._size = 0
-        self.save()
+        self.save(update_fields=["_size"])
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):
@@ -3463,27 +3473,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         return self.logical_file is not None
 
     @property
-    def get_or_create_logical_file(self):
-        """
-        Create a logical file on the fly if it does not exist
-
-        This is a temporary fix just for release 1.14. It is expected that further
-        work on logical files will make this unnecessary.
-        """
-        # prevent import loops
-        from hs_file_types.models.generic import GenericLogicalFile
-        if self.content_object.resource_type == "CompositeResource":
-            if not self.has_logical_file:
-                logical_file = GenericLogicalFile.create()
-                self.logical_file_content_object = logical_file
-                self.save()
-                logger = logging.getLogger(__name__)
-                logger.warn("auto-create logical file for {}".format(self.storage_path))
-            return self.logical_file
-        else:
-            return None
-
-    @property
     def logical_file(self):
         """Return content_object of logical file."""
         return self.logical_file_content_object
@@ -3592,8 +3581,8 @@ class DiscoverableResourceManager(models.Manager):
     def get_queryset(self):
         """Extend Django model Manager to filter for public or discoverable resources."""
         return super(DiscoverableResourceManager, self).get_queryset().filter(
-            Q(raccess__discoverable=True) |
-            Q(raccess__public=True))
+            Q(raccess__discoverable=True)
+            | Q(raccess__public=True))
 
 
 # remove RichText parent class from the parameters for Django inplace editing to work;
@@ -3836,15 +3825,14 @@ class BaseResource(Page, AbstractResource):
         Raises SessionException if iRODS fails.
         """
         # trigger file size read for files that haven't been set yet
-        for f in self.files.filter(_size__lt=0):
-            f.calculate_size()
-        # compute the total file size for the resource
-        res_size_dict = self.files.aggregate(Sum('_size'))
-        # handle case if no resource files
-        res_size = res_size_dict['_size__sum']
-        if not res_size:
-            # in case of no files
-            res_size = 0
+        res_size = 0
+        if self.files.count() > 0:
+            for f in self.files.filter(_size__lt=0):
+                f.calculate_size()
+            # compute the total file size for the resource
+            res_size_dict = self.files.aggregate(Sum('_size'))
+            res_size = res_size_dict['_size__sum']
+
         return res_size
 
     @property
@@ -3922,21 +3910,25 @@ class BaseResource(Page, AbstractResource):
 
     def replaced_by(self):
         """ return a list or resources that replaced this one """
-        from hs_core.hydroshare import get_resource_by_shortkey, current_site_url   # prevent import loop
-        replacedby = self.metadata.relations.all().filter(type=RelationTypes.isReplacedBy)
-        rlist = []
-        for r in replacedby:
-            citation = r.value
-            res_id = citation[-32:]
-            # TODO: This is a mistake. This hardcodes the server on which the URI is created as its URI
-            res_path = "{}/resource/{}".format(current_site_url(), res_id)
-            if citation.endswith(res_path):
-                try:
-                    rv = get_resource_by_shortkey(res_id, or_404=False)
-                    rlist.append(rv)
-                except BaseResource.DoesNotExist:
-                    pass
-        return rlist
+        from hs_core.hydroshare import get_resource_by_shortkey
+
+        replaced_by_resources = []
+
+        def get_replaced_by(resource):
+            replace_relation_meta = resource.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
+            if replace_relation_meta is not None:
+                version_citation = replace_relation_meta.value
+                if '/resource/' in version_citation:
+                    version_res_id = version_citation.split('/resource/')[-1]
+                    try:
+                        new_version_res = get_resource_by_shortkey(version_res_id, or_404=False)
+                        replaced_by_resources.append(new_version_res)
+                        get_replaced_by(new_version_res)
+                    except BaseResource.DoesNotExist:
+                        pass
+
+        get_replaced_by(self)
+        return replaced_by_resources
 
     def get_relation_version_res_url(self, rel_type):
         """Extracts the resource url from resource citation stored in relation metadata for resource
@@ -3957,26 +3949,15 @@ class BaseResource(Page, AbstractResource):
         return True if a resource should be exhibited
         A resource should be exhibited if it is at least discoverable
         and not replaced by anything that exists and is at least discoverable.
-
-        A resource is hidden if there is any descendant (according to isReplacedBy)
-        that is discoverable. The descendent tree is searched via breadth-first search
-        with cycle elimination.  Thus the search always terminates regardless of the
-        complexity of descendents.
         """
         if not self.raccess.discoverable:
             return False  # not exhibitable
-        replacedby = self.replaced_by()
-        visited = {}
-        visited[self.short_id] = True
 
-        # breadth-first replacement search, first discoverable replacement wins
-        for r in replacedby:
-            if r.raccess.discoverable:
-                return False
-            if r.short_id not in visited:
-                replacedby.extend(r.replaced_by())
-                visited[r.short_id] = True
-        return True  # no reason not to show it
+        replaced_by_resources = self.replaced_by()
+        if any([res.raccess.discoverable for res in replaced_by_resources]):
+            # there is a newer discoverable resource - so this resource should not be shown in discover
+            return False
+        return True
 
     def update_relation_meta(self):
         """Updates the citation stored in relation metadata for relation type
@@ -4002,18 +3983,20 @@ class BaseResource(Page, AbstractResource):
                     relation_updated = True
             return relation_updated
 
-        replace_relation = self.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
+        relations = self.metadata.relations.all()
+        replace_relation = [rel for rel in relations if rel.type == RelationTypes.isReplacedBy]
         replace_relation_updated = False
-        if replace_relation is not None:
+        if replace_relation:
+            replace_relation = replace_relation[0]
             replace_relation_updated = _update_relation_meta(replace_relation)
 
         part_of_relation_updated = False
-        for part_of_relation in self.metadata.relations.filter(type=RelationTypes.isPartOf).all():
+        for part_of_relation in [rel for rel in relations if rel.type == RelationTypes.isPartOf]:
             if _update_relation_meta(part_of_relation):
                 part_of_relation_updated = True
 
         has_part_relation_updated = False
-        for has_part_relation in self.metadata.relations.filter(type=RelationTypes.hasPart).all():
+        for has_part_relation in [rel for rel in relations if rel.type == RelationTypes.hasPart]:
             if _update_relation_meta(has_part_relation):
                 has_part_relation_updated = True
 
@@ -4206,7 +4189,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         res.extra_metadata = copy.deepcopy(extra_metadata)
 
         # delete ingested default citation
-        citation_regex = re.compile("(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}")
+        citation_regex = re.compile("(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}")  # noqa
         ingested_citation = self.citation.first()
         if ingested_citation and citation_regex.match(ingested_citation.value):
             self.citation.first().delete()
@@ -4371,19 +4354,19 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         return True
 
-    def get_required_missing_elements(self, desired_resource_state='discoverable'):
+    def get_required_missing_elements(self, desired_state='discoverable'):
         """Return a list of required missing metadata elements.
 
         This method needs to be overriden by any subclass of this class
         if they implement additional metadata elements that are required
         """
 
-        resource_states = ('discoverable', 'published')
-        if desired_resource_state not in resource_states:
+        resource_states = ('discoverable', 'public', 'published')
+        if desired_state not in resource_states:
             raise ValidationError(f"Desired resource state is not in: {','.join(resource_states)}")
 
         missing_required_elements = []
-        if desired_resource_state == 'discoverable':
+        if desired_state != 'published':
             if not self.title:
                 missing_required_elements.append('Title (at least 30 characters)')
             elif self.title.value.lower() == 'untitled resource':
@@ -4394,7 +4377,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 missing_required_elements.append('Rights')
             if self.subjects.count() == 0:
                 missing_required_elements.append('Keywords (at least 3)')
-        elif desired_resource_state == 'published':
+        else:
             if not self.title or len(self.title.value) < 30:
                 missing_required_elements.append('The title must be at least 30 characters.')
             if not self.description or len(self.description.abstract) < 150:
@@ -4593,295 +4576,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 # handling funding_agencies
                 self.update_repeatable_element(element_name=element_name, metadata=metadata,
                                                property_name="funding_agencies")
-
-    def get_xml_legacy(self, pretty_print=True, include_format_elements=True):
-        """Get metadata XML rendering."""
-        # importing here to avoid circular import problem
-        from .hydroshare.utils import current_site_url, get_resource_types
-
-        RDF_ROOT = etree.Element('{%s}RDF' % self.NAMESPACES['rdf'], nsmap=self.NAMESPACES)
-        # create the Description element -this is not exactly a dc element
-        rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' % self.NAMESPACES['rdf'])
-
-        resource_uri = self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
-        rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], resource_uri)
-
-        # get the resource object associated with this metadata container object - needed to
-        # get the verbose_name
-        resource = BaseResource.objects.filter(object_id=self.id).first()
-        rt = [rt for rt in get_resource_types()
-              if rt._meta.object_name == resource.resource_type][0]
-        resource = rt.objects.get(id=resource.id)
-
-        # create the title element
-        if self.title:
-            dc_title = etree.SubElement(rdf_Description, '{%s}title' % self.NAMESPACES['dc'])
-            dc_title.text = self.title.value
-
-        # create the type element
-        if self.type:
-            dc_type = etree.SubElement(rdf_Description, '{%s}type' % self.NAMESPACES['dc'])
-            dc_type.set('{%s}resource' % self.NAMESPACES['rdf'], self.type.url)
-
-        # create the Description element (we named it as Abstract to differentiate from the parent
-        # "Description" element)
-        if self.description:
-            dc_description = etree.SubElement(rdf_Description,
-                                              '{%s}description' % self.NAMESPACES['dc'])
-            dc_des_rdf_Desciption = etree.SubElement(dc_description,
-                                                     '{%s}Description' % self.NAMESPACES['rdf'])
-            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
-                                                '{%s}abstract' % self.NAMESPACES['dcterms'])
-            dcterms_abstract.text = clean_for_xml(self.description.abstract)
-
-        for agency in self.funding_agencies.all():
-            hsterms_agency = etree.SubElement(rdf_Description,
-                                              '{%s}awardInfo' % self.NAMESPACES['hsterms'])
-            hsterms_agency_rdf_Description = etree.SubElement(hsterms_agency, '{%s}Description' %
-                                                              self.NAMESPACES['rdf'])
-            hsterms_name = etree.SubElement(hsterms_agency_rdf_Description,
-                                            '{%s}fundingAgencyName' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = clean_for_xml(agency.agency_name)
-            if agency.agency_url:
-                hsterms_agency_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
-                                                   agency.agency_url)
-            if agency.award_title:
-                hsterms_title = etree.SubElement(hsterms_agency_rdf_Description, '{%s}awardTitle' %
-                                                 self.NAMESPACES['hsterms'])
-                hsterms_title.text = clean_for_xml(agency.award_title)
-            if agency.award_number:
-                hsterms_number = etree.SubElement(hsterms_agency_rdf_Description,
-                                                  '{%s}awardNumber' % self.NAMESPACES['hsterms'])
-                hsterms_number.text = clean_for_xml(agency.award_number)
-
-        # use all creators associated with this metadata object to
-        # generate creator xml elements
-        for creator in self.creators.all():
-            self._create_person_element(etree, rdf_Description, creator)
-
-        for contributor in self.contributors.all():
-            self._create_person_element(etree, rdf_Description, contributor)
-
-        for coverage in self.coverages.all():
-            coverage.add_to_xml_container(rdf_Description)
-
-        for dt in self.dates.all():
-            dc_date = etree.SubElement(rdf_Description, '{%s}date' % self.NAMESPACES['dc'])
-            dc_term = '{%s}' + dt.type
-            dc_date_dcterms = etree.SubElement(dc_date, dc_term % self.NAMESPACES['dcterms'])
-            rdf_date_value = etree.SubElement(dc_date_dcterms, '{%s}value' % self.NAMESPACES['rdf'])
-            if dt.type != 'valid':
-                rdf_date_value.text = dt.start_date.isoformat()
-            else:
-                if dt.end_date:
-                    rdf_date_value.text = "start=%s; end=%s" % (dt.start_date.isoformat(),
-                                                                dt.end_date.isoformat())
-                else:
-                    rdf_date_value.text = dt.start_date.isoformat()
-
-        if include_format_elements:
-            for fmt in self.formats.all():
-                dc_format = etree.SubElement(rdf_Description, '{%s}format' % self.NAMESPACES['dc'])
-                dc_format.text = fmt.value
-
-        for res_id in self.identifiers.all():
-            dc_identifier = etree.SubElement(rdf_Description,
-                                             '{%s}identifier' % self.NAMESPACES['dc'])
-            dc_id_rdf_Description = etree.SubElement(dc_identifier,
-                                                     '{%s}Description' % self.NAMESPACES['rdf'])
-            id_hsterm = '{%s}' + res_id.name
-            hsterms_hs_identifier = etree.SubElement(dc_id_rdf_Description,
-                                                     id_hsterm % self.NAMESPACES['hsterms'])
-            hsterms_hs_identifier.text = res_id.url
-
-        if self.language:
-            dc_lang = etree.SubElement(rdf_Description, '{%s}language' % self.NAMESPACES['dc'])
-            dc_lang.text = self.language.code
-
-        if self.publisher:
-            dc_publisher = etree.SubElement(rdf_Description,
-                                            '{%s}publisher' % self.NAMESPACES['dc'])
-            dc_pub_rdf_Description = etree.SubElement(dc_publisher,
-                                                      '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_pub_name = etree.SubElement(dc_pub_rdf_Description,
-                                                '{%s}publisherName' % self.NAMESPACES['hsterms'])
-            hsterms_pub_name.text = self.publisher.name
-            hsterms_pub_url = etree.SubElement(dc_pub_rdf_Description,
-                                               '{%s}publisherURL' % self.NAMESPACES['hsterms'])
-            hsterms_pub_url.set('{%s}resource' % self.NAMESPACES['rdf'], self.publisher.url)
-
-        for rel in self.relations.all():
-            dc_relation = etree.SubElement(rdf_Description, '{%s}relation' % self.NAMESPACES['dc'])
-            dc_rel_rdf_Description = etree.SubElement(dc_relation,
-                                                      '{%s}Description' % self.NAMESPACES['rdf'])
-            if rel.type in Relation.HS_RELATION_TERMS:
-                term_ns = self.NAMESPACES['hsterms']
-            else:
-                term_ns = self.NAMESPACES['dcterms']
-            terms_type = etree.SubElement(dc_rel_rdf_Description, '{%s}%s' % (term_ns, rel.type))
-
-            # check if the relation value starts with 'http://' or 'https://'
-            if rel.value.lower().find('http://') == 0 or rel.value.lower().find('https://') == 0:
-                terms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
-            else:
-                terms_type.text = rel.value
-
-        if self.rights:
-            dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % self.NAMESPACES['dc'])
-            dc_rights_rdf_Description = etree.SubElement(dc_rights,
-                                                         '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
-                                                 '{%s}rightsStatement' % self.NAMESPACES['hsterms'])
-            hsterms_statement.text = clean_for_xml(self.rights.statement)
-            if self.rights.url:
-                hsterms_url = etree.SubElement(dc_rights_rdf_Description,
-                                               '{%s}URL' % self.NAMESPACES['hsterms'])
-                hsterms_url.set('{%s}resource' % self.NAMESPACES['rdf'], self.rights.url)
-
-        for sub in self.subjects.all():
-            dc_subject = etree.SubElement(rdf_Description, '{%s}subject' % self.NAMESPACES['dc'])
-            if sub.value.lower().find('http://') == 0 or sub.value.lower().find('https://') == 0:
-                dc_subject.set('{%s}resource' % self.NAMESPACES['rdf'], sub.value)
-            else:
-                dc_subject.text = sub.value
-
-        # resource type related additional attributes
-        rdf_Description_resource = etree.SubElement(RDF_ROOT,
-                                                    '{%s}Description' % self.NAMESPACES['rdf'])
-        rdf_Description_resource.set('{%s}about' % self.NAMESPACES['rdf'], self.type.url)
-        rdfs1_label = etree.SubElement(rdf_Description_resource,
-                                       '{%s}label' % self.NAMESPACES['rdfs1'])
-        rdfs1_label.text = resource._meta.verbose_name
-        rdfs1_isDefinedBy = etree.SubElement(rdf_Description_resource,
-                                             '{%s}isDefinedBy' % self.NAMESPACES['rdfs1'])
-        rdfs1_isDefinedBy.text = current_site_url() + "/terms"
-
-        # encode extended key/value arbitrary metadata
-        resource = BaseResource.objects.filter(object_id=self.id).first()
-        for key, value in list(resource.extra_metadata.items()):
-            hsterms_key_value = etree.SubElement(
-                rdf_Description, '{%s}extendedMetadata' % self.NAMESPACES['hsterms'])
-            hsterms_key_value_rdf_Description = etree.SubElement(
-                hsterms_key_value, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description,
-                                           '{%s}key' % self.NAMESPACES['hsterms'])
-            hsterms_key.text = key
-            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
-                                             '{%s}value' % self.NAMESPACES['hsterms'])
-            hsterms_value.text = value
-
-        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                       pretty_print=pretty_print).decode()
-
-    # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
-    # need to use the same method from the hydroshare.utils.py
-    def add_metadata_element_to_xml(self, root, md_element, md_fields):
-        """Generate XML elements for a given metadata element.
-        Helper function to generate xml elements for a given metadata element that belongs to
-        'hsterms' namespace
-        :param root: the xml document root element to which xml elements for the specified
-        metadata element needs to be added
-        :param md_element: the metadata element object. The term attribute of the metadata
-        element object is used for naming the root xml element for this metadata element.
-        If the root xml element needs to be named differently, then this needs to be a tuple
-        with first element being the metadata element object and the second being the name
-        for the root element. Example: md_element=self.Creat or    # the term attribute of the
-        Creator object will be used md_element=(self.Creator, 'Author') # 'Author' will be used
-        :param md_fields: a list of attribute names of the metadata element (if the name to be used
-         in generating the xml element name is same as the attribute name then include the
-         attribute name as a list item. if xml element name needs to be different from the
-         attribute name then the list item must be a tuple with first element of the tuple being
-         the attribute name and the second element being what will be used in naming the xml
-         element) Example: [('first_name', 'firstName'), 'phone', 'email']
-         # xml sub-elements names: firstName, phone, email
-        """
-        from lxml import etree
-
-        if isinstance(md_element, tuple):
-            element_name = md_element[1]
-            md_element = md_element[0]
-        else:
-            element_name = md_element.term
-
-        hsterms_newElem = etree.SubElement(root,
-                                           "{{{ns}}}{new_element}"
-                                           .format(ns=self.NAMESPACES['hsterms'],
-                                                   new_element=element_name))
-        hsterms_newElem_rdf_Desc = etree.SubElement(
-            hsterms_newElem, "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
-        for md_field in md_fields:
-            if isinstance(md_field, tuple):
-                field_name = md_field[0]
-                xml_element_name = md_field[1]
-            else:
-                field_name = md_field
-                xml_element_name = md_field
-
-            if hasattr(md_element, field_name):
-                attr = getattr(md_element, field_name)
-                if attr:
-                    field = etree.SubElement(hsterms_newElem_rdf_Desc,
-                                             "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
-                                                                      field=xml_element_name))
-                    field.text = str(attr)
-
-    def _create_person_element(self, etree, parent_element, person):
-        """Create a metadata element for a person (Creator, Contributor, etc)."""
-        # importing here to avoid circular import problem
-        from .hydroshare.utils import current_site_url
-
-        if isinstance(person, Creator):
-            dc_person = etree.SubElement(parent_element, '{%s}creator' % self.NAMESPACES['dc'])
-        else:
-            dc_person = etree.SubElement(parent_element, '{%s}contributor' % self.NAMESPACES['dc'])
-
-        dc_person_rdf_Description = etree.SubElement(dc_person,
-                                                     '{%s}Description' % self.NAMESPACES['rdf'])
-
-        if person.name.strip():
-            hsterms_name = etree.SubElement(dc_person_rdf_Description,
-                                            '{%s}name' % self.NAMESPACES['hsterms'])
-
-            hsterms_name.text = person.name
-
-        if person.relative_uri:
-            dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
-                                          current_site_url() + person.relative_uri)
-
-        if isinstance(person, Creator):
-            hsterms_creatorOrder = etree.SubElement(dc_person_rdf_Description,
-                                                    '{%s}creatorOrder' % self.NAMESPACES['hsterms'])
-            hsterms_creatorOrder.text = str(person.order)
-
-        if person.organization:
-            hsterms_organization = etree.SubElement(dc_person_rdf_Description,
-                                                    '{%s}organization' % self.NAMESPACES['hsterms'])
-            hsterms_organization.text = person.organization
-
-        if person.email:
-            hsterms_email = etree.SubElement(dc_person_rdf_Description,
-                                             '{%s}email' % self.NAMESPACES['hsterms'])
-            hsterms_email.text = person.email
-
-        if person.address:
-            hsterms_address = etree.SubElement(dc_person_rdf_Description,
-                                               '{%s}address' % self.NAMESPACES['hsterms'])
-            hsterms_address.text = person.address
-
-        if person.phone:
-            hsterms_phone = etree.SubElement(dc_person_rdf_Description,
-                                             '{%s}phone' % self.NAMESPACES['hsterms'])
-            hsterms_phone.set('{%s}resource' % self.NAMESPACES['rdf'], 'tel:' + person.phone)
-
-        if person.homepage:
-            hsterms_homepage = etree.SubElement(dc_person_rdf_Description,
-                                                '{%s}homepage' % self.NAMESPACES['hsterms'])
-            hsterms_homepage.set('{%s}resource' % self.NAMESPACES['rdf'], person.homepage)
-
-        for name, link in person.identifiers.items():
-            hsterms_link_type = etree.SubElement(dc_person_rdf_Description,
-                                                 '{%s}' % self.NAMESPACES['hsterms'] + name)
-            hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link)
 
     @property
     def resource_uri(self):

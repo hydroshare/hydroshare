@@ -13,11 +13,12 @@ class WithoutLoggedInDateTokenGenerator(PasswordResetTokenGenerator):
     Removes last_login from the hash of the PasswordResetTokenGenerator.  Allows use of generated tokens in scenarios
     where a user logging into their account after the token is generated should not expire the token
     """
+
     def _make_hash_value(self, user, timestamp):
         # override this method to remove last_login from hash
         return (
-                text_type(user.pk) + user.password +
-                text_type(timestamp)
+            text_type(user.pk) + user.password
+            + text_type(timestamp)
         )
 
 

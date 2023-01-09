@@ -5,7 +5,6 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 from haystack.query import SearchQuerySet
 
-from hs_composite_resource.models import CompositeResource
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
 from hs_core.models import GenericResource
@@ -32,7 +31,7 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
             'GenericResource',
             self.user,
             'My Test Resource'
-            )
+        )
 
         # there should be one resource at this point
         self.assertEqual(GenericResource.objects.all().count(), 1, msg="Number of resources not equal to 1")
@@ -54,12 +53,14 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
         # open files for read and upload
         self.file_one = open(file_one, "rb")
 
+        # indexing is turned off during test run - however, using the keyword 'INDEX-FOR-TESTING',
+        # this specific resource will get indexed.
         new_res = resource.create_resource(
             'GenericResource',
             self.user,
             'My Test Resource',
             files=(self.file_one,),
-            keywords=("one", "two",),
+            keywords=("one", "two", "INDEX-FOR-TESTING"),
             metadata=[{"description": {"abstract": "myabstract"}}]
         )
         current_index_count = len(SearchQuerySet().all())
@@ -69,8 +70,3 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
 
         resource.delete_resource(new_res.short_id)
         self.assertEqual(len(SearchQuerySet().all()), current_index_count)
-
-
-
-
-

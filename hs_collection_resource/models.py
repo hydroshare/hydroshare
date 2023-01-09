@@ -56,7 +56,7 @@ class CollectionResource(BaseResource):
             return False
 
         return self.can_be_public_or_discoverable and \
-               self.are_all_contained_resources_published
+            self.are_all_contained_resources_published
 
     @property
     def update_text_file(self):

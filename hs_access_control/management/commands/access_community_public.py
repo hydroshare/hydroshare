@@ -23,7 +23,7 @@ def shorten(title, length):
     if len(title) <= length:
         return title
     else:
-        return title[0:19]+'...'
+        return title[0:19] + '...'
 
 
 def access_type(thing):
@@ -61,22 +61,22 @@ class Command(BaseCommand):
         print("community is {} (id={})".format(community.name, community.id))
         stuff = community.public_resources
         for r in stuff:
-            print(("{} '{}' '{}' type='{}' group='{}' (id={}) published={} public={} " +
-                  "discoverable={} created='{}' updated='{}' first author='{}'")
-                   .format(r.short_id,
-                           shorten(r.title, 20),
-                           # equivalently: shorten(r.content_object._title.first().value, 20),
-                           shorten(r.description, 20),
-                           # equivalently: shorten(r.content_object._description.first().value, 20),
-                           r.resource_type,
-                           r.group_name,
-                           r.group_id,
-                           r.published,
-                           r.public,
-                           r.discoverable,
-                           r.created,
-                           r.updated,
-                           r.first_creator
-                           # equivalently: r.content_object.creators.filter(order=1).first()
-                           )
+            print(("{} '{}' '{}' type='{}' group='{}' (id={}) published={} public={} "
+                  + "discoverable={} created='{}' updated='{}' first author='{}'")
+                  .format(r.short_id,
+                          shorten(r.title, 20),
+                          # equivalently: shorten(r.content_object._title.first().value, 20),
+                          shorten(r.description, 20),
+                          # equivalently: shorten(r.content_object._description.first().value, 20),
+                          r.resource_type,
+                          r.group_name,
+                          r.group_id,
+                          r.published,
+                          r.public,
+                          r.discoverable,
+                          r.created,
+                          r.updated,
+                          r.first_creator
+                          # equivalently: r.content_object.creators.filter(order=1).first()
+                          )
                   )

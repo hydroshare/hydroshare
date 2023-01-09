@@ -14,6 +14,7 @@ def get_site_conf():
     """
     return SiteConfiguration.objects.get_or_create(site_id=current_site_id())[0]
 
+
 @register.as_tag
 def get_recaptcha_site_key():
     return settings.RECAPTCHA_SITE_KEY

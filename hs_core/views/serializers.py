@@ -59,10 +59,10 @@ class ResourceUpdateRequestValidator(serializers.Serializer):
 
 class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
     resource_type = serializers.ChoiceField(
-            choices=list(zip(
-                [x.__name__ for x in hydroshare.get_resource_types()],
-                [x.__name__ for x in hydroshare.get_resource_types()]
-            )), default='CompositeResource')
+        choices=list(zip(
+            [x.__name__ for x in hydroshare.get_resource_types()],
+            [x.__name__ for x in hydroshare.get_resource_types()]
+        )), default='CompositeResource')
 
 
 class ResourceTypesSerializer(serializers.Serializer):
@@ -73,8 +73,8 @@ class ResourceTypesSerializer(serializers.Serializer):
 
 class ContentTypesSerializer(serializers.Serializer):
     content_type = serializers.CharField(max_length=100, required=True,
-                                          validators=[lambda x: x in CONTENT_TYPES],
-                                          help_text='list of content types')
+                                         validators=[lambda x: x in CONTENT_TYPES],
+                                         help_text='list of content types')
 
 
 class CheckStatusSerializer(serializers.Serializer):

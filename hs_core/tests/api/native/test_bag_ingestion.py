@@ -98,7 +98,7 @@ class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
             'CompositeResource',
             self.user,
             'My Test Resource'
-            )
+        )
 
         self.test_bag_path = 'hs_core/tests/data/test_resource_metadata_files.zip'
 
