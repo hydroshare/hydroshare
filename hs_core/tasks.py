@@ -18,6 +18,7 @@ from celery import shared_task
 from celery.schedules import crontab
 from celery.worker.request import Request
 from celery import Task
+
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -810,6 +811,18 @@ def resource_debug(resource_id):
     resource = utils.get_resource_by_shortkey(resource_id)
     from hs_core.management.utils import check_irods_files
     return check_irods_files(resource, log_errors=False, return_errors=True)
+
+
+@shared_task
+def get_non_preferred_paths(resource_id):
+    """Gets a list of file/folder paths that contain non-preferred characters"""
+
+    resource = utils.get_resource_by_shortkey(resource_id)
+    non_preferred_paths = []
+
+    if resource.resource_type == "CompositeResource":
+        non_preferred_paths = resource.get_non_preferred_path_names()
+    return non_preferred_paths
 
 
 @shared_task
