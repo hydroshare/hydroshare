@@ -210,7 +210,7 @@ class FindCommunitiesView(TemplateView):
         user = self.request.user
         user_is_admin = False
         if user:
-            user_is_admin = user.is_authenticated() and user.is_superuser
+            user_is_admin = user.is_authenticated and user.is_superuser
 
         # get the list of any pending community create requests by this user
         user_pending_requests = user.uaccess.pending_community_requests()
@@ -280,7 +280,7 @@ class MyCommunitiesView(TemplateView):
 
         user_is_admin = False
         if user:
-            user_is_admin = user.is_authenticated() and user.is_superuser
+            user_is_admin = user.is_authenticated and user.is_superuser
 
         if user_is_admin:
             admin_all_requests = []
