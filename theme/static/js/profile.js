@@ -268,31 +268,46 @@ function isPhoneCountryCodeOnly(phone, country){
 }
 
 function resetPhoneValues(){
-    const oldPhones = PHONES || null;
-    if (!oldPhones || oldPhones === 'None') return;
+    // Bootstrap-formhelper will erase existing values if they don't conform to the expected country format
+    // So we update with the original values where necessary
     $('input[type="tel"]').each(function(){
-        let phoneField = $(this);
-        if (oldPhones[phoneField[0].name] === 'None') return;
-        phoneField.val(oldPhones[phoneField[0].name]);
+        const oldPhones = PHONES || null;
+        if (!oldPhones || oldPhones === 'None') return;
+        const phoneObj = $(this);
+        if (oldPhones[phoneObj[0].name] === 'None') return;
+        phoneObj.val(oldPhones[phoneObj[0].name]);
     });
-    checkForInvalidPhones();
 }
 
-function checkForInvalidPhones(country){
-    country = country || $("#country").val()
+function checkForInvalidPhones(){
     $('input[type="tel"]').each(function(){
-        let phoneField = $(this);
-        phoneField.siblings('.error-label').remove();
-        phoneField.removeClass('form-invalid');
-        const phoneValidation = isPhoneValidInCountry(phoneField.val(), country);
-        const onlyCode = isPhoneCountryCodeOnly(phoneField.val(), country);
-        onlyCode ? phoneField.addClass('only-country-code') : phoneField.removeClass('only-country-code');
-        if ( phoneValidation !== true && !onlyCode){
-            phoneField
-                .addClass('form-invalid')
-                .parent().append(errorLabel(`Please update to format: [${phoneValidation}]`));
-        }
+        checkPhone(this, false);
     });
+}
+
+function checkPhone(phoneField, isInputEvent=true){
+    const country = $("#country").val();
+    phoneField = $(phoneField);
+    phoneField.siblings('.error-label').remove();
+    phoneField.removeClass('form-invalid');
+    if (! country ) {
+        if (isInputEvent){
+            phoneField
+            .addClass('form-invalid')
+            .parent().append(errorLabel("Please add a country before adding phone to your profile"));
+        }
+        return;
+    }
+    const phoneValue = phoneField.val();
+    if( !phoneValue ) return;
+    const phoneValidation = isPhoneValidInCountry(phoneValue, country);
+    const onlyCode = isPhoneCountryCodeOnly(phoneValue, country);
+    onlyCode ? phoneField.addClass('only-country-code') : phoneField.removeClass('only-country-code');
+    if ( phoneValidation !== true && !onlyCode ){
+        phoneField
+            .addClass('form-invalid')
+            .parent().append(errorLabel(`Please update to format: [${phoneValidation}]`));
+    }
 }
 
 $(document).ready(function () {
@@ -429,11 +444,10 @@ $(document).ready(function () {
     }
 
     // Event listeners for profile phone changes
-    $('input[type="tel"]').on('keyup', function(){
-        checkForInvalidPhones();
-    });
+    $('input[type="tel"]').on('keyup', (e)=>checkPhone(e.target));
     $('#country').on('change', function(){
         resetPhoneValues();
+        checkForInvalidPhones();
     });
 
     $('.btn-save-profile').click(function(e){
@@ -442,4 +456,5 @@ $(document).ready(function () {
     });
 
     resetPhoneValues();
+    checkForInvalidPhones();
 });
