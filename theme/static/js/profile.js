@@ -245,6 +245,43 @@ function getUrlVars()
     return vars;
 }
 
+function isStateInCountry(stateCode, country){
+    if (!BFHStatesList.hasOwnProperty(country)) return false;
+    const asArray = Object.entries(BFHStatesList[country]);
+    const filtered = asArray.filter(([key, state]) => state.code === stateCode);
+    return filtered.length > 0;
+}
+
+function checkForInvalidStates(country){
+    const oldState = OLD_STATE || null;
+    if (!oldState || oldState === 'None') return;
+    country = country || $("#country").val()
+    const stateField = $('#state');
+    if ( !isStateInCountry(oldState, country)){
+        stateField.append($('<option>', {
+            value: oldState,
+            text: oldState,
+            class: "old-state-option"
+        }));
+        stateField.val(oldState)
+            .change()
+            .addClass('form-invalid')
+            .parent().append(errorLabel("No longer valid, please update."));
+
+        // Register one-time listener to clear the message and old option
+        stateField.one('change', function(){
+            $(this).siblings('.error-label').remove();
+            $(this).removeClass('form-invalid');
+            $(".old-state-option").remove();
+        });
+    }
+
+    // Update for view mode
+    if (! $('#db-state').text()) {
+        $('#db-state').text(OLD_STATE);
+    }
+}
+
 $(document).ready(function () {
     // Multiple orgs are a string delimited by ";" --wrap them so we can style them
     $("#organization").splitAndWrapWithClass(";", "organization-divider");
@@ -377,4 +414,5 @@ $(document).ready(function () {
         // clear out the edit query params so edit mode isn't reopened on save
         history.pushState('', document.title, window.location.pathname);
     }
+    checkForInvalidStates();
 });
