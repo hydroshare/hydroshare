@@ -13,9 +13,6 @@ def debug_resource(request, shortkey):
     """ Debug view for resource depicts output of various integrity checking scripts """
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    non_preferred_paths = []
-    if resource.resource_type == "CompositeResource":
-        non_preferred_paths = resource.get_non_preferred_path_names()
 
     template = loader.get_template('debug/debug_resource.html')
     context = {
@@ -30,7 +27,6 @@ def debug_resource(request, shortkey):
         'type_AVU': resource.getAVU('resourceType'),
         'modified_AVU': resource.getAVU('bag_modified'),
         'quota_AVU': resource.getAVU('quotaUserName'),
-        'non_preferred_paths': non_preferred_paths,
     }
     return HttpResponse(template.render(context, request))
 
