@@ -4,6 +4,7 @@ import base64
 import os.path
 from io import StringIO
 from xml.sax import xmlreader, saxutils
+# TODO: should we use defusedxml.sax?
 from xml.sax.expatreader import ExpatParser
 
 from django.conf import settings
@@ -22,8 +23,8 @@ class CatalogedExpatParser(ExpatParser):
 
         source = self._ent_handler.resolveEntity(pubid, sysid)
         source = saxutils.prepare_input_source(source,
-                                               self._source.getSystemId() or
-                                               "")
+                                               self._source.getSystemId()
+                                               or "")
 
         # If an entry does not exist in the xml cache, create it.
         filepath = os.path.join(XML_CACHE, base64.urlsafe_b64encode(pubid))
@@ -39,7 +40,7 @@ class CatalogedExpatParser(ExpatParser):
 
         try:
             xmlreader.IncrementalParser.parse(self, source)
-        except:
+        except: # noqa
             return 0  # FIXME: save error info here?
 
         (self._parser, self._source) = self._entity_stack[-1]

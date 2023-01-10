@@ -205,6 +205,8 @@ preflight_hs() {
         echo "This directory is used for celery beat scheduler to write celerybeat-schedule file for \
             scheduling purposes." > ${HS_PATH}/celery/readme.txt;
     fi
+    #  Create celery health check file
+    date +"%m/%d/%y %H:%M:%S" > ${HS_PATH}/celery/periodic_tasks_last_executed.txt
     # Generate init-hydroshare
     cp -rf ${HS_PATH}/scripts/templates/init-hydroshare.template ${HS_PATH}/init-hydroshare
     sed -i $SED_EXT 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-hydroshare

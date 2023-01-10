@@ -233,7 +233,7 @@ class SignupForm(forms.ModelForm):
     organization = forms.CharField(required=True)
     user_type = forms.CharField(required=True)
     country = forms.CharField(label='Country', required=True)
-    state = forms.CharField(label='State/Province', required=True)
+    state = forms.CharField(label='State/Region', required=True)
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -247,7 +247,7 @@ class SignupForm(forms.ModelForm):
         }
         response = requests.post(url, values)
         result = response.json()
-        if(result["success"]):
+        if (result["success"]):
             return (True, [])
 
         return (False, result["error-codes"])
@@ -280,8 +280,6 @@ class SignupForm(forms.ModelForm):
 
     def clean_state(self):
         data = self.cleaned_data['state']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("State is a required field.")
         return data
 
     def save(self, *args, **kwargs):
@@ -344,8 +342,6 @@ class UserProfileForm(forms.ModelForm):
 
     def clean_state(self):
         data = self.cleaned_data['state']
-        if data is None or len(data.strip()) == 0:
-            raise forms.ValidationError("State is a required field.")
         return data
 
     def clean_identifiers(self):

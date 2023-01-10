@@ -811,10 +811,10 @@ class GroupCommunityProvenance(ProvenanceBase):
         # This syntax is curious due to undesirable semantics of .exclude.
         # All conditions on the filter must be specified in the same filter statement.
         selected = Group.objects.filter(g2gcq__community=community)\
-                               .annotate(start=Max('g2gcq__start'))\
-                               .filter(g2gcq__start=F('start'),
-                                       g2gcq__grantor=grantor,
-                                       g2gcq__undone=False)
+            .annotate(start=Max('g2gcq__start'))\
+            .filter(g2gcq__start=F('start'),
+                    g2gcq__grantor=grantor,
+                    g2gcq__undone=False)
         return selected
 
     @classmethod
@@ -867,10 +867,10 @@ class CommunityResourceProvenance(ProvenanceBase):
     start = models.DateTimeField(editable=False, auto_now_add=True)
 
     resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
-                                  null=False,
-                                  editable=False,
-                                  related_name='r2crq',
-                                  help_text='community to be granted privilege')
+                                 null=False,
+                                 editable=False,
+                                 related_name='r2crq',
+                                 help_text='community to be granted privilege')
 
     community = models.ForeignKey(Community, on_delete=models.CASCADE,
                                   null=False,

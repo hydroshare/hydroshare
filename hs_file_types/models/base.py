@@ -230,12 +230,12 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             with form(id="id-keywords-filetype", action=action, method="post",
                       enctype="multipart/form-data"):
                 _input(id="id-delete-keyword-filetype-action", type="hidden",
-                           value=delete_action)
+                       value=delete_action)
                 with div(cls="tags"):
                     with div(id="add-keyword-wrapper", cls="input-group"):
                         _input(id="txt-keyword-filetype", cls="form-control",
-                                   placeholder="keyword",
-                                   type="text", name="keywords")
+                               placeholder="keyword",
+                               type="text", name="keywords")
                         with span(cls="input-group-btn"):
                             a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
                               type="button")
@@ -336,7 +336,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     def get_supported_element_names(cls):
         return ['Coverage']
 
-    def get_required_missing_elements(self):
+    def get_required_missing_elements(self, *args):
         return []
 
     @property
@@ -533,9 +533,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                         legend('Title')
                         with div(cls="controls"):
                             _input(value=dataset_name,
-                                       cls="form-control input-sm textinput textInput",
-                                       id="file_dataset_name", maxlength="250",
-                                       name="dataset_name", type="text")
+                                   cls="form-control input-sm textinput textInput",
+                                   id="file_dataset_name", maxlength="250",
+                                   name="dataset_name", type="text")
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                         button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
@@ -619,20 +619,20 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                                                   fr="file_extra_meta_key_original")
                                             with div(cls="controls"):
                                                 _input(value=k, readonly="readonly",
-                                                           cls="form-control input-sm textinput "
-                                                               "textInput",
-                                                           id="file_extra_meta_key_original",
-                                                           maxlength="100",
-                                                           name="key_original", type="text")
+                                                       cls="form-control input-sm textinput "
+                                                       "textInput",
+                                                       id="file_extra_meta_key_original",
+                                                       maxlength="100",
+                                                       name="key_original", type="text")
                                         with div(cls="control-group"):
                                             label("Key", cls="control-label requiredField",
                                                   fr="file_extra_meta_key")
                                             with div(cls="controls"):
                                                 _input(value=k,
-                                                           cls="form-control input-sm textinput "
-                                                               "textInput",
-                                                           id="file_extra_meta_key", maxlength="100",
-                                                           name="key", type="text")
+                                                       cls="form-control input-sm textinput "
+                                                       "textInput",
+                                                       id="file_extra_meta_key", maxlength="100",
+                                                       name="key", type="text")
                                         with div(cls="control-group"):
                                             label("Value", cls="control-label requiredField",
                                                   fr="file_extra_meta_value")
@@ -683,7 +683,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                                                   fr="file_extra_meta_name")
                                             with div(cls="controls"):
                                                 _input(cls="form-control input-sm textinput "
-                                                               "textInput", value=k,
+                                                       "textInput", value=k,
                                                            id="file_extra_meta_key", maxlength="100",
                                                            name="key", type="text", readonly="readonly")
                                         with div(cls="control-group"):
@@ -721,7 +721,7 @@ class AbstractLogicalFile(models.Model):
     dataset_name = models.CharField(max_length=255, null=True, blank=True)
     # this will be used for dc:type in resourcemetadata.xml
     # each specific logical type needs to reset this field
-    # also this data type needs to be defined in in terms.html page
+    # also this data type needs to be defined in terms.html page
     data_type = "Generic"
 
     # this field is for logical file to store extra key:value pairs, e.g., currently for .url
@@ -1113,7 +1113,7 @@ class AbstractLogicalFile(models.Model):
         is already associated with any other logical file object, this function does not do
         anything to that logical object. The caller needs to take necessary action for the
         previously associated logical file object. If res_file is already part of this
-        logical file, it raise ValidationError.
+        logical file, it raises ValidationError.
 
         :param res_file an instance of ResourceFile
         """
@@ -1212,12 +1212,12 @@ class AbstractLogicalFile(models.Model):
         Deletes the logical file as well as all resource files associated with this logical file.
         This function is primarily used by the system to delete logical file object and associated
         metadata as part of deleting a resource file object. Any time a request is made to
-        deleted a specific resource file object, if the the requested file is part of a
+        delete a specific resource file object, if the the requested file is part of a
         logical file then all files in the same logical file group will be deleted. if custom logic
         requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
         use LFO.logical_delete()
-        :param  user    user who is deleting file type/aggregation
-        :param delete_res_files If True all resource files that are part of this logical file will
+        :param  user:  user who is deleting file type/aggregation
+        :param delete_res_files: If True all resource files that are part of this logical file will
         be deleted
         """
 
@@ -1248,7 +1248,7 @@ class AbstractLogicalFile(models.Model):
             # the metadata object
             metadata.delete()
 
-        # if the this deleted aggregation has a parent aggregation - xml files for the parent
+        # if this deleted aggregation has a parent aggregation - xml files for the parent
         # aggregation needs to be generated so that the references to the deleted aggregation can be removed
         # setting parent aggregation metadata dirty will regenerate xml files for parent aggregation at the time
         # of download
@@ -1344,7 +1344,7 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def has_children(self):
-        """Returns True if the this aggregation contains any other aggregations, otherwise False"""
+        """Returns True if this aggregation contains any other aggregations, otherwise False"""
         return len(self.get_children()) > 0
 
     @property
@@ -1361,7 +1361,7 @@ class AbstractLogicalFile(models.Model):
 
     def set_metadata_dirty(self):
         self.metadata.is_dirty = True
-        self.metadata.save()
+        self.metadata.save(update_fields=["is_dirty"])
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         """Creates aggregation map xml and aggregation metadata xml files
@@ -1549,6 +1549,7 @@ class FileTypeContext(object):
     :param  is_temp_file if True resource file specified by file_id will be retrieved from
     irods to temp directory
     """
+
     def __init__(self, aggr_cls, user, resource, file_id=None, folder_path='',
                  post_aggr_signal=None, is_temp_file=True):
 

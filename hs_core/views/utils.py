@@ -330,12 +330,15 @@ def rights_allows_copy(res, user):
     if not user.is_authenticated:
         return False
 
-    if not user.uaccess.owns_resource(res) and \
-            (res.metadata.rights.statement == "This resource is shared under the Creative "
-                                              "Commons Attribution-NoDerivs CC BY-ND." or
-             res.metadata.rights.statement == "This resource is shared under the Creative "
-                                              "Commons Attribution-NoCommercial-NoDerivs "
-                                              "CC BY-NC-ND."):
+    if user.uaccess.owns_resource(res):
+        return True
+
+    rights = res.metadata.rights
+    if (rights.statement == "This resource is shared under the Creative "
+                            "Commons Attribution-NoDerivs CC BY-ND."
+        or rights.statement == "This resource is shared under the Creative "
+                               "Commons Attribution-NoCommercial-NoDerivs "
+                               "CC BY-NC-ND."):
         return False
 
     return True
@@ -644,7 +647,7 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
 
     # remove obsoleted resources
     resource_collection = resource_collection.exclude(object_id__in=Relation.objects.filter(
-            type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
+        type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
 
     # When used in the My Resources page, annotate for speed
     if annotate:
@@ -823,7 +826,7 @@ def _link_irods_folder_to_django(resource, istorage, foldername):
     :return: List of ResourceFile of newly linked files
     """
     if __debug__:
-        assert(isinstance(resource, BaseResource))
+        assert (isinstance(resource, BaseResource))
     if istorage is None:
         istorage = resource.get_irods_storage()
 
@@ -838,8 +841,8 @@ def _link_irods_folder_to_django(resource, istorage, foldername):
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             res_files = res_files + \
-                        _link_irods_folder_to_django(resource, istorage,
-                                                     os.path.join(foldername, folder))
+                _link_irods_folder_to_django(resource, istorage,
+                                             os.path.join(foldername, folder))
     return res_files
 
 
@@ -941,7 +944,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     :return: output_zip_fname and output_zip_size pair
     """
     if __debug__:
-        assert(input_coll_path.startswith("data/contents/"))
+        assert (input_coll_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published:
@@ -967,15 +970,17 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
                   f"characters: {filename_banned_chars}"
         raise ValidationError(err_msg)
 
+    content_dir = os.path.dirname(res_coll_input)
+    output_zip_full_path = os.path.join(content_dir, output_zip_fname)
+    if istorage.exists(output_zip_full_path):
+        err_msg = f"Zip filename '{output_zip_fname}' already exists. Provide a different name for the zip file."
+        raise ValidationError(err_msg)
+
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
 
-    content_dir = os.path.dirname(res_coll_input)
-    output_zip_full_path = os.path.join(content_dir, output_zip_fname)
     istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
-
     output_zip_size = istorage.size(output_zip_full_path)
-
     zip_res_file = link_irods_file_to_django(resource, output_zip_full_path)
     if resource.resource_type == "CompositeResource":
         # make the newly added zip file part of an aggregation if needed
@@ -1040,7 +1045,8 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     else:
         zip_file_target_full_path = os.path.join(resource.file_path, f"{output_zip_fname}.zip")
     if istorage.exists(zip_file_target_full_path):
-        raise ValidationError(f"Zip file ({output_zip_fname}.zip) already exists")
+        err_msg = f"Zip file ({output_zip_fname}.zip) already exists. Provide a different name for the zip file."
+        raise ValidationError(err_msg)
 
     daily_date = datetime.today().strftime('%Y-%m-%d')
     output_path = f"zips/{daily_date}/{uuid4().hex}/{output_zip_fname}.zip"
@@ -1067,6 +1073,7 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
 class IrodsFile:
     """Mimics an uploaded file to allow use of the ingestion logic which expects an uploaded file, rather than a file
     on irods."""
+
     def __init__(self, name, istorage):
         self._name = name
         self._istorage = istorage
@@ -1099,7 +1106,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     from hs_file_types.utils import identify_metadata_files
 
     if __debug__:
-        assert(zip_with_rel_path.startswith("data/contents/"))
+        assert (zip_with_rel_path.startswith("data/contents/"))
 
     if ingest_metadata:
         if not auto_aggregate:
@@ -1439,7 +1446,7 @@ def remove_folder(user, res_id, folder_path):
     :return:
     """
     if __debug__:
-        assert(folder_path.startswith("data/contents/"))
+        assert (folder_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published:
@@ -1468,7 +1475,7 @@ def list_folder(res_id, folder_path):
     :return:
     """
     if __debug__:
-        assert(folder_path.startswith("data/contents/"))
+        assert (folder_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -1544,8 +1551,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
     """
     if __debug__:
         for s in src_paths:
-            assert(s.startswith('data/contents/'))
-        assert(tgt_path == 'data/contents' or tgt_path.startswith("data/contents/"))
+            assert (s.startswith('data/contents/'))
+        assert (tgt_path == 'data/contents' or tgt_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not user.is_superuser:
@@ -1642,8 +1649,8 @@ def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=Tru
     """helper method for moving/renaming file/folder"""
 
     if __debug__:
-        assert(src_path.startswith("data/contents/"))
-        assert(tgt_path.startswith("data/contents/"))
+        assert (src_path.startswith("data/contents/"))
+        assert (tgt_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not user.is_superuser:

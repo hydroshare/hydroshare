@@ -7,7 +7,7 @@
         User Type: {{ user.userprofile.user_type }}
         Organization: {{ user.userprofile.organization }}
         Country: {{ user.userprofile.country }}
-        State/Province: {{ user.userprofile.state }}
+        State/Region: {{ user.userprofile.state }}
         Email: {{ user.email }}
         {% if user.userprofile.title %}User Title: {{ user.userprofile.title }}{% endif %}
         {% if explanation %}Explanation: {{ explanation }}{% endif %}

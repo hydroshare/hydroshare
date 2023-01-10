@@ -27,11 +27,11 @@ class SimpleTest(TestCase):
             'note bones': str(SQ(content=Clean("note")) & SQ(content=Clean("bones"))),
             'note "bones"': str(SQ(content=Clean("note")) & SQ(content=Exact("bones"))),
             '"need note"': str(SQ(content=Exact("need note"))),
-            'need note used': str(SQ(content=Clean("need")) &
-                                  SQ(content=Clean("note")) &
-                                  SQ(content=Clean("used"))),
-            '"need" "note"': str(SQ(content=Exact("need")) &
-                                 SQ(content=Exact("note"))),
+            'need note used': str(SQ(content=Clean("need"))
+                                  & SQ(content=Clean("note"))
+                                  & SQ(content=Clean("used"))),
+            '"need" "note"': str(SQ(content=Exact("need"))
+                                 & SQ(content=Exact("note"))),
 
             # removed '+', '-' syntaxes 4/5/2019. test cases modified accordingly.
             '"note"': str(SQ(content=Exact('note'))),
@@ -66,20 +66,20 @@ class SimpleTest(TestCase):
 
     def test_logic(self):
         testcase = {
-            'need note NOT used': str(SQ(content=Clean("need")) &
-                                      SQ(content=Clean("note")) & ~ SQ(content=Clean("used"))),
-            '(a AND b) OR (c AND d)': str((SQ(content=Clean("a")) & SQ(content=Clean("b"))) |
-                                          (SQ(content=Clean("c")) & SQ(content=Clean("d")))),
-            'a AND b OR (c AND d)': str(SQ(content=Clean("a")) & SQ(content=Clean("b")) |
-                                        (SQ(content=Clean("c")) & SQ(content=Clean("d")))),
-            '"a AND b" OR "(c AND d)"': str(SQ(content=Exact("a AND b")) |
-                                            SQ(content=Exact("(c AND d)"))),
-            '"notes done" OR papaya': str(SQ(content=Exact("notes done")) |
-                                          SQ(content=Clean("papaya"))),
-            '"a AND b" OR (c AND d)': str(SQ(content=Exact("a AND b")) |
-                                          (SQ(content=Clean("c")) & SQ(content=Clean("d")))),
-            'subject:"HP employee" OR something': str(SQ(subject=Exact("HP employee")) |
-                                                      SQ(content=Clean('something'))),
+            'need note NOT used': str(SQ(content=Clean("need"))
+                                      & SQ(content=Clean("note")) & ~ SQ(content=Clean("used"))),
+            '(a AND b) OR (c AND d)': str((SQ(content=Clean("a")) & SQ(content=Clean("b")))
+                                          | (SQ(content=Clean("c")) & SQ(content=Clean("d")))),
+            'a AND b OR (c AND d)': str(SQ(content=Clean("a")) & SQ(content=Clean("b"))
+                                        | (SQ(content=Clean("c")) & SQ(content=Clean("d")))),
+            '"a AND b" OR "(c AND d)"': str(SQ(content=Exact("a AND b"))
+                                            | SQ(content=Exact("(c AND d)"))),
+            '"notes done" OR papaya': str(SQ(content=Exact("notes done"))
+                                          | SQ(content=Clean("papaya"))),
+            '"a AND b" OR (c AND d)': str(SQ(content=Exact("a AND b"))
+                                          | (SQ(content=Clean("c")) & SQ(content=Clean("d")))),
+            'subject:"HP employee" OR something': str(SQ(subject=Exact("HP employee"))
+                                                      | SQ(content=Clean('something'))),
         }
         parser = ParseSQ(handle_logic=True, handle_fields=True)
 
@@ -88,15 +88,15 @@ class SimpleTest(TestCase):
 
     def test_parse_with_different_default(self):
         testcase = {
-            'helo again bye': {'sq': str(SQ(content=Clean('helo')) | SQ(content=Clean('again')) |
-                                         SQ(content=Clean('bye'))),
+            'helo again bye': {'sq': str(SQ(content=Clean('helo')) | SQ(content=Clean('again'))
+                                         | SQ(content=Clean('bye'))),
                                'operator': 'OR'},
             'helo again AND bye': {
                 'sq': str((SQ(content=Clean('helo')) | SQ(content=Clean('again'))) & SQ(content=Clean('bye'))),
                 'operator': 'OR'},
             'helo again AND bye run': {
-                'sq': str(((SQ(content=Clean('helo')) | SQ(content=Clean('again'))) &
-                          SQ(content=Clean('bye'))) | SQ(content=Clean('run'))),
+                'sq': str(((SQ(content=Clean('helo')) | SQ(content=Clean('again')))
+                          & SQ(content=Clean('bye'))) | SQ(content=Clean('run'))),
                 'operator': 'OR'},
 
         }
@@ -117,30 +117,30 @@ class SimpleTest(TestCase):
 
     def test_dates(self):
         testcase = {
-            "created:2017-05-02": str(SQ(created__gte='2017-05-02T00:00:00Z') &
-                                      SQ(created__lt='2017-05-03T00:00:00Z')),
-            "created:2017-05": str(SQ(created__gte='2017-05-01T00:00:00Z') &
-                                   SQ(created__lt='2017-05-02T00:00:00Z')),
-            "created:2017": str(SQ(created__gte='2017-01-01T00:00:00Z') &
-                                SQ(created__lt='2017-01-02T00:00:00Z')),
-            "modified:2017-05-02": str(SQ(modified__gte='2017-05-02T00:00:00Z') &
-                                       SQ(modified__lt='2017-05-03T00:00:00Z')),
-            "modified:2017-05": str(SQ(modified__gte='2017-05-01T00:00:00Z') &
-                                    SQ(modified__lt='2017-05-02T00:00:00Z')),
-            "modified:2017": str(SQ(modified__gte='2017-01-01T00:00:00Z') &
-                                 SQ(modified__lt='2017-01-02T00:00:00Z')),
-            "start_date:2017-05-02": str(SQ(start_date__gte='2017-05-02T00:00:00Z') &
-                                         SQ(start_date__lt='2017-05-03T00:00:00Z')),
-            "start_date:2017-05": str(SQ(start_date__gte='2017-05-01T00:00:00Z') &
-                                      SQ(start_date__lt='2017-05-02T00:00:00Z')),
-            "start_date:2017": str(SQ(start_date__gte='2017-01-01T00:00:00Z') &
-                                   SQ(start_date__lt='2017-01-02T00:00:00Z')),
-            "end_date:2017-05-02": str(SQ(end_date__gte='2017-05-02T00:00:00Z') &
-                                       SQ(end_date__lt='2017-05-03T00:00:00Z')),
-            "end_date:2017-05": str(SQ(end_date__gte='2017-05-01T00:00:00Z') &
-                                    SQ(end_date__lt='2017-05-02T00:00:00Z')),
-            "end_date:2017": str(SQ(end_date__gte='2017-01-01T00:00:00Z') &
-                                 SQ(end_date__lt='2017-01-02T00:00:00Z')),
+            "created:2017-05-02": str(SQ(created__gte='2017-05-02T00:00:00Z')
+                                      & SQ(created__lt='2017-05-03T00:00:00Z')),
+            "created:2017-05": str(SQ(created__gte='2017-05-01T00:00:00Z')
+                                   & SQ(created__lt='2017-05-02T00:00:00Z')),
+            "created:2017": str(SQ(created__gte='2017-01-01T00:00:00Z')
+                                & SQ(created__lt='2017-01-02T00:00:00Z')),
+            "modified:2017-05-02": str(SQ(modified__gte='2017-05-02T00:00:00Z')
+                                       & SQ(modified__lt='2017-05-03T00:00:00Z')),
+            "modified:2017-05": str(SQ(modified__gte='2017-05-01T00:00:00Z')
+                                    & SQ(modified__lt='2017-05-02T00:00:00Z')),
+            "modified:2017": str(SQ(modified__gte='2017-01-01T00:00:00Z')
+                                 & SQ(modified__lt='2017-01-02T00:00:00Z')),
+            "start_date:2017-05-02": str(SQ(start_date__gte='2017-05-02T00:00:00Z')
+                                         & SQ(start_date__lt='2017-05-03T00:00:00Z')),
+            "start_date:2017-05": str(SQ(start_date__gte='2017-05-01T00:00:00Z')
+                                      & SQ(start_date__lt='2017-05-02T00:00:00Z')),
+            "start_date:2017": str(SQ(start_date__gte='2017-01-01T00:00:00Z')
+                                   & SQ(start_date__lt='2017-01-02T00:00:00Z')),
+            "end_date:2017-05-02": str(SQ(end_date__gte='2017-05-02T00:00:00Z')
+                                       & SQ(end_date__lt='2017-05-03T00:00:00Z')),
+            "end_date:2017-05": str(SQ(end_date__gte='2017-05-01T00:00:00Z')
+                                    & SQ(end_date__lt='2017-05-02T00:00:00Z')),
+            "end_date:2017": str(SQ(end_date__gte='2017-01-01T00:00:00Z')
+                                 & SQ(end_date__lt='2017-01-02T00:00:00Z')),
         }
         parser = ParseSQ(handle_fields=True)
         for case in testcase.keys():

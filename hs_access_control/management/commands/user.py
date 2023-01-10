@@ -20,7 +20,7 @@ def shorten(title, length):
     if len(title) <= length:
         return title
     else:
-        return title[0:19]+'...'
+        return title[0:19] + '...'
 
 
 class Command(BaseCommand):
@@ -47,17 +47,17 @@ class Command(BaseCommand):
         print("resources: [on my resources landing page]")
         print("  OWNED by user {}:".format(user.username))
         resources = user.uaccess.get_resources_with_explicit_access(
-                PrivilegeCodes.OWNER, via_user=True, via_group=False, via_community=False)
+            PrivilegeCodes.OWNER, via_user=True, via_group=False, via_community=False)
         for r in resources:
             print("     resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
         print("  EDITABLE by user {}:".format(user.username))
         resources = user.uaccess.get_resources_with_explicit_access(
-                PrivilegeCodes.CHANGE, via_user=True, via_group=False, via_community=False)
+            PrivilegeCodes.CHANGE, via_user=True, via_group=False, via_community=False)
         for r in resources:
             print("     resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
         print("  VIEWABLE by user {}:".format(user.username))
         resources = user.uaccess.get_resources_with_explicit_access(
-                PrivilegeCodes.VIEW, via_user=True, via_group=False, via_community=False)
+            PrivilegeCodes.VIEW, via_user=True, via_group=False, via_community=False)
         for r in resources:
             print("     resource '{}' ({})".format(shorten(r.title, 20), r.short_id))
         print("groups: [on my resources landing page]")

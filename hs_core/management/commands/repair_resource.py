@@ -51,7 +51,7 @@ class Command(BaseCommand):
                                     echo_errors=echo_errors,
                                     log_errors=log_errors,
                                     return_errors=False)
-                except BaseResource.NotFoundException:
+                except BaseResource.DoesNotExist:
                     msg = "resource {} not found".format(rid)
                     print(msg)
                     continue
@@ -65,7 +65,7 @@ class Command(BaseCommand):
                                     echo_errors=echo_errors,
                                     log_errors=log_errors,
                                     return_errors=False)
-                except BaseResource.NotFoundException:
+                except BaseResource.DoesNotExist:
                     msg = "resource {} not found".format(r.short_id)
                     print(msg)
                     continue

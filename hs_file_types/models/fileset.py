@@ -16,7 +16,7 @@ class FileSetMetaData(GenericFileMetaDataMixin):
 class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
     """ One more files in a specific folder can be part of this aggregation """
 
-    metadata = models.OneToOneField(FileSetMetaData, on_delete=models.CASCADE,  related_name="logical_file")
+    metadata = models.OneToOneField(FileSetMetaData, on_delete=models.CASCADE, related_name="logical_file")
     # folder path relative to {resource_id}/data/contents/ that represents this aggregation
     # folder becomes the name of the aggregation
     folder = models.CharField(max_length=4096)
@@ -218,7 +218,7 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         for child_aggr in self.get_children():
             if child_aggr.is_fileset:
                 child_aggr.folder = new_folder + child_aggr.folder[len(old_folder):]
-                child_aggr.save()
+                child_aggr.save(update_fields=["folder"])
 
         # update self
         self.folder = new_folder + self.folder[len(old_folder):]

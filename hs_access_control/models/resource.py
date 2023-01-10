@@ -5,7 +5,7 @@ from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes as PC, \
-        UserResourcePrivilege, GroupResourcePrivilege
+    UserResourcePrivilege, GroupResourcePrivilege
 
 #############################################
 # flags and methods for resources
@@ -90,18 +90,18 @@ class ResourceAccess(models.Model):
         VIEW, even if the resource is immutable.
         """
 
-        return User.objects.filter(self.__view_users_from_individual |
-                                   self.__view_users_from_group).distinct()
+        return User.objects.filter(self.__view_users_from_individual
+                                   | self.__view_users_from_group).distinct()
 
     @property
     def __edit_users_from_individual(self):
         return Q(is_active=True,
                  u2urp__resource=self.resource,
                  u2urp__privilege=PC.OWNER) | \
-               Q(is_active=True,
-                 u2urp__resource=self.resource,
-                 u2urp__resource__raccess__immutable=False,
-                 u2urp__privilege__lte=PC.CHANGE)
+            Q(is_active=True,
+              u2urp__resource=self.resource,
+              u2urp__resource__raccess__immutable=False,
+              u2urp__privilege__lte=PC.CHANGE)
 
     @property
     def __edit_users_from_group(self):
@@ -133,8 +133,8 @@ class ResourceAccess(models.Model):
 
         """
         return User.objects\
-                   .filter((self.__edit_users_from_individual) |
-                           (self.__edit_users_from_group)).distinct()
+                   .filter(self.__edit_users_from_individual
+                           | self.__edit_users_from_group).distinct()
 
     @property
     def __view_groups_from_group(self):
@@ -209,7 +209,6 @@ class ResourceAccess(models.Model):
                                        include_user_granted_access=True,
                                        include_group_granted_access=True,
                                        include_community_granted_access=False):
-
         """
         Gets a QuerySet of Users who have the explicit specified privilege access to the resource.
         An empty list is returned if both include_user_granted_access and
@@ -305,9 +304,9 @@ class ResourceAccess(models.Model):
                     # See Subquery documentation for why this is necessary.
                     excluded = User.objects.filter(excl).values('pk')
                     return User.objects\
-                            .filter(incl)\
-                            .exclude(pk__in=Subquery(excluded))\
-                            .distinct()
+                        .filter(incl)\
+                        .exclude(pk__in=Subquery(excluded))\
+                        .distinct()
                 else:
                     return User.objects.filter(incl)
             else:

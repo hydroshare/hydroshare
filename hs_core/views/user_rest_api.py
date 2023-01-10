@@ -1,8 +1,6 @@
-from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 from theme.models import UserProfile
 from hs_core.views import serializers
@@ -10,7 +8,7 @@ from hs_core.views import serializers
 
 class UserInfo(APIView):
     @swagger_auto_schema(operation_description="Get information about the logged in user",
-                        responses={200: serializers.UserInfoSerializer})
+                         responses={200: serializers.UserInfoSerializer})
     def get(self, request):
         '''
         Get information about the logged in user
@@ -19,8 +17,8 @@ class UserInfo(APIView):
         :return: HttpResponse response containing **user_info**
         '''
         if not request.user.is_authenticated:
-            return Response({ "title": "None", "organization": "None", "state": "None", "country": "None",
-                              "user_type": "None"})
+            return Response({"title": "None", "organization": "None", "state": "None", "country": "None",
+                             "user_type": "None"})
 
         user_info = {"username": request.user.username}
 

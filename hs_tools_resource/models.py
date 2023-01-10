@@ -225,8 +225,8 @@ class SupportedResTypes(AbstractMetaDataElement):
                 # "copy res" or "create a new version"
                 qs = SupportedResTypeChoices.objects.filter(id=res_type)
                 if not qs.exists():
-                    raise ObjectDoesNotExist('Resource type object {0} is not supported').format(
-                        res_type)
+                    raise ObjectDoesNotExist('Resource type object {0} is not supported'.format(
+                        res_type))
                 meta_instance.supported_res_types.add(qs[0])
 
             elif isinstance(res_type, str):
@@ -315,8 +315,8 @@ class SupportedAggTypes(AbstractMetaDataElement):
                 # "copy agg" or "create a new version"
                 qs = SupportedAggTypeChoices.objects.filter(id=agg_type)
                 if not qs.exists():
-                    raise ObjectDoesNotExist('Aggregation type object {0} is not supported').format(
-                        agg_type)
+                    raise ObjectDoesNotExist('Aggregation type object {0} is not supported'.format(
+                        agg_type))
                 meta_instance.supported_agg_types.add(qs[0])
 
             elif isinstance(agg_type, str):
@@ -403,8 +403,8 @@ class SupportedSharingStatus(AbstractMetaDataElement):
                 # "copy res" or "create a new version"
                 qs = SupportedSharingStatusChoices.objects.filter(id=sharing_status)
                 if not qs.exists():
-                    raise ObjectDoesNotExist('Sharing status {0} is not supported').format(
-                        sharing_status)
+                    raise ObjectDoesNotExist('Sharing status {0} is not supported'.format(
+                        sharing_status))
                 meta_instance.sharing_status.add(qs[0])
             elif isinstance(sharing_status, str):
                 # create or update res
@@ -725,7 +725,9 @@ class ToolMetaData(CoreMetaData):
             return False
         return True
 
-    def get_required_missing_elements(self):  # show missing required meta
+    def get_required_missing_elements(self, desired_state='discoverable'):  # show missing required meta
+        if desired_state == 'published':
+            return []
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
 
         # At least one of the two metadata must exist: Home Page URL or App-launching URL Pattern
@@ -735,16 +737,16 @@ class ToolMetaData(CoreMetaData):
                                              'Pattern')
         else:
             # If Supported Res Type is selected, app-launching URL pattern must be present
-            if self.supported_resource_types \
-                    and self.supported_resource_types.supported_res_types.count() > 0:
+            supported_resource_types = self.supported_resource_types
+            if supported_resource_types \
+                    and supported_resource_types.supported_res_types.count() > 0:
                 if not self._launching_pattern_exists():
                     missing_required_elements.append('An App-launching URL Pattern')
 
-            # if Supported Res Type presents, Supported Sharing Status must present, not vice versa
-            if self.supported_resource_types \
-                    and self.supported_resource_types.supported_res_types.count() > 0:
-                if not self.supported_sharing_status \
-                        or not self.supported_sharing_status.sharing_status.count() > 0:
+                # if Supported Res Type presents, Supported Sharing Status must present, not vice versa
+                supported_sharing_status = self.supported_sharing_status
+                if not supported_sharing_status \
+                        or not supported_sharing_status.sharing_status.count() > 0:
                     missing_required_elements.append('Supported Sharing Status')
 
         return missing_required_elements

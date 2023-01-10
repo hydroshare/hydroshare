@@ -114,19 +114,22 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
 
             element_name = "coverage"
             logical_file_class_name = self.logical_file.__class__.__name__
-            if self.temporal_coverage or self.spatial_coverage:
-                if self.temporal_coverage:
+            temporal_coverage = self.temporal_coverage
+            spatial_coverage = self.spatial_coverage
+
+            if temporal_coverage or spatial_coverage:
+                if temporal_coverage:
                     temp_action = update_action.format(logical_file_class_name, self.logical_file.id,
-                                                       element_name, self.temporal_coverage.id)
+                                                       element_name, temporal_coverage.id)
                     temp_cov_form.action = temp_action
                 else:
                     temp_action = create_action.format(logical_file_class_name, self.logical_file.id,
                                                        element_name)
                     temp_cov_form.action = temp_action
 
-                if self.spatial_coverage:
+                if spatial_coverage:
                     spatial_action = update_action.format(logical_file_class_name, self.logical_file.id,
-                                                          element_name, self.spatial_coverage.id)
+                                                          element_name, spatial_coverage.id)
                     spatial_cov_form.action = spatial_action
                 else:
                     spatial_action = create_action.format(logical_file_class_name, self.logical_file.id,
@@ -181,7 +184,7 @@ class GenericFileMetaData(GenericFileMetaDataMixin):
 class GenericLogicalFile(AbstractLogicalFile):
     """ Each resource file is assigned an instance of this logical file type on upload to
     Composite Resource """
-    metadata = models.OneToOneField(GenericFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
+    metadata = models.OneToOneField(GenericFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "genericData"
 
     @classmethod

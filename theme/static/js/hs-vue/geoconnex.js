@@ -1255,13 +1255,11 @@ const geoconnexApp = new Vue({
         url: url,
       });
       const contexts = featureJsonLd["@context"];
-      let nameField = "NAME";
       for (let context of contexts) {
-        nameField =
-          Object.keys(context).find((key) => context[key] === "schema:name") ||
-          "NAME";
+        const nameField = Object.keys(context).find((key) => context[key] === "schema:name");
+        if (nameField) return nameField;
       }
-      return nameField;
+      return "NAME";
     },
     async getFeatureProperties(feature) {
       const geoconnexApp = this;

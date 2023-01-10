@@ -5,7 +5,6 @@ import tempfile
 import shutil
 
 from rest_framework import status
-from datetime import datetime
 
 from hs_core.hydroshare import resource
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
@@ -79,7 +78,7 @@ class TestResourceFile(HSRESTTestCase):
     def test_get_resource_file(self):
         files = (MyTemporaryUploadedFile(file=open(self.txt_file_path, 'rb'), name=self.txt_file_path))
         resource.add_resource_files(self.pid, files)
-        file_response = self.getResourceFile(self.pid, "text.txt")
+        _ = self.getResourceFile(self.pid, "text.txt")
 
     def test_create_resource_file(self):
         # Make a new text file
@@ -127,7 +126,7 @@ class TestResourceFile(HSRESTTestCase):
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        url2 = str.format('/hsapi/resource/{}/folders/folder/path/', self.pid )
+        url2 = str.format('/hsapi/resource/{}/folders/folder/path/', self.pid)
         response = self.client.get(url2, {})
         content = json.loads(response.content.decode())
         self.assertEqual(len(content['files']), 1)

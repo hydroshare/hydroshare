@@ -9,7 +9,6 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.template import Template, Context
 from django.utils.html import strip_tags
-# from dominate.tags import legend, table, tbody, tr, th, div
 from dominate import tags as html_tags
 from osgeo import ogr, osr
 from rdflib import RDF, BNode, Literal
@@ -244,8 +243,8 @@ class GeographicFeatureMetaDataMixin(models.Model):
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(GeographicFeatureMetaDataMixin, self). \
             get_required_missing_elements()
-        if not (self.coverages.all().filter(type='box').first() or
-                self.coverages.all().filter(type='point').first()):
+        if not (self.coverages.all().filter(type='box').first()
+                or self.coverages.all().filter(type='point').first()):
             missing_required_elements.append('Spatial Coverage')
         if not self.originalcoverage:
             missing_required_elements.append('Spatial Reference')
@@ -398,7 +397,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
-    metadata = models.OneToOneField(GeoFeatureFileMetaData, on_delete=models.CASCADE,  related_name="logical_file")
+    metadata = models.OneToOneField(GeoFeatureFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "GeographicFeature"
 
     @classmethod
@@ -902,7 +901,7 @@ def extract_metadata(shp_file_full_path):
 
         metadata_dict["geometryinformation"] = geometryinformation
         return metadata_dict
-    except:
+    except: # noqa
         raise ValidationError("Parsing of shapefiles failed!")
 
 
@@ -1069,7 +1068,7 @@ def parse_shp_xml(shp_xml_full_path):
 
                         title_max_length = Title._meta.get_field('value').max_length
                         if len(title_value) > title_max_length:
-                            title_value = title_value[:title_max_length-1]
+                            title_value = title_value[:title_max_length - 1]
                         title = {'title': {'value': title_value}}
                         metadata.append(title)
 

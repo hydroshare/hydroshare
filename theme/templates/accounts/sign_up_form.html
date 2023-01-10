@@ -77,7 +77,8 @@
 
           {#        State       #}
           <div class="form-group">
-            <input id="id_state" class="form-control form-required" name="state" placeholder="State/Province *">
+            <small class="text-muted">State/Region</small>
+            <select id="id_state" class="form-control bfh-states" name="state" data-country="id_country"></select>
           </div>
         </div>
     </div>
@@ -149,9 +150,9 @@
             var pwconfirm = $("#id_password2").val();
             // These are the required form fields
             var requiredFieldsToCheck = ["#id_username", "#id_email", "#id_password1",
-                "#id_password2",  "[name='organization']", "#id_country", "#id_state"];
+                "#id_password2",  "[name='organization']", "#id_country"];
             var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', "Organization",
-                "Country", "State/Province"];
+                "Country", "State/Region"];
             var empty = false;
             var missingFields = 'Data missing for:';
             var missingFieldCount = 0;
