@@ -70,18 +70,6 @@
   </tbody>
 </table>
 
-<div>
-    <h2>Non Preferred Paths</h2>
-    {% if non_preferred_paths %}
-     <ul>
-     {% for path in non_preferred_paths %}
-         <li>{{ path }}</li>
-     {% endfor %}
-     </ul>
-    {% else %}
-        <p>No non-preferred paths found</p>
-    {% endif %}
-</div>
 <div id="irods-issues">
   <h2>iRODs Issues</h2>
   <p class="loading">Debugging. Please wait...</p>
