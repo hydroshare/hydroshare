@@ -2620,3 +2620,17 @@ def my_resources(request, *args, **kwargs):
                 "trows": trows,
             }
         )
+
+
+def get_non_preferred_paths(request, shortkey):
+    resource, _, _ = authorize(request, shortkey,
+                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+
+    try:
+        non_preferred_paths = resource.get_non_preferred_path_names()
+    except Exception as ex:
+        data = {"status": "ERROR", "error": str(ex)}
+        return JsonResponse(data)
+
+    data = {"status": "SUCCESS", "non_preferred_paths": non_preferred_paths}
+    return JsonResponse(data)
