@@ -362,6 +362,10 @@
         .title-builder-input {
             margin-top: 1em;
         }
+        .path-align {
+          word-wrap: break-word;
+          white-space: normal !important;
+        }
     </style>
 
     <script>
@@ -395,6 +399,9 @@
                                 list.appendChild(listItem);
                             }
                             modalBody.append(list);
+                            modalBody.find("ul").children().each(function () {
+                                $(this).find("code").addClass("path-align");
+                            });
                         }
                     } else if (json_response.status === "ERROR") {
                         console.log(json_response.error);
