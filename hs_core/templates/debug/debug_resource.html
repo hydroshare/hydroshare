@@ -71,7 +71,7 @@
 </table>
 
 <div id="non-preferred-paths">
-    <h2>Non Preferred Paths</h2>
+    <h2>Non Preferred Path Names</h2>
     <p class="loading">Debugging. Please wait...</p>
 </div>
 <div id="irods-issues">
@@ -149,7 +149,7 @@
       if (response.status === "SUCCESS") {
         if (response.non_preferred_paths.length) {
           let title = document.createElement("p");
-          let titleText = document.createTextNode("The following non preferred paths were found: ");
+          let titleText = document.createTextNode("The following non-preferred path names were found: ");
           title.appendChild(titleText);
           nonPreferredPathsDiv.appendChild(title);
 
@@ -170,7 +170,7 @@
         else {
           // No issues found
           let title = document.createElement("P");
-          let titleText = document.createTextNode("No non preferred paths found.");
+          let titleText = document.createTextNode("No non-preferred path names found.");
           title.appendChild(titleText);
           nonPreferredPathsDiv.appendChild(title);
           // Remove loading indicator
@@ -190,7 +190,7 @@
       else {
         // Failed to retrieve data
         let title = document.createElement("P");
-        let titleText = document.createTextNode("Failed to get non preferred paths.");
+        let titleText = document.createTextNode("Failed to get non-preferred path names.");
         title.appendChild(titleText);
         nonPreferredPathsDiv.appendChild(title);
         // Remove loading indicator
