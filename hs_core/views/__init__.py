@@ -2623,8 +2623,17 @@ def my_resources(request, *args, **kwargs):
 
 
 def get_non_preferred_paths(request, shortkey):
-    resource, _, _ = authorize(request, shortkey,
-                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    try:
+        resource, _, _ = authorize(request, shortkey,
+                                   needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    except ObjectDoesNotExist:
+        err_message = f"No resource was found for id:{shortkey}"
+        data = {"status": "ERROR", "error": err_message}
+        return JsonResponse(data)
+    except PermissionDenied:
+        err_message = "You don't have permission for this resource"
+        data = {"status": "ERROR", "error": err_message}
+        return JsonResponse(data)
 
     try:
         non_preferred_paths = resource.get_non_preferred_path_names()
