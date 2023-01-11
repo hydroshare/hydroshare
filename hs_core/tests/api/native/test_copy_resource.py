@@ -41,7 +41,7 @@ class TestCopyResource(TestCase):
             groups=[]
         )
 
-        # create a generic resource
+        # create a composite resource
         self.res = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.owner,

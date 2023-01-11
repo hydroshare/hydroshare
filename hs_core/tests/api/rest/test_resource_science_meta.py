@@ -39,7 +39,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # content = json.loads(response.content.decode())
 
-    def test_put_scimeta_generic_resource(self):
+    def test_put_scimeta_composite_resource(self):
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
         put_data = {
             "title": "New Title",
@@ -140,7 +140,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(str(self.resource.metadata.description), "New Description")
         self.assertEqual(str(self.resource.metadata.title), "New Title")
 
-    def test_put_scimeta_generic_resource_double_none(self):
+    def test_put_scimeta_composite_resource_double_none(self):
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
         put_data = {
             "title": "New Title",
