@@ -56,7 +56,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res = hydroshare.create_resource(
             resource_type="CompositeResource",
             owner=self.user,
-            title="Generic resource",
+            title="A Resource",
             keywords=["kw1", "kw2"],
         )
 
@@ -89,7 +89,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         self.assertEqual(
             self.res.metadata.title.value,
-            "Generic resource",
+            "A Resource",
             msg="resource title did not match",
         )
 
