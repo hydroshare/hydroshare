@@ -28,7 +28,7 @@ class TestReorderAuthorsCommand(TestCase):
         self.res = hydroshare.create_resource(
             resource_type="CompositeResource",
             owner=self.user,
-            title="Generic resource",
+            title="A resource",
             keywords=["kw1", "kw2"],
         )
 

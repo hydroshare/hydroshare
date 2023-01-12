@@ -1377,10 +1377,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             self.res.short_id,
             "description",
             self.res.metadata.description.id,
-            abstract="Updated generic resource",
+            abstract="Updated resource",
         )
         self.assertEqual(
-            self.res.metadata.description.abstract, "Updated generic resource"
+            self.res.metadata.description.abstract, "Updated resource"
         )
 
         # test adding a 2nd description element - should raise an exception
@@ -2514,7 +2514,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertRaises(
             Exception,
             lambda: resource.create_metadata_element(
-                self.res.short_id, "type", url="http://hydroshare.org/generic"
+                self.res.short_id, "type", url="http://hydroshare.org/composite"
             ),
         )
 
@@ -2523,11 +2523,11 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             self.res.short_id,
             "type",
             self.res.metadata.type.id,
-            url="http://hydroshare2.org/generic",
+            url="http://hydroshare2.org/composite",
         )
         self.assertEqual(
             self.res.metadata.type.url,
-            "http://hydroshare2.org/generic",
+            "http://hydroshare2.org/composite",
             msg="Resource type url did not match.",
         )
 
@@ -2549,7 +2549,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             self.res.short_id,
             "title",
             self.res.metadata.title.id,
-            value="Test generic resource",
+            value="Test resource",
         )
 
         # add another creator with all sub_elements

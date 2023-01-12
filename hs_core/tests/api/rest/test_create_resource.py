@@ -322,7 +322,7 @@ class TestCreateResource(HSRESTTestCase):
         title = 'My Test resource'
         # test title
         metadata = []
-        metadata.append({'title': {'value': "This is a generic resource"}})
+        metadata.append({'title': {'value': "This is a resource"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
@@ -363,7 +363,7 @@ class TestCreateResource(HSRESTTestCase):
 
         # test type
         metadata = []
-        metadata.append({'type': {'url': "http://hydroshare.org/generic"}})
+        metadata.append({'type': {'url': "http://hydroshare.org/composite"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 

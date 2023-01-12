@@ -13,7 +13,7 @@ from hs_core.hydroshare.resource import update_quota_usage
 
 class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
     """
-    This TestCase class tests all federation zone related functionalities for generic resource,
+    This TestCase class tests all federation zone related functionalities for composite resource,
     in particular, only file operation-related functionalities need to be tested, including
     creating resources in the federated user zone, adding files to resources in the user zone,
     creating a new version of a resource in the user zone, deleting resources in the user zone,
@@ -79,7 +79,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         res = hydroshare.resource.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
-            title='My Test Generic Resource in HydroShare Zone'
+            title='My Test Resource in HydroShare Zone'
         )
         self.assertEqual(res.files.all().count(), 0,
                          msg="Number of content files is not equal to 0")

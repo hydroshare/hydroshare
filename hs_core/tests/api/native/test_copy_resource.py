@@ -59,26 +59,26 @@ class TestCopyResource(TestCase):
 
         hydroshare.add_resource_files(self.res.short_id, self.test_file1, self.test_file2)
 
-        # create a generic empty resource with one license that prohibits derivation
+        # create a composite empty resource with one license that prohibits derivation
         statement = 'This resource is shared under the Creative Commons Attribution-NoDerivs CC ' \
                     'BY-ND.'
         url = 'http://creativecommons.org/licenses/by-nd/4.0/'
         metadata = []
         metadata.append({'rights': {'statement': statement, 'url': url}})
-        self.res_generic_lic_nd = hydroshare.create_resource(
+        self.res_composite_lic_nd = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.owner,
             title='Test Resource',
             metadata=metadata
         )
 
-        # create a generic empty resource with another license that prohibits derivation
+        # create a composite empty resource with another license that prohibits derivation
         statement = 'This resource is shared under the Creative Commons ' \
                     'Attribution-NoCommercial-NoDerivs CC BY-NC-ND.'
         url = 'http://creativecommons.org/licenses/by-nc-nd/4.0/'
         metadata = []
         metadata.append({'rights': {'statement': statement, 'url': url}})
-        self.res_generic_lic_nc_nd = hydroshare.create_resource(
+        self.res_composite_lic_nc_nd = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.owner,
             title='Test Resource',
@@ -94,10 +94,10 @@ class TestCopyResource(TestCase):
         super(TestCopyResource, self).tearDown()
         if self.res:
             self.res.delete()
-        if self.res_generic_lic_nd:
-            self.res_generic_lic_nd.delete()
-        if self.res_generic_lic_nc_nd:
-            self.res_generic_lic_nc_nd.delete()
+        if self.res_composite_lic_nd:
+            self.res_composite_lic_nd.delete()
+        if self.res_composite_lic_nc_nd:
+            self.res_composite_lic_nc_nd.delete()
         self.test_file1.close()
         os.remove(self.test_file1.name)
         self.test_file2.close()
@@ -112,12 +112,12 @@ class TestCopyResource(TestCase):
                                              action='copy')
         # ensure resource cannot be copied if the license does not allow derivation by a non-owner
         with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_generic_lic_nd.short_id,
+            hydroshare.create_empty_resource(self.res_composite_lic_nd.short_id,
                                              self.nonowner,
                                              action='copy')
 
         with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_generic_lic_nc_nd.short_id,
+            hydroshare.create_empty_resource(self.res_composite_lic_nc_nd.short_id,
                                              self.nonowner,
                                              action='copy')
 

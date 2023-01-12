@@ -30,7 +30,7 @@ class TestCopyResource(MockIRODSTestCaseMixin, ViewTestCase):
         self.gen_res = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
-            title='Generic Resource Key/Value Metadata Testing'
+            title='Resource Key/Value Metadata Testing'
         )
 
     def tearDown(self):

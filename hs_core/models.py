@@ -4213,7 +4213,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """Parse the input *metadata* dict to needed format and store it in
         *parsed_metadata* list
         :param  metadata: a dict of metadata that needs to be parsed to get the metadata in the
-        format needed for updating the metadata elements supported by generic resource type
+        format needed for updating the metadata elements supported by resource type
         :param  parsed_metadata: a list of dicts that will be appended with parsed data
         """
 
