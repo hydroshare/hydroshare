@@ -8,6 +8,7 @@ $(document).ready(function () {
       isSaving: false,
       isApproving: false,
       isRejecting: false,
+      rejectReason: '',
       userCardSelected: {
         user_type: null,
         access: null,
@@ -66,18 +67,14 @@ $(document).ready(function () {
         this.isApproving = false
       },
       async onReject() {
+        if (!this.rejectReason) {
+          return false
+        }
         this.isRejecting = true
-        const url = `/access/_internal/crequest/decline/${this.request.id}/`;
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            // Do not set content-type header. The browser will set it for you.
-            // https://muffinman.io/blog/uploading-files-using-fetch-multipart-form-data/
-            'X-CSRFToken': getCookie('csrftoken')
-          }
-        });
+        const response = await $.post(`/access/_internal/crequest/decline/${this.request.id}/`, { reason: this.rejectReason} )
+        console.log(response)
 
-        if (response.status === 200) {
+        if (response.message === 'Request declined') {
           this.$set(this.request.community_to_approve, 'status', 'Rejected');
           // Redirect to requests page
           window.location.href = "/communities/manage-requests/";

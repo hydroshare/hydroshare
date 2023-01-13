@@ -69,11 +69,13 @@
           <button @click="onApprove" :disabled="isApproving || isRejecting" type="button" class="btn btn-success">
             ${ isApproving ? 'Approving Community...' : 'Approve Community' }
           </button>
-          <button @click="onReject" :disabled="isApproving || isRejecting" type="button" class="btn btn-danger">
+          <button data-toggle="modal" data-target="#reject-new-community-creation-request-dialog" :disabled="isApproving || isRejecting" type="button" class="btn btn-danger">
             ${ isRejecting ? 'Rejecting Community...' : 'Reject Community' }
           </button>
         </template>
       </template>
+
+      {% include 'hs_communities/reject-community-creation-request-modal.html' %}
     </div>
   </div>
 </form>

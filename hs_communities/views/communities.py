@@ -276,7 +276,7 @@ class MyCommunitiesView(TemplateView):
                 communities_member_of.append(community)
 
         # get the list of any pending community create requests by this user
-        user_pending_requests = user.uaccess.pending_community_requests()
+        user_pending_requests = [cr_json(c) for c in user.uaccess.pending_community_requests()] 
 
         user_is_admin = False
         if user:

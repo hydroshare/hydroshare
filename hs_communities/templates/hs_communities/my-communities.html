@@ -7,7 +7,7 @@
 {% block main %}
     {% include 'hs_communities/communities-nav.html' with active='my_communities' %}
     <div class="container">
-        <div class="row">
+        <div id="my-communities-app" class="row">
             <div class="col-sm-12">
                 <h2 class="page-title">My Communities</h2>
             </div>
@@ -15,11 +15,47 @@
                 <a class="btn btn-success" data-toggle="modal" data-target="#request-new-community-dialog">
                     <i class="fa fa-plus"></i> Request a New Community
                 </a>
-                {# Pabitra: Here is how you access the pending requests  #}
-                {% for pr in user_pending_requests %}
-                    {{ pr.community_to_approve.name }}
-                    <br>
-                {% endfor %}
+
+                <br>
+                <br>
+
+                <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Requests</h4>
+                <i v-if="!pendingRequests.length">No pending requests.</i>
+                <template v-else>
+                    <div v-for="request of pendingRequests" class="request-block">
+                        <h5><a :href="`{% url "manage_requests" %}${request.id}`">${ request.community_to_approve.name }</a></h5>
+                        <div class="text-muted">${ request.date_requested }</div>
+                        <br>
+                        <button type="submit" class="btn btn-warning" @click="targetRequest = request" :disabled="isRemoving[request.id]"
+                            data-toggle="modal" data-target="#remove-community-request-modal">Cancel Request</button>
+                    </div>
+                    <!-- Remove Community Request Modal -->
+                    <div class="modal fade" id="remove-community-request-modal" tabindex="-1" role="dialog"
+                        aria-labelledby="removeGroupLabel">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content" v-if="targetRequest">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal"
+                                            aria-label="Close"><span aria-hidden="true">&times;</span>
+                                    </button>
+                                    <h4 class="modal-title" id="removeGroupLabel">Cancel Request</h4>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want cancel this request?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                                        Close
+                                    </button>
+                                    <button class="btn btn-danger"
+                                            @click="remove(targetRequest.id)" :disabled="isRemoving[targetRequest.id]"
+                                            value="clear">Cancel Request
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </div>
             <div class="col-sm-8">
                 <div class="row">
@@ -66,5 +102,10 @@
 
 {% block extra_js %}
     {{ block.super }}
+    <script type="text/javascript">
+        // Constants here
+        const PENDING_REQUESTS = {{ user_pending_requests|safe }}
+      </script>
     <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/my-communities.js' %}"></script>
 {% endblock %}

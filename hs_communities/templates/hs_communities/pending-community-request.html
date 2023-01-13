@@ -6,7 +6,8 @@
 
 {% block main %}
     {% include 'hs_communities/communities-nav.html' with active='manage_requests' %}
-    {# Needs to be included first so it's available before other instances initialize #}
+
+    {# Profile card component needs to be included first so it's available before other instances initialize #}
     {% include "includes/profile-card.html" %}
     <div id="pending-community-request-app" class="container">
         <div class="row">
@@ -28,7 +29,11 @@
 
                 <div v-if="request.status === 'Approved'" class="alert alert-success col-xs-12 col-sm-7">This request has been approved.</div>
     
-                <div v-else-if="request.status === 'Rejected'" class="alert alert-success col-xs-12 col-sm-7">This request has been rejected.</div>
+                <div v-else-if="request.status === 'Rejected'" class="alert alert-danger col-xs-12 col-sm-7">
+                  <div>This request has been rejected.</div>
+                  <br>
+                  <p><b>Reason for rejection:</b> ${request.decline_reason}</p>
+                </div>
                 
                 <template>
                     {% include 'hs_communities/pending-community-request-form.html' %}
