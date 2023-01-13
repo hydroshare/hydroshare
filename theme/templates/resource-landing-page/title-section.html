@@ -159,7 +159,7 @@
     </div>
     <div id="non-preferred-paths">
         <div class="col-sm-12">
-            <div id="non-preferred-paths" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <div id="non-preferred-paths" class="alert alert-warning alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
             <p>This resource contains some files/folders that have non-preferred characters in their name.
@@ -368,57 +368,8 @@
         }
     </style>
 
-    <script>
-        let nonPreferredPathDiv = $("#non-preferred-paths");
-        nonPreferredPathDiv.hide();
-        if (CAN_CHANGE && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
-            let url = "/hsapi/_internal/" + SHORT_ID + "/non-preferred-paths/";
-
-            $.ajax({
-                type: "GET",
-                url: url,
-                dataType: 'json',
-                data: {},
-                async: true,
-                success: function (result) {
-                    $("#checking-for-paths").hide();
-                    result = JSON.stringify(result);
-                    let json_response = JSON.parse(result);
-                    if (json_response.status === "SUCCESS") {
-                        //$("#checking-for-paths").hide();
-                        if (json_response.non_preferred_paths.length) {
-                            nonPreferredPathDiv.show();
-                            let modalBody = nonPreferredPathDiv.find(".modal-body");
-                            let list = document.createElement("UL");
-                            for (let i = 0; i < json_response.non_preferred_paths.length; i++) {
-                                let listItem = document.createElement("LI");
-                                let code = document.createElement("CODE");
-                                let itemText = document.createTextNode(json_response.non_preferred_paths[i]);
-                                code.appendChild(itemText);
-                                listItem.appendChild(code);
-                                list.appendChild(listItem);
-                            }
-                            modalBody.append(list);
-                            modalBody.find("ul").children().each(function () {
-                                $(this).find("code").addClass("path-align");
-                            });
-                        }
-                    } else if (json_response.status === "ERROR") {
-                        console.log(json_response.error);
-                    }
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    $("#checking-for-paths").hide();
-                    nonPreferredPathDiv.hide();
-                }
-            });
-        }
-        else {
-           $("#checking-for-paths").hide();
-           nonPreferredPathDiv.hide();
-        }
-    </script>
     {#        vue-mover uses Sortable.min.js#}
+    <script src="{% static 'js/non_preferred_paths_in_resource.js' %}"></script>
     <script src="{% static 'js/Sortable.min.js' %}"></script>
     <script src="{% static 'js/vue-mover.js' %}"></script>
 {% endblock %}
