@@ -81,24 +81,24 @@
 
 <script>
   // Load async data for iRODs issues found
-  let xhttp = new XMLHttpRequest();
+  const xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
-      let response = JSON.parse(this.responseText);
-      let irodsIssuesDiv = document.getElementById("irods-issues");
+      const response = JSON.parse(this.responseText);
+      const irodsIssuesDiv = document.getElementById("irods-issues");
       if (response.status === "SUCCESS") {
         if (response.irods_issues.length) {
-          let title = document.createElement("p");
-          let titleText = document.createTextNode("iRODs issues found: ");
+          const title = document.createElement("p");
+          const titleText = document.createTextNode("iRODs issues found: ");
           title.appendChild(titleText);
           irodsIssuesDiv.appendChild(title);
 
-          let list = document.createElement("UL");
+          const list = document.createElement("UL");
 
           for (let i = 0; i < response.irods_issues.length; i++) {
-            let listItem = document.createElement("LI");
-            let code = document.createElement("CODE");
-            let itemText = document.createTextNode(response.irods_issues[i]);
+            const listItem = document.createElement("LI");
+            const code = document.createElement("CODE");
+            const itemText = document.createTextNode(response.irods_issues[i]);
             code.appendChild(itemText);
             listItem.appendChild(code);
             list.appendChild(listItem);
@@ -109,8 +109,8 @@
         }
         else {
           // No issues found
-          let title = document.createElement("P");
-          let titleText = document.createTextNode("No iRODs issues found.");
+          const title = document.createElement("P");
+          const titleText = document.createTextNode("No iRODs issues found.");
           title.appendChild(titleText);
           irodsIssuesDiv.appendChild(title);
           // Remove loading indicator
@@ -119,7 +119,7 @@
       }
       else if (response.status === null) {
         // Resend the request
-        let url = this.responseURL;
+        const url = this.responseURL;
         setTimeout(function () {
           console.log("Resending...");
           xhttp.open("GET", url, true);
@@ -128,8 +128,8 @@
       }
       else {
         // Failed to retrieve data
-        let title = document.createElement("P");
-        let titleText = document.createTextNode("Failed to get iRODS issues.");
+        const title = document.createElement("P");
+        const titleText = document.createTextNode("Failed to get iRODS issues.");
         title.appendChild(titleText);
         irodsIssuesDiv.appendChild(title);
         // Remove loading indicator
@@ -141,25 +141,25 @@
   xhttp.send();
 
   // Load async data for non preferred paths in the resource
-  let xhttp_path_check = new XMLHttpRequest();
+  const xhttp_path_check = new XMLHttpRequest();
   xhttp_path_check.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
-          let response = JSON.parse(this.responseText);
-          let nonPreferredPathsDiv = document.getElementById("non-preferred-paths");
-          let title = document.createElement("p");
+          const response = JSON.parse(this.responseText);
+          const nonPreferredPathsDiv = document.getElementById("non-preferred-paths");
+          const title = document.createElement("p");
           if (response.status === "SUCCESS") {
               // Remove loading indicator
               document.querySelector("#non-preferred-paths > .loading").remove();
               if (response.non_preferred_paths.length) {
-                  let titleText = document.createTextNode("The following non-preferred path names were found: ");
+                  const titleText = document.createTextNode("The following non-preferred path names were found: ");
                   title.appendChild(titleText);
                   nonPreferredPathsDiv.appendChild(title);
-                  let list = document.createElement("UL");
+                  const list = document.createElement("UL");
 
                   for (let i = 0; i < response.non_preferred_paths.length; i++) {
-                      let listItem = document.createElement("LI");
-                      let code = document.createElement("CODE");
-                      let itemText = document.createTextNode(response.non_preferred_paths[i]);
+                      const listItem = document.createElement("LI");
+                      const code = document.createElement("CODE");
+                      const itemText = document.createTextNode(response.non_preferred_paths[i]);
                       code.appendChild(itemText);
                       listItem.appendChild(code);
                       list.appendChild(listItem);
@@ -167,13 +167,13 @@
                   nonPreferredPathsDiv.appendChild(list);
               } else {
                   // No non-preferred paths found
-                  let titleText = document.createTextNode("No non-preferred path names found.");
+                  const titleText = document.createTextNode("No non-preferred path names found.");
                   title.appendChild(titleText);
                   nonPreferredPathsDiv.appendChild(title);
               }
           } else if (response.status === null) {
               // Resend the request
-              let url = this.responseURL;
+              const url = this.responseURL;
 
               setTimeout(function () {
                   console.log("Resending...");
@@ -182,7 +182,7 @@
               }, 1000);
           } else {  //response.status === "ERROR"
               // Failed to retrieve data
-              let titleText = document.createTextNode("Failed to get non-preferred path names.");
+              const titleText = document.createTextNode("Failed to get non-preferred path names.");
               title.appendChild(titleText);
               nonPreferredPathsDiv.appendChild(title);
 
