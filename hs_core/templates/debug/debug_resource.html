@@ -142,63 +142,55 @@
 
   // Load async data for non preferred paths in the resource
   let xhttp_path_check = new XMLHttpRequest();
-   xhttp_path_check.onreadystatechange = function () {
-    if (this.readyState == 4 && this.status == 200) {
-      let response = JSON.parse(this.responseText);
-      let nonPreferredPathsDiv = document.getElementById("non-preferred-paths");
-      if (response.status === "SUCCESS") {
-        if (response.non_preferred_paths.length) {
+  xhttp_path_check.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+          let response = JSON.parse(this.responseText);
+          let nonPreferredPathsDiv = document.getElementById("non-preferred-paths");
           let title = document.createElement("p");
-          let titleText = document.createTextNode("The following non-preferred path names were found: ");
-          title.appendChild(titleText);
-          nonPreferredPathsDiv.appendChild(title);
+          if (response.status === "SUCCESS") {
+              // Remove loading indicator
+              document.querySelector("#non-preferred-paths > .loading").remove();
+              if (response.non_preferred_paths.length) {
+                  let titleText = document.createTextNode("The following non-preferred path names were found: ");
+                  title.appendChild(titleText);
+                  nonPreferredPathsDiv.appendChild(title);
+                  let list = document.createElement("UL");
 
-          let list = document.createElement("UL");
+                  for (let i = 0; i < response.non_preferred_paths.length; i++) {
+                      let listItem = document.createElement("LI");
+                      let code = document.createElement("CODE");
+                      let itemText = document.createTextNode(response.non_preferred_paths[i]);
+                      code.appendChild(itemText);
+                      listItem.appendChild(code);
+                      list.appendChild(listItem);
+                  }
+                  nonPreferredPathsDiv.appendChild(list);
+              } else {
+                  // No non-preferred paths found
+                  let titleText = document.createTextNode("No non-preferred path names found.");
+                  title.appendChild(titleText);
+                  nonPreferredPathsDiv.appendChild(title);
+              }
+          } else if (response.status === null) {
+              // Resend the request
+              let url = this.responseURL;
 
-          for (let i = 0; i < response.non_preferred_paths.length; i++) {
-            let listItem = document.createElement("LI");
-            let code = document.createElement("CODE");
-            let itemText = document.createTextNode(response.non_preferred_paths[i]);
-            code.appendChild(itemText);
-            listItem.appendChild(code);
-            list.appendChild(listItem);
+              setTimeout(function () {
+                  console.log("Resending...");
+                  xhttp_path_check.open("GET", url, true);
+                  xhttp_path_check.send();
+              }, 1000);
+          } else {  //response.status === "ERROR"
+              // Failed to retrieve data
+              let titleText = document.createTextNode("Failed to get non-preferred path names.");
+              title.appendChild(titleText);
+              nonPreferredPathsDiv.appendChild(title);
+
+              // Remove loading indicator
+              document.querySelector("#non-preferred-paths > .loading").remove();
           }
-          nonPreferredPathsDiv.appendChild(list);
-          // Remove loading indicator
-          document.querySelector("#non-preferred-paths > .loading").remove();
-        }
-        else {
-          // No issues found
-          let title = document.createElement("P");
-          let titleText = document.createTextNode("No non-preferred path names found.");
-          title.appendChild(titleText);
-          nonPreferredPathsDiv.appendChild(title);
-          // Remove loading indicator
-          document.querySelector("#non-preferred-paths > .loading").remove();
-        }
       }
-      else if (response.status === null) {
-        // Resend the request
-        let url = this.responseURL;
-
-        setTimeout(function () {
-          console.log("Resending...");
-          xhttp_path_check.open("GET", url, true);
-          xhttp_path_check.send();
-        }, 1000);
-      }
-      else {
-        // Failed to retrieve data
-        let title = document.createElement("P");
-        let titleText = document.createTextNode("Failed to get non-preferred path names.");
-        title.appendChild(titleText);
-        nonPreferredPathsDiv.appendChild(title);
-        // Remove loading indicator
-        document.querySelector("#non-preferred-paths > .loading").remove();
-      }
-    }
   };
   xhttp_path_check.open("GET", "non-preferred-paths/", true);
   xhttp_path_check.send();
-
 </script>
