@@ -55,7 +55,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a resource 'bikes'
         self.bikes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.george,
             title='Bikes',
             metadata=[],
@@ -223,7 +223,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             is_equal_to_as_set(
                 george.uaccess.view_resources,
                 [bikes]))
-        trikes = hydroshare.create_resource(resource_type='GenericResource',
+        trikes = hydroshare.create_resource(resource_type='CompositeResource',
                                             owner=self.george,
                                             title='Trikes',
                                             metadata=[],)
@@ -239,7 +239,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             is_equal_to_as_set(
                 george.uaccess.owned_resources,
                 [bikes]))
-        trikes = hydroshare.create_resource(resource_type='GenericResource',
+        trikes = hydroshare.create_resource(resource_type='CompositeResource',
                                             owner=self.george,
                                             title='Trikes',
                                             metadata=[],)
@@ -255,7 +255,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             is_equal_to_as_set(
                 george.uaccess.edit_resources,
                 [bikes]))
-        trikes = hydroshare.create_resource(resource_type='GenericResource',
+        trikes = hydroshare.create_resource(resource_type='CompositeResource',
                                             owner=self.george,
                                             title='Trikes',
                                             metadata=[],)

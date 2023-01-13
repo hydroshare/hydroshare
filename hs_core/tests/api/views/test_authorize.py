@@ -24,7 +24,7 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             groups=[])
         self.res = resource.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource'
         )

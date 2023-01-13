@@ -1,10 +1,11 @@
 import os
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 
 from hs_core import hydroshare
+from hs_core.models import BaseResource
 
 
 class TestTickets(TestCase):
@@ -21,7 +22,7 @@ class TestTickets(TestCase):
         )
 
         self.res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'test resource',
         )
@@ -42,6 +43,10 @@ class TestTickets(TestCase):
 
     def tearDown(self):
         super(TestTickets, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        self.res.delete()
+        BaseResource.objects.all().delete()
         self.test_file_1.close()
         os.remove(self.test_file_1.name)
 

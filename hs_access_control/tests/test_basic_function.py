@@ -60,7 +60,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a resource 'bikes'
         self.bikes = create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.george,
             title='Bikes',
             metadata=[],

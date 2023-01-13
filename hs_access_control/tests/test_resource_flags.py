@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group
 from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
@@ -64,14 +64,14 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.bones = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='all about dog bones',
             metadata=[],
         )
 
         self.chewies = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='all about dog chewies',
             metadata=[],
@@ -185,7 +185,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(
             is_equal_to_as_set(
                 [bones],
-                GenericResource.discoverable_resources.all()))
+                BaseResource.discoverable_resources.all()))
 
     def test_06_not_discoverable(self):
         """Resource can be made not discoverable and not public"""
@@ -202,7 +202,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(bones.raccess.allow_private_sharing)
         self.assertTrue(bones.raccess.shareable)
 
-        names = GenericResource.discoverable_resources.all()
+        names = BaseResource.discoverable_resources.all()
         self.assertEqual(names.count(), 0)
 
     def test_07_immutable(self):
@@ -278,11 +278,11 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(
             is_equal_to_as_set(
                 [chewies],
-                GenericResource.public_resources.all()))
+                BaseResource.public_resources.all()))
         self.assertTrue(
             is_equal_to_as_set(
                 [chewies],
-                GenericResource.discoverable_resources.all()))
+                BaseResource.discoverable_resources.all()))
 
         # can 'nobody' see the public resource owned by 'dog'
         # but not explicitly shared with 'nobody'.
@@ -318,11 +318,11 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         # static methods
         self.assertTrue(
             is_equal_to_as_set(
-                [], GenericResource.public_resources.all()))
+                [], BaseResource.public_resources.all()))
         self.assertTrue(
             is_equal_to_as_set(
                 [chewies],
-                GenericResource.discoverable_resources.all()))
+                BaseResource.discoverable_resources.all()))
 
         # can 'nobody' see the public resource owned by 'dog' but not
         # explicitly shared with 'nobody'.

@@ -410,7 +410,7 @@ def create_resource(
 
     3. resource_type is a string: see parameter list
 
-    :param resource_type: string. the type of the resource such as GenericResource
+    :param resource_type: string. the type of the resource such as CompositeResource
     :param owner: email address, username, or User instance. The owner of the resource
     :param title: string. the title of the resource
     :param edit_users: list of email addresses, usernames, or User instances who will be given edit

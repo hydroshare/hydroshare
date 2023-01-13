@@ -12,7 +12,7 @@ from .base import HSRESTTestCase
 class TestResourceList(HSRESTTestCase):
 
     def test_resource_list(self):
-        new_res = resource.create_resource('GenericResource',
+        new_res = resource.create_resource('CompositeResource',
                                            self.user,
                                            'My Test Resource')
         pid = new_res.short_id
@@ -25,12 +25,6 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['results'][0]['resource_id'], pid)
 
     def test_resource_list_by_type(self):
-        gen_res = resource.create_resource('GenericResource',
-                                           self.user,
-                                           'My Test Resource')
-        gen_pid = gen_res.short_id
-        self.resources_to_delete.append(gen_pid)
-
         raster = open('hs_core/tests/data/cea.tif', 'rb')
         comp_res = resource.create_resource('CompositeResource',
                                             self.user,
@@ -51,16 +45,11 @@ class TestResourceList(HSRESTTestCase):
         response = self.client.get('/hsapi/resource/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content.decode())
-        self.assertEqual(content['count'], 3)
+        self.assertEqual(content['count'], 2)
 
-        self.assertEqual(content['results'][0]['resource_id'], gen_pid)
-        self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
-        self.assertTrue(content['results'][0]['resource_url']
-                        .endswith(res_tail.format(res_id=gen_pid)))
-
-        self.assertEqual(content['results'][2]['resource_id'], app_pid)
-        self.assertTrue(content['results'][2]['resource_url'].startswith("http://"))
-        self.assertTrue(content['results'][2]['resource_url']
+        self.assertEqual(content['results'][1]['resource_id'], app_pid)
+        self.assertTrue(content['results'][1]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][1]['resource_url']
                         .endswith(res_tail.format(res_id=app_pid)))
 
         # Filter by type (single)
@@ -92,10 +81,10 @@ class TestResourceList(HSRESTTestCase):
                         .endswith(res_tail.format(res_id=app_pid)))
 
     def test_resource_list_by_keyword(self):
-        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')
-        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2')
-        gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3')
-        gen_res_four = resource.create_resource('GenericResource', self.user, 'Resource 2')
+        gen_res_one = resource.create_resource('CompositeResource', self.user, 'Resource 1')
+        gen_res_two = resource.create_resource('CompositeResource', self.user, 'Resource 2')
+        gen_res_three = resource.create_resource('CompositeResource', self.user, 'Resource 3')
+        gen_res_four = resource.create_resource('CompositeResource', self.user, 'Resource 2')
 
         self.resources_to_delete.append(gen_res_one.short_id)
         self.resources_to_delete.append(gen_res_two.short_id)
@@ -128,7 +117,7 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['count'], 2)
 
     def test_resource_list_obsolete(self):
-        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')
+        gen_res_one = resource.create_resource('CompositeResource', self.user, 'Resource 1')
         # make a new version of gen_res_one to make gen_res_one obsolete
         new_ver_gen_res_one = resource.create_empty_resource(gen_res_one.short_id, self.user)
 
@@ -274,13 +263,13 @@ class TestResourceList(HSRESTTestCase):
                                                    description='This is another great group',
                                                    purpose='To have fun',
                                                    auto_approve=True)
-        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1',
+        gen_res_one = resource.create_resource('CompositeResource', self.user, 'Resource 1',
                                                edit_groups=[group_one, group_two], view_groups=None)
-        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2',
+        gen_res_two = resource.create_resource('CompositeResource', self.user, 'Resource 2',
                                                edit_groups=None, view_groups=[group_one, group_two])
-        gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3',
+        gen_res_three = resource.create_resource('CompositeResource', self.user, 'Resource 3',
                                                  edit_groups=[group_one], view_groups=None)
-        gen_res_four = resource.create_resource('GenericResource', self.user, 'Resource 4',
+        gen_res_four = resource.create_resource('CompositeResource', self.user, 'Resource 4',
                                                 edit_groups=None, view_groups=None)
 
         self.groups_to_delete.append(group_one)
@@ -316,9 +305,9 @@ class TestResourceList(HSRESTTestCase):
 
     def test_resource_list_by_user(self):
         # HSRESTTestCase is forcing authentication of user, so we'll just test that user
-        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')
-        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2')
-        gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3')
+        gen_res_one = resource.create_resource('CompositeResource', self.user, 'Resource 1')
+        gen_res_two = resource.create_resource('CompositeResource', self.user, 'Resource 2')
+        gen_res_three = resource.create_resource('CompositeResource', self.user, 'Resource 3')
 
         self.resources_to_delete.append(gen_res_one.short_id)
         self.resources_to_delete.append(gen_res_two.short_id)
