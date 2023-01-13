@@ -408,7 +408,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                                               "will be shown below when you "
                                                                               "save metadata.")
 
-                                        with dom_tags.div(cls="control-group"):
+                                        with dom_tags.div(cls="form-group"):
                                             link = "https://help.hydroshare.org/modeling/" \
                                                    "model-instance-metadata-schema/"
                                             link_title = "Refer to Model Instance Metadata schema help page " \
