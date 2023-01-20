@@ -30,7 +30,7 @@ from django.forms.models import model_to_dict
 from django.utils.timezone import now
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
-import defusedxml.ElementTree as etree
+from lxml import etree
 from markdown import markdown
 from mezzanine.conf import settings as s
 from mezzanine.core.managers import PublishedManager
