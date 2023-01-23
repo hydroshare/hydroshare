@@ -180,8 +180,9 @@ class ModelProgramMetadataValidationForm(forms.Form):
         :returns   a dict object containing the validated json schema
         """
         json_schema, validation_errors = ModelProgramLogicalFile.validate_meta_schema(schema_string)
-        for err_msg in validation_errors:
-            self.add_error(field_name, err_msg)
+        if validation_errors:
+            err_message = ", ".join(validation_errors)
+            self.add_error(field_name, err_message)
         return json_schema
 
 

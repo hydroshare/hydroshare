@@ -55,8 +55,7 @@ class Command(BaseCommand):
 
                 # Pabitra: Not sure why are we skipping other resource types
                 # Alva: cannot preserve file integrity constraints for other file types.
-                if r.resource_type != 'CompositeResource' and \
-                   r.resource_type != 'GenericResource':
+                if r.resource_type != 'CompositeResource':
                     print(("resource {} has type {}: skipping".format(r.short_id,
                                                                       r.resource_type)))
                 else:
@@ -100,8 +99,7 @@ class Command(BaseCommand):
             for r in BaseResource.objects.all():
                 # Pabitra: Not sure why are we skipping other resource types
                 # Alva: cannot preserve file integrity constraints for other file types.
-                if r.resource_type == 'CompositeResource' or \
-                   r.resource_type == 'GenericResource':
+                if r.resource_type == 'CompositeResource':
                     print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
                           .format(r.short_id, str(r.files.all().count())))
                     try:

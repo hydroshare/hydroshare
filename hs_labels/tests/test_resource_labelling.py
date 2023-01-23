@@ -128,14 +128,14 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.scratching = hydroshare.create_resource(
-            resource_type="GenericResource",
+            resource_type="CompositeResource",
             owner=self.cat,
             title="Test Resource",
             metadata=[],
         )
 
         self.bones = hydroshare.create_resource(
-            resource_type="GenericResource",
+            resource_type="CompositeResource",
             owner=self.dog,
             title="all about dog bones",
             metadata=[],

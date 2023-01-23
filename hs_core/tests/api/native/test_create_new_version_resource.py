@@ -1,11 +1,12 @@
 import os
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase
 
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
+from hs_core.models import BaseResource
 from hs_composite_resource.models import CompositeResource
 
 
@@ -54,6 +55,9 @@ class TestNewVersionResource(TestCase):
 
     def tearDown(self):
         super(TestNewVersionResource, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        BaseResource.objects.all().delete()
         self.test_file1.close()
         os.remove(self.test_file1.name)
         self.test_file2.close()

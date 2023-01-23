@@ -14,7 +14,7 @@ class TestResourceMap(ResMapTestCase):
     def setUp(self):
         super(TestResourceMap, self).setUp()
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         self.res = resource.create_resource(self.rtype,
                                             self.user,
