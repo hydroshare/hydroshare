@@ -2113,7 +2113,7 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
                 request,
                 "Publication request was rejected. Please send an email to the resource owner indicating why.",
             )
-            res.metadata.dates.all().filter(type="review_started").delete()
+        res.metadata.dates.all().filter(type="review_started").delete()
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 
 
