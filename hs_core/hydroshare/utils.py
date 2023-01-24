@@ -1053,7 +1053,6 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     return ret
 
 
-
 class ZipContents(object):
     """
     Extract the contents of a zip file one file at a time
