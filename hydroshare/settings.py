@@ -1,4 +1,6 @@
 # TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+import sys
+
 from PIL import ImageFile
 import os
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
@@ -334,6 +336,15 @@ INSTALLED_APPS = (
     "markdown",
     "hs_communities",
     "hs_discover",
+    "health_check",
+    "health_check.db",
+    "health_check.cache",
+    "health_check.storage",
+    "health_check.contrib.migrations",
+    "health_check.contrib.celery",
+    "health_check.contrib.celery_ping",
+    "health_check.contrib.psutil",
+    "health_check.contrib.rabbitmq",
 )
 
 SWAGGER_SETTINGS = {
@@ -765,6 +776,15 @@ TASK_NAME_LIST = [
 local_settings = __import__(local_settings_module, globals(), locals(), ["*"])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
+
+if 'test' in sys.argv:
+    import logging
+
+    logging.disable(logging.CRITICAL)
+    DISABLE_HAYSTACK = True
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
 
 ####################
 # DYNAMIC SETTINGS #

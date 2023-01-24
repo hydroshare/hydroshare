@@ -10,7 +10,9 @@ from django.test import TestCase
 
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
+from hs_composite_resource.models import CompositeResource
+
 from hs_file_types.models import GeoRasterLogicalFile
 
 
@@ -39,11 +41,11 @@ class TestCopyResource(TestCase):
             groups=[]
         )
 
-        # create a generic resource
-        self.res_generic = hydroshare.create_resource(
-            resource_type='GenericResource',
+        # create a composite resource
+        self.res = hydroshare.create_resource(
+            resource_type='CompositeResource',
             owner=self.owner,
-            title='Test Generic Resource'
+            title='Test Resource'
         )
 
         test_file1 = open('test1.txt', 'w')
@@ -55,31 +57,31 @@ class TestCopyResource(TestCase):
         self.test_file1 = open('test1.txt', 'rb')
         self.test_file2 = open('test2.txt', 'rb')
 
-        hydroshare.add_resource_files(self.res_generic.short_id, self.test_file1, self.test_file2)
+        hydroshare.add_resource_files(self.res.short_id, self.test_file1, self.test_file2)
 
-        # create a generic empty resource with one license that prohibits derivation
+        # create a composite empty resource with one license that prohibits derivation
         statement = 'This resource is shared under the Creative Commons Attribution-NoDerivs CC ' \
                     'BY-ND.'
         url = 'http://creativecommons.org/licenses/by-nd/4.0/'
         metadata = []
         metadata.append({'rights': {'statement': statement, 'url': url}})
-        self.res_generic_lic_nd = hydroshare.create_resource(
-            resource_type='GenericResource',
+        self.res_composite_lic_nd = hydroshare.create_resource(
+            resource_type='CompositeResource',
             owner=self.owner,
-            title='Test Generic Resource',
+            title='Test Resource',
             metadata=metadata
         )
 
-        # create a generic empty resource with another license that prohibits derivation
+        # create a composite empty resource with another license that prohibits derivation
         statement = 'This resource is shared under the Creative Commons ' \
                     'Attribution-NoCommercial-NoDerivs CC BY-NC-ND.'
         url = 'http://creativecommons.org/licenses/by-nc-nd/4.0/'
         metadata = []
         metadata.append({'rights': {'statement': statement, 'url': url}})
-        self.res_generic_lic_nc_nd = hydroshare.create_resource(
-            resource_type='GenericResource',
+        self.res_composite_lic_nc_nd = hydroshare.create_resource(
+            resource_type='CompositeResource',
             owner=self.owner,
-            title='Test Generic Resource',
+            title='Test Resource',
             metadata=metadata
         )
 
@@ -90,101 +92,102 @@ class TestCopyResource(TestCase):
 
     def tearDown(self):
         super(TestCopyResource, self).tearDown()
-        if self.res_generic:
-            self.res_generic.delete()
-        if self.res_generic_lic_nd:
-            self.res_generic_lic_nd.delete()
-        if self.res_generic_lic_nc_nd:
-            self.res_generic_lic_nc_nd.delete()
+        if self.res:
+            self.res.delete()
+        if self.res_composite_lic_nd:
+            self.res_composite_lic_nd.delete()
+        if self.res_composite_lic_nc_nd:
+            self.res_composite_lic_nc_nd.delete()
         self.test_file1.close()
         os.remove(self.test_file1.name)
         self.test_file2.close()
         os.remove(self.test_file2.name)
+        BaseResource.objects.all().delete()
 
-    def test_copy_generic_resource(self):
+    def test_copy_resource(self):
         # ensure a nonowner who does not have permission to view a resource cannot copy it
         with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_generic.short_id,
+            hydroshare.create_empty_resource(self.res.short_id,
                                              self.nonowner,
                                              action='copy')
         # ensure resource cannot be copied if the license does not allow derivation by a non-owner
         with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_generic_lic_nd.short_id,
+            hydroshare.create_empty_resource(self.res_composite_lic_nd.short_id,
                                              self.nonowner,
                                              action='copy')
 
         with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_generic_lic_nc_nd.short_id,
+            hydroshare.create_empty_resource(self.res_composite_lic_nc_nd.short_id,
                                              self.nonowner,
                                              action='copy')
 
         # add key/value metadata to original resource
-        self.res_generic.extra_metadata = {'variable': 'temp', 'units': 'deg F'}
-        self.res_generic.save()
+        self.res.extra_metadata = {'variable': 'temp', 'units': 'deg F'}
+        self.res.save()
 
         # give nonowner view privilege so nonowner can create a new copy of this resource
-        self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner,
+        self.owner.uaccess.share_resource_with_user(self.res, self.nonowner,
                                                     PrivilegeCodes.VIEW)
-        new_res_generic = hydroshare.create_empty_resource(self.res_generic.short_id,
-                                                           self.nonowner,
-                                                           action='copy')
+        new_res = hydroshare.create_empty_resource(self.res.short_id,
+                                                   self.nonowner,
+                                                   action='copy')
         # test to make sure the new copied empty resource has no content files
-        self.assertEqual(new_res_generic.files.all().count(), 0)
+        self.assertEqual(new_res.files.all().count(), 0)
 
-        new_res_generic = hydroshare.copy_resource(self.res_generic, new_res_generic)
+        new_res = hydroshare.copy_resource(self.res, new_res)
 
         # test the new copied resource has the same resource type as the original resource
-        self.assertTrue(isinstance(new_res_generic, GenericResource))
+        self.assertTrue(isinstance(new_res, CompositeResource))
 
         # test the new copied resource has the correct content file with correct path copied over
-        self.assertEqual(new_res_generic.files.all().count(), 2)
+        self.assertEqual(new_res.files.all().count(), 2)
         # add each file of resource to list
         new_res_file_list = []
-        for f in new_res_generic.files.all():
+        for f in new_res.files.all():
             new_res_file_list.append(f.resource_file.name)
-        for f in self.res_generic.files.all():
-            ori_res_no_id_file_path = f.resource_file.name[len(self.res_generic.short_id):]
-            new_res_file_path = new_res_generic.short_id + ori_res_no_id_file_path
+        for f in self.res.files.all():
+            ori_res_no_id_file_path = f.resource_file.name[len(self.res.short_id):]
+            new_res_file_path = new_res.short_id + ori_res_no_id_file_path
             self.assertIn(new_res_file_path, new_res_file_list,
                           msg='resource content path is not created correctly '
                               'for new copied resource')
 
         # test key/value metadata copied over
-        self.assertEqual(new_res_generic.extra_metadata, self.res_generic.extra_metadata)
+        self.assertEqual(new_res.extra_metadata, self.res.extra_metadata)
         # test science metadata elements are copied from the original resource to the new copied
         # resource
-        self.assertEqual(new_res_generic.metadata.title.value,
-                         self.res_generic.metadata.title.value,
+        self.assertEqual(new_res.metadata.title.value,
+                         self.res.metadata.title.value,
                          msg='metadata title is not copied over to the new copied resource')
-        self.assertEqual(new_res_generic.creator, self.nonowner,
+        self.assertEqual(new_res.creator, self.nonowner,
                          msg='creator is not copied over to the new copied resource')
 
         # test to make sure a new unique identifier has been created for the new copied resource
         self.assertIsNotNone(
-            new_res_generic.short_id,
+            new_res.short_id,
             msg='Unique identifier has not been created for new copied resource.')
-        self.assertNotEqual(new_res_generic.short_id, self.res_generic.short_id)
+        self.assertNotEqual(new_res.short_id, self.res.short_id)
 
         # test to make sure the new copied resource has the correct identifier
-        self.assertEqual(new_res_generic.metadata.identifiers.all().count(), 1,
+        self.assertEqual(new_res.metadata.identifiers.all().count(), 1,
                          msg="Number of identifier elements not equal to 1.")
         self.assertIn('hydroShareIdentifier',
-                      [id.name for id in new_res_generic.metadata.identifiers.all()],
+                      [id.name for id in new_res.metadata.identifiers.all()],
                       msg="hydroShareIdentifier name was not found for new copied resource.")
         id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
-                                         new_res_generic.short_id)
-        self.assertIn(id_url, [id.url for id in new_res_generic.metadata.identifiers.all()],
+                                         new_res.short_id)
+        self.assertIn(id_url, [id.url for id in new_res.metadata.identifiers.all()],
                       msg="Identifier url was not found for new copied resource.")
 
         # test to make sure the new copied resource is linked with the original resource via
         # 'source' type relation metadata element and contains the citation of the resource from which the copy was made
-        relation_meta = new_res_generic.metadata.relations.filter(type='source').first()
-        derived_from = _get_relation_meta_derived_from(self.res_generic)
+        relation_meta = new_res.metadata.relations.filter(type='source').first()
+        derived_from = _get_relation_meta_derived_from(self.res)
         self.assertEqual(relation_meta.value, derived_from)
 
         # make sure to clean up resource so that irods storage can be cleaned up
-        if new_res_generic:
-            new_res_generic.delete()
+        if new_res:
+            new_res.delete()
 
     def test_copy_composite_resource(self):
         """Test that logical file type objects gets copied along with the metadata that each

@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group, User
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from hs_core.models import GenericResource, Creator
+from hs_core.models import BaseResource, Creator
 from hs_core import hydroshare
 from hs_core.hydroshare import resource
 
@@ -26,9 +26,9 @@ class TestReorderAuthorsCommand(TestCase):
         )
 
         self.res = hydroshare.create_resource(
-            resource_type="GenericResource",
+            resource_type="CompositeResource",
             owner=self.user,
-            title="Generic resource",
+            title="A resource",
             keywords=["kw1", "kw2"],
         )
 
@@ -53,7 +53,7 @@ class TestReorderAuthorsCommand(TestCase):
         super(TestReorderAuthorsCommand, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
-        GenericResource.objects.all().delete()
+        BaseResource.objects.all().delete()
         Creator.objects.all().delete()
 
     def test_command_doesnt_alter_if_aready_correct(self):

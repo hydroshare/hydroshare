@@ -62,7 +62,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a entity 'bikes'
         self.bikes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.george,
             title='Bikes',
             metadata=[],
@@ -70,6 +70,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a entity 'bikers'
         self.bikers = self.george.uaccess.create_group('Bikers', 'Of the human powered kind')
+
+    def tearDown(self):
+        super(UnitTests, self).tearDown()
+        global_reset()
 
     def test_usergroupprivilege_get_current_record(self):
         george = self.george

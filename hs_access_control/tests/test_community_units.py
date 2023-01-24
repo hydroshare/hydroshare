@@ -1,14 +1,15 @@
 from django.test import TestCase
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied
 
 from hs_access_control.models import \
     UserCommunityProvenance, UserCommunityPrivilege, \
     GroupCommunityProvenance, GroupCommunityPrivilege, \
     CommunityResourceProvenance, CommunityResourcePrivilege, \
-    PrivilegeCodes
+    PrivilegeCodes, Community
 
 from hs_core import hydroshare
+from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
@@ -62,7 +63,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a entity 'bikes'
         self.bikes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.george,
             title='Bikes',
             metadata=[],
@@ -73,6 +74,14 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a community 'rebels'
         self.rebels = self.george.uaccess.create_community('Rebels', 'Random rebels')
+
+    def tearDown(self):
+        super(UnitTests, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        self.bikes.delete()
+        BaseResource.objects.all().delete()
+        Community.objects.all().delete()
 
     def test_usercommunityprivilege_get_current_record(self):
         george = self.george

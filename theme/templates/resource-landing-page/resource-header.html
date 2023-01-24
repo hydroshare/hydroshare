@@ -61,18 +61,18 @@
                         {% endif %}
                       </div>
                       <div style="display:flex; align-items: center;" class="space-left gap-1x">
-                        {% if not cm.raccess.published %}
-                        <span data-toggle="tooltip" data-placement="auto"
-                              title='Drag and drop Authors to rearrange.'
-                              class="glyphicon glyphicon-info-sign text-muted">
-                        {% endif %}
-                        </span>
                         {% if resource_edit_mode %}
-                        <a data-toggle="tooltip" data-placement="auto"
-                            href="https://www.youtube.com/watch?v=5rYQjvnRXlI" target="_blank"
-                            title='How to: Authorship and Ownership'
-                            class="fa fa-youtube-play icon-red no-decoration icon-guide">
-                        </a>
+                            {% if not cm.raccess.published_or_review_pending %}
+                                <span data-toggle="tooltip" data-placement="auto"
+                                    title='Drag and drop Authors to rearrange.'
+                                    class="glyphicon glyphicon-info-sign text-muted">
+                                </span>
+                            {% endif %}
+                            <a data-toggle="tooltip" data-placement="auto"
+                                href="https://www.youtube.com/watch?v=5rYQjvnRXlI" target="_blank"
+                                title='How to: Authorship and Ownership'
+                                class="fa fa-youtube-play icon-red no-decoration icon-guide">
+                            </a>
                         {% endif %}
                       </div>
                     </td>

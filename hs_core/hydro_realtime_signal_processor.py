@@ -1,6 +1,8 @@
-from haystack.signals import RealtimeSignalProcessor
-from haystack.exceptions import NotHandled
 import logging
+
+from django.conf import settings
+from haystack.exceptions import NotHandled
+from haystack.signals import RealtimeSignalProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +22,19 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         Given an individual model instance, determine which backends the
         update should be sent to & update the object on those backends.
         """
+
         from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
         from hs_access_control.models import ResourceAccess
         from hs_file_types.models import AbstractFileMetaData
         from django.contrib.postgres.fields import HStoreField
+
+        if getattr(settings, "DISABLE_HAYSTACK", False):
+            # haystack has been set to disable state (during test run)
+            # a resource can be indexed as part of test run by setting one of the keywords as 'INDEX-FOR-TESTING'
+            if isinstance(instance, BaseResource) and not instance.metadata.subjects.filter(
+                    value="INDEX-FOR-TESTING").exists():
+                # no need to index
+                return
 
         if isinstance(instance, BaseResource):
             if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'):
@@ -58,14 +69,15 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 newbase = instance.resource
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                logger.exception("{} exception: {}".format(type(instance), e))
+                logger.exception("{} exception: {}".format(type(instance), str(e)))
 
         elif isinstance(instance, CoreMetaData):
             try:
                 newbase = instance.resource
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                logger.exception("{} exception: {}".format(type(instance), e))
+                logger.exception("{} exception: {}".format(type(instance), str(e)))
+
         elif isinstance(instance, AbstractMetaDataElement):
             if isinstance(instance.metadata, AbstractFileMetaData):
                 try:
@@ -73,21 +85,21 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                     newbase = instance.metadata.logical_file.resource
                     self.handle_save(BaseResource, newbase)
                 except Exception as e:
-                    logger.exception("{} exception: {}".format(type(instance), e))
+                    logger.exception("{} exception: {}".format(type(instance), str(e)))
             else:
                 try:
                     # resolve the BaseResource corresponding to the metadata element.
                     newbase = instance.metadata.resource
                     self.handle_save(BaseResource, newbase)
                 except Exception as e:
-                    logger.exception("{} exception: {}".format(type(instance), e))
+                    logger.exception("{} exception: {}".format(type(instance), str(e)))
 
         elif isinstance(instance, HStoreField):
             try:
                 newbase = BaseResource.objects.get(extra_metadata=instance)
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                logger.exception("{} exception: {}".format(type(instance), e))
+                logger.exception("{} exception: {}".format(type(instance), str(e)))
 
     def handle_delete(self, sender, instance, **kwargs):
         """

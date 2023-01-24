@@ -38,7 +38,7 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
             title='cats', description="We are the cats")
 
         self.posts = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.cat,
             title='all about scratching posts',
             metadata=[],
@@ -59,7 +59,7 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
             title='dogs', description="We are the dogs")
 
         self.bones = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='all about bones',
             metadata=[],

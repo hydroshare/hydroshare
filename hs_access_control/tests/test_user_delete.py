@@ -1,5 +1,5 @@
 from django.test import TestCase
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 
 from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
     UserGroupPrivilege, UserResourcePrivilege, GroupMembershipRequest
@@ -36,7 +36,7 @@ class T12UserDelete(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.scratching = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.cat,
             title='all about sofas as scratching posts',
             metadata=[]
@@ -63,11 +63,20 @@ class T12UserDelete(MockIRODSTestCaseMixin, TestCase):
 
         self.cat.uaccess.create_group_membership_request(self.arfers)
 
+    def tearDown(self):
+        super(T12UserDelete, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        self.scratching.delete()
+        BaseResource.objects.all().delete()
+
     def test_00_cascade(self):
-        "Deleting a user cascade-deletes its access control"
+        """
+        Deleting a user cascade-deletes its access control
         # This tests that deleting a user cleans up its access control.
         # Note that deleting the sole owner of a resource or group
         # leaves it orphaned. This is not prevented.
+        """
         cat = self.cat
 
         # get the id's of all objects that should be deleted.
