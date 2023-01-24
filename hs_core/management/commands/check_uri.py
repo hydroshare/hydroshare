@@ -30,7 +30,7 @@ def check_uri(uri, options):
         print("filename is {}".format(filename))
         if '.' in filename:
             extension = filename.split('.')
-            extension = extension[len(extension)-1]
+            extension = extension[len(extension) - 1]
             if extension != "":
                 print("extension is .{}".format(extension))
                 file = file + '.' + extension

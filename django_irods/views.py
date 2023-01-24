@@ -111,7 +111,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             prefix = res.file_path
             if path.startswith(prefix):
                 # +1 to remove trailing slash
-                aggregation_name = path[len(prefix)+1:]
+                aggregation_name = path[len(prefix) + 1:]
             aggregation = res.get_aggregation_by_aggregation_name(aggregation_name)
             if not is_zip_request:
                 download_url = request.GET.get('url_download', 'false').lower()

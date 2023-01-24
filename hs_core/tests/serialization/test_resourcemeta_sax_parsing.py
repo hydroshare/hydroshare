@@ -68,5 +68,3 @@ class TestGenericResourceMetaSax(unittest.TestCase):
         self.assertEqual(handler.contributors[1].email, 'bar@icloud.com')
         self.assertEqual(handler.contributors[1].address, '123 Wall Street')
         self.assertEqual(handler.contributors[1].phone, '412-555-2121')
-
-

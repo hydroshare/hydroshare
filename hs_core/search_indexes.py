@@ -119,7 +119,7 @@ def get_content_types(res):
         path = f.short_path
         path = path.split(".")  # determine last extension
         if len(path) > 1:
-            ext = path[len(path)-1]
+            ext = path[len(path) - 1]
             if len(ext) <= 5:  # skip obviously non-MIME extensions
                 all_exts.add(ext.lower())
             else:
@@ -368,7 +368,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 obj.metadata is not None and \
                 obj.metadata.creators is not None:
             for creator in obj.metadata.creators.all():
-                if(creator.organization is not None):
+                if (creator.organization is not None):
                     organizations.append(creator.organization.strip())
         return organizations
 
@@ -458,8 +458,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 # TODO: this returns the box center, not the extent
                 # TODO: probably better to call this something different.
                 elif coverage.type == 'box':
-                    return (float(coverage.value["eastlimit"]) +
-                            float(coverage.value["westlimit"])) / 2
+                    return (float(coverage.value["eastlimit"])
+                            + float(coverage.value["westlimit"])) / 2
         else:
             return None
 
@@ -474,8 +474,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     return float(coverage.value["north"])
                 # TODO: This returns the box center, not the extent
                 elif coverage.type == 'box':
-                    return (float(coverage.value["northlimit"]) +
-                            float(coverage.value["southlimit"])) / 2
+                    return (float(coverage.value["northlimit"])
+                            + float(coverage.value["southlimit"])) / 2
         else:
             return None
 
@@ -832,7 +832,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         for f in obj.timeserieslogicalfile_set.all():
             for s in f.metadata.sites:
                 if discoverable(s.site_name):
-                        sites.add(s.site_name.strip())
+                    sites.add(s.site_name.strip())
         for f in obj.reftimeserieslogicalfile_set.all():
             for s in f.metadata.sites:
                 if discoverable(s.name):

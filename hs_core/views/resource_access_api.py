@@ -13,7 +13,7 @@ from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
 class PrivilegeField(serializers.Field):
     def to_representation(self, privilege):
-        return PrivilegeCodes.CHOICES[privilege-1][1]
+        return PrivilegeCodes.CHOICES[privilege - 1][1]
 
 
 class GroupResourcePrivilegeSerializer(serializers.ModelSerializer):

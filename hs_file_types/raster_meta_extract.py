@@ -126,8 +126,8 @@ def get_original_coverage_info(raster_dataset):
         y_coor = []
         for px in xarr:
             for py in yarr:
-                x = gt[0]+(px*gt[1])+(py*gt[2])
-                y = gt[3]+(px*gt[4])+(py*gt[5])
+                x = gt[0] + (px * gt[1]) + (py * gt[2])
+                y = gt[3] + (px * gt[4]) + (py * gt[5])
                 x_coor.append(x)
                 y_coor.append(y)
             yarr.reverse()
@@ -288,7 +288,7 @@ def get_band_info(raster_file_name):
         band_count = raster_dataset.RasterCount
 
         for i in range(0, band_count):
-            band = raster_dataset.GetRasterBand(i+1)
+            band = raster_dataset.GetRasterBand(i + 1)
             minimum, maximum, _, _ = band.ComputeStatistics(False)
             no_data = band.GetNoDataValue()
             new_no_data = None
@@ -302,22 +302,22 @@ def get_band_info(raster_file_name):
                 band.SetNoDataValue(new_no_data)
                 minimum, maximum, _, _ = band.ComputeStatistics(False)
 
-            band_info[i+1] = {
-                'name': 'Band_'+str(i+1),
+            band_info[i + 1] = {
+                'name': 'Band_' + str(i + 1),
                 'variableName': '',
                 'variableUnit': band.GetUnitType(),
                 'noDataValue': band.GetNoDataValue(),
                 'maximumValue': maximum,
                 'minimumValue': minimum,
-                }
+            }
     else:
         band_info = {
-                'name': 'Band_1',
-                'variableName': '',
-                'variableUnit': '',
-                'noDataValue': None,
-                'maximumValue': None,
-                'minimumValue': None,
+            'name': 'Band_1',
+            'variableName': '',
+            'variableUnit': '',
+            'noDataValue': None,
+            'maximumValue': None,
+            'minimumValue': None,
         }
 
     raster_dataset = None

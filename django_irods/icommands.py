@@ -55,16 +55,16 @@ class Session(object):
 
         if not myEnv:
             myEnv = IRodsEnv(
-               pk=-1,
-               host=settings.IRODS_HOST,
-               port=settings.IRODS_PORT,
-               def_res=settings.IRODS_DEFAULT_RESOURCE,
-               home_coll=settings.IRODS_HOME_COLLECTION,
-               cwd=settings.IRODS_CWD,
-               username=settings.IRODS_USERNAME,
-               zone=settings.IRODS_ZONE,
-               auth=settings.IRODS_AUTH,
-               irods_default_hash_scheme='MD5'
+                pk=-1,
+                host=settings.IRODS_HOST,
+                port=settings.IRODS_PORT,
+                def_res=settings.IRODS_DEFAULT_RESOURCE,
+                home_coll=settings.IRODS_HOME_COLLECTION,
+                cwd=settings.IRODS_CWD,
+                username=settings.IRODS_USERNAME,
+                zone=settings.IRODS_ZONE,
+                auth=settings.IRODS_AUTH,
+                irods_default_hash_scheme='MD5'
             )
 
         # create irods_environment.json file
@@ -111,7 +111,7 @@ class Session(object):
         try:
             if os.path.exists(os.path.join(self.session_path, 'irods_environment.json')):
                 return True
-        except:
+        except: # noqa
             return False
         else:
             return False

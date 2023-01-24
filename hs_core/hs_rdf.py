@@ -272,7 +272,7 @@ class HydroPrettyXMLSerializer(Serializer):
 
             try:
                 self.nm.qname(type)
-            except:
+            except: # noqa
                 type = None
 
             element = type or RDF.Description
@@ -327,8 +327,8 @@ class HydroPrettyXMLSerializer(Serializer):
                 # RDF.first and RDF.rest are ignored... including RDF.List
                 import warnings
                 warnings.warn(
-                    "Assertions on %s other than RDF.first " % repr(object) +
-                    "and RDF.rest are ignored ... including RDF.List",
+                    "Assertions on %s other than RDF.first " % repr(object)
+                    + "and RDF.rest are ignored ... including RDF.List",
                     UserWarning, stacklevel=2)
                 writer.attribute(RDF.parseType, "Collection")
 
@@ -364,6 +364,7 @@ class HydroPrettyXMLSerializer(Serializer):
                     writer.attribute(RDF.resource, self.relativize(object))
 
         writer.pop(predicate)
+
 
 register(
     'hydro-xml', Serializer,

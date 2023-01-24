@@ -147,8 +147,8 @@ def assertResourceEditorsAre(self, this_resource, these_users):
                 u.uaccess.get_resources_with_explicit_access(
                     PrivilegeCodes.OWNER)))
         self.assertTrue(is_equal_to_as_set(
-            set(u.uaccess.edit_resources) -
-            set(u.uaccess.owned_resources),
+            set(u.uaccess.edit_resources)
+            - set(u.uaccess.owned_resources),
             u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)))
         self.assertTrue(this_resource in u.uaccess.view_resources)
         self.assertTrue(
@@ -363,11 +363,11 @@ def assertGroupOwnersAre(self, this_group, these_users):
     """ These users are owners of this group """
     self.assertTrue(is_equal_to_as_set(these_users, this_group.gaccess.owners))
     self.assertTrue(is_disjoint_from(these_users,
-                                     set(this_group.gaccess.edit_users) -
-                                     set(this_group.gaccess.owners)))
+                                     set(this_group.gaccess.edit_users)
+                                     - set(this_group.gaccess.owners)))
     self.assertTrue(is_disjoint_from(these_users,
-                                     set(this_group.gaccess.members) -
-                                     set(this_group.gaccess.owners)))
+                                     set(this_group.gaccess.members)
+                                     - set(this_group.gaccess.owners)))
     for u in these_users:
         self.assertTrue(u.uaccess.owns_group(this_group))
         self.assertTrue(u.uaccess.can_change_group(this_group))
@@ -392,11 +392,11 @@ def assertGroupEditorsAre(self, this_group, these_users):
     """ these_users are all editors without ownership """
     self.assertTrue(is_disjoint_from(these_users, this_group.gaccess.owners))
     self.assertTrue(is_equal_to_as_set(these_users,
-                                       set(this_group.gaccess.edit_users) -
-                                       set(this_group.gaccess.owners)))
+                                       set(this_group.gaccess.edit_users)
+                                       - set(this_group.gaccess.owners)))
     self.assertTrue(is_disjoint_from(these_users,
-                                     set(this_group.gaccess.members) -
-                                     set(this_group.gaccess.edit_users)))
+                                     set(this_group.gaccess.members)
+                                     - set(this_group.gaccess.edit_users)))
     for u in these_users:
         self.assertFalse(u.uaccess.owns_group(this_group))
         self.assertTrue(u.uaccess.can_change_group(this_group))
@@ -421,11 +421,11 @@ def assertGroupViewersAre(self, this_group, these_users):
     """ these_users are all viewers without ownership or edit """
     self.assertTrue(is_disjoint_from(these_users, this_group.gaccess.owners))
     self.assertTrue(is_disjoint_from(these_users,
-                                     set(this_group.gaccess.edit_users) -
-                                     set(this_group.gaccess.owners)))
+                                     set(this_group.gaccess.edit_users)
+                                     - set(this_group.gaccess.owners)))
     self.assertTrue(is_equal_to_as_set(these_users,
-                                       set(this_group.gaccess.members) -
-                                       set(this_group.gaccess.edit_users)))
+                                       set(this_group.gaccess.members)
+                                       - set(this_group.gaccess.edit_users)))
     for u in these_users:
         self.assertFalse(u.uaccess.owns_group(this_group))
         self.assertFalse(u.uaccess.can_change_group(this_group))
@@ -470,11 +470,11 @@ def assertOwnedGroupsAre(self, this_user, these_groups):
     self.assertTrue(is_subset_of(these_groups, this_user.uaccess.edit_groups))
     self.assertTrue(is_subset_of(these_groups, this_user.uaccess.view_groups))
     self.assertTrue(is_disjoint_from(these_groups,
-                                     set(this_user.uaccess.edit_groups) -
-                                     set(this_user.uaccess.owned_groups)))
+                                     set(this_user.uaccess.edit_groups)
+                                     - set(this_user.uaccess.owned_groups)))
     self.assertTrue(is_disjoint_from(these_groups,
-                                     set(this_user.uaccess.view_groups) -
-                                     set(this_user.uaccess.owned_groups)))
+                                     set(this_user.uaccess.view_groups)
+                                     - set(this_user.uaccess.owned_groups)))
     self.assertTrue(
         is_equal_to_as_set(
             these_groups,
@@ -513,12 +513,12 @@ def assertEditableGroupsAre(self, this_user, these_groups):
     self.assertTrue(is_subset_of(these_groups, this_user.uaccess.edit_groups))
     self.assertTrue(is_subset_of(these_groups, this_user.uaccess.view_groups))
     self.assertTrue(is_equal_to_as_set(these_groups,
-                                       set(this_user.uaccess.edit_groups) -
-                                       set(this_user.uaccess.owned_groups)))
+                                       set(this_user.uaccess.edit_groups)
+                                       - set(this_user.uaccess.owned_groups)))
     self.assertTrue(is_disjoint_from(these_groups,
-                                     set(this_user.uaccess.view_groups) -
-                                     set(this_user.uaccess.owned_groups) -
-                                     set(this_user.uaccess.edit_groups)))
+                                     set(this_user.uaccess.view_groups)
+                                     - set(this_user.uaccess.owned_groups)
+                                     - set(this_user.uaccess.edit_groups)))
     self.assertTrue(
         is_disjoint_from(
             these_groups,
@@ -560,12 +560,12 @@ def assertViewableGroupsAre(self, this_user, these_groups):
             this_user.uaccess.edit_groups))
     self.assertTrue(is_subset_of(these_groups, this_user.uaccess.view_groups))
     self.assertTrue(is_equal_to_as_set(these_groups,
-                                       set(this_user.uaccess.view_groups) -
-                                       set(this_user.uaccess.edit_groups) -
-                                       set(this_user.uaccess.owned_groups)))
+                                       set(this_user.uaccess.view_groups)
+                                       - set(this_user.uaccess.edit_groups)
+                                       - set(this_user.uaccess.owned_groups)))
     self.assertTrue(is_disjoint_from(these_groups,
-                                     set(this_user.uaccess.edit_groups) -
-                                     set(this_user.uaccess.view_groups)))
+                                     set(this_user.uaccess.edit_groups)
+                                     - set(this_user.uaccess.view_groups)))
     self.assertTrue(
         is_disjoint_from(
             these_groups,
@@ -643,8 +643,8 @@ def assertResourceGroupViewersAre(self, this_resource, these_groups):
             these_groups,
             this_resource.raccess.view_groups))
     self.assertTrue(is_equal_to_as_set(these_groups,
-                                       set(this_resource.raccess.view_groups) -
-                                       set(this_resource.raccess.edit_groups)))
+                                       set(this_resource.raccess.view_groups)
+                                       - set(this_resource.raccess.edit_groups)))
     for g in these_groups:
         self.assertTrue(this_resource not in g.gaccess.edit_resources)
         self.assertTrue(this_resource in g.gaccess.view_resources)
