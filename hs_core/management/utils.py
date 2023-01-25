@@ -108,7 +108,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
                         else:
                             err_msg = "File ({}) is missing in iRODS. File not added to the aggregation"
                             err_msg = err_msg.format(new_path)
-                            logger.warn(err_msg)
+                            logger.warning(err_msg)
                             command.stdout.write(command.style.WARNING(err_msg))
                 else:
                     msg = "Moved file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
@@ -122,7 +122,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
             else:
                 err_msg = "File path ({}) not found in iRODS. Couldn't make this file part of " \
                           "the {} aggregation.".format(src_full_path, aggr_name)
-                logger.warn(err_msg)
+                logger.warning(err_msg)
                 command.stdout.write(command.style.WARNING(err_msg))
             command.stdout.flush()
 
@@ -678,7 +678,7 @@ def repair_resource(resource, logger, stop_on_error=False,
     # Do this before check because otherwise, errors get printed twice
     # TODO: This does not currently work properly for composite resources
     # if resource.resource_type == 'CompositeResource' or \
-    if resource.resource_type == 'GenericResource':
+    if resource.resource_type == 'CompositeResource':
         _, count = ingest_irods_files(resource,
                                       logger,
                                       stop_on_error=False,

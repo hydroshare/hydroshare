@@ -1192,7 +1192,7 @@ function showFileTypeMetadata(file_type_time_series, url){
                   setupModelProgramFileTypeUI();
                   setupModelProgramTypeUI();
                   $("#mi-json-schema-file").change(function () {
-                    $(".btn-form-submit").show();
+                    $("#filetype-modelprogram").find(".btn-form-submit").show();
                 })
              }
              if (logical_type === "ModelInstanceLogicalFile") {

@@ -12,14 +12,14 @@ from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference
-from hs_core.models import GenericResource, Relation
+from hs_core.models import BaseResource, Relation
 from hs_core.views.utils import show_relations_section, \
     rights_allows_copy
 from hs_odm2.models import ODM2Variable
 from .forms import ExtendedMetadataForm
 
 
-@processor_for(GenericResource)
+@processor_for(BaseResource)
 def landing_page(request, page):
     """Return resource landing page context."""
     edit_resource = check_resource_mode(request)
@@ -114,12 +114,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     content_model.update_relation_meta()
     creators = content_model.metadata.creators.all()
 
-    content_model.non_preferred_path_names = []
     # whether the user has permission to change the model
     can_change = content_model.can_change(request)
-    if can_change and not content_model.raccess.published:
-        # display of non-preferred paths is relevant for resource that is not yet published
-        content_model.non_preferred_path_names = content_model.get_non_preferred_path_names()
 
     # user requested the resource in READONLY mode
     if not resource_edit:

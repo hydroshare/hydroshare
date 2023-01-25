@@ -454,7 +454,7 @@ class CompositeResource(BaseResource):
             if hasattr(lf, 'folder'):
                 if lf.folder is not None and lf.folder.startswith(orig_path):
                     lf.folder = os.path.join(new_path, lf.folder[len(orig_path) + 1:]).strip('/')
-                    lf.save()
+                    lf.save(update_fields=["folder"])
                     lf.set_metadata_dirty()
                     continue
 

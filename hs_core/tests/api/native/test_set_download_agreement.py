@@ -33,7 +33,7 @@ class TestSetDownloadAgreement(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.res = resource.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user_owner,
             'My Test Resource'
         )

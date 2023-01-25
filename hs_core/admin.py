@@ -5,7 +5,7 @@ from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.utils.translation import gettext_lazy as _
 
-from .models import ResourceFile, User, GenericResource
+from .models import ResourceFile, User
 
 
 class UserCreationFormExtended(UserCreationForm):
@@ -34,4 +34,3 @@ class InlineResourceFiles(GenericTabularInline):
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
-admin.site.unregister(GenericResource)

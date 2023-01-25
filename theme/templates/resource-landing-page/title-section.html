@@ -154,9 +154,12 @@
             </div>
         </div>
     {% endif %}
-    {% if cm.non_preferred_path_names %}
+    <div id="checking-for-paths" class="col-sm-12">
+        <p class="alert alert-warning">Checking for non-preferred file/folder path names (may take a long time depending on the number of files/folders) ...</p>
+    </div>
+    <div id="non-preferred-paths">
         <div class="col-sm-12">
-            <div id="non-preferred-paths" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <div id="non-preferred-paths" class="alert alert-warning alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
             <p>This resource contains some files/folders that have non-preferred characters in their name.
@@ -177,11 +180,7 @@
                         </p>
                     </div>
                     <div class="modal-body">
-                        <ul>
-                        {% for path in cm.non_preferred_path_names %}
-                            <li>{{ path }}</li>
-                        {% endfor %}
-                        </ul>
+                    {# non preferred paths are populated here by JS code #}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -189,7 +188,7 @@
                 </div>
             </div>
         </div>
-    {% endif %}
+    </div>
 {% endif %}
 
 {# ======= Title ======= #}
@@ -363,8 +362,14 @@
         .title-builder-input {
             margin-top: 1em;
         }
+        .path-align {
+          word-wrap: break-word;
+          white-space: normal !important;
+        }
     </style>
+
     {#        vue-mover uses Sortable.min.js#}
+    <script src="{% static 'js/non_preferred_paths_in_resource.js' %}"></script>
     <script src="{% static 'js/Sortable.min.js' %}"></script>
     <script src="{% static 'js/vue-mover.js' %}"></script>
 {% endblock %}

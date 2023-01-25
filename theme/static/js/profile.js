@@ -245,6 +245,108 @@ function getUrlVars()
     return vars;
 }
 
+function isPhoneValidInCountry(phone, country){
+    if (!BFHPhoneFormatList.hasOwnProperty(country)) return false;
+    let BFHString = BFHPhoneFormatList[country];
+
+    // Turn the string into a regex
+    stringFormat = BFHString.replace(/\s/g, String.fromCharCode(92)+"s");
+    stringFormat = stringFormat.replace("+", String.fromCharCode(92)+"+");
+    stringFormat = stringFormat.replace("(", String.fromCharCode(92)+"(");
+    stringFormat = stringFormat.replace(")", String.fromCharCode(92)+")");
+    stringFormat = stringFormat.replace(/d/g, String.fromCharCode(92)+"d");
+    stringFormat = new RegExp(stringFormat);
+    return stringFormat.test(phone) || BFHString;
+}
+
+function isPhoneCountryCodeOnly(phone, country){
+    if (!BFHPhoneFormatList.hasOwnProperty(country)) return false;
+    let BFHString = BFHPhoneFormatList[country];
+    let stringFormat = BFHString.replace(/d/g, '');
+    stringFormat = stringFormat.replace(/[\(\)-]/g, '');
+    return phone.trim().length === stringFormat.trim().length
+}
+
+function resetPhoneValues(){
+    // Bootstrap-formhelper will erase existing values if they don't conform to the expected country format
+    // So we update with the original values where necessary
+    $('input[type="tel"]').each(function(){
+        const oldPhones = PHONES || null;
+        if (!oldPhones || oldPhones === 'None') return;
+        const phoneObj = $(this);
+        if (oldPhones[phoneObj[0].name] === 'None') return;
+        phoneObj.val(oldPhones[phoneObj[0].name]);
+    });
+}
+
+function checkForInvalidPhones(){
+    $('input[type="tel"]').each(function(){
+        checkPhone(this, false);
+    });
+}
+
+function checkPhone(phoneField, isInputEvent=true){
+    const country = $("#country").val();
+    phoneField = $(phoneField);
+    phoneField.siblings('.error-label').remove();
+    phoneField.removeClass('form-invalid');
+    if (! country ) {
+        if (isInputEvent){
+            phoneField
+            .addClass('form-invalid')
+            .parent().append(errorLabel("Please add a country before adding phone to your profile"));
+        }
+        return;
+    }
+    const phoneValue = phoneField.val();
+    if( !phoneValue ) return;
+    const phoneValidation = isPhoneValidInCountry(phoneValue, country);
+    const onlyCode = isPhoneCountryCodeOnly(phoneValue, country);
+    onlyCode ? phoneField.addClass('only-country-code') : phoneField.removeClass('only-country-code');
+    if ( phoneValidation !== true && !onlyCode ){
+        phoneField
+            .addClass('form-invalid')
+            .parent().append(errorLabel(`Please update to format: [${phoneValidation}]`));
+    }
+}
+
+function isStateInCountry(stateCode, country){
+    if (!BFHStatesList.hasOwnProperty(country)) return false;
+    const asArray = Object.entries(BFHStatesList[country]);
+    const filtered = asArray.filter(([key, state]) => state.code === stateCode);
+    return filtered.length > 0;
+}
+
+function checkForInvalidStates(country){
+    const oldState = OLD_STATE || null;
+    if (!oldState || oldState === 'None') return;
+    country = country || $("#country").val()
+    const stateField = $('#state');
+    if ( !isStateInCountry(oldState, country)){
+        stateField.append($('<option>', {
+            value: oldState,
+            text: oldState,
+            class: "old-state-option"
+        }));
+        stateField.val(oldState)
+            .change()
+            .addClass('form-invalid')
+            .parent().append(errorLabel("No longer valid, please update."));
+
+        // Register one-time listener to clear the message and old option
+        stateField.one('change', function(){
+            $(this).siblings('.error-label').remove();
+            $(this).removeClass('form-invalid');
+            $(".old-state-option").remove();
+        });
+    }
+
+    // Update for view mode
+    if (! $('#db-state').text()) {
+        $('#db-state').text(OLD_STATE);
+    }
+}
+
 $(document).ready(function () {
     // Multiple orgs are a string delimited by ";" --wrap them so we can style them
     $("#organization").splitAndWrapWithClass(";", "organization-divider");
@@ -377,4 +479,20 @@ $(document).ready(function () {
         // clear out the edit query params so edit mode isn't reopened on save
         history.pushState('', document.title, window.location.pathname);
     }
+
+    // Event listeners for profile phone changes
+    $('input[type="tel"]').on('keyup', (e)=>checkPhone(e.target));
+    $('#country').on('change', function(){
+        resetPhoneValues();
+        checkForInvalidPhones();
+    });
+
+    $('.btn-save-profile').click(function(e){
+        // clear phones that only have country codes before submit
+        $('.only-country-code').val("");
+    });
+
+    resetPhoneValues();
+    checkForInvalidPhones();
+    checkForInvalidStates();
 });

@@ -410,7 +410,7 @@ def create_resource(
 
     3. resource_type is a string: see parameter list
 
-    :param resource_type: string. the type of the resource such as GenericResource
+    :param resource_type: string. the type of the resource such as CompositeResource
     :param owner: email address, username, or User instance. The owner of the resource
     :param title: string. the title of the resource
     :param edit_users: list of email addresses, usernames, or User instances who will be given edit
@@ -1039,13 +1039,13 @@ def submit_resource_for_review(request, pk):
                               "reference content, or this resource type is not allowed for publication.")
 
     try:
-        user_to = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
+        user_to = User.objects.get(email__iexact=settings.DEFAULT_SUPPORT_EMAIL)
     except User.DoesNotExist:
         user_to = create_account(
-            email=settings.DEFAULT_FROM_EMAIL,
-            username=settings.DEFAULT_FROM_EMAIL,
-            first_name=settings.DEFAULT_FROM_EMAIL,
-            last_name=settings.DEFAULT_FROM_EMAIL,
+            email=settings.DEFAULT_SUPPORT_EMAIL,
+            username=settings.DEFAULT_SUPPORT_EMAIL,
+            first_name=settings.DEFAULT_SUPPORT_EMAIL,
+            last_name=settings.DEFAULT_SUPPORT_EMAIL,
             superuser=True
         )
     from hs_core.views.utils import send_action_to_take_email
