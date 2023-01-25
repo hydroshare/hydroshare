@@ -81,7 +81,7 @@ class ViewTests(TestCase):
 
         # build request 'GET'
         res_id = 'D7a7de92941a044049a7b8ad09f4c75bb'
-        res_type = 'GenericResource'
+        res_type = 'CompositeResource'
         app_name = 'test'
         request_url = 'https://apps.hydroshare.org/apps/hydroshare-gis/' \
                       '?res_id=%s&res_type=%s' % (res_id, res_type)
@@ -134,7 +134,7 @@ class ViewTests(TestCase):
 
         # build request 'GET'
         res_id = 'D7a7de92941a044049a7b8ad09f4c75bb'
-        res_type = 'GenericResource'
+        res_type = 'CompositeResource'
         app_name = 'test'
         request_url = 'https://www.youtube.com/' \
                       '?res_id=%s&res_type=%s' % (res_id, res_type)

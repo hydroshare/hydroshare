@@ -1701,11 +1701,13 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                 html_tags.legend("Abstract")
                 html_tags.p(self.abstract)
             html_string += abstract_div.render()
-        if self.spatial_coverage:
-            html_string += self.spatial_coverage.get_html()
+        spatial_coverage = self.spatial_coverage
+        if spatial_coverage:
+            html_string += spatial_coverage.get_html()
 
-        if self.temporal_coverage:
-            html_string += self.temporal_coverage.get_html()
+        temporal_coverage = self.temporal_coverage
+        if temporal_coverage:
+            html_string += temporal_coverage.get_html()
 
         series_selection_div = self.get_series_selection_html(selected_series_id=series_id)
         html_tags.legend("Corresponding Metadata")
@@ -1737,18 +1739,20 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                 # create 2nd column of the row
                 with html_tags.div(cls="content-block"):
                     # generate html for processing_level element
-                    if self.processing_levels:
+                    processing_levels = self.processing_levels
+                    if processing_levels:
                         html_tags.legend("Processing Level")
                         pro_level = self.get_element_by_series_id(series_id=series_id,
-                                                                  elements=self.processing_levels)
+                                                                  elements=processing_levels)
                         if pro_level:
                             pro_level.get_html()
 
                     # generate html for timeseries_result element
-                    if self.time_series_results:
+                    time_series_results = self.time_series_results
+                    if time_series_results:
                         html_tags.legend("Time Series Result", cls='space-top')
                         ts_result = self.get_element_by_series_id(series_id=series_id,
-                                                                  elements=self.time_series_results)
+                                                                  elements=time_series_results)
                         if ts_result:
                             ts_result.get_html()
 
@@ -1771,11 +1775,13 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             self.get_update_sqlite_file_html_form()
             super(TimeSeriesFileMetaData, self).get_html_forms(temporal_coverage=False)
             self.get_abstract_form()
-            if self.spatial_coverage:
-                self.spatial_coverage.get_html()
+            spatial_coverage = self.spatial_coverage
+            if spatial_coverage:
+                spatial_coverage.get_html()
 
-            if self.temporal_coverage:
-                self.temporal_coverage.get_html()
+            temporal_coverage = self.temporal_coverage
+            if temporal_coverage:
+                temporal_coverage.get_html()
 
             series_selection_div = self.get_series_selection_html(selected_series_id=series_id)
             with series_selection_div:
@@ -1876,8 +1882,9 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
         root_div = html_tags.div(id="div-series-selection-file_type", cls="content-block")
         heading = "Select a timeseries to see corresponding metadata (Number of time series:{})"
-        if self.series_names:
-            time_series_count = len(self.series_names)
+        series_names = self.series_names
+        if series_names:
+            time_series_count = len(series_names)
         else:
             time_series_count = self.time_series_results.count()
         heading = heading.format(str(time_series_count))
@@ -2442,7 +2449,7 @@ def copy_cv_terms(src_metadata, tgt_metadata):
         list(tgt_metadata.cv_aggregation_statistics.all())
     for cv_term in cv_terms:
         cv_term.is_dirty = False
-        cv_term.save()
+        cv_term.save(update_fields=["is_dirty"])
 
 
 def validate_odm2_db_file(sqlite_file_path):

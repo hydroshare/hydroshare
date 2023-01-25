@@ -155,74 +155,84 @@
                                     <fieldset class="col-sm-12">
                                         <small class="text-muted">If this user account is for an Organization, First name, Middle name, and Last name may be left blank. Any resources created by an Organization user will list the Organization as the resource author/creator.</small>
                                     </fieldset>
+                                    <br>
                                 </div>
 
                                 <div class="row">
-                                    {# Organization #}
-                                    <fieldset class="col-sm-6">
-                                        <label>Organization *</label>
-                                        <input class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
-                                        <br /><small class="text-muted">The names of the organizations you are associated with.</small><br />
-                                    </fieldset>
+                                    <div class="col-xs-12 col-sm-6">
+                                      <div class="row">
+                                        
+                                        {# Organization #}
+                                        <fieldset class="col-xs-12">
+                                            <label>Organization *</label>
+                                            <input class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                            <small class="text-muted">The names of the organizations you are associated with.</small><br />
+                                        </fieldset>
+                                        <br>
 
-                                    {#        User Type       #}
-                                    <fieldset>
-                                        <label for="selectUserType">User type *</label>
-                                        <select name="user_type" class="form-control form-required" id="selectUserType">
-                                            <option disabled selected value>Select a user type</option>
-                                            <option value="University Faculty">University Faculty</option>
-                                            <option value="University Professional or Research Staff">University Professional or Research Staff</option>
-                                            <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
-                                            <option value="University Graduate Student">University Graduate Student</option>
-                                            <option value="University Undergraduate Student">University Undergraduate Student</option>
-                                            <option value="Commercial/Professional">Commercial/Professional</option>
-                                            <option value="Government Official">Government Official</option>
-                                            <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
-                                            <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
-                                            <option value="Organization">Organization</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </fieldset>
+                                        {#        User Type       #}
+                                        <fieldset class="col-xs-12">
+                                            <label for="selectUserType">User type *</label>
+                                            <select name="user_type" class="form-control form-required" id="selectUserType">
+                                                <option disabled selected value>Select a user type</option>
+                                                <option value="University Faculty">University Faculty</option>
+                                                <option value="University Professional or Research Staff">University Professional or Research Staff</option>
+                                                <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
+                                                <option value="University Graduate Student">University Graduate Student</option>
+                                                <option value="University Undergraduate Student">University Undergraduate Student</option>
+                                                <option value="Commercial/Professional">Commercial/Professional</option>
+                                                <option value="Government Official">Government Official</option>
+                                                <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
+                                                <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
+                                                <option value="Organization">Organization</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </fieldset>
 
-                                    {#        User Type - Other       #}
-                                    <fieldset id="user-type-other">
-                                        <label>Specify: *</label>
-                                        <input name="user_type" class="form-control">
-                                    </fieldset>
+                                        {#        User Type - Other       #}
+                                        <fieldset id="user-type-other" class="col-sm-6">
+                                            <label>Specify: *</label>
+                                            <input name="user_type" class="form-control">
+                                        </fieldset>
+                                      </div>
+                                    </div>
 
-                                    {#        Country       #}
-                                    <fieldset>
-                                        <label>Country *</label>
-                                        <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
-                                    </fieldset>
+                                    <div class="col-xs-12 col-sm-6">
+                                      <div class="row">
+                                        {#        Country       #}
+                                        <fieldset class="col-xs-12">
+                                            <label>Country *</label>
+                                            <select id="country" name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
+                                        </fieldset>
 
-                                    {#        State       #}
-                                    <fieldset>
-                                        <label>State/Province *</label>
-                                        <input name="state" class="form-control form-required" {% if  profile.state and profile.state != 'None' %} value="{{ profile.state }}" {% endif %}>
-                                    </fieldset>
+                                        {#        State       #}
+                                        <fieldset class="col-xs-12">
+                                            <label>State/Region</label>
+                                            <select id="state" name="state" class="form-control input-medium bfh-states" data-country="country" data-state="{{ profile.state }}"></select>
+                                        </fieldset>
+                                      </div>
+                                    </div>
                                 </div>
 
-                                <div class="row">
-                                    {# Subject areas #}
-                                    <fieldset class="col-sm-12">
-                                        <label>Subject areas</label>
-                                        <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
-                                        <small class="text-muted">A comma-separated list of subject areas you are interested
-                                            in researching. e.g. "Computer Science, Hydrology, Water Management"
-                                        </small>
-                                    </fieldset>
-                                </div>
+                                {# Subject areas #}
+                                <fieldset>
+                                    <label>Subject areas</label>
+                                    <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
+                                    <small class="text-muted">A comma-separated list of subject areas you are interested
+                                        in researching. e.g. "Computer Science, Hydrology, Water Management"
+                                    </small>
+                                </fieldset>
 
-                                <div class="row">
-                                    {# email subscription #}
-                                    <fieldset class="col-sm-12">
-                                        <input type="checkbox" name="email_opt_out" id="id_email_opt_out"
-                                                {% if profile.email_opt_out %} checked {% endif %}>
-                                        <label class="form-check" for="id_email_opt_out">Opt out of receiving system
-                                            announcement emails such as announcements of planned downtime for system upgrades.</label>
-                                    </fieldset>
-                                </div>
+                                <br>
+
+                                {# email subscription #}
+                                <fieldset>
+                                    <div class="checkbox">
+                                        <label class="form-check" for="id_email_opt_out">
+                                            <input type="checkbox" name="email_opt_out" id="id_email_opt_out" {% if profile.email_opt_out %} checked {% endif %}>
+                                            Opt out of receiving system announcement emails such as announcements of planned downtime for system upgrades.</label>
+                                    </div>
+                                </fieldset>
                             </div>
                             {% endif %}
 
@@ -369,8 +379,8 @@
                                                 {% endif %}
                                                 {% if profile.state and profile.state != "Unspecified"%}
                                                     <tr>
-                                                        <td><span class="text-muted">State/Province</span></td>
-                                                        <td>{{ profile.state }}</td>
+                                                        <td><span class="text-muted">State/Region:</span></td>
+                                                        <td><span id="db-state" class="bfh-states" data-state="{{ profile.state }}" data-country="{{ profile.country }}"></span></td>
                                                     </tr>
                                                 {% endif %}
                                                 <tr>
@@ -658,10 +668,6 @@
                                                 <img src="{% static 'img/resource-icons/collection48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "GenericResource" %}
-                                                <img src="{% static 'img/resource-icons/generic48x48.png' %}"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
                                             {% endif %}
 
                                         </span>
@@ -901,6 +907,9 @@
 
 {% block extra_js %}
     {{ block.super }}
+    <script>
+        var OLD_STATE = "{{ profile_user.userprofile.state }}";
+    </script>
     <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/profile.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/jquery.tagsinput-revisited.min.js' %}"></script>

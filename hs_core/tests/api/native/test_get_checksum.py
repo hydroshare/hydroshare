@@ -23,7 +23,7 @@ class TestGetChecksum(MockIRODSTestCaseMixin, TestCase):
 
         # create a resource
         self.res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user1,
             'Test Resource',
         )

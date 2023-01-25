@@ -50,7 +50,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         )
 
         # create a resource for sharing with group
-        self.resource = hydroshare.create_resource(resource_type='GenericResource',
+        self.resource = hydroshare.create_resource(resource_type='CompositeResource',
                                                    owner=self.john,
                                                    title='Test Resource',
                                                    metadata=[]

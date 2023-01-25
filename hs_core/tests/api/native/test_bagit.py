@@ -5,7 +5,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import hs_bagit
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.tasks import create_bag_by_irods
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from django_irods.storage import IrodsStorage
 from hs_core.task_utils import _retrieve_task_id
 
@@ -25,7 +25,7 @@ class TestBagIt(TestCase):
 
         # note: creating a resource calls the hs_bagit.create_bag() api
         self.test_res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource'
         )
@@ -34,7 +34,7 @@ class TestBagIt(TestCase):
         super(TestBagIt, self).tearDown()
         if self.test_res:
             self.test_res.delete()
-        GenericResource.objects.all().delete()
+        BaseResource.objects.all().delete()
 
     def test_create_bag_files(self):
         # this is the api call we are testing

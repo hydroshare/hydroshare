@@ -41,7 +41,7 @@ from hs_core.hydroshare import add_resource_files
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.hydroshare.utils import check_aggregations
 from hs_core.hydroshare.utils import get_file_mime_type
-from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
+from hs_core.models import AbstractMetaDataElement, BaseResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_core.tasks import create_temp_zip, FileOverrideException
@@ -330,12 +330,15 @@ def rights_allows_copy(res, user):
     if not user.is_authenticated:
         return False
 
-    if not user.uaccess.owns_resource(res) and \
-            (res.metadata.rights.statement == "This resource is shared under the Creative "
-                                              "Commons Attribution-NoDerivs CC BY-ND."
-             or res.metadata.rights.statement == "This resource is shared under the Creative "
-                                              "Commons Attribution-NoCommercial-NoDerivs "
-                                              "CC BY-NC-ND."):
+    if user.uaccess.owns_resource(res):
+        return True
+
+    rights = res.metadata.rights
+    if (rights.statement == "This resource is shared under the Creative "
+                            "Commons Attribution-NoDerivs CC BY-ND."
+        or rights.statement == "This resource is shared under the Creative "
+                               "Commons Attribution-NoCommercial-NoDerivs "
+                               "CC BY-NC-ND."):
         return False
 
     return True
@@ -451,7 +454,7 @@ def validate_metadata(metadata, resource_type):
      and the other one for "Coverage' element.
     [{'description':{'abstract': 'This is a great resource'}},
     {'coverage': {'value':{'type': 'period', 'start': 01/01/2010', 'end': '12/12/2015'}}}]
-    :param resource_type: resource type name (e.g., "GenericResource" or "CollectionResource")
+    :param resource_type: resource type name (e.g., "CollectionResource" or "CollectionResource")
     :return:
 
     """
@@ -497,7 +500,7 @@ def validate_metadata(metadata, resource_type):
 
             if element_attribute_names_valid:
                 if is_core_element:
-                    element_resource_class = GenericResource().__class__
+                    element_resource_class = BaseResource().__class__
                 else:
                     element_resource_class = resource_class
 

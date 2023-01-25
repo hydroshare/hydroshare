@@ -10,7 +10,7 @@ from .base import HSRESTTestCase
 class TestFolders(HSRESTTestCase):
 
     def test_create_folder(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
                   'title': title,
@@ -57,7 +57,7 @@ class TestFolders(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_file_in_folder(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
                   'title': title,

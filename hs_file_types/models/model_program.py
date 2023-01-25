@@ -125,7 +125,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         mp_aggr = self.logical_file
         for mi_metadata in mp_aggr.mi_metadata_objects.all():
             mi_metadata.is_dirty = True
-            mi_metadata.save()
+            mi_metadata.save(update_fields=["is_dirty"])
 
         super(ModelProgramFileMetaData, self).delete()
 
@@ -408,6 +408,12 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                                               "will be shown below when you "
                                                                               "save metadata.")
 
+                                        with dom_tags.div(cls="form-group"):
+                                            link = "https://help.hydroshare.org/modeling/" \
+                                                   "model-instance-metadata-schema/"
+                                            link_title = "Refer to Model Instance Metadata schema help page " \
+                                                         "for schema requirements."
+                                            dom_tags.a(link_title, href=link, target="_blank")
                                         # give an option to upload/select a json file for the metadata schema
                                         with dom_tags.div(cls="form-group"):
                                             with dom_tags.select(cls="form-control", name='mi_json_schema_template',
@@ -482,7 +488,7 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
 
         for mi_metadata in self.mi_metadata_objects.all():
             mi_metadata.is_dirty = True
-            mi_metadata.save()
+            mi_metadata.save(update_fields=["is_dirty"])
 
         super(ModelProgramLogicalFile, self).delete()
 
@@ -521,8 +527,8 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         is_schema_valid = True
         try:
             json_schema = json.loads(meta_schema)
-        except ValueError:
-            validation_errors.append("Schema is not valid JSON")
+        except ValueError as err:
+            validation_errors.append(f"Schema is not valid JSON. Error: {str(err)}")
             return json_schema, validation_errors
 
         if json_schema:
@@ -551,7 +557,10 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
                     jsonschema.Draft4Validator.check_schema(json_schema)
                 except jsonschema.SchemaError as ex:
                     is_schema_valid = False
-                    schema_err_msg = f"{ex.message}. Schema invalid field path:{str(list(ex.path))}"
+                    err_paths = " -> ".join(list(ex.path))
+                    schema_errors = str(ex).split("\n")
+                    schema_errors = " ".join(schema_errors)
+                    schema_err_msg = f"{schema_errors}. Schema invalid field path:{err_paths}"
                     schema_err_msg = f"Not a valid JSON schema. Error:{schema_err_msg}"
                     validation_errors.append(schema_err_msg)
 
@@ -674,13 +683,13 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         """set metadata to dirty for all the model instances related to this model program instance"""
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
-            mi_meta.save()
+            mi_meta.save(update_fields=["is_dirty"])
 
     def set_metadata_dirty(self):
         super(ModelProgramLogicalFile, self).set_metadata_dirty()
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
-            mi_meta.save()
+            mi_meta.save(update_fields=["is_dirty"])
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)

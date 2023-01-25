@@ -60,7 +60,7 @@ from .utils import (
 )
 
 from hs_core.models import (
-    GenericResource,
+    BaseResource,
     resource_processor,
     CoreMetaData,
     Subject,
@@ -424,7 +424,7 @@ def _get_resource_sender(element_name, resource):
     ]
 
     if element_name in core_metadata_element_names:
-        sender_resource = GenericResource().__class__
+        sender_resource = BaseResource().__class__
     else:
         sender_resource = resource.__class__
 
@@ -637,17 +637,17 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         except ValidationError as exp:
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session["validation_error"] = err_msg
-                            logger.warn(err_msg)
+                            logger.warning(err_msg)
                         except Error as exp:
                             # some database error occurred
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session["validation_error"] = err_msg
-                            logger.warn(err_msg)
+                            logger.warning(err_msg)
                         except Exception as exp:
                             # some other error occurred
                             err_msg = err_msg.format(element_name, str(exp))
                             request.session["validation_error"] = err_msg
-                            logger.warn(err_msg)
+                            logger.warning(err_msg)
 
                     if is_add_success:
                         resource_modified(res, request.user, overwrite_bag=False)
@@ -718,8 +718,9 @@ def get_resource_metadata(request, shortkey, *args, **kwargs):
     )
     res_metadata = dict()
     res_metadata["title"] = resource.metadata.title.value
-    if resource.metadata.description:
-        res_metadata["abstract"] = resource.metadata.description.abstract
+    description = resource.metadata.description
+    if description:
+        res_metadata["abstract"] = description.abstract
     else:
         res_metadata["abstract"] = None
     creators = []
@@ -773,12 +774,12 @@ def update_metadata_element(
                 except ValidationError as exp:
                     err_msg = err_msg.format(element_name, str(exp))
                     request.session["validation_error"] = err_msg
-                    logger.warn(err_msg)
+                    logger.warning(err_msg)
                 except Error as exp:
                     # some database error occurred
                     err_msg = err_msg.format(element_name, str(exp))
                     request.session["validation_error"] = err_msg
-                    logger.warn(err_msg)
+                    logger.warning(err_msg)
                 # TODO: it's brittle to embed validation logic at this level.
                 if element_name == "title":
                     res.update_public_and_discoverable()
@@ -911,7 +912,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
         hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     except ValidationError as err:
         request.session["validation_error"] = str(err)
-        logger.warn(str(err))
+        logger.warning(str(err))
     finally:
         request.session["resource-mode"] = "edit"
 
@@ -939,14 +940,14 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
         except ValidationError as err:
             request.session["resource-mode"] = "edit"
             request.session["validation_error"] = str(err)
-            logger.warn(str(err))
+            logger.warning(str(err))
             return HttpResponseRedirect(request.META["HTTP_REFERER"])
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
             # ObjectDoesNotExist exception as legitimate in delete_multiple_files() without
             # raising this specific exception
-            logger.warn(str(ex))
+            logger.warning(str(ex))
             continue
 
     request.session["resource-mode"] = "edit"
@@ -1017,7 +1018,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             return HttpResponseRedirect("/my-resources/")
         except ValidationError as ex:
             request.session["validation_error"] = str(ex)
-            logger.warn(str(ex))
+            logger.warning(str(ex))
             return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
 
@@ -1192,7 +1193,7 @@ def publish(request, shortkey, *args, **kwargs):
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
-        logger.warn(str(exp))
+        logger.warning(str(exp))
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
 
@@ -1214,7 +1215,7 @@ def submit_for_review(request, shortkey, *args, **kwargs):
         hydroshare.submit_resource_for_review(request, shortkey)
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
-        logger.warn(str(exp))
+        logger.warning(str(exp))
     else:
         message = """Congratulations!
                 Your resource is under review for appropriate minimum metadata and to ensure that it adheres to
@@ -1656,7 +1657,7 @@ class PatchedChoiceWidget(autocomplete_light.ChoiceWidget):
         return super(PatchedChoiceWidget, self).render(name, value, attrs)
 
 
-@processor_for(GenericResource)
+@processor_for(BaseResource)
 def add_generic_context(request, page):
     user = request.user
     user_zone_account_exist = utils.get_user_zone_status_info(user)
@@ -2174,7 +2175,7 @@ def get_file(request, *args, **kwargs):
     return HttpResponse(open(name), content_type="x-binary/octet-stream")
 
 
-processor_for(GenericResource)(resource_processor)
+processor_for(BaseResource)(resource_processor)
 
 
 def get_metadata_terms_page(request, *args, **kwargs):
@@ -2451,7 +2452,7 @@ class MyGroupsView(TemplateView):
         return super(MyGroupsView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        u = User.objects.get(pk=self.request.user.id)
+        u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
 
         groups = u.uaccess.my_groups
         group_membership_requests = (
@@ -2493,13 +2494,13 @@ class GroupView(TemplateView):
 
     def get_context_data(self, **kwargs):
         group_id = kwargs["group_id"]
-        g = Group.objects.get(pk=group_id)
+        g = Group.objects.select_related("gaccess").get(pk=group_id)
 
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
         for res in g.gaccess.view_resources:
-            grp = GroupResourcePrivilege.objects.get(resource=res, group=g)
+            grp = GroupResourcePrivilege.objects.select_related("grantor").get(resource=res, group=g)
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
@@ -2510,7 +2511,7 @@ class GroupView(TemplateView):
 
         if self.request.user.is_authenticated:
             group_members = g.gaccess.members
-            u = User.objects.get(pk=self.request.user.id)
+            u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
             u.is_group_editor = g in u.uaccess.edit_groups
             u.is_group_viewer = (
@@ -2574,7 +2575,7 @@ def my_resources_filter_counts(request, *args, **kwargs):
     View for counting resources that belong to a given user.
     """
     _ = request.GET.getlist("filter", default=None)
-    u = User.objects.get(pk=request.user.id)
+    u = User.objects.select_related("uaccess").get(pk=request.user.id)
 
     filter_counts = get_my_resources_filter_counts(u)
 
@@ -2593,7 +2594,7 @@ def my_resources(request, *args, **kwargs):
         filter = request.GET.getlist("f", default=[])
     else:
         filter = [request.GET["new_filter"]]
-    u = User.objects.get(pk=request.user.id)
+    u = User.objects.select_related("uaccess").get(pk=request.user.id)
 
     if not filter:
         # add default filters
@@ -2619,3 +2620,26 @@ def my_resources(request, *args, **kwargs):
                 "trows": trows,
             }
         )
+
+
+def get_non_preferred_paths(request, shortkey):
+    try:
+        resource, _, _ = authorize(request, shortkey,
+                                   needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    except ObjectDoesNotExist:
+        err_message = f"No resource was found for id:{shortkey}"
+        data = {"status": "ERROR", "error": err_message}
+        return JsonResponse(data)
+    except PermissionDenied:
+        err_message = "You don't have permission for this resource"
+        data = {"status": "ERROR", "error": err_message}
+        return JsonResponse(data)
+
+    try:
+        non_preferred_paths = resource.get_non_preferred_path_names()
+    except Exception as ex:
+        data = {"status": "ERROR", "error": str(ex)}
+        return JsonResponse(data)
+
+    data = {"status": "SUCCESS", "non_preferred_paths": non_preferred_paths}
+    return JsonResponse(data)

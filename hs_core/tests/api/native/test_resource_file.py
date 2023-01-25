@@ -26,7 +26,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         )
 
         self.res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource'
         )
