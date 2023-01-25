@@ -795,13 +795,13 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
 
             except Exception as e:
                 logger.error(e)
-                return e
+                return json.dumps(e.__dict__)
 
-        return response
+        return response.json()
 
     except (requests.exceptions.RequestException, ValueError) as e:
         logger.error(e)
-        return e
+        return json.dumps(e.__dict__)
 
 
 @shared_task
