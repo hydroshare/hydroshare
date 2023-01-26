@@ -56,6 +56,7 @@ RUN export GEOS_CONFIG=/usr/bin/geos-config
 RUN HDF5_INCDIR=/usr/include/hdf5/serial 
 RUN pip install --upgrade pip 
 RUN pip install 'setuptools<58.0.0'
+RUN pip install 'numpy==1.16.6'
 
 RUN wget https://ftp.osuosl.org/pub/osgeo/download/gdal/2.4.1/gdal-2.4.1.tar.gz \
     && tar -xzf gdal-2.4.1.tar.gz \
