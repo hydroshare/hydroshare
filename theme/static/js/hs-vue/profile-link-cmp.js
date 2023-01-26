@@ -2,9 +2,8 @@ Vue.component('profile-link', {
     delimiters: ['${', '}'],
     template: '#profile-link-template',
     props: {
-        user: {
-            type: Object, required: true
-        }
+        user: { type: Object, required: true },
+        showDetails: { type: Boolean, required: false, default: false }
     }
 });
 

@@ -8,6 +8,9 @@
 
 {% block main %}
     {% include 'hs_communities/communities-nav.html' with active='my_communities' %}
+
+    {# Profile card component needs to be included first so it's available before other instances initialize #}
+    {% include "includes/profile-card.html" %}
     <div id="communities-app" class="container full-width" style="padding: 0;">
         <div class="container">
             <div class="flex">
@@ -84,12 +87,12 @@
                     </li>
                     <li role="presentation">
                         <a href="#groups" aria-controls="groups" role="tab" data-toggle="tab">
-                            <i class="glyphicon glyphicon-file"></i>&nbsp;Groups</a>
+                            <i class="glyphicon glyphicon-user"></i>&nbsp;Groups</a>
                     </li>
                     {% if is_admin %}
                         <li role="presentation">
                             <a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">
-                                <i class="glyphicon glyphicon-file"></i>&nbsp;Owner Settings</a>
+                                <i class="glyphicon glyphicon-lock"></i>&nbsp;Owner Settings</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -125,7 +128,7 @@
                                                                     <label class="checkbox noselect"><input
                                                                             id="{{ g.id }}" type="checkbox"
                                                                             data-facet="none" value="Click"
-                                                                            @click="updateContribs({{ g.id }})"> {{ g.name }}
+                                                                            @click="updateContributors({{ g.id }})"> {{ g.name }}
                                                                         {% if grpfilter == g.name %}
                                                                             checked
                                                                         {% endif %}

@@ -2,7 +2,7 @@
   <legend>Owner Settings</legend>
   {% csrf_token %}
   <div class="row">
-    <div class="col-xs-12 col-sm-7">
+    <div class="col-xs-12 col-sm-7 has-space-bottom-2x">
       <div class="row">
         {# Community Name #}
         <fieldset class="col-sm-12">
@@ -110,21 +110,10 @@
       </div>
 
       <button type="submit" class="btn btn-primary">Update Community Profile</button>
-
-      <hr>
-      <fieldset style="margin-top: 20px;">
-        <label>Delete this Community</label>
-        <p><small>Deleting a Community does not delete any of the Groups that are members of the Community or the
-            resources that have been shared with the Groups. However, once your Community is deleted, it will be gone
-            forever. Make sure this is what you want to do!</small></p>
-        <br>
-        <a href="#" id="btn-delete-community" class="btn btn-danger" data-toggle="modal"
-          data-target="#delete-community-dialog">Delete this Community</a>
-      </fieldset>
     </div>
 
-    <div class="col-xs-12 col-sm-5">
-      <fieldset class="col-sm-12">
+    <div class="col-xs-12 col-sm-5 has-space-bottom-2x">
+      <fieldset>
         <div class="has-space-bottom">
           <legend class="flex justify-space-between align-center" style="padding-bottom: 1rem;">
             <span>Community Owners</span>
@@ -133,9 +122,26 @@
         </div>
         {# Owners #}
         <div v-for="owner in community.owners" class="flex justify-space-between full-width">
-          <h4><strong><a>${ owner.first_name } ${ owner.last_name }</a></strong></h4>
-          <button @click="removeOwner(owner)" class="btn btn-danger">Remove</button>
+          <profile-link
+              :user="owner" :key="owner.id" @load-card="onLoadOwnerCard($event)" :show-details="true">
+          </profile-link>
+          <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
+          <button @click="removeOwner(owner)" class="btn btn-danger" :disabled="community.owners.length === 1">Remove</button>
         </div>
+      </fieldset>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12 col-sm-7">
+      <fieldset>
+        <label>Delete this Community</label>
+        <p><small>Deleting a Community does not delete any of the Groups that are members of the Community or the
+            resources that have been shared with the Groups. However, once your Community is deleted, it will be gone
+            forever. Make sure this is what you want to do!</small></p>
+        <br>
+        <a href="#" id="btn-delete-community" class="btn btn-danger" data-toggle="modal"
+          data-target="#delete-community-dialog">Delete this Community</a>
       </fieldset>
     </div>
   </div>

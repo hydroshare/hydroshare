@@ -739,6 +739,10 @@ li.account p{
 	margin-right: 60px;
 }
 
+.has-cursor-pointer {
+  cursor: pointer;
+}
+
 /* ===== Scroll to Top ===== */
 
 .scrolltotop {
@@ -2611,6 +2615,11 @@ table.overview tr > td:first-child {
     margin-bottom: 10px;
 }
 
+.details-profile-pic {
+	margin-right: 1rem;
+	margin-top: -1rem;
+}
+
 h4.title {
     border-bottom: 1px solid #ddd;
     padding-bottom: 7px;
@@ -4065,6 +4074,10 @@ div.group-add-photo {
 
 .has-space-bottom {
   margin-bottom: 2rem;
+}
+
+.has-space-bottom-2x {
+  margin-bottom: 4rem;
 }
 
 .full-width {

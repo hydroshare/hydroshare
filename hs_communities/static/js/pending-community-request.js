@@ -41,7 +41,7 @@ $(document).ready(function () {
     },
     methods: {
       onLoadOwnerCard(data) {
-        const el = $(data.event.target);
+        const el = $(data.event.target).closest('.profile-link');
         const cardWidth = 350;
 
         this.userCardSelected = data.user;

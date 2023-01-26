@@ -14,6 +14,28 @@ $(document).ready(function () {
       isRemoving: {},
       isApproving: {},
       isInviting: {},
+      userCardSelected: {
+        user_type: null,
+        access: null,
+        id: null,
+        pictureUrl: null,
+        best_name: null,
+        user_name: null,
+        can_undo: null,
+        email: null,
+        organization: null,
+        title: null,
+        contributions: null,
+        subject_areas: null,
+        identifiers: [],
+        state: null,
+        country: null,
+        joined: null,
+      },
+      cardPosition: {
+        top: 0,
+        left: 0,
+      }
     },
     mounted: function () {
       const groupIds = {};
@@ -30,6 +52,14 @@ $(document).ready(function () {
       }
     },
     methods: {
+      onLoadOwnerCard(data) {
+        const el = $(data.event.target).closest('.profile-link');
+        const cardWidth = 350;
+
+        this.userCardSelected = data.user;
+        this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
+        this.cardPosition.top = el.position().top + 30;
+      },
       isVisible(groupId) {
         if (this.$data.filterTo.length === 0) {  // If no selections show all
           return true;
@@ -37,7 +67,7 @@ $(document).ready(function () {
           return this.$data.filterTo.indexOf(groupId) > -1;
         }
       },
-      updateContribs(groupId) {
+      updateContributors(groupId) {
         const loc = this.$data.filterTo.indexOf(groupId);
 
         if (loc < 0) {
@@ -101,7 +131,10 @@ $(document).ready(function () {
         }
       },
       removeOwner: async function(owner) {
-        
+        console.log('removing owner')
+      },
+      addOwner: async function(owner) {
+        console.log('removing owner')
       }
     }
   });
