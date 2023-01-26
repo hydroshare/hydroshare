@@ -7,6 +7,7 @@ $(document).ready(function () {
       isEditMode: false,
       isSaving: false,
       isApproving: false,
+      isResubmitting: false,
       isRejecting: false,
       rejectReason: '',
       userCardSelected: {
@@ -61,10 +62,42 @@ $(document).ready(function () {
 
         if (response.status === 200) {
           this.$set(this.request.community_to_approve, 'status', 'Approved');
+          this.$set(this.request, 'status', 'Approved');
           // Redirect to requests page
           window.location.href = "/communities/manage-requests/";
         }
         this.isApproving = false
+      },
+      async onResubmit() {
+        this.isResubmitting = true
+        try {
+          const url = `/access/_internal/crequest/resubmit/${this.request.id}/`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              // Do not set content-type header. The browser will set it for you.
+              // https://muffinman.io/blog/uploading-files-using-fetch-multipart-form-data/
+              'X-CSRFToken': getCookie('csrftoken')
+            }
+          });
+
+          console.log(response)
+
+          if (response.status === 200) {
+            this.$set(this.request.community_to_approve, 'status', 'Submitted');
+            this.$set(this.request, 'status', 'Submitted');
+            // Redirect to requests page
+            // window.location.href = "/communities/manage-requests/";
+          }
+          else {
+            customAlert("Resubmit Community", 'Failed to resubmit this request', "error", 6000);
+          }
+        }
+        catch(e) {
+          console.error(e)
+        }
+        
+        this.isResubmitting = false
       },
       async onReject() {
         if (!this.rejectReason) {

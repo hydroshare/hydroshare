@@ -149,6 +149,31 @@ class CommunityRequestEmailNotification:
             <p>Thank you,</p>
             <p>The HydroShare Team</p>
             """
+
+        if self.on_event == CommunityRequestEvents.RESUBMITTED:
+            mail_to = ""
+            if hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
+                mail_to = settings.DEFAULT_SUPPORT_EMAIL
+            if not mail_to:
+                try:
+                    mail_to = User.objects.get(username__iexact='CUAHSI').email
+                except User.DoesNotExist:
+                    err_msg = "No support email was found to send email for approving request to create a community"
+                    logging.error(err_msg)
+                    return
+
+            recipient_emails = [mail_to]
+
+            subject = "New HydroShare Community Request Resubmission"
+            message = f"""Dear HydroShare Admin,
+            <p>User {self.community_request.requested_by.first_name} has resubmitted a request to create the following community.
+            Please click on the link below to review this request.
+            <p><a href="{community_request_url}">
+            {self.community_request.community_to_approve.name}</a></p>
+            <p>Thank you,</p>
+            <p>The HydroShare Team</p>
+            """
+
         elif self.on_event == CommunityRequestEvents.DECLINED:
             recipient_emails = [self.community_request.requested_by.email]
             subject = "HydroShare Community Create Request Declined"

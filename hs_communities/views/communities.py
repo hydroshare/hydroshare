@@ -64,8 +64,8 @@ class CommunityView(TemplateView):
         message = ''
         context = {}
 
-        if "cid" in kwargs:
-            cid = int(kwargs["cid"])
+        if "community_id" in kwargs:
+            cid = int(kwargs["community_id"])
         else:
             cid = None
 

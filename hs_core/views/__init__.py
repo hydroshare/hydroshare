@@ -2687,7 +2687,7 @@ class GroupView(TemplateView):
         g = Group.objects.select_related("gaccess").get(pk=group_id)
 
         if "cid" in kwargs:
-            cid = kwargs["cid"]
+            cid = kwargs["community_id"]
         else:
             cid = None
 

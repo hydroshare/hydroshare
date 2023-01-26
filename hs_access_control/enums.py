@@ -6,6 +6,7 @@ class CommunityRequestEvents(enum.Enum):
     CREATED = enum.auto()
     DECLINED = enum.auto()
     APPROVED = enum.auto()
+    RESUBMITTED = enum.auto()
 
 
 class CommunityGroupEvents(enum.Enum):
@@ -25,6 +26,7 @@ class CommunityRequestActions(str, enum.Enum):
     APPROVE = 'approve'
     DECLINE = 'decline'
     REMOVE = 'remove'
+    RESUBMIT = 'resubmit'
 
 
 class CommunityActions(str, enum.Enum):

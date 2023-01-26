@@ -4,7 +4,7 @@
     <div class="col-xs-12 col-sm-7">
       <div class="row">
         <div class="text-right col-sm-12">
-          <button v-if="!isEditMode && request.status === 'Submitted'" type="button" role="button" class="btn btn-default" @click.prevent="isEditMode = true">Edit</button>
+          <button v-if="!isEditMode && (request.status === 'Submitted' || request.status === 'Rejected')" type="button" role="button" class="btn btn-default" @click.prevent="isEditMode = true">Edit</button>
           <template v-if="isEditMode">
             <button type="button" class="btn btn-default" :disabled="isSaving" @click.prevent="onCancel">Cancel</button>
             <button type="submit" class="btn btn-success" :disabled="isSaving" @click.prevent="onUpdate">
@@ -65,14 +65,16 @@
       </div>
       
       <template v-if="!isEditMode">
-        <template v-if="request.status === 'Submitted'">
-          <button @click="onApprove" :disabled="isApproving || isRejecting" type="button" class="btn btn-success">
-            ${ isApproving ? 'Approving Community...' : 'Approve Community' }
-          </button>
-          <button data-toggle="modal" data-target="#reject-new-community-creation-request-dialog" :disabled="isApproving || isRejecting" type="button" class="btn btn-danger">
-            ${ isRejecting ? 'Rejecting Community...' : 'Reject Community' }
-          </button>
-        </template>
+        <button v-if="request.status === 'Submitted'" @click="onApprove" :disabled="isApproving || isRejecting" type="button" class="btn btn-success">
+          ${ isApproving ? 'Approving Community...' : 'Approve' }
+        </button>
+        <button v-if="request.status === 'Submitted'" data-toggle="modal" data-target="#reject-new-community-creation-request-dialog"
+          :disabled="isApproving || isRejecting || request.status === 'Rejected'" type="button" class="btn btn-danger">
+          ${ isRejecting ? 'Rejecting Community...' : 'Reject' }
+        </button>
+        <button v-if="request.status === 'Rejected'" @click="onResubmit" :disabled="isResubmitting" type="button" class="btn btn-default">
+          ${ isResubmitting ? 'Resubmitting...' : 'Resubmit' }
+        </button>
       </template>
 
       {% include 'hs_communities/reject-community-creation-request-modal.html' %}

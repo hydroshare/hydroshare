@@ -280,24 +280,24 @@ class RequestCommunity(models.Model):
     def approved(self):
         return not self.declined and not self.pending_approval
 
-    @classmethod
-    def create_request(cls, request):
-        """Helper to create a request for a new community"""
+    # @classmethod
+    # def create_request(cls, request):
+    #     """Helper to create a request for a new community"""
 
-        # TODO: currently this method is not used for creating a community request.
-        #  see hs_core/views/__init__.py view function 'request_new_community()' that is used for creating community
-        #  If Mauriel ends of using this, then remove the view function 'request_new_community()'. Otherwise, this
-        #  class method needs to be removed.
+    #     # TODO: currently this method is not used for creating a community request.
+    #     #  see hs_core/views/__init__.py view function 'request_new_community()' that is used for creating community
+    #     #  If Mauriel ends of using this, then remove the view function 'request_new_community()'. Otherwise, this
+    #     #  class method needs to be removed.
 
-        from ..forms import RequestNewCommunityForm
+    #     from ..forms import RequestNewCommunityForm
 
-        community_form = RequestNewCommunityForm(request.POST, request.FILES)
-        if community_form.is_valid():
-            new_community_request = community_form.save(request)
-            return new_community_request
+    #     community_form = RequestNewCommunityForm(request.POST, request.FILES)
+    #     if community_form.is_valid():
+    #         new_community_request = community_form.save(request)
+    #         return new_community_request
 
-        err_msg = f"Failed to make a request for a new community. Errors: {community_form.errors.as_json}"
-        raise ValidationError(err_msg)
+    #     err_msg = f"Failed to make a request for a new community. Errors: {community_form.errors.as_json}"
+    #     raise ValidationError(err_msg)
 
     def approve(self):
         """Helper to approve a request to create a new community
@@ -311,6 +311,17 @@ class RequestCommunity(models.Model):
         # upon approval the request the associated community is set to active
         self.community_to_approve.active = True
         self.community_to_approve.save()
+        self.save()
+
+    def resubmit(self):
+        """Helper to resubmit a request to create a new community after it has been declined
+        """
+        assert self.pending_approval is False
+        assert self.declined is True
+
+        self.pending_approval = True
+        self.declined = False
+        self.decline_reason = None
         self.save()
 
     def decline(self, reason):
@@ -329,7 +340,7 @@ class RequestCommunity(models.Model):
         self.pending_approval = False
         self.declined = True
         self.decline_reason = reason
-        # upon decline the request the associated community is set to inactive
+        # upon declining the request, the associated community is set to inactive
         self.community_to_approve.active = False
         self.community_to_approve.save()
         self.save()
@@ -343,8 +354,8 @@ class RequestCommunity(models.Model):
         """Updates data for a community that is waiting for approval"""
         from ..forms import CommunityForm
 
-        if not self.pending_approval:
-            raise ValidationError("Can't update this community request")
+        # if not self.pending_approval:
+        #     raise ValidationError("Can't update this community request")
 
         community_to_update = self.community_to_approve
         cf = CommunityForm(data=request.POST)

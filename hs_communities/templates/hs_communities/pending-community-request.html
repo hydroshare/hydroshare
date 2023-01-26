@@ -28,6 +28,8 @@
                 <br>
 
                 <div v-if="request.status === 'Approved'" class="alert alert-success col-xs-12 col-sm-7">This request has been approved.</div>
+
+                <div v-if="request.status === 'Submitted'" class="alert alert-warning col-xs-12 col-sm-7">This request is pending approval.</div>
     
                 <div v-else-if="request.status === 'Rejected'" class="alert alert-danger col-xs-12 col-sm-7">
                   <div>This request has been rejected.</div>

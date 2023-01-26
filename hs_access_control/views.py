@@ -752,6 +752,11 @@ class CommunityRequestView(View):
                                                       on_event=CommunityRequestEvents.DECLINED).send()
                 else:
                     denied = "You are not allowed to decline community requests"
+            elif action == CommunityRequestActions.RESUBMIT: # resubmit a request after it has been declined
+                cr.resubmit()
+                message = "Request has been resubmitted"
+                CommunityRequestEmailNotification(request=self.request, community_request=cr,
+                                                  on_event=CommunityRequestEvents.RESUBMITTED).send()
             else:
                 assert action == CommunityRequestActions.REMOVE
                 if user == cr.requested_by or user.is_superuser:
