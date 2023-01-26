@@ -45,7 +45,11 @@ RUN apt-get update && apt-get install -y --fix-missing --no-install-recommends \
     openssh-server \
     netcdf-bin \
     supervisor \
-    nodejs
+    nodejs \
+    libc6 \
+    libproj13 \
+    proj-bin=5.2.0-1 \
+    cmake
 RUN npm install -g phantomjs-prebuilt
 
 WORKDIR /
@@ -61,11 +65,14 @@ RUN wget https://ftp.osuosl.org/pub/osgeo/download/gdal/3.6.2/gdal-3.6.2.tar.gz 
     && tar -xzf gdal-3.6.2.tar.gz \
     && rm gdal-3.6.2.tar.gz
 
+# TODO: buster limits us to libproj 5.2
+# in order to cmake gdal, we need at least libproj 6.0
+# https://packages.debian.org/buster/proj-bin
 WORKDIR /gdal-3.6.2
-RUN ./configure --with-python --with-geos=yes \
-    && make \
-    && sudo make install \
-    && sudo ldconfig
+RUN cmake .
+RUN cmake --build .
+RUN cmake --build . --target install
+RUN sudo ldconfig
 WORKDIR /
 
 # TODO: iROds 4.2.x is holding us to Debian Buster which is EOL. It also requires libssl1.0.0 which is obsolete
