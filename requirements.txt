@@ -1,7 +1,7 @@
 # generated using pipdeptree https://github.com/tox-dev/pipdeptree
 # pipdeptree -f | sed 's/ //g' | sort -u > requirements.txt
 aiohttp==3.8.3
-amqp==2.6.1
+amqp==5.1.1
 anyjson==0.3.3
 arrow==0.7.0
 asgiref==3.5.2
@@ -14,7 +14,7 @@ bcrypt==4.0.1
 beautifulsoup4==4.11.1
 billiard==3.6.4.0
 bleach==4.1.0
-celery==4.4.7
+celery==5.2.7
 certifi==2022.12.7
 cffi==1.15.1
 cftime==1.6.2
@@ -92,7 +92,7 @@ jsonschema==2.6.0
 jwcrypto==1.4.2
 keepalive==0.5
 kiwisolver==1.4.4
-kombu==4.6.11
+kombu==5.2.4
 lazy-object-proxy==1.8.0
 lxml==4.9.2
 Markdown==3.0.1
@@ -170,7 +170,7 @@ ua-parser==0.16.1
 uritemplate==3.0.0
 urllib3==1.26.13
 validate-email==1.3
-vine==1.3.0
+vine==5.0.0
 virtualenv==15.0.2
 webencodings==0.5.1
 websocket-client==1.4.2
