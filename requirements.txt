@@ -70,7 +70,7 @@ flower==0.9.3
 foresite@git+https://github.com/sblack-usu/foresite-toolkit.git@94c0c2a8e21a922caa1df6cc412d5dc1a7adb189#subdirectory=foresite-python/trunk
 funcsigs==1.0.2
 future==0.16.0
-GDAL==2.4.1
+GDAL==3.6.2
 geographiclib==1.52
 geojson==1.3.2
 geopy==1.16.0
