@@ -35,8 +35,8 @@
                                 <i class="fa fa-map-marker text-muted" aria-hidden="true"></i>
                             </td>
                             <td>
-                                <span v-if="user.state && user.state !== 'Unspecified'">${user.state}</span>
-                                <span v-if="user.state && user.country">, </span>
+                                <span v-if="user.state && user.state !== 'Unspecified'">
+                                  ${user.state + (user.country && user.country !== 'Unspecified' ? ',' : '')}</span>
                                 <span v-if="user.country && user.country !== 'Unspecified'">${user.country}</span>
                             </td>
                         </tr>

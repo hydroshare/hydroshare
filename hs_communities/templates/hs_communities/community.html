@@ -27,50 +27,45 @@
             </div>
             {% else %}
             <div class="has-space-right">
-                {% if community.picture and community.picture.url %}
-                <div>
+                <div v-if="community.picture && community.picture.url">
                     <center><img src='{{ community.picture.url }}' height=200></center>
                 </div>
-                {% else %}
-                <div class="community-image-wrapper community-image-wrapper-medium">
+                <div v-else class="community-image-wrapper community-image-wrapper-medium">
                     <div class="community-image community-preview-image-default"
                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
                     </div>
                 </div>
-                {% endif %}
             </div>
             {% endif %}
 
             <div class="flex-grow-1">
                 <div class="community-title-container flex justify-space-between align-flex-start">
-                    <h2 class="community-title is-marginless">{{ community.name }}</h2>
+                    <h2 class="community-title is-marginless">${ community.name }</h2>
 
-                    <div class="community-actions flex">
+                    <!-- <div class="community-actions flex">
                         {% if profile_user.is_group_member %}
                         <div>
-                            <a href="#" id="btn-leave-community" class="btn btn-default" data-toggle="modal"
+                            <button id="btn-leave-community" class="btn btn-default" data-toggle="modal"
                                 data-target="#leave-community-dialog">
                                 Leave Community
-                            </a>
+                            </button>
                         </div>
                         {% endif %}
-                    </div>
+                    </div> -->
                 </div>
 
                 <h4 v-if="community.purpose" class="text-muted">{{ community.purpose|linebreaks }}</h4>
 
                 <!-- Community Info -->
-                {% if community.email or community.url %}
-                <div class="community-info">
+                <div v-if="community.email || community.url" class="community-info">
                     <div v-if="community.url" class="text-muted">
                         <i class="fa fa-link"></i> <a :href="community.url" target="_blank">${ community.url }</a>
                     </div>
 
                     <div v-if="community.email" class="text-muted">
-                        <i class="fa fa-envelope-o"></i> <a href="mailto:{{ community.email }}">${ community.email }</a>
+                        <i class="fa fa-envelope-o"></i> <a :href="'mailto:' + community.email">${ community.email }</a>
                     </div>
                 </div>
-                {% endif %}
             </div>
         </div>
 
@@ -168,7 +163,7 @@
                                         <th>Date Created</th>
                                         <th>Last modified</th>
                                         <th>Subject</th>
-                                        
+
                                         {# Needed for datatable to function properly #}
                                         <th>Authors</th>
                                         <th>Permission Level</th>
@@ -265,13 +260,12 @@
 {{ block.super }}
 <script type="text/javascript">
     // Constants here
-    const COMMUNITY = {{ community| safe }}
-    const IS_ADMIN = {{ is_admin }}
-    const GROUPS = {{ groups| safe }}
-    const MEMBERS = {{ members| safe }}
-    const PENDING = {{ pending| safe }}
+    const COMMUNITY = {{ community| safe }};
+    const IS_ADMIN = {{ is_admin }};
+    const GROUPS = {{ groups| safe }};
+    const MEMBERS = {{ members| safe }};
+    const PENDING = {{ pending| safe }};
 </script>
-<script type="text/javascript" src="{% static 'js/vue-2.6.10-dev.js' %}"></script>
 <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/hs_resource_table_community.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/community.js' %}"></script>
