@@ -743,6 +743,10 @@ li.account p{
   cursor: pointer;
 }
 
+.has-text-center {
+  text-align: center;
+}
+
 /* ===== Scroll to Top ===== */
 
 .scrolltotop {

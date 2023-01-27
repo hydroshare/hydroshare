@@ -1,0 +1,10 @@
+.collaborate-nav a {
+  text-decoration: none;
+  width: 13rem;
+  display: block;
+  flex-shrink: 0;
+}
+
+.collaborate-nav p {
+  max-width: 40rem;
+}
