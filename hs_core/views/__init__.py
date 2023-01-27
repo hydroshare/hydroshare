@@ -2586,7 +2586,7 @@ def community_json(community):
             "name": community.name,
             "description": community.description or "",
             "purpose": community.purpose or "",
-            "auto_approve": 1 if community.auto_approve is True else 0,
+            # "auto_approve": 1 if community.auto_approve is True else 0,
             "date_created": community.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
             "picture": url,
             "closed": 1 if community.closed is True else 0,

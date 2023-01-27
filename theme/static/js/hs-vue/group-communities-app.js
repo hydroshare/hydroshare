@@ -22,7 +22,7 @@ let groupCommunitiesApp = new Vue({
     leave: async function(id) {
       this.$set(this.isLeaving, id, true)
       // TODO: handle leaving
-      const url = '/access/_internal/groupjson/' + this.groupId + '/leave/' + id + '/';
+      const url = '/access/_internal/group/' + this.groupId + '/leave/' + id + '/';
       try {
         const response = await $.get(url)
         this.joined = response.joined
@@ -40,7 +40,7 @@ let groupCommunitiesApp = new Vue({
     join: async function(id) {
       this.$set(this.isJoining, id, true)
       // TODO: handle leaving
-      const url = '/access/_internal/groupjson/' + this.groupId + '/join/' + id + '/';
+      const url = '/access/_internal/group/' + this.groupId + '/join/' + id + '/';
       try {
         const response = await $.get(url, { 'responseType': 'text' })
         console.log(response)

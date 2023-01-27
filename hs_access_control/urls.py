@@ -10,12 +10,6 @@ urlpatterns = [
     url(r'^_internal/community/(?P<cid>[0-9]+)/(?P<action>owner)/(?P<uid>[a-zA-Z0-9]+)/(?P<addrem>add|remove)$',
         views.CommunityView.as_view(), name='access_manage_community'),
 
-    # Community JSON responders (deprecated)
-    url(r'^_internal/communityjson/(?P<cid>[0-9]+)/$',
-        views.CommunityView.as_view()),
-    url(r'^_internal/communityjson/(?P<cid>[0-9]+)/(?P<action>[a-z_ ]*)/(?P<gid>[0-9]+)/$',
-        views.CommunityView.as_view()),
-
     # Group responders return JSON
     url(r'^_internal/group/(?P<gid>[0-9]+)/$',
         views.GroupView.as_view(), name='access_manage_group'),

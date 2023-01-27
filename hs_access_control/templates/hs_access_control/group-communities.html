@@ -19,10 +19,12 @@
           <div class="community-card--info flex-grow-1">
             <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>
             <p v-if="community.purpose">${ community.purpose }</p>
-            <label :for="'auto-share-' + community.id" class="radio-inline">
-              <input type="checkbox" :id="'auto-share-' + community.id">
-              Automatically share public and and published resources with this Community
-            </label>
+            <div class="checkbox">
+              <label :for="'auto-share-' + community.id">
+                <input type="checkbox" :id="'auto-share-' + community.id">
+                <div class="text-muted">Automatically share public and and published resources with this Community</div>
+              </label>
+            </div>
           </div>
           <div class="community-card--actions">
             <button class="btn btn-primary" @click="join(community.id)" :disabled="isJoining[community.id]">Join Community</button>
@@ -33,21 +35,24 @@
 
     <!-- JOINED COMMUNITIES -->
     <div>
-      <h4 class="heading">This Group is a member of the following Communities</h4>
+      <!-- <h4 class="heading">This Group is a member of the following Communities</h4>  -->
+      <legend>This Group is a member of the following Communities</legend>
       <template v-if="joined.length">
         <div v-for="community of joined" class="group-community-card panel panel-default">
           <div class="panel-body flex gap-1 align-center">
-            <div class="group-image-wrapper group-image-wrapper-medium">
+            <div class="group-image-wrapper group-image-wrapper-medium has-space-right">
                 <div class="group-image group-preview-image-default"
                     style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
             </div>
             <div class="community-card--info flex-grow-1">
               <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>
               <p v-if="community.purpose">${ community.purpose }</p>
-              <label :for="'auto-share-' + community.id" class="radio-inline has-space-top" style="padding: 0;">
-                <input type="checkbox" :id="'auto-share-' + community.id">
-                Automatically share public and and published resources with this Community
-              </label>
+              <div class="checkbox">
+                <label :for="'auto-share-' + community.id">
+                  <input type="checkbox" :id="'auto-share-' + community.id">
+                  <div class="text-muted">Automatically share public and and published resources with this Community</div>
+                </label>
+              </div>
             </div>
             <div class="community-card--actions">
               <!-- <button class="btn btn-default" @click="leave(community.id)" :disabled="isLeaving[community.id]">Leave Community</button> -->
@@ -101,4 +106,4 @@
   const PENDING = {{ communities.pending|safe }};
   const COMMUNITIES_CAN_JOIN = {{ communities.available_to_join|safe }};
 </script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/group-community-app.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/group-communities-app.js"></script>

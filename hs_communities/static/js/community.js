@@ -83,7 +83,7 @@ $(document).ready(function () {
       remove: async function (id) {
         this.$set(this.isRemoving, id, true)
         // TODO: handle leaving
-        const url = '/access/_internal/communityjson/' + this.community.id + '/remove/' + id + '/';
+        const url = '/access/_internal/community/' + this.community.id + '/remove/' + id + '/';
         try {
           const response = await $.get(url)
           this.availableToInvite = response.groups
@@ -101,14 +101,14 @@ $(document).ready(function () {
       invite: async function (id) {
         this.$set(this.isInviting, id, true)
         // TODO: handle leaving
-        const url = '/access/_internal/communityjson/' + this.community.id + '/invite/' + id + '/';
+        const url = '/access/_internal/community/' + this.community.id + '/invite/' + id + '/';
         try {
-          const response = await $.get(url, { 'responseType': 'text' })
+          const response = await $.post(url)
           const group = this.availableToInvite.find(g => g.id === id)
           group.wasInvited = true
 
           // this.availableToInvite = response.groups
-          this.members = response.members
+          // this.members = response.members
           this.$set(this.isInviting, id, false)
           customAlert("Invite Group", response.message, "success", 6000);
         }
@@ -121,9 +121,9 @@ $(document).ready(function () {
       approve: async function (id) {
         this.$set(this.isApproving, id, true)
         // TODO: handle leaving
-        const url = '/access/_internal/communityjson/' + this.community.id + '/approve/' + id + '/';
+        const url = '/access/_internal/community/' + this.community.id + '/approve/' + id + '/';
         try {
-          const response = await $.get(url, { 'responseType': 'text' })
+          const response = await $.get(url)
           // this.joined = response.joined
           // this.availableToJoin = response.available_to_join
           this.$set(this.isApproving, id, false)
