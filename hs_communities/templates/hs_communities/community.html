@@ -11,8 +11,12 @@
 
     {# Profile card component needs to be included first so it's available before other instances initialize #}
     {% include "includes/profile-card.html" %}
+
     <div id="communities-app" class="container full-width" style="padding: 0;">
         <div class="container">
+            {% if is_admin %}
+              {% include 'hs_communities/community-settings-add-owner.html' %}
+            {% endif %}
             <div class="flex">
                 {% if czo_community %}
                   <div class="has-space-right">

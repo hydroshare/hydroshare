@@ -71,7 +71,7 @@
                                     data-value="users">Users</button>
                             <button type="button"
                                     :class="{btn: true, 'btn-primary': !isInviteUsers, 'btn-default': isInviteUsers}"
-                                    @click="isInviteUsers = false; if (selectedAccess === 'owner') {selectedAccess = 'view'}"
+                                    @click="onBtnGroupsClick"
                                     data-value="groups">Groups</button>
                         </div>
 

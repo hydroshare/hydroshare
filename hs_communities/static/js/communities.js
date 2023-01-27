@@ -44,6 +44,9 @@ $(document).ready(function () {
         const groupId = parseInt($(this).attr('id'));
         groupIds[$(this).text()] = groupId;
       });
+
+      $("input[name='user-autocomplete']").attr("placeholder", "Search by name or username").addClass("form-control");
+
       this.$data.groupIds = groupIds;
 
       const filterGroup = $('#filter-querystring').text();
@@ -76,25 +79,25 @@ $(document).ready(function () {
           this.$data.filterTo.splice(loc, 1);
         }
       },
-      remove: async function(id) {
+      remove: async function (id) {
         this.$set(this.isRemoving, id, true)
         // TODO: handle leaving
         const url = '/access/_internal/communityjson/' + this.community.id + '/remove/' + id + '/';
         try {
-          const  response = await $.get(url)
+          const response = await $.get(url)
           this.availableToInvite = response.groups
           this.members = response.members
           this.$set(this.isRemoving, id, false)
           $("#remove-group-modal").modal('hide')
           customAlert("Remove Group", response.message, "success", 6000);
         }
-        catch(e) {
+        catch (e) {
           console.log(e)
           // abort
           this.$set(this.isRemoving, id, false)
         }
       },
-      invite: async function(id) {
+      invite: async function (id) {
         this.$set(this.isInviting, id, true)
         // TODO: handle leaving
         const url = '/access/_internal/communityjson/' + this.community.id + '/invite/' + id + '/';
@@ -108,13 +111,13 @@ $(document).ready(function () {
           this.$set(this.isInviting, id, false)
           customAlert("Invite Group", response.message, "success", 6000);
         }
-        catch(e) {
+        catch (e) {
           console.log(e)
           // abort
           this.$set(this.isInviting, id, false)
         }
       },
-      approve: async function(id) {
+      approve: async function (id) {
         this.$set(this.isApproving, id, true)
         // TODO: handle leaving
         const url = '/access/_internal/communityjson/' + this.community.id + '/approve/' + id + '/';
@@ -124,18 +127,40 @@ $(document).ready(function () {
           // this.availableToJoin = response.available_to_join
           this.$set(this.isApproving, id, false)
         }
-        catch(e) {
+        catch (e) {
           console.log(e)
           // abort
           this.$set(this.isApproving, id, false)
         }
       },
-      removeOwner: async function(owner) {
+      onRemoveOwner: async function (owner) {
         console.log('removing owner')
       },
-      addOwner: async function(owner) {
-        console.log('removing owner')
-      }
+      onAddOwner: async function () {
+        let targetUserId;
+
+        if ($("#user-deck > .hilight").length > 0) {
+          targetUserId = parseInt($("#user-deck > .hilight")[0].getAttribute("data-value"));
+        }
+        else {
+          return false;   // No user selected
+        }
+
+        $(".hilight > span").click(); // Clear the autocomplete
+        console.log(targetUserId)
+        // add owner here
+
+        const url = `/access/_internal/community/${this.community.id}/owner/${targetUserId}/add`
+        try {
+          const response = await $.post(url, { 'responseType': 'text' })
+          console.log(response)
+        }
+        catch (e) {
+          console.log(e)
+          // abort
+          this.$set(this.isApproving, id, false)
+        }
+      },
     }
   });
 });

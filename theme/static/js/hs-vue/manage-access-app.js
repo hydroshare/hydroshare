@@ -128,6 +128,12 @@ let manageAccessApp = new Vue({
                 vue.isProcessing = false;
             });
         },
+        onBtnGroupsClick: function () {
+          this.isInviteUsers = false;
+          if (this.selectedAccess === 'owner') {
+            this.selectedAccess = 'view'
+          }
+        },
         getUserDropdownItemClass: function (user, accessToGrant) {
             let ddClass = {
                 active: false,

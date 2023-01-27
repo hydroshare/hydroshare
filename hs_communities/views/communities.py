@@ -13,6 +13,7 @@ from hs_access_control.models import Community, GroupCommunityRequest, RequestCo
 from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
 from hs_access_control.views import community_json, gcr_json, group_json, user_json, cr_json
 from hs_communities.models import Topic
+from hs_core.views import add_generic_context
 
 logger = logging.getLogger(__name__)
 
@@ -190,6 +191,10 @@ class CommunityView(TemplateView):
             context["members"] = []
             for g in Group.objects.filter(g2gcp__community=community).order_by("name"):
                 context["members"].append(group_json(g))
+
+            if is_admin:
+              hs_core_dublin_context = add_generic_context(self.request, None)
+              context.update(hs_core_dublin_context)
 
             return context
 
