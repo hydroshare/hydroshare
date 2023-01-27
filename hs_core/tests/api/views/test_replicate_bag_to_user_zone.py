@@ -1,7 +1,7 @@
 import json
 
 from django.test import TestCase, RequestFactory
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.urls import reverse
 
 from rest_framework import status
@@ -33,12 +33,18 @@ class TestReplicateBagToUserZone(TestCaseCommonUtilities, TestCase):
         super(TestReplicateBagToUserZone, self).create_irods_user_in_user_zone()
 
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
-            title='Generic Resource Key/Value Metadata Testing'
+            title='Resource Key/Value Metadata Testing'
         )
 
         self.factory = RequestFactory()
+
+    def tearDown(self):
+        super(TestReplicateBagToUserZone, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        self.gen_res.delete()
 
     def test_replicate_bag(self):
         # here we are testing rep_res_bag_to_irods_user_zone view function

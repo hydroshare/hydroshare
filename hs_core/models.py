@@ -30,7 +30,7 @@ from django.forms.models import model_to_dict
 from django.utils.timezone import now
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
-import defusedxml.ElementTree as etree
+from lxml import etree
 from markdown import markdown
 from mezzanine.conf import settings as s
 from mezzanine.core.managers import PublishedManager
@@ -4034,25 +4034,6 @@ class BaseResource(Page, AbstractResource):
         return not_preferred_paths
 
 
-# TODO Deprecated
-class GenericResource(BaseResource):
-    """Define GenericResource model."""
-
-    objects = ResourceManager('GenericResource')
-
-    @property
-    def supports_folders(self):
-        """Return True always."""
-        return True
-
-    discovery_content_type = 'Generic Resource'  # used during discovery
-
-    class Meta:
-        """Define meta properties for GenericResource model."""
-        verbose_name = 'Generic'
-        proxy = True
-
-
 old_get_content_model = Page.get_content_model
 
 
@@ -4225,7 +4206,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """Parse the input *metadata* dict to needed format and store it in
         *parsed_metadata* list
         :param  metadata: a dict of metadata that needs to be parsed to get the metadata in the
-        format needed for updating the metadata elements supported by generic resource type
+        format needed for updating the metadata elements supported by resource type
         :param  parsed_metadata: a list of dicts that will be appended with parsed data
         """
 

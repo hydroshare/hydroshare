@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group, User
 
 from hs_core.hydroshare import resource
 from hs_core.models import (
-    GenericResource,
+    BaseResource,
     Creator,
     Contributor,
     CoreMetaData,
@@ -54,9 +54,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.res = hydroshare.create_resource(
-            resource_type="GenericResource",
+            resource_type="CompositeResource",
             owner=self.user,
-            title="Generic resource",
+            title="A Resource",
             keywords=["kw1", "kw2"],
         )
 
@@ -67,7 +67,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
-        GenericResource.objects.all().delete()
+        BaseResource.objects.all().delete()
         Creator.objects.all().delete()
         Contributor.objects.all().delete()
         CoreMetaData.objects.all().delete()
@@ -89,7 +89,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         self.assertEqual(
             self.res.metadata.title.value,
-            "Generic resource",
+            "A Resource",
             msg="resource title did not match",
         )
 
@@ -148,7 +148,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # 'Type' element should have been created
         type_url = "{0}/terms/{1}".format(
-            hydroshare.utils.current_site_url(), "GenericResource"
+            hydroshare.utils.current_site_url(), "CompositeResource"
         )
         self.assertEqual(
             self.res.metadata.type.url, type_url, msg="type element url is wrong"
@@ -1377,10 +1377,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             self.res.short_id,
             "description",
             self.res.metadata.description.id,
-            abstract="Updated generic resource",
+            abstract="Updated resource",
         )
         self.assertEqual(
-            self.res.metadata.description.abstract, "Updated generic resource"
+            self.res.metadata.description.abstract, "Updated resource"
         )
 
         # test adding a 2nd description element - should raise an exception
@@ -1488,9 +1488,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # open the file for read
         file_obj_1 = open(res_file_1, "rb")
         res = hydroshare.create_resource(
-            resource_type="GenericResource",
+            resource_type="CompositeResource",
             owner=self.user,
-            title="Generic resource",
+            title="Test resource",
             files=(file_obj_1,),
         )
         format_CSV = "text/plain"
@@ -1510,9 +1510,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # open the file for read
         file_obj_2 = open(res_file_2, "rb")
         res = hydroshare.create_resource(
-            resource_type="GenericResource",
+            resource_type="CompositeResource",
             owner=self.user,
-            title="Generic resource",
+            title="Test resource",
             files=(file_obj_1, file_obj_2),
         )
 
@@ -1534,9 +1534,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         file_obj_1 = open(res_file_1, "rb")
 
         res = hydroshare.create_resource(
-            resource_type="GenericResource",
+            resource_type="CompositeResource",
             owner=self.user,
-            title="Generic resource",
+            title="Test resource",
             files=(file_obj_1, file_obj_3),
         )
         # there should be two format elements at this point
@@ -1566,9 +1566,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # open the file for read
         file_obj_1 = open(res_file_1, "rb")
         res = hydroshare.create_resource(
-            resource_type="GenericResource",
+            resource_type="CompositeResource",
             owner=self.user,
-            title="Generic resource",
+            title="Test resource",
             files=(file_obj_1,),
         )
         format_CSV = "text/plain"
@@ -1877,9 +1877,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # publisher name 'CUAHSI' only and publisher url to 'https://www.cuahsi.org' only.
         # create a different resource
         res_with_files = hydroshare.create_resource(
-            resource_type="GenericResource",
+            resource_type="CompositeResource",
             owner=self.user,
-            title="Generic resource with files",
+            title="Test resource with files",
         )
 
         # check the resource is not published
@@ -2514,7 +2514,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertRaises(
             Exception,
             lambda: resource.create_metadata_element(
-                self.res.short_id, "type", url="http://hydroshare.org/generic"
+                self.res.short_id, "type", url="http://hydroshare.org/composite"
             ),
         )
 
@@ -2523,11 +2523,11 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             self.res.short_id,
             "type",
             self.res.metadata.type.id,
-            url="http://hydroshare2.org/generic",
+            url="http://hydroshare2.org/composite",
         )
         self.assertEqual(
             self.res.metadata.type.url,
-            "http://hydroshare2.org/generic",
+            "http://hydroshare2.org/composite",
             msg="Resource type url did not match.",
         )
 
@@ -2549,7 +2549,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             self.res.short_id,
             "title",
             self.res.metadata.title.id,
-            value="Test generic resource",
+            value="Test resource",
         )
 
         # add another creator with all sub_elements
@@ -2696,11 +2696,11 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # check root 'hsterms' element
         container = RDF_ROOT.find(
-            "hsterms:GenericResource", namespaces=self.res.metadata.NAMESPACES
+            "hsterms:CompositeResource", namespaces=self.res.metadata.NAMESPACES
         )
 
         self.assertNotEqual(
-            container, None, msg="Root 'hsterms:GenericResource' element was not found."
+            container, None, msg="Root 'hsterms:CompositeResource' element was not found."
         )
         # res_uri = 'http://hydroshare.org/resource/%s' % self.res.short_id
         res_uri = "{}/resource/{}".format(

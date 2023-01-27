@@ -526,7 +526,8 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
+                                                    {# this assumes that the phone will be in the same country as the profile #}
+                                                    <input id="phone1" name="phone_1" class="form-control bfh-phone phone" data-country="country" type="tel" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
                                                 </div>
                                             </fieldset>
 
@@ -547,7 +548,8 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
+                                                    {# this assumes that the phone will be in the same country as the profile #}
+                                                    <input id="phone2" name="phone_2" class="form-control bfh-phone phone" data-country="country" type="tel" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
                                                 </div>
                                             </fieldset>
                                             <fieldset class="col-sm-12">
@@ -666,10 +668,6 @@
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "CollectionResource" %}
                                                 <img src="{% static 'img/resource-icons/collection48x48.png' %}"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "GenericResource" %}
-                                                <img src="{% static 'img/resource-icons/generic48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% endif %}
@@ -912,6 +910,7 @@
 {% block extra_js %}
     {{ block.super }}
     <script>
+        var PHONES = {'phone_1': "{{profile_user.userprofile.phone_1}}", 'phone_2': "{{profile_user.userprofile.phone_2}}" };
         var OLD_STATE = "{{ profile_user.userprofile.state }}";
     </script>
     <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>

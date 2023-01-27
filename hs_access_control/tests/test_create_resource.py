@@ -1,11 +1,13 @@
 from django.test import TestCase
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 
 from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
+
+from hs_composite_resource.models import CompositeResource
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set, \
     assertUserResourceState, assertResourceUserState
@@ -43,6 +45,16 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             groups=[]
         )
+        # a resource
+        self.holes = None
+
+    def tearDown(self):
+        super(T03CreateResource, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        if self.holes:
+            self.holes.delete()
+        BaseResource.objects.all().delete()
 
     def test_01_create(self):
         """Resource creator has appropriate access"""
@@ -51,10 +63,8 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         assertUserResourceState(self, cat, [], [], [])
 
         # create a resource
-        holes = hydroshare.create_resource(resource_type='GenericResource',
-                                           owner=cat,
-                                           title='all about dog holes',
-                                           metadata=[],)
+        self.holes = self._create_resource()
+        holes = self.holes
 
         assertUserResourceState(self, cat, [holes], [], [])
 
@@ -95,10 +105,8 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         """A user who didn't create a resource cannot access it"""
         cat = self.cat
         dog = self.dog
-        holes = hydroshare.create_resource(resource_type='GenericResource',
-                                           owner=cat,
-                                           title='all about dog holes',
-                                           metadata=[],)
+        self.holes = self._create_resource()
+        holes = self.holes
 
         # check that resource was created
         assertUserResourceState(self, cat, [holes], [], [])
@@ -147,10 +155,8 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         dog = self.dog
 
         # create a resource
-        holes = hydroshare.create_resource(resource_type='GenericResource',
-                                           owner=cat,
-                                           title='all about dog holes',
-                                           metadata=[],)
+        self.holes = self._create_resource()
+        holes = self.holes
 
         assertUserResourceState(self, cat, [holes], [], [])
         assertResourceUserState(self, holes, [cat], [], [])
@@ -271,10 +277,8 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
 
         # create a resource
-        holes = hydroshare.create_resource(resource_type='GenericResource',
-                                           owner=cat,
-                                           title='all about dog holes',
-                                           metadata=[],)
+        self.holes = self._create_resource()
+        holes = self.holes
 
         # metadata state
         self.assertFalse(holes.raccess.immutable)
@@ -304,10 +308,10 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # is it listed as discoverable?
         self.assertTrue(
             is_equal_to_as_set(
-                [], GenericResource.discoverable_resources.all()))
+                [], CompositeResource.discoverable_resources.all()))
         self.assertTrue(
             is_equal_to_as_set(
-                [], GenericResource.public_resources.all()))
+                [], CompositeResource.public_resources.all()))
 
         # make it discoverable
         holes.raccess.discoverable = True
@@ -317,10 +321,10 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(
             is_equal_to_as_set(
                 [holes],
-                GenericResource.discoverable_resources.all()))
+                CompositeResource.discoverable_resources.all()))
         self.assertTrue(
             is_equal_to_as_set(
-                [], GenericResource.public_resources.all()))
+                [], CompositeResource.public_resources.all()))
 
         # metadata state
         self.assertFalse(holes.raccess.immutable)
@@ -398,10 +402,8 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
 
         # create a resource
-        holes = hydroshare.create_resource(resource_type='GenericResource',
-                                           owner=cat,
-                                           title='all about dog holes',
-                                           metadata=[],)
+        self.holes = self._create_resource()
+        holes = self.holes
 
         # metadata state
         self.assertFalse(holes.raccess.immutable)
@@ -510,10 +512,8 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
 
         # create a resource
-        holes = hydroshare.create_resource(resource_type='GenericResource',
-                                           owner=cat,
-                                           title='all about dog holes',
-                                           metadata=[],)
+        self.holes = self._create_resource()
+        holes = self.holes
 
         # metadata state
         self.assertFalse(holes.raccess.immutable)
@@ -543,10 +543,10 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # is it listed as discoverable?
         self.assertTrue(
             is_equal_to_as_set(
-                [], GenericResource.discoverable_resources.all()))
+                [], CompositeResource.discoverable_resources.all()))
         self.assertTrue(
             is_equal_to_as_set(
-                [], GenericResource.public_resources.all()))
+                [], CompositeResource.public_resources.all()))
 
         # make it public
         holes.raccess.public = True
@@ -556,11 +556,11 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(
             is_equal_to_as_set(
                 [holes],
-                GenericResource.discoverable_resources.all()))
+                CompositeResource.discoverable_resources.all()))
         self.assertTrue(
             is_equal_to_as_set(
                 [holes],
-                GenericResource.public_resources.all()))
+                CompositeResource.public_resources.all()))
 
         # metadata state
         self.assertFalse(holes.raccess.immutable)
@@ -629,3 +629,9 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(
             self.admin.uaccess.can_share_resource(
                 holes, PrivilegeCodes.VIEW))
+
+    def _create_resource(self):
+        return hydroshare.create_resource(resource_type='CompositeResource',
+                                          owner=self.cat,
+                                          title='all about dog holes',
+                                          metadata=[], )

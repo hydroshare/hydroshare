@@ -1,12 +1,13 @@
 from django.test import TestCase
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied
 
 from hs_access_control.models import PrivilegeCodes, GroupCommunityPrivilege,\
     GroupCommunityProvenance, UserCommunityPrivilege, UserCommunityProvenance, \
-    GroupResourcePrivilege, CommunityResourcePrivilege, CommunityResourceProvenance
+    GroupResourcePrivilege, CommunityResourcePrivilege, CommunityResourceProvenance, Community
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_core import hydroshare
+from hs_core.models import BaseResource
 
 
 class TestCommunities(TestCase):
@@ -106,7 +107,7 @@ class TestCommunities(TestCase):
         self.bat.uaccess.share_group_with_user(self.bats, self.dog, PrivilegeCodes.OWNER)
 
         self.holes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='all about dog holes',
             metadata=[],
@@ -114,7 +115,7 @@ class TestCommunities(TestCase):
         self.dog.uaccess.share_resource_with_group(self.holes, self.dogs, PrivilegeCodes.VIEW)
 
         self.squirrels = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='a list of squirrels to pester',
             metadata=[],
@@ -124,7 +125,7 @@ class TestCommunities(TestCase):
                                                    PrivilegeCodes.CHANGE)
 
         self.posts = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.cat,
             title='all about scratching posts',
             metadata=[],
@@ -133,7 +134,7 @@ class TestCommunities(TestCase):
         self.cat.uaccess.share_resource_with_group(self.posts, self.cats, PrivilegeCodes.VIEW)
 
         self.claus = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.cat,
             title='bad jokes about claws',
             metadata=[],
@@ -141,7 +142,7 @@ class TestCommunities(TestCase):
         self.cat.uaccess.share_resource_with_group(self.claus, self.cats, PrivilegeCodes.CHANGE)
 
         self.wings = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.bat,
             title='things with wings',
             metadata=[],
@@ -149,7 +150,7 @@ class TestCommunities(TestCase):
         self.bat.uaccess.share_resource_with_group(self.wings, self.bats, PrivilegeCodes.VIEW)
 
         self.perches = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.bat,
             title='where to perch',
             metadata=[],
@@ -170,8 +171,21 @@ class TestCommunities(TestCase):
         self.pests.active = True
         self.pests.save()
 
+    def tearDown(self):
+        super(TestCommunities, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        self.posts.delete()
+        self.holes.delete()
+        self.claus.delete()
+        self.perches.delete()
+        self.wings.delete()
+        self.squirrels.delete()
+        BaseResource.objects.all().delete()
+        Community.objects.all().delete()
+
     def test_share_community_with_group(self):
-        " share and unshare community with group "
+        """ share and unshare community with group """
 
         # first check permissions
         self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,

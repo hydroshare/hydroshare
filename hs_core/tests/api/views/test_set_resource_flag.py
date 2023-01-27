@@ -2,12 +2,13 @@ import os
 import shutil
 import json
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.urls import reverse
 from django.core.files.uploadedfile import UploadedFile
 
 
 from hs_core import hydroshare
+from hs_core.models import BaseResource
 from hs_core.views import set_resource_flag
 from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
@@ -28,9 +29,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
             groups=[]
         )
         self.gen_res_one = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
-            title='Generic Resource Set Flag Testing-1'
+            title='Resource Set Flag Testing-1'
         )
 
         # Make a text file
@@ -46,9 +47,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
             {'subject': {'value': 'sub-1'}}
         ]
         self.gen_res_two = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
-            title='Generic Resource Set Flag Testing-2',
+            title='Resource Set Flag Testing-2',
             files=files,
             metadata=metadata_dict
         )
@@ -57,6 +58,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
         super(TestSetResourceFlag, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        BaseResource.objects.all().delete()
 
     def test_set_resource_flag_make_public(self):
         # here we are testing the set_resource_flag view function to make a resource public

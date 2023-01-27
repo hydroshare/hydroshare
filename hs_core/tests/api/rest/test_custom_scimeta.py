@@ -9,7 +9,7 @@ class TestCustomScimetaEndpoint(HSRESTTestCase):
     def setUp(self):
         super(TestCustomScimetaEndpoint, self).setUp()
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         res = resource.create_resource(self.rtype,
                                        self.user,
