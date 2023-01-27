@@ -35,8 +35,7 @@
 
     <!-- JOINED COMMUNITIES -->
     <div>
-      <!-- <h4 class="heading">This Group is a member of the following Communities</h4>  -->
-      <legend>This Group is a member of the following Communities</legend>
+      <h4 class="heading">This Group is a member of the following Communities</h4> 
       <template v-if="joined.length">
         <div v-for="community of joined" class="group-community-card panel panel-default">
           <div class="panel-body flex gap-1 align-center">
@@ -55,7 +54,6 @@
               </div>
             </div>
             <div class="community-card--actions">
-              <!-- <button class="btn btn-default" @click="leave(community.id)" :disabled="isLeaving[community.id]">Leave Community</button> -->
               <button class="btn btn-default" @click="targetCommunity = community" :disabled="isLeaving[community.id]" 
                 data-toggle="modal" data-target="#leave-community-modal">Leave Community</button>
             </div>

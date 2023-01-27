@@ -11,6 +11,7 @@ $(document).ready(function () {
       isAdmin: IS_ADMIN,
       pending: PENDING,
       targetGroup: null,
+      targetOwner: null,
       isRemoving: {},
       isApproving: {},
       isInviting: {},
