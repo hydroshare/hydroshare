@@ -3,7 +3,6 @@
 {% load hydroshare_tags thumbnail %}
 
 {% block main %}
-
     <div class="collaborate-header">
         <div class="container">
             <div class="row">
@@ -20,9 +19,14 @@
     <div class="container">
         <div class="row">
             <div class="col-sm-12">
+                {% if request.user.is_authenticated %}
                 <h2 class="page-title">Find Groups</h2>
                 <a class="btn btn-success" data-toggle="modal" data-target="#create-group-dialog"><i class="fa fa-plus"></i> Create Group</a>
                 <br><br>
+                {% else %}
+                <h2 class="page-title">Find Public Groups</h2>
+                {% endif %}
+                
                 <div class="group-search input-group">
                     <span class="glyphicon glyphicon-search search-icon"></span>
                     <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by group name...">
@@ -46,7 +50,7 @@
                             {% endif %}
                             <div class="group-caption">
                                 <h3 class="group-name"><a href="/group/{{ group.id }}">{{ group.name }}</a></h3>
-                                <div class="group-purpose">
+                                <div class="group-purpose text-muted">
                                     <p>{{ group.gaccess.purpose|linebreaks}}</p>
                                 </div>
                                 <div class="group-description"><p>{{ group.gaccess.description|linebreaks }}</p></div>
@@ -136,7 +140,7 @@
                                     {% endif %}
 
                                     <br>
-
+                                    {% if request.user.is_authenticated %}
                                     {% if group.is_user_member %}
                                         <div class="text-center">
                                             <h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group</h4>
@@ -177,6 +181,7 @@
                                                role="button">Ask to join</a>
                                         </form>
                                     {% endif %}
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -184,12 +189,18 @@
                 {% endif %}
             {% endfor %}
                 {% else %}
+                {% if request.user.is_authenticated %}
                <div class="col-sm-12"><i>No groups have been created yet.</i>
                </div>
+               {% else %}
+               <div class="col-sm-12"><i>No public groups have been created yet.</i>
+               </div>
+               {% endif %}
             {% endif %}
         </div>
     </div>
 
+    {% if request.user.is_authenticated %}
     <!-- Create Group Modal -->
     <div class="modal fade" id="create-group-dialog" tabindex="-1" role="dialog"
          aria-labelledby="Creage Group">
@@ -298,6 +309,7 @@
     </div>
 
     {% include "includes/group_explanation_modal.html" %}
+    {% endif %}
 {% endblock %}
 
 {% block extra_js %}

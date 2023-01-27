@@ -2432,12 +2432,10 @@ def _set_resource_sharing_status(user, resource, flag_to_set, flag_value):
 
 class FindGroupsView(TemplateView):
     template_name = (
-        "pages/groups-unauthenticated.html"  # default view is for users not logged in
+        "pages/find-groups.html"
     )
 
     def dispatch(self, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            self.template_name = "pages/groups-authenticated.html"  # update template if user is logged in
         return super(FindGroupsView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
