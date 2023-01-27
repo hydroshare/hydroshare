@@ -117,16 +117,17 @@
         <div class="has-space-bottom">
           <legend class="flex justify-space-between align-center" style="padding-bottom: 1rem;">
             <span>Community Owners</span>
-            <button data-toggle="modal" data-target="#community-settings-add-owner" class="btn btn-primary">Add Owner</button>
+            <button data-toggle="modal" data-target="#community-settings-add-owner"
+              class="btn btn-primary has-space-left">Add Owner</button>
           </legend>
         </div>
         {# Owners #}
-        <div v-for="owner in community.owners" class="flex justify-space-between full-width">
+        <div v-for="owner in community.owners" class="flex justify-space-between full-width align-center has-space-bottom">
           <profile-link
               :user="owner" :key="owner.id" @load-card="onLoadOwnerCard($event)" :show-details="true">
           </profile-link>
           <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
-          <button @click="removeOwner(owner)" class="btn btn-danger" :disabled="community.owners.length === 1">Remove</button>
+          <button type="button" @click="onRemoveOwner(owner.id)" class="btn btn-danger has-space-left" :disabled="community.owners.length === 1 || isRemovingOwner[owner.id]">Remove</button>
         </div>
       </fieldset>
     </div>

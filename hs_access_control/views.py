@@ -558,7 +558,7 @@ class CommunityView(View):
         elif action == CommunityActions.OWNER:  # add or remove an owner.
             # look up proposed user id
             try:
-                newuser = User.objects.get(username=uid)
+                newuser = User.objects.get(id=uid)
                 if addrem == CommunityActions.ADD:
                     if not newuser.uaccess.owns_community(community):
                         user.uaccess.share_community_with_user(

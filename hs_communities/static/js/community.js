@@ -1,6 +1,6 @@
 $(document).ready(function () {
   const CommunityApp = new Vue({
-    el: "#communities-app",
+    el: "#community-app",
     delimiters: ['${', '}'],
     data: {
       filterTo: [],
@@ -14,6 +14,7 @@ $(document).ready(function () {
       isRemoving: {},
       isApproving: {},
       isInviting: {},
+      isRemovingOwner: {},
       userCardSelected: {
         user_type: null,
         access: null,
@@ -133,32 +134,49 @@ $(document).ready(function () {
           this.$set(this.isApproving, id, false)
         }
       },
-      onRemoveOwner: async function (owner) {
-        console.log('removing owner')
+      onRemoveOwner: async function (userId) {
+        const url = `/access/_internal/community/${this.community.id}/owner/${userId}/remove`
+        this.$set(this.isRemovingOwner, userId, true)
+        try {
+          const response = await $.post(url)
+          if (response.community) {
+            this.community.owners = response.community.owners
+            customAlert('Remove Community Owner', 'User has been removed as an owner of this Community', 'success', 6000);
+          }
+        }
+        catch (e) {
+          customAlert("Add Community Owner", 'Failed to remove Community owner', 'error', 6000);
+        }
+        this.$set(this.isRemovingOwner, userId, false)
       },
       onAddOwner: async function () {
-        let targetUserId;
+        let userId;
 
         if ($("#user-deck > .hilight").length > 0) {
-          targetUserId = parseInt($("#user-deck > .hilight")[0].getAttribute("data-value"));
+          userId = parseInt($("#user-deck > .hilight")[0].getAttribute("data-value"));
         }
         else {
           return false;   // No user selected
         }
 
         $(".hilight > span").click(); // Clear the autocomplete
-        console.log(targetUserId)
         // add owner here
 
-        const url = `/access/_internal/community/${this.community.id}/owner/${targetUserId}/add`
+        const url = `/access/_internal/community/${this.community.id}/owner/${userId}/add`
         try {
-          const response = await $.post(url, { 'responseType': 'text' })
-          console.log(response)
+          const response = await $.post(url)
+          if (response.community) {
+            this.community.owners = response.community.owners
+            customAlert('Add Community Owner', 'User has been added as an owner of this Community', 'success', 6000);
+          }
         }
         catch (e) {
-          console.log(e)
-          // abort
-          this.$set(this.isApproving, id, false)
+          if (e.status === 400 && e.responseText.indexOf('already owns community') >= 0) {
+            customAlert('Add Community Owner', 'User is already an owner of this Community', 'info', 6000);
+          }
+          else {
+            customAlert("Add Community Owner", 'Failed to add user as Community owner', 'error', 6000);
+          }
         }
       },
     }
