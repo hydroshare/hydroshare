@@ -40,7 +40,16 @@
 }
 
 .group-community-card {
+  position: relative;
   border-radius: 4px;
+  max-width: 75rem;
+}
+
+.group-community-card .pending-invitation-badge {
+  position: absolute;
+  top: 1rem;
+  right: 2.4rem;
+  margin: 0;
 }
 
 .community-card--heading {
@@ -48,8 +57,7 @@
 }
 
 .community-card--info {
-  display: flex;
-  flex-direction: column;
+  flex-grow: 1;
 }
 
 .group-actions {

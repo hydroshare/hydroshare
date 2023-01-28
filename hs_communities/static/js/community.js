@@ -42,6 +42,8 @@ $(document).ready(function () {
     mounted: function () {
       const groupIds = {};
 
+      console.log(this.pending)
+
       $('#groups-list li').each(function () {
         const groupId = parseInt($(this).attr('id'));
         groupIds[$(this).text()] = groupId;
@@ -86,9 +88,9 @@ $(document).ready(function () {
         // TODO: handle leaving
         const url = '/access/_internal/community/' + this.community.id + '/remove/' + id + '/';
         try {
-          const response = await $.get(url)
-          this.availableToInvite = response.groups
-          this.members = response.members
+          const response = await $.post(url)
+          // this.availableToInvite = response.groups
+          // this.members = response.members
           this.$set(this.isRemoving, id, false)
           $("#remove-group-modal").modal('hide')
           customAlert("Remove Group", response.message, "success", 6000);
@@ -124,9 +126,10 @@ $(document).ready(function () {
         // TODO: handle leaving
         const url = '/access/_internal/community/' + this.community.id + '/approve/' + id + '/';
         try {
-          const response = await $.get(url)
+          const response = await $.post(url)
           // this.joined = response.joined
           // this.availableToJoin = response.available_to_join
+          console.log(response)
           this.$set(this.isApproving, id, false)
         }
         catch (e) {
@@ -143,6 +146,7 @@ $(document).ready(function () {
           if (response.community) {
             this.community.owners = response.community.owners
             customAlert('Remove Community Owner', 'User has been removed as an owner of this Community', 'success', 6000);
+            $("#remove-community-owner-modal").modal('hide')
           }
         }
         catch (e) {

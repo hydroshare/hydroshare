@@ -115,7 +115,7 @@ def gcr_json(request):
         'when_group': (request.when_group.strftime("%m/%d/%Y, %H:%M:%S")
                        if request.when_group is not None
                        else ""),
-        'privilege': request.privilege,
+        'privilege': request.privilege or "",
         'redeemed': 1 if request.redeemed is True else 0,
     }
 
@@ -519,6 +519,7 @@ class CommunityView(View):
                 # send email to group owners
                 CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
                                                 on_event=CommunityGroupEvents.APPROVED).send()
+                #TODO: return data needed to update UI
         elif action == CommunityActions.DECLINE:  # decline a request from a group
             group = Group.objects.get(id=gid)
             gcr = GroupCommunityRequest.get_request(community=community, group=group)

@@ -2555,17 +2555,18 @@ def group_json(group):
         return {
             'type': 'Group',
             'name': group.name,
-            'active': group.gaccess.active,
-            'discoverable': group.gaccess.discoverable,
-            'public': group.gaccess.public,
-            'shareable': group.gaccess.shareable,
-            'auto_approve': group.gaccess.auto_approve,
-            'requires_explanation': group.gaccess.requires_explanation,
-            'purpose': group.gaccess.purpose,
-            'email': group.gaccess.email,
+            'active': 1 if group.gaccess.active is True else 0,
+            'discoverable': 1 if group.gaccess.discoverable is True else 0,
+            'public': 1 if group.gaccess.public is True else 0,
+            'shareable': 1 if group.gaccess.shareable is True else 0,
+            'auto_approve': 1 if group.gaccess.auto_approve is True else 0,
+            'requires_explanation': 1 if group.gaccess.requires_explanation is True else 0,
+            'purpose': group.gaccess.purpose or '',
+            'email': group.gaccess.email or '',
             'date_created': group.gaccess.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
             'picture': url,
-            'owners': [user_json(u) for u in group.gaccess.owners]
+            'owners': [user_json(u) for u in group.gaccess.owners],
+            'description': group.gaccess.description or '',
         }
     else:
         return {}
@@ -2606,8 +2607,8 @@ def gcr_json(request):
                            if request.when_community is not None else ""),
         "when_group": (request.when_group.strftime("%m/%d/%Y, %H:%M:%S")
                        if request.when_group is not None else ""),
-        "privilege": request.privilege,
-        "redeemed": request.redeemed
+        "privilege": request.privilege or "",
+        "redeemed": 1 if request.redeemed is True else 0
     }
 
 
@@ -2689,51 +2690,51 @@ class GroupView(TemplateView):
         else:
             cid = None
 
-        if "action" in kwargs:
-            action = kwargs["action"]
-        else:
-            action = None
+        # if "action" in kwargs:
+        #     action = kwargs["action"]
+        # else:
+        #     action = None
 
         denied = self.hydroshare_denied(group_id, cid=cid)
         communitiesContext = {}
 
         if denied == "":
-            user = self.request.user
+            # user = self.request.user
             group = Group.objects.get(id=group_id)
-            if "action" in kwargs:
-                community = Community.objects.get(id=cid)
-                if action == "approve":
-                    gcr = GroupCommunityRequest.objects.get(
-                        group=group, community=community)
-                    if gcr.redeemed:  # reset to unredeemed in order to approve
-                        gcr.reset(responder=user)
-                    message, worked = gcr.approve(responder=user)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+            # if "action" in kwargs:
+            #     community = Community.objects.get(id=cid)
+            #     if action == "approve":
+            #         gcr = GroupCommunityRequest.objects.get(
+            #             group=group, community=community)
+            #         if gcr.redeemed:  # reset to unredeemed in order to approve
+            #             gcr.reset(responder=user)
+            #         message, worked = gcr.approve(responder=user)
+            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == "decline":
-                    gcr = GroupCommunityRequest.objects.get(
-                        group=group, community=community)
-                    message, worked = gcr.decline(responder=user)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+            #     elif action == "decline":
+            #         gcr = GroupCommunityRequest.objects.get(
+            #             group=group, community=community)
+            #         message, worked = gcr.decline(responder=user)
+            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == "join":
-                    message, worked = GroupCommunityRequest.create_or_update(
-                        group=group, community=community, requester=user)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+            #     elif action == "join":
+            #         message, worked = GroupCommunityRequest.create_or_update(
+            #             group=group, community=community, requester=user)
+            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == "leave":
-                    message, worked = GroupCommunityRequest.remove(
-                        requester=user, group=group, community=community)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+            #     elif action == "leave":
+            #         message, worked = GroupCommunityRequest.remove(
+            #             requester=user, group=group, community=community)
+            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == "retract":  # remove a pending request
-                    message, worked = GroupCommunityRequest.retract(
-                        requester=user, group=group, community=community)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+            #     elif action == "retract":  # remove a pending request
+            #         message, worked = GroupCommunityRequest.retract(
+            #             requester=user, group=group, community=community)
+            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                else:
-                    message = "unknown action '{}'".format(action)
-                    logger.error(message)
+            #     else:
+            #         message = "unknown action '{}'".format(action)
+            #         logger.error(message)
 
             communitiesContext["denied"] = denied  # empty string means ok
             communitiesContext["message"] = message
@@ -2746,17 +2747,17 @@ class GroupView(TemplateView):
                 communitiesContext["joined"].append(community_json(c))
 
             # invites from communities to be approved or declined
-            communitiesContext["approvals"] = []
-            for r in GroupCommunityRequest.objects.filter(
-                    group=group,
-                    group__gaccess__active=True,
-                    group_owner__isnull=True).order_by("community__name"):
-                context["approvals"].append(gcr_json(r))
+            # communitiesContext["approvals"] = []
+            # for r in GroupCommunityRequest.objects.filter(
+            #         group=group,
+            #         group__gaccess__active=True,
+            #         group_owner__isnull=True).order_by("community__name"):
+            #     communitiesContext["approvals"].append(gcr_json(r))
 
             # pending requests from this group
             communitiesContext["pending"] = []
             for r in GroupCommunityRequest.objects.filter(
-                    group=group, redeemed=False, community_owner__isnull=True)\
+                    group=group, redeemed=False)\
                     .order_by("community__name"):
                 communitiesContext["pending"].append(gcr_json(r))
 

@@ -1576,18 +1576,6 @@ body > .main-container {
 	text-overflow: ellipsis;
 }
 
-.flex {
-	display: flex;
-}
-
-.align-center {
-  align-items: center;
-}
-
-.gap-1x {
-  gap: 8px;
-}
-
 #citation-text a, .citation-description, .rights-url a {
 	word-break: break-word;
 }

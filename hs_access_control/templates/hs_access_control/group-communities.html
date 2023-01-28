@@ -10,24 +10,25 @@
     <!-- PENDING INVITATIONS -->
     <div v-if="isGroupOwner && pending.length">
       <h4 class="heading">Pending Community Membership Requests</h4>
-      <div v-for="community of pending" class="group-community-card panel panel-default">
+      <div v-for="request of pending" class="group-community-card panel panel-default">
+        <!-- <h5 class="pending-invitation-badge"><span class="label label-warning">Pending Invitation</span></h5> -->
         <div class="panel-body flex gap-1 align-center">
-          <div class="group-image-wrapper group-image-wrapper-medium">
-              <div class="group-image group-preview-image-default"
-                  style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+          <div class="group-image-wrapper group-image-wrapper-medium has-space-right">
+            <div class="group-image group-preview-image-default"
+                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
           </div>
-          <div class="community-card--info flex-grow-1">
-            <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>
-            <p v-if="community.purpose">${ community.purpose }</p>
+          <div class="community-card--info">
+            <a class="community-card--heading" :href="'/community/' + request.community.id">${ request.community.name }</a>
+            <p v-if="request.community.purpose">${ request.community.purpose }</p>
             <div class="checkbox">
-              <label :for="'auto-share-' + community.id">
-                <input type="checkbox" :id="'auto-share-' + community.id">
+              <label :for="'auto-share-' + request.community.id">
+                <input type="checkbox" :id="'auto-share-' + request.community.id">
                 <div class="text-muted">Automatically share public and and published resources with this Community</div>
               </label>
             </div>
-          </div>
-          <div class="community-card--actions">
-            <button class="btn btn-primary" @click="join(community.id)" :disabled="isJoining[community.id]">Join Community</button>
+            <button class="btn btn-primary btn-sm" @click="acceptInvite(request.community.id)"
+              :disabled="isJoining[request.community.id]">
+                <i class="fa fa-user-plus" aria-hidden="true"></i> Join Community</button>
           </div>
         </div>
       </div>
@@ -99,7 +100,6 @@
 
   const GROUP_ID = {{ gid }}
   const IS_GROUP_OWNER = "{{ profile_user.is_group_owner }}" === "True"
-
   const JOINED = {{ communities.joined|safe }};
   const PENDING = {{ communities.pending|safe }};
   const COMMUNITIES_CAN_JOIN = {{ communities.available_to_join|safe }};

@@ -96,45 +96,45 @@ class CommunityView(TemplateView):
             context["is_admin"] = is_admin
             context["czo_community"] = "CZO National" in community.name
 
-            if action is not None:
-                group = Group.objects.get(id=int(gid))
-                if action == "approve":  # approve a request from a group
-                    gcr = GroupCommunityRequest.objects.get(
-                        community=community, group=group)
-                    if gcr.redeemed:  # make it possible to approve a formerly declined request.
-                        gcr.reset(responder=user)
-                    message, worked = gcr.approve(responder=user)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+            # if action is not None:
+            #     group = Group.objects.get(id=int(gid))
+            #     if action == "approve":  # approve a request from a group
+            #         gcr = GroupCommunityRequest.objects.get(
+            #             community=community, group=group)
+            #         if gcr.redeemed:  # make it possible to approve a formerly declined request.
+            #             gcr.reset(responder=user)
+            #         message, worked = gcr.approve(responder=user)
+            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == "decline":  # decline a request from a group
-                    gcr = GroupCommunityRequest.objects.get(
-                        community__id=int(cid),
-                        group__id=int(kwargs["gid"]))
-                    message, worked = gcr.decline(responder=user)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+            #     elif action == "decline":  # decline a request from a group
+            #         gcr = GroupCommunityRequest.objects.get(
+            #             community__id=int(cid),
+            #             group__id=int(kwargs["gid"]))
+            #         message, worked = gcr.decline(responder=user)
+            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == "invite":
-                    logger.debug("action is invite")
-                    try:
-                        message, worked = GroupCommunityRequest.create_or_update(
-                            requester=user, group=group, community=community)
-                        logger.debug("message = '{}' worked='{}'".format(message, worked))
-                    except Exception as e:
-                        logger.debug(e)
+            #     elif action == "invite":
+            #         logger.debug("action is invite")
+            #         try:
+            #             message, worked = GroupCommunityRequest.create_or_update(
+            #                 requester=user, group=group, community=community)
+            #             logger.debug("message = '{}' worked='{}'".format(message, worked))
+            #         except Exception as e:
+            #             logger.debug(e)
 
-                elif action == 'remove':  # remove a group from this community
-                    message, worked = GroupCommunityRequest.remove(
-                        requester=user, group=group, community=community)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+            #     elif action == 'remove':  # remove a group from this community
+            #         message, worked = GroupCommunityRequest.remove(
+            #             requester=user, group=group, community=community)
+            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == "retract":  # remove a pending request
-                    message, worked = GroupCommunityRequest.retract(
-                        requester=user, group=group, community=community)
-                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+            #     elif action == "retract":  # remove a pending request
+            #         message, worked = GroupCommunityRequest.retract(
+            #             requester=user, group=group, community=community)
+            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                else:
-                    message = "unknown action '{}'".format(action)
-                    logger.error(message)
+            #     else:
+            #         message = "unknown action '{}'".format(action)
+            #         logger.error(message)
 
             # build a JSON object that contains the results of the query
 
@@ -161,7 +161,7 @@ class CommunityView(TemplateView):
 
             context["pending"] = []
             for r in GroupCommunityRequest.objects.filter(
-                    community=community, redeemed=False, group_owner__isnull=True).order_by("group__name"):
+                    community=community, redeemed=False).order_by("group__name"):
                 context["pending"].append(gcr_json(r))
 
             # requests that were declined by us
