@@ -82,7 +82,7 @@
                     <td v-if="owners.length" class="owners-wrapper">
                         <template v-for="owner in owners">
                             <profile-link
-                                :user="owner" :key="owner.id" @load-card="onLoadOwnerCard($event)">
+                                :user="owner" :key="owner.id" @load-card="loadOwnerCard($event)">
                             </profile-link>
                         </template>
 
@@ -113,7 +113,7 @@
                 <tr>
                     <th>Last updated:</th>
                     <td> {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }}
-                        <profile-link v-if="lastChanagedBy.is_active" v-on:load-card="onLoadOwnerCard($event)" :user="lastChanagedBy"></profile-link>
+                        <profile-link v-if="lastChanagedBy.is_active" v-on:load-card="loadOwnerCard($event)" :user="lastChanagedBy"></profile-link>
                         <profile-card v-if="lastChanagedBy.is_active" :user="lastChanagedBy" :position="cardPosition"></profile-card>
                     </td>
                 </tr>

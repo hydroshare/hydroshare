@@ -1848,7 +1848,6 @@ def update_user_community(request, community_id, *args, **kwargs):
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
 
-# TODO: FIGURE OUT HOW TO DELETE COMMUNITIES
 @login_required
 def delete_user_community(request, group_id, *args, **kwargs):
     """This one is not really deleting the group object, rather setting the active status

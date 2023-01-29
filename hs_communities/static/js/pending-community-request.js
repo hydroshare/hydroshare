@@ -40,7 +40,7 @@ $(document).ready(function () {
 
     },
     methods: {
-      onLoadOwnerCard(data) {
+      loadOwnerCard(data) {
         const el = $(data.event.target).closest('.profile-link');
         const cardWidth = 350;
 

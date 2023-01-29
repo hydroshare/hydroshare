@@ -421,6 +421,29 @@ class CommunityView(View):
 
         return err_msg, req_params
 
+    def get_pending_requests(self, community):
+        pending = []
+        for r in GroupCommunityRequest.objects.filter(
+                community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
+            pending.append(gcr_json(r))
+        return pending
+    
+    def get_groups(self, community):
+        groups = []
+        for g in Group.objects.filter(gaccess__active=True)\
+                              .exclude(invite_g2gcr__community=community)\
+                              .exclude(g2gcp__community=community)\
+                              .order_by('name'):
+            groups.append(group_json(g))
+        return groups
+    
+    def get_group_members(self, community):
+        members = []
+        for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
+            members.append(group_json(g))
+
+        return members
+
     def get(self, *args, **kwargs):
         message = ''
         cid = kwargs.get('cid', None)
@@ -440,17 +463,9 @@ class CommunityView(View):
         context['community'] = community_json(community)
 
         # groups that can be invited are those that are not already invited or members.
-        context['groups'] = []
-        for g in Group.objects.filter(gaccess__active=True)\
-                              .exclude(invite_g2gcr__community=community)\
-                              .exclude(g2gcp__community=community)\
-                              .order_by('name'):
-            context['groups'].append(group_json(g))
+        context['groups'] = self.get_groups(community)
 
-        context['pending'] = []
-        for r in GroupCommunityRequest.objects.filter(
-                community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
-            context['pending'].append(gcr_json(r))
+        context['pending'] = self.get_pending_requests(community)
 
         # requests that were declined by us
         context['we_declined'] = []
@@ -534,12 +549,17 @@ class CommunityView(View):
         elif action == CommunityActions.INVITE:
             group = Group.objects.get(id=gid)
             try:
-                message, _ = GroupCommunityRequest.create_or_update(
+                message, approved = GroupCommunityRequest.create_or_update(
                     requester=user, group=group, community=community)
                 # send email to group owner
                 gcr = GroupCommunityRequest.get_request(community=community, group=group)
                 CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
                                                 on_event=CommunityGroupEvents.INVITED).send()
+                context = {}
+                if approved:
+                    context['members'] = self.get_group_members(community)
+                context['pending'] = self.get_pending_requests(community)
+                return JsonResponse(context)
             except Exception as e:
                 logger.error(str(e))
                 denied = str(e)
@@ -549,6 +569,12 @@ class CommunityView(View):
                 requester=user, group=group, community=community)
             if not worked:
                 denied = message
+            else:
+                context = { 
+                    'members': self.get_group_members(community),
+                    'groups': self.get_groups(community)
+                }
+                return JsonResponse(context)
         elif action == CommunityActions.RETRACT:  # remove a pending request
             group = Group.objects.get(id=gid)
             message, worked = GroupCommunityRequest.retract(

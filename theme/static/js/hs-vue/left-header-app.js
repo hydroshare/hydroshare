@@ -443,7 +443,7 @@ let leftHeaderApp = new Vue({
         },
     },
     methods: {
-        onLoadOwnerCard: function(data) {
+        loadOwnerCard: function(data) {
             const el = $(data.event.target);
             const cardWidth = 350;
 

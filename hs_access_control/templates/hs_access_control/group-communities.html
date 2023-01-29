@@ -22,7 +22,7 @@
             <p v-if="request.community.purpose">${ request.community.purpose }</p>
             <div class="checkbox">
               <label :for="'auto-share-' + request.community.id">
-                <input type="checkbox" :id="'auto-share-' + request.community.id">
+                <input type="checkbox" :value="request.community.autoshare" @change="" :id="'auto-share-' + request.community.id">
                 <div class="text-muted">Automatically share public and and published resources with this Community</div>
               </label>
             </div>

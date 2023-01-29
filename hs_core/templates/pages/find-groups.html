@@ -3,18 +3,7 @@
 {% load hydroshare_tags thumbnail %}
 
 {% block main %}
-    <div class="collaborate-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="collaborate-nav">
-                        <a href="{% url "groups" %}" class="collaborate-nav-item active">Find Groups</a>
-                        <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include 'includes/groups-nav.html' with active='find_groups' %}
 
     <div class="container">
         <div class="row">

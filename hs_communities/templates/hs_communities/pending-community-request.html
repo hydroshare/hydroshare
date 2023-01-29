@@ -20,7 +20,7 @@
                 <p>Submission Date: ${ request.date_requested }</p>
                 <p>Submitted by: 
                     <profile-link
-                        :user="request.requested_by" :key="request.requested_by.id" @load-card="onLoadOwnerCard($event)">
+                        :user="request.requested_by" :key="request.requested_by.id" @load-card="loadOwnerCard($event)">
                     </profile-link>
                     <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
                 </p>

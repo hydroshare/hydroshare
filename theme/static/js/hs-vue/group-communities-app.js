@@ -74,6 +74,6 @@ let groupCommunitiesApp = new Vue({
     },
   },
   created() {
-    console.log(this.approvals)
+    console.log(this.joined)
   }
 });

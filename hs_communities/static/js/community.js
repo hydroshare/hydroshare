@@ -49,7 +49,9 @@ $(document).ready(function () {
         groupIds[$(this).text()] = groupId;
       });
 
-      $("input[name='user-autocomplete']").attr("placeholder", "Search by name or username").addClass("form-control");
+      $("input[name='user-autocomplete']")
+        .attr("placeholder", "Search by name or username")
+        .addClass("form-control");
 
       this.$data.groupIds = groupIds;
 
@@ -59,7 +61,7 @@ $(document).ready(function () {
       }
     },
     methods: {
-      onLoadOwnerCard(data) {
+      loadOwnerCard(data) {
         const el = $(data.event.target).closest('.profile-link');
         const cardWidth = 350;
 
@@ -83,17 +85,17 @@ $(document).ready(function () {
           this.$data.filterTo.splice(loc, 1);
         }
       },
-      remove: async function (id) {
+      removeGroup: async function (id) {
         this.$set(this.isRemoving, id, true)
         // TODO: handle leaving
         const url = '/access/_internal/community/' + this.community.id + '/remove/' + id + '/';
         try {
           const response = await $.post(url)
-          // this.availableToInvite = response.groups
-          // this.members = response.members
+          this.members = response.members
+          this.availableToInvite = response.groups
           this.$set(this.isRemoving, id, false)
           $("#remove-group-modal").modal('hide')
-          customAlert("Remove Group", response.message, "success", 6000);
+          customAlert("Remove Group", 'Group has been removed from your Community', "success", 6000);
         }
         catch (e) {
           console.log(e)
@@ -101,7 +103,7 @@ $(document).ready(function () {
           this.$set(this.isRemoving, id, false)
         }
       },
-      invite: async function (id) {
+      inviteGroup: async function (id) {
         this.$set(this.isInviting, id, true)
         // TODO: handle leaving
         const url = '/access/_internal/community/' + this.community.id + '/invite/' + id + '/';
@@ -110,8 +112,11 @@ $(document).ready(function () {
           const group = this.availableToInvite.find(g => g.id === id)
           group.wasInvited = true
 
-          // this.availableToInvite = response.groups
-          // this.members = response.members
+          this.pending = response.pending
+          if (response.members) {
+            // If members is included in the response, we update the state
+            this.members = response.members
+          }
           this.$set(this.isInviting, id, false)
           customAlert("Invite Group", response.message, "success", 6000);
         }
@@ -138,7 +143,7 @@ $(document).ready(function () {
           this.$set(this.isApproving, id, false)
         }
       },
-      onRemoveOwner: async function (userId) {
+      removeOwner: async function (userId) {
         const url = `/access/_internal/community/${this.community.id}/owner/${userId}/remove`
         this.$set(this.isRemovingOwner, userId, true)
         try {
@@ -154,7 +159,7 @@ $(document).ready(function () {
         }
         this.$set(this.isRemovingOwner, userId, false)
       },
-      onAddOwner: async function () {
+      addOwner: async function () {
         let userId;
 
         if ($("#user-deck > .hilight").length > 0) {

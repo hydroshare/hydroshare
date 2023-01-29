@@ -107,9 +107,8 @@ class GroupCommunityRequest(models.Model):
         Usage:
             GroupCommunityRequest.create_or_update(group={X}, community={Y}, requester={Z})
 
-        Return: returns a triple of values
+        Return: returns a tuple of values
         * message: a status message for the community owner using this routine.
-        * request: the request object of type GroupCommunityRequest.
         * approved: whether the request was approved. If False, it was only queued.
 
         Theory of operation: This routine ensures that there is never more than one

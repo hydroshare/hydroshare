@@ -6,7 +6,7 @@
 
 {% block main %}
     {% include 'hs_communities/communities-nav.html' with active='communities' %}
-    <div class="container">
+    <div class="container has-space-bottom-2x">
         <div class="row">
             <div class="col-sm-12">
                 <h2 class="page-title">Find Communities</h2>
@@ -59,7 +59,7 @@
                             {% endif %}
 
                             {% if community.description %}
-                            <div class="group-description">
+                            <div class="community-description">
                               <p>{{ community.description|linebreaks }}</p>
                             </div>
                             {% endif %}

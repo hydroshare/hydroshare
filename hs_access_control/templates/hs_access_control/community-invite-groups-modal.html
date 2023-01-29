@@ -16,13 +16,13 @@
 
         <div class="grid">
           <div v-for="group of availableToInvite"
-            class="group-community-card panel panel-default flex flex-column is-marginless">
+            class="community-group-card panel panel-default flex flex-column is-marginless">
             <div class="community-card--actions text-right has-background-light-gray">
-              <button v-if="group.wasInvited" class="btn btn-default" @click="invite(group.id)" disabled>
+              <button v-if="group.wasInvited" class="btn btn-default" disabled>
                 Invited
               </button>
 
-              <button v-else class="btn btn-primary" @click="invite(group.id)" :disabled="isInviting[group.id]">
+              <button v-else class="btn btn-primary" @click="inviteGroup(group.id)" :disabled="isInviting[group.id]">
                 ${ isInviting[group.id] ? 'Sending invitation...' : 'Send Invite' }
               </button>
             </div>

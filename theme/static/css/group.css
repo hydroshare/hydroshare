@@ -14,10 +14,6 @@
 .group-info {
   margin-top: 20px;
   word-break: break-all;
-  display: flex;
-  align-items: flex-start;
-  column-gap: 50px;
-  flex-wrap: wrap;
 }
 
 .group-info > div {

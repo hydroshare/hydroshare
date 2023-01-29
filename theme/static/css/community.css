@@ -76,6 +76,11 @@
 	padding-left: 25px;
 }
 
+.community-group-card {
+  border-radius: 4px;
+  max-width: 75rem;
+}
+
 @media screen and (min-width: 768px) {
   #invite-groups-modal .modal-dialog {
     width: 900px;

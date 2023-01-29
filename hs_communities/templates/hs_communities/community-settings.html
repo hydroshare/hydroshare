@@ -109,7 +109,7 @@
         <br>
       </div>
 
-      <button type="submit" class="btn btn-primary">Update Community Profile</button>
+      <button type="submit" class="btn btn-primary">Save Profile Changes</button>
     </div>
 
     <div class="col-xs-12 col-sm-5 has-space-bottom-2x">
@@ -125,7 +125,7 @@
         {# Owners #}
         <div v-for="owner in community.owners"
           class="flex justify-space-between full-width align-center has-space-bottom">
-          <profile-link :user="owner" :key="owner.id" @load-card="onLoadOwnerCard($event)" :show-details="true">
+          <profile-link :user="owner" :key="owner.id" @load-card="loadOwnerCard($event)" :show-details="true">
           </profile-link>
           <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
           <button type="button" data-toggle="modal" data-target="#remove-community-owner-modal"
@@ -167,8 +167,8 @@
         </div>
 
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Confirm</button>
           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Delete</button>
         </div>
       </form>
     </div>
@@ -194,7 +194,7 @@
           Cancel
         </button>
         <button class="btn btn-danger" :disabled="community.owners.length === 1 || isRemovingOwner[targetOwner.id]"
-          @click="onRemoveOwner(targetOwner.id)">Remove
+          @click="removeOwner(targetOwner.id)">Remove
         </button>
       </div>
     </div>
