@@ -16,6 +16,7 @@ $(document).ready(function () {
       isApproving: {},
       isInviting: {},
       isRemovingOwner: {},
+      inviteSearch: '',
       userCardSelected: {
         user_type: null,
         access: null,
@@ -39,19 +40,29 @@ $(document).ready(function () {
         left: 0,
       }
     },
+    computed: {
+      filteredAvailableToInvite() {
+        if (!this.inviteSearch) {
+          return this.availableToInvite
+        }
+        return this.availableToInvite.filter(group => {
+          return group.name.toLowerCase().indexOf(this.inviteSearch) >= 0
+        })
+      }
+    },
     mounted: function () {
-      const groupIds = {};
+      // Styling and placeholder for user auto-complete
+      $("input[name='user-autocomplete']")
+        .attr("placeholder", "Search by name or username")
+        .addClass("form-control");
 
-      console.log(this.pending)
+      // Initialize DataTables filter data
+      const groupIds = {};
 
       $('#groups-list li').each(function () {
         const groupId = parseInt($(this).attr('id'));
         groupIds[$(this).text()] = groupId;
       });
-
-      $("input[name='user-autocomplete']")
-        .attr("placeholder", "Search by name or username")
-        .addClass("form-control");
 
       this.$data.groupIds = groupIds;
 

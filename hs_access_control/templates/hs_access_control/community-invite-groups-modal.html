@@ -11,11 +11,12 @@
       <div class="modal-body">
         <div class="input-group has-space-bottom full-width">
           <span class="glyphicon glyphicon-search search-icon"></span>
-          <input type="text" class="form-control input--search" placeholder="Search" />
+          <input v-model.trim="inviteSearch" type="text" class="form-control input--search"
+            placeholder="Search by group name" />
         </div>
 
         <div class="grid">
-          <div v-for="group of availableToInvite"
+          <div v-for="group of filteredAvailableToInvite"
             class="community-group-card panel panel-default flex flex-column is-marginless">
             <div class="community-card--actions text-right has-background-light-gray">
               <button v-if="group.wasInvited" class="btn btn-default" disabled>
