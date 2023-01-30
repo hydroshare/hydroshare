@@ -396,7 +396,11 @@ class CommunityView(View):
         req_params['cid'] = cid
 
         gid = kwargs.get('gid', None)
-        if gid is None and action != CommunityActions.OWNER and action is not None:
+        non_group_actions = [
+            CommunityActions.OWNER,
+            CommunityActions.DEACTIVATE
+        ]
+        if gid is None and action is not None and action not in non_group_actions:
             err_msg = "id for the group is not provided"
             return err_msg, req_params
 

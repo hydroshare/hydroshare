@@ -1849,20 +1849,6 @@ def update_user_community(request, community_id, *args, **kwargs):
 
 
 @login_required
-def delete_user_community(request, group_id, *args, **kwargs):
-    """This one is not really deleting the group object, rather setting the active status
-    to False (delete) which can be later restored (undelete) )"""
-    try:
-        hydroshare.set_group_active_status(request.user, group_id, False)
-        messages.success(request, "Community delete was successful.")
-    except PermissionDenied:
-        messages.error(request, "Community delete errors: You don't have permission to delete"
-                                " this community.")
-
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-
-@login_required
 def update_user_group(request, group_id, *args, **kwargs):
     user = request.user
     group_to_update = hydroshare.utils.group_from_id(group_id)

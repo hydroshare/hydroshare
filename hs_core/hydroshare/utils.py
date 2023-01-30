@@ -170,7 +170,7 @@ def community_from_id(community):
         tgt = Community.objects.get(name=community)
     except ObjectDoesNotExist:
         try:
-            tgt = Community.objects.get(pk=int(community))
+            tgt = Community.objects.get(id=int(community))
         except ValueError:
             raise Http404('Community not found')
         except TypeError:

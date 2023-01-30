@@ -15,11 +15,12 @@ $(document).ready(function () {
       targetGroup: null,
       targetOwner: null,
       isRemoving: {},
-      isApproving: {},
+      isApprovingGroup: {},
       isInviting: {},
       isRemovingOwner: {},
       isCancelingInvitation: {},
       inviteSearch: '',
+      isDeletingCommunity: false,
       userCardSelected: {
         user_type: null,
         access: null,
@@ -152,9 +153,23 @@ $(document).ready(function () {
         }
         this.$set(this.isCancelingInvitation, id, false)
       },
-      approve: async function (id) {
-        this.$set(this.isApproving, id, true)
-        // TODO: handle leaving
+      deleteCommunity: async function() {
+        const url = `/access/_internal/community/${this.community.id}/deactivate/`;
+        this.isDeletingCommunity = true
+        try {
+          await $.post(url)
+          // redirect to my-communities
+          window.location.href = "/my-communities/";
+        }
+        catch (e) {
+          console.log(e)
+          customAlert("Delete Community", 'Failed to delete Community', 'error', 6000);
+        }
+        $("#delete-community-dialog").modal('hide')
+        this.isDeletingCommunity = false
+      },
+      approveGroup: async function (id) {
+        this.$set(this.isApprovingGroup, id, true)
         const url = `/access/_internal/community/${this.community.id}/approve/${id}/`;
         try {
           const response = await $.post(url)
@@ -164,7 +179,7 @@ $(document).ready(function () {
           console.log(e)
           customAlert("Approve Group Join Request", 'Failed to approve request', 'error', 6000);
         }
-        this.$set(this.isApproving, id, false)
+        this.$set(this.isApprovingGroup, id, false)
 
       },
       removeOwner: async function (userId) {
