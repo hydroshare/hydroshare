@@ -40,20 +40,11 @@
             {% endif %}
 
             <div class="flex-grow-1">
+                {% if not czo_community %}
                 <div class="community-title-container flex justify-space-between align-flex-start">
                     <h2 class="community-title is-marginless">${ community.name }</h2>
-
-                    <!-- <div class="community-actions flex">
-                        {% if profile_user.is_group_member %}
-                        <div>
-                            <button id="btn-leave-community" class="btn btn-default" data-toggle="modal"
-                                data-target="#leave-community-dialog">
-                                Leave Community
-                            </button>
-                        </div>
-                        {% endif %}
-                    </div> -->
                 </div>
+                {% endif %}
 
                 <h4 v-if="community.purpose" class="text-muted">{{ community.purpose|linebreaks }}</h4>
 
