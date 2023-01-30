@@ -86,3 +86,16 @@
     width: 900px;
   }
 }
+
+.community-banner {
+  height: 20rem;
+  width: 100%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.hint {
+  margin-top: 8px;
+  display: block;
+}

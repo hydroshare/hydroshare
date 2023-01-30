@@ -5,15 +5,17 @@ $(document).ready(function () {
     data: {
       filterTo: [],
       groupIds: [],
-      availableToInvite: GROUPS,
-      members: MEMBERS,
-      community: COMMUNITY,
-      allCommunities: ALL_COMMUNITIES,
-      groupsJoined: GROUPS_JOINED,
-      isAdmin: IS_ADMIN,
-      pending: PENDING,
+      availableToInvite: null,
+      members: null,
+      community: null,
+      allCommunities: null,
+      groupsJoined: null,
+      isAdmin: null,
+      pending: null,
       targetGroup: null,
       targetOwner: null,
+      selectedLogo: null,
+      selectedBanner: null,
       isRemoving: {},
       isApprovingGroup: {},
       isInviting: {},
@@ -54,7 +56,17 @@ $(document).ready(function () {
         })
       }
     },
-    mounted: function () {
+    beforeMount() {
+      // Load data
+      this.community = JSON.parse(document.getElementById('community').textContent)
+      this.allCommunities = JSON.parse(document.getElementById('all_communities').textContent)
+      this.groupsJoined = JSON.parse(document.getElementById('user_groups_joined').textContent)
+      this.isAdmin = JSON.parse(document.getElementById('is_admin').textContent)
+      this.availableToInvite = JSON.parse(document.getElementById('groups').textContent)
+      this.members = JSON.parse(document.getElementById('members').textContent)
+      this.pending = JSON.parse(document.getElementById('pending').textContent)
+    },
+    mounted() {
       // Styling and placeholder for user auto-complete
       $("input[name='user-autocomplete']")
         .attr("placeholder", "Search by name or username")
@@ -191,7 +203,7 @@ $(document).ready(function () {
           if (response.community) {
             this.community.owners = response.community.owners
             if (response.hasOwnProperty('is_admin')) {
-              this.isAdmin = !!response.is_owner
+              this.isAdmin = !!response.is_admin
               if (!this.isAdmin) {
                 // User should no longer see the admin tab. Make resources tab active.
                 $('#user-profile-tabs a[href="#resources"]').tab('show')
@@ -216,7 +228,6 @@ $(document).ready(function () {
         }
 
         $(".hilight > span").click(); // Clear the autocomplete
-        // add owner here
 
         const url = `/access/_internal/community/${this.community.id}/owner/${userId}/add`
         try {
@@ -235,6 +246,18 @@ $(document).ready(function () {
           }
         }
       },
+      onLogoChange(event) {
+        const label = event.target.value
+          .replace(/\\/g, '/')
+          .replace(/.*\//, '');
+        this.selectedLogo = label
+      },
+      onBannerChange(event) {
+        const label = event.target.value
+          .replace(/\\/g, '/')
+          .replace(/.*\//, '');
+        this.selectedBanner = label
+      }
     }
   });
 });

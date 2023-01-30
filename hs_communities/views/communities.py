@@ -227,8 +227,10 @@ class FindCommunitiesView(TemplateView):
         if user:
             user_is_admin = user.is_authenticated and user.is_superuser
 
-        # get the list of any pending community create requests by this user
-        user_pending_requests = user.uaccess.pending_community_requests()
+        if user.is_authenticated:
+            # get the list of any pending community create requests by this user
+            user_pending_requests = user.uaccess.pending_community_requests()
+            context["user_pending_requests"] = user_pending_requests
 
         if user_is_admin:
             admin_all_requests = []
@@ -238,7 +240,6 @@ class FindCommunitiesView(TemplateView):
             context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
 
         context["communities_list"] = Community.objects.filter(active=True)
-        context["user_pending_requests"] = user_pending_requests
         context["user_is_admin"] = user_is_admin
 
         return context

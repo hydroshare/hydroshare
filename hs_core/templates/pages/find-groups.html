@@ -2,6 +2,10 @@
 
 {% load hydroshare_tags thumbnail %}
 
+{% block extra_css %}
+    <link href="{% static 'css/collaborate.css' %}" rel="stylesheet"/>
+{% endblock %}
+
 {% block main %}
     {% include 'includes/groups-nav.html' with active='find_groups' %}
 

@@ -4,6 +4,10 @@
 
 {% block meta_title %}My Communities {% endblock %}
 
+{% block extra_css %}
+    <link href="{% static 'css/collaborate.css' %}" rel="stylesheet"/>
+{% endblock %}
+
 {% block main %}
     {% include 'hs_communities/communities-nav.html' with active='my_communities' %}
     <div class="container">

@@ -65,12 +65,12 @@
       </div>
       
       <template v-if="!isEditMode">
-        <button v-if="request.status === 'Submitted'" @click="onApprove" :disabled="isApproving || isRejecting" type="button" class="btn btn-success has-space-right">
-          ${ isApproving ? 'Approving Community...' : 'Approve' }
-        </button>
         <button v-if="request.status === 'Submitted'" data-toggle="modal" data-target="#reject-new-community-creation-request-dialog"
           :disabled="isApproving || isRejecting || request.status === 'Rejected'" type="button" class="btn btn-default">
           ${ isRejecting ? 'Rejecting Community...' : 'Reject' }
+        </button>
+        <button v-if="request.status === 'Submitted'" @click="onApprove" :disabled="isApproving || isRejecting" type="button" class="btn btn-success has-space-right">
+          ${ isApproving ? 'Approving Community...' : 'Approve' }
         </button>
         <button v-if="request.status === 'Rejected'" @click="onResubmit" :disabled="isResubmitting" type="button" class="btn btn-default">
           ${ isResubmitting ? 'Resubmitting...' : 'Resubmit' }

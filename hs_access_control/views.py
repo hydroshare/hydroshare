@@ -80,9 +80,15 @@ def community_json(community):
     """ JSON format for community data suitable for UI """
     if community is not None:
         try:
-            url = community.picture.url
+            logo_url = community.picture.url
         except ValueError:
-            url = ""
+            logo_url = ""
+
+        try:
+            banner_url = community.banner.url
+        except ValueError:
+            banner_url = ""
+
         return {
             'id': community.id,
             'type': 'Community',
@@ -94,7 +100,8 @@ def community_json(community):
             'auto_approve_resource': 1 if community.auto_approve_resource is True else 0,
             'auto_approve_group': 1 if community.auto_approve_group is True else 0,
             'date_created': community.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
-            'picture': url or '',
+            'logo': logo_url or '',
+            'banner': banner_url or '',
             'closed': 1 if community.closed is True else 0,
             'owners': [user_json(u) for u in community.owners]
         }
@@ -450,58 +457,59 @@ class CommunityView(View):
 
         return members
 
-    def get(self, *args, **kwargs):
-        message = ''
-        cid = kwargs.get('cid', None)
-        denied = self.hydroshare_denied(cid)
-        if denied:
-            return error_response(denied)
+    # (deprecated): not used anywhere. Data is loaded in template view
+    # def get(self, *args, **kwargs):
+    #     message = ''
+    #     cid = kwargs.get('cid', None)
+    #     denied = self.hydroshare_denied(cid)
+    #     if denied:
+    #         return error_response(denied)
 
-        # user and community are needed for every request
-        user = self.request.user
-        community = Community.objects.get(id=cid)
+    #     # user and community are needed for every request
+    #     user = self.request.user
+    #     community = Community.objects.get(id=cid)
 
-        # build a JSON object that contains the results of the query
-        context = {}
-        context['denied'] = denied
-        context['message'] = message
-        context['user'] = user_json(user)
-        context['community'] = community_json(community)
+    #     # build a JSON object that contains the results of the query
+    #     context = {}
+    #     context['denied'] = denied
+    #     context['message'] = message
+    #     context['user'] = user_json(user)
+    #     context['community'] = community_json(community)
 
-        # groups that can be invited are those that are not already invited or members.
-        context['groups'] = self.get_groups(community)
+    #     # groups that can be invited are those that are not already invited or members.
+    #     context['groups'] = self.get_groups(community)
 
-        context['pending'] = self.get_pending_requests(community)
+    #     context['pending'] = self.get_pending_requests(community)
 
-        # requests that were declined by us
-        context['we_declined'] = []
-        for r in GroupCommunityRequest.objects.filter(
-                community=community, redeemed=True, approved=False,
-                when_group__lt=F('when_community')).order_by('group__name'):
-            context['we_declined'].append(gcr_json(r))
+    #     # requests that were declined by us
+    #     context['we_declined'] = []
+    #     for r in GroupCommunityRequest.objects.filter(
+    #             community=community, redeemed=True, approved=False,
+    #             when_group__lt=F('when_community')).order_by('group__name'):
+    #         context['we_declined'].append(gcr_json(r))
 
-        # requests that were declined by others
-        context['they_declined'] = []
-        for r in GroupCommunityRequest.objects.filter(
-                community=community, redeemed=True, approved=False,
-                when_group__gt=F('when_community')).order_by('group__name'):
-            context['they_declined'].append(gcr_json(r))
+    #     # requests that were declined by others
+    #     context['they_declined'] = []
+    #     for r in GroupCommunityRequest.objects.filter(
+    #             community=community, redeemed=True, approved=False,
+    #             when_group__gt=F('when_community')).order_by('group__name'):
+    #         context['they_declined'].append(gcr_json(r))
 
-        # group requests to be approved
-        context['approvals'] = []
-        for r in GroupCommunityRequest.objects.filter(
-                community=Community.objects.get(id=int(cid)),
-                group__gaccess__active=True,
-                community_owner__isnull=True,
-                redeemed=False).order_by('group__name'):
-            context['approvals'].append(gcr_json(r))
+    #     # group requests to be approved
+    #     context['approvals'] = []
+    #     for r in GroupCommunityRequest.objects.filter(
+    #             community=Community.objects.get(id=int(cid)),
+    #             group__gaccess__active=True,
+    #             community_owner__isnull=True,
+    #             redeemed=False).order_by('group__name'):
+    #         context['approvals'].append(gcr_json(r))
 
-        # group members of community
-        context['members'] = []
-        for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
-            context['members'].append(group_json(g))
+    #     # group members of community
+    #     context['members'] = []
+    #     for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
+    #         context['members'].append(group_json(g))
 
-        return JsonResponse(context)
+    #     return JsonResponse(context)
 
     def post(self, *args, **kwargs):
         message = ""
