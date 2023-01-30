@@ -218,8 +218,8 @@
                                         {# First Author #}
                                         {% if res.first_creator.relative_uri and res.first_creator.is_active_user %}
                                         <td>
-                                            <a href="{{ res.first_creator.relative_uri }}">{{ res.first_creator.name
-                                                }}</a>
+                                            <a href="{{ res.first_creator.relative_uri }}">
+                                              {{ res.first_creator.name }}</a>
                                         </td>
                                         {% else %}
                                         <td>{{ res.first_creator.name }}</td>
@@ -245,9 +245,11 @@
                         </div>
                     </div>
                 </div>
+                {% if is_admin %}
                 <div role="tabpanel" class="tab-pane fade in" id="settings">
                     {% include 'hs_communities/community-settings.html' %}
                 </div>
+                {% endif %}
                 <div role="tabpanel" class="tab-pane fade in" id="groups">
                     {% include 'hs_communities/community-groups.html' %}
                 </div>
