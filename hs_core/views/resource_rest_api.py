@@ -554,6 +554,9 @@ class ResourceFileCRUD(APIView):
         return request
 
     def get(self, request, pk, pathname):
+        if not request.user.is_authenticated:
+            raise PermissionDenied("Requesting user must be authenticated to download")
+
         resource, _, _ = view_utils.authorize(
             request, pk,
             needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
