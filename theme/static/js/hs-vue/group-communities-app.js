@@ -4,7 +4,8 @@ let groupCommunitiesApp = new Vue({
   data: {
       joined: JOINED,
       pending: PENDING,
-      availableToJoin: COMMUNITIES_CAN_JOIN,
+      // availableToJoin: COMMUNITIES_CAN_JOIN,
+      allCommunities: ALL_COMMUNITIES,
       groupId: GROUP_ID,
       isGroupOwner: IS_GROUP_OWNER,
       isLeaving: { },

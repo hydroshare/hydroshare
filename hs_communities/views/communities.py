@@ -151,6 +151,13 @@ class CommunityView(TemplateView):
                                   .order_by("name"):
                 context["groups"].append(group_json(g))
 
+            # TODO: add list of groups that the user has joined to context
+
+            # list of all available communities
+            context["all_communities"] = []
+            for c in Community.objects.order_by("name"):
+                context["all_communities"].append(community_json(c))
+
             # groups that have shared resources with the community
             raw_groups = community.groups_with_public_resources()
             shared_by_groups = []

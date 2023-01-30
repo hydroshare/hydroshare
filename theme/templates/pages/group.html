@@ -7,18 +7,10 @@
 {% endblock %}
 
 {% block main %}
-    <div class="collaborate-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="collaborate-nav">
-                        <a href="{% url "groups" %}" class="collaborate-nav-item">Find Groups</a>
-                        <a href="{% url "my_groups" %}" class="collaborate-nav-item active">My Groups</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include 'includes/groups-nav.html' with active='my_groups' %}
+
+    {# These components needs to be included first so they are available before this app initializes #}
+    {% include "hs_access_control/join-communities.html" %}
 
     <div class="container">
         <div>

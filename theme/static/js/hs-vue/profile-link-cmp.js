@@ -9,6 +9,7 @@ Vue.component('profile-link', {
 
 Vue.component('profile-card', {
     delimiters: ['${', '}'],
+    template: '#profile-card-template',
     props: {
         user: {
             type: Object, required: true
@@ -44,6 +45,5 @@ Vue.component('profile-card', {
                 }
             },
         }
-    },
-    template: '#profile-card-template',
+    }
 });

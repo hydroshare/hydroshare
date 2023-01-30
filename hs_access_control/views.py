@@ -581,7 +581,12 @@ class CommunityView(View):
                 requester=user, group=group, community=community)
             if not worked:
                 denied = message
-
+            else:
+                context = { 
+                    'pending': self.get_pending_requests(community),
+                    'groups': self.get_groups(community)
+                }
+                return JsonResponse(context)
         elif action == CommunityActions.OWNER:  # add or remove an owner.
             # look up proposed user id
             try:

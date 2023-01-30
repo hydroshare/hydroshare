@@ -2760,12 +2760,20 @@ class GroupView(TemplateView):
                     .order_by("community__name"):
                 communitiesContext["pending"].append(gcr_json(r))
 
+            # TODO: (deprecated): no longer needed. Populating modal with all_communities instead
             # Communities that can be joined.
-            communitiesContext["available_to_join"] = []
-            for c in Community.objects.filter().exclude(invite_c2gcr__group=group)\
-                                               .exclude(c2gcp__group=group)\
-                                               .order_by("name"):
-                communitiesContext["available_to_join"].append(community_json(c))
+            # communitiesContext["available_to_join"] = []
+            # for c in Community.objects.filter().exclude(invite_c2gcr__group=group)\
+            #                                    .exclude(c2gcp__group=group)\
+            #                                    .order_by("name"):
+            #     communitiesContext["available_to_join"].append(community_json(c))
+
+            # list of all available communities
+            communitiesContext["all_communities"] = []
+            for c in Community.objects.order_by("name"):
+                communitiesContext["all_communities"].append(community_json(c))
+
+            # TODO: add list of groups the user has joined to context
 
             # requests that were declined by others
             communitiesContext["they_declined"] = []

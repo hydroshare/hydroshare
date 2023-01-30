@@ -2,7 +2,8 @@
   <div class="group-communities--sidebar">
     <div class="alert alert-info">
       <p>Want your Group to join a HydroShare Community? Click the button below to request that your group be added.</p>
-      <button class="btn btn-primary has-space-top" data-toggle="modal" data-target="#communities-modal">Ask to join a Community</button>
+      <button class="btn btn-default has-space-top" data-toggle="modal"
+        data-target="#join-communities-modal">Ask to join a Community</button>
     </div>
   </div>
 
@@ -92,16 +93,22 @@
       </div>
   </div>
 
-  {% include "hs_access_control/communities-modal.html" %}
+  <div class="modal fade" id="join-communities-modal" tabindex="-1" role="dialog" aria-labelledby="joinLabel">
+    <div class="modal-dialog" role="document">
+      <!-- The template for this component needs to be included outside of a Vue app -->
+      <!-- Included at the top of group.html -->
+      <join-communities :groups="[]" :communities="allCommunities" :default-group-id="groupId" />
+    </div>
+  </div>
 </div>
 
 
 <script type="text/javascript">
-
   const GROUP_ID = {{ gid }}
   const IS_GROUP_OWNER = "{{ profile_user.is_group_owner }}" === "True"
   const JOINED = {{ communities.joined|safe }};
   const PENDING = {{ communities.pending|safe }};
-  const COMMUNITIES_CAN_JOIN = {{ communities.available_to_join|safe }};
+  // const COMMUNITIES_CAN_JOIN = {{ communities.available_to_join|safe }};
+  const ALL_COMMUNITIES = {{ communities.all_communities|safe }};
 </script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/group-communities-app.js"></script>

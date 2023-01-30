@@ -8,6 +8,7 @@ $(document).ready(function () {
       availableToInvite: GROUPS,
       members: MEMBERS,
       community: COMMUNITY,
+      allCommunities: ALL_COMMUNITIES,
       isAdmin: IS_ADMIN,
       pending: PENDING,
       targetGroup: null,
@@ -16,6 +17,7 @@ $(document).ready(function () {
       isApproving: {},
       isInviting: {},
       isRemovingOwner: {},
+      isCancelingInvitation: {},
       inviteSearch: '',
       userCardSelected: {
         user_type: null,
@@ -100,19 +102,18 @@ $(document).ready(function () {
         this.$set(this.isRemoving, id, true)
         // TODO: handle leaving
         const url = '/access/_internal/community/' + this.community.id + '/remove/' + id + '/';
+        $("#remove-group-modal").modal('hide')
         try {
           const response = await $.post(url)
           this.members = response.members
           this.availableToInvite = response.groups
-          this.$set(this.isRemoving, id, false)
-          $("#remove-group-modal").modal('hide')
           customAlert("Remove Group", 'Group has been removed from your Community', "success", 6000);
         }
         catch (e) {
           console.log(e)
           // abort
-          this.$set(this.isRemoving, id, false)
         }
+        this.$set(this.isRemoving, id, false)
       },
       inviteGroup: async function (id) {
         this.$set(this.isInviting, id, true)
@@ -128,41 +129,54 @@ $(document).ready(function () {
             // If members is included in the response, we update the state
             this.members = response.members
           }
-          this.$set(this.isInviting, id, false)
           customAlert("Invite Group", response.message, "success", 6000);
         }
         catch (e) {
           console.log(e)
-          // abort
-          this.$set(this.isInviting, id, false)
         }
+        this.$set(this.isInviting, id, false)
+      },
+      cancelGroupInvitation: async function(id) {
+        this.$set(this.isCancelingInvitation, id, true)
+        $("#cancel-group-invitation-modal").modal('hide')
+        const url = `/access/_internal/community/${this.community.id}/retract/${id}/`
+        try {
+          const response = await $.post(url)
+          this.pending = response.pending
+          this.availableToInvite = response.groups
+        }
+        catch(e) {
+          console.log(e)
+          customAlert("Retract Group Invitation", 'Failed to retract invitation', 'error', 6000);
+        }
+        this.$set(this.isCancelingInvitation, id, false)
       },
       approve: async function (id) {
         this.$set(this.isApproving, id, true)
         // TODO: handle leaving
-        const url = '/access/_internal/community/' + this.community.id + '/approve/' + id + '/';
+        const url = `/access/_internal/community/${this.community.id}/approve/${id}/`;
         try {
           const response = await $.post(url)
           // this.joined = response.joined
           // this.availableToJoin = response.available_to_join
           console.log(response)
-          this.$set(this.isApproving, id, false)
         }
         catch (e) {
           console.log(e)
-          // abort
-          this.$set(this.isApproving, id, false)
+          customAlert("Approve Group Join Request", 'Failed to approve request', 'error', 6000);
         }
+        this.$set(this.isApproving, id, false)
+
       },
       removeOwner: async function (userId) {
         const url = `/access/_internal/community/${this.community.id}/owner/${userId}/remove`
+        $("#remove-community-owner-modal").modal('hide')
         this.$set(this.isRemovingOwner, userId, true)
         try {
           const response = await $.post(url)
           if (response.community) {
             this.community.owners = response.community.owners
             customAlert('Remove Community Owner', 'User has been removed as an owner of this Community', 'success', 6000);
-            $("#remove-community-owner-modal").modal('hide')
           }
         }
         catch (e) {
