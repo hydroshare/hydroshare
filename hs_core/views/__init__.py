@@ -1224,7 +1224,9 @@ def submit_for_review(request, shortkey, *args, **kwargs):
                 Your resource is under review for appropriate minimum metadata and to ensure that it adheres to
                 community guidelines.
                 The review process will likely be complete within 1 business day, but not exceed 2 business days.
-                You will receive a notification via email once the review process has concluded."""
+                You will receive a notification via email once the review process has concluded.
+                If you decide that you no longer wish to have this resource reviewed for publication,
+                please contact help@cuahsi.org"""
         messages.success(request, message)
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
