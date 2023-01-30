@@ -57,7 +57,7 @@
                 </label>
               </div> -->
             </div>
-            <div class="community-card--actions">
+            <div class="community-card--actions" v-if="isGroupOwner">
               <button class="btn btn-default" @click="targetCommunity = community" :disabled="isLeaving[community.id]" 
                 data-toggle="modal" data-target="#leave-community-modal">Leave Community</button>
             </div>
@@ -106,12 +106,11 @@
 
 
 <script type="text/javascript">
-  const GROUP_ID = {{ gid }}
-  const IS_GROUP_OWNER = "{{ profile_user.is_group_owner }}" === "True"
+  const GROUP_ID = {{ gid }};
+  const IS_GROUP_OWNER = "{{ profile_user.is_group_owner }}" === "True";
   const JOINED = {{ communities.joined|safe }};
   const GROUPS_JOINED = {{ communities.user_groups_joined|safe }};
   const PENDING = {{ communities.pending|safe }};
-  // const COMMUNITIES_CAN_JOIN = {{ communities.available_to_join|safe }};
   const ALL_COMMUNITIES = {{ communities.all_communities|safe }};
 </script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/group-communities-app.js"></script>

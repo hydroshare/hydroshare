@@ -182,6 +182,7 @@
             <!-- Tab panes -->
             <div class="tab-content">
                 {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public %}
+                <!-- TODO: move this logic to a Vue app -->
                 <div role="tabpanel" class="tab-pane fade" id="members">
                     <div class="row">
                         <div class="col-sm-12 col-md-3">
@@ -231,9 +232,11 @@
                                             {% endif %}
                                         </td>
                                         <td>
+                                            <!-- TODO: replace for profile card component -->
                                             <h4><strong><a>{{ owner|contact }}</a></strong></h4>
                                             {% if  owner.userprofile.title %}
-                                                <span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
+                                                <span class="text-muted">{{ owner.userprofile.title }}</span>
+                                            {% endif %}
                                         </td>
                                         <td>
                                             {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}

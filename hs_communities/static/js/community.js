@@ -158,9 +158,7 @@ $(document).ready(function () {
         const url = `/access/_internal/community/${this.community.id}/approve/${id}/`;
         try {
           const response = await $.post(url)
-          // this.joined = response.joined
-          // this.availableToJoin = response.available_to_join
-          console.log(response)
+          // TODO: update state
         }
         catch (e) {
           console.log(e)
@@ -177,6 +175,13 @@ $(document).ready(function () {
           const response = await $.post(url)
           if (response.community) {
             this.community.owners = response.community.owners
+            if (response.hasOwnProperty('is_admin')) {
+              this.isAdmin = !!response.is_owner
+              if (!this.isAdmin) {
+                // User should no longer see the admin tab. Make resources tab active.
+                $('#user-profile-tabs a[href="#resources"]').tab('show')
+              }
+            }
             customAlert('Remove Community Owner', 'User has been removed as an owner of this Community', 'success', 6000);
           }
         }

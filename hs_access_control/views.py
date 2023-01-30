@@ -12,6 +12,7 @@ from hs_access_control.models import Community, GroupCommunityRequest, Privilege
 from hs_access_control.models.community import RequestCommunity
 from .emails import CommunityGroupEmailNotification, CommunityRequestEmailNotification
 from .enums import CommunityActions, CommunityGroupEvents, CommunityRequestActions, CommunityRequestEvents
+from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
 
 logger = logging.getLogger(__name__)
 
@@ -224,6 +225,7 @@ class GroupView(View):
 
         if action is not None:
             community = Community.objects.get(id=cid)
+            
             if action == CommunityActions.APPROVE:
                 # group owner accepting an invitation for a group to join a community
                 gcr = GroupCommunityRequest.get_request(group=group, community=community)
@@ -319,11 +321,11 @@ class GroupView(View):
             context['pending'].append(gcr_json(r))
 
         # Communities that can be joined.
-        context['available_to_join'] = []
-        for c in Community.objects.filter().exclude(invite_c2gcr__group=group) \
-                .exclude(c2gcp__group=group) \
-                .order_by('name'):
-            context['available_to_join'].append(community_json(c))
+        # context['available_to_join'] = []
+        # for c in Community.objects.filter().exclude(invite_c2gcr__group=group) \
+        #         .exclude(c2gcp__group=group) \
+        #         .order_by('name'):
+        #     context['available_to_join'].append(community_json(c))
 
         # requests that were declined by others
         context['they_declined'] = []
@@ -620,6 +622,8 @@ class CommunityView(View):
         context['message'] = message
         context['user'] = user_json(user)
         context['community'] = community_json(community)
+        context['is_admin'] = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
+                                                                  privilege=PrivilegeCodes.OWNER).exists() else 0
         return JsonResponse(context)
 
 

@@ -43,7 +43,7 @@ class CommunityView(TemplateView):
             logger.error(message)
             return message
 
-        if user.uaccess.owns_community(community):
+        if user.uaccess.owns_community(community) or user.uaccess.can_view_community(community):
             if gid is None:
                 return ""
             else:

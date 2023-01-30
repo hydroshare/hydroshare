@@ -1,6 +1,6 @@
 <div class="flex gap-2">
   <div class="community-groups--sidebar">
-    <button v-if="isAdmin && false" class="btn btn-primary has-space-bottom btn-block"
+    <button v-if="isAdmin" class="btn btn-primary has-space-bottom btn-block"
       data-toggle="modal" data-target="#invite-groups-modal">
       <i class="fa fa-plus" aria-hidden="true"></i> 
       Invite Groups</button>
@@ -26,7 +26,7 @@
             <p>${ request.group.description }</p>
           </div>
           <div class="community-card--actions">
-            <button v-if="!request.when_community" class="btn btn-primary"
+            <button v-if="!request.when_community" class="btn btn-primary btn-sm"
               @click="approve(request.group.id)" :disabled="isApproving[request.group.id]">Approve Group</button>
             <div v-else>
               <div class="text-center has-space-bottom">
@@ -59,7 +59,7 @@
               <p>${ group.description }</p>
             </div>
             <div v-if="isAdmin" class="community-card--actions">
-              <button class="btn btn-default" @click="targetGroup = group" :disabled="isRemoving[group.id]"
+              <button class="btn btn-default btn-sm" @click="targetGroup = group" :disabled="isRemoving[group.id]"
                 data-toggle="modal" data-target="#remove-group-modal">Remove Group</button>
             </div>
           </div>
@@ -70,7 +70,7 @@
   </div>
 
   <!-- Remove Group Modal -->
-  <div class="modal fade" id="remove-group-modal" tabindex="-1" role="dialog"
+  <div v-if="isAdmin" class="modal fade" id="remove-group-modal" tabindex="-1" role="dialog"
     aria-labelledby="removeGroupLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content" v-if="targetGroup">
@@ -97,7 +97,7 @@
   </div>
 
   <!-- Cancel Group Invitation Modal -->
-  <div class="modal fade" id="cancel-group-invitation-modal" tabindex="-1" role="dialog"
+  <div v-if="isAdmin" class="modal fade" id="cancel-group-invitation-modal" tabindex="-1" role="dialog"
     aria-labelledby="cancelInvitationLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content" v-if="targetGroup">

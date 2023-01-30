@@ -4,7 +4,6 @@ let groupCommunitiesApp = new Vue({
   data: {
       joined: JOINED,
       pending: PENDING,
-      // availableToJoin: COMMUNITIES_CAN_JOIN,
       allCommunities: ALL_COMMUNITIES,
       groupsJoined: GROUPS_JOINED,
       groupId: GROUP_ID,
@@ -13,24 +12,22 @@ let groupCommunitiesApp = new Vue({
       isJoining: { },
       targetCommunity: null
   },
-  watch: {
+  // watch: {
       
-  },
-  computed: {
+  // },
+  // computed: {
       
-  },
+  // },
   methods: {
     leave: async function(id) {
       this.$set(this.isLeaving, id, true)
-      // TODO: handle leaving
       const url = '/access/_internal/group/' + this.groupId + '/leave/' + id + '/';
       try {
         const response = await $.post(url)
-        // this.joined = response.joined
-        // this.availableToJoin = response.available_to_join
         delete this.isLeaving[id]
         $("#leave-community-modal").modal('hide')
         customAlert("Leave Community", response.message, "success", 6000);
+        // TODO: update state
       }
       catch(e) {
         console.log(e)
@@ -43,10 +40,8 @@ let groupCommunitiesApp = new Vue({
       const url = '/access/_internal/group/' + this.groupId + '/approve/' + id + '/';
       try {
         const response = await $.post(url)
-        // this.joined = response.joined
-        // this.availableToJoin = response.available_to_join
-        console.log(response)
-        // this.$set(this.isJoining, id, false)
+        // TODO: update state
+        this.$set(this.isJoining, id, false)
         delete this.isJoining[id]
         customAlert("Join Community", response.message, "success", 6000);
       }
@@ -61,9 +56,7 @@ let groupCommunitiesApp = new Vue({
       const url = '/access/_internal/group/' + this.groupId + '/join/' + id + '/';
       try {
         const response = await $.post(url)
-        // this.joined = response.joined
-        // this.availableToJoin = response.available_to_join
-        console.log(response)
+        // TODO: update state
         this.$set(this.isJoining, id, false)
         delete this.isJoining[id]
         customAlert("Join Community", response.message, "success", 6000);
@@ -74,8 +67,5 @@ let groupCommunitiesApp = new Vue({
         this.$set(this.isJoining, id, false)
       }
     },
-  },
-  created() {
-    console.log(this.joined)
   }
 });

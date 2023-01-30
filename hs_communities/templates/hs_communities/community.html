@@ -78,12 +78,10 @@
                     <a href="#groups" aria-controls="groups" role="tab" data-toggle="tab">
                         <i class="fa fa-users"></i>&nbsp;Groups</a>
                 </li>
-                {% if is_admin %}
-                <li role="presentation">
+                <li v-if="isAdmin" role="presentation">
                     <a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">
                         <i class="fa fa-lock"></i>&nbsp;Owner Settings</a>
                 </li>
-                {% endif %}
             </ul>
 
             <!-- Tab panes -->
@@ -236,11 +234,9 @@
                         </div>
                     </div>
                 </div>
-                {% if is_admin %}
-                <div role="tabpanel" class="tab-pane fade in" id="settings">
+                <div v-if="isAdmin" role="tabpanel" class="tab-pane fade in" id="settings">
                     {% include 'hs_communities/community-settings.html' %}
                 </div>
-                {% endif %}
                 <div role="tabpanel" class="tab-pane fade in" id="groups">
                     {% include 'hs_communities/community-groups.html' %}
                 </div>
