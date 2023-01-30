@@ -21,12 +21,13 @@
           <div class="community-card--info">
             <a class="community-card--heading" :href="'/community/' + request.community.id">${ request.community.name }</a>
             <p v-if="request.community.purpose">${ request.community.purpose }</p>
-            <div class="checkbox">
+            <!-- TODO (phase 2): auto share -->
+            <!-- <div class="checkbox">
               <label :for="'auto-share-' + request.community.id">
                 <input type="checkbox" :value="request.community.autoshare" @change="" :id="'auto-share-' + request.community.id">
                 <div class="text-muted">Automatically share public and and published resources with this Community</div>
               </label>
-            </div>
+            </div> -->
             <button class="btn btn-primary btn-sm" @click="acceptInvite(request.community.id)"
               :disabled="isJoining[request.community.id]">
                 <i class="fa fa-user-plus" aria-hidden="true"></i> Join Community</button>
@@ -48,12 +49,13 @@
             <div class="community-card--info flex-grow-1">
               <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>
               <p v-if="community.purpose">${ community.purpose }</p>
-              <div class="checkbox">
+              <!-- TODO (phase 2): auto share -->
+              <!-- <div class="checkbox">
                 <label :for="'auto-share-' + community.id">
                   <input type="checkbox" :id="'auto-share-' + community.id">
                   <div class="text-muted">Automatically share public and and published resources with this Community</div>
                 </label>
-              </div>
+              </div> -->
             </div>
             <div class="community-card--actions">
               <button class="btn btn-default" @click="targetCommunity = community" :disabled="isLeaving[community.id]" 
