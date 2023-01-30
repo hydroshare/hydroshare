@@ -1,4 +1,7 @@
-
+.hint {
+  margin-top: 8px;
+  display: block;
+}
 
 /* -------------- Collaborate and Groups page styling --------------- */
 
@@ -16,6 +19,7 @@
 .collaborate-header {
   background: #093E54;
   padding: 20px 0;
+  margin-bottom: 4rem;
 }
 
 .collaborate-header a {

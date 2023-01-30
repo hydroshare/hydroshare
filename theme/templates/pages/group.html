@@ -678,140 +678,141 @@
                 </div>
 
                 {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                <div role="tabpanel" class="tab-pane fade" id="owner-settings">
-                    <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST" enctype="multipart/form-data" class="col-xs-12 col-sm-7">
-                        <legend>Group Settings</legend>
-                        {% csrf_token %}
-                        <div class="row">
-                            {# Group Name #}
-                            <fieldset class="col-sm-12">
-                                <label>Group Name *</label>
-                                <input type="text" value="{{ group.name }}" class="form-control" required="required" name="name" maxlength="79">
-                                <small class="text-muted">Group name may be 79 characters or less.</small>
-                            </fieldset>
+                <div role="tabpanel" class="tab-pane fade col-xs-12 col-sm-7" id="owner-settings">
+                  <div class="panel panel-default">
+                    <div class="panel-heading">Group Preferences</div>
+                    <div class="panel-body">
+                      <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST" enctype="multipart/form-data">
+                          {% csrf_token %}
+                          <div class="row">
+                              {# Group Name #}
+                              <fieldset class="col-sm-12">
+                                  <label>Group Name *</label>
+                                  <input type="text" value="{{ group.name }}" class="form-control" required="required" name="name" maxlength="79">
+                                  <small class="text-muted">Group name may be 79 characters or less.</small>
+                              </fieldset>
 
-                            <br>
-                            {# Group Contact Email #}
-                            <fieldset class="col-sm-12">
-                                <label>Group Contact Email</label>
-                                <input class="form-control" type="email" name="email" value="{{ profile_user.email }}"></input>
-                                <small class="text-muted">An email address for someone in charge of the group.</small>
-                            </fieldset>
-                            
-                            <br>
-                            {# Group Url #}
-                            <fieldset class="col-sm-12">
-                                <label>Group URL</label>
-                                <input class="form-control" value="{{ group.gaccess.url }}" type="url" name="url"></input>
-                                <small class="text-muted">A URL for a web page that describes the group in more detail.</small>
-                            </fieldset>
+                              <br>
+                              {# Group Contact Email #}
+                              <fieldset class="col-sm-12">
+                                  <label>Group Contact Email</label>
+                                  <input class="form-control" type="email" name="email" value="{{ profile_user.email }}"></input>
+                                  <small class="text-muted">An email address for someone in charge of the group.</small>
+                              </fieldset>
+                              
+                              <br>
+                              {# Group Url #}
+                              <fieldset class="col-sm-12">
+                                  <label>Group URL</label>
+                                  <input class="form-control" value="{{ group.gaccess.url }}" type="url" name="url"></input>
+                                  <small class="text-muted">A URL for a web page that describes the group in more detail.</small>
+                              </fieldset>
 
-                            <br>
-                            {# Purpose #}
-                            <fieldset class="col-sm-12">
-                                <label>Purpose</label>
-                                <textarea class="form-control" name="purpose" maxlength="300">{{ group.gaccess.purpose }}</textarea>
-                                <small class="text-muted">A brief description of the purpose for which the group was created.</small><br>
-                                <small class="text-muted">300 characters or less.</small>
-                            </fieldset>
-    
-                            <br>
-                            {# Group Description #}
-                            <fieldset class="col-sm-12">
-                                <label>About this group *</label>
-                                <textarea class="form-control" required="required" name="description">{{ group.gaccess.description }}</textarea>
-                                <small class="text-muted">A longer text description for the group.</small>
-                            </fieldset>
-    
-                            <br>
-                            {# auto approve #}
-                            <fieldset class="col-sm-12">
-                                <input id="auto-approve" type="checkbox"  {% if group.gaccess.auto_approve %}checked{% endif %} name="auto_approve">
-                                <label class="checkbox-label" for="auto-approve">Auto approve membership</label><br>
-                                <small class="text-muted">Choose this option if you want group membership requests to be automatically approved.</small>
-                            </fieldset>
+                              <br>
+                              {# Purpose #}
+                              <fieldset class="col-sm-12">
+                                  <label>Purpose</label>
+                                  <textarea class="form-control" name="purpose" maxlength="300">{{ group.gaccess.purpose }}</textarea>
+                                  <small class="text-muted">A brief description of the purpose for which the group was created.</small><br>
+                                  <small class="text-muted">300 characters or less.</small>
+                              </fieldset>
+      
+                              <br>
+                              {# Group Description #}
+                              <fieldset class="col-sm-12">
+                                  <label>About this group *</label>
+                                  <textarea class="form-control" required="required" name="description">{{ group.gaccess.description }}</textarea>
+                                  <small class="text-muted">A longer text description for the group.</small>
+                              </fieldset>
+      
+                              <br>
+                              {# auto approve #}
+                              <fieldset class="col-sm-12">
+                                  <input id="auto-approve" type="checkbox"  {% if group.gaccess.auto_approve %}checked{% endif %} name="auto_approve">
+                                  <label class="checkbox-label" for="auto-approve">Auto approve membership</label><br>
+                                  <small class="text-muted">Choose this option if you want group membership requests to be automatically approved.</small>
+                              </fieldset>
 
-                            <br>
-                            {# Picture #}
-                            <div class="col-sm-12">
-                                <fieldset>
-                                    <label>Add a photo</label>
-    
-                                    <div class="input-group">
-                                        <span class="input-group-btn">
-                                            <span id="cv-custom-upload" class="btn btn-default btn-file">
-                                                Browse&hellip; <input class="upload-picture" type="file" name="picture">
-                                            </span>
-                                        </span>
-                                        <input type="text" class="form-control" readonly>
-                                    </div>
-                                    <small class="text-muted">Add a photo, Logo, or icon image to identify your group.</small>
-                                </fieldset>
-                            </div>
-    
-                            <br>
-    
-                            <br>
-                            {# Privacy #}
-                                <fieldset class="col-sm-12">
-                                    <label>Privacy *</label>
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="privacy_level" value="public"
-                                                   {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Public
-                                            <div class="text-muted">Other users can find the group and see who has
-                                                membership.
-                                            </div>
-                                        </label>
-                                    </div>
+                              <br>
+                              {# Picture #}
+                              <div class="col-sm-12">
+                                  <fieldset>
+                                      <label>Add a photo</label>
+      
+                                      <div class="input-group">
+                                          <span class="input-group-btn">
+                                              <span id="cv-custom-upload" class="btn btn-default btn-file">
+                                                  Browse&hellip; <input class="upload-picture" type="file" name="picture">
+                                              </span>
+                                          </span>
+                                          <input type="text" class="form-control" readonly>
+                                      </div>
+                                      <small class="text-muted hint">Add a photo, Logo, or icon image to identify your group.</small>
+                                  </fieldset>
+                              </div>
+      
+                              <br>
+      
+                              <br>
+                              {# Privacy #}
+                                  <fieldset class="col-sm-12">
+                                      <label>Privacy *</label>
+                                      <div class="radio">
+                                          <label>
+                                              <input type="radio" name="privacy_level" value="public"
+                                                    {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Public
+                                              <div class="text-muted">Other users can find the group and see who has
+                                                  membership.
+                                              </div>
+                                          </label>
+                                      </div>
 
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="privacy_level" value="discoverable"
-                                                   {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Discoverable
-                                            <div class="text-muted">Other users can find this group, but membership
-                                                information is hidden.
-                                            </div>
-                                        </label>
-                                    </div>
+                                      <div class="radio">
+                                          <label>
+                                              <input type="radio" name="privacy_level" value="discoverable"
+                                                    {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Discoverable
+                                              <div class="text-muted">Other users can find this group, but membership
+                                                  information is hidden.
+                                              </div>
+                                          </label>
+                                      </div>
 
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="privacy_level" value="private"
-                                                   {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
-                                            <div class="text-muted">Other users can not find this group.</div>
-                                        </label>
-                                    </div>
-                                </fieldset>
-                            <br>
-                            <fieldset class="col-sm-12">
-                                <small class="text-muted">( * ) Required fields</small>
-                            </fieldset>
-                            <br>
-                        </div>
-    
-                        <button type="submit" class="btn btn-primary">Update Group Profile</button>
-                        {% if group.gaccess.active  %}
-                            <hr>
-                            <fieldset style="margin-top: 20px;">
-                                <label>Delete this Group</label>
-                                <p><small>Deleting a group does not delete any of the resources that have been shared with the group. 
-                                    However, once your group is deleted, it will be gone forever. Make sure this is what you want to do!</small></p>
-                                <br>
-                                <a href="#" id="btn-delete-group" class="btn btn-danger" data-toggle="modal" data-target="#delete-group-dialog">Delete this group</a>
-                            </fieldset>
-                        {% endif %}
-                        {% if not group.gaccess.active %}
-                        <hr>
-                        <fieldset style="margin-top: 20px;">
-                            <label>Restore this Group</label>
-                            <p><small> Click on the button below if you want to make the group active again.</small></p>
-                            <br>
-                            <a href="{% url "restore_user_group" group.id %}" class="btn btn-success">
-                                <span class="glyphicon glyphicon-retweet"></span> Restore this Group</a>
-                        </fieldset>
-                        {% endif %}
-                    </form>
+                                      <div class="radio">
+                                          <label>
+                                              <input type="radio" name="privacy_level" value="private"
+                                                    {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
+                                              <div class="text-muted">Other users can not find this group.</div>
+                                          </label>
+                                      </div>
+                                  </fieldset>
+                              <br>
+                              <fieldset class="col-sm-12">
+                                  <small class="text-muted">( * ) Required fields</small>
+                              </fieldset>
+                              <br>
+                          </div>
+                          <button type="submit" class="btn btn-primary">Update Group Profile</button>
+                      </form>
+                    </div>
+                  </div>
+
+                  <div class="panel panel-default">
+                    {% if group.gaccess.active  %}
+                      <div class="panel-heading">Delete this Group</div>
+                      <div class="panel-body">
+                          <p>Deleting a group does not delete any of the resources that have been shared with the group. 
+                              However, once your group is deleted, it will be gone forever. Make sure this is what you want to do!</p>
+                          <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#delete-group-dialog">Delete this group</button>
+                      </div>
+                    {% else %}
+                      <div class="panel-heading">Restore this Group</div>
+                      <div class="panel-body">
+                          <p>Click on the button below if you want to make the group active again.</p>
+                          <a href="{% url "restore_user_group" group.id %}" class="btn btn-success">
+                              <span class="glyphicon glyphicon-retweet"></span> Restore this Group</a>
+                      </div>
+                    {% endif %}
+                  </div>
                 </div>
                 {% endif %}
 
@@ -899,8 +900,8 @@
                         </div>
 
                         <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Confirm</button>
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                          <button type="submit" class="btn btn-danger">Delete</button>
                         </div>
                     </form>
                 </div>

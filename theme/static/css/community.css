@@ -93,9 +93,5 @@
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-}
-
-.hint {
-  margin-top: 8px;
-  display: block;
+  margin-top: -4rem;
 }
