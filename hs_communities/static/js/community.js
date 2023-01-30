@@ -9,6 +9,7 @@ $(document).ready(function () {
       members: MEMBERS,
       community: COMMUNITY,
       allCommunities: ALL_COMMUNITIES,
+      groupsJoined: GROUPS_JOINED,
       isAdmin: IS_ADMIN,
       pending: PENDING,
       targetGroup: null,

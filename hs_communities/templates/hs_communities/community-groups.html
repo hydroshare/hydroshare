@@ -133,7 +133,7 @@
     <join-communities
       @update-members="members = $event"
       @update-pending="pending = $event"
-      :groups="availableToInvite"
+      :groups="groupsJoined"
       :communities="allCommunities"
       :default-community-id="community.id"
     />

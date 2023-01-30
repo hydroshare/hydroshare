@@ -97,7 +97,7 @@
     <div class="modal-dialog" role="document">
       <!-- The template for this component needs to be included outside of a Vue app -->
       <!-- Included at the top of group.html -->
-      <join-communities :groups="[]" :communities="allCommunities" :default-group-id="groupId" />
+      <join-communities :groups="groupsJoined" :communities="allCommunities" :default-group-id="groupId" />
     </div>
   </div>
 </div>
@@ -107,6 +107,7 @@
   const GROUP_ID = {{ gid }}
   const IS_GROUP_OWNER = "{{ profile_user.is_group_owner }}" === "True"
   const JOINED = {{ communities.joined|safe }};
+  const GROUPS_JOINED = {{ communities.user_groups_joined|safe }};
   const PENDING = {{ communities.pending|safe }};
   // const COMMUNITIES_CAN_JOIN = {{ communities.available_to_join|safe }};
   const ALL_COMMUNITIES = {{ communities.all_communities|safe }};

@@ -2552,6 +2552,7 @@ def group_json(group):
         except ValueError:
             url = ""
         return {
+            'id': group.id,
             'type': 'Group',
             'name': group.name,
             'active': 1 if group.gaccess.active is True else 0,
@@ -2698,42 +2699,8 @@ class GroupView(TemplateView):
         communitiesContext = {}
 
         if denied == "":
-            # user = self.request.user
+            user = self.request.user
             group = Group.objects.get(id=group_id)
-            # if "action" in kwargs:
-            #     community = Community.objects.get(id=cid)
-            #     if action == "approve":
-            #         gcr = GroupCommunityRequest.objects.get(
-            #             group=group, community=community)
-            #         if gcr.redeemed:  # reset to unredeemed in order to approve
-            #             gcr.reset(responder=user)
-            #         message, worked = gcr.approve(responder=user)
-            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
-
-            #     elif action == "decline":
-            #         gcr = GroupCommunityRequest.objects.get(
-            #             group=group, community=community)
-            #         message, worked = gcr.decline(responder=user)
-            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
-
-            #     elif action == "join":
-            #         message, worked = GroupCommunityRequest.create_or_update(
-            #             group=group, community=community, requester=user)
-            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
-
-            #     elif action == "leave":
-            #         message, worked = GroupCommunityRequest.remove(
-            #             requester=user, group=group, community=community)
-            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
-
-            #     elif action == "retract":  # remove a pending request
-            #         message, worked = GroupCommunityRequest.retract(
-            #             requester=user, group=group, community=community)
-            #         logger.debug("message = '{}' worked='{}'".format(message, worked))
-
-            #     else:
-            #         message = "unknown action '{}'".format(action)
-            #         logger.error(message)
 
             communitiesContext["denied"] = denied  # empty string means ok
             communitiesContext["message"] = message
@@ -2773,7 +2740,10 @@ class GroupView(TemplateView):
             for c in Community.objects.order_by("name"):
                 communitiesContext["all_communities"].append(community_json(c))
 
-            # TODO: add list of groups the user has joined to context
+            # list of groups the user has joined
+            groups = user.uaccess.my_groups
+            active_groups = [group_json(g) for g in groups if g.gaccess.active]
+            communitiesContext['user_groups_joined'] = active_groups
 
             # requests that were declined by others
             communitiesContext["they_declined"] = []

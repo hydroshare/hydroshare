@@ -6,6 +6,7 @@ let groupCommunitiesApp = new Vue({
       pending: PENDING,
       // availableToJoin: COMMUNITIES_CAN_JOIN,
       allCommunities: ALL_COMMUNITIES,
+      groupsJoined: GROUPS_JOINED,
       groupId: GROUP_ID,
       isGroupOwner: IS_GROUP_OWNER,
       isLeaving: { },
