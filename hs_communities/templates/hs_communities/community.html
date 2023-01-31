@@ -88,7 +88,7 @@
                             <i class="glyphicon glyphicon-file"></i>&nbsp;RESOURCES</a>
                     </li>
                     <li role="presentation">
-                        <a href="#groups" aria-controls="groups" role="tab" data-toggle="tab">
+                        <a href="#groups-tab" aria-controls="groups-tab" role="tab" data-toggle="tab">
                             <i class="fa fa-users"></i>&nbsp;Groups</a>
                     </li>
                     <li v-if="isAdmin" role="presentation">
@@ -247,11 +247,11 @@
                             </div>
                         </div>
                     </div>
+                    <div role="tabpanel" class="tab-pane fade in" id="groups-tab">
+                      {% include 'hs_communities/community-groups.html' %}
+                    </div>
                     <div v-if="isAdmin" role="tabpanel" class="tab-pane fade in" id="settings">
                         {% include 'hs_communities/community-settings.html' %}
-                    </div>
-                    <div role="tabpanel" class="tab-pane fade in" id="groups">
-                        {% include 'hs_communities/community-groups.html' %}
                     </div>
                 </div>
             </div>

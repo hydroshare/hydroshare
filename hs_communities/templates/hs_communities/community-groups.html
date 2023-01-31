@@ -1,4 +1,5 @@
 <div class="flex gap-2">
+  {% if not user.is_anonymous %}
   <div class="community-groups--sidebar">
     <button v-if="isAdmin" class="btn btn-primary has-space-bottom btn-block"
       data-toggle="modal" data-target="#invite-groups-modal">
@@ -10,6 +11,7 @@
         data-target="#join-communities-modal">Ask to join a Community</button>
     </div>
   </div>
+  {% endif %}
 
   <div class="community-groups--content flex-grow-1 flex flex-column gap-2">
     <!-- PENDING JOIN REQUESTS -->
