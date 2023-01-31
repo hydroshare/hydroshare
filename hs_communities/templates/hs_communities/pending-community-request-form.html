@@ -42,7 +42,7 @@
         {# Purpose #}
         <fieldset class="col-sm-12" :disabled="!isEditMode || isSaving">
           <label>Purpose</label>
-          <textarea ref="purpose" class="form-control" name="purpose"
+          <textarea ref="purpose" class="form-control" name="purpose" rows="4"
             maxlength="300">${ request.community_to_approve.purpose }</textarea>
           <small class="text-muted">A brief description of the purpose for which the community was created.</small><br>
           <small class="text-muted">300 characters or less.</small>
@@ -52,7 +52,7 @@
         {# Community Description #}
         <fieldset class="col-sm-12" :disabled="!isEditMode || isSaving">
           <label>About this community *</label>
-          <textarea ref="description" class="form-control" required="required"
+          <textarea ref="description" class="form-control" required="required" rows="4"
             name="description">${ request.community_to_approve.description }</textarea>
           <small class="text-muted">A longer text description for the community.</small>
         </fieldset>
@@ -65,6 +65,7 @@
       </div>
       
       <template v-if="!isEditMode">
+        {% if user.is_superuser %}
         <button v-if="request.status === 'Submitted'" data-toggle="modal" data-target="#reject-new-community-creation-request-dialog"
           :disabled="isApproving || isRejecting || request.status === 'Rejected'" type="button" class="btn btn-default">
           ${ isRejecting ? 'Rejecting Community...' : 'Reject' }
@@ -72,6 +73,7 @@
         <button v-if="request.status === 'Submitted'" @click="onApprove" :disabled="isApproving || isRejecting" type="button" class="btn btn-success has-space-right">
           ${ isApproving ? 'Approving Community...' : 'Approve' }
         </button>
+        {% endif %}
         <button v-if="request.status === 'Rejected'" @click="onResubmit" :disabled="isResubmitting" type="button" class="btn btn-default">
           ${ isResubmitting ? 'Resubmitting...' : 'Resubmit' }
         </button>

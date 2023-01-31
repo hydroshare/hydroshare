@@ -3,6 +3,9 @@
 {% load hydroshare_tags thumbnail %}
 
 {% block meta_title %} Pending Community Requests {% endblock %}
+{% block extra_css %}
+<link href="{% static 'css/collaborate.css' %}" rel="stylesheet"/>
+{% endblock %}
 
 {% block main %}
     {% include 'hs_communities/communities-nav.html' with active='manage_requests' %}

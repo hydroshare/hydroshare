@@ -3,7 +3,7 @@ $(document).ready(function () {
     el: "#pending-community-request-app",
     delimiters: ['${', '}'],
     data: {
-      request: REQUEST || null,
+      request: null,
       isEditMode: false,
       isSaving: false,
       isApproving: false,
@@ -33,12 +33,14 @@ $(document).ready(function () {
         left: 0,
       }
     },
-    created() {
-      console.log(this.request)
+    // created() {
+    // },
+    beforeMount() {
+      // Load data
+      this.request = JSON.parse(document.getElementById('community_request').textContent)
     },
-    mounted() {
-
-    },
+    // mounted() {
+    // },
     methods: {
       loadOwnerCard(data) {
         const el = $(data.event.target).closest('.profile-link');
@@ -138,7 +140,8 @@ $(document).ready(function () {
           for (let field of fields) {
             this.$set(this.request.community_to_approve, field, formData.get(field));
           }
-          this.isEditMode = false
+          this.isEditMode = false;
+          customAlert("New Community Request", 'Your changes have been saved', "success", 6000);
         }
         else {
           // show error

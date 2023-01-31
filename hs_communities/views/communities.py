@@ -308,18 +308,18 @@ class CommunityCreationRequest(TemplateView):
             logger.error(message)
             return message
 
-        if not user.is_superuser:
-            message = "user with id {} is not a superuser".format(user.id)
-            logger.error(message)
-            return message
-
         if rid is not None:
             try:
-                RequestCommunity.objects.get(id=rid)
+                req = RequestCommunity.objects.get(id=rid)
             except RequestCommunity.DoesNotExist:
                 message = "community request id {} not found".format(rid)
                 logger.error(message)
                 return message
+            
+        if not user.is_superuser and not user == req.requested_by:
+            message = "user with id {} is not a superuser or the user who submitted the request".format(user.id)
+            logger.error(message)
+            return message
 
         return ""
 
