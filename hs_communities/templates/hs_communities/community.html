@@ -18,6 +18,7 @@
 {{ groups|json_script:"groups" }}
 {{ members|json_script:"members" }}
 {{ pending|json_script:"pending" }}
+{{ czo_community|json_script:"czo_community" }}
 
 {# These components needs to be included first so they are available before this app initializes #}
 {% include "includes/profile-card.html" %}
@@ -28,6 +29,9 @@
     <div v-if="community.banner" class="community-banner has-space-bottom-2x"
       style="background-image: url({{ community.banner }})">
     </div>
+    <div v-else-if="isCzoCommunity" class="community-banner czo-banner has-space-bottom-2x"
+      style="background-image: url({% static 'img/czo-logo-wide.png' %})">
+    </div>
     <div class="container full-width" style="padding: 0;">
         <div class="container">
             {% if is_admin %}
@@ -35,29 +39,21 @@
             {% endif %}
 
             <div class="flex">
-                {% if czo_community %}
-                <a href="http://criticalzone.org">
-                  <img src="{% static 'img/czo-logo-wide.png' %}" alt="CZO National"></a>
-                {% else %}
-
                 <div class="has-space-right">
                     <div v-if="community.logo">
                         <center><img src='{{ community.logo }}' height=200></center>
                     </div>
-                    <div v-else class="community-image-wrapper community-image-wrapper-medium">
-                        <div class="community-image community-preview-image-default"
+                    <div v-else class="group-image-wrapper group-image-wrapper-medium">
+                        <div class="group-image group-preview-image-default"
                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
                         </div>
                     </div>
                 </div>
-                {% endif %}
 
                 <div class="flex-grow-1">
-                    {% if not czo_community %}
                     <div class="community-title-container flex justify-space-between align-flex-start">
                         <h2 class="community-title is-marginless">${ community.name }</h2>
                     </div>
-                    {% endif %}
 
                     <h4 v-if="community.purpose" class="text-muted">{{ community.purpose|linebreaks }}</h4>
 

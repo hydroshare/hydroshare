@@ -95,3 +95,7 @@
   background-position: center;
   margin-top: -4rem;
 }
+
+.community-banner.czo-banner {
+  background-size: unset;
+}

@@ -37,7 +37,7 @@
             {# Purpose #}
             <fieldset class="col-sm-12">
               <label>Purpose</label>
-              <textarea class="form-control" name="purpose" maxlength="300">{{ community.purpose }}</textarea>
+              <textarea class="form-control" name="purpose" maxlength="300" rows="4">{{ community.purpose }}</textarea>
               <small class="text-muted">A brief description of the purpose for which the community was created.</small><br>
               <small class="text-muted">300 characters or less.</small>
             </fieldset>
@@ -46,7 +46,7 @@
             {# Community Description #}
             <fieldset class="col-sm-12">
               <label>About this community *</label>
-              <textarea class="form-control" required="required" name="description">{{ community.description }}</textarea>
+              <textarea class="form-control" required="required" name="description" rows="4">{{ community.description }}</textarea>
               <small class="text-muted">A longer text description for the community.</small>
             </fieldset>
     
