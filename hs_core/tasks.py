@@ -77,7 +77,9 @@ class FileOverrideException(Exception):
 
 
 class HydroshareRequest(Request):
-    'A Celery custom request to log failures.'
+    '''A Celery custom request to log failures.
+    https://docs.celeryq.dev/en/v4.4.7/userguide/tasks.html?#requests-and-custom-requests
+    '''
     def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
         super(HydroshareRequest, self).on_failure(
             exc_info,
@@ -91,7 +93,15 @@ class HydroshareRequest(Request):
 
 
 class HydroshareTask(Task):
+    '''Custom Celery Task configured for Hydroshare
+    https://docs.celeryq.dev/en/v4.4.7/userguide/tasks.html?#automatic-retry-for-known-exceptions
+    '''
     Request = HydroshareRequest
+    autoretry_for = (Exception, KeyError)
+    retry_kwargs = {'max_retries': 3}
+    retry_backoff = True
+    retry_backoff_max = 600
+    retry_jitter = True
 
 
 @celery_app.on_after_finalize.connect
