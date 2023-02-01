@@ -116,7 +116,8 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
                                  send_over_quota_emails.s())
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
-        sender.add_periodic_task(crontab(minute=15, hour=1, day_of_month=1), monthly_group_membership_requests_cleanup.s())
+        sender.add_periodic_task(
+            crontab(minute=15, hour=1, day_of_month=1), monthly_group_membership_requests_cleanup.s())
         sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
         sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
         sender.add_periodic_task(crontab(minute=0, hour=1), nightly_periodic_task_check.s())
