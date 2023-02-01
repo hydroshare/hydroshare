@@ -868,7 +868,7 @@ def monthly_group_membership_requests_cleanup():
     Delete expired and redeemed group membership requests
     """
     two_months_ago = datetime.today() - timedelta(days=60)
-    GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
+    GroupMembershipRequest.objects.filter(date_requested__lte=two_months_ago).delete()
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
