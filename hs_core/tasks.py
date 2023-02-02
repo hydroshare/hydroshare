@@ -88,8 +88,9 @@ class HydroshareRequest(Request):
         )
         warning_message = f'Failure detected for task {self.task.name}'
         logger.warning(warning_message)
-        subject = 'Notification of failing Celery task'
-        send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+        if not settings.DISABLE_TASK_EMAILS:
+            subject = 'Notification of failing Celery task'
+            send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
 
 class HydroshareTask(Task):
