@@ -422,6 +422,7 @@ MIDDLEWARE = (
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "hs_tools_resource.middleware.CheckRequest",  # before CsrfViewMiddleware
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "mezzanine.core.request.CurrentRequestMiddleware",
