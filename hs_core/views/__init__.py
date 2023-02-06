@@ -772,7 +772,7 @@ def update_metadata_element(
                             element_exists = response["element_exists"]
 
                 except ValidationError as exp:
-                    err_msg = err_msg.format(element_name, str(exp))
+                    err_msg = err_msg.format(element_name, exp.message)
                     request.session["validation_error"] = err_msg
                     logger.warning(err_msg)
                 except Error as exp:

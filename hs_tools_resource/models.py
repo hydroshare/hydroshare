@@ -469,7 +469,6 @@ class ToolIcon(AbstractMetaDataElement):
         try:
             response = requests.get(url, verify=False)
         except Exception as ex:
-            # TODO: 4701, beta gets this
             raise ValidationError("Failed to read data from given url: {0}".format(str(ex)))
         if response.status_code != 200:
             raise ValidationError("Failed to read data from given url. HTTP_code {0}".format(response.status_code))
@@ -483,7 +482,6 @@ class ToolIcon(AbstractMetaDataElement):
         if not image_type:
             image_type = get_file_mime_type(url).rsplit('/', 1)[1]
         if image_type not in ["png", "gif", "jpeg", "svg+xml", "vnd.microsoft.icon", "svg", "ico"]:
-            # TODO: 4701, local gets this
             raise ValidationError("Supported icon image types are png, gif, jpeg, ico, and svg")
         base64_string = base64.b64encode(response.content)
         data_url = "data:image/{image_type};base64,{base64_string}". \
