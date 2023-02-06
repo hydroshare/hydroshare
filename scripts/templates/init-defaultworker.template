@@ -10,5 +10,5 @@ userdel hydro-service \
 
 celery -A hydroshare beat  -s /hydroshare/celery/celerybeat-schedule &
 celery -A hydroshare worker -E -Q default --concurrency=CELERY_CONCURRENCY &
-celery flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
+celery -A hydroshare flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
 
