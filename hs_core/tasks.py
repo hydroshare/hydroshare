@@ -77,7 +77,9 @@ class FileOverrideException(Exception):
 
 
 class HydroshareRequest(Request):
-    'A Celery custom request to log failures.'
+    '''A Celery custom request to log failures.
+    https://docs.celeryq.dev/en/v4.4.7/userguide/tasks.html?#requests-and-custom-requests
+    '''
     def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
         super(HydroshareRequest, self).on_failure(
             exc_info,
@@ -86,12 +88,21 @@ class HydroshareRequest(Request):
         )
         warning_message = f'Failure detected for task {self.task.name}'
         logger.warning(warning_message)
-        subject = 'Notification of failing Celery task'
-        send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+        if not settings.DISABLE_TASK_EMAILS:
+            subject = 'Notification of failing Celery task'
+            send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
 
 class HydroshareTask(Task):
+    '''Custom Celery Task configured for Hydroshare
+    https://docs.celeryq.dev/en/v4.4.7/userguide/tasks.html?#automatic-retry-for-known-exceptions
+    '''
     Request = HydroshareRequest
+    autoretry_for = (Exception, KeyError)
+    retry_kwargs = {'max_retries': 3}
+    retry_backoff = True
+    retry_backoff_max = 600
+    retry_jitter = True
 
 
 @celery_app.on_after_finalize.connect
@@ -106,9 +117,10 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
                                  send_over_quota_emails.s())
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
-        sender.add_periodic_task(crontab(day_of_month=1), monthly_group_membership_requests_cleanup.s())
+        sender.add_periodic_task(
+            crontab(minute=15, hour=1, day_of_month=1), monthly_group_membership_requests_cleanup.s())
         sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
-        sender.add_periodic_task(crontab(day_of_week=1), task_notification_cleanup.s())
+        sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
         sender.add_periodic_task(crontab(minute=0, hour=1), nightly_periodic_task_check.s())
 
 
@@ -868,7 +880,7 @@ def monthly_group_membership_requests_cleanup():
     Delete expired and redeemed group membership requests
     """
     two_months_ago = datetime.today() - timedelta(days=60)
-    GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
+    GroupMembershipRequest.objects.filter(date_requested__lte=two_months_ago).delete()
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
