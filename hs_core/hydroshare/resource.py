@@ -1104,6 +1104,7 @@ def publish_resource(user, pk):
         if not response.status_code == status.HTTP_200_OK:
             # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
             # crontab celery task
+            logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
             resource.doi = get_resource_doi(pk, 'failure')
             resource.save()
 

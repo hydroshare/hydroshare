@@ -1190,6 +1190,9 @@ def publish(request, shortkey, *args, **kwargs):
     if not request.user.is_superuser:
         raise ValidationError("Resource can only be published by an admin user")
     try:
+        res = get_resource_by_shortkey(shortkey)
+        res.raccess.review_pending = False
+        res.raccess.save()
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
@@ -1221,7 +1224,9 @@ def submit_for_review(request, shortkey, *args, **kwargs):
                 Your resource is under review for appropriate minimum metadata and to ensure that it adheres to
                 community guidelines.
                 The review process will likely be complete within 1 business day, but not exceed 2 business days.
-                You will receive a notification via email once the review process has concluded."""
+                You will receive a notification via email once the review process has concluded.
+                If you decide that you no longer wish to have this resource reviewed for publication,
+                please contact help@cuahsi.org"""
         messages.success(request, message)
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
@@ -2113,7 +2118,7 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
                 request,
                 "Publication request was rejected. Please send an email to the resource owner indicating why.",
             )
-            res.metadata.dates.all().filter(type="review_started").delete()
+        res.metadata.dates.all().filter(type="review_started").delete()
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 
 

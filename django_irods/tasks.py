@@ -41,8 +41,8 @@ what each does:
 * ixmsg    - send/receive iRODS xMessage System messages.
 """
 
-from celery.task import Task
-from celery.task import subtask
+from celery import Task
+from celery import subtask
 from .icommands import Session, GLOBAL_SESSION, IRodsEnv
 
 from . import models as m

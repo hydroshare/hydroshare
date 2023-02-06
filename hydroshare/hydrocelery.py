@@ -10,7 +10,8 @@ from django.conf import settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hydroshare.settings')
 os.environ.setdefault('PYTHONPATH', '/hydroshare/hydroshare')
 
-app = Celery('hydroshare', backend='amqp://')
+# ampq backend has been deprecated in celery v5
+app = Celery('hydroshare', backend='rpc://', broker=settings.BROKER_URL)
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
