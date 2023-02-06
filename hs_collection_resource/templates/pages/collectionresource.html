@@ -248,15 +248,16 @@
                     <div id="clear-deleted-res-warning" class="collection-div-popup-warning">Clearing deleted resources and updating bag. Please wait...</div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="clear-deleted-res-btn-cancel">
+                      Cancel
+                    </button>
                     {% if page.perms.change %}
                         <button type="button" data-res-id="{{ cm.short_id }}" class="btn btn-success"
                                 id="clear-deleted-res-btn">
                             Clear and Update Bag
                         </button>
                     {% endif %}
-                    <button type="button" class="btn btn-default" data-dismiss="modal" id="clear-deleted-res-btn-cancel">
-                       Close
-                    </button>
+     
                 </div>
             </div>
         </div>
