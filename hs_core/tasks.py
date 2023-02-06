@@ -221,6 +221,12 @@ def manage_task_hourly():
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))
 
+    pending_unpublished_resources = BaseResource.objects.filter(raccess__published=False,
+                                                                doi__contains='pending')
+    for res in pending_unpublished_resources:
+        msg_lst.append(f"{res.short_id} has pending in DOI but resource_acceess shows unpublished. "
+                       "This indicates an issue with the resource, please notify a developer")
+
     if msg_lst and not settings.DISABLE_TASK_EMAILS:
         email_msg = '\n'.join(msg_lst)
         subject = 'Notification of pending DOI deposition/activation of published resources'
