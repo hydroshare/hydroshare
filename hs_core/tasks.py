@@ -800,6 +800,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
         logger.error(f"Error updating web services: {str(e)}")
         raise
 
+
 @shared_task
 def resource_debug(resource_id):
     """Update web services hosted by GeoServer and HydroServer.
