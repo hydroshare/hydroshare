@@ -411,6 +411,11 @@ echo
 docker $DOCKER_PARAM exec hydroshare python manage.py migrate --fake-initial --noinput
 
 echo
+echo "  - docker exec -u hydro-service hydroshare python manage.py prevent_web_crawling"
+echo
+docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py prevent_web_crawling
+
+echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py fix_permissions
