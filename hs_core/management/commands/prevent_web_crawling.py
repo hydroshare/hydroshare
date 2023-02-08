@@ -15,7 +15,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         # a list of urls to disable
-        parser.add_argument('dissalowed_urls', nargs='*', type=str)
+        parser.add_argument('disallowed_urls', nargs='*', type=str)
 
     def handle(self, *args, **options):
         # django-robots model definitions:
@@ -26,15 +26,15 @@ class Command(BaseCommand):
         r.save()  # extra save here is necessary to do r.disallowed later
         r.sites.set(Site.objects.all())
 
-        if len(options['dissalowed_urls']) > 0:  # an array of urls to disable.
-            for url in options['dissalowed_urls']:
+        if len(options['disallowed_urls']) > 0:  # an array of urls to disable.
+            for url in options['disallowed_urls']:
                 try:
                     u = Url()
                     u.pattern = url
                     u.save()
                     r.disallowed.add(u)
                 except Exception:
-                    print(f"Dissalow url: {url} failed.")
+                    print(f"Disallow url: {url} failed.")
                     raise
         else:
             u = Url()
