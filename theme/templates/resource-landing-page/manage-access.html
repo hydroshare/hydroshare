@@ -151,7 +151,7 @@
                             </div>
 
                             <template v-if="canChangeResourceFlags || '{{ cm.raccess.published }}'">
-                                {% if not cm.raccess.published %}
+                                {% if not cm.raccess.published_or_review_pending %}
                                     <div class="btn-group" role="group">
                                         {# -------- PUBLIC -------- #}
                                         <button
