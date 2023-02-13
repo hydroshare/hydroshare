@@ -39,6 +39,9 @@ let groupCommunitiesApp = new Vue({
         if (response.hasOwnProperty('available_to_join')) {
           this.availableToJoin = response.available_to_join
         }
+        if (response.hasOwnProperty('joined')) {
+          this.joined = response.joined;
+        }
         delete this.isLeaving[id]
         $("#leave-community-modal").modal('hide')
         customAlert("Leave Community", `The Group has left this Community`, "success", 6000);
@@ -61,6 +64,9 @@ let groupCommunitiesApp = new Vue({
         }
         if (response.hasOwnProperty('available_to_join')) {
           this.availableToJoin = response.available_to_join;
+        }
+        if (response.hasOwnProperty('joined')) {
+          this.joined = response.joined;
         }
         this.$set(this.isAcceptingInvitation, id, false)
         delete this.isAcceptingInvitation[id]

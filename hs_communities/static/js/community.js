@@ -218,13 +218,13 @@ $(document).ready(function () {
             // If members is included in the response, we update the state
             this.members = response.members
           }
+          customAlert("Approve Group Join Request", `The Group request to join the Community has been accepted`, "success", 6000);
         }
         catch (e) {
           console.log(e)
           customAlert("Approve Group Join Request", 'Failed to approve request', 'error', 6000);
         }
         this.$set(this.isApprovingGroup, id, false)
-
       },
       removeOwner: async function (userId) {
         const url = `/access/_internal/community/${this.community.id}/owner/${userId}/remove`

@@ -3618,13 +3618,17 @@ class UserAccess(models.Model):
 
         if not this_community.active:
             raise PermissionDenied("Community is not active")
+        
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Affected Group is not active")
 
         # Check for sufficient privilege
         if self.user.is_superuser:
             return True
 
-        if not self.owns_community(this_community):
-            raise PermissionDenied("User is not an owner of the target community")
+        # Do not allow if user does not own neither group nor community
+        if not self.owns_community(this_community) and not self.owns_group(this_group):
+            raise PermissionDenied("User is not an owner of the target community or the affected group")
 
         return True
 
@@ -3656,16 +3660,6 @@ class UserAccess(models.Model):
         view's forms. "unshare_*" still checks for permission (again) in case
         things have changed (e.g., through a stale form).
         """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_group, Group)
-            assert isinstance(this_community, Community)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Affected Group is not active")
-        if not this_community.active:
-            raise PermissionDenied("Community is not active")
 
         self.__check_unshare_community_with_group(this_community, this_group)
         GroupCommunityPrivilege.unshare(

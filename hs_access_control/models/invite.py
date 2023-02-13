@@ -517,7 +517,10 @@ class GroupCommunityRequest(models.Model):
                 .format(group.name, community.name)
             return message, True
 
-        requester.uaccess.unshare_community_with_group(community, group)
+        try:
+            requester.uaccess.unshare_community_with_group(community, group)
+        except:
+            return 'Failed to remove Group from Community', False
         message = "Group '{}' removed from community '{}'."\
             .format(group.name, community.name)
         return message, True

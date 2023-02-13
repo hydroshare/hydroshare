@@ -269,7 +269,8 @@ class GroupView(View):
                                                     on_event=CommunityGroupEvents.APPROVED).send()
                     return JsonResponse({ 
                         'pending': self.get_pending_community_requests(group),
-                        'available_to_join': self.get_communities_available_to_join(group)
+                        'available_to_join': self.get_communities_available_to_join(group),
+                        'joined': self.get_communities_joined(group),
                     })
 
             elif action == CommunityActions.DECLINE:  # decline an invitation from a community
@@ -337,8 +338,8 @@ class GroupView(View):
 
         # build a JSON object that contains the results of the query
         context = {}
-        if denied:
-            return error_response(denied)
+        # if denied:
+        #     return error_response(denied)
 
         context['denied'] = denied  # empty string means ok
         context['message'] = message
