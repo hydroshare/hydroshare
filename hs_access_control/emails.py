@@ -165,8 +165,9 @@ class CommunityRequestEmailNotification:
             recipient_emails = [mail_to]
 
             subject = "New HydroShare Community Request Resubmission"
-            message = f"""Dear HydroShare Admin,
-            <p>User {self.community_request.requested_by.first_name} has resubmitted a request to create the following community.
+            requested_by = self.community_request.requested_by.first_name
+            message = f"""Dear HydroShare Admin,            
+            <p>User {requested_by} has resubmitted a request to create the following community.
             Please click on the link below to review this request.
             <p><a href="{community_request_url}">
             {self.community_request.community_to_approve.name}</a></p>

@@ -1,120 +1,102 @@
-import json
 import datetime
-from dateutil import tz
+import json
 import logging
 
-from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
-
-from django.db.models import Q, F
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
-from django.core.mail import send_mail
+from autocomplete_light import shortcuts as autocomplete_light
+from dateutil import tz
+from django import forms
+from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
-from django.contrib import messages
-from django.utils.decorators import method_decorator
-from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
+from django.core import signing
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
+from django.core.mail import send_mail
+from django.db import Error, IntegrityError
+from django.db.models import F, Q
+from django.forms.models import model_to_dict
 from django.http import (
-    HttpResponseRedirect,
     HttpResponse,
-    JsonResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
+    HttpResponseRedirect,
+    JsonResponse,
 )
-from django.shortcuts import get_object_or_404, render, redirect
-from django.core import signing
-from django.db import Error, IntegrityError
-from django import forms
-from django.views.generic import TemplateView
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.forms.models import model_to_dict
-
-from rest_framework import status
-from rest_framework.decorators import api_view
-
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
-from mezzanine.utils.email import subject_template, send_mail_template
-
-from autocomplete_light import shortcuts as autocomplete_light
+from mezzanine.utils.email import send_mail_template, subject_template
+from rest_framework import status
+from rest_framework.decorators import api_view
+from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from django_irods.icommands import SessionException
-
-from hs_core import hydroshare
-from hs_core.hydroshare.utils import (
-    resource_modified,
-    resolve_request,
-)
-from .utils import (
-    authorize,
-    upload_from_irods,
-    ACTION_TO_AUTHORIZE,
-    run_script_to_update_hyrax_input_files,
-    get_my_resources_list,
-    send_action_to_take_email,
-    get_coverage_data_dict,
-    get_my_resources_filter_counts,
-)
-
-from hs_core.models import (
-    BaseResource,
-    resource_processor,
-    CoreMetaData,
-    Subject,
-    TaskNotification,
-)
-from hs_core.hydroshare.resource import (
-    METADATA_STATUS_SUFFICIENT,
-    METADATA_STATUS_INSUFFICIENT,
-    update_quota_usage as update_quota_usage_utility,
-)
-
 from hs_access_control.emails import CommunityRequestEmailNotification
 from hs_access_control.enums import CommunityRequestEvents
 from hs_access_control.forms import RequestNewCommunityForm, UpdateCommunityForm
 from hs_access_control.models import Community, GroupCommunityRequest
-
-from hs_tools_resource.app_launch_helper import resource_level_tool_urls
-
+from hs_access_control.models import GroupMembershipRequest, GroupResourcePrivilege, PrivilegeCodes
+from hs_core import hydroshare
+from hs_core import signals
+from hs_core.enums import RelationTypes
+from hs_core.hydroshare.resource import (
+    METADATA_STATUS_INSUFFICIENT,
+    METADATA_STATUS_SUFFICIENT,
+    update_quota_usage as update_quota_usage_utility,
+)
+from hs_core.hydroshare.utils import (
+    get_resource_by_shortkey,
+    resolve_request,
+    resource_modified,
+)
+from hs_core.models import (
+    BaseResource,
+    CoreMetaData,
+    Subject,
+    TaskNotification,
+    resource_processor,
+)
 from hs_core.task_utils import (
-    get_all_tasks,
-    revoke_task_by_id,
     dismiss_task_by_id,
-    set_task_delivered_by_id,
+    get_all_tasks,
     get_or_create_task_notification,
-    get_task_user_id,
     get_resource_delete_task,
+    get_task_user_id,
+    revoke_task_by_id,
+    set_task_delivered_by_id,
 )
 from hs_core.tasks import (
     copy_resource_task,
-    replicate_resource_bag_to_user_zone_task,
     create_new_version_resource_task,
     delete_resource_task,
+    replicate_resource_bag_to_user_zone_task,
 )
-from hs_core.enums import RelationTypes
-
-from . import resource_rest_api
-from . import resource_metadata_rest_api
-from . import user_rest_api
-from . import resource_folder_hierarchy
-
-from . import resource_access_api
-from . import resource_folder_rest_api
-from . import debug_resource_view
-from . import resource_ticket_rest_api
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from . import apps
-
-from hs_core import signals
-
-from hs_access_control.models import (
-    PrivilegeCodes,
-    GroupMembershipRequest,
-    GroupResourcePrivilege,
+from . import debug_resource_view
+from . import resource_access_api
+from . import resource_folder_hierarchy
+from . import resource_folder_rest_api
+from . import resource_metadata_rest_api
+from . import resource_rest_api
+from . import resource_ticket_rest_api
+from . import user_rest_api
+from .utils import (
+    ACTION_TO_AUTHORIZE,
+    authorize,
+    get_coverage_data_dict,
+    get_my_resources_filter_counts,
+    get_my_resources_list,
+    run_script_to_update_hyrax_input_files,
+    send_action_to_take_email,
+    upload_from_irods,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -2711,9 +2693,9 @@ class GroupView(TemplateView):
 
             # Communities that can be joined.
             communitiesContext["available_to_join"] = []
-            for c in Community.objects.filter(active=True).exclude(invite_c2gcr__group=group)\
-                                               .exclude(c2gcp__group=group)\
-                                               .order_by("name"):
+            for c in Community.objects.filter(active=True).exclude(invite_c2gcr__group=group) \
+                    .exclude(c2gcp__group=group) \
+                    .order_by("name"):
                 communitiesContext["available_to_join"].append(community_json(c))
 
             # list of all available communities
