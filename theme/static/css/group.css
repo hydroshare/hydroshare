@@ -1,7 +1,5 @@
 .group-header {
-  display: flex;
   column-gap: 30px;
-  align-items: center;
 }
 
 .group-title-container {
@@ -58,4 +56,11 @@
 
 .group-actions {
   gap: 1rem;
+}
+
+@media (max-width: 992px) {
+  .group-community-card .panel-body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

@@ -2,15 +2,24 @@ let groupCommunitiesApp = new Vue({
   el: '#group-communities',
   delimiters: ['${', '}'],
   data: {
-      joined: JOINED,
-      pending: PENDING,
-      allCommunities: ALL_COMMUNITIES,
-      groupsJoined: GROUPS_JOINED,
-      groupId: GROUP_ID,
-      isGroupOwner: IS_GROUP_OWNER,
+      joined: null,
+      pending: null,
+      allCommunities: null,
+      groupsJoined: null,
+      groupId: null,
+      isGroupOwner: null,
       isLeaving: { },
       isJoining: { },
       targetCommunity: null
+  },
+  beforeMount() {
+    // Load data
+    this.groupId = JSON.parse(document.getElementById('group_id').textContent);
+    this.isGroupOwner = JSON.parse(document.getElementById('is_group_owner').textContent);
+    this.joined = JSON.parse(document.getElementById('joined').textContent);
+    this.groupsJoined = JSON.parse(document.getElementById('groups_joined').textContent);
+    this.pending = JSON.parse(document.getElementById('pending').textContent);
+    this.allCommunities = JSON.parse(document.getElementById('all_communities').textContent);
   },
   // watch: {
       

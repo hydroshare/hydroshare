@@ -3701,6 +3701,10 @@ input.no-style {
   margin-right: 2rem;
 }
 
+.has-space-right-2x {
+  margin-right: 4rem;
+}
+
 .has-space-left {
   margin-left: 2rem;
 }
@@ -3719,6 +3723,12 @@ input.no-style {
 
 .grid {
   display: grid;
+}
+
+@media (max-width: 992px) {
+  .flex-sm-column {
+    flex-direction: column;
+  }
 }
 
 /* --------------------------------------------------------- */

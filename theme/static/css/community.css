@@ -81,6 +81,13 @@
   max-width: 75rem;
 }
 
+@media (max-width: 992px) {
+  .community-group-card .panel-body  {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 @media screen and (min-width: 768px) {
   #invite-groups-modal .modal-dialog {
     width: 900px;

@@ -1,3 +1,11 @@
+<!-- Load context data needed in Vue app -->
+{{ gid|json_script:"group_id" }}
+{{ profile_user.is_group_owner|json_script:"is_group_owner" }}
+{{ communities.joined|json_script:"joined" }}
+{{ communities.user_groups_joined|json_script:"groups_joined" }}
+{{ communities.pending|json_script:"pending" }}
+{{ communities.all_communities|json_script:"all_communities" }}
+
 <div id="group-communities" class="flex gap-2">
   <div class="group-communities--sidebar">
     <div class="alert alert-info">
@@ -104,13 +112,4 @@
   </div>
 </div>
 
-
-<script type="text/javascript">
-  const GROUP_ID = {{ gid }};
-  const IS_GROUP_OWNER = "{{ profile_user.is_group_owner }}" === "True";
-  const JOINED = {{ communities.joined|safe }};
-  const GROUPS_JOINED = {{ communities.user_groups_joined|safe }};
-  const PENDING = {{ communities.pending|safe }};
-  const ALL_COMMUNITIES = {{ communities.all_communities|safe }};
-</script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/group-communities-app.js"></script>

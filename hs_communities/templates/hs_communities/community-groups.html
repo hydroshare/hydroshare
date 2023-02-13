@@ -1,4 +1,4 @@
-<div class="flex gap-2">
+<div class="flex gap-2 flex-sm-column">
   {% if not user.is_anonymous %}
   <div class="community-groups--sidebar">
     <button v-if="isAdmin" class="btn btn-primary has-space-bottom btn-block"
@@ -19,9 +19,14 @@
       <h4 class="heading">Pending Group Membership Requests</h4>
       <div v-for="request of pending" class="community-group-card panel panel-default">
         <div class="panel-body flex gap-1 align-center">
-          <div class="group-image-wrapper group-image-wrapper-medium has-space-right">
+          <div v-if="request.group.picture" class="group-image-wrapper group-image-wrapper-medium has-space-right">
+              <div class="group-image"
+              :style="`background-image: url(${request.group.picture})`"></div>
+          </div>
+          <div v-else class="group-image-wrapper group-image-wrapper-medium has-space-right">
               <div class="group-image group-preview-image-default"
-                  style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                  style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+              </div>
           </div>
           <div class="community-card--info flex-grow-1">
             <a class="community-card--heading" :href="'/group/' + request.group.id">${ request.group.name }</a>
@@ -52,10 +57,16 @@
       <template v-if="members.length">
         <div v-for="group of members" class="community-group-card panel panel-default">
           <div class="panel-body flex gap-1 align-center">
-            <div class="group-image-wrapper group-image-wrapper-medium has-space-right">
-                <div class="group-image group-preview-image-default"
-                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+            <div v-if="group.picture" class="group-image-wrapper group-image-wrapper-medium has-space-right">
+                <div class="group-image"
+                :style="`background-image: url(${group.picture})`"></div>
             </div>
+            <div v-else class="group-image-wrapper group-image-wrapper-medium has-space-right">
+                <div class="group-image group-preview-image-default"
+                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                </div>
+            </div>
+
             <div class="community-card--info flex-grow-1">
               <a class="community-card--heading" :href="'/group/' + group.id">${ group.name }</a>
               <p>${ group.description }</p>
