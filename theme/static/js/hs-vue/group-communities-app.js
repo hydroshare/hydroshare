@@ -67,8 +67,12 @@ let groupCommunitiesApp = new Vue({
       const url = '/access/_internal/group/' + this.groupId + '/decline/' + id + '/';
       try {
         const response = await $.post(url)
-        // TODO: update state
-        console.log(response)
+        if (response.hasOwnProperty('pending')) {
+          this.pending = response.pending;
+        }
+        if (response.hasOwnProperty('available_to_join')) {
+          this.availableToJoin = response.available_to_join;
+        }
         this.$set(this.isDecliningInvitation, id, false)
         delete this.isDecliningInvitation[id]
         customAlert("Decline Community Invitation", `The invitation has been declined`, "success", 6000);

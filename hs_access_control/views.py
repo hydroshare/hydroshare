@@ -222,9 +222,9 @@ class GroupView(View):
     
     def get_communities_available_to_join(self, group):
         available = []
-        for c in Community.objects.filter().exclude(invite_c2gcr__group=group)\
-                                            .exclude(c2gcp__group=group)\
-                                            .order_by("name"):
+        for c in Community.objects.filter(active=True).exclude(invite_c2gcr__group=group)\
+                                                      .exclude(c2gcp__group=group)\
+                                                      .order_by("name"):
             available.append(community_json(c))
         return available
     

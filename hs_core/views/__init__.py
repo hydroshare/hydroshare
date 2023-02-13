@@ -2433,6 +2433,7 @@ class FindGroupsView(TemplateView):
                 Group.objects.filter(gaccess__active=True)
                 .exclude(name="Hydroshare Author")
                 .select_related("gaccess")
+                .order_by('name')
             )
             for g in groups:
                 g.members = g.gaccess.members
@@ -2710,7 +2711,7 @@ class GroupView(TemplateView):
 
             # Communities that can be joined.
             communitiesContext["available_to_join"] = []
-            for c in Community.objects.filter().exclude(invite_c2gcr__group=group)\
+            for c in Community.objects.filter(active=True).exclude(invite_c2gcr__group=group)\
                                                .exclude(c2gcp__group=group)\
                                                .order_by("name"):
                 communitiesContext["available_to_join"].append(community_json(c))
