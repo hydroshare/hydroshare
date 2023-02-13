@@ -26,7 +26,6 @@ class CommunityView(TemplateView):
     template_name = "hs_communities/community.html"
 
     def dispatch(self, *args, **kwargs):
-        self.template_name = "hs_communities/community.html"
         return super(CommunityView, self).dispatch(*args, **kwargs)
 
     def hydroshare_denied(self, cid):
