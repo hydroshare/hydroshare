@@ -175,7 +175,7 @@
                       Cancel
                   </button>
                   <button class="btn btn-danger"
-                          @click="leave(targetCommunity.id)" :disabled="isLeaving[targetCommunity.id]"
+                          @click="leaveCommunity(targetCommunity.id)" :disabled="isLeaving[targetCommunity.id]"
                           value="clear">Leave Community
                   </button>
               </div>
@@ -190,6 +190,7 @@
       <join-communities
         @update-pending="pending = $event"
         @update-available-to-join="availableToJoin = $event"
+        @update-joined="joined = $event"
         :communities="availableToJoin"
         :default-group-id="groupId"
       />
