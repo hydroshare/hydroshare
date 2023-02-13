@@ -228,6 +228,13 @@ class GroupView(View):
             available.append(community_json(c))
         return available
 
+    def get_communities_joined(self, group):
+        # communities joined
+        joined = []
+        for c in Community.objects.filter(c2gcp__group=group).order_by('name'):
+            joined.append(community_json(c))
+        return joined
+
     def post(self, *args, **kwargs):
         message = ''
         validation_err_msg, req_params = self.validate_request_parameters(kwargs)
@@ -296,6 +303,7 @@ class GroupView(View):
 
                 # return relevant state
                 return JsonResponse({
+                    'joined': self.get_communities_joined(group),
                     'pending': self.get_pending_community_requests(group),
                     'available_to_join': self.get_communities_available_to_join(group)
                 })
@@ -306,6 +314,12 @@ class GroupView(View):
                     requester=user, group=group, community=community)
                 if not worked:
                     denied = message
+                else:
+                    # return relevant state
+                    return JsonResponse({
+                        'joined': self.get_communities_joined(group),
+                        'available_to_join': self.get_communities_available_to_join(group)
+                    })
 
             else:
                 assert action == CommunityActions.RETRACT

@@ -5,7 +5,6 @@ let groupCommunitiesApp = new Vue({
       joined: null,
       pending: null,
       availableToJoin: null,
-      groupsJoined: null,
       groupId: null,
       isGroupOwner: null,
       isLeaving: { },
@@ -19,7 +18,6 @@ let groupCommunitiesApp = new Vue({
     this.groupId = JSON.parse(document.getElementById('group_id').textContent);
     this.isGroupOwner = JSON.parse(document.getElementById('is_group_owner').textContent);
     this.joined = JSON.parse(document.getElementById('joined').textContent);
-    this.groupsJoined = JSON.parse(document.getElementById('groups_joined').textContent);
     this.pending = JSON.parse(document.getElementById('pending').textContent);
     this.availableToJoin = JSON.parse(document.getElementById('available_to_join').textContent);
   },
@@ -30,15 +28,20 @@ let groupCommunitiesApp = new Vue({
       
   // },
   methods: {
-    leave: async function(id) {
+    leaveCommunity: async function(id) {
       this.$set(this.isLeaving, id, true)
       const url = '/access/_internal/group/' + this.groupId + '/leave/' + id + '/';
       try {
         const response = await $.post(url)
+        if (response.hasOwnProperty('joined')) {
+          this.joined = response.joined
+        }
+        if (response.hasOwnProperty('available_to_join')) {
+          this.availableToJoin = response.available_to_join
+        }
         delete this.isLeaving[id]
         $("#leave-community-modal").modal('hide')
-        customAlert("Leave Community", response.message, "success", 6000);
-        // TODO: update state
+        customAlert("Leave Community", `The Group has left this Community`, "success", 6000);
       }
       catch(e) {
         console.log(e)
@@ -52,6 +55,13 @@ let groupCommunitiesApp = new Vue({
       try {
         const response = await $.post(url)
         // TODO: update state
+        console.log(response)
+        if (response.hasOwnProperty('pending')) {
+          this.pending = response.pending;
+        }
+        if (response.hasOwnProperty('available_to_join')) {
+          this.availableToJoin = response.available_to_join;
+        }
         this.$set(this.isAcceptingInvitation, id, false)
         delete this.isAcceptingInvitation[id]
         customAlert("Join Community", 'The Community invitation has been accepted', "success", 6000);
@@ -104,21 +114,5 @@ let groupCommunitiesApp = new Vue({
         $("#retract-community-join-request-modal").modal('hide')
       }
     },
-    // join: async function(id) {
-    //   this.$set(this.isJoining, id, true)
-    //   const url = '/access/_internal/group/' + this.groupId + '/join/' + id + '/';
-    //   try {
-    //     const response = await $.post(url)
-    //     // TODO: update state
-    //     this.$set(this.isJoining, id, false)
-    //     delete this.isJoining[id]
-    //     customAlert("Join Community", response.message, "success", 6000);
-    //   }
-    //   catch(e) {
-    //     console.log(e)
-    //     // abort
-    //     this.$set(this.isJoining, id, false)
-    //   }
-    // },
   }
 });

@@ -42,15 +42,18 @@ Vue.component('join-communities', {
       // const isCommunityInvitingGroup = this.defaultCommunityId;
       const url = `/access/_internal/group/${this.selectedGroupId}/join/${this.selectedCommunityId}/`
       try {
-        const response = await $.post(url)
-        if (response.members) {
+        const response = await $.post(url);
+        if (response.hasOwnProperty('members')) {
           this.$emit('update-members', response.members)
         }
-        if (response.pending) {
+        if (response.hasOwnProperty('pending')) {
           this.$emit('update-pending', response.pending)
         }
-        if (response.available_to_join) {
+        if (response.hasOwnProperty('available_to_join')) {
           this.$emit('update-available-to-join', response.available_to_join)
+        }
+        if (response.hasOwnProperty('joined')) {
+          this.$emit('update-joined', response.joined)
         }
         this.message.type = 'success'
         this.message.text = 'Invitation sent!'
