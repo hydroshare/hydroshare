@@ -44,7 +44,7 @@ let groupCommunitiesApp = new Vue({
         }
         delete this.isLeaving[id]
         $("#leave-community-modal").modal('hide')
-        customAlert("Leave Community", `The Group has left this Community`, "success", 6000);
+        customAlert("Leave Community", `The Group has left this Community`, "success", 6000, true);
       }
       catch(e) {
         console.log(e)
@@ -70,7 +70,7 @@ let groupCommunitiesApp = new Vue({
         }
         this.$set(this.isAcceptingInvitation, id, false)
         delete this.isAcceptingInvitation[id]
-        customAlert("Join Community", 'The Community invitation has been accepted', "success", 6000);
+        customAlert("Join Community", 'The Community invitation has been accepted', "success", 6000, true);
       }
       catch(e) {
         console.log(e)
@@ -91,7 +91,7 @@ let groupCommunitiesApp = new Vue({
         }
         this.$set(this.isDecliningInvitation, id, false)
         delete this.isDecliningInvitation[id]
-        customAlert("Decline Community Invitation", `The invitation has been declined`, "success", 6000);
+        customAlert("Decline Community Invitation", `The invitation has been declined`, "success", 6000, true);
       }
       catch(e) {
         console.log(e)
@@ -113,7 +113,7 @@ let groupCommunitiesApp = new Vue({
         this.$set(this.isRetractingRequest, id, false)
         delete this.isRetractingRequest[id]
         $("#retract-community-join-request-modal").modal('hide')
-        customAlert("Retract Request", `The join request has been retracted`, "success", 6000);
+        customAlert("Retract Request", `The join request has been retracted`, "success", 6000, true);
       }
       catch(e) {
         console.log(e)

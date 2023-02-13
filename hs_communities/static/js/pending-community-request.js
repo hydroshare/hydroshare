@@ -92,7 +92,7 @@ $(document).ready(function () {
             // window.location.href = "/communities/manage-requests/";
           }
           else {
-            customAlert("Resubmit Community", 'Failed to resubmit this request', "error", 6000);
+            customAlert("Resubmit Community", 'Failed to resubmit this request', "error", 6000, true);
           }
         }
         catch(e) {
@@ -141,7 +141,7 @@ $(document).ready(function () {
             this.$set(this.request.community_to_approve, field, formData.get(field));
           }
           this.isEditMode = false;
-          customAlert("New Community Request", 'Your changes have been saved', "success", 6000);
+          customAlert("New Community Request", 'Your changes have been saved', "success", 6000, true);
         }
         else {
           // show error

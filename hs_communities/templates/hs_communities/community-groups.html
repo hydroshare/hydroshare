@@ -34,13 +34,13 @@
           </div>
           <div class="community-card--actions">
             <div v-if="!request.when_community">
-              <button class="btn btn-primary btn-sm"
+              <button class="btn btn-primary btn-sm has-space-bottom"
                 @click="approveGroup(request.group.id)" :disabled="isApprovingGroup[request.group.id]">Approve Group</button>
               <button @click="targetGroup = request.group"
                 data-toggle="modal"
                 data-target="#reject-group-modal"
                 :disabled="isRejectingGroup[request.group.id]"
-                type="button" class="btn btn-default btn-sm">
+                type="button" class="btn btn-default btn-sm has-space-bottom">
                 ${ isRejectingGroup[request.group.id] ? 'Rejecting Group...' : 'Reject Group'}
               </button>
             </div>

@@ -122,7 +122,7 @@ $(document).ready(function () {
           const response = await $.post(url)
           this.members = response.members
           this.availableToInvite = response.groups
-          customAlert("Remove Group", 'Group has been removed from your Community', "success", 6000);
+          customAlert("Remove Group", 'Group has been removed from your Community', "success", 6000, true);
         }
         catch (e) {
           console.log(e)
@@ -146,7 +146,7 @@ $(document).ready(function () {
             // If members is included in the response, we update the state
             this.members = response.members
           }
-          customAlert("Invite Group", response.message, "success", 6000);
+          customAlert("Invite Group", response.message, "success", 6000, true);
         }
         catch (e) {
           console.log(e)
@@ -167,11 +167,11 @@ $(document).ready(function () {
             this.members = response.members
           }
           $("#reject-group-modal").modal('hide');
-          customAlert("Reject Group", response.message, "success", 6000);
+          customAlert("Reject Group", 'The Group request to join has been rejected', "success", 6000, true);
         }
         catch (e) {
           console.log(e)
-          customAlert("Reject Group", `Failed to reject Group`, "error", 6000);
+          customAlert("Reject Group", `Failed to reject Group`, "error", 6000, true);
           $("#reject-group-modal").modal('hide');
         }
         this.$set(this.isRejectingGroup, id, false)
@@ -187,7 +187,7 @@ $(document).ready(function () {
         }
         catch(e) {
           console.log(e)
-          customAlert("Retract Group Invitation", 'Failed to retract invitation', 'error', 6000);
+          customAlert("Retract Group Invitation", 'Failed to retract invitation', 'error', 6000, true);
         }
         this.$set(this.isCancelingInvitation, id, false)
       },
@@ -195,13 +195,13 @@ $(document).ready(function () {
         const url = `/access/_internal/community/${this.community.id}/deactivate/`;
         this.isDeletingCommunity = true
         try {
-          await $.post(url)
+          await $.post(url);
           // redirect to my-communities
           window.location.href = "/my-communities/";
         }
         catch (e) {
           console.log(e)
-          customAlert("Delete Community", 'Failed to delete Community', 'error', 6000);
+          customAlert("Delete Community", 'Failed to delete Community', 'error', 6000, true);
         }
         $("#delete-community-dialog").modal('hide')
         this.isDeletingCommunity = false
@@ -210,21 +210,21 @@ $(document).ready(function () {
         this.$set(this.isApprovingGroup, id, true)
         const url = `/access/_internal/community/${this.community.id}/approve/${id}/`;
         try {
-          const response = await $.post(url)
+          const response = await $.post(url);
           if (response.hasOwnProperty('pending')) {
             this.pending = response.pending
           }
           if (response.hasOwnProperty('members')) {
-            // If members is included in the response, we update the state
             this.members = response.members
           }
-          customAlert("Approve Group Join Request", `The Group request to join the Community has been accepted`, "success", 6000);
+          console.log(customAlert)
+          customAlert("Approve Group Join Request", 'The Group request to join the Community has been accepted', "success", 6000, true);
         }
         catch (e) {
           console.log(e)
-          customAlert("Approve Group Join Request", 'Failed to approve request', 'error', 6000);
+          customAlert("Approve Group Join Request", 'Failed to approve request', 'error', 6000, true);
         }
-        this.$set(this.isApprovingGroup, id, false)
+        this.$set(this.isApprovingGroup, id, false);
       },
       removeOwner: async function (userId) {
         const url = `/access/_internal/community/${this.community.id}/owner/${userId}/remove`
@@ -241,11 +241,11 @@ $(document).ready(function () {
                 $('#user-profile-tabs a[href="#resources"]').tab('show')
               }
             }
-            customAlert('Remove Community Owner', 'User has been removed as an owner of this Community', 'success', 6000);
+            customAlert('Remove Community Owner', 'User has been removed as an owner of this Community', 'success', 6000, true);
           }
         }
         catch (e) {
-          customAlert("Add Community Owner", 'Failed to remove Community owner', 'error', 6000);
+          customAlert("Add Community Owner", 'Failed to remove Community owner', 'error', 6000, true);
         }
         this.$set(this.isRemovingOwner, userId, false)
       },
@@ -266,15 +266,15 @@ $(document).ready(function () {
           const response = await $.post(url)
           if (response.community) {
             this.community.owners = response.community.owners
-            customAlert('Add Community Owner', 'User has been added as an owner of this Community', 'success', 6000);
+            customAlert('Add Community Owner', 'User has been added as an owner of this Community', 'success', 6000, true);
           }
         }
         catch (e) {
           if (e.status === 400 && e.responseText.indexOf('already owns community') >= 0) {
-            customAlert('Add Community Owner', 'User is already an owner of this Community', 'info', 6000);
+            customAlert('Add Community Owner', 'User is already an owner of this Community', 'info', 6000, true);
           }
           else {
-            customAlert("Add Community Owner", 'Failed to add user as Community owner', 'error', 6000);
+            customAlert("Add Community Owner", 'Failed to add user as Community owner', 'error', 6000, true);
           }
         }
       },

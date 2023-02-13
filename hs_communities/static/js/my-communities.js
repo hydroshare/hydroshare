@@ -21,7 +21,7 @@ $(document).ready(function () {
           }
           this.$set(this.isRemoving, id, false)
           $("#remove-community-request-modal").modal('hide')
-          customAlert("Cancel Request", response.message, "success", 6000);
+          customAlert("Cancel Request", response.message, "success", 6000, true);
         }
         catch(e) {
           console.log(e)
