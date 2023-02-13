@@ -2628,7 +2628,7 @@ def request_new_community(request, *args, **kwargs):
 
 
 class GroupView(TemplateView):
-    template_name = "pages/group-unauthenticated.html"
+    template_name = "pages/group.html"
 
     def hydroshare_denied(self, gid, cid=None):
         user = self.request.user
@@ -2663,8 +2663,6 @@ class GroupView(TemplateView):
             return message
 
     def dispatch(self, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            self.template_name = "pages/group.html"
         return super(GroupView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -2677,11 +2675,6 @@ class GroupView(TemplateView):
             cid = kwargs["community_id"]
         else:
             cid = None
-
-        # if "action" in kwargs:
-        #     action = kwargs["action"]
-        # else:
-        #     action = None
 
         denied = self.hydroshare_denied(group_id, cid=cid)
         communitiesContext = {}
