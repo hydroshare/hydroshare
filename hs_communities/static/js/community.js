@@ -22,6 +22,7 @@ $(document).ready(function () {
       isInviting: {},
       isRemovingOwner: {},
       isCancelingInvitation: {},
+      isRejectingGroup: {},
       inviteSearch: '',
       isDeletingCommunity: false,
       userCardSelected: {
@@ -140,8 +141,10 @@ $(document).ready(function () {
           const group = this.availableToInvite.find(g => g.id === id)
           group.wasInvited = true
 
-          this.pending = response.pending
-          if (response.members) {
+          if (response.hasOwnProperty('pending')) {
+            this.pending = response.pending
+          }
+          if (response.hasOwnProperty('members')) {
             // If members is included in the response, we update the state
             this.members = response.members
           }
@@ -151,6 +154,29 @@ $(document).ready(function () {
           console.log(e)
         }
         this.$set(this.isInviting, id, false)
+      },
+      rejectGroup: async function (id) {
+        this.$set(this.isRejectingGroup, id, true)
+        const url = '/access/_internal/community/' + this.community.id + '/decline/' + id + '/';
+        try {
+          const response = await $.post(url);
+
+          if (response.hasOwnProperty('pending')) {
+            this.pending = response.pending
+          }
+          if (response.hasOwnProperty('members')) {
+            // If members is included in the response, we update the state
+            this.members = response.members
+          }
+          $("#reject-group-modal").modal('hide');
+          customAlert("Reject Group", response.message, "success", 6000);
+        }
+        catch (e) {
+          console.log(e)
+          customAlert("Reject Group", `Failed to reject Group`, "error", 6000);
+          $("#reject-group-modal").modal('hide');
+        }
+        this.$set(this.isRejectingGroup, id, false)
       },
       cancelGroupInvitation: async function(id) {
         this.$set(this.isCancelingInvitation, id, true)
@@ -187,7 +213,13 @@ $(document).ready(function () {
         const url = `/access/_internal/community/${this.community.id}/approve/${id}/`;
         try {
           const response = await $.post(url)
-          // TODO: update state
+          if (response.hasOwnProperty('pending')) {
+            this.pending = response.pending
+          }
+          if (response.hasOwnProperty('members')) {
+            // If members is included in the response, we update the state
+            this.members = response.members
+          }
         }
         catch (e) {
           console.log(e)

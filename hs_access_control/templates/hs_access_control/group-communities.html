@@ -4,7 +4,7 @@
 {{ communities.joined|json_script:"joined" }}
 {{ communities.user_groups_joined|json_script:"groups_joined" }}
 {{ communities.pending|json_script:"pending" }}
-{{ communities.all_communities|json_script:"all_communities" }}
+{{ communities.available_to_join|json_script:"available_to_join" }}
 
 <div id="group-communities" class="flex gap-2">
   <div class="group-communities--sidebar">
@@ -36,9 +36,34 @@
                 <div class="text-muted">Automatically share public and and published resources with this Community</div>
               </label>
             </div> -->
-            <button class="btn btn-primary btn-sm" @click="acceptInvite(request.community.id)"
-              :disabled="isJoining[request.community.id]">
+            
+            <div v-if="request.when_community">
+              <button class="btn btn-primary btn-sm" @click="acceptInvitation(request.community.id)"
+                :disabled="isAcceptingInvitation[request.community.id]">
                 <i class="fa fa-user-plus" aria-hidden="true"></i> Join Community</button>
+
+              <button @click="targetCommunity = request.community"
+                :disabled="isDecliningInvitation[request.community.id]"
+                data-toggle="modal"
+                data-target="#decline-community-invitation-modal"
+                type="button" class="btn btn-default btn-sm">
+                ${ isDecliningInvitation[request.community.id] ? 'Declining Invitation...' : 'Decline Invitation'}
+              </button>
+            </div>
+
+            <div v-else>
+              <div class="has-space-bottom">
+                <span class="label label-success">Requested to join</span>
+              </div>
+
+              <button @click="targetCommunity = request.community"
+                :disabled="isRetractingRequest[request.community.id]"
+                data-toggle="modal"
+                data-target="#retract-community-join-request-modal"
+                type="button" class="btn btn-default btn-sm">
+                ${ isRetractingRequest[request.community.id] ? 'Retracting Request...' : 'Retract Request'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -76,6 +101,61 @@
     </div>
   </div>
 
+  <!-- Retract Community Join Request Modal -->
+  <div v-if="isGroupOwner" class="modal fade" id="retract-community-join-request-modal"
+    tabindex="-1" role="dialog"
+    aria-labelledby="retractRequestLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" v-if="targetCommunity">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="retractRequestLabel">Retract Community Join Request</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want retract this request?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    Cancel
+                </button>
+                <button class="btn btn-danger"
+                        @click="retractRequest(targetCommunity.id)"
+                        :disabled="isRetractingRequest[targetCommunity.id]">Retract Request
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Decline Community Invitation Modal -->
+  <div v-if="isGroupOwner" class="modal fade" id="decline-community-invitation-modal" tabindex="-1" role="dialog"
+    aria-labelledby="declineInvitationLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" v-if="targetCommunity">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="declineInvitationLabel">Decline Community Invitation</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to decline this invitation?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    Cancel
+                </button>
+                <button class="btn btn-danger"
+                        @click="declineInvitation(targetCommunity.id)"
+                        :disabled="isDecliningInvitation[targetCommunity.id]">Decline Invitation
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
+
   <!-- Leave Community Modal -->
   <div class="modal fade" id="leave-community-modal" tabindex="-1" role="dialog"
         aria-labelledby="leaveCommunityLabel">
@@ -107,7 +187,12 @@
     <div class="modal-dialog" role="document">
       <!-- The template for this component needs to be included outside of a Vue app -->
       <!-- Included at the top of group.html -->
-      <join-communities :groups="groupsJoined" :communities="allCommunities" :default-group-id="groupId" />
+      <join-communities
+        @update-pending="pending = $event"
+        @update-available-to-join="availableToJoin = $event"
+        :communities="availableToJoin"
+        :default-group-id="groupId"
+      />
     </div>
   </div>
 </div>

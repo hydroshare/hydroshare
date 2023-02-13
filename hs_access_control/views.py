@@ -213,6 +213,21 @@ class GroupView(View):
 
         return err_msg, req_params
 
+    def get_pending_community_requests(self, group):
+        pending = []
+        for r in GroupCommunityRequest.objects.filter(group=group,
+                                                      redeemed=False).order_by("community__name"):
+            pending.append(gcr_json(r))
+        return pending
+    
+    def get_communities_available_to_join(self, group):
+        available = []
+        for c in Community.objects.filter().exclude(invite_c2gcr__group=group)\
+                                            .exclude(c2gcp__group=group)\
+                                            .order_by("name"):
+            available.append(community_json(c))
+        return available
+    
     def post(self, *args, **kwargs):
         message = ''
         validation_err_msg, req_params = self.validate_request_parameters(kwargs)
@@ -245,6 +260,10 @@ class GroupView(View):
                     # email notify to concerned parties
                     CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
                                                     on_event=CommunityGroupEvents.APPROVED).send()
+                    return JsonResponse({ 
+                        'pending': self.get_pending_community_requests(group),
+                        'available_to_join': self.get_communities_available_to_join(group)
+                    })
 
             elif action == CommunityActions.DECLINE:  # decline an invitation from a community
                 # group owner declining an invitation for a group to join a community
@@ -257,16 +276,29 @@ class GroupView(View):
                     # email notify to concerned parties
                     CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
                                                     on_event=CommunityGroupEvents.DECLINED).send()
+                    # return relevant state
+                    return JsonResponse({ 
+                        'pending': self.get_pending_community_requests(group),
+                        'available_to_join': self.get_communities_available_to_join(group)
+                    })
 
             elif action == CommunityActions.JOIN:  # request to join a community
                 # group owner making a request to join a community
-                message, worked = GroupCommunityRequest.create_or_update(
+                message, approved = GroupCommunityRequest.create_or_update(
                     group=group, community=community, requester=user)
-                # send email to group owner
-                gcr = GroupCommunityRequest.get_request(community=community, group=group)
-                # email notify to community owners
-                CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
-                                                on_event=CommunityGroupEvents.JOIN_REQUESTED).send()
+                
+                if not approved:
+                    # send email to group owner
+                    gcr = GroupCommunityRequest.get_request(community=community, group=group)
+                    # email notify to community owners
+                    CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
+                                                    on_event=CommunityGroupEvents.JOIN_REQUESTED).send()
+                
+                # return relevant state
+                return JsonResponse({ 
+                    'pending': self.get_pending_community_requests(group),
+                    'available_to_join': self.get_communities_available_to_join(group)
+                })
 
             elif action == CommunityActions.LEAVE:  # leave a community
                 # group owner making a group leave a community
@@ -282,6 +314,12 @@ class GroupView(View):
                     requester=user, group=group, community=community)
                 if not worked:
                     denied = message
+                else:
+                    # return relevant state
+                    return JsonResponse({ 
+                        'pending': self.get_pending_community_requests(group),
+                        'available_to_join': self.get_communities_available_to_join(group)
+                    })
 
         # build a JSON object that contains the results of the query
         context = {}
@@ -548,7 +586,11 @@ class CommunityView(View):
                 # send email to group owners
                 CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
                                                 on_event=CommunityGroupEvents.APPROVED).send()
-                #TODO: return data needed to update UI
+                context = {}
+                context['members'] = self.get_group_members(community)
+                context['pending'] = self.get_pending_requests(community)
+                return JsonResponse(context)
+
         elif action == CommunityActions.DECLINE:  # decline a request from a group
             group = Group.objects.get(id=gid)
             gcr = GroupCommunityRequest.get_request(community=community, group=group)
@@ -559,6 +601,9 @@ class CommunityView(View):
                 # send email to group owners
                 CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
                                                 on_event=CommunityGroupEvents.DECLINED).send()
+                context = {}
+                context['pending'] = self.get_pending_requests(community)
+                return JsonResponse(context)
 
         elif action == CommunityActions.INVITE:
             group = Group.objects.get(id=gid)
