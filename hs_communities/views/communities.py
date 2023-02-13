@@ -74,9 +74,9 @@ class CommunityView(TemplateView):
               context["user"] = user_json(user)
 
               # list of groups that the user has joined
-              groups = user.uaccess.my_groups
-              active_groups = [group_json(g) for g in groups if g.gaccess.active]
-              context['user_groups_joined'] = active_groups
+              # groups = user.uaccess.my_groups
+              # active_groups = [group_json(g) for g in groups if g.gaccess.active]
+              # context['user_groups_joined'] = active_groups
 
               # groups that can be invited are those that are not already invited or members.
               context["groups"] = []

@@ -10,7 +10,6 @@ $(document).ready(function () {
       community: null,
       isCzoCommunity: false,
       allCommunities: null,
-      groupsJoined: null,
       isAdmin: null,
       pending: null,
       targetGroup: null,
@@ -63,7 +62,6 @@ $(document).ready(function () {
       this.community = JSON.parse(document.getElementById('community').textContent);
       this.isCzoCommunity = JSON.parse(document.getElementById('czo_community').textContent);
       this.allCommunities = JSON.parse(document.getElementById('all_communities').textContent);
-      this.groupsJoined = JSON.parse(document.getElementById('user_groups_joined').textContent);
       this.isAdmin = JSON.parse(document.getElementById('is_admin').textContent);
       this.availableToInvite = JSON.parse(document.getElementById('groups').textContent);
       this.members = JSON.parse(document.getElementById('members').textContent);

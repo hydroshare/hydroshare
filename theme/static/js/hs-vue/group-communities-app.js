@@ -5,7 +5,6 @@ let groupCommunitiesApp = new Vue({
       joined: null,
       pending: null,
       availableToJoin: null,
-      groupsJoined: null,
       groupId: null,
       isGroupOwner: null,
       isLeaving: { },
@@ -19,7 +18,6 @@ let groupCommunitiesApp = new Vue({
     this.groupId = JSON.parse(document.getElementById('group_id').textContent);
     this.isGroupOwner = JSON.parse(document.getElementById('is_group_owner').textContent);
     this.joined = JSON.parse(document.getElementById('joined').textContent);
-    this.groupsJoined = JSON.parse(document.getElementById('groups_joined').textContent);
     this.pending = JSON.parse(document.getElementById('pending').textContent);
     this.availableToJoin = JSON.parse(document.getElementById('available_to_join').textContent);
   },

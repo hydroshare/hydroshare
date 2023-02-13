@@ -2722,9 +2722,9 @@ class GroupView(TemplateView):
                 communitiesContext["all_communities"].append(community_json(c))
 
             # list of groups the user has joined
-            groups = user.uaccess.my_groups
-            active_groups = [group_json(g) for g in groups if g.gaccess.active]
-            communitiesContext['user_groups_joined'] = active_groups
+            # groups = user.uaccess.my_groups
+            # active_groups = [group_json(g) for g in groups if g.gaccess.active]
+            # communitiesContext['user_groups_joined'] = active_groups
 
             # requests that were declined by others
             communitiesContext["they_declined"] = []
