@@ -16,12 +16,9 @@
                 <h2 class="page-title">My Communities</h2>
             </div>
             <div class="col-sm-4">
-                <a class="btn btn-success" data-toggle="modal" data-target="#request-new-community-dialog">
+                <a class="btn btn-success has-space-bottom" data-toggle="modal" data-target="#request-new-community-dialog">
                     <i class="fa fa-plus"></i> Request a New Community
                 </a>
-
-                <br>
-                <br>
 
                 <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Requests</h4>
                 <i v-if="!pendingRequests.length">No pending requests.</i>
@@ -70,8 +67,8 @@
                                     <tr>
                                         <td>
                                             <div class="group-image-wrapper">
-                                                {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                                    {% thumbnail group.gaccess.picture "x80" crop="center" as im %}
+                                                {% if c.picture and c.picture.url %}
+                                                    {% thumbnail c.picture "x80" crop="center" as im %}
                                                         <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
                                                     {% endthumbnail %}
                                                 {% else %}
