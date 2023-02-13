@@ -2,7 +2,7 @@ import logging
 
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
-from django.db.models import F
+from django.db.models import F, Q
 from django.http import JsonResponse
 from django.views.generic import View
 from hs_core.templatetags.hydroshare_tags import best_name
@@ -221,12 +221,13 @@ class GroupView(View):
         return pending
 
     def get_communities_available_to_join(self, group):
-        available = []
-        for c in Community.objects.filter(active=True).exclude(invite_c2gcr__group=group)\
-                                                      .exclude(c2gcp__group=group)\
-                                                      .order_by("name"):
-            available.append(community_json(c))
-        return available
+      available = []
+      for c in Community.objects.filter(active=True).exclude(
+          Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
+          .exclude(c2gcp__group=group) \
+          .order_by("name"):
+        available.append(community_json(c))
+      return available
 
     def get_communities_joined(self, group):
         # communities joined

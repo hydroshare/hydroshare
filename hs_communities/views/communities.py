@@ -3,7 +3,7 @@ import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
-from django.db.models import F
+from django.db.models import F, Q
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
 from django.utils.html import escapejs, mark_safe
@@ -81,10 +81,10 @@ class CommunityView(TemplateView):
                 # groups that can be invited are those that are not already invited or members.
                 context["groups"] = []
                 for g in Group.objects.filter(gaccess__active=True) \
-                        .exclude(invite_g2gcr__community=community) \
-                        .exclude(g2gcp__community=community) \
-                        .order_by("name"):
-                    context["groups"].append(group_json(g))
+                    .exclude(Q(invite_g2gcr__community=community) & Q(invite_g2gcr__redeemed=False)) \
+                    .exclude(g2gcp__community=community) \
+                    .order_by("name"):
+                  context["groups"].append(group_json(g))
 
                 # list of all available communities
                 context["all_communities"] = []
