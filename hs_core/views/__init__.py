@@ -1833,9 +1833,6 @@ def update_user_community(request, community_id, *args, **kwargs):
 
     community_to_update = hydroshare.utils.community_from_id(community_id)
 
-    # TODO: need community equivalent of can_change_group_flags
-    # if user.uaccess.can_change_group_flags(community_to_update):
-
     community_form = UpdateCommunityForm(request.POST, request.FILES)
     if community_form.is_valid():
         try:
