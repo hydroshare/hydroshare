@@ -593,5 +593,6 @@ class GroupCommunityRequest(models.Model):
 
 
 # TODO: we need some kind of user feedback about what happened when something is denied.
+# - Email notifications have been put in place for community requests
 # TODO: it would be nice to know why something's declined.
 # TODO: to avoid request storms, the decline should be sticky unless overridden by an invite.

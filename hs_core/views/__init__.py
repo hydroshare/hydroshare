@@ -42,6 +42,7 @@ from hs_access_control.enums import CommunityRequestEvents
 from hs_access_control.forms import RequestNewCommunityForm, UpdateCommunityForm
 from hs_access_control.models import Community, GroupCommunityRequest
 from hs_access_control.models import GroupMembershipRequest, GroupResourcePrivilege, PrivilegeCodes
+from hs_access_control.views import community_json, group_community_request_json
 from hs_core import hydroshare
 from hs_core import signals
 from hs_core.enums import RelationTypes
@@ -2501,88 +2502,6 @@ class AddUserForm(forms.Form):
     )
 
 
-def user_json(user):
-    """ JSON format for user data suitable for UI """
-    if user is not None:
-        return {
-            "type": "User",
-            "username": user.username,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "email": user.email
-        }
-    else:
-        return {}
-
-
-def group_json(group):
-    """ JSON format for group data suitable for UI """
-    if group is not None:
-        try:
-            url = group.gaccess.picture.url
-        except ValueError:
-            url = ""
-        return {
-            'id': group.id,
-            'type': 'Group',
-            'name': group.name,
-            'active': 1 if group.gaccess.active is True else 0,
-            'discoverable': 1 if group.gaccess.discoverable is True else 0,
-            'public': 1 if group.gaccess.public is True else 0,
-            'shareable': 1 if group.gaccess.shareable is True else 0,
-            'auto_approve': 1 if group.gaccess.auto_approve is True else 0,
-            'requires_explanation': 1 if group.gaccess.requires_explanation is True else 0,
-            'purpose': group.gaccess.purpose or '',
-            'email': group.gaccess.email or '',
-            'date_created': group.gaccess.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
-            'picture': url,
-            'owners': [user_json(u) for u in group.gaccess.owners],
-            'description': group.gaccess.description or '',
-        }
-    else:
-        return {}
-
-
-def community_json(community):
-    """ JSON format for community data suitable for UI """
-    if community is not None:
-        try:
-            url = community.picture.url
-        except ValueError:
-            url = ""
-        return {
-            "id": community.id,
-            "type": 'Community',
-            "name": community.name,
-            "description": community.description or "",
-            "purpose": community.purpose or "",
-            # "auto_approve": 1 if community.auto_approve is True else 0,
-            "date_created": community.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
-            "picture": url,
-            "closed": 1 if community.closed is True else 0,
-            "owners": [user_json(u) for u in community.owners]
-        }
-    else:
-        return {}
-
-
-def gcr_json(request):
-    """ JSON format for request data suitable for UI """
-    return {
-        "type": "GroupCommunityRequest",
-        "group": group_json(request.group),
-        "community": community_json(request.community),
-        "group_owner": user_json(request.group_owner),
-        "community_owner": user_json(request.community_owner),
-        "when_community": (request.when_community.strftime("%m/%d/%Y, %H:%M:%S")
-                           if request.when_community is not None else ""),
-        "when_group": (request.when_group.strftime("%m/%d/%Y, %H:%M:%S")
-                       if request.when_group is not None else ""),
-        "privilege": request.privilege or "",
-        "redeemed": 1 if request.redeemed is True else 0
-    }
-
-
 @login_required
 def request_new_community(request, *args, **kwargs):
     """ A view function to server request for creating a new community """
@@ -2682,14 +2601,14 @@ class GroupView(TemplateView):
             #         group=group,
             #         group__gaccess__active=True,
             #         group_owner__isnull=True).order_by("community__name"):
-            #     communitiesContext["approvals"].append(gcr_json(r))
+            #     communitiesContext["approvals"].append(group_community_request_json(r))
 
             # pending requests from this group
             communitiesContext["pending"] = []
             for r in GroupCommunityRequest.objects.filter(
                     group=group, redeemed=False)\
                     .order_by("community__name"):
-                communitiesContext["pending"].append(gcr_json(r))
+                communitiesContext["pending"].append(group_community_request_json(r))
 
             # Communities that can be joined.
             communitiesContext["available_to_join"] = []
@@ -2714,7 +2633,7 @@ class GroupView(TemplateView):
             for r in GroupCommunityRequest.objects.filter(
                     group=group, redeemed=True, approved=False,
                     when_group__lt=F("when_community")).order_by("community__name"):
-                communitiesContext["they_declined"].append(gcr_json(r))
+                communitiesContext["they_declined"].append(group_community_request_json(r))
 
             # requests that were declined by us
             communitiesContext["we_declined"] = []

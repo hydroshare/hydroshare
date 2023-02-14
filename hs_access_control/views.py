@@ -31,6 +31,9 @@ def user_json(user):
             "pictureUrl": picture or "",
             "best_name": best_name(user),
             "user_name": user.username,
+            "type": "User",
+            "first_name": user.first_name,
+            "last_name": user.last_name,
             # Data used to populate profile badge:
             "email": user.email,
             "organization": user.userprofile.organization or '',
@@ -70,7 +73,7 @@ def group_json(group):
             'email': group.gaccess.email or '',
             'date_created': group.gaccess.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
             'picture': url or '',
-            'owners': [user_json(u) for u in group.gaccess.owners]
+            'owners': [user_json(u) for u in group.gaccess.owners],
         }
     else:
         return {}
@@ -109,7 +112,7 @@ def community_json(community):
         return {}
 
 
-def gcr_json(request):
+def group_community_request_json(request):
     """ JSON format for request data suitable for UI """
     return {
         'type': 'GroupCommunityRequest',
@@ -124,11 +127,11 @@ def gcr_json(request):
                        if request.when_group is not None
                        else ""),
         'privilege': request.privilege or "",
-        'redeemed': 1 if request.redeemed is True else 0,
+        'redeemed': 1 if request.redeemed is True else 0
     }
 
 
-def cr_json(cr):
+def community_request_json(cr):
     """ JSON format for community request data suitable for UI """
     if cr is not None:
         return {
@@ -215,7 +218,7 @@ class GroupView(View):
     def get_pending_community_requests(self, group):
         pending = []
         for r in GroupCommunityRequest.objects.filter(group=group, redeemed=False).order_by("community__name"):
-            pending.append(gcr_json(r))
+            pending.append(group_community_request_json(r))
         return pending
 
     def get_communities_available_to_join(self, group):
@@ -367,14 +370,14 @@ class GroupView(View):
                 group=group,
                 group__gaccess__active=True,
                 group_owner__isnull=True).order_by('community__name'):
-            context['approvals'].append(gcr_json(r))
+            context['approvals'].append(group_community_request_json(r))
 
         # pending requests from this group
         context['pending'] = []
         for r in GroupCommunityRequest.objects.filter(
                 group=group, redeemed=False, community_owner__isnull=True) \
                 .order_by('community__name'):
-            context['pending'].append(gcr_json(r))
+            context['pending'].append(group_community_request_json(r))
 
         # Communities that can be joined.
         # context['available_to_join'] = []
@@ -388,14 +391,14 @@ class GroupView(View):
         for r in GroupCommunityRequest.objects.filter(
                 group=group, redeemed=True, approved=False,
                 when_group__lt=F('when_community')).order_by('community__name'):
-            context['they_declined'].append(gcr_json(r))
+            context['they_declined'].append(group_community_request_json(r))
 
         # requests that were declined by us
         context['we_declined'] = []
         for r in GroupCommunityRequest.objects.filter(
                 group=group, redeemed=True, approved=False,
                 when_group__gt=F('when_community')).order_by('community__name'):
-            context['we_declined'].append(gcr_json(r))
+            context['we_declined'].append(group_community_request_json(r))
 
         return JsonResponse(context)
 
@@ -487,7 +490,7 @@ class CommunityView(View):
         pending = []
         for r in GroupCommunityRequest.objects.filter(
                 community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
-            pending.append(gcr_json(r))
+            pending.append(group_community_request_json(r))
         return pending
 
     def get_groups(self, community):
@@ -505,60 +508,6 @@ class CommunityView(View):
             members.append(group_json(g))
 
         return members
-
-    # (deprecated): not used anywhere. Data is loaded in template view
-    # def get(self, *args, **kwargs):
-    #     message = ''
-    #     cid = kwargs.get('cid', None)
-    #     denied = self.hydroshare_denied(cid)
-    #     if denied:
-    #         return error_response(denied)
-
-    #     # user and community are needed for every request
-    #     user = self.request.user
-    #     community = Community.objects.get(id=cid)
-
-    #     # build a JSON object that contains the results of the query
-    #     context = {}
-    #     context['denied'] = denied
-    #     context['message'] = message
-    #     context['user'] = user_json(user)
-    #     context['community'] = community_json(community)
-
-    #     # groups that can be invited are those that are not already invited or members.
-    #     context['groups'] = self.get_groups(community)
-
-    #     context['pending'] = self.get_pending_requests(community)
-
-    #     # requests that were declined by us
-    #     context['we_declined'] = []
-    #     for r in GroupCommunityRequest.objects.filter(
-    #             community=community, redeemed=True, approved=False,
-    #             when_group__lt=F('when_community')).order_by('group__name'):
-    #         context['we_declined'].append(gcr_json(r))
-
-    #     # requests that were declined by others
-    #     context['they_declined'] = []
-    #     for r in GroupCommunityRequest.objects.filter(
-    #             community=community, redeemed=True, approved=False,
-    #             when_group__gt=F('when_community')).order_by('group__name'):
-    #         context['they_declined'].append(gcr_json(r))
-
-    #     # group requests to be approved
-    #     context['approvals'] = []
-    #     for r in GroupCommunityRequest.objects.filter(
-    #             community=Community.objects.get(id=int(cid)),
-    #             group__gaccess__active=True,
-    #             community_owner__isnull=True,
-    #             redeemed=False).order_by('group__name'):
-    #         context['approvals'].append(gcr_json(r))
-
-    #     # group members of community
-    #     context['members'] = []
-    #     for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
-    #         context['members'].append(group_json(g))
-
-    #     return JsonResponse(context)
 
     def post(self, *args, **kwargs):
         message = ""
@@ -769,13 +718,13 @@ class CommunityRequestView(View):
             pending_qs = pending_qs.filter(requested_by=user)
 
         for a_cr in approved_qs:
-            context['approved'].append(cr_json(a_cr))
+            context['approved'].append(community_request_json(a_cr))
 
         for d_cr in declined_qs:
-            context['declined'].append(cr_json(d_cr))
+            context['declined'].append(community_request_json(d_cr))
 
         for p_cr in pending_qs:
-            context['pending'].append(cr_json(p_cr))
+            context['pending'].append(community_request_json(p_cr))
 
         return JsonResponse(context)
 
@@ -870,6 +819,6 @@ class CommunityRequestView(View):
         context['denied'] = denied
         context['message'] = message
         context['user'] = user_json(user)
-        context['request'] = cr_json(cr)
+        context['request'] = community_request_json(cr)
 
         return self.get_community_requests(user, context)

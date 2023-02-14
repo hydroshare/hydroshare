@@ -77,8 +77,3 @@ var colDefs = [
         "searchable": false
     }
 ];
-// TODO: fix the following references
-// $(document).ready(function () {
-//     start_resource_table();
-//     $.fn.dataTable.ext.search.push(hs_resource_table_custom_search);
-// });

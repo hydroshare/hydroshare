@@ -19,11 +19,15 @@
     <div v-if="isGroupOwner && pending.length">
       <h4 class="heading">Pending Community Membership Requests</h4>
       <div v-for="request of pending" class="group-community-card panel panel-default">
-        <!-- <h5 class="pending-invitation-badge"><span class="label label-warning">Pending Invitation</span></h5> -->
         <div class="panel-body flex gap-1 align-center">
-          <div class="group-image-wrapper group-image-wrapper-medium has-space-right">
+          <div v-if="request.community.logo" class="group-image-wrapper group-image-wrapper-medium">
+            <div class="group-image"
+              :style="`background-image: url(${request.community.logo})`"></div>
+          </div>
+          <div v-else class="group-image-wrapper group-image-wrapper-medium">
             <div class="group-image group-preview-image-default"
-                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+            </div>
           </div>
           <div class="community-card--info">
             <a class="community-card--heading" :href="'/community/' + request.community.id">${ request.community.name }</a>
@@ -75,8 +79,16 @@
         <div v-for="community of joined" class="group-community-card panel panel-default">
           <div class="panel-body flex gap-1 align-center">
             <div class="group-image-wrapper group-image-wrapper-medium has-space-right">
+              <div v-if="community.logo"
+                class="group-image-wrapper group-image-wrapper-medium">
+                <div class="group-image"
+                  :style="`background-image: url(${community.logo})`"></div>
+              </div>
+              <div v-else class="group-image-wrapper group-image-wrapper-medium">
                 <div class="group-image group-preview-image-default"
-                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                </div>
+              </div>
             </div>
             <div class="community-card--info flex-grow-1">
               <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>

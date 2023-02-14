@@ -57,8 +57,6 @@ let groupCommunitiesApp = new Vue({
       const url = '/access/_internal/group/' + this.groupId + '/approve/' + id + '/';
       try {
         const response = await $.post(url)
-        // TODO: update state
-        console.log(response)
         if (response.hasOwnProperty('pending')) {
           this.pending = response.pending;
         }

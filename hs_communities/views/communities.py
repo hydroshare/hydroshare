@@ -11,7 +11,7 @@ from django.views.generic import TemplateView
 
 from hs_access_control.models import Community, GroupCommunityRequest, RequestCommunity
 from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
-from hs_access_control.views import community_json, gcr_json, group_json, user_json, cr_json
+from hs_access_control.views import community_json, group_community_request_json, group_json, user_json, community_request_json
 from hs_communities.models import Topic
 from hs_core.views import add_generic_context
 
@@ -94,21 +94,21 @@ class CommunityView(TemplateView):
                 context["pending"] = []
                 for r in GroupCommunityRequest.objects.filter(
                         community=community, redeemed=False).order_by("group__name"):
-                    context["pending"].append(gcr_json(r))
+                    context["pending"].append(group_community_request_json(r))
 
                 # requests that were declined by us
                 context["we_declined"] = []
                 for r in GroupCommunityRequest.objects.filter(
                         community=community, redeemed=True, approved=False,
                         when_group__lt=F("when_community")).order_by("group__name"):
-                    context["we_declined"].append(gcr_json(r))
+                    context["we_declined"].append(group_community_request_json(r))
 
                 # requests that were declined by others
                 context["they_declined"] = []
                 for r in GroupCommunityRequest.objects.filter(
                         community=community, redeemed=True, approved=False,
                         when_group__gt=F("when_community")).order_by("group__name"):
-                    context["they_declined"].append(gcr_json(r))
+                    context["they_declined"].append(group_community_request_json(r))
 
                 # group requests to be approved
                 context["approvals"] = []
@@ -117,7 +117,7 @@ class CommunityView(TemplateView):
                         group__gaccess__active=True,
                         community_owner__isnull=True,
                         redeemed=False).order_by("group__name"):
-                    context["approvals"].append(gcr_json(r))
+                    context["approvals"].append(group_community_request_json(r))
 
                 if is_admin:
                     hs_core_dublin_context = add_generic_context(self.request, None)
@@ -173,7 +173,7 @@ class FindCommunitiesView(TemplateView):
         if user_is_admin:
             admin_all_requests = []
             for request in RequestCommunity.all_requests().order_by("-date_requested"):
-                admin_all_requests.append(cr_json(request))
+                admin_all_requests.append(community_request_json(request))
             context["admin_all_requests"] = admin_all_requests
             context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
 
@@ -230,7 +230,7 @@ class MyCommunitiesView(TemplateView):
                 communities_member_of.append(community)
 
         # get the list of any pending community create requests by this user
-        user_pending_requests = [cr_json(c) for c in user.uaccess.pending_community_requests()]
+        user_pending_requests = [community_request_json(c) for c in user.uaccess.pending_community_requests()]
 
         user_is_admin = False
         if user:
@@ -239,7 +239,7 @@ class MyCommunitiesView(TemplateView):
         if user_is_admin:
             admin_all_requests = []
             for request in RequestCommunity.all_requests().order_by("-date_requested"):
-                admin_all_requests.append(cr_json(request))
+                admin_all_requests.append(community_request_json(request))
             context["admin_all_requests"] = admin_all_requests
             context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
 
@@ -279,7 +279,7 @@ class CommunityCreationRequests(TemplateView):
         if denied == "":
             admin_all_requests = []
             for request in RequestCommunity.all_requests().order_by('-date_requested'):
-                admin_all_requests.append(cr_json(request))
+                admin_all_requests.append(community_request_json(request))
 
             return {
                 "admin_all_requests": admin_all_requests,
@@ -333,11 +333,11 @@ class CommunityCreationRequest(TemplateView):
 
         if denied == "" and rid is not None:
             req = RequestCommunity.objects.get(id=int(rid))
-            context["community_request"] = cr_json(req)
+            context["community_request"] = community_request_json(req)
 
             admin_all_requests = []
             for request in RequestCommunity.all_requests().order_by("-date_requested"):
-                admin_all_requests.append(cr_json(request))
+                admin_all_requests.append(community_request_json(request))
 
             context["admin_all_requests"] = admin_all_requests
             context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
