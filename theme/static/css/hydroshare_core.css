@@ -3697,6 +3697,10 @@ input.no-style {
   margin-top: 2rem;
 }
 
+.has-space-top-2x {
+  margin-top: 4rem;
+}
+
 .has-space-right {
   margin-right: 2rem;
 }

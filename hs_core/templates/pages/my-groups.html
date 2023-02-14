@@ -14,12 +14,9 @@
                 <h2 class="page-title">My Groups</h2>
             </div>
             <div class="col-sm-3">
-                <a class="btn btn-success" data-toggle="modal" data-target="#create-group-dialog"><i class="fa fa-plus"></i> Create Group</a>
+                <a class="btn btn-success" data-toggle="modal" data-target="#create-group-modal"><i class="fa fa-plus"></i> Create Group</a>
 
-                <br>
-                <br>
-
-                <div>
+                <div class="has-space-top-2x">
                     <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Requests</h4>
                     <hr class="solid">
                     {% if not my_pending_requests and not group_membership_requests %}
