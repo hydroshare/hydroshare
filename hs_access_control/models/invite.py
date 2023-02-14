@@ -424,8 +424,7 @@ class GroupCommunityRequest(models.Model):
             return message, True
         else:
             message = "You do not own the community and cannot approve this request."
-            return message, False
-        
+            return message, False   
         
     def accept_invitation(self, responder):
         """ approve a request as the owner of the group being invited """
