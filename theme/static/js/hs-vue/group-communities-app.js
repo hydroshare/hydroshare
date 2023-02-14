@@ -90,7 +90,8 @@ let groupCommunitiesApp = new Vue({
           this.availableToJoin = response.available_to_join;
         }
         this.$set(this.isDecliningInvitation, id, false)
-        delete this.isDecliningInvitation[id]
+        delete this.isDecliningInvitation[id];
+        $('#decline-community-invitation-modal').modal('hide');
         customAlert("Decline Community Invitation", `The invitation has been declined`, "success", 6000, true);
       }
       catch(e) {

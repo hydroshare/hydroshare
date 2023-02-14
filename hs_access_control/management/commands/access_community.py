@@ -397,12 +397,12 @@ class Command(BaseCommand):
                     community_owner = community.first_owner
                     print("owner '{}' of community '{}' approves request from group '{}'"
                           .format(community_owner.username, cname, gname))
-                    message, _ = gcr.approve(responder=community_owner)
+                    message, _ = gcr.approve_request(responder=community_owner)
                 else:
                     group_owner = group.gaccess.first_owner
                     print("owner '{}' of group '{}' approves invitation from community '{}'"
                           .format(group_owner.username, gname, cname))
-                    message, _ = gcr.approve(responder=group_owner)
+                    message, _ = gcr.accept_invitation(responder=group_owner)
 
                 # update gcp for result of situation
                 try:
@@ -426,12 +426,12 @@ class Command(BaseCommand):
                     community_owner = community.first_owner
                     print("owner '{}' of community '{}' declines request from group '{}'"
                           .format(community_owner.username, cname, gname))
-                    message, _ = gcr.decline(responder=community_owner)
+                    message, _ = gcr.decline_group_request(responder=community_owner)
                 else:
                     group_owner = group.gaccess.first_owner
                     print("owner '{}' of group '{}' declines invitation from community '{}'"
                           .format(group_owner.username, gname, cname))
-                    message, _ = gcr.decline(responder=group_owner)
+                    message, _ = gcr.decline_invitation(responder=group_owner)
 
                 # update gcp for result of situation
                 try:

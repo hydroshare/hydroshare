@@ -259,7 +259,7 @@ class GroupView(View):
                 gcr = GroupCommunityRequest.get_request(group=group, community=community)
                 if gcr.redeemed:  # reset to unredeemed in order to approve
                     gcr.reset(responder=user)
-                message, worked = gcr.approve(responder=user)
+                message, worked = gcr.accept_invitation(responder=user)
                 if not worked:
                     denied = message
                 else:
@@ -276,7 +276,7 @@ class GroupView(View):
                 # group owner declining an invitation for a group to join a community
                 gcr = GroupCommunityRequest.objects.get(
                     group=group, community=community)
-                message, worked = gcr.decline(responder=user)
+                message, worked = gcr.decline_invitation(responder=user)
                 if not worked:
                     denied = message
                 else:
@@ -590,7 +590,7 @@ class CommunityView(View):
             gcr = GroupCommunityRequest.objects.get(community=community, group=group)
             if gcr.redeemed:  # make it possible to approve a formerly declined request
                 gcr.reset(responder=user)
-            message, worked = gcr.approve(responder=user)
+            message, worked = gcr.approve_request(responder=user)
             if not worked:
                 denied = message
             else:
@@ -605,7 +605,7 @@ class CommunityView(View):
         elif action == CommunityActions.DECLINE:  # decline a request from a group
             group = Group.objects.get(id=gid)
             gcr = GroupCommunityRequest.get_request(community=community, group=group)
-            message, worked = gcr.decline(responder=user)
+            message, worked = gcr.decline_group_request(responder=user)
             if not worked:
                 denied = message
             else:

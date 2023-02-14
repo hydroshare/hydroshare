@@ -212,7 +212,7 @@ class TestRequest(TestCase):
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
-        message, success = request.approve(responder=self.cat)
+        message, success = request.accept_invitation(responder=self.cat)
         request = GroupCommunityRequest.objects.get(pk=request.pk)
 
         expected = "Request to connect group '{}' to community '{}' {}.".format(
@@ -259,7 +259,7 @@ class TestRequest(TestCase):
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
-        message, success = request.decline(responder=self.cat)
+        message, success = request.decline_invitation(responder=self.cat)
         request = GroupCommunityRequest.objects.get(pk=request.pk)
 
         expected = "Request to connect group '{}' to community '{}' {}.".format(
@@ -306,7 +306,7 @@ class TestRequest(TestCase):
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
-        message, success = request.approve(responder=self.dog)
+        message, success = request.approve_request(responder=self.dog)
         request = GroupCommunityRequest.objects.get(pk=request.pk)
 
         expected = "Request to connect group '{}' to community '{}' {}.".format(
@@ -353,7 +353,7 @@ class TestRequest(TestCase):
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
-        message, success = request.decline(responder=self.dog)
+        message, success = request.decline_group_request(responder=self.dog)
         request = GroupCommunityRequest.objects.get(pk=request.pk)
 
         expected = "Request to connect group '{}' to community '{}' {}.".format(

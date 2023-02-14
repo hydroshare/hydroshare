@@ -251,8 +251,8 @@ class GroupCommunityRequest(models.Model):
                 request, created = cls.objects.get_or_create(
                     defaults={'group_owner': group_owner}, community=community, group=group)
 
-            # auto-approve if there's already an invite(!)
-            if request.community_owner is not None and request.privilege is not None:
+            # auto-approve if there's already a pending invite(!)
+            if not request.redeemed and request.community_owner is not None and request.privilege is not None:
                 request.group_owner = group_owner
                 request.redeemed = True
                 request.approved = True
@@ -403,29 +403,37 @@ class GroupCommunityRequest(models.Model):
 
         self.save()
 
-    def approve(self, responder, privilege=PrivilegeCodes.VIEW):
-        """ approve a request as the owner of the other side of the transaction """
+    def approve_request(self, responder, privilege=PrivilegeCodes.VIEW):
+        """ approve a request as the owner of the community receving the request to join """
         assert (isinstance(responder, User))
         if self.redeemed:
             message = "Request is completed and cannot be approved."
             return message, False
-        if self.community_owner is None:
-            if responder.uaccess.owns_community(self.community):
-                self.community_owner = responder
-                self.privilege = privilege
-                self.redeemed = True
-                self.approved = True
-                self.when_community = timezone.now()
-                self.save()
-                self.community_owner.uaccess.share_community_with_group(
-                    self.community, self.group, self.privilege)
-                message = "Request to connect group '{}' to community '{}' approved."\
-                    .format(self.group.name, self.community.name)
-                return message, True
-            else:
-                message = "You do not own the community and cannot approve this request."
-                return message, False
-        elif responder.uaccess.owns_group(self.group):
+        
+        if responder.uaccess.owns_community(self.community):
+            self.community_owner = responder
+            self.privilege = privilege
+            self.redeemed = True
+            self.approved = True
+            self.when_community = timezone.now()
+            self.save()
+            self.community_owner.uaccess.share_community_with_group(
+                self.community, self.group, self.privilege)
+            message = "Request to connect group '{}' to community '{}' approved."\
+                .format(self.group.name, self.community.name)
+            return message, True
+        else:
+            message = "You do not own the community and cannot approve this request."
+            return message, False
+        
+        
+    def accept_invitation(self, responder):
+        """ approve a request as the owner of the group being invited """
+        assert (isinstance(responder, User))
+        if self.redeemed:
+            message = "Request is completed and cannot be approved."
+            return message, False
+        if responder.uaccess.owns_group(self.group):
             self.group_owner = responder
             self.redeemed = True
             self.approved = True
@@ -440,29 +448,14 @@ class GroupCommunityRequest(models.Model):
             message = "You do not own the group and cannot approve this request."
             return message, False
 
-    def decline(self, responder):
-        """ decline a request, as the owner of the other side of the transaction """
+    def decline_invitation(self, responder):
+        """ decline a request, as an owner of the group being invited """
         assert (isinstance(responder, User))
         if self.redeemed:
             message = "Request is completed and cannot be declined."
             return message, False
-        if self.community_owner is None:
-            # the request for a group join a community was created by a group owner
-            if responder.uaccess.owns_community(self.community):
-                self.community_owner = responder
-                self.privilege = PrivilegeCodes.VIEW
-                self.redeemed = True
-                self.approved = False
-                self.when_community = timezone.now()
-                self.save()
-                message = "Request to connect group '{}' to community '{}' declined."\
-                    .format(self.group.name, self.community.name)
-                return message, True
-            else:
-                message = "You do not own the community and cannot decline this request."
-                return message, False
-        elif responder.uaccess.owns_group(self.group):
-            # this request (self) is an invitation made by a community owner to a group to join the community
+
+        if responder.uaccess.owns_group(self.group):
             self.group_owner = responder
             self.redeemed = True
             self.approved = False
@@ -473,6 +466,26 @@ class GroupCommunityRequest(models.Model):
             return message, True
         else:
             message = "You do not own the group and cannot decline this request."
+            return message, False
+
+    def decline_group_request(self, responder):
+        """ decline a request, as the owner of the community """
+        assert (isinstance(responder, User))
+        if self.redeemed:
+            message = "Request is completed and cannot be declined."
+            return message, False
+        if responder.uaccess.owns_community(self.community):
+            self.community_owner = responder
+            self.privilege = PrivilegeCodes.VIEW
+            self.redeemed = True
+            self.approved = False
+            self.when_community = timezone.now()
+            self.save()
+            message = "Request to connect group '{}' to community '{}' declined."\
+                .format(self.group.name, self.community.name)
+            return message, True
+        else:
+            message = "You do not own the community and cannot decline this request."
             return message, False
 
     @classmethod

@@ -4388,31 +4388,3 @@ class UserAccess(models.Model):
             return record.enabled
         except Feature.DoesNotExist:
             return False
-
-    # ======================
-    # community invitations
-    # ======================
-
-    def group_community_invite(self, group, community):
-        message, approved = GroupCommunityRequest(
-            group=group, community=community, requester=self.user
-        )
-        return message
-
-    def group_community_pending(self):
-        return GroupCommunityRequest.pending(self.user)
-
-    def group_community_queued(self):
-        return GroupCommunityRequest.queued(self.user)
-
-    def group_community_approve(self, request):
-        message, success = request.approve(
-            responder=self.user, privilege=PrivilegeCodes.VIEW
-        )
-        return message
-
-    def group_community_decline(self, request):
-        message, success = request.decline(
-            responder=self.user, privilege=PrivilegeCodes.VIEW
-        )
-        return message

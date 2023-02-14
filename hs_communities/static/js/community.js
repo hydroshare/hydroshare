@@ -115,7 +115,6 @@ $(document).ready(function () {
       },
       removeGroup: async function (id) {
         this.$set(this.isRemoving, id, true)
-        // TODO: handle leaving
         const url = '/access/_internal/community/' + this.community.id + '/remove/' + id + '/';
         $("#remove-group-modal").modal('hide')
         try {
@@ -132,7 +131,6 @@ $(document).ready(function () {
       },
       inviteGroup: async function (id) {
         this.$set(this.isInviting, id, true)
-        // TODO: handle leaving
         const url = '/access/_internal/community/' + this.community.id + '/invite/' + id + '/';
         try {
           const response = await $.post(url)
@@ -143,10 +141,9 @@ $(document).ready(function () {
             this.pending = response.pending
           }
           if (response.hasOwnProperty('members')) {
-            // If members is included in the response, we update the state
             this.members = response.members
           }
-          customAlert("Invite Group", response.message, "success", 6000, true);
+          customAlert("Invite Group", 'The Group has been invited to join', "success", 6000, true);
         }
         catch (e) {
           console.log(e)
@@ -163,11 +160,10 @@ $(document).ready(function () {
             this.pending = response.pending
           }
           if (response.hasOwnProperty('members')) {
-            // If members is included in the response, we update the state
             this.members = response.members
           }
           $("#reject-group-modal").modal('hide');
-          customAlert("Reject Group", 'The Group request to join has been rejected', "success", 6000, true);
+          customAlert("Reject Group", "The Group's request to join the Community has been rejected", "success", 6000, true);
         }
         catch (e) {
           console.log(e)
@@ -217,8 +213,7 @@ $(document).ready(function () {
           if (response.hasOwnProperty('members')) {
             this.members = response.members
           }
-          console.log(customAlert)
-          customAlert("Approve Group Join Request", 'The Group request to join the Community has been accepted', "success", 6000, true);
+          customAlert("Approve Group Join Request", "The Group's request to join the Community has been accepted", "success", 6000, true);
         }
         catch (e) {
           console.log(e)
