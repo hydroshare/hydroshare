@@ -3618,7 +3618,7 @@ class UserAccess(models.Model):
 
         if not this_community.active:
             raise PermissionDenied("Community is not active")
-        
+
         if not this_group.gaccess.active:
             raise PermissionDenied("Affected Group is not active")
 

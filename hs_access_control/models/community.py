@@ -280,25 +280,6 @@ class RequestCommunity(models.Model):
     def approved(self):
         return not self.declined and not self.pending_approval
 
-    # @classmethod
-    # def create_request(cls, request):
-    #     """Helper to create a request for a new community"""
-
-    #     # TODO: currently this method is not used for creating a community request.
-    #     #  see hs_core/views/__init__.py view function 'request_new_community()' that is used for creating community
-    #     #  If Mauriel ends of using this, then remove the view function 'request_new_community()'. Otherwise, this
-    #     #  class method needs to be removed.
-
-    #     from ..forms import RequestNewCommunityForm
-
-    #     community_form = RequestNewCommunityForm(request.POST, request.FILES)
-    #     if community_form.is_valid():
-    #         new_community_request = community_form.save(request)
-    #         return new_community_request
-
-    #     err_msg = f"Failed to make a request for a new community. Errors: {community_form.errors.as_json}"
-    #     raise ValidationError(err_msg)
-
     def approve(self):
         """Helper to approve a request to create a new community
         Note: The caller of this function needs to check authorization for approval

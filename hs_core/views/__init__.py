@@ -2663,7 +2663,7 @@ class GroupView(TemplateView):
         communitiesContext = {}
 
         if denied == "":
-            user = self.request.user
+            # user = self.request.user
             group = Group.objects.get(id=group_id)
 
             communitiesContext["denied"] = denied  # empty string means ok

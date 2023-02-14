@@ -25,11 +25,11 @@ class InitiatorCodes(object):
 
 
 class GroupCommunityRequest(models.Model):
-    '''
+    """
     A mechanism for handling Invitations from a community owner to a group owner.
     * The community owner creates a GroupCommunityRequest.
     * The group owner uses GroupCommunityRequest.act() to respond.
-    '''
+    """
 
     # target
     group = models.ForeignKey(Group, on_delete=models.CASCADE, editable=False, null=False, related_name='invite_g2gcr')
@@ -69,10 +69,11 @@ class GroupCommunityRequest(models.Model):
                     str(self.group), str(self.group_owner))
 
     def save(self, *args, **kwargs):
-        '''
+        """
         On save, update timestamps.
         See discussion of auto_now and auto_now_add in stack overflow for details
-        '''
+        """
+
         if not self.id:  # when created
             if self.group_owner:
                 self.when_group = timezone.now()
@@ -96,7 +97,7 @@ class GroupCommunityRequest(models.Model):
 
     @classmethod
     def create_or_update(cls, **kwargs):
-        '''
+        """
         Request a group to be included in a community. This can only be done by agreement between
         a community owner and a group owner.
 
@@ -129,7 +130,8 @@ class GroupCommunityRequest(models.Model):
         * GroupCommunityRequest.pending(requester={X}, group={Y}, community={Z}):
           requests that are pending for a user.
 
-        '''
+        """
+
         if __debug__:
             assert ('group' in kwargs)
             assert (isinstance(kwargs['group'], Group))
@@ -296,7 +298,7 @@ class GroupCommunityRequest(models.Model):
             raise PermissionDenied("requester owns neither group nor community.")
 
     def cancel(self, requester):
-        '''
+        """
         Cancel a Group/Community request.
 
         Arguments:
@@ -308,7 +310,8 @@ class GroupCommunityRequest(models.Model):
         * success: whether the action was taken successfully.
 
         Theory of operation: Either owner can cancel a request.
-        '''
+        """
+
         if self.redeemed:
             message = "Connection request between community '{}' and group '{}': "\
                       "already acted upon."\
@@ -328,10 +331,10 @@ class GroupCommunityRequest(models.Model):
 
     @classmethod
     def pending(cls, responder=None):
-        '''
+        """
         Return a list of active requests as class objects. These can be further filtered
         to determine whether the current user has any requests he/she can approve.
-        '''
+        """
         requests = cls.objects.filter(redeemed=False)
         if responder is not None:
             assert (isinstance(responder, User))
@@ -345,10 +348,10 @@ class GroupCommunityRequest(models.Model):
 
     @classmethod
     def queued(cls, requester=None):
-        '''
+        """
         Return a list of active requests as class objects. These can be further filtered
         to determine whether the current user has any requests he/she can cancel.
-        '''
+        """
         requests = cls.objects.filter(redeemed=False)
         if requester is not None:
             assert (isinstance(requester, User))
@@ -360,7 +363,7 @@ class GroupCommunityRequest(models.Model):
 
     @classmethod
     def get_request(cls, **kwargs):
-        '''
+        """
         Returns the unique request, if any, concerning a Group/Community pair.
 
         Arguments
@@ -368,7 +371,8 @@ class GroupCommunityRequest(models.Model):
         :group: the Group object
 
         This either returns a single object or None if there is none.
-        '''
+        """
+
         if __debug__:
             assert ('group' in kwargs)
             assert ('community' in kwargs)
@@ -382,7 +386,7 @@ class GroupCommunityRequest(models.Model):
             return None
 
     def reset(self, responder):
-        ''' make a completed request approvable again '''
+        """ make a completed request approvable again """
         if not self.redeemed:
             message = "One can only reset a redeemed request."
             return message, False
@@ -400,7 +404,7 @@ class GroupCommunityRequest(models.Model):
         self.save()
 
     def approve(self, responder, privilege=PrivilegeCodes.VIEW):
-        ''' approve a request as the owner of the other side of the transaction '''
+        """ approve a request as the owner of the other side of the transaction """
         assert (isinstance(responder, User))
         if self.redeemed:
             message = "Request is completed and cannot be approved."
@@ -473,7 +477,7 @@ class GroupCommunityRequest(models.Model):
 
     @classmethod
     def remove(cls, requester, **kwargs):
-        '''
+        """
         Remove a group from a community. This can only be done by a community or group owner.
         :param group: target group.
         :param community: target community.
@@ -484,8 +488,8 @@ class GroupCommunityRequest(models.Model):
         Return values: returns a pair of values
         * message: a status message for the user.
         * success: whether the removal succeeded.
+        """
 
-        '''
         if __debug__:
             assert ('group' in kwargs)
             assert (isinstance(kwargs['group'], Group))
@@ -519,7 +523,7 @@ class GroupCommunityRequest(models.Model):
 
         try:
             requester.uaccess.unshare_community_with_group(community, group)
-        except:
+        except:     # noqa
             return 'Failed to remove Group from Community', False
         message = "Group '{}' removed from community '{}'."\
             .format(group.name, community.name)
@@ -527,7 +531,7 @@ class GroupCommunityRequest(models.Model):
 
     @classmethod
     def retract(cls, requester, **kwargs):
-        '''
+        """
         Retract an unredeemed request. This can only be done by a community or group owner.
         :param group: target group.
         :param community: target community.
@@ -539,7 +543,7 @@ class GroupCommunityRequest(models.Model):
         * message: a status message for the user.
         * success: whether the removal succeeded.
 
-        '''
+        """
         if __debug__:
             assert ('group' in kwargs)
             assert (isinstance(kwargs['group'], Group))

@@ -175,7 +175,6 @@ class GroupView(View):
                     return message
                 else:
                     return ""
-
         else:
             message = "user '{}' does not own group '{}'"\
                       .format(user.username, group.name)
@@ -215,19 +214,18 @@ class GroupView(View):
 
     def get_pending_community_requests(self, group):
         pending = []
-        for r in GroupCommunityRequest.objects.filter(group=group,
-                                                      redeemed=False).order_by("community__name"):
+        for r in GroupCommunityRequest.objects.filter(group=group, redeemed=False).order_by("community__name"):
             pending.append(gcr_json(r))
         return pending
 
     def get_communities_available_to_join(self, group):
-      available = []
-      for c in Community.objects.filter(active=True).exclude(
-          Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
-          .exclude(c2gcp__group=group) \
-          .order_by("name"):
-        available.append(community_json(c))
-      return available
+        available = []
+        for c in Community.objects.filter(active=True).exclude(
+                Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
+                .exclude(c2gcp__group=group) \
+                .order_by("name"):
+            available.append(community_json(c))
+        return available
 
     def get_communities_joined(self, group):
         # communities joined
@@ -339,9 +337,6 @@ class GroupView(View):
 
         # build a JSON object that contains the results of the query
         context = {}
-        # if denied:
-        #     return error_response(denied)
-
         context['denied'] = denied  # empty string means ok
         context['message'] = message
         context['user'] = user_json(user)
@@ -799,8 +794,8 @@ class CommunityRequestView(View):
         return self.get_community_requests(user)
 
     def post(self, *args, **kwargs):
-        """creates a community request or takes a specified action (decline, approve, or delete) on an
-        existing community request - request to create a new community
+        """Takes a specified action (decline, approve, or delete) on an
+        existing community request (request to create a new community)
         """
         message = ''
         validation_err_msg, req_params = self.validate_request_parameters(kwargs)
@@ -814,65 +809,53 @@ class CommunityRequestView(View):
             return error_response(denied)
 
         user = self.request.user
-
-        if action == CommunityRequestActions.REQUEST:
-            # user is making a request for a new community
-            try:
-                cr = RequestCommunity.create_request(self.request)
-            except ValidationError as err:
-                denied = err.message
-            else:
-                # send email to hydroshare support/help
+        # user taking action on an existing community request - request to create a new community
+        cr = RequestCommunity.objects.get(id=crid)
+        if action == CommunityRequestActions.UPDATE:
+            # update the community fields from POST data.
+            cr_by_user = cr.requested_by
+            if cr_by_user != user and not user.is_superuser:
+                denied = "You are not allowed to update this community request"
+            if not denied:
+                try:
+                    cr.update_request(user, self.request)
+                except ValidationError as err:
+                    denied = err.message
+        elif action == CommunityRequestActions.APPROVE:
+            if user.is_superuser:
+                cr.approve()
+                message = "Request approved"
+                # send email to the user who requested the new community
                 CommunityRequestEmailNotification(request=self.request, community_request=cr,
-                                                  on_event=CommunityRequestEvents.CREATED).send()
+                                                  on_event=CommunityRequestEvents.APPROVED).send()
+
+            else:
+                denied = "You are not allowed to approve community requests."
+        elif action == CommunityRequestActions.DECLINE:  # decline a request to create a community
+            decline_reason = self.request.POST.get('reason', '')
+            decline_reason = decline_reason.strip()
+            if not decline_reason:
+                denied = "Reason for declining community request must be provided"
+            elif user.is_superuser:
+                cr.decline(reason=decline_reason)
+                message = "Request declined"
+                # send email to the user who requested the new community
+                CommunityRequestEmailNotification(request=self.request, community_request=cr,
+                                                  on_event=CommunityRequestEvents.DECLINED).send()
+            else:
+                denied = "You are not allowed to decline community requests"
+        elif action == CommunityRequestActions.RESUBMIT:    # resubmit a request after it has been declined
+            cr.resubmit()
+            message = "Request has been resubmitted"
+            CommunityRequestEmailNotification(request=self.request, community_request=cr,
+                                              on_event=CommunityRequestEvents.RESUBMITTED).send()
         else:
-            # user taking action on an existing community request - request to create a new community
-            cr = RequestCommunity.objects.get(id=crid)
-            if action == CommunityRequestActions.UPDATE:
-                # update the community fields from POST data.
-                cr_by_user = cr.requested_by
-                if cr_by_user != user and not user.is_superuser:
-                    denied = "You are not allowed to update this community request"
-                if not denied:
-                    try:
-                        cr.update_request(user, self.request)
-                    except ValidationError as err:
-                        denied = err.message
-            elif action == CommunityRequestActions.APPROVE:
-                if user.is_superuser:
-                    cr.approve()
-                    message = "Request approved"
-                    # send email to the user who requested the new community
-                    CommunityRequestEmailNotification(request=self.request, community_request=cr,
-                                                      on_event=CommunityRequestEvents.APPROVED).send()
-
-                else:
-                    denied = "You are not allowed to approve community requests."
-            elif action == CommunityRequestActions.DECLINE:  # decline a request to create a community
-                decline_reason = self.request.POST.get('reason', '')
-                decline_reason = decline_reason.strip()
-                if not decline_reason:
-                    denied = "Reason for declining community request must be provided"
-                elif user.is_superuser:
-                    cr.decline(reason=decline_reason)
-                    message = "Request declined"
-                    # send email to the user who requested the new community
-                    CommunityRequestEmailNotification(request=self.request, community_request=cr,
-                                                      on_event=CommunityRequestEvents.DECLINED).send()
-                else:
-                    denied = "You are not allowed to decline community requests"
-            elif action == CommunityRequestActions.RESUBMIT:    # resubmit a request after it has been declined
-                cr.resubmit()
-                message = "Request has been resubmitted"
-                CommunityRequestEmailNotification(request=self.request, community_request=cr,
-                                                  on_event=CommunityRequestEvents.RESUBMITTED).send()
+            assert action == CommunityRequestActions.REMOVE
+            if user == cr.requested_by or user.is_superuser:
+                cr.remove()
+                message = "Request removed"
             else:
-                assert action == CommunityRequestActions.REMOVE
-                if user == cr.requested_by or user.is_superuser:
-                    cr.remove()
-                    message = "Request removed"
-                else:
-                    denied = "You are not allowed to remove this request"
+                denied = "You are not allowed to remove this request"
 
         # at the end of this, message is not None
         # if one tried to act on the request;
