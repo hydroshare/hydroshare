@@ -152,6 +152,10 @@ class GroupCommunityRequest(models.Model):
                 .format(group.name, community.name)
             return message, True
 
+        if community.closed:
+            message = "Community '{}' is currently not allowing more groups to join.".format(community.name)
+            return message, True
+
         # requester owns both community and group
         if requester.uaccess.owns_community(community) and requester.uaccess.owns_group(group):
             community_owner = requester

@@ -222,9 +222,11 @@ class GroupView(View):
         return pending
 
     def get_communities_available_to_join(self, group):
+        """get a list of communities that a group can join"""
         available = []
-        for c in Community.objects.filter(active=True).exclude(
-                Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
+        for c in Community.objects.filter(active=True) \
+                .exclude(closed=True) \
+                .exclude(Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
                 .exclude(c2gcp__group=group) \
                 .order_by("name"):
             available.append(community_json(c))

@@ -2612,10 +2612,11 @@ class GroupView(TemplateView):
 
             # Communities that can be joined.
             communitiesContext["available_to_join"] = []
-            for c in Community.objects.filter(active=True).exclude(
-                  Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
-                  .exclude(c2gcp__group=group) \
-                  .order_by("name"):
+            for c in Community.objects.filter(active=True) \
+                    .exclude(closed=True) \
+                    .exclude(Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
+                    .exclude(c2gcp__group=group) \
+                    .order_by("name"):
                 communitiesContext["available_to_join"].append(community_json(c))
 
             # list of all available communities
