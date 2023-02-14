@@ -216,6 +216,7 @@ class GroupView(View):
         return err_msg, req_params
 
     def get_pending_community_requests(self, group):
+        """get a list of pending request to join a community for a given group"""
         pending = []
         for r in GroupCommunityRequest.objects.filter(group=group, redeemed=False).order_by("community__name"):
             pending.append(group_community_request_json(r))
@@ -233,7 +234,7 @@ class GroupView(View):
         return available
 
     def get_communities_joined(self, group):
-        # communities joined
+        """get a list of communities a group has joined"""
         joined = []
         for c in Community.objects.filter(c2gcp__group=group).order_by('name'):
             joined.append(community_json(c))
@@ -380,13 +381,6 @@ class GroupView(View):
                 group=group, redeemed=False, community_owner__isnull=True) \
                 .order_by('community__name'):
             context['pending'].append(group_community_request_json(r))
-
-        # Communities that can be joined.
-        # context['available_to_join'] = []
-        # for c in Community.objects.filter().exclude(invite_c2gcr__group=group) \
-        #         .exclude(c2gcp__group=group) \
-        #         .order_by('name'):
-        #     context['available_to_join'].append(community_json(c))
 
         # requests that were declined by others
         context['they_declined'] = []

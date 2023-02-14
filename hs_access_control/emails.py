@@ -26,18 +26,7 @@ class CommunityGroupEmailNotification:
         group_url = f"{site_domain}/group/{self.group_community_request.group.id}"
         community_url = f"{site_domain}/community/{self.group_community_request.community.id}"
 
-        if self.on_event == CommunityGroupEvents.CREATED:
-            # on request of group to join a community
-            recipient_emails = [owner.email for owner in self.group_community_request.community.owners]
-            subject = "Group wants to join Community"
-            message = f"""Dear Community owners,
-            <p>{self.group_community_request.group_owner.first_name} is requesting group <a href="{group_url}">
-            {self.group_community_request.group.name}</a> to join your community <a href="{community_url}">
-            {self.group_community_request.community.name}</a></p>.
-            <p>Thank you,</p>
-            <p>The HydroShare Team</p>
-            """
-        elif self.on_event == CommunityGroupEvents.INVITED:
+        if self.on_event == CommunityGroupEvents.INVITED:
             # send emails to all group owners
             recipient_emails = [grp_owner.email for grp_owner in self.group_community_request.group.gaccess.owners]
             subject = "Invitation for your group to join Community"
@@ -116,7 +105,7 @@ class CommunityGroupEmailNotification:
 
 
 class CommunityRequestEmailNotification:
-    """A class for for sending emails related to creating a new community"""
+    """A class for sending emails related to creating a new community"""
     def __init__(self, request: HttpRequest, community_request: RequestCommunity, on_event: CommunityRequestEvents):
         self.request = request
         self.community_request = community_request
@@ -127,16 +116,11 @@ class CommunityRequestEmailNotification:
         site_domain = f"{self.request.scheme}://{self.request.get_host()}"
         community_request_url = f"{site_domain}/communities/manage-requests/{self.community_request.id}"
         if self.on_event == CommunityRequestEvents.CREATED:
-            mail_to = ""
-            if hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
-                mail_to = settings.DEFAULT_SUPPORT_EMAIL
+            mail_to = _get_default_mail_to_user()
             if not mail_to:
-                try:
-                    mail_to = User.objects.get(username__iexact='CUAHSI').email
-                except User.DoesNotExist:
-                    err_msg = "No support email was found to send email for approving request to create a community"
-                    logging.error(err_msg)
-                    return
+                err_msg = "No support email was found to send email for approving request to create a community"
+                logging.error(err_msg)
+                return
 
             recipient_emails = [mail_to]
 
@@ -150,17 +134,13 @@ class CommunityRequestEmailNotification:
             <p>The HydroShare Team</p>
             """
 
-        if self.on_event == CommunityRequestEvents.RESUBMITTED:
-            mail_to = ""
-            if hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
-                mail_to = settings.DEFAULT_SUPPORT_EMAIL
+        elif self.on_event == CommunityRequestEvents.RESUBMITTED:
+            mail_to = _get_default_mail_to_user()
             if not mail_to:
-                try:
-                    mail_to = User.objects.get(username__iexact='CUAHSI').email
-                except User.DoesNotExist:
-                    err_msg = "No support email was found to send email for approving request to create a community"
-                    logging.error(err_msg)
-                    return
+                err_msg = "No support email was found to send email for approving a resubmission request " \
+                          "to create a community"
+                logging.error(err_msg)
+                return
 
             recipient_emails = [mail_to]
 
@@ -202,5 +182,21 @@ class CommunityRequestEmailNotification:
             """
 
         admin_user = get_default_admin_user()
-        send_mail(subject=subject, message=message, html_message=message, from_email=admin_user.email,
-                  recipient_list=recipient_emails, fail_silently=True)
+        try:
+            send_mail(subject=subject, message=message, html_message=message, from_email=admin_user.email,
+                      recipient_list=recipient_emails)
+        except Exception as err:
+            err_msg = f"Failed to email message '{message}'. Error: {str(err)}"
+            logging.error(err_msg)
+
+
+def _get_default_mail_to_user():
+    mail_to = ""
+    if hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
+        mail_to = settings.DEFAULT_SUPPORT_EMAIL
+    if not mail_to:
+        try:
+            mail_to = User.objects.get(username__iexact='CUAHSI').email
+        except User.DoesNotExist:
+            pass
+    return mail_to

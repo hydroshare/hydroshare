@@ -408,7 +408,7 @@ class GroupCommunityRequest(models.Model):
         self.save()
 
     def approve_request(self, responder, privilege=PrivilegeCodes.VIEW):
-        """ approve a request as the owner of the community receving the request to join """
+        """ approve a request as the owner of the community receiving the request to join """
         assert (isinstance(responder, User))
         if self.redeemed:
             message = "Request is completed and cannot be approved."

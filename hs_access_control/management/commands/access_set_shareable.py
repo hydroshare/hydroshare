@@ -57,7 +57,7 @@ class Command(BaseCommand):
                 check_shareable(rid, options)
         else:
             print("No resource id's given.")
-            print("set_shareable usage: python manage.py set_shareable [--on|--off|] {resource-ids}")
+            print("access_set_shareable usage: python manage.py set_shareable [--on|--off|] {resource-ids}")
             print("     no options: print shareable flag state.")
             print("     --on: make the resource shareable.")
             print("     --off: make the resource not shareable.")
