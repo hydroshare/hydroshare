@@ -443,18 +443,18 @@ class GroupView(GroupCommunityViewMixin):
             context['pending'].append(group_community_request_json(r))
 
         # requests that were declined by others
-        context['they_declined'] = []
+        context['group_declined'] = []
         for r in GroupCommunityRequest.objects.filter(
                 group=group, redeemed=True, approved=False,
                 when_group__lt=F('when_community')).order_by('community__name'):
-            context['they_declined'].append(group_community_request_json(r))
+            context['group_declined'].append(group_community_request_json(r))
 
         # requests that were declined by us
-        context['we_declined'] = []
+        context['community_declined'] = []
         for r in GroupCommunityRequest.objects.filter(
                 group=group, redeemed=True, approved=False,
                 when_group__gt=F('when_community')).order_by('community__name'):
-            context['we_declined'].append(group_community_request_json(r))
+            context['community_declined'].append(group_community_request_json(r))
 
         return JsonResponse(context)
 

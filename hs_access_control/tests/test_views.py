@@ -109,8 +109,8 @@ class TestViews(TransactionTestCase):
         self.assertEqual(json_response['community']['owners'], [user_json(self.cat)])
         self.assertEqual(json_response['approvals'], [])
         self.assertEqual(json_response['pending'], [])
-        self.assertEqual(json_response['they_declined'], [])
-        self.assertEqual(json_response['we_declined'], [])
+        self.assertEqual(json_response['group_declined'], [])
+        self.assertEqual(json_response['community_declined'], [])
 
     def test_community_add_owner(self):
         """ add an owner to a community """
@@ -442,8 +442,8 @@ class TestViews(TransactionTestCase):
         self.assertEqual(json_response['group']['owners'], [user_json(self.cat)])
         self.assertEqual(json_response['approvals'], [])
         self.assertEqual(json_response['pending'], [])
-        self.assertEqual(json_response['they_declined'], [])
-        self.assertEqual(json_response['we_declined'], [])
+        self.assertEqual(json_response['group_declined'], [])
+        self.assertEqual(json_response['community_declined'], [])
 
     def test_group_add_community_automatically(self):
         """ add a group automatically to a community """
