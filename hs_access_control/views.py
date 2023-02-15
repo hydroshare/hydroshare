@@ -11,7 +11,13 @@ from rest_framework import status
 from hs_access_control.models import Community, GroupCommunityRequest
 from hs_access_control.models.community import RequestCommunity
 from .emails import CommunityGroupEmailNotification, CommunityRequestEmailNotification
-from .enums import CommunityActions, CommunityGroupEvents, CommunityRequestActions, CommunityRequestEvents
+from .enums import (
+    CommunityActions,
+    CommunityGroupEvents,
+    CommunityRequestActions,
+    CommunityRequestEvents,
+    CommunityJoinRequestTypes,
+)
 from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
 
 logger = logging.getLogger(__name__)
@@ -153,7 +159,108 @@ def error_response(err_message):
     return JsonResponse(context, status=status.HTTP_400_BAD_REQUEST)
 
 
-class GroupView(View):
+class GroupCommunityViewMixin(View):
+    """A mixin to support group joining a community"""
+    def approve_to_join(self, request_type, group, community):
+        """request/invite for a group to join a community is approved"""
+        user = self.request.user
+        gcr = GroupCommunityRequest.get_request(group=group, community=community)
+        if gcr.redeemed:  # reset to unredeemed in order to approve
+            gcr.reset(responder=user)
+
+        if request_type == CommunityJoinRequestTypes.COMMUNITY_INVITING:
+            message, worked = gcr.accept_invitation(responder=user)
+        else:
+            message, worked = gcr.approve_request(responder=user)
+
+        if not worked:
+            return error_response(message)
+        else:
+            # email notify to concerned parties
+            CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
+                                            on_event=CommunityGroupEvents.APPROVED).send()
+            if request_type == CommunityJoinRequestTypes.COMMUNITY_INVITING:
+                return JsonResponse({
+                    'pending': self.get_pending_community_requests(group),
+                    'available_to_join': self.get_communities_available_to_join(group),
+                    'joined': self.get_communities_joined(group),
+                })
+            else:
+                return JsonResponse({
+                    "members": self.get_group_members(community),
+                    "pending": self.get_pending_requests(community)
+                })
+
+    def decline_to_join(self, request_type, group, community):
+        """request/invite for a group to join a community is declined"""
+        user = self.request.user
+        gcr = GroupCommunityRequest.get_request(group=group, community=community)
+        if request_type == CommunityJoinRequestTypes.COMMUNITY_INVITING:
+            message, worked = gcr.decline_invitation(responder=user)
+        else:
+            message, worked = gcr.decline_group_request(responder=user)
+
+        if not worked:
+            return error_response(message)
+
+        # email notify to concerned parties
+        CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
+                                        on_event=CommunityGroupEvents.DECLINED).send()
+
+        if request_type == CommunityJoinRequestTypes.COMMUNITY_INVITING:
+            return JsonResponse({
+                'pending': self.get_pending_community_requests(group),
+                'available_to_join': self.get_communities_available_to_join(group)
+            })
+        else:
+            return JsonResponse({"pending": self.get_pending_requests(community)})
+
+    @staticmethod
+    def get_pending_community_requests(group):
+        """get a list of pending request to join a community for a given group"""
+        pending = []
+        for r in GroupCommunityRequest.objects.filter(group=group, redeemed=False).order_by("community__name"):
+            pending.append(group_community_request_json(r))
+        return pending
+
+    @staticmethod
+    def get_communities_available_to_join(group):
+        """get a list of communities that a group can join"""
+        available = []
+        for c in Community.objects.filter(active=True) \
+                .exclude(closed=True) \
+                .exclude(Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
+                .exclude(c2gcp__group=group) \
+                .order_by("name"):
+            available.append(community_json(c))
+        return available
+
+    @staticmethod
+    def get_communities_joined(group):
+        """get a list of communities a group has joined"""
+        joined = []
+        for c in Community.objects.filter(c2gcp__group=group).order_by('name'):
+            joined.append(community_json(c))
+        return joined
+
+    @staticmethod
+    def get_group_members(community):
+        members = []
+        for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
+            members.append(group_json(g))
+
+        return members
+
+    @staticmethod
+    def get_pending_requests(community):
+        pending = []
+        for r in GroupCommunityRequest.objects.filter(
+                community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
+            pending.append(group_community_request_json(r))
+        return pending
+
+
+class GroupView(GroupCommunityViewMixin):
     """ Group transaction engine manages joining and leaving communities """
 
     def hydroshare_denied(self, gid, cid=None):
@@ -215,31 +322,6 @@ class GroupView(View):
 
         return err_msg, req_params
 
-    def get_pending_community_requests(self, group):
-        """get a list of pending request to join a community for a given group"""
-        pending = []
-        for r in GroupCommunityRequest.objects.filter(group=group, redeemed=False).order_by("community__name"):
-            pending.append(group_community_request_json(r))
-        return pending
-
-    def get_communities_available_to_join(self, group):
-        """get a list of communities that a group can join"""
-        available = []
-        for c in Community.objects.filter(active=True) \
-                .exclude(closed=True) \
-                .exclude(Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
-                .exclude(c2gcp__group=group) \
-                .order_by("name"):
-            available.append(community_json(c))
-        return available
-
-    def get_communities_joined(self, group):
-        """get a list of communities a group has joined"""
-        joined = []
-        for c in Community.objects.filter(c2gcp__group=group).order_by('name'):
-            joined.append(community_json(c))
-        return joined
-
     def post(self, *args, **kwargs):
         message = ''
         validation_err_msg, req_params = self.validate_request_parameters(kwargs)
@@ -262,38 +344,13 @@ class GroupView(View):
 
             if action == CommunityActions.APPROVE:
                 # group owner accepting an invitation for a group to join a community
-                gcr = GroupCommunityRequest.get_request(group=group, community=community)
-                if gcr.redeemed:  # reset to unredeemed in order to approve
-                    gcr.reset(responder=user)
-                message, worked = gcr.accept_invitation(responder=user)
-                if not worked:
-                    denied = message
-                else:
-                    # email notify to concerned parties
-                    CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
-                                                    on_event=CommunityGroupEvents.APPROVED).send()
-                    return JsonResponse({
-                        'pending': self.get_pending_community_requests(group),
-                        'available_to_join': self.get_communities_available_to_join(group),
-                        'joined': self.get_communities_joined(group),
-                    })
+                self.approve_to_join(request_type=CommunityJoinRequestTypes.COMMUNITY_INVITING, group=group,
+                                     community=community)
 
             elif action == CommunityActions.DECLINE:  # decline an invitation from a community
                 # group owner declining an invitation for a group to join a community
-                gcr = GroupCommunityRequest.objects.get(
-                    group=group, community=community)
-                message, worked = gcr.decline_invitation(responder=user)
-                if not worked:
-                    denied = message
-                else:
-                    # email notify to concerned parties
-                    CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
-                                                    on_event=CommunityGroupEvents.DECLINED).send()
-                    # return relevant state
-                    return JsonResponse({
-                        'pending': self.get_pending_community_requests(group),
-                        'available_to_join': self.get_communities_available_to_join(group)
-                    })
+                self.decline_to_join(request_type=CommunityJoinRequestTypes.COMMUNITY_INVITING, group=group,
+                                     community=community)
 
             elif action == CommunityActions.JOIN:  # request to join a community
                 # group owner making a request to join a community
@@ -340,6 +397,9 @@ class GroupView(View):
                         'pending': self.get_pending_community_requests(group),
                         'available_to_join': self.get_communities_available_to_join(group)
                     })
+
+        if denied:
+            return error_response(denied)
 
         # build a JSON object that contains the results of the query
         context = {}
@@ -399,7 +459,7 @@ class GroupView(View):
         return JsonResponse(context)
 
 
-class CommunityView(View):
+class CommunityView(GroupCommunityViewMixin):
     """ Community transaction engine manages inviting and approving groups """
 
     def hydroshare_denied(self, cid, gid=None):
@@ -482,13 +542,6 @@ class CommunityView(View):
 
         return err_msg, req_params
 
-    def get_pending_requests(self, community):
-        pending = []
-        for r in GroupCommunityRequest.objects.filter(
-                community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
-            pending.append(group_community_request_json(r))
-        return pending
-
     def get_groups(self, community):
         groups = []
         for g in Group.objects.filter(gaccess__active=True)\
@@ -497,13 +550,6 @@ class CommunityView(View):
                               .order_by('name'):
             groups.append(group_json(g))
         return groups
-
-    def get_group_members(self, community):
-        members = []
-        for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
-            members.append(group_json(g))
-
-        return members
 
     def post(self, *args, **kwargs):
         message = ""
@@ -532,34 +578,13 @@ class CommunityView(View):
 
         if action == CommunityActions.APPROVE:  # approve a request from a group
             group = Group.objects.get(id=gid)
-            gcr = GroupCommunityRequest.objects.get(community=community, group=group)
-            if gcr.redeemed:  # make it possible to approve a formerly declined request
-                gcr.reset(responder=user)
-            message, worked = gcr.approve_request(responder=user)
-            if not worked:
-                denied = message
-            else:
-                # send email to group owners
-                CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
-                                                on_event=CommunityGroupEvents.APPROVED).send()
-                context = {}
-                context['members'] = self.get_group_members(community)
-                context['pending'] = self.get_pending_requests(community)
-                return JsonResponse(context)
+            self.approve_to_join(request_type=CommunityJoinRequestTypes.GROUP_REQUESTING, group=group,
+                                 community=community)
 
         elif action == CommunityActions.DECLINE:  # decline a request from a group
             group = Group.objects.get(id=gid)
-            gcr = GroupCommunityRequest.get_request(community=community, group=group)
-            message, worked = gcr.decline_group_request(responder=user)
-            if not worked:
-                denied = message
-            else:
-                # send email to group owners
-                CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
-                                                on_event=CommunityGroupEvents.DECLINED).send()
-                context = {}
-                context['pending'] = self.get_pending_requests(community)
-                return JsonResponse(context)
+            self.decline_to_join(request_type=CommunityJoinRequestTypes.GROUP_REQUESTING, group=group,
+                                 community=community)
 
         elif action == CommunityActions.INVITE:
             group = Group.objects.get(id=gid)

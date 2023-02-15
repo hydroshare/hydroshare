@@ -19,6 +19,13 @@ class CommunityGroupEvents(enum.Enum):
     JOIN_REQUESTED = enum.auto()
 
 
+class CommunityJoinRequestTypes(enum.Enum):
+    """Enum object for naming request/invite for a group to join a community"""
+
+    GROUP_REQUESTING = enum.auto()
+    COMMUNITY_INVITING = enum.auto()
+
+
 class CommunityRequestActions(str, enum.Enum):
     """Enum object for naming all allowed actions on a request to create a new community"""
 
