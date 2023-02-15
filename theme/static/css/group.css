@@ -58,6 +58,10 @@
   gap: 1rem;
 }
 
+.request-block {
+  max-width: 21rem;
+}
+
 @media (max-width: 992px) {
   .group-community-card .panel-body {
     flex-direction: column;
