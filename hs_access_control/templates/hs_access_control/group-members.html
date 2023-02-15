@@ -4,7 +4,7 @@
     {% if profile_user.is_group_owner %}
     {% if group.gaccess.active %}
     <button type="button" class="btn btn-primary has-space-bottom" role="button" data-toggle="modal"
-      data-target="#invite-dialog">Invite People</button>
+      data-target="#invite-dialog"><span class="fa fa-user-plus"></span> Invite People</button>
     {% endif %}
     {% endif %}
     <table id="members-filter" class="table-user-contributions table table-hover">
@@ -206,34 +206,31 @@
         </td>
         <td>
           {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-          <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
-            {% csrf_token %}
-            <a href="#" class="btn btn-success btn-act-on-request" data-user-action="Accept"
-              data-member-id="{{ pendingrequest.request_from.id }}"
-              data-name="{{ pendingrequest.request_from|best_name }}"
-              data-title="
-                                                 {% if pendingrequest.request_from.userprofile.title %}{{ pendingrequest.request_from.userprofile.title }}{% endif %}"><span
-                class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
-          </form>
-          {% endif %}
-        </td>
-        <td>
-          {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-          <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
-            {% csrf_token %}
-            <a href="#" class="btn btn-default btn-act-on-request" data-user-action="Reject"><span
-                class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
-          </form>
+          <div class="flex gap-1">
+            <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
+              {% csrf_token %}
+              <a href="#" class="btn btn-default btn-act-on-request" data-user-action="Reject"><span
+                  class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
+            </form>
+            <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
+              {% csrf_token %}
+              <a href="#" class="btn btn-success btn-act-on-request" data-user-action="Accept"
+                data-member-id="{{ pendingrequest.request_from.id }}"
+                data-name="{{ pendingrequest.request_from|best_name }}"
+                data-title="
+                                                   {% if pendingrequest.request_from.userprofile.title %}{{ pendingrequest.request_from.userprofile.title }}{% endif %}"><span
+                  class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
+            </form>
+          </div>
           {% endif %}
         </td>
         {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-        {% if pendingrequest.explanation %}
-        <td class="text-muted explanation" title="{{ pendingrequest.explanation }}">Explanation: {{
-          pendingrequest.explanation }} </td>
-        {% else %}
-        <td class="text-muted explanation" title="">Explanation not required. You can modify this setting by editing the
-          group.</td>
-        {% endif %}
+          {% if pendingrequest.explanation %}
+          <td class="text-muted explanation" title="{{ pendingrequest.explanation }}">Explanation: {{ pendingrequest.explanation }} </td>
+          {% else %}
+          <td class="text-muted explanation" title="">Explanation not required. You can modify this setting by editing the
+            group.</td>
+          {% endif %}
         {% endif %}
       </tr>
       {% else %}

@@ -55,7 +55,7 @@ function request_join_group_ajax_submit() {
             success: function (result) {
                 var container = target.parent().parent();
                 target.parent().remove();
-                container.append('<h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>');
+                container.append('<h4 class="flag-joined"><span class="fa fa-send"></span> Request Sent</h4>');
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 console.log("error");

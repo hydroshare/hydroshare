@@ -73,18 +73,22 @@ class CommunityView(TemplateView):
                 context["is_admin"] = is_admin
                 context["user"] = user_json(user)
 
-                # list of groups that the user has joined
-                # groups = user.uaccess.my_groups
-                # active_groups = [group_json(g) for g in groups if g.gaccess.active]
-                # context['user_groups_joined'] = active_groups
 
                 # groups that can be invited are those that are not already invited or members.
                 context["groups"] = []
-                for g in Group.objects.filter(gaccess__active=True) \
-                        .exclude(Q(invite_g2gcr__community=community) & Q(invite_g2gcr__redeemed=False)) \
-                        .exclude(g2gcp__community=community) \
-                        .order_by("name"):
-                    context["groups"].append(group_json(g))
+
+                if is_admin:
+                    # Community owners can invite any group
+                    groups = Group.objects
+                else:
+                    # Other users can invite groups they own
+                    groups = user.uaccess.owned_groups
+
+                for g in groups.filter(gaccess__active=True) \
+                          .exclude(Q(invite_g2gcr__community=community) & Q(invite_g2gcr__redeemed=False)) \
+                          .exclude(g2gcp__community=community) \
+                          .order_by("name"):
+                      context["groups"].append(group_json(g))
 
                 # list of all available communities
                 context["all_communities"] = []
