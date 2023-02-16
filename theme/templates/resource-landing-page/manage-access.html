@@ -63,7 +63,7 @@
                     </div>
 
                     <div id="div-invite-people" class="panel-body">
-                        <div id="invite-flag" class="btn-group space-bottom" role="group"
+                        <div id="invite-flag" class="btn-group has-space-bottom" role="group"
                              aria-label="Share with users or groups">
                             <button type="button"
                                     :class="{btn: true, 'btn-primary': isInviteUsers, 'btn-default': !isInviteUsers}"
@@ -125,7 +125,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div v-if="error" class='alert alert-danger space-top small'>
+                        <div v-if="error" class='alert alert-danger has-space-top small'>
                             <strong>Error: </strong>${ error }
                         </div>
                     </div>
@@ -244,7 +244,7 @@
 
                             </template>
 
-                            <div v-if="sharingError" class='alert alert-danger space-top small'>
+                            <div v-if="sharingError" class='alert alert-danger has-space-top small'>
                                 <strong>Error: </strong>${ sharingError }
                             </div>
                          </div>

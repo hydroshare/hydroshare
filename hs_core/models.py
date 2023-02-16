@@ -1761,7 +1761,7 @@ class Coverage(AbstractMetaDataElement):
                 legend('Spatial Coverage')
                 div('Coordinate Reference System', cls='text-muted')
                 div(self.value['projection'])
-                div('Coordinate Reference System Unit', cls='text-muted space-top')
+                div('Coordinate Reference System Unit', cls='text-muted has-space-top')
                 div(self.value['units'])
                 h4('Extent', cls='space-top')
                 with table(cls='custom-table'):

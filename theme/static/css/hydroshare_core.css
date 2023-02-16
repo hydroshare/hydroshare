@@ -3693,38 +3693,6 @@ input.no-style {
   flex-wrap: wrap;
 }
 
-.has-space-top {
-  margin-top: 2rem;
-}
-
-.has-space-top-2x {
-  margin-top: 4rem;
-}
-
-.has-space-right {
-  margin-right: 2rem;
-}
-
-.has-space-right-2x {
-  margin-right: 4rem;
-}
-
-.has-space-left {
-  margin-left: 2rem;
-}
-
-.has-space-bottom {
-  margin-bottom: 2rem;
-}
-
-.has-space-bottom-2x {
-  margin-bottom: 4rem;
-}
-
-.full-width {
-  width: 100%;
-}
-
 .grid {
   display: grid;
 }
@@ -4773,30 +4741,6 @@ a[data-toggle="modal"] {
 	display: block;
 }
 
-.space-top {
-	margin-top: 16px;
-}
-
-.space-bottom {
-	margin-bottom: 16px;
-}
-
-.space-right {
-	margin-right: 16px;
-}
-
-.space-left {
-	margin-left: 16px;
-}
-
-.space-left-1x {
-  margin-left: 8px;
-}
-
-.space-right-1x {
-  margin-right: 8px;
-}
-
 .border-gray {
 	border: 1px solid #DDD;
 }
@@ -4819,4 +4763,36 @@ div.property-selector {
 	overflow: scroll;
 	width: max-content;
 	max-height: 160px;
+}
+
+.has-space-top {
+  margin-top: 2rem;
+}
+
+.has-space-top-2x {
+  margin-top: 4rem;
+}
+
+.has-space-right {
+  margin-right: 2rem;
+}
+
+.has-space-right-2x {
+  margin-right: 4rem;
+}
+
+.has-space-left {
+  margin-left: 2rem;
+}
+
+.has-space-bottom {
+  margin-bottom: 2rem;
+}
+
+.has-space-bottom-2x {
+  margin-bottom: 4rem;
+}
+
+.full-width {
+  width: 100%;
 }

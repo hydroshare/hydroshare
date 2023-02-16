@@ -114,7 +114,7 @@
                                         <span aria-hidden="true">&times;</span>
                                     </button>
                                     <div class="flex">
-                                        <i class="glyphicon glyphicon-info-sign space-right"></i>
+                                        <i class="glyphicon glyphicon-info-sign has-space-right"></i>
                                         <em>You can set the spatial and temporal coverage manually by using the map to place a point or box or by filling in coordinates. Alternatively, you can add content files to your resource that have spatial coverage information (e.g., geographic
                                         feature, geographic raster, multidimensional, etc.) and then click the button to set the coverage from
                                         the content files.</em>
@@ -125,7 +125,7 @@
                             <div id="readonly-coverage-notice" class="alert alert-warning alert-dismissible" role="alert"
                                  style="display: none;">
                                 <div class="flex">
-                                    <i class="glyphicon glyphicon-info-sign space-right"></i>
+                                    <i class="glyphicon glyphicon-info-sign has-space-right"></i>
                                     <em>Spatial coverage for time series resources should be set by editing the
                                     coordinates of the monitoring sites on the "Resource Specific" metadata tab.</em>
                                 </div>
@@ -139,7 +139,7 @@
                                    type="text" value="{% if spatial_coverage.units %}{{ spatial_coverage.units }}{% else %}{{ spatial_coverage.default_units }}{% endif %}">
                         </div>
 
-                        <div class="col-xs-12 space-top">
+                        <div class="col-xs-12 has-space-top">
                             <div class="row">
                                 <div class="col-xs-4 col-md-2">
                                     <h4>Spatial:</h4>
@@ -177,14 +177,14 @@
                                 </div>
 
                                 <div class="space-bottom">
-                                    <small class="text-muted space-bottom">
+                                    <small class="text-muted has-space-bottom">
                                         <div><i class="fa fa-tachometer" aria-hidden="true"></i> Coordinate Units:
                                         </div>
                                         <div><strong>{% if spatial_coverage.units %}{{ spatial_coverage.units }}{% else %}{{ spatial_coverage.default_units }}{% endif %}</strong></div>
                                     </small>
                                 </div>
 
-                                <div id="div_id_north" class="control-group space-top">
+                                <div id="div_id_north" class="control-group has-space-top">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">Latitude</span>
                                         <input type="number" class="form-control" placeholder="-90 to 90"
@@ -195,7 +195,7 @@
                                     </div>
                                 </div>
 
-                                <div id="div_id_east" class="control-group space-top">
+                                <div id="div_id_east" class="control-group has-space-top">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">Longitude</span>
                                         <input type="number" class="form-control" placeholder="-180 to 180"
@@ -206,7 +206,7 @@
                                     </div>
                                 </div>
 
-                                <div id="div_id_northlimit" class="control-group space-bottom">
+                                <div id="div_id_northlimit" class="control-group has-space-bottom">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">North Latitude</span>
                                         <input type="number" class="form-control" placeholder="-90 to 90"
@@ -217,7 +217,7 @@
                                     </div>
                                 </div>
 
-                                <div id="div_id_eastlimit" class="control-group space-bottom">
+                                <div id="div_id_eastlimit" class="control-group has-space-bottom">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">East Longitude</span>
                                         <input type="number" class="form-control" placeholder="-180 to 180"
@@ -228,7 +228,7 @@
                                     </div>
                                 </div>
 
-                                <div id="div_id_southlimit" class="control-group space-bottom">
+                                <div id="div_id_southlimit" class="control-group has-space-bottom">
                                     <div class="input-group">
                                         <span class="input-group-addon coordinates-label-addon">South Latitude</span>
                                         <input type="number" class="form-control" placeholder="-90 to 90"
@@ -253,7 +253,7 @@
                                 {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
                                 {% if cm.resource_type == "CompositeResource" %}
                                     <button id="btn-update-resource-spatial-coverage"
-                                            type="button" class="btn btn-info space-top"
+                                            type="button" class="btn btn-info has-space-top"
                                             {% if not cm.has_logical_spatial_coverage %}
                                             style="display: none"
                                             {% endif %}>
@@ -280,7 +280,7 @@
 
                                 <div id="coverageMap" style="height:350px"></div>
 
-                                <button id="spatial-coverage-save" type="button" class="btn btn-primary pull-right btn-form-submit space-top"
+                                <button id="spatial-coverage-save" type="button" class="btn btn-primary pull-right btn-form-submit has-space-top"
                                         style="display: none;">Save changes
                                 </button>
                             </div>
@@ -289,7 +289,7 @@
                 </form>
             </div>
             <div class="col-xs-12">
-                <div class="row space-top">
+                <div class="row has-space-top">
                     <div class="col-xs-4 col-md-2">
                         <h4>Temporal:</h4>
                     </div>
@@ -368,7 +368,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-xs-12 space-top">
+                                <div class="col-xs-12 has-space-top">
                                     <button type="button" class="btn btn-primary pull-right btn-form-submit"
                                             style="display: none;">Save changes
                                     </button>
@@ -384,7 +384,7 @@
         {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
         {% if cm.resource_type == "CompositeResource" %}
             <button id="btn-update-resource-temporal-coverage"
-                    type="button" class="btn btn-info space-top"
+                    type="button" class="btn btn-info has-space-top"
                     {% if not cm.has_logical_temporal_coverage %}
                     style="display: none"
                     {% endif %}>

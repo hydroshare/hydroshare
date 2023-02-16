@@ -181,13 +181,13 @@ class OriginalCoverageRaster(AbstractMetaDataElement):
 
         with root_div:
             html_tags.legend('Spatial Reference')
-            html_tags.div('Coordinate Reference System', cls='text-muted space-top')
+            html_tags.div('Coordinate Reference System', cls='text-muted has-space-top')
             html_tags.div(self.value.get('projection', ''))
-            html_tags.div('Coordinate Reference System Unit', cls='text-muted space-top')
+            html_tags.div('Coordinate Reference System Unit', cls='text-muted has-space-top')
             html_tags.div(self.value['units'])
-            html_tags.div('Datum', cls='text-muted space-top')
+            html_tags.div('Datum', cls='text-muted has-space-top')
             html_tags.div(self.value.get('datum', ''))
-            html_tags.div('Coordinate String', cls='text-muted space-top')
+            html_tags.div('Coordinate String', cls='text-muted has-space-top')
             html_tags.div(self.value.get('projection_string', ''), style="word-break: break-all;")
             html_tags.h4('Extent', cls='space-top')
             with html_tags.table(cls='custom-table'):
