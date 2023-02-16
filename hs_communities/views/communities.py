@@ -96,10 +96,10 @@ class CommunityView(TemplateView):
 
                 # exclude groups that are already invited or members.
                 for g in groups.filter(gaccess__active=True) \
-                          .exclude(Q(invite_g2gcr__community=community) & Q(invite_g2gcr__redeemed=False)) \
-                          .exclude(g2gcp__community=community) \
-                          .order_by("name"):
-                      context["groups"].append(group_json(g))
+                        .exclude(Q(invite_g2gcr__community=community) & Q(invite_g2gcr__redeemed=False)) \
+                        .exclude(g2gcp__community=community) \
+                        .order_by("name"):
+                    context["groups"].append(group_json(g))
 
                 # list of all available communities
                 context["all_communities"] = []
