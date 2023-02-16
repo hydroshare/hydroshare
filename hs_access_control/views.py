@@ -18,7 +18,7 @@ from .enums import (
     CommunityRequestEvents,
     CommunityJoinRequestTypes,
 )
-from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
+from hs_access_control.models.privilege import PrivilegeCodes
 
 logger = logging.getLogger(__name__)
 
@@ -323,7 +323,6 @@ class GroupView(GroupCommunityViewMixin):
         return err_msg, req_params
 
     def post(self, *args, **kwargs):
-        message = ''
         validation_err_msg, req_params = self.validate_request_parameters(kwargs)
         if validation_err_msg:
             return error_response(validation_err_msg)
@@ -344,13 +343,13 @@ class GroupView(GroupCommunityViewMixin):
 
             if action == CommunityActions.APPROVE:
                 # group owner accepting an invitation for a group to join a community
-                self.approve_to_join(request_type=CommunityJoinRequestTypes.COMMUNITY_INVITING, group=group,
-                                     community=community)
+                return self.approve_to_join(request_type=CommunityJoinRequestTypes.COMMUNITY_INVITING, group=group,
+                                            community=community)
 
             elif action == CommunityActions.DECLINE:  # decline an invitation from a community
                 # group owner declining an invitation for a group to join a community
-                self.decline_to_join(request_type=CommunityJoinRequestTypes.COMMUNITY_INVITING, group=group,
-                                     community=community)
+                return self.decline_to_join(request_type=CommunityJoinRequestTypes.COMMUNITY_INVITING, group=group,
+                                            community=community)
 
             elif action == CommunityActions.JOIN:  # request to join a community
                 # group owner making a request to join a community
@@ -400,14 +399,6 @@ class GroupView(GroupCommunityViewMixin):
 
         if denied:
             return error_response(denied)
-
-        # build a JSON object that contains the results of the query
-        context = {}
-        context['denied'] = denied  # empty string means ok
-        context['message'] = message
-        context['user'] = user_json(user)
-        context['group'] = group_json(group)
-        return JsonResponse(context)
 
     def get(self, *args, **kwargs):
         gid = kwargs['gid']
@@ -527,6 +518,23 @@ class CommunityView(GroupCommunityViewMixin):
         if uid is None and action == CommunityActions.OWNER and action is not None:
             err_msg = "id for the community owner is not provided"
             return err_msg, req_params
+
+        if uid is not None:
+            try:
+                int(uid)
+            except ValueError:
+                try:
+                    user = User.objects.get(username=uid)
+                    uid = user.id
+                except User.DoesNotExist:
+                    err_message = "user id {} not found".format(uid)
+                    return err_message
+            try:
+                User.objects.get(id=uid)
+            except User.DoesNotExist:
+                err_message = "user id {} not found".format(uid)
+                return err_message
+
         req_params['uid'] = uid
 
         addrem = kwargs.get('addrem', None)
@@ -552,7 +560,6 @@ class CommunityView(GroupCommunityViewMixin):
         return groups
 
     def post(self, *args, **kwargs):
-        message = ""
         validation_err_msg, req_params = self.validate_request_parameters(kwargs)
         if validation_err_msg:
             return error_response(validation_err_msg)
@@ -578,13 +585,13 @@ class CommunityView(GroupCommunityViewMixin):
 
         if action == CommunityActions.APPROVE:  # approve a request from a group
             group = Group.objects.get(id=gid)
-            self.approve_to_join(request_type=CommunityJoinRequestTypes.GROUP_REQUESTING, group=group,
-                                 community=community)
+            return self.approve_to_join(request_type=CommunityJoinRequestTypes.GROUP_REQUESTING, group=group,
+                                        community=community)
 
         elif action == CommunityActions.DECLINE:  # decline a request from a group
             group = Group.objects.get(id=gid)
-            self.decline_to_join(request_type=CommunityJoinRequestTypes.GROUP_REQUESTING, group=group,
-                                 community=community)
+            return self.decline_to_join(request_type=CommunityJoinRequestTypes.GROUP_REQUESTING, group=group,
+                                        community=community)
 
         elif action == CommunityActions.INVITE:
             group = Group.objects.get(id=gid)
@@ -654,15 +661,7 @@ class CommunityView(GroupCommunityViewMixin):
 
         if denied:
             return error_response(denied)
-        # build a JSON object that contains the results of the query
-        context = {}
-        context['denied'] = denied
-        context['message'] = message
-        context['user'] = user_json(user)
-        context['community'] = community_json(community)
-        context['is_admin'] = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
-                                                                         privilege=PrivilegeCodes.OWNER).exists() else 0
-        return JsonResponse(context)
+        return JsonResponse({"message": "success"})
 
 
 class CommunityRequestView(View):

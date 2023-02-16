@@ -4,6 +4,7 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from hs_access_control.enums import CommunityActions, CommunityJoinRequestTypes
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes
 
@@ -407,89 +408,71 @@ class GroupCommunityRequest(models.Model):
 
         self.save()
 
-    def approve_request(self, responder, privilege=PrivilegeCodes.VIEW):
+    def approve_request(self, responder):
         """ approve a request as the owner of the community receiving the request to join """
-        assert (isinstance(responder, User))
-        if self.redeemed:
-            message = "Request is completed and cannot be approved."
-            return message, False
-        
-        if responder.uaccess.owns_community(self.community):
-            self.community_owner = responder
-            self.privilege = privilege
-            self.redeemed = True
-            self.approved = True
-            self.when_community = timezone.now()
-            self.save()
-            self.community_owner.uaccess.share_community_with_group(
-                self.community, self.group, self.privilege)
-            message = "Request to connect group '{}' to community '{}' approved."\
-                .format(self.group.name, self.community.name)
-            return message, True
-        else:
-            message = "You do not own the community and cannot approve this request."
-            return message, False   
-        
+
+        return self._act_on_group_community_request(user=responder,
+                                                    request_type=CommunityJoinRequestTypes.GROUP_REQUESTING,
+                                                    action_type=CommunityActions.APPROVE)
+
     def accept_invitation(self, responder):
         """ approve a request as the owner of the group being invited """
-        assert (isinstance(responder, User))
-        if self.redeemed:
-            message = "Request is completed and cannot be approved."
-            return message, False
-        if responder.uaccess.owns_group(self.group):
-            self.group_owner = responder
-            self.redeemed = True
-            self.approved = True
-            self.when_group = timezone.now()
-            self.save()
-            message = "Request to connect group '{}' to community '{}' approved."\
-                .format(self.group.name, self.community.name)
-            self.community_owner.uaccess.share_community_with_group(
-                self.community, self.group, self.privilege)
-            return message, True
-        else:
-            message = "You do not own the group and cannot approve this request."
-            return message, False
+
+        return self._act_on_group_community_request(user=responder,
+                                                    request_type=CommunityJoinRequestTypes.COMMUNITY_INVITING,
+                                                    action_type=CommunityActions.APPROVE)
 
     def decline_invitation(self, responder):
         """ decline a request, as an owner of the group being invited """
-        assert (isinstance(responder, User))
-        if self.redeemed:
-            message = "Request is completed and cannot be declined."
-            return message, False
-
-        if responder.uaccess.owns_group(self.group):
-            self.group_owner = responder
-            self.redeemed = True
-            self.approved = False
-            self.when_group = timezone.now()
-            self.save()
-            message = "Request to connect group '{}' to community '{}' declined."\
-                .format(self.group.name, self.community.name)
-            return message, True
-        else:
-            message = "You do not own the group and cannot decline this request."
-            return message, False
+        return self._act_on_group_community_request(user=responder,
+                                                    request_type=CommunityJoinRequestTypes.COMMUNITY_INVITING,
+                                                    action_type=CommunityActions.DECLINE)
 
     def decline_group_request(self, responder):
-        """ decline a request, as the owner of the community """
-        assert (isinstance(responder, User))
+        """decline a request, as the owner of the community"""
+
+        return self._act_on_group_community_request(user=responder,
+                                                    request_type=CommunityJoinRequestTypes.GROUP_REQUESTING,
+                                                    action_type=CommunityActions.DECLINE)
+
+    def _act_on_group_community_request(self, user, request_type, action_type):
+        """helper method to support acting on request related to group joining a community"""
+
+        assert isinstance(user, User)
+        assert request_type in (CommunityJoinRequestTypes.GROUP_REQUESTING,
+                                CommunityJoinRequestTypes.COMMUNITY_INVITING)
+        assert action_type in (CommunityActions.APPROVE, CommunityActions.DECLINE)
+
         if self.redeemed:
-            message = "Request is completed and cannot be declined."
+            message = f"Request is completed and cannot be {action_type.value}d."
             return message, False
-        if responder.uaccess.owns_community(self.community):
-            self.community_owner = responder
-            self.privilege = PrivilegeCodes.VIEW
-            self.redeemed = True
-            self.approved = False
-            self.when_community = timezone.now()
-            self.save()
-            message = "Request to connect group '{}' to community '{}' declined."\
-                .format(self.group.name, self.community.name)
-            return message, True
+
+        if request_type == CommunityJoinRequestTypes.GROUP_REQUESTING:
+            if not user.uaccess.owns_community(self.community):
+                message = f"You do not own the community and cannot {action_type.value} this request."
+                return message, False
+            else:
+                self.community_owner = user
+                self.privilege = PrivilegeCodes.VIEW
+                self.when_community = timezone.now()
+        elif not user.uaccess.owns_group(self.group):   # community invited group to join
+            message = f"You do not own the group and cannot {action_type.value} this request."
+            return message, False
         else:
-            message = "You do not own the community and cannot decline this request."
-            return message, False
+            self.group_owner = user
+            self.when_group = timezone.now()
+
+        self.redeemed = True
+        self.approved = action_type == CommunityActions.APPROVE
+        self.save()
+        if action_type == CommunityActions.APPROVE:
+            self.community_owner.uaccess.share_community_with_group(
+                self.community, self.group, self.privilege)
+
+        message = f"Request to connect group '{self.group.name}' to " \
+                  f"community '{self.community.name}' {action_type.value}d."
+
+        return message, True
 
     @classmethod
     def remove(cls, requester, **kwargs):

@@ -16,7 +16,7 @@ from hs_access_control.models.privilege import (
 from hs_access_control.models.group import GroupAccess, GroupMembershipRequest
 from hs_access_control.models.exceptions import PolymorphismError
 from hs_access_control.models.community import Community, RequestCommunity
-from hs_access_control.models.invite import GroupCommunityRequest
+
 
 #############################################
 # Methods and data for users

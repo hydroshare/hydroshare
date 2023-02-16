@@ -11,7 +11,14 @@ from django.views.generic import TemplateView
 
 from hs_access_control.models import Community, GroupCommunityRequest, RequestCommunity
 from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
-from hs_access_control.views import community_json, group_community_request_json, group_json, user_json, community_request_json
+from hs_access_control.views import (
+    community_json,
+    group_community_request_json,
+    group_json,
+    user_json,
+    community_request_json,
+)
+
 from hs_communities.models import Topic
 from hs_core.views import add_generic_context
 
@@ -72,11 +79,6 @@ class CommunityView(TemplateView):
                                                                       privilege=PrivilegeCodes.OWNER).exists() else 0
                 context["is_admin"] = is_admin
                 context["user"] = user_json(user)
-
-                # list of groups that the user has joined
-                # groups = user.uaccess.my_groups
-                # active_groups = [group_json(g) for g in groups if g.gaccess.active]
-                # context['user_groups_joined'] = active_groups
 
                 # groups that can be invited are those that are not already invited or members.
                 context["groups"] = []
