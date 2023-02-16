@@ -2532,37 +2532,15 @@ def request_new_community(request, *args, **kwargs):
 class GroupView(TemplateView):
     template_name = "pages/group.html"
 
-    def hydroshare_denied(self, gid, cid=None):
-        user = self.request.user
-        if not user or not user.is_authenticated:
-            message = "You must be logged in to access this function."
-            logger.error(message)
-            return message
-
+    def hydroshare_denied(self, gid):
         try:
-            group = Group.objects.get(id=gid)
+            Group.objects.get(id=gid)
         except Group.DoesNotExist:
             message = "group id {} not found".format(gid)
             logger.error(message)
             return message
-
-        if user.uaccess.owns_group(group):
-            if cid is None:
-                return ""
-            else:
-                community = Community.objects.filter(id=cid)
-                if community.count() < 1:
-                    message = "community id {} not found".format(cid)
-                    logger.error(message)
-                    return message
-                else:
-                    return ""
-
-        else:
-            message = "user {} ({}) does not own group {} ({})"\
-                      .format(user.username, user.id, group.name, group.id)
-            logger.error(message)
-            return message
+        
+        return ''
 
     def dispatch(self, *args, **kwargs):
         return super(GroupView, self).dispatch(*args, **kwargs)
@@ -2573,64 +2551,57 @@ class GroupView(TemplateView):
         group_id = kwargs["group_id"]
         g = Group.objects.select_related("gaccess").get(pk=group_id)
 
-        if "cid" in kwargs:
-            cid = kwargs["community_id"]
-        else:
-            cid = None
-
-        denied = self.hydroshare_denied(group_id, cid=cid)
-        communitiesContext = {}
+        denied = self.hydroshare_denied(group_id)
+        data = {} # JSON serializable data to be used in Vue app
 
         if denied == "":
-            # user = self.request.user
             group = Group.objects.get(id=group_id)
 
-            communitiesContext["denied"] = denied  # empty string means ok
-            communitiesContext["message"] = message
-            communitiesContext["group"] = group
-            communitiesContext["gid"] = group_id
+            data["denied"] = denied  # empty string means ok
+            data["message"] = message
+            data["gid"] = group_id
 
             # communities joined
-            communitiesContext["joined"] = []
+            data["joined"] = []
             for c in Community.objects.filter(c2gcp__group=group).order_by('name'):
-                communitiesContext["joined"].append(community_json(c))
+                data["joined"].append(community_json(c))
 
             # pending requests from this group
-            communitiesContext["pending"] = []
+            data["pending"] = []
             for r in GroupCommunityRequest.objects.filter(
                     group=group, redeemed=False)\
                     .order_by("community__name"):
-                communitiesContext["pending"].append(group_community_request_json(r))
+                data["pending"].append(group_community_request_json(r))
 
             # Communities that can be joined.
-            communitiesContext["available_to_join"] = []
+            data["available_to_join"] = []
             for c in Community.objects.filter(active=True) \
                     .exclude(closed=True) \
                     .exclude(Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
                     .exclude(c2gcp__group=group) \
                     .order_by("name"):
-                communitiesContext["available_to_join"].append(community_json(c))
+                data["available_to_join"].append(community_json(c))
 
             # list of all available communities
-            communitiesContext["all_communities"] = []
+            data["all_communities"] = []
             for c in Community.objects.order_by("name"):
-                communitiesContext["all_communities"].append(community_json(c))
+                data["all_communities"].append(community_json(c))
 
             # requests that were declined by others
-            communitiesContext["group_declined"] = []
+            data["group_declined"] = []
             for r in GroupCommunityRequest.objects.filter(
                     group=group, redeemed=True, approved=False,
                     when_group__lt=F("when_community")).order_by("community__name"):
-                communitiesContext["group_declined"].append(group_community_request_json(r))
+                data["group_declined"].append(group_community_request_json(r))
 
             # requests that were declined by us
-            communitiesContext["community_declined"] = []
+            data["community_declined"] = []
             for r in GroupCommunityRequest.objects.filter(
                     group=group, redeemed=True, approved=False,
                     when_group__gt=F("when_community")).order_by("community__name"):
-                communitiesContext["community_declined"].append(r)
+                data["community_declined"].append(r)
         else:  # non-empty denied means an error.
-            communitiesContext["denied"] = denied
+            data["denied"] = denied
 
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
@@ -2646,10 +2617,8 @@ class GroupView(TemplateView):
         )
 
         context["group"] = g
-        context["gid"] = g.id
         context["view_users"] = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
         context["add_view_user_form"] = AddUserForm()
-        context["communities"] = communitiesContext
 
         if self.request.user.is_authenticated:
             group_members = g.gaccess.members
@@ -2684,11 +2653,12 @@ class GroupView(TemplateView):
                 group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 
             context["group_resources"] = group_resources
-            context["profile_user"] = u
+            data["is_group_owner"] = u.is_group_owner
         else:
             public_group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
             context["group_resources"] = public_group_resources
 
+        context["data"] = data
         return context
 
 

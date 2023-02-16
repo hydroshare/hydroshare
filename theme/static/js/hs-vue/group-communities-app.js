@@ -15,11 +15,13 @@ let groupCommunitiesApp = new Vue({
   },
   beforeMount() {
     // Load data
-    this.groupId = JSON.parse(document.getElementById('group_id').textContent);
-    this.isGroupOwner = JSON.parse(document.getElementById('is_group_owner').textContent);
-    this.joined = JSON.parse(document.getElementById('joined').textContent);
-    this.pending = JSON.parse(document.getElementById('pending').textContent);
-    this.availableToJoin = JSON.parse(document.getElementById('available_to_join').textContent);
+    const appData = JSON.parse(document.getElementById('communities-app-data').textContent);
+    
+    this.isGroupOwner = appData.is_group_owner;
+    this.groupId = appData.gid;
+    this.joined = appData.joined;
+    this.pending = appData.pending;
+    this.availableToJoin = appData.available_to_join;
   },
   // watch: {
       

@@ -1,9 +1,5 @@
 <!-- Load context data needed in Vue app -->
-{{ gid|json_script:"group_id" }}
-{{ profile_user.is_group_owner|json_script:"is_group_owner" }}
-{{ communities.joined|json_script:"joined" }}
-{{ communities.pending|json_script:"pending" }}
-{{ communities.available_to_join|json_script:"available_to_join" }}
+{{ data|json_script:"communities-app-data" }}
 
 <div id="group-communities" class="flex gap-2">
   <div v-if="isGroupOwner" class="group-communities--sidebar">
