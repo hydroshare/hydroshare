@@ -11,13 +11,7 @@
 {% include 'hs_communities/communities-nav.html' with active='my_communities' %}
 
 <!-- Load context data needed in Vue app -->
-{{ community|json_script:"community" }}
-{{ all_communities|json_script:"all_communities" }}
-{{ is_admin|json_script:"is_admin" }}
-{{ groups|json_script:"groups" }}
-{{ members|json_script:"members" }}
-{{ pending|json_script:"pending" }}
-{{ czo_community|json_script:"czo_community" }}
+{{ data|json_script:"community-app-data" }}
 
 {# These components needs to be included first so they are available before this app initializes #}
 {% include "includes/profile-card.html" %}
@@ -32,6 +26,7 @@
   style="background-image: url({% static 'img/czo-logo-wide.png' %})">
 </div>
 {% endif %}
+
 <div id="community-app" class="container">
   <div v-if="community" class="container full-width" style="padding: 0;">
       <div class="container">
@@ -43,7 +38,7 @@
               <div class="has-space-right">
                   <div v-if="community.logo" class="group-image-wrapper group-image-wrapper-medium">
                       <div class="group-image"
-                      style="background-image: url({{ community.logo }})"></div>
+                        style="background-image: url({{ community.logo }})"></div>
                   </div>
                   <div v-else class="group-image-wrapper group-image-wrapper-medium">
                       <div class="group-image group-preview-image-default"
@@ -54,7 +49,7 @@
 
               <div class="flex-grow-1">
                   <div class="community-title-container flex justify-space-between align-flex-start">
-                      <h2 class="community-title is-marginless">${ community.name }</h2>
+                      <h2 class="community-title is-marginless">{{ community.name }}</h2>
                   </div>
 
                   <h4 v-if="community.purpose" class="text-muted">{{ community.purpose|linebreaks }}</h4>
@@ -62,11 +57,11 @@
                   <!-- Community Info -->
                   <div v-if="community.email || community.url" class="community-info">
                       <div v-if="community.url" class="text-muted">
-                          <i class="fa fa-link"></i> <a :href="community.url" target="_blank">${ community.url }</a>
+                          <i class="fa fa-link"></i> <a :href="community.url" target="_blank">{{ community.url }}</a>
                       </div>
 
                       <div v-if="community.email" class="text-muted">
-                          <i class="fa fa-envelope-o"></i> <a :href="'mailto:' + community.email">${ community.email }</a>
+                          <i class="fa fa-envelope-o"></i> <a :href="'mailto:' + community.email">{{ community.email }}</a>
                       </div>
                   </div>
               </div>

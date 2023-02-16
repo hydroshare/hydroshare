@@ -48,6 +48,7 @@ class CommunityView(TemplateView):
     def get_context_data(self, *args, **kwargs):
         message = ''
         context = {}
+        data = {} # JSON serializable data to be used in Vue app
 
         if "community_id" in kwargs:
             cid = int(kwargs["community_id"])
@@ -77,11 +78,11 @@ class CommunityView(TemplateView):
             if user.is_authenticated:
                 is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
                                                                       privilege=PrivilegeCodes.OWNER).exists() else 0
-                context["is_admin"] = is_admin
-                context["user"] = user_json(user)
+                data["is_admin"] = is_admin
+                data["user"] = user_json(user)
 
                 # Groups that can be invited
-                context["groups"] = []
+                data["groups"] = []
 
                 if is_admin:
                     # Community owners can invite any group
@@ -99,48 +100,52 @@ class CommunityView(TemplateView):
                         .exclude(Q(invite_g2gcr__community=community) & Q(invite_g2gcr__redeemed=False)) \
                         .exclude(g2gcp__community=community) \
                         .order_by("name"):
-                    context["groups"].append(group_json(g))
+                    data["groups"].append(group_json(g))
 
                 # list of all available communities
-                context["all_communities"] = []
+                data["all_communities"] = []
                 for c in Community.objects.order_by("name"):
-                    context["all_communities"].append(community_json(c))
+                    data["all_communities"].append(community_json(c))
 
-                context["pending"] = []
+                data["pending"] = []
                 for r in GroupCommunityRequest.objects.filter(
                         community=community, redeemed=False).order_by("group__name"):
-                    context["pending"].append(group_community_request_json(r))
+                    data["pending"].append(group_community_request_json(r))
 
                 # requests that were declined by this commmunity
-                context["community_declined"] = []
+                data["community_declined"] = []
                 for r in GroupCommunityRequest.objects.filter(
                         community=community, redeemed=True, approved=False,
                         when_group__lt=F("when_community")).order_by("group__name"):
-                    context["community_declined"].append(group_community_request_json(r))
+                    data["community_declined"].append(group_community_request_json(r))
 
                 # requests that were declined by the groups invited
-                context["group_declined"] = []
+                data["group_declined"] = []
                 for r in GroupCommunityRequest.objects.filter(
                         community=community, redeemed=True, approved=False,
                         when_group__gt=F("when_community")).order_by("group__name"):
-                    context["group_declined"].append(group_community_request_json(r))
+                    data["group_declined"].append(group_community_request_json(r))
 
                 # group requests to be approved
-                context["approvals"] = []
+                data["approvals"] = []
                 for r in GroupCommunityRequest.objects.filter(
                         community=Community.objects.get(id=int(cid)),
                         group__gaccess__active=True,
                         community_owner__isnull=True,
                         redeemed=False).order_by("group__name"):
-                    context["approvals"].append(group_community_request_json(r))
+                    data["approvals"].append(group_community_request_json(r))
 
             # Both authenticated and anonymous users can make use of the data below
             context["community_resources"] = community_resources
             context["grpfilter"] = grpfilter
-            context["czo_community"] = "CZO National" in community.name
             context["denied"] = denied
             context["message"] = message
+            context["czo_community"] = "CZO National" in community.name
+            context["banner"] = community.banner
+
+            # community data is used both by the vue app and the template render
             context["community"] = community_json(community)
+            data["community"] = community_json(community)
 
             # groups that have shared resources with the community
             raw_groups = community.groups_with_public_resources()
@@ -151,10 +156,11 @@ class CommunityView(TemplateView):
             context["shared_by_groups"] = shared_by_groups
 
             # group members of community
-            context["members"] = []
+            data["members"] = []
             for g in Group.objects.filter(g2gcp__community=community).order_by("name"):
-                context["members"].append(group_json(g))
+                data["members"].append(group_json(g))
 
+            context['data'] = data
             return context
 
         else:  # non-empty denied means an error.

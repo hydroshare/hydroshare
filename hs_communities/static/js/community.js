@@ -8,7 +8,6 @@ $(document).ready(function () {
       availableToInvite: null,
       members: null,
       community: null,
-      isCzoCommunity: false,
       allCommunities: null,
       isAdmin: null,
       pending: null,
@@ -59,13 +58,14 @@ $(document).ready(function () {
     },
     beforeMount() {
       // Load data
-      this.community = JSON.parse(document.getElementById('community').textContent);
-      this.isCzoCommunity = JSON.parse(document.getElementById('czo_community').textContent);
-      this.allCommunities = JSON.parse(document.getElementById('all_communities').textContent);
-      this.isAdmin = JSON.parse(document.getElementById('is_admin').textContent);
-      this.availableToInvite = JSON.parse(document.getElementById('groups').textContent);
-      this.members = JSON.parse(document.getElementById('members').textContent);
-      this.pending = JSON.parse(document.getElementById('pending').textContent);
+      const appData = JSON.parse(document.getElementById('community-app-data').textContent);
+
+      this.community = appData.community;
+      this.allCommunities = appData.all_communities;
+      this.isAdmin = appData.is_admin;
+      this.availableToInvite = appData.groups;
+      this.members = appData.members;
+      this.pending = appData.pending;
     },
     mounted() {
       // Styling and placeholder for user auto-complete
