@@ -48,7 +48,7 @@ class CommunityView(TemplateView):
     def get_context_data(self, *args, **kwargs):
         message = ''
         context = {}
-        data = {} # JSON serializable data to be used in Vue app
+        data = {}   # JSON serializable data to be used in Vue app
 
         if "community_id" in kwargs:
             cid = int(kwargs["community_id"])

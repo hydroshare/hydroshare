@@ -2539,7 +2539,7 @@ class GroupView(TemplateView):
             message = "group id {} not found".format(gid)
             logger.error(message)
             return message
-        
+
         return ''
 
     def dispatch(self, *args, **kwargs):
@@ -2552,7 +2552,7 @@ class GroupView(TemplateView):
         g = Group.objects.select_related("gaccess").get(pk=group_id)
 
         denied = self.hydroshare_denied(group_id)
-        data = {} # JSON serializable data to be used in Vue app
+        data = {}   # JSON serializable data to be used in Vue app
 
         if denied == "":
             group = Group.objects.get(id=group_id)
