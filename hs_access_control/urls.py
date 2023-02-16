@@ -3,8 +3,6 @@ from hs_access_control import views
 
 urlpatterns = [
     # Community responders return JSON
-    url(r'^_internal/community/(?P<cid>[0-9]+)/$',
-        views.CommunityView.as_view(), name='access_manage_community'),
     url(r'^_internal/community/(?P<cid>[0-9]+)/(?P<action>[a-z]+)/(?P<gid>[0-9]+)/$',
         views.CommunityView.as_view(), name='access_manage_community'),
     url(r'^_internal/community/(?P<cid>[0-9]+)/(?P<action>owner)/(?P<uid>[a-zA-Z0-9]+)/(?P<addrem>add|remove)$',
