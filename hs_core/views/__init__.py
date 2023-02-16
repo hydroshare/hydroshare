@@ -2595,14 +2595,6 @@ class GroupView(TemplateView):
             for c in Community.objects.filter(c2gcp__group=group).order_by('name'):
                 communitiesContext["joined"].append(community_json(c))
 
-            # invites from communities to be approved or declined
-            # communitiesContext["approvals"] = []
-            # for r in GroupCommunityRequest.objects.filter(
-            #         group=group,
-            #         group__gaccess__active=True,
-            #         group_owner__isnull=True).order_by("community__name"):
-            #     communitiesContext["approvals"].append(group_community_request_json(r))
-
             # pending requests from this group
             communitiesContext["pending"] = []
             for r in GroupCommunityRequest.objects.filter(
@@ -2624,24 +2616,19 @@ class GroupView(TemplateView):
             for c in Community.objects.order_by("name"):
                 communitiesContext["all_communities"].append(community_json(c))
 
-            # list of groups the user has joined
-            # groups = user.uaccess.my_groups
-            # active_groups = [group_json(g) for g in groups if g.gaccess.active]
-            # communitiesContext['user_groups_joined'] = active_groups
-
             # requests that were declined by others
-            communitiesContext["they_declined"] = []
+            communitiesContext["group_declined"] = []
             for r in GroupCommunityRequest.objects.filter(
                     group=group, redeemed=True, approved=False,
                     when_group__lt=F("when_community")).order_by("community__name"):
-                communitiesContext["they_declined"].append(group_community_request_json(r))
+                communitiesContext["group_declined"].append(group_community_request_json(r))
 
             # requests that were declined by us
-            communitiesContext["we_declined"] = []
+            communitiesContext["community_declined"] = []
             for r in GroupCommunityRequest.objects.filter(
                     group=group, redeemed=True, approved=False,
                     when_group__gt=F("when_community")).order_by("community__name"):
-                communitiesContext["we_declined"].append(r)
+                communitiesContext["community_declined"].append(r)
         else:  # non-empty denied means an error.
             communitiesContext["denied"] = denied
 

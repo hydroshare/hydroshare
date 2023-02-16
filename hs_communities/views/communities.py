@@ -80,13 +80,26 @@ class CommunityView(TemplateView):
                 context["is_admin"] = is_admin
                 context["user"] = user_json(user)
 
-                # groups that can be invited are those that are not already invited or members.
+                # Groups that can be invited
                 context["groups"] = []
-                for g in Group.objects.filter(gaccess__active=True) \
-                        .exclude(Q(invite_g2gcr__community=community) & Q(invite_g2gcr__redeemed=False)) \
-                        .exclude(g2gcp__community=community) \
-                        .order_by("name"):
-                    context["groups"].append(group_json(g))
+
+                if is_admin:
+                    # Community owners can invite any group
+                    groups = Group.objects
+
+                    # forms needed for admin actions
+                    hs_core_dublin_context = add_generic_context(self.request, None)
+                    context.update(hs_core_dublin_context)
+                else:
+                    # Other users can invite groups they own
+                    groups = user.uaccess.owned_groups
+
+                # exclude groups that are already invited or members.
+                for g in groups.filter(gaccess__active=True) \
+                          .exclude(Q(invite_g2gcr__community=community) & Q(invite_g2gcr__redeemed=False)) \
+                          .exclude(g2gcp__community=community) \
+                          .order_by("name"):
+                      context["groups"].append(group_json(g))
 
                 # list of all available communities
                 context["all_communities"] = []
@@ -98,19 +111,19 @@ class CommunityView(TemplateView):
                         community=community, redeemed=False).order_by("group__name"):
                     context["pending"].append(group_community_request_json(r))
 
-                # requests that were declined by us
-                context["we_declined"] = []
+                # requests that were declined by this commmunity
+                context["community_declined"] = []
                 for r in GroupCommunityRequest.objects.filter(
                         community=community, redeemed=True, approved=False,
                         when_group__lt=F("when_community")).order_by("group__name"):
-                    context["we_declined"].append(group_community_request_json(r))
+                    context["community_declined"].append(group_community_request_json(r))
 
-                # requests that were declined by others
-                context["they_declined"] = []
+                # requests that were declined by the groups invited
+                context["group_declined"] = []
                 for r in GroupCommunityRequest.objects.filter(
                         community=community, redeemed=True, approved=False,
                         when_group__gt=F("when_community")).order_by("group__name"):
-                    context["they_declined"].append(group_community_request_json(r))
+                    context["group_declined"].append(group_community_request_json(r))
 
                 # group requests to be approved
                 context["approvals"] = []
@@ -120,10 +133,6 @@ class CommunityView(TemplateView):
                         community_owner__isnull=True,
                         redeemed=False).order_by("group__name"):
                     context["approvals"].append(group_community_request_json(r))
-
-                if is_admin:
-                    hs_core_dublin_context = add_generic_context(self.request, None)
-                    context.update(hs_core_dublin_context)
 
             # Both authenticated and anonymous users can make use of the data below
             context["community_resources"] = community_resources

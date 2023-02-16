@@ -6,7 +6,7 @@
 {{ communities.available_to_join|json_script:"available_to_join" }}
 
 <div id="group-communities" class="flex gap-2">
-  <div class="group-communities--sidebar">
+  <div v-if="isGroupOwner" class="group-communities--sidebar">
     <div class="alert alert-info">
       <p>Want your Group to join a HydroShare Community? Click the button below to request that your group be added.</p>
       <button class="btn btn-default has-space-top" data-toggle="modal"
@@ -73,43 +73,39 @@
     </div>
 
     <!-- JOINED COMMUNITIES -->
-    <div>
-      <h4 class="heading">This Group is a member of the following Communities</h4> 
-      <template v-if="joined.length">
-        <div v-for="community of joined" class="group-community-card panel panel-default">
-          <div class="panel-body flex gap-1 align-center">
-            <div class="group-image-wrapper group-image-wrapper-medium has-space-right">
-              <div v-if="community.logo"
-                class="group-image-wrapper group-image-wrapper-medium">
-                <div class="group-image"
-                  :style="`background-image: url(${community.logo})`"></div>
-              </div>
-              <div v-else class="group-image-wrapper group-image-wrapper-medium">
-                <div class="group-image group-preview-image-default"
-                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
-                </div>
-              </div>
-            </div>
-            <div class="community-card--info flex-grow-1">
-              <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>
-              <p v-if="community.purpose">${ community.purpose }</p>
-              <!-- TODO (phase 2): auto share -->
-              <!-- <div class="checkbox">
-                <label :for="'auto-share-' + community.id">
-                  <input type="checkbox" :id="'auto-share-' + community.id">
-                  <div class="text-muted">Automatically share public and and published resources with this Community</div>
-                </label>
-              </div> -->
-            </div>
-            <div class="community-card--actions" v-if="isGroupOwner">
-              <button class="btn btn-default" @click="targetCommunity = community" :disabled="isLeaving[community.id]" 
-                data-toggle="modal" data-target="#leave-community-modal">Leave Community</button>
+    <h4 class="heading">This Group is a member of the following Communities</h4> 
+    <template v-if="joined.length">
+      <div v-for="community of joined" class="group-community-card panel panel-default">
+        <div class="panel-body flex gap-1 align-center">
+          <div v-if="community.logo"
+            class="group-image-wrapper group-image-wrapper-medium">
+            <div class="group-image"
+              :style="`background-image: url(${community.logo})`"></div>
+          </div>
+          <div v-else class="group-image-wrapper group-image-wrapper-medium">
+            <div class="group-image group-preview-image-default"
+                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
             </div>
           </div>
+          <div class="community-card--info flex-grow-1">
+            <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>
+            <p v-if="community.purpose">${ community.purpose }</p>
+            <!-- TODO (phase 2): auto share -->
+            <!-- <div class="checkbox">
+              <label :for="'auto-share-' + community.id">
+                <input type="checkbox" :id="'auto-share-' + community.id">
+                <div class="text-muted">Automatically share public and and published resources with this Community</div>
+              </label>
+            </div> -->
+          </div>
+          <div class="community-card--actions" v-if="isGroupOwner">
+            <button class="btn btn-default" @click="targetCommunity = community" :disabled="isLeaving[community.id]" 
+              data-toggle="modal" data-target="#leave-community-modal">Leave Community</button>
+          </div>
         </div>
-      </template>
-      <p v-else>This Group is not a member of any Communities yet.</p>
-    </div>
+      </div>
+    </template>
+    <p v-else>This Group is not a member of any Communities yet.</p>
   </div>
 
   <!-- Retract Community Join Request Modal -->
@@ -194,7 +190,7 @@
       </div>
   </div>
 
-  <div class="modal fade" id="join-communities-modal" tabindex="-1" role="dialog" aria-labelledby="joinLabel">
+  <div v-if="isGroupOwner" class="modal fade" id="join-communities-modal" tabindex="-1" role="dialog" aria-labelledby="joinLabel">
     <div class="modal-dialog" role="document">
       <!-- The template for this component needs to be included outside of a Vue app -->
       <!-- Included at the top of group.html -->

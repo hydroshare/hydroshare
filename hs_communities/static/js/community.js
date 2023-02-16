@@ -174,15 +174,17 @@ $(document).ready(function () {
       },
       cancelGroupInvitation: async function(id) {
         this.$set(this.isCancelingInvitation, id, true)
-        $("#cancel-group-invitation-modal").modal('hide')
         const url = `/access/_internal/community/${this.community.id}/retract/${id}/`
         try {
           const response = await $.post(url)
-          this.pending = response.pending
-          this.availableToInvite = response.groups
+          this.pending = response.pending;
+          this.availableToInvite = response.groups;
+          $("#cancel-group-invitation-modal").modal('hide');
+          customAlert("Retract Group Invitation", 'The invitation has been retracted', 'success', 6000, true);
         }
         catch(e) {
           console.log(e)
+          $("#cancel-group-invitation-modal").modal('hide');
           customAlert("Retract Group Invitation", 'Failed to retract invitation', 'error', 6000, true);
         }
         this.$set(this.isCancelingInvitation, id, false)
