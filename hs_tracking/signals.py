@@ -80,7 +80,6 @@ def capture_download(**kwargs):
         res_metadata['publish_date'] = kwargs['resource'].publish_date.strftime("%m/%d/%Y %H:%M:%S.%f")
     fields['resource_metadata'] = json.dumps(res_metadata)
 
-
     # format the 'download' kwargs
     msg = Variable.format_kwargs(**fields)
 

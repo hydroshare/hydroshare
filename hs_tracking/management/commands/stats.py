@@ -182,7 +182,7 @@ class Command(BaseCommand):
         # print all failed resources for debugging purposes
         for f in failed_resource_ids:
             err.error('Error processing resource: %s' % f)
-    
+
     def downloads(self, lookback=1):
         """Export just the download tracking information.
         This will be a subset of "yesterdays_variables" containing only download activities
@@ -216,7 +216,6 @@ class Command(BaseCommand):
                       'action=%s' % str(v.name),
                       vals]
             print('|'.join(values))
-        
 
     def yesterdays_variables(self, lookback=1):
 
