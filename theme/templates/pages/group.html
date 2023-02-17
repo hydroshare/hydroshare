@@ -89,7 +89,7 @@
             {% endif %}
 
             <div>
-                {% if not profile_user.is_group_member and profile_user.is_authenticated %}
+                {% if not profile_user.is_group_member and request.user.is_authenticated %}
                     <div>
                         {% if group.gaccess.active %}
                             <hr>

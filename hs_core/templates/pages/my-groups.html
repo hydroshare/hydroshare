@@ -13,7 +13,7 @@
             <div class="col-sm-12">
                 <h2 class="page-title">My Groups</h2>
             </div>
-            <div class="col-sm-3">
+            <div class="col-sm-3 has-space-bottom-2x">
                 <a class="btn btn-success" data-toggle="modal" data-target="#create-group-modal"><i class="fa fa-plus"></i> Create Group</a>
 
                 <div class="has-space-top-2x">
@@ -53,7 +53,6 @@
 
                     {% if group_membership_requests %}
                         {% for request in group_membership_requests %}
-
                             <div class="request-block">
                                 <form></form>
                                 <div class="activity-block height-fix">
@@ -95,7 +94,6 @@
                             </div>
                         {% endfor %}
                     {% endif %}
-
                 </div>
             </div>
             <div class="col-sm-9">
