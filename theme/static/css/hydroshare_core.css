@@ -2799,12 +2799,13 @@ span.you-flag {
 	width: calc(100% - 2px) !important;     /* Makes up for border width */
 }
 
-#collected-by-table {
-    border: 0 !important;
+.my-resources-table td:nth-child(3),
+.my-resources-table td:nth-child(4) {
+  min-width: 20rem;
 }
 
-#item-selectors.group-resource-list {
-    width: 100% !important;
+#collected-by-table {
+    border: 0 !important;
 }
 
 .resource-custom-table tbody td {
@@ -2836,14 +2837,7 @@ span.you-flag {
 
 #item-selectors tr > td[data-col='resource-type'], #items-discovered tr > td[data-col='resource-type'] {
     max-width: 135px;
-	min-width: 135px;
-}
-
-#item-selectors.group-resource-list tr > td:first-child {
-    padding-right: initial;
-    max-width: initial;
-    min-width: initial;
-    padding-left: 10px;
+	  min-width: 135px;
 }
 
 .dataTables_wrapper {
@@ -3378,13 +3372,13 @@ span.you-flag {
 
 /* =================================== */
 .steps-container {
-  display: flex;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  justify-content: center;
   gap: 10px;
 }
 
 .steps-container h4 {
   font-weight: bold;
+  text-align: center;
 }
 
 .step-item {
@@ -3393,6 +3387,8 @@ span.you-flag {
   flex-direction: column;
   align-items: center;
   position: relative;
+  flex: 1 1 auto;
+  margin-bottom: 2rem;
 }
 
 .step-item hr {
