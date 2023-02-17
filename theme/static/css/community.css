@@ -106,3 +106,7 @@
 .community-banner.czo-banner {
   background-size: unset;
 }
+
+#item-selectors td:nth-child(2) {
+  min-width: 20rem;
+}

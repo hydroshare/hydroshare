@@ -68,3 +68,7 @@
     align-items: flex-start;
   }
 }
+
+#item-selectors td:nth-child(2) {
+  min-width: 20rem;
+}
