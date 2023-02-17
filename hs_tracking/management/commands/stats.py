@@ -61,6 +61,12 @@ class Command(BaseCommand):
             help="current user list",
         )
         parser.add_argument(
+            "--downloads",
+            dest="downloads",
+            action="store_true",
+            help="download stats",
+        )
+        parser.add_argument(
             "--resources-details",
             dest="resources_details",
             action="store_true",
@@ -176,6 +182,41 @@ class Command(BaseCommand):
         # print all failed resources for debugging purposes
         for f in failed_resource_ids:
             err.error('Error processing resource: %s' % f)
+    
+    def downloads(self, lookback=1):
+        """Export just the download tracking information.
+        This will be a subset of "yesterdays_variables" containing only download activities
+
+        Args:
+            lookback (int, optional): Days in the past to export. Defaults to 1.
+        """
+        today_start = timezone.datetime.now().replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0)
+
+        # adjust start date for look-back option
+        yesterday_start = today_start - datetime.timedelta(days=lookback)
+        variables = hs_tracking.Variable.objects.filter(
+            timestamp__gte=yesterday_start,
+            timestamp__lt=today_start,
+            name="download"
+        )
+        for v in variables:
+            uid = v.session.visitor.user.id if v.session.visitor.user else None
+
+            # make sure values are | separated (i.e. replace legacy format)
+            vals = self.dict_spc_to_pipe(v.value)
+
+            # encode variables as key value pairs (except for timestamp)
+            values = [str(v.timestamp),
+                      'user_id=%s' % str(uid),
+                      'session_id=%s' % str(v.session.id),
+                      'action=%s' % str(v.name),
+                      vals]
+            print('|'.join(values))
+        
 
     def yesterdays_variables(self, lookback=1):
 
@@ -248,5 +289,7 @@ class Command(BaseCommand):
                 self.monthly_users_by_type(month_start, month_end)
         if options["resources_details"]:
             self.resources_details()
+        if options["downloads"]:
+            self.downloads(lookback=int(options['lookback-days']))
         if options["yesterdays_variables"]:
             self.yesterdays_variables(lookback=int(options['lookback-days']))
