@@ -116,20 +116,17 @@ def resource_first_author(content):
             first_creator = creator
             break
 
-    if first_creator.name and first_creator.relative_uri and first_creator.is_active_user:
-        return format_html('<a href="{desc}">{name}</a>',
-                           desc=first_creator.relative_uri,
-                           name=first_creator.name)
-    elif first_creator.name:
-        return format_html('<span>{name}</span>', name=first_creator.name)
-    else:
-        first_creator = content.metadata.creators.filter(order=1).first()
-        if first_creator.name:
+    if first_creator.name:
+        if first_creator.relative_uri and first_creator.is_active_user:
+            return format_html('<a href="{desc}">{name}</a>',
+                               desc=first_creator.relative_uri,
+                               name=first_creator.name)
+        else:
             return format_html('<span>{name}</span>', name=first_creator.name)
-        if first_creator.organization:
-            return format_html('<span>{name}</span>', name=first_creator.organization)
+    elif first_creator.organization:
+        return format_html('<span>{name}</span>', name=first_creator.organization)
 
-        return ''
+    return ''
 
 
 @register.filter
