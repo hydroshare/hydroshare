@@ -247,7 +247,7 @@
                         <table class="table hs-table info-table">
                             <tr v-for="value in selectedReferenceFeatures" style="padding-bottom: 20px">
                                 <td v-if="isUrl(value.value)" class="dataset-details">
-                                    <a v-if="isUrl(value.value)" target="_blank" :href="value.value"> ${value.text}</a>
+                                    <a target="_blank" :href="value.value"> ${value.text}</a>
                                     <i class="fa fa-external-link"></i>
                                 </td>
                                 <td v-else class="dataset-details">${value.text}</td>

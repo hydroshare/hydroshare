@@ -198,6 +198,10 @@ const geoconnexApp = new Vue({
         const remove = oldValue.filter((obj) =>
           newValue.every((s) => s.id !== obj.id)
         );
+
+        geoconnexApp.ajaxRemoveFeatureFromResMetadata(remove);
+        if (!this.isGeoconnexUrl(remove[0].value)) return;
+        
         try {
           geoconnexApp.selectedFeatureGroup.removeLayer(
             geoconnexApp.selectedLayerDictionary[remove[0].value]
@@ -208,7 +212,6 @@ const geoconnexApp = new Vue({
           geoconnexApp.generateAppMessage(`${message}: ${e.message}`);
           geoconnexApp.error(message, e);
         }
-        geoconnexApp.ajaxRemoveFeatureFromResMetadata(remove);
 
         // re-enable the item for selection
         geoconnexApp.features.forEach((it) => {
@@ -228,14 +231,14 @@ const geoconnexApp = new Vue({
       try {
         const promises = [];
         for (const relation of geoconnexApp.metadataRelations) {
-          if (
-            this.isUrl(relation.value) &&
-            relation.value.indexOf("geoconnex") > -1
-          ) {
+          if (this.isGeoconnexUrl(relation.value)) {
             promises.push(geoconnexApp.fetchSingleFeature(relation));
           }
+          else{
+            geoconnexApp.selectedReferenceFeatures.push(relation);
+          }
         }
-        const results = await Promise.all(promises);
+        const results = await Promise.all(promises)
         const features = results.flat().filter(Boolean);
         if (!features) {
           throw new Error("No features returned from fetch");
@@ -274,6 +277,7 @@ const geoconnexApp = new Vue({
     },
     addSelectedFeatureToMap(feature) {
       const geoconnexApp = this;
+      if (typeof feature === 'string') return;
       if (!feature.geometry) {
         geoconnexApp.fetchGeometryForSingleFeature(feature).then((geometry) => {
           feature.geometry = geometry.geometry;
@@ -290,7 +294,7 @@ const geoconnexApp = new Vue({
       const geoconnexApp = this;
       const url = `/hsapi/_internal/${geoconnexApp.resShortId}/geospatialrelation/add-metadata/`;
       const data = {
-        text: feature.text || "",
+        text: feature.text || feature,
         value: feature.uri ? feature.uri : feature,
         type: "relation"
       };
@@ -1278,13 +1282,16 @@ const geoconnexApp = new Vue({
       });
       return feature;
     },
-    isUrl(stringToTest) {
+    isUrl(stringToTest){
       try {
         new URL(stringToTest);
       } catch (_) {
         return false;
       }
       return true;
+    },
+    isGeoconnexUrl(stringToTest) {
+      return this.isUrl(stringToTest) && stringToTest.indexOf("geoconnex") > -1
     },
     trimString(longString, append = "") {
       return longString.length + append.length > geoconnexApp.stringLengthLimit
