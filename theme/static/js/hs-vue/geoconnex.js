@@ -201,7 +201,7 @@ const geoconnexApp = new Vue({
 
         geoconnexApp.ajaxRemoveFeatureFromResMetadata(remove);
         if (!this.isGeoconnexUrl(remove[0].value)) return;
-        
+
         try {
           geoconnexApp.selectedFeatureGroup.removeLayer(
             geoconnexApp.selectedLayerDictionary[remove[0].value]
@@ -233,12 +233,11 @@ const geoconnexApp = new Vue({
         for (const relation of geoconnexApp.metadataRelations) {
           if (this.isGeoconnexUrl(relation.value)) {
             promises.push(geoconnexApp.fetchSingleFeature(relation));
-          }
-          else{
+          } else {
             geoconnexApp.selectedReferenceFeatures.push(relation);
           }
         }
-        const results = await Promise.all(promises)
+        const results = await Promise.all(promises);
         const features = results.flat().filter(Boolean);
         if (!features) {
           throw new Error("No features returned from fetch");
@@ -277,7 +276,7 @@ const geoconnexApp = new Vue({
     },
     addSelectedFeatureToMap(feature) {
       const geoconnexApp = this;
-      if (typeof feature === 'string') return;
+      if (typeof feature === "string") return;
       if (!feature.geometry) {
         geoconnexApp.fetchGeometryForSingleFeature(feature).then((geometry) => {
           feature.geometry = geometry.geometry;
@@ -296,7 +295,7 @@ const geoconnexApp = new Vue({
       const data = {
         text: feature.text || feature,
         value: feature.uri ? feature.uri : feature,
-        type: "relation"
+        type: "relation",
       };
       let ajaxResult;
       $.ajax({
@@ -305,15 +304,15 @@ const geoconnexApp = new Vue({
         data: data,
         success: function (result) {
           // hsapi returns 200 even if the metadata creation fails
-          ajaxResult = result
+          ajaxResult = result;
         },
         complete: function (jqXHR, status) {
           const statusObj = JSON.parse(jqXHR.responseText);
-          if (statusObj.status === "error"){
+          if (statusObj.status === "error") {
             const message = "Error while attempting to save related feature";
             geoconnexApp.error(message, statusObj.message);
             geoconnexApp.generateAppMessage(`${message}: ${statusObj.message}`);
-          }else{
+          } else {
             geoconnexApp.log(
               `Added ${
                 feature.text ? feature.text : feature
@@ -325,7 +324,7 @@ const geoconnexApp = new Vue({
               text: feature.text ? feature.text : feature,
             });
           }
-        }
+        },
       });
     },
     ajaxRemoveFeatureFromResMetadata(relations) {
@@ -831,9 +830,7 @@ const geoconnexApp = new Vue({
           ? collectionOverride
           : feature.collection;
 
-        if (
-          geoconnexApp.ignoredFeatures[collection.id]?.includes(feature.id)
-        )
+        if (geoconnexApp.ignoredFeatures[collection.id]?.includes(feature.id))
           return;
 
         // check if layergroup exists in the "dictionary"
@@ -1260,7 +1257,9 @@ const geoconnexApp = new Vue({
       });
       const contexts = featureJsonLd["@context"];
       for (let context of contexts) {
-        const nameField = Object.keys(context).find((key) => context[key] === "schema:name");
+        const nameField = Object.keys(context).find(
+          (key) => context[key] === "schema:name"
+        );
         if (nameField) return nameField;
       }
       return "NAME";
@@ -1282,7 +1281,7 @@ const geoconnexApp = new Vue({
       });
       return feature;
     },
-    isUrl(stringToTest){
+    isUrl(stringToTest) {
       try {
         new URL(stringToTest);
       } catch (_) {
@@ -1291,7 +1290,7 @@ const geoconnexApp = new Vue({
       return true;
     },
     isGeoconnexUrl(stringToTest) {
-      return this.isUrl(stringToTest) && stringToTest.indexOf("geoconnex") > -1
+      return this.isUrl(stringToTest) && stringToTest.indexOf("geoconnex") > -1;
     },
     trimString(longString, append = "") {
       return longString.length + append.length > geoconnexApp.stringLengthLimit
@@ -1389,13 +1388,13 @@ const geoconnexApp = new Vue({
       geoconnexApp.resMode == "Edit" && geoconnexApp.fetchCollections(false);
       await geoconnexApp.loadResourceMetadataRelations();
 
-      if (geoconnexApp.resMode == "Edit"){
+      if (geoconnexApp.resMode == "Edit") {
         // wait for spatial coverage map to load before getting extent
         await geoconnexApp
-        .until((_) => coverageMap)
-        .then(() => {
-          geoconnexApp.updateAppWithResSpatialExtent();
-        });
+          .until((_) => coverageMap)
+          .then(() => {
+            geoconnexApp.updateAppWithResSpatialExtent();
+          });
       }
       geoconnexApp.fitMapToFeatures({ group: null, overrideShouldFit: true });
     }
