@@ -325,6 +325,7 @@ INSTALLED_APPS = (
     "hs_tools_resource",
     "hs_sitemap",
     "hs_collection_resource",
+    "hs_external_resource",
     "hs_tracking",
     "hs_file_types",
     "hs_composite_resource",

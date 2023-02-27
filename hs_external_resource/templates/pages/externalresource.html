@@ -1,0 +1,89 @@
+{% extends "pages/baseresource.html" %}
+{% load pages_tags mezzanine_tags crispy_forms_tags hydroshare_tags %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
+{% endblock %}
+
+{# override content_block in generice.html#}
+{% block content_block %}
+    <input type="hidden" id="edit-mode" value="{{ edit_mode }}" >
+    <input type="hidden" id="published" value="{{ cm.raccess.published }}" >
+    <input type="hidden" id="discoverable" value="{{ discoverable }}">
+    <input type="hidden" id="collection-res-id" value="{{ external_res_id }}">
+    <div class="col-sm-12 content-block">
+        {# collection content table #}
+        <div id="collection_content_div">
+            <div id="title_and_add_btn_div">
+                <h3>External Contents </h3>
+            </div>
+            <div id="collection-table-div">
+                {% if edit_mode and not cm.raccess.published %}
+                    <form id="collector-new" name="collector-new"
+                          action="/hsapi/_internal/{{ external_res_id }}/update-collection/" method="POST">
+                {% endif %}
+
+                {% if edit_mode and not cm.raccess.published %}
+                    </form>
+                    <div>
+                        <a id="btn-add-collection-resources" type="button" class="btn btn-success">
+                        <span class="glyphicon glyphicon-plus"><span
+                                class="button-label"> Add resources...</span></span>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            <hr>
+            {% block download_bag %}
+                <button id="btn-download-all" class="btn btn-default row-selector space-bottom"
+                    {% if cm.raccess.require_download_agreement %}
+                        data-target="#license-agree-dialog-bag" data-toggle="modal"
+                        data-placement="auto"
+                    {% endif %}
+                    data-bag-url="{{ cm.bag_url }}">
+                    <span class="glyphicon glyphicon-download-alt"></span>
+                    <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
+                </button>
+                <div>
+                    <a target="_blank" href="https://help.hydroshare.org/creating-and-managing-resources/view-and-download-a-resource">Learn more about the BagIt download</a>
+                </div>
+            {% endblock %}
+        </div>
+    </div>
+
+    {#    modal div: warning message  #}
+    <div class="modal fade" id="remove-collection-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="remove-collection-warning-title">Warning</h4>
+                </div>
+                <div class="modal-body" id="remove-collection-warning-body">
+                    You have NO PERMISSION over the resource you are about to remove, which means you CAN NOT add it back later.
+                </div>
+                <div id="remove-collection-btn-warning" class="collection-div-popup-warning">Updating collection...Please wait...</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="remove-collection-btn-cancel">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" id="remove-collection-btn-ok">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+
+    {# put resource specific js below #}
+
+    <script type="text/javascript" src="{% static 'js/collection-resource.js' %}"></script>
+
+{% endblock %}
