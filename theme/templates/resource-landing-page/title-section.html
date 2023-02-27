@@ -113,6 +113,12 @@
                         <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
                     {% endif %}
                 {% endif %}
+                {%  if cm.resource_type|lower == "externalresource" %}
+                    {% if not cm.has_resources%}
+                        <br>
+                        <span>A external resource cannot be published.</span>
+                    {% endif %}
+                {% endif %}
 
                 {% if not resource_edit_mode %}
                     <hr>
