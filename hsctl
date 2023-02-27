@@ -372,6 +372,9 @@ rebuild_hs() {
     docker exec -u hydro-service hydroshare rm -f hydroshare/static/static/robots.txt
     migrate_hs
     sleep 3s
+    # prevent web crawling on development systems (ie beta) -- this should not be run on production
+    echo "  - docker exec -u hydro-service hydroshare python manage.py prevent_web_crawling"
+    docker exec -u hydro-service hydroshare python manage.py prevent_web_crawling
     thumbnail_cleanup
     solr_schema_hs
     sleep 2s
