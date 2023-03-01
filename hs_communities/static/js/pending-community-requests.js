@@ -27,12 +27,6 @@ $(document).ready(function () {
         left: 0,
       }
     },
-    created() {
-      console.log(this.pendingRequests[0])
-    },
-    mounted() {
-
-    },
     methods: {
       loadOwnerCard: function(data) {
         const el = $(data.event.target);

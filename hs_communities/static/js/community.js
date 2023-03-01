@@ -124,6 +124,7 @@ $(document).ready(function () {
           customAlert("Remove Group", 'Group has been removed from your Community', "success", 6000, true);
         }
         catch (e) {
+          customAlert("Remove Group", 'Failed to remove Group from your Community', "error", 6000, true);
           console.log(e)
           // abort
         }
@@ -146,6 +147,7 @@ $(document).ready(function () {
           customAlert("Invite Group", 'The Group has been invited to join', "success", 6000, true);
         }
         catch (e) {
+          customAlert("Invite Group", 'Failed to send invitation', "error", 6000, true);
           console.log(e)
         }
         this.$set(this.isInviting, id, false)

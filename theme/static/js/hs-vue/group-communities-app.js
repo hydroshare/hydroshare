@@ -44,14 +44,16 @@ let groupCommunitiesApp = new Vue({
         if (response.hasOwnProperty('joined')) {
           this.joined = response.joined;
         }
-        delete this.isLeaving[id]
-        $("#leave-community-modal").modal('hide')
+        this.$set(this.isLeaving, id, false);
+        delete this.isLeaving[id];
+        $("#leave-community-modal").modal('hide');
         customAlert("Leave Community", `The Group has left this Community`, "success", 6000, true);
       }
       catch(e) {
-        console.log(e)
         // abort
-        this.$set(this.isLeaving, id, false)
+        console.log(e)
+        customAlert("Leave Community", `Failed to leave this Community`, "error", 6000, true);
+        this.$set(this.isLeaving, id, false);
       }
     },
     acceptInvitation: async function(id) {
@@ -73,8 +75,9 @@ let groupCommunitiesApp = new Vue({
         customAlert("Join Community", 'The Community invitation has been accepted', "success", 6000, true);
       }
       catch(e) {
-        console.log(e)
         // abort
+        console.log(e);
+        customAlert("Join Community", 'Failed to accept Community invitation', "error", 6000, true);
         this.$set(this.isAcceptingInvitation, id, false)
       }
     },
@@ -96,8 +99,10 @@ let groupCommunitiesApp = new Vue({
       }
       catch(e) {
         console.log(e)
+        customAlert("Decline Community Invitation", `Failed to decline Community invitation`, "error", 6000, true);
         // abort
-        this.$set(this.isDecliningInvitation, id, false)
+        this.$set(this.isDecliningInvitation, id, false);
+        $('#decline-community-invitation-modal').modal('hide');
       }
     },
     retractRequest: async function(id) {
@@ -111,14 +116,16 @@ let groupCommunitiesApp = new Vue({
         if (response.hasOwnProperty('available_to_join')) {
           this.availableToJoin = response.available_to_join
         }
-        this.$set(this.isRetractingRequest, id, false)
-        delete this.isRetractingRequest[id]
-        $("#retract-community-join-request-modal").modal('hide')
+        this.$set(this.isRetractingRequest, id, false);
+        delete this.isRetractingRequest[id];
+        $("#retract-community-join-request-modal").modal('hide');
         customAlert("Retract Request", `The join request has been retracted`, "success", 6000, true);
       }
       catch(e) {
         console.log(e)
-        $("#retract-community-join-request-modal").modal('hide')
+        this.$set(this.isRetractingRequest, id, false);
+        customAlert("Retract Request", `Failed to retract request`, "error", 6000, true);
+        $("#retract-community-join-request-modal").modal('hide');
       }
     },
   }

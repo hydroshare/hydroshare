@@ -68,6 +68,9 @@ $(document).ready(function () {
           // Redirect to requests page
           window.location.href = "/communities/manage-requests/";
         }
+        else {
+          customAlert("Approve Community Request", 'Failed to approve request', "error", 6000, true);
+        }
         this.isApproving = false
       },
       async onResubmit() {
@@ -82,8 +85,6 @@ $(document).ready(function () {
               'X-CSRFToken': getCookie('csrftoken')
             }
           });
-
-          console.log(response)
 
           if (response.status === 200) {
             this.$set(this.request.community_to_approve, 'status', 'Submitted');
@@ -107,7 +108,6 @@ $(document).ready(function () {
         }
         this.isRejecting = true
         const response = await $.post(`/access/_internal/crequest/decline/${this.request.id}/`, { reason: this.rejectReason} )
-        console.log(response)
 
         if (response.message === 'Request declined') {
           this.$set(this.request.community_to_approve, 'status', 'Rejected');
@@ -144,15 +144,14 @@ $(document).ready(function () {
           customAlert("New Community Request", 'Your changes have been saved', "success", 6000, true);
         }
         else {
-          // show error
+          customAlert("New Community Request", 'Failed to save changes', "error", 6000, true);
         }
 
-        this.isSaving = false
+        this.isSaving = false;
       },
       onCancel() {
         // restore to original values
-        this.isEditMode = false
-        console.log(this.request.community_to_approve.name)
+        this.isEditMode = false;
       }
     }
   });
