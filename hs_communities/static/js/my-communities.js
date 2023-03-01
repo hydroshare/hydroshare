@@ -3,7 +3,6 @@ $(document).ready(function () {
     el: "#my-communities-app",
     delimiters: ['${', '}'],
     data: {
-      test: 'test!!',
       isRemoving: {},
       targetRequest: null,
       pendingRequests: PENDING_REQUESTS
@@ -24,9 +23,10 @@ $(document).ready(function () {
           customAlert("Cancel Request", response.message, "success", 6000, true);
         }
         catch(e) {
-          console.log(e)
           // abort
-          this.$set(this.isRemoving, id, false)
+          console.log(e)
+          customAlert("Cancel Request", 'Failed to cancel request', "error", 6000, true);
+          this.$set(this.isRemoving, id, false);
         }
       },
     }
