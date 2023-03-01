@@ -1542,9 +1542,12 @@ function startDownload(zipFiles) {
                     + frameID + "' style='display:none;' src='" + url + "'></iframe>");
                 })
                 .error(function(xhr, errmsg, err){
-                    // TODO #4733: what if there is a 500 error instead of a 400?
-                    // Should check the status code and show appropriate message
-                    $('#authenticate-dialog').modal('show');
+                    const {status} = xhr;
+                    if (status < 500 ){
+                        $('#authenticate-dialog').modal('show');
+                    }else{
+                        display_error_message('Failed to download files', xhr.responseText);
+                    }
                 })
             }
         }
