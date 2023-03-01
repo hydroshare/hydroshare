@@ -7,8 +7,6 @@ $(document).ready(function () {
       targetRequest: null,
       pendingRequests: PENDING_REQUESTS
     },
-    mounted: function () {
-    },
     methods: {
       remove: async function(id) {
         this.$set(this.isRemoving, id, true)
