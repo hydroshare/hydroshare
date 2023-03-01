@@ -69,7 +69,7 @@ $(document).ready(function () {
           window.location.href = "/communities/manage-requests/";
         }
         else {
-          customAlert("Approve Community Request", 'Failed to approve request', "error", 6000, true);
+          customAlert("Approve Community Request", 'Failed to approve Request', "error", 6000, true);
         }
         this.isApproving = false
       },
@@ -77,37 +77,25 @@ $(document).ready(function () {
         this.isResubmitting = true
         try {
           const url = `/access/_internal/crequest/resubmit/${this.request.id}/`;
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-              // Do not set content-type header. The browser will set it for you.
-              // https://muffinman.io/blog/uploading-files-using-fetch-multipart-form-data/
-              'X-CSRFToken': getCookie('csrftoken')
-            }
-          });
-
-          if (response.status === 200) {
+          const response = await $.post(url);
+          if (response.message === 'Request has been resubmitted') {
             this.$set(this.request.community_to_approve, 'status', 'Submitted');
             this.$set(this.request, 'status', 'Submitted');
-            // Redirect to requests page
-            // window.location.href = "/communities/manage-requests/";
-          }
-          else {
-            customAlert("Resubmit Community", 'Failed to resubmit this request', "error", 6000, true);
           }
         }
         catch(e) {
-          console.error(e)
+          customAlert("Resubmit Community", 'Failed to resubmit this request', "error", 6000, true);
+          console.error(e);
         }
         
         this.isResubmitting = false
       },
       async onReject() {
         if (!this.rejectReason) {
-          return false
+          return false;
         }
         this.isRejecting = true
-        const response = await $.post(`/access/_internal/crequest/decline/${this.request.id}/`, { reason: this.rejectReason} )
+        const response = await $.post(`/access/_internal/crequest/decline/${this.request.id}/`, { reason: this.rejectReason });
 
         if (response.message === 'Request declined') {
           this.$set(this.request.community_to_approve, 'status', 'Rejected');

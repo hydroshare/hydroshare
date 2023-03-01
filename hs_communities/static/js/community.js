@@ -244,6 +244,7 @@ $(document).ready(function () {
           }
         }
         catch (e) {
+          console.log(e);
           customAlert("Add Community Owner", 'Failed to remove Community owner', 'error', 6000, true);
         }
         this.$set(this.isRemovingOwner, userId, false)
@@ -273,6 +274,7 @@ $(document).ready(function () {
             customAlert('Add Community Owner', 'User is already an owner of this Community', 'info', 6000, true);
           }
           else {
+            console.log(e);
             customAlert("Add Community Owner", 'Failed to add user as Community owner', 'error', 6000, true);
           }
         }
