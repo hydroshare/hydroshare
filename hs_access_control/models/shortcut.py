@@ -1,9 +1,9 @@
 from django.contrib.auth.models import User
-from django.db import models
-from django.db.models import Q, Subquery
+from django.db.models import Q
 
 from hs_core.models import BaseResource
-from hs_access_control.models.privilege import PrivilegeCodes, GroupResourcePrivilege
+from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivilege, \
+    GroupResourcePrivilege
 
 
 #############################################
@@ -27,15 +27,14 @@ def get_user_resource_privilege(email, short_id):
     # user access
     user_privilege = UserResourcePrivilege.get_privilege(user=user, resource=resource)
 
+    # group access
     group_privilege = GroupResourcePrivilege.objects.filter(
         Q(resource=resource,
           group__gaccess__active=True,
           group__g2ugp__user__email=email)).values_list('privilege', flat=True)
-    print(group_privilege)
     if len(group_privilege) > 0:
-        group_privilege = min(group_privilege)
+        group_privilege = min(group_privilege)  # min of a list
     else:
         group_privilege = PrivilegeCodes.NONE
 
-    print(group_privilege) 
     return min(public, user_privilege, group_privilege)
