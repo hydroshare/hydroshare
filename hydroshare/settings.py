@@ -161,7 +161,10 @@ INTERNAL_IPS = ("127.0.0.1",)
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
 # TODO remove MezzanineBackend after conflicting users have been removed
-AUTHENTICATION_BACKENDS = ("theme.backends.CaseInsensitiveMezzanineBackend",)
+AUTHENTICATION_BACKENDS = [
+    "theme.backends.CaseInsensitiveMezzanineBackend",
+    "hs_core.authentication.HydroShareOIDCAuthenticationBackend",
+]
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -346,6 +349,7 @@ INSTALLED_APPS = (
     "health_check.contrib.celery_ping",
     "health_check.contrib.psutil",
     "health_check.contrib.rabbitmq",
+    "mozilla_django_oidc",
 )
 
 SWAGGER_SETTINGS = {
