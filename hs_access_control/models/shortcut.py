@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User
 from django.db.models import Q
 
 from hs_core.models import BaseResource
@@ -17,24 +16,32 @@ from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivi
 def get_user_resource_privilege(email, short_id):
     # a naive solution with no performance enhancements:
     # These gets throw exceptions if no user or resource found or if duplicates exist.
-    user = User.objects.get(email=email)
     resource = BaseResource.objects.get(short_id=short_id)
+
     # public access
     if resource.raccess.public:
         public = PrivilegeCodes.VIEW
     else:
         public = PrivilegeCodes.NONE
+
     # user access
-    user_privilege = UserResourcePrivilege.get_privilege(user=user, resource=resource)
+    user_privilege = UserResourcePrivilege.objects.filter(
+        user__email=email,
+        resource__short_id=short_id).values_list('privilege', flat=True)
+    if len(user_privilege) > 0:
+        user_privilege = min(user_privilege)  # min of a list
+    else:
+        user_privilege = PrivilegeCodes.NONE
 
     # group access
     group_privilege = GroupResourcePrivilege.objects.filter(
         Q(resource=resource,
           group__gaccess__active=True,
           group__g2ugp__user__email=email)).values_list('privilege', flat=True)
+
     if len(group_privilege) > 0:
         group_privilege = min(group_privilege)  # min of a list
     else:
         group_privilege = PrivilegeCodes.NONE
 
-    return min(public, user_privilege, group_privilege)
+    return min(public, user_privilege, group_privilege)  # min of an argument list
