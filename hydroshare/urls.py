@@ -152,6 +152,7 @@ urlpatterns = i18n_patterns(
         r"^group/(?P<group_id>[0-9]+)", hs_core_views.GroupView.as_view(), name="group"
     ),
     url(r"^apps/$", hs_core_views.apps.AppsView.as_view(), name="apps"),
+    url('oidc/', include('mozilla_django_oidc.urls')),
 )
 
 # Filebrowser admin media library.
