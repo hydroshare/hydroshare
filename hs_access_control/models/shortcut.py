@@ -20,28 +20,19 @@ def get_user_resource_privilege(email, short_id):
 
     # public access
     if resource.raccess.public:
-        public = PrivilegeCodes.VIEW
+        privilege = [PrivilegeCodes.VIEW]
     else:
-        public = PrivilegeCodes.NONE
+        privilege = [PrivilegeCodes.NONE]
 
     # user access
-    user_privilege = UserResourcePrivilege.objects.filter(
+    privilege.extend(UserResourcePrivilege.objects.filter(
         user__email=email,
-        resource__short_id=short_id).values_list('privilege', flat=True)
-    if len(user_privilege) > 0:
-        user_privilege = min(user_privilege)  # min of a list
-    else:
-        user_privilege = PrivilegeCodes.NONE
+        resource__short_id=short_id).values_list('privilege', flat=True))
 
     # group access
-    group_privilege = GroupResourcePrivilege.objects.filter(
+    privilege.extend(GroupResourcePrivilege.objects.filter(
         Q(resource=resource,
           group__gaccess__active=True,
-          group__g2ugp__user__email=email)).values_list('privilege', flat=True)
+          group__g2ugp__user__email=email)).values_list('privilege', flat=True))
 
-    if len(group_privilege) > 0:
-        group_privilege = min(group_privilege)  # min of a list
-    else:
-        group_privilege = PrivilegeCodes.NONE
-
-    return min(public, user_privilege, group_privilege)  # min of an argument list
+    return min(privilege)  # min of a list
