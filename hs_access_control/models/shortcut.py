@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from hs_core.models import BaseResource
+from hs_access_control.models import ResourceAccess
 from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivilege, \
     GroupResourcePrivilege
 
@@ -14,12 +14,21 @@ from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivi
 #############################################
 
 def get_user_resource_privilege(email, short_id):
-    # a naive solution with no performance enhancements:
-    # These gets throw exceptions if no user or resource found or if duplicates exist.
-    resource = BaseResource.objects.get(short_id=short_id)
+    # return the privilege code 1-4 for a user and resource
+    #
+    # this never throws exceptions. It returns NONE:
+    # - if a resource does not exist.
+    # - if an email does not correspond to a user
+    #
+    # It returns the min of the privileges:
+    # - if an email corresponds to more than one user account
+    # - if a GUID somehow refers to more than one resource.
 
     # public access
-    if resource.raccess.public:
+    privilege = list(ResourceAccess.objects.filter(
+        resource__short_id=short_id).values_list('public', flat='True'))
+
+    if (len(privilege) > 0) and privilege[0]:  # boolean
         privilege = [PrivilegeCodes.VIEW]
     else:
         privilege = [PrivilegeCodes.NONE]
@@ -31,8 +40,11 @@ def get_user_resource_privilege(email, short_id):
 
     # group access
     privilege.extend(GroupResourcePrivilege.objects.filter(
-        Q(resource=resource,
+        Q(resource__short_id=short_id,
           group__gaccess__active=True,
           group__g2ugp__user__email=email)).values_list('privilege', flat=True))
 
-    return min(privilege)  # min of a list
+    if len(privilege) > 0:
+        return min(privilege)  # min of a list
+    else:
+        return PrivilegeCodes.NONE
