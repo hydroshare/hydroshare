@@ -791,35 +791,26 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
         response = session.post(rest_url, timeout=timeout)
 
         if publish_urls and response.status_code == status.HTTP_201_CREATED:
-            try:
+            resource = utils.get_resource_by_shortkey(res_id)
+            response_content = json.loads(response.content.decode())
+            if "resource" in response_content:
+                for key, value in response_content["resource"].items():
+                    resource.extra_metadata[key] = value
+                    resource.save()
 
-                resource = utils.get_resource_by_shortkey(res_id)
-                response_content = json.loads(response.content.decode())
-
-                if "resource" in response_content:
-                    for key, value in response_content["resource"].items():
-                        resource.extra_metadata[key] = value
-                        resource.save()
-
-                if "content" in response_content:
-                    for url in response_content["content"]:
-                        logical_files = list(resource.logical_files)
-                        lf = logical_files[[i.aggregation_name for i in
-                                            logical_files].index(
-                            url["layer_name"].encode()
-                        )]
-                        lf.metadata.extra_metadata["Web Services URL"] = url["message"]
-                        lf.metadata.save()
-
-            except Exception as e:
-                logger.error(e)
-                return e
-
-        return response
-
-    except (requests.exceptions.RequestException, ValueError) as e:
-        logger.error(e)
-        return e
+            if "content" in response_content:
+                for url in response_content["content"]:
+                    logical_files = list(resource.logical_files)
+                    lf = logical_files[[i.aggregation_name for i in
+                                        logical_files].index(
+                        url["layer_name"].encode()
+                    )]
+                    lf.metadata.extra_metadata["Web Services URL"] = url["message"]
+                    lf.metadata.save()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Error updating web services: {str(e)}")
+        raise
 
 
 @shared_task
