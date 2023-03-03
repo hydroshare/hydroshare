@@ -5,8 +5,8 @@ USER root:root
 RUN addgroup --gid 10000 service-accounts 
 RUN adduser -u 20028 -s /bin/sh -D -H -g 'hydroshare user' hydro-service service-accounts
 
-# COPY init-uppy /init-uppy
-# RUN chown node:node /init-uppy
+COPY init-uppy /init-uppy
+RUN chown node:node /init-uppy
 RUN mkdir /uppy_tmp
 RUN chmod 777 /uppy_tmp
 RUN chown node:node /uppy_tmp

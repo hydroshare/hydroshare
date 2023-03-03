@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 class Upload(models.Model):
     ''' track all in-progress uploads '''
-    user = models.ForeignKey(User, null=True, editable=False)
-    resource = models.ForeignKey(BaseResource, null=True, editable=False)
+    user = models.ForeignKey(User, null=True, editable=False, on_delete=models.CASCADE)
+    resource = models.ForeignKey(BaseResource, null=True, editable=False, on_delete=models.CASCADE)
     path = models.TextField(null=True, editable=False)
     tempfile = models.TextField(null=True, editable=False)
     size = models.IntegerField(null=True, editable=False)
