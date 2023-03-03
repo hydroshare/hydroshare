@@ -1,4 +1,7 @@
 from django.db.models import Q
+from django.http import JsonResponse
+from rest_framework import status
+from rest_framework.decorators import api_view
 
 from hs_access_control.models import ResourceAccess
 from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivilege, \
@@ -12,6 +15,13 @@ from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivi
 # of resolving keys to objects, as used in the rest of access control.
 # This saves oodles of time in processing requests from REST calls.
 #############################################
+
+
+@api_view(['GET',])
+def get_user_resource_privilege_endpoint(request, user_identifier, resource_id):
+    privilege = get_user_resource_privilege(user_identifier, resource_id)
+    return JsonResponse({"privilege": privilege}, status=status.HTTP_200_OK)
+
 
 def get_user_resource_privilege(email, short_id):
     # return the privilege code 1-4 for a user and resource
