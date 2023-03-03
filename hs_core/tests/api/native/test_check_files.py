@@ -27,7 +27,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         )
 
         self.res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource'
         )
@@ -96,7 +96,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertTrue(errors[1].endswith(
             'data/contents/file1.txt in iRODs does not exist in Django'))
         self.assertTrue(errors[2].endswith(
-            "type is GenericResource, title is 'My Test Resource'"))
+            "type is CompositeResource, title is 'My Test Resource'"))
 
         # now try to clean it up
         errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False,
@@ -106,7 +106,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertTrue(errors[1].endswith(
             'data/contents/file1.txt in iRODs does not exist in Django (DELETED FROM IRODS)'))
         self.assertTrue(errors[2].endswith(
-            "type is GenericResource, title is 'My Test Resource'"))
+            "type is CompositeResource, title is 'My Test Resource'"))
 
         # resource should not have any files at this point
         self.assertEqual(self.res.files.all().count(), 0,
@@ -165,7 +165,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertTrue(errors[1].endswith(
             'data/contents/foo/file1.txt in iRODs does not exist in Django'))
         self.assertTrue(errors[2].endswith(
-            "type is GenericResource, title is 'My Test Resource'"))
+            "type is CompositeResource, title is 'My Test Resource'"))
 
         # now try to clean it up
         errors, ecount = check_irods_files(self.res, return_errors=True, log_errors=False,
@@ -175,7 +175,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertTrue(errors[1].endswith(
             'data/contents/foo/file1.txt in iRODs does not exist in Django (DELETED FROM IRODS)'))
         self.assertTrue(errors[2].endswith(
-            "type is GenericResource, title is 'My Test Resource'"))
+            "type is CompositeResource, title is 'My Test Resource'"))
 
         # resource should not have any files at this point
         self.assertEqual(self.res.files.all().count(), 0,

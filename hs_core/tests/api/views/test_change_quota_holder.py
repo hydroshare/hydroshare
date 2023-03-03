@@ -1,7 +1,7 @@
 import json
 
 from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from hs_core import hydroshare
 from hs_core.views import change_quota_holder
@@ -32,7 +32,7 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, ViewTestCase):
         )
 
         self.res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='My Test Resource'
         )

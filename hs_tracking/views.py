@@ -1,17 +1,15 @@
 import csv
-from io import StringIO
 import urllib.parse
+from io import StringIO
 
-from django.views.generic import TemplateView
-from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from django.contrib import messages
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
 
 from . import models as hs_tracking
 from .models import Session, Variable
-from .utils import get_std_log_fields, authentic_redirect_url
-from hs_tools_resource.utils import do_work_when_launching_app_as_needed, WebAppLaunchException
+from .utils import authentic_redirect_url, get_std_log_fields
 
 
 class AppLaunch(TemplateView):
@@ -24,18 +22,17 @@ class AppLaunch(TemplateView):
 
         if not authentic_redirect_url(url):
             return HttpResponseForbidden()
-        # do work as needed when launching web app
-        res_id = querydict.pop('res_id', [''])[0]
-        tool_res_id = querydict.pop('tool_res_id', [''])[0]
-        if res_id and tool_res_id:
-            try:
-                do_work_when_launching_app_as_needed(tool_res_id, res_id, request.user)
-            except WebAppLaunchException as ex:
-                messages.warning(request, str(ex))
-                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+        # encode url placeholder values received from the front-end
+        url_placeholders = ["HS_JS_AGG_KEY", "HS_JS_MAIN_FILE_KEY", "HS_JS_FILE_KEY"]
+        for placeholder in url_placeholders:
+            placeholder_value = querydict.pop(placeholder, [''])[0]
+            if placeholder in url:
+                encoded_value = urllib.parse.quote(placeholder_value)
+                url = url.replace(placeholder, encoded_value)
 
         # log app launch details if user is logged in
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             # get user session and standard fields
             session = Session.objects.for_request(request, request.user)
             fields = get_std_log_fields(request, session)

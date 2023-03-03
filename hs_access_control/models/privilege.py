@@ -197,19 +197,19 @@ class UserGroupPrivilege(PrivilegeBase):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    user = models.ForeignKey(User,
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
                              null=False,
                              editable=False,
                              related_name='u2ugp',
                              help_text='user to be granted privilege')
 
-    group = models.ForeignKey(Group,
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,
                               null=False,
                               editable=False,
                               related_name='g2ugp',
                               help_text='group to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
                                 related_name='x2ugp',
@@ -220,9 +220,9 @@ class UserGroupPrivilege(PrivilegeBase):
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<user '{}' (id={}) holds {} ({})" +
-                          " over group '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<user '{}' (id={}) holds {} ({})"
+                          + " over group '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.user.username), str(self.user.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -375,19 +375,19 @@ class UserResourcePrivilege(PrivilegeBase):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    user = models.ForeignKey(User,
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
                              null=False,
                              editable=False,
                              related_name='u2urp',
                              help_text='user to be granted privilege')
 
-    resource = models.ForeignKey(BaseResource,
+    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
                                  null=False,
                                  editable=False,
                                  related_name='r2urp',
                                  help_text='resource to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
                                 related_name='x2urp',
@@ -403,9 +403,9 @@ class UserResourcePrivilege(PrivilegeBase):
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<user '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<user '{}' (id={}) holds {} ({})"
+                          + " over resource '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.user.username), str(self.user.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -546,19 +546,19 @@ class GroupResourcePrivilege(PrivilegeBase):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    group = models.ForeignKey(Group,
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,
                               null=False,
                               editable=False,
                               related_name='g2grp',
                               help_text='group to be granted privilege')
 
-    resource = models.ForeignKey(BaseResource,
+    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
                                  null=False,
                                  editable=False,
                                  related_name='r2grp',
                                  help_text='resource to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
                                 related_name='x2grp',
@@ -574,9 +574,9 @@ class GroupResourcePrivilege(PrivilegeBase):
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<group '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<group '{}' (id={}) holds {} ({})"
+                          + " over resource '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.group.name), str(self.group.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -701,19 +701,19 @@ class UserCommunityPrivilege(PrivilegeBase):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    community = models.ForeignKey(Community,
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,
                                   null=False,
                                   editable=False,
                                   related_name='c2ucp',
                                   help_text='community to be granted privilege')
 
-    user = models.ForeignKey(User,
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
                              null=False,
                              editable=False,
                              related_name='u2ucp',
                              help_text='group providing privilege')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
                                 related_name='x2ucp',
@@ -724,9 +724,9 @@ class UserCommunityPrivilege(PrivilegeBase):
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over user '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<community '{}' (id={}) holds {} ({})"
+                          + " over user '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.community.name), str(self.community.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -883,19 +883,19 @@ class GroupCommunityPrivilege(PrivilegeBase):
 
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    community = models.ForeignKey(Community,
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,
                                   null=False,
                                   editable=False,
                                   related_name='c2gcp',
                                   help_text='community to be granted privilege')
 
-    group = models.ForeignKey(Group,
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,
                               null=False,
                               editable=False,
                               related_name='g2gcp',
                               help_text='group providing privilege')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
                                 related_name='x2gcp',
@@ -911,9 +911,9 @@ class GroupCommunityPrivilege(PrivilegeBase):
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over group '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<community '{}' (id={}) holds {} ({})"
+                          + " over group '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.community.name), str(self.community.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -1070,19 +1070,19 @@ class CommunityResourcePrivilege(PrivilegeBase):
 
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    community = models.ForeignKey(Community,
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,
                                   null=False,
                                   editable=False,
                                   related_name='c2crp',
                                   help_text='community to be granted privilege')
 
-    resource = models.ForeignKey(BaseResource,
+    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
                                  null=False,
                                  editable=False,
                                  related_name='r2crp',
                                  help_text='resource providing privilege')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
                                 related_name='x2crp',
@@ -1098,9 +1098,9 @@ class CommunityResourcePrivilege(PrivilegeBase):
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<community '{}' (id={}) holds {} ({})"
+                          + " over resource '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.community.name), str(self.community.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),

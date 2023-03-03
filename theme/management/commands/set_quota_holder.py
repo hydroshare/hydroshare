@@ -36,29 +36,29 @@ class Command(BaseCommand):
                             print('resource ' + res.short_id + ' does not have an owner')
                             continue
                     res.set_quota_holder(res.creator, res.creator)
-                    print('the quota holder of resource ' + res.short_id +
-                          ' has been set to its creator ' + res.creator.username)
+                    print('the quota holder of resource ' + res.short_id
+                          + ' has been set to its creator ' + res.creator.username)
                     count += 1
             except SessionException as ex:
                 # this is needed for migration testing where some resources copied from www
                 # for testing do not exist in the iRODS backend, hence need to skip these
                 # test artifects
-                print(res.short_id + ' raised SessionException when setting quota holder: ' +
-                      ex.stderr)
+                print(res.short_id + ' raised SessionException when setting quota holder: '
+                      + ex.stderr)
                 continue
             except AttributeError as ex:
                 # when federation is not set up correctly, istorage does not have a session
                 # attribute, hence raise AttributeError - ignore for testing and it should not
                 # happen in production where federation is set up properly
-                print((res.short_id + ' raised AttributeError when setting quota holder: ' +
-                      str(ex)))
+                print((res.short_id + ' raised AttributeError when setting quota holder: '
+                      + str(ex)))
                 continue
             except ValueError as ex:
                 # when federation is not set up correctly, istorage does not have a session
                 # attribute, hence raise AttributeError - ignore for testing and it should not
                 # happen in production where federation is set up properly
-                print((res.short_id + ' raised ValueError when setting quota holder: ' +
-                      str(ex)))
+                print((res.short_id + ' raised ValueError when setting quota holder: '
+                      + str(ex)))
                 continue
 
         print('{} resources with missing quota holder have been fixed'.format(count))

@@ -2,6 +2,7 @@ import glob
 import json
 import os
 
+import jsonschema
 from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
@@ -124,7 +125,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         mp_aggr = self.logical_file
         for mi_metadata in mp_aggr.mi_metadata_objects.all():
             mi_metadata.is_dirty = True
-            mi_metadata.save()
+            mi_metadata.save(update_fields=["is_dirty"])
 
         super(ModelProgramFileMetaData, self).delete()
 
@@ -139,8 +140,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         if self.logical_file.metadata_schema_json:
             graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_url)))
 
-        if self.logical_file.model_program_type:
-            graph.add((subject, HSTERMS.modelProgramName, Literal(self.logical_file.model_program_type)))
         if self.version:
             graph.add((subject, HSTERMS.modelVersion, Literal(self.version)))
         if self.release_date:
@@ -179,7 +178,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
         subject = self.rdf_subject_from_graph(graph)
 
-        set_field(HSTERMS.modelProgramName, "model_program_type", self.logical_file)
         set_field(HSTERMS.modelVersion, "version", self)
         set_field(HSTERMS.modelReleaseDate, "release_date", self, is_date=True)
         set_field(HSTERMS.modelWebsite, "website", self)
@@ -222,11 +220,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         """generates html code to display aggregation metadata in view mode"""
 
         html_string = super(ModelProgramFileMetaData, self).get_html(skip_coverage=True)
-        mp_program_type_div = dom_tags.div()
-        with mp_program_type_div:
-            dom_tags.legend("Name")
-            dom_tags.p(self.logical_file.model_program_type)
-        html_string += mp_program_type_div.render()
 
         if self.version:
             version_div = dom_tags.div(cls="content-block")
@@ -340,16 +333,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                         dom_tags.legend("General Information", cls="legend-border")
                         with dom_tags.div(cls="form-group"):
                             with dom_tags.div(cls="control-group"):
-                                with dom_tags.div(id="mp-program-type"):
-                                    dom_tags.label('Name*', fr="id_mp_program_type", cls="control-label")
-                                    dom_tags.span(cls="glyphicon glyphicon-info-sign text-muted", data_toggle="tooltip",
-                                                  data_placement="auto",
-                                                  data_original_title="Provide the name of your model "
-                                                                      "program (e.g., SWAT, MODFLOW, etc.)")
-                                    dom_tags.input(type="text", id="id_mp_program_type", name="mp_program_type",
-                                                   cls="form-control input-sm textinput",
-                                                   value=self.logical_file.model_program_type)
-
                                 dom_tags.label('Version', cls="control-label", fr="file_version")
                                 with dom_tags.div(cls="controls"):
                                     if self.version:
@@ -425,6 +408,12 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                                               "will be shown below when you "
                                                                               "save metadata.")
 
+                                        with dom_tags.div(cls="form-group"):
+                                            link = "https://help.hydroshare.org/modeling/" \
+                                                   "model-instance-metadata-schema/"
+                                            link_title = "Refer to Model Instance Metadata schema help page " \
+                                                         "for schema requirements."
+                                            dom_tags.a(link_title, href=link, target="_blank")
                                         # give an option to upload/select a json file for the metadata schema
                                         with dom_tags.div(cls="form-group"):
                                             with dom_tags.select(cls="form-control", name='mi_json_schema_template',
@@ -481,10 +470,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 class ModelProgramLogicalFile(AbstractModelLogicalFile):
     """ One file or more than one file in a specific folder can be part of this aggregation """
 
-    # attribute to store type of model program (SWAT, UEB etc)
-    model_program_type = models.CharField(max_length=255, default="Unknown Model Program")
-
-    metadata = models.OneToOneField(ModelProgramFileMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(ModelProgramFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "Model Program"
 
     @classmethod
@@ -502,7 +488,7 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
 
         for mi_metadata in self.mi_metadata_objects.all():
             mi_metadata.is_dirty = True
-            mi_metadata.save()
+            mi_metadata.save(update_fields=["is_dirty"])
 
         super(ModelProgramLogicalFile, self).delete()
 
@@ -529,6 +515,137 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         This must agree between Composite Types and native types).
         """
         return "Model Program"
+
+    @staticmethod
+    def validate_meta_schema(meta_schema):
+        """A helper to validate metadata schema for model program aggregation
+        :param  meta_schema: metadata schema as a string - which needs to be validated
+        :returns a dict of metadata schema and a list of validation errors
+        """
+        validation_errors = []
+        json_schema = dict()
+        is_schema_valid = True
+        try:
+            json_schema = json.loads(meta_schema)
+        except ValueError as err:
+            validation_errors.append(f"Schema is not valid JSON. Error: {str(err)}")
+            return json_schema, validation_errors
+
+        if json_schema:
+            schema_version = json_schema.get("$schema", "")
+            if not schema_version:
+                is_schema_valid = False
+                err_message = "Not a valid JSON schema. {}"
+                if "$schema" not in json_schema:
+                    err_message = err_message.format("Key '$schema' is missing")
+                else:
+                    err_message = err_message.format("Key '$schema' is missing a value for schema version")
+                validation_errors.append(err_message)
+            else:
+                if "/draft-04/" not in schema_version:
+                    is_schema_valid = False
+                    err_message = "Not a valid JSON schema. Schema version is invalid. Supported valid version(s): " \
+                                  "draft-04"
+                    validation_errors.append(err_message)
+
+            if 'properties' not in json_schema:
+                is_schema_valid = False
+                validation_errors.append("Not a valid metadata schema. Attribute 'properties' is missing")
+
+            if is_schema_valid:
+                try:
+                    jsonschema.Draft4Validator.check_schema(json_schema)
+                except jsonschema.SchemaError as ex:
+                    is_schema_valid = False
+                    err_paths = " -> ".join(list(ex.path))
+                    schema_errors = str(ex).split("\n")
+                    schema_errors = " ".join(schema_errors)
+                    schema_err_msg = f"{schema_errors}. Schema invalid field path:{err_paths}"
+                    schema_err_msg = f"Not a valid JSON schema. Error:{schema_err_msg}"
+                    validation_errors.append(schema_err_msg)
+
+        if is_schema_valid:
+            # custom validation - hydroshare requirements
+            # this custom validation requiring additional attributes are needed for making the json-editor form
+            # generation at the front-end to work
+            if 'additionalProperties' not in json_schema:
+                is_schema_valid = False
+                validation_errors.append("Not a valid metadata schema. Attribute 'additionalProperties' is missing")
+
+            elif json_schema['additionalProperties']:
+                is_schema_valid = False
+                validation_errors.append("Not a valid metadata schema. Attribute 'additionalProperties' "
+                                         "should bet set to 'false'")
+
+            def validate_schema(schema_dict):
+                for k, v in schema_dict.items():
+                    # key must not have whitespaces - required for xml encoding of metadata
+                    if k != k.strip():
+                        msg = f"Not a valid metadata schema. Attribute '{k}' has leading or trailing whitespaces"
+                        validation_errors.append(msg)
+                    # key must consists of alphanumeric characters only - required for xml encoding of metadata
+                    if not k.isalnum():
+                        msg = f"Not a valid metadata schema. Attribute '{k}' has non-alphanumeric characters"
+                        validation_errors.append(msg)
+
+                    # key must start with a alphabet character - required for xml encoding of metadata
+                    if not k[0].isalpha():
+                        msg = f"Not a valid metadata schema. Attribute '{k}' starts with a non-alphabet character"
+                        validation_errors.append(msg)
+
+                    if isinstance(v, dict):
+                        if k not in ('properties', 'items'):
+                            # we need a title to use as label for the form field
+                            if 'title' not in v:
+                                msg = f"Not a valid metadata schema. Attribute 'title' is missing for {k}"
+                                validation_errors.append(msg)
+                            elif len(v['title'].strip()) == 0:
+                                msg = f"Not a valid metadata schema. Attribute 'title' has no value for {k}"
+                                validation_errors.append(msg)
+
+                            if v['type'] == 'array':
+                                # we need format attribute set to 'table' in order for the jsoneditor to allow
+                                # editing array type field
+                                if 'format' not in v:
+                                    msg = f"Not a valid metadata schema. Attribute 'format' is missing for {k}"
+                                    validation_errors.append(msg)
+
+                                elif v['format'] != 'table':
+                                    msg = f"Not a valid metadata schema. Attribute 'format' should be set " \
+                                          f"to table for {k}"
+                                    validation_errors.append(msg)
+
+                        if 'type' in v and v['type'] == 'object':
+                            # we requiring "additionalProperties": false so that we don't allow user to add new
+                            # form fields using the json-editor form
+                            if 'additionalProperties' not in v:
+                                msg = "Not a valid metadata schema. Attribute 'additionalProperties' is " \
+                                      f"missing for {k}"
+                                validation_errors.append(msg)
+                            elif v['additionalProperties']:
+                                msg = "Not a valid metadata schema. Attribute 'additionalProperties' must " \
+                                      f"be set to false for {k}"
+                                validation_errors.append(msg)
+
+                        # check for nested objects - we are not allowing nested objects to keep the form
+                        # generated from the schema by json-editor to not get complicated
+                        nested_object_found = False
+                        if 'type' in v and v['type'] == 'object':
+                            # parent type is object - check child type is not object
+                            for k_child, v_child in v.items():
+                                if isinstance(v_child, dict):
+                                    if 'type' in v_child and v_child['type'] == 'object':
+                                        msg = "Not a valid metadata schema. Nested object types are not allowed. " \
+                                              f"Attribute '{k_child}' contains nested object types"
+                                        validation_errors.append(msg)
+                                        nested_object_found = True
+                        if not nested_object_found:
+                            validate_schema(v)
+
+            if is_schema_valid:
+                validate_schema(json_schema['properties'])
+
+        return json_schema, validation_errors
 
     def copy_mp_file_types(self, tgt_logical_file):
         """helper function to support creating copy or new version of a resource
@@ -557,7 +674,6 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         copy_of_logical_file.metadata.code_repository = self.metadata.code_repository
         copy_of_logical_file.metadata.save()
 
-        copy_of_logical_file.model_program_type = self.model_program_type
         copy_of_logical_file.metadata_schema_json = self.metadata_schema_json
         copy_of_logical_file.folder = self.folder
         copy_of_logical_file.save()
@@ -567,13 +683,13 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         """set metadata to dirty for all the model instances related to this model program instance"""
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
-            mi_meta.save()
+            mi_meta.save(update_fields=["is_dirty"])
 
     def set_metadata_dirty(self):
         super(ModelProgramLogicalFile, self).set_metadata_dirty()
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
-            mi_meta.save()
+            mi_meta.save(update_fields=["is_dirty"])
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)

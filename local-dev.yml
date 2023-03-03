@@ -80,7 +80,9 @@ services:
     stdin_open: true
     tty: true
   postgis:
-    image: hydroshare/hs_postgres:9.4.7
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_PASSWORD: 'postgres'
     container_name: postgis
     hostname: postgis
     volumes:
@@ -192,6 +194,7 @@ services:
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
+      COLUMNS: 80
     ports:
       - "5555:5555"
     volumes:

@@ -28,7 +28,7 @@
     </ul>
 </ul>
 
-<h2>Resource flags</h2>
+<h2>Resource Flags</h2>
 <table border='1'>
   <tbody>
   <tr>
@@ -70,31 +70,35 @@
   </tbody>
 </table>
 
+<div id="non-preferred-paths">
+    <h2>Non Preferred Path Names</h2>
+    <p class="loading">Debugging. Please wait...</p>
+</div>
 <div id="irods-issues">
-  <h2>iRODs issues</h2>
+  <h2>iRODs Issues</h2>
   <p class="loading">Debugging. Please wait...</p>
 </div>
 
 <script>
   // Load async data for iRODs issues found
-  let xhttp = new XMLHttpRequest();
+  const xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
-      let response = JSON.parse(this.responseText);
-      let irodsIssuesDiv = document.getElementById("irods-issues");
+      const response = JSON.parse(this.responseText);
+      const irodsIssuesDiv = document.getElementById("irods-issues");
       if (response.status === "SUCCESS") {
         if (response.irods_issues.length) {
-          let title = document.createElement("p");
-          let titleText = document.createTextNode("iRODs issues found: ");
+          const title = document.createElement("p");
+          const titleText = document.createTextNode("iRODs issues found: ");
           title.appendChild(titleText);
           irodsIssuesDiv.appendChild(title);
 
-          let list = document.createElement("UL");
+          const list = document.createElement("UL");
 
           for (let i = 0; i < response.irods_issues.length; i++) {
-            let listItem = document.createElement("LI");
-            let code = document.createElement("CODE");
-            let itemText = document.createTextNode(response.irods_issues[i]);
+            const listItem = document.createElement("LI");
+            const code = document.createElement("CODE");
+            const itemText = document.createTextNode(response.irods_issues[i]);
             code.appendChild(itemText);
             listItem.appendChild(code);
             list.appendChild(listItem);
@@ -105,8 +109,8 @@
         }
         else {
           // No issues found
-          let title = document.createElement("P");
-          let titleText = document.createTextNode("No iRODs issues found.");
+          const title = document.createElement("P");
+          const titleText = document.createTextNode("No iRODs issues found.");
           title.appendChild(titleText);
           irodsIssuesDiv.appendChild(title);
           // Remove loading indicator
@@ -115,7 +119,7 @@
       }
       else if (response.status === null) {
         // Resend the request
-        let url = this.responseURL;
+        const url = this.responseURL;
         setTimeout(function () {
           console.log("Resending...");
           xhttp.open("GET", url, true);
@@ -124,8 +128,8 @@
       }
       else {
         // Failed to retrieve data
-        let title = document.createElement("P");
-        let titleText = document.createTextNode("Failed to debug resource.");
+        const title = document.createElement("P");
+        const titleText = document.createTextNode("Failed to get iRODS issues.");
         title.appendChild(titleText);
         irodsIssuesDiv.appendChild(title);
         // Remove loading indicator
@@ -135,4 +139,58 @@
   };
   xhttp.open("GET", "irods-issues/", true);
   xhttp.send();
+
+  // Load async data for non preferred paths in the resource
+  const xhttp_path_check = new XMLHttpRequest();
+  xhttp_path_check.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+          const response = JSON.parse(this.responseText);
+          const nonPreferredPathsDiv = document.getElementById("non-preferred-paths");
+          const title = document.createElement("p");
+          if (response.status === "SUCCESS") {
+              // Remove loading indicator
+              document.querySelector("#non-preferred-paths > .loading").remove();
+              if (response.non_preferred_paths.length) {
+                  const titleText = document.createTextNode("The following non-preferred path names were found: ");
+                  title.appendChild(titleText);
+                  nonPreferredPathsDiv.appendChild(title);
+                  const list = document.createElement("UL");
+
+                  for (let i = 0; i < response.non_preferred_paths.length; i++) {
+                      const listItem = document.createElement("LI");
+                      const code = document.createElement("CODE");
+                      const itemText = document.createTextNode(response.non_preferred_paths[i]);
+                      code.appendChild(itemText);
+                      listItem.appendChild(code);
+                      list.appendChild(listItem);
+                  }
+                  nonPreferredPathsDiv.appendChild(list);
+              } else {
+                  // No non-preferred paths found
+                  const titleText = document.createTextNode("No non-preferred path names found.");
+                  title.appendChild(titleText);
+                  nonPreferredPathsDiv.appendChild(title);
+              }
+          } else if (response.status === null) {
+              // Resend the request
+              const url = this.responseURL;
+
+              setTimeout(function () {
+                  console.log("Resending...");
+                  xhttp_path_check.open("GET", url, true);
+                  xhttp_path_check.send();
+              }, 1000);
+          } else {  //response.status === "ERROR"
+              // Failed to retrieve data
+              const titleText = document.createTextNode("Failed to get non-preferred path names.");
+              title.appendChild(titleText);
+              nonPreferredPathsDiv.appendChild(title);
+
+              // Remove loading indicator
+              document.querySelector("#non-preferred-paths > .loading").remove();
+          }
+      }
+  };
+  xhttp_path_check.open("GET", "non-preferred-paths/", true);
+  xhttp_path_check.send();
 </script>

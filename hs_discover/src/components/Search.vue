@@ -11,6 +11,7 @@
                   v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></span>
             <span id="search-glass" class="fa fa-search inside-left"></span>
             <p class="table-message" v-if="noMatches()">No resource matches</p>
+            <a href="https://help.hydroshare.org/discovering-resources/discovering-data-and-models-from-hydroshare-users/field-based-search-in-discover/" target="_blank">Advanced search help</a>
         </div>
       </div>
     </div>
@@ -24,7 +25,7 @@
                         <div id="headingDate" class="panel-heading">
                             <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
                                 class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">
-                                Temporal Coverage Filter</a>
+                                Temporal Coverage</a>
                             </h4>
                         </div>
                         <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
@@ -51,7 +52,7 @@
                     <div class="panel panel-default">
                         <div id="headingAuthor" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#creator" aria-expanded="true" aria-controls="creator">
-                                Author Filter</a>
+                                Author</a>
                             </h4>
                         </div>
                         <div id="creator" class="facet-list panel-collapse collapse in" aria-labelledby="headingAuthor">
@@ -72,7 +73,7 @@
                     <div class="panel panel-default">
                         <div id="headingOwner" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#owner" aria-expanded="true" aria-controls="owner">
-                                Owner Filter</a>
+                                Owner</a>
                             </h4>
                         </div>
                         <div id="owner" class="facet-list panel-collapse collapse in" aria-labelledby="headingOwner">
@@ -94,7 +95,7 @@
                     <div class="panel panel-default">
                         <div id="headingSubject" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#subject" aria-expanded="true" aria-controls="subject">
-                                Subject Filter</a>
+                                Subject</a>
                             </h4>
                         </div>
                         <div id="subject" class="facet-list panel-collapse collapse in" aria-labelledby="headingSubject">
@@ -116,7 +117,7 @@
                     <div class="panel panel-default">
                         <div id="headingContributor" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#contributor" aria-expanded="true" aria-controls="contributor">
-                                Contributor Filter</a>
+                                Contributor</a>
                             </h4>
                         </div>
                         <div id="contributor" class="facet-list panel-collapse collapse in" aria-labelledby="headingContributor">
@@ -138,7 +139,7 @@
                     <div class="panel panel-default">
                         <div id="headingType" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#type" aria-expanded="true" aria-controls="type">
-                                Type Filter</a>
+                                Content Type</a>
                             </h4>
                         </div>
                         <div id="type" class="facet-list panel-collapse collapse in" aria-labelledby="headingType">
@@ -160,7 +161,7 @@
                     <div class="panel panel-default">
                         <div id="headingAvailability" class="panel-heading">
                             <h4 class="panel-title"><a data-toggle="collapse" href="#availability" aria-expanded="true" aria-controls="availability">
-                                Availability Filter</a>
+                                Availability</a>
                             </h4>
                         </div>
                         <div id="availability" class="facet-list panel-collapse collapse in" aria-labelledby="headingAvailability">
@@ -219,7 +220,7 @@
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                            <img v-if="entry.geo" src="/static/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
                         <td class="tbl-col-title">
@@ -292,19 +293,9 @@ export default {
       countAvailabilities: {},
       availabilityFilter: [],
       resIconName: {
-        'Composite Resource': '/static/img/resource-icons/composite48x48.png',
-        Generic: '/static/img/resource-icons/generic48x48.png',
-        'Geopgraphic Raster': '/static/img/resource-icons/geographicraster48x48.png',
-        'Model Program Resource': '/static/img/resource-icons/modelprogram48x48.png',
-        'Collection Resource': '/static/img/resource-icons/collection48x48.png',
-        'Web App Resource': '/static/img/resource-icons/webapp48x48.png',
-        'Time Series': '/static/img/resource-icons/timeseries48x48.png',
-        'Script Resource': '/static/img/resource-icons/script48x48.png',
-        'Model Instance Resource': '/static/img/resource-icons/modelinstance48x48.png',
-        'SWAT Model Instance Resource': '/static/img/resource-icons/swat48x48.png',
-        'MODFLOW Model Instance Resource': '/static/img/resource-icons/modflow48x48.png',
-        'Multidimensional (NetCDF)': '/static/img/resource-icons/multidimensional48x48.png',
-        'HIS Referenced Time Series': '/static/img/resource-icons/his48x48.png',
+        Resource: '/static/static/img/resource-icons/composite48x48.png',
+        Collection: '/static/static/img/resource-icons/collection48x48.png',
+        'App Connector': '/static/static/img/resource-icons/webapp48x48.png',
       },
       sortMap: {
         'First Author': 'author',

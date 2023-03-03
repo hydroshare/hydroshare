@@ -5,7 +5,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.tokens import default_token_generator, PasswordResetTokenGenerator
 from django.db.models import Q
 from django.utils.http import base36_to_int
-from django.utils.six import text_type
+from six import text_type
 
 
 class WithoutLoggedInDateTokenGenerator(PasswordResetTokenGenerator):
@@ -13,11 +13,12 @@ class WithoutLoggedInDateTokenGenerator(PasswordResetTokenGenerator):
     Removes last_login from the hash of the PasswordResetTokenGenerator.  Allows use of generated tokens in scenarios
     where a user logging into their account after the token is generated should not expire the token
     """
+
     def _make_hash_value(self, user, timestamp):
         # override this method to remove last_login from hash
         return (
-                text_type(user.pk) + user.password +
-                text_type(timestamp)
+            text_type(user.pk) + user.password
+            + text_type(timestamp)
         )
 
 

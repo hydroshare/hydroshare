@@ -8,6 +8,7 @@ import os
 from kombu import Queue, Exchange
 
 DEBUG = True
+DISABLE_TASK_EMAILS = True
 
 # Make these unique, and don't share it with anybody
 SECRET_KEY = \
@@ -15,7 +16,7 @@ SECRET_KEY = \
 NEVERCACHE_KEY = \
     "7b205669-41dd-40db-9b96-c6f93b66123496a56be1-607f-4dbf-bf62-3315fb353ce6f12a7d28-06ad-4ef7-9266-b5ea66ed2519"
 
-ALLOWED_HOSTS = "*"
+ALLOWED_HOSTS = ['*']
 
 # for Django/Mezzanine comments and ratings to require user login
 COMMENTS_ACCOUNT_REQUIRED = True
@@ -53,6 +54,8 @@ CELERY_DEFAULT_EXCHANGE = 'tasks'
 CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 CELERY_ROUTES = ('hs_core.router.HSTaskRouter',)
+
+DISABLE_PERIODIC_TASKS = False
 
 # Docker settings
 DOCKER_URL = 'unix://docker.sock/'

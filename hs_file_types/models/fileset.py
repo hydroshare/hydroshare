@@ -16,7 +16,7 @@ class FileSetMetaData(GenericFileMetaDataMixin):
 class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
     """ One more files in a specific folder can be part of this aggregation """
 
-    metadata = models.OneToOneField(FileSetMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(FileSetMetaData, on_delete=models.CASCADE, related_name="logical_file")
     # folder path relative to {resource_id}/data/contents/ that represents this aggregation
     # folder becomes the name of the aggregation
     folder = models.CharField(max_length=4096)
@@ -86,13 +86,13 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets any one resource file from the list of files *resource_files* """
 
         return resource_files[0] if resource_files else None
 
     @classmethod
-    def can_set_folder_to_aggregation(cls, resource, dir_path):
+    def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """Checks if the specified folder *dir_path* can be set to Fileset aggregation
 
         :return
@@ -106,14 +106,14 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         fileset aggregation can contain any other aggregation types including fileset aggregation
         """
 
-        if resource.get_folder_aggregation_object(dir_path) is not None:
+        if resource.get_folder_aggregation_object(dir_path, aggregations=aggregations) is not None:
             # target folder is already an aggregation
             return False
 
         # checking all parent folders
         path = os.path.dirname(dir_path)
         while '/' in path:
-            parent_aggr = resource.get_folder_aggregation_object(path)
+            parent_aggr = resource.get_folder_aggregation_object(path, aggregations=aggregations)
             if parent_aggr is not None and (parent_aggr.is_model_program or parent_aggr.is_model_instance):
                 # avoid creating a fileset aggregation inside a model program/instance aggregation folder
                 return False
@@ -218,7 +218,7 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         for child_aggr in self.get_children():
             if child_aggr.is_fileset:
                 child_aggr.folder = new_folder + child_aggr.folder[len(old_folder):]
-                child_aggr.save()
+                child_aggr.save(update_fields=["folder"])
 
         # update self
         self.folder = new_folder + self.folder[len(old_folder):]

@@ -3,7 +3,7 @@ import shutil
 import json
 
 from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 
@@ -28,9 +28,9 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
             groups=[]
         )
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
-            title='Generic Resource Key/Value Metadata Testing'
+            title='Resource Key/Value Metadata Testing'
         )
 
     def tearDown(self):
@@ -66,7 +66,7 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
 
         # update title metadata
         self.assertEqual(self.gen_res.metadata.title.value,
-                         'Generic Resource Key/Value Metadata Testing')
+                         'Resource Key/Value Metadata Testing')
         title_element = self.gen_res.metadata.title
 
         url_params = {'shortkey': self.gen_res.short_id, 'element_name': 'title',

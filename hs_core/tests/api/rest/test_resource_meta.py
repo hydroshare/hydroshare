@@ -1,9 +1,5 @@
 import os
 import json
-import tempfile
-import shutil
-
-from lxml import etree
 
 from rest_framework import status
 
@@ -16,7 +12,7 @@ class TestResourceMetadata(HSRESTTestCase):
     def setUp(self):
         super(TestResourceMetadata, self).setUp()
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         res = resource.create_resource(self.rtype,
                                        self.user,

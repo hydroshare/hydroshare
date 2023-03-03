@@ -108,7 +108,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
                         else:
                             err_msg = "File ({}) is missing in iRODS. File not added to the aggregation"
                             err_msg = err_msg.format(new_path)
-                            logger.warn(err_msg)
+                            logger.warning(err_msg)
                             command.stdout.write(command.style.WARNING(err_msg))
                 else:
                     msg = "Moved file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
@@ -122,7 +122,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
             else:
                 err_msg = "File path ({}) not found in iRODS. Couldn't make this file part of " \
                           "the {} aggregation.".format(src_full_path, aggr_name)
-                logger.warn(err_msg)
+                logger.warning(err_msg)
                 command.stdout.write(command.style.WARNING(err_msg))
             command.stdout.flush()
 
@@ -246,14 +246,14 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
 
     # skip resources that do not exist in iRODS
     elif not istorage.exists(resource.root_path):
-            msg = "root path {} does not exist in iRODS".format(resource.root_path)
-            ecount += 1
-            if echo_errors:
-                print(msg)
-            if log_errors:
-                logger.error(msg)
-            if return_errors:
-                errors.append(msg)
+        msg = "root path {} does not exist in iRODS".format(resource.root_path)
+        ecount += 1
+        if echo_errors:
+            print(msg)
+        if log_errors:
+            logger.error(msg)
+        if return_errors:
+            errors.append(msg)
 
     else:
         # Step 2: does every file in Django refer to an existing file in iRODS?
@@ -279,24 +279,24 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
         from hs_composite_resource.models import CompositeResource as CR
         if isinstance(resource, CR):
             for lf in resource.logical_files:
-                    for f in lf.files.all():
-                        try:
-                            f.resource_file.size
-                        except:
-                            ecount += 1
-                            msg = "check_resource: file {} does not exist on irods" \
-                                .format(f.storage_path.encode('ascii', 'replace'))
+                for f in lf.files.all():
+                    try:
+                        f.resource_file.size
+                    except: # noqa
+                        ecount += 1
+                        msg = "check_resource: file {} does not exist on irods" \
+                            .format(f.storage_path.encode('ascii', 'replace'))
+                        print(msg)
+                        if clean_django:
+                            f.delete()
+                        if echo_errors:
                             print(msg)
-                            if clean_django:
-                                f.delete()
-                            if echo_errors:
-                                print(msg)
-                            if log_errors:
-                                logger.error(msg)
-                            if return_errors:
-                                errors.append(msg)
-                            if stop_on_error:
-                                raise ValidationError(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
         # Step 4: does every iRODS file correspond to a record in files?
         error2, ecount2 = __check_irods_directory(resource, resource.file_path, logger,
                                                   stop_on_error=stop_on_error,
@@ -572,8 +572,7 @@ def __ingest_irods_directory(resource,
                             raise ValidationError(msg)
                     elif res_file.has_logical_file and file_type is None:
                         msg = "ingest_irods_files: logical file for {} has type {}, not needed"\
-                            .format(res_file.storage_path, type(res_file.logical_file).__name__,
-                                    file_type.__name__)
+                            .format(res_file.storage_path, type(res_file.logical_file).__name__)
                         if echo_errors:
                             print(msg)
                         if log_errors:
@@ -679,9 +678,7 @@ def repair_resource(resource, logger, stop_on_error=False,
     # Do this before check because otherwise, errors get printed twice
     # TODO: This does not currently work properly for composite resources
     # if resource.resource_type == 'CompositeResource' or \
-    if resource.resource_type == 'GenericResource' or \
-       resource.resource_type == 'ModelInstanceResource' or \
-       resource.resource_type == 'ModelProgramResource':
+    if resource.resource_type == 'CompositeResource':
         _, count = ingest_irods_files(resource,
                                       logger,
                                       stop_on_error=False,

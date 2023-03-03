@@ -33,10 +33,10 @@ def landing_page(request, page):
             extended_metadata_exists = True
 
         new_supported_res_types_array = []
-        if content_model.metadata.supported_resource_types:
+        supported_resource_types = content_model.metadata.supported_resource_types
+        if supported_resource_types:
             extended_metadata_exists = True
-            supported_res_types_str = content_model.metadata. \
-                supported_resource_types.get_supported_res_types_str()
+            supported_res_types_str = supported_resource_types.get_supported_res_types_str()
             supported_res_types_array = supported_res_types_str.split(',')
             for type_name in supported_res_types_array:
                 for class_verbose_list in get_SupportedResTypes_choices():
@@ -47,10 +47,10 @@ def landing_page(request, page):
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
 
         new_supported_agg_types_array = []
-        if content_model.metadata.supported_aggregation_types:
+        supported_aggregation_types = content_model.metadata.supported_aggregation_types
+        if supported_aggregation_types:
             extended_metadata_exists = True
-            supported_agg_types_str = content_model.metadata. \
-                supported_aggregation_types.get_supported_agg_types_str()
+            supported_agg_types_str = supported_aggregation_types.get_supported_agg_types_str()
             supported_agg_types_array = supported_agg_types_str.split(',')
             for type_name in supported_agg_types_array:
                 for class_verbose_list in get_SupportedAggTypes_choices():
@@ -60,17 +60,19 @@ def landing_page(request, page):
 
             context['supported_agg_types'] = ", ".join(new_supported_agg_types_array)
 
-        if content_model.metadata.supported_sharing_status is not None:
+        supported_sharing_status = content_model.metadata.supported_sharing_status
+        if supported_sharing_status is not None:
             extended_metadata_exists = True
-            sharing_status_str = content_model.metadata.supported_sharing_status \
-                .get_sharing_status_str()
+            sharing_status_str = supported_sharing_status.get_sharing_status_str()
             context['supported_sharing_status'] = sharing_status_str
 
-        if content_model.metadata.app_icon:
-            context['tool_icon_url'] = content_model.metadata.app_icon.data_url
+        app_icon = content_model.metadata.app_icon
+        if app_icon:
+            context['tool_icon_url'] = app_icon.data_url
 
-        if content_model.metadata.supported_file_extensions:
-            context['supported_file_extensions'] = content_model.metadata.supported_file_extensions
+        supported_file_extensions = content_model.metadata.supported_file_extensions
+        if supported_file_extensions:
+            context['supported_file_extensions'] = supported_file_extensions
 
         context['extended_metadata_exists'] = extended_metadata_exists
 

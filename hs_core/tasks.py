@@ -6,24 +6,30 @@ import traceback
 import zipfile
 import logging
 import json
+import asyncio
 
 from celery.signals import task_postrun
 from datetime import datetime, timedelta, date
+from django.utils import timezone
 from xml.etree import ElementTree
 
 import requests
 from celery import shared_task
 from celery.schedules import crontab
-from celery.task import periodic_task
+from celery.worker.request import Request
+from celery import Task
+
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
-from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag
+from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag, current_site_url
+from hydroshare.hydrocelery import app as celery_app
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
-from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref
+from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref, \
+    get_resource_doi
 from hs_core.task_utils import get_or_create_task_notification
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
@@ -35,7 +41,28 @@ from hs_core.models import BaseResource, TaskNotification
 from hs_core.enums import RelationTypes
 from theme.utils import get_quota_message
 from hs_collection_resource.models import CollectionDeletedResource
+from hs_file_types.models import (
+    FileSetLogicalFile,
+    GenericLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
+    ModelProgramLogicalFile,
+    ModelInstanceLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile
+)
 
+FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
+                 "FileSetLogicalFile": FileSetLogicalFile,
+                 "GeoRasterLogicalFile": GeoRasterLogicalFile,
+                 "NetCDFLogicalFile": NetCDFLogicalFile,
+                 "GeoFeatureLogicalFile": GeoFeatureLogicalFile,
+                 "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
+                 "TimeSeriesLogicalFile": TimeSeriesLogicalFile,
+                 "ModelProgramLogicalFile": ModelProgramLogicalFile,
+                 "ModelInstanceLogicalFile": ModelInstanceLogicalFile
+                 }
 
 # Pass 'django' into getLogger instead of __name__
 # for celery tasks (as this seems to be the
@@ -44,10 +71,63 @@ from hs_collection_resource.models import CollectionDeletedResource
 logger = logging.getLogger('django')
 
 
+class FileOverrideException(Exception):
+    def __init__(self, error_message):
+        super(FileOverrideException, self).__init__(self, error_message)
+
+
+class HydroshareRequest(Request):
+    '''A Celery custom request to log failures.
+    https://docs.celeryq.dev/en/v4.4.7/userguide/tasks.html?#requests-and-custom-requests
+    '''
+    def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
+        super(HydroshareRequest, self).on_failure(
+            exc_info,
+            send_failed_event=send_failed_event,
+            return_ok=return_ok
+        )
+        warning_message = f'Failure detected for task {self.task.name}'
+        logger.warning(warning_message)
+        if not settings.DISABLE_TASK_EMAILS:
+            subject = 'Notification of failing Celery task'
+            send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+
+
+class HydroshareTask(Task):
+    '''Custom Celery Task configured for Hydroshare
+    https://docs.celeryq.dev/en/v4.4.7/userguide/tasks.html?#automatic-retry-for-known-exceptions
+    '''
+    Request = HydroshareRequest
+    autoretry_for = (Exception, KeyError)
+    retry_kwargs = {'max_retries': 3}
+    retry_backoff = True
+    retry_backoff_max = 600
+    retry_jitter = True
+
+
+@celery_app.on_after_finalize.connect
+def setup_periodic_tasks(sender, **kwargs):
+    if (hasattr(settings, 'DISABLE_PERIODIC_TASKS') and settings.DISABLE_PERIODIC_TASKS):
+        logger.debug("Periodic tasks are disabled in SETTINGS")
+    else:
+        sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=1, day_of_month=1), update_from_geoconnex_task.s())
+        sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
+        sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s())
+        sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
+                                 send_over_quota_emails.s())
+        sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
+        sender.add_periodic_task(
+            crontab(minute=15, hour=1, day_of_month=1), monthly_group_membership_requests_cleanup.s())
+        sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
+        sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=1), nightly_periodic_task_check.s())
+
+
 # Currently there are two different cleanups scheduled.
 # One is 20 minutes after creation, the other is nightly.
 # TODO Clean up zipfiles in remote federated storage as well.
-@periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=23))
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def nightly_zips_cleanup():
     # delete 2 days ago
     date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
@@ -72,9 +152,15 @@ def nightly_zips_cleanup():
                 istorage.delete(zips_daily_date)
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
-def manage_task_nightly():
-    # The nightly running task do DOI activation check
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def nightly_periodic_task_check():
+    with open("celery/periodic_tasks_last_executed.txt", mode='w') as file:
+        file.write(timezone.now().strftime('%m/%d/%y %H:%M:%S'))
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def manage_task_hourly():
+    # The hourly running task do DOI activation check
 
     # Check DOI activation on failed and pending resources and send email.
     msg_lst = []
@@ -82,8 +168,9 @@ def manage_task_nightly():
     # retry metadata deposition
     failed_resources = BaseResource.objects.filter(raccess__published=True, doi__contains='failure')
     for res in failed_resources:
-        if res.metadata.dates.all().filter(type='published'):
-            pub_date = res.metadata.dates.all().filter(type='published')[0]
+        meta_published_date = res.metadata.dates.all().filter(type='published').first()
+        if meta_published_date:
+            pub_date = meta_published_date
             pub_date = pub_date.start_date.strftime('%m/%d/%Y')
             act_doi = get_activated_doi(res.doi)
             response = deposit_res_metadata_with_crossref(res)
@@ -108,8 +195,9 @@ def manage_task_nightly():
     pending_resources = BaseResource.objects.filter(raccess__published=True,
                                                     doi__contains='pending')
     for res in pending_resources:
-        if res.metadata.dates.all().filter(type='published'):
-            pub_date = res.metadata.dates.all().filter(type='published')[0]
+        meta_published_date = res.metadata.dates.all().filter(type='published').first()
+        if meta_published_date:
+            pub_date = meta_published_date
             pub_date = pub_date.start_date.strftime('%m/%d/%Y')
             act_doi = get_activated_doi(res.doi)
             main_url = get_crossref_url()
@@ -119,7 +207,8 @@ def manage_task_nightly():
                                                    USERNAME=settings.CROSSREF_LOGIN_ID,
                                                    PASSWORD=settings.CROSSREF_LOGIN_PWD,
                                                    DOI_BATCH_ID=res.short_id,
-                                                   TYPE='result'))
+                                                   TYPE='result'),
+                                    verify=False)
             root = ElementTree.fromstring(response.content)
             rec_cnt_elem = root.find('.//record_count')
             failure_cnt_elem = root.find('.//failure_count')
@@ -138,19 +227,89 @@ def manage_task_nightly():
                                "data deposited since {pub_date}.".format(res_doi=act_doi,
                                                                          pub_date=pub_date))
                 logger.debug(response.content)
+            else:
+                notify_owners_of_publication_success(res)
         else:
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))
 
-    if msg_lst:
+    pending_unpublished_resources = BaseResource.objects.filter(raccess__published=False,
+                                                                doi__contains='pending')
+    for res in pending_unpublished_resources:
+        msg_lst.append(f"{res.short_id} has pending in DOI but resource_acceess shows unpublished. "
+                       "This indicates an issue with the resource, please notify a developer")
+
+    if msg_lst and not settings.DISABLE_TASK_EMAILS:
         email_msg = '\n'.join(msg_lst)
         subject = 'Notification of pending DOI deposition/activation of published resources'
         # send email for people monitoring and follow-up as needed
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=15, hour=0, day_of_week=1,
-                                                     day_of_month='1-7'))
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def update_from_geoconnex_task():
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(utils.update_geoconnex_texts())
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def nightly_metadata_review_reminder():
+    # The daiy check for resources with active metadata review that has been pending for more than 48hrs
+
+    if settings.DISABLE_TASK_EMAILS:
+        return
+
+    pending_resources = BaseResource.objects.filter(raccess__review_pending=True)
+    for res in pending_resources:
+        review_date = res.metadata.dates.all().filter(type='review_started').first()
+        if review_date:
+            review_date = review_date.start_date
+            cutoff_date = timezone.now() - timedelta(days=2)
+            if review_date < cutoff_date:
+                res_url = current_site_url() + res.get_absolute_url()
+                subject = f"Metadata review pending since " \
+                    f"{ review_date.strftime('%m/%d/%Y') } for { res.metadata.title }"
+                email_msg = f'''
+                Metadata review for <a href="{ res_url }">{ res_url }</a>
+                was requested at { review_date.strftime("%Y-%m-%d %H:%M:%S") }.
+
+                This is a reminder to review and approve/reject the publication request.
+                '''
+                recipients = [settings.DEFAULT_SUPPORT_EMAIL]
+                send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, recipients)
+
+
+def notify_owners_of_publication_success(resource):
+    """
+    Sends email notification to resource owners on publication success
+
+    :param resource: a resource that has been published
+    :return:
+    """
+    res_url = current_site_url() + resource.get_absolute_url()
+
+    email_msg = f'''Dear Resource Owner,
+    <p>The following resource that you submitted for publication:
+    <a href="{ res_url }">
+    { res_url }</a>
+    has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
+
+    <p>The publication request was processed by <a href="https://www.crossref.org/">Crossref.org</a>.
+    The Digital Object Identifier (DOI) for your resource is:
+    <a href="{ get_resource_doi(resource.short_id) }">https://doi.org/10.4211/hs.{ resource.short_id }</a></p>
+
+    <p>Thank you,</p>
+    <p>The HydroShare Team</p>
+    '''
+    if not settings.DISABLE_TASK_EMAILS:
+        send_mail(subject="HydroShare resource metadata review completed",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[o.email for o in resource.raccess.owners.all()])
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def send_over_quota_emails():
     # check over quota cases and send quota warning emails as needed
     hs_internal_zone = "hydroshare"
@@ -195,7 +354,7 @@ def send_over_quota_emails():
 
                 msg_str += '\n\nHydroShare Support'
                 subject = 'Quota warning'
-                if settings.DEBUG:
+                if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
                     logger.info("quota warning email not sent out on debug server but logged instead: "
                                 "{}".format(msg_str))
                 else:
@@ -205,7 +364,7 @@ def send_over_quota_emails():
                                   [u.email, settings.DEFAULT_SUPPORT_EMAIL],
                                   html_message=msg_str)
                     except Exception as ex:
-                        logger.debug("Failed to send quota warning email: " + ex.message)
+                        logger.debug("Failed to send quota warning email: " + str(ex))
             else:
                 if uq.remaining_grace_period >= 0:
                     # turn grace period off now that the user is below quota soft limit
@@ -251,7 +410,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         msg = "Unable to add zip file contents to non-existent resource {pk}."
         msg = msg.format(pk=pk)
         logger.error(msg)
-    except:
+    except: # noqa
         exc_info = "".join(traceback.format_exception(*sys.exc_info()))
         if resource:
             resource.file_unpack_status = 'Error'
@@ -307,6 +466,11 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
         head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
         out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
+        # in the case of user provided zip file name, out_with_folder path may not end with
+        # aggregation file name
+        aggr_filename = os.path.basename(input_path)
+        if not out_with_folder.endswith(aggr_filename):
+            out_with_folder = os.path.join(os.path.dirname(out_with_folder), aggr_filename)
         istorage.copyFiles(input_path, out_with_folder)
         if not aggregation:
             if '/data/contents/' in input_path:
@@ -320,7 +484,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 
         if aggregation:
             try:
-                istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
+                istorage.copyFiles(aggregation.map_file_path, temp_folder_name)
             except SessionException:
                 logger.error("cannot copy {}".format(aggregation.map_file_path))
             try:
@@ -428,7 +592,7 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new collection will not contain "deleted resources"
-            new_res.resources = ori_res.resources.all()
+            new_res.resources.set(ori_res.resources.all())
 
         # create bag for the new resource
         create_bag(new_res)
@@ -472,13 +636,12 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
             # element is copied over to this new version resource, needs to delete this element so
             # it can be created to link to its original resource correctly
             new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
-
         new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf, value=ori_res.get_citation())
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new version collection will not contain "deleted resources"
-            new_res.resources = ori_res.resources.all()
+            new_res.resources.set(ori_res.resources.all())
 
         # create bag for the new resource
         create_bag(new_res)
@@ -556,17 +719,18 @@ def delete_resource_task(resource_id, request_username=None):
     # when the most recent version of a resource in an obsolescence chain is deleted, the previous
     # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
     # relation element
-    if res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
-        is_version_of_res_link = \
-            res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().value
+    relation_is_version_of = res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first()
+    if relation_is_version_of:
+        is_version_of_res_link = relation_is_version_of.value
         idx = is_version_of_res_link.rindex('/')
         if idx == -1:
             obsolete_res_id = is_version_of_res_link
         else:
             obsolete_res_id = is_version_of_res_link[idx + 1:]
         obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
-        if obsolete_res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).exists():
-            eid = obsolete_res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first().id
+        relation_is_replaced_by = obsolete_res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
+        if relation_is_replaced_by:
+            eid = relation_is_replaced_by.id
             obsolete_res.metadata.delete_element('relation', eid)
             # also make this obsoleted resource editable if not published now that it becomes the latest version
             if not obsolete_res.raccess.published:
@@ -632,18 +796,20 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                 resource = utils.get_resource_by_shortkey(res_id)
                 response_content = json.loads(response.content.decode())
 
-                for key, value in response_content["resource"].items():
-                    resource.extra_metadata[key] = value
-                    resource.save()
+                if "resource" in response_content:
+                    for key, value in response_content["resource"].items():
+                        resource.extra_metadata[key] = value
+                        resource.save()
 
-                for url in response_content["content"]:
-                    logical_files = list(resource.logical_files)
-                    lf = logical_files[[i.aggregation_name for i in
-                                        logical_files].index(
-                                                    url["layer_name"].encode()
-                                                )]
-                    lf.metadata.extra_metadata["Web Services URL"] = url["message"]
-                    lf.metadata.save()
+                if "content" in response_content:
+                    for url in response_content["content"]:
+                        logical_files = list(resource.logical_files)
+                        lf = logical_files[[i.aggregation_name for i in
+                                            logical_files].index(
+                            url["layer_name"].encode()
+                        )]
+                        lf.metadata.extra_metadata["Web Services URL"] = url["message"]
+                        lf.metadata.save()
 
             except Exception as e:
                 logger.error(e)
@@ -660,22 +826,53 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
 def resource_debug(resource_id):
     """Update web services hosted by GeoServer and HydroServer.
     """
-    from hs_core.hydroshare.utils import get_resource_by_shortkey
-
-    resource = get_resource_by_shortkey(resource_id)
+    resource = utils.get_resource_by_shortkey(resource_id)
     from hs_core.management.utils import check_irods_files
     return check_irods_files(resource, log_errors=False, return_errors=True)
 
 
 @shared_task
+def get_non_preferred_paths(resource_id):
+    """Gets a list of file/folder paths that contain non-preferred characters"""
+
+    resource = utils.get_resource_by_shortkey(resource_id)
+    non_preferred_paths = []
+
+    if resource.resource_type == "CompositeResource":
+        non_preferred_paths = resource.get_non_preferred_path_names()
+    return non_preferred_paths
+
+
+@shared_task
 def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False, auto_aggregate=False,
-               ingest_metadata=False):
+               ingest_metadata=False, unzip_to_folder=False):
     from hs_core.views.utils import unzip_file
     user = User.objects.get(pk=user_pk)
-    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata)
+    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata,
+               unzip_to_folder)
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
+@shared_task
+def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
+    from hs_core.views.utils import rename_irods_file_or_folder_in_django
+    res = utils.get_resource_by_shortkey(res_id)
+    istorage = res.get_irods_storage()
+    res_files = []
+    file_type_obj = FILE_TYPE_MAP[file_type]
+    aggregation = file_type_obj.objects.get(id=file_type_id)
+    res_files.extend(aggregation.files.all())
+    orig_aggregation_name = aggregation.aggregation_name
+    for file in res_files:
+        tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
+        istorage.moveFile(file.storage_path, tgt_full_path)
+        rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
+    new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
+    res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
+                                                    new_path=new_aggregation_name)
+    return res.get_absolute_url()
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def daily_odm2_sync():
     """
     ODM2 variables are maintained on an external site this synchronizes data to HydroShare for local caching
@@ -683,16 +880,16 @@ def daily_odm2_sync():
     ODM2Variable.sync()
 
 
-@periodic_task(ignore_result=True, run_every=crontab(day_of_month=1))
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def monthly_group_membership_requests_cleanup():
     """
     Delete expired and redeemed group membership requests
     """
     two_months_ago = datetime.today() - timedelta(days=60)
-    GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
+    GroupMembershipRequest.objects.filter(date_requested__lte=two_months_ago).delete()
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=30, hour=0))
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def daily_innactive_group_requests_cleanup():
     """
     Redeem group membership requests for innactive users
@@ -724,7 +921,7 @@ def update_task_notification(sender=None, task_id=None, task=None, state=None, r
             logger.warning("Unhandled task state of {} for {}".format(state, task_id))
 
 
-@periodic_task(ignore_result=True, run_every=crontab(day_of_week=1))
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def task_notification_cleanup():
     """
     Delete expired task notifications each week

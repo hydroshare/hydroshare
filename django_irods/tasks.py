@@ -41,8 +41,8 @@ what each does:
 * ixmsg    - send/receive iRODS xMessage System messages.
 """
 
-from celery.task import Task
-from celery.task import subtask
+from celery import Task
+from celery import subtask
 from .icommands import Session, GLOBAL_SESSION, IRodsEnv
 
 from . import models as m
@@ -52,12 +52,13 @@ import tempfile
 import requests
 from django.conf import settings
 
+
 class RodsException(Exception):
     pass
 
 
 class IRODSTask(Task):
-    abstract=True
+    abstract = True
 
     def __init__(self, *args, **kwargs):
         super(IRODSTask, self).__init__(*args, **kwargs)
@@ -126,7 +127,9 @@ class IRODSTask(Task):
     def run(self, environment, *options, **kwargs):
         return self.session(environment).run(self.name, None, *options)
 
-CHUNK_SIZE=8192
+
+CHUNK_SIZE = 8192
+
 
 class IGet(IRODSTask):
     name = 'django_irods.tasks.iget'
@@ -195,14 +198,15 @@ class IGet(IRODSTask):
 
         :param environment: a dict or primary key of the RodsEnvironment model that governs this session
         :param path: the path to get from
-        :param callback: a registered Celery task that can be called as a subtask with the entire contents of the file that was gotten (file must fit in memory)
+        :param callback: a registered Celery task that can be called as a subtask with the entire contents of the file
+            that was gotten (file must fit in memory)
         :param post: a URL to which the results of the iget can be POSTed.  File can be larger than available memory.
         :param post_name: the filename that the POST will be given.
         :param options: any of the above command line options.
         :return:
         """
 
-        options += ('-',) # we're redirecting to stdout.
+        options += ('-',)  # we're redirecting to stdout.
 
         proc = self.session(environment).run_safe('iget', None, path, *options)
         tmp = tempfile.SpooledTemporaryFile()   # spool to disk if the iget is too large
@@ -219,13 +223,14 @@ class IGet(IRODSTask):
             subtask(callback).delay(data)
             return None
         elif post:
-            rsp =  requests.post(post, files={post_name: tmp})
+            rsp = requests.post(post, files={post_name: tmp})
             return {
                 'code' : rsp.status_code,
                 'content' : rsp.content
             }
         else:
             return tmp.read()
+
 
 class IPut(IRODSTask):
     name = 'django_irods.tasks.iput'
@@ -348,6 +353,7 @@ class ILs(IRODSTask):
     """
     name = 'django_irods.tasks.ils'
 
+
 class IAdmin(IRODSTask):
     """
     Usage: iadmin [-hvV] [command]
@@ -411,80 +417,83 @@ class IAdmin(IRODSTask):
     :return:
     """
     name = 'django_irods.tasks.iadmin'
+
     def run(self, environment, command, *options):
         return self.session(environment).run('iadmin', None, command, *options)
 
+
 class IBundle(IRODSTask):
 
-   """
-   Usage : ibun -x [-hb] [-R resource] structFilePath
-               irodsCollection
+    """
+    Usage : ibun -x [-hb] [-R resource] structFilePath
+                irodsCollection
 
-   Usage : ibun -c [-hf] [-R resource] [-D dataType] structFilePath
-               irodsCollection
+    Usage : ibun -c [-hf] [-R resource] [-D dataType] structFilePath
+                irodsCollection
 
-   Bundle file operations. This command allows structured files such as
-   tar files to be uploaded and downloaded to/from iRODS.
+    Bundle file operations. This command allows structured files such as
+    tar files to be uploaded and downloaded to/from iRODS.
 
-   A tar file containing many small files can be created with normal unix
-   tar command on the client and then uploaded to the iRODS server as a
-   normal iRODS file. The 'ibun -x' command can then be used to extract/untar
-   the uploaded tar file. The extracted subfiles and subdirectories will
-   appeared as normal iRODS files and sub-collections. The 'ibun -c' command
-   can be used to tar/bundle an iRODS collection into a tar file.
+    A tar file containing many small files can be created with normal unix
+    tar command on the client and then uploaded to the iRODS server as a
+    normal iRODS file. The 'ibun -x' command can then be used to extract/untar
+    the uploaded tar file. The extracted subfiles and subdirectories will
+    appeared as normal iRODS files and sub-collections. The 'ibun -c' command
+    can be used to tar/bundle an iRODS collection into a tar file.
 
-   For example, to upload a directory mydir to iRODS::
+    For example, to upload a directory mydir to iRODS::
 
-       tar -chlf mydir.tar -C /x/y/z/mydir .
-       iput -Dtar mydir.tar .
-       ibun -x mydir.tar mydir
+        tar -chlf mydir.tar -C /x/y/z/mydir .
+        iput -Dtar mydir.tar .
+        ibun -x mydir.tar mydir
 
-   Note the use of -C option with the tar command which will tar the
-   content of mydir but without including the directory mydir in the paths.
-   The 'ibun -x' command extracts the tar file into the mydir collection.
-   The target mydir collection does not have to exist nor be empty.
-   If a subfile already exists in the target collection, the ingestion
-   of this subfile will fail (unless the -f flag is set) but the process
-   will continue.
+    Note the use of -C option with the tar command which will tar the
+    content of mydir but without including the directory mydir in the paths.
+    The 'ibun -x' command extracts the tar file into the mydir collection.
+    The target mydir collection does not have to exist nor be empty.
+    If a subfile already exists in the target collection, the ingestion
+    of this subfile will fail (unless the -f flag is set) but the process
+    will continue.
 
-   It is generally a good practice to tag the tar file using the -Dtar flag
-   when uploading the file using iput. But if the tag is not made,
-   the server assumes it is a tar dataType. The dataType tag can be added
-   afterward with the isysmeta command. For example:
-   isysmeta mod /tempZone/home/rods/mydir.tar datatype 'tar file'
+    It is generally a good practice to tag the tar file using the -Dtar flag
+    when uploading the file using iput. But if the tag is not made,
+    the server assumes it is a tar dataType. The dataType tag can be added
+    afterward with the isysmeta command. For example:
+    isysmeta mod /tempZone/home/rods/mydir.tar datatype 'tar file'
 
-   The following command bundles the iRods collection mydir into a tar file::
+    The following command bundles the iRods collection mydir into a tar file::
 
-        ibun -cDtar mydir1.tar mydir
+         ibun -cDtar mydir1.tar mydir
 
-   If a copy of a file to be bundled does not exist on the target resource,
-   a replica will automatically be made on the target resource.
-   Again, if the -D flag is not use, the bundling will be done using tar.
+    If a copy of a file to be bundled does not exist on the target resource,
+    a replica will automatically be made on the target resource.
+    Again, if the -D flag is not use, the bundling will be done using tar.
 
-   The -b option when used with the -x option, specifies bulk registration
-   which does up to 50 rgistrations at a time to reduce overhead.
+    The -b option when used with the -x option, specifies bulk registration
+    which does up to 50 rgistrations at a time to reduce overhead.
 
-   Options are:
-   * -b  bulk registration when used with -x to reduce overhead
-   * -R  resource - specifies the resource to store to. This is optional
-     in your environment
-   * -D  dataType - the struct file data type. Valid only if the struct file
-     does not exist. Currently only one dataType - 't' which specifies
-     a tar file type is supported. If -D is not specified, the default is
-     a tar file type
-   * -x  extract the structFile and register the extracted files and directories
-     under the input irodsCollection
-   * -c  bundle the files and sub-collection underneath the input irodsCollection
-     and store it in the structFilePath
-   * -f  force overwrite the struct file (-c) or the subfiles (-x).
-   * -h  this help
+    Options are:
+    * -b  bulk registration when used with -x to reduce overhead
+    * -R  resource - specifies the resource to store to. This is optional
+      in your environment
+    * -D  dataType - the struct file data type. Valid only if the struct file
+      does not exist. Currently only one dataType - 't' which specifies
+      a tar file type is supported. If -D is not specified, the default is
+      a tar file type
+    * -x  extract the structFile and register the extracted files and directories
+      under the input irodsCollection
+    * -c  bundle the files and sub-collection underneath the input irodsCollection
+      and store it in the structFilePath
+    * -f  force overwrite the struct file (-c) or the subfiles (-x).
+    * -h  this help
 
-   :param environment:
-   :param options:
-   :return:
-   """
-   def run(self, environment, command, *options):
-       return self.session(environment).run('iadmin', None, command, *options)
+    :param environment:
+    :param options:
+    :return:
+    """
+
+    def run(self, environment, command, *options):
+        return self.session(environment).run('iadmin', None, command, *options)
 
 
 class IChksum(IRODSTask):
@@ -609,5 +618,3 @@ class Iuserinfo(IRODSTask):
 
 class Ixmsg(IRODSTask):
     name = 'django_irods.tasks.ixmsg'
-
-

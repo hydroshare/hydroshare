@@ -208,6 +208,7 @@ function updateSelectionMenuContext() {
         "setModelInstanceFileType",
         "subMenuSetContentType",
         "unzip",
+        "unzipToFolder",
         "updateRefUrl",
         "uploadFiles",
         "zip"
@@ -237,6 +238,9 @@ function updateSelectionMenuContext() {
 
         uiActionStates.unzip.disabled = true;
         uiActionStates.unzip.fileMenu.hidden = true;
+
+        uiActionStates.unzipToFolder.disabled = true;
+        uiActionStates.unzipToFolder.fileMenu.hidden = true;
 
         uiActionStates.downloadZipped.disabled = true;
         uiActionStates.downloadZipped.fileMenu.hidden = true;
@@ -271,11 +275,11 @@ function updateSelectionMenuContext() {
         uiActionStates.setModelInstanceFileType.disabled = true;
 
         const foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
-        if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
+        if(resourceType === 'Resource' && foldersSelected.length > 1) {
             uiActionStates.removeAggregation.disabled = true;
             uiActionStates.setFileSetFileType.disabled = true;
         }
-        if(resourceType !== 'Composite Resource') {
+        if(resourceType !== 'Resource') {
             uiActionStates.removeAggregation.disabled = true;
         }
         $("#fileTypeMetaData").html(file_metadata_alert);
@@ -291,6 +295,8 @@ function updateSelectionMenuContext() {
         if (selected.hasClass("fb-folder")) {
             uiActionStates.unzip.disabled = true;
             uiActionStates.unzip.fileMenu.hidden = true;
+            uiActionStates.unzipToFolder.disabled = true;
+            uiActionStates.unzipToFolder.fileMenu.hidden = true;
 
             uiActionStates.getRefUrl.disabled = true;
             uiActionStates.getRefUrl.fileMenu.hidden = true;
@@ -316,7 +322,6 @@ function updateSelectionMenuContext() {
             }
             else {
                 //  ------------- Folder is a logical file type -------------
-                uiActionStates.zip.disabled = true;
                 uiActionStates.paste.disabled = true;
                 uiActionStates.subMenuSetContentType.disabled = true;
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
@@ -362,6 +367,8 @@ function updateSelectionMenuContext() {
             if (!fileName.toUpperCase().endsWith(".ZIP")) {
                 uiActionStates.unzip.disabled = true;
                 uiActionStates.unzip.fileMenu.hidden = true;
+                uiActionStates.unzipToFolder.disabled = true;
+                uiActionStates.unzipToFolder.fileMenu.hidden = true;
             }
 
             if (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile") {
@@ -482,6 +489,7 @@ function updateSelectionMenuContext() {
         uiActionStates.cut.disabled = true;
         uiActionStates.rename.disabled = true;
         uiActionStates.unzip.disabled = true;
+        uiActionStates.unzipToFolder.disabled = true;
         uiActionStates.zip.disabled = true;
         uiActionStates.delete.disabled = true;
         uiActionStates.download.disabled = true;
@@ -497,7 +505,7 @@ function updateSelectionMenuContext() {
         uiActionStates.setModelInstanceFileType.disabled = true;
         uiActionStates.preview.disabled = true;
 
-        if (resourceType === 'Composite Resource') {
+        if (resourceType === 'Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
                 const logicalFileType = $(this).attr("data-logical-file-type");
                 //disable folder creation in aggregation folders
@@ -530,14 +538,18 @@ function updateSelectionMenuContext() {
 
     //  ------------- A file is included in the selection -------------
     if (selected.hasClass("fb-file")) {
+        const logicalFileType = $(selected).find(".fb-logical-file-type").attr("data-logical-file-type").trim();
         uiActionStates.open.disabled = true;
         uiActionStates.open.fileMenu.hidden = true;
 
         uiActionStates.paste.disabled = true;
         uiActionStates.paste.fileMenu.hidden = true;
 
-        uiActionStates.zip.disabled = true;
-        uiActionStates.zip.fileMenu.hidden = true;
+        if (logicalFileType !=="GenericLogicalFile") {
+            // we allow generic logical file (single aggregation file) to be zipped
+            uiActionStates.zip.disabled = true;
+            uiActionStates.zip.fileMenu.hidden = true;
+        }
     }
 
     if (!sourcePaths.selected.length) {
@@ -582,7 +594,7 @@ function updateSelectionMenuContext() {
 
     $("#open-separator").toggleClass("hidden", uiActionStates.open.fileMenu.hidden);
     $("#content-type-separator").toggleClass("hidden", mode !== "edit" || uiActionStates.removeAggregation.fileMenu.hidden && uiActionStates.subMenuSetContentType.fileMenu.hidden);
-    $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden);
+    $("#zip-separator").toggleClass("hidden", uiActionStates.zip.fileMenu.hidden && uiActionStates.unzip.fileMenu.hidden && uiActionStates.unzipToFolder.fileMenu.hidden);
 }
 
 // Proxy function when pasting in current directory triggering from menu item or button
@@ -595,6 +607,7 @@ function onPaste() {
 function paste(destPath) {
     let calls = [];
     let localSources = [];
+    let is_async_celery_task = false;
 
     // var localSources = sourcePaths.slice();  // avoid concurrency botch due to call by reference
     sourcePaths.selected.each(function () {
@@ -602,7 +615,8 @@ function paste(destPath) {
             let item = $(this);
             const hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
             const file_type_id = item.attr("data-logical-file-id");
-            calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, destPath.join('/')));
+            calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, destPath.join('/'), false));
+            is_async_celery_task = true;
         }
         else {
             const itemName = $(this).find(".fb-file-name").text();
@@ -612,13 +626,22 @@ function paste(destPath) {
     });
 
     if (localSources.length) {
-        calls.push(move_to_folder_ajax_submit(localSources, destPath.join('/')));
+        calls.push(move_to_folder_ajax_submit(localSources, destPath.join('/'), false));
     }
 
-    // Wait for the asynchronous call to finish to get new folder structure
+    // Wait for the calls to finish to get new folder structure if the task in the call is not done
+    // asyncronously on the server backend since JSON response return of success indicates the task
+    // is done if the task is NOT run asyncronously in which case the browser needs to be refreshed
+    // for the new folder structure; otherwise, if the task is run asyncronously as a celery task on
+    // the server backend, the task will run in the background after the server returns JSON response
+    // indicating the task is queued to be executed in the celery task queue, in which case, refreshing
+    // file browser is not needed and is actually problematic while the task is running in the background
+    // and has not yet finished
     $.when.apply($, calls).done(function () {
-        refreshFileBrowser();
-        clearSourcePaths();
+        if (!is_async_celery_task) {
+            refreshFileBrowser();
+            clearSourcePaths();
+        }
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1042,7 +1065,7 @@ function showFileTypeMetadata(file_type_time_series, url){
         return;
     }
     resource_mode = resource_mode.toLowerCase();
-    if(RESOURCE_PUBLISHED) {
+    if(RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
         resource_mode = 'view';
     }
     var $url;
@@ -1169,7 +1192,7 @@ function showFileTypeMetadata(file_type_time_series, url){
                   setupModelProgramFileTypeUI();
                   setupModelProgramTypeUI();
                   $("#mi-json-schema-file").change(function () {
-                    $(".btn-form-submit").show();
+                    $("#filetype-modelprogram").find(".btn-form-submit").show();
                 })
              }
              if (logical_type === "ModelInstanceLogicalFile") {
@@ -1451,6 +1474,11 @@ function isVirtualFolder(item) {
     return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet && !isModelProgramFolder && !isModelInstanceFolder;
 }
 
+function isSingleFileAggregation(item) {
+    item = $(item);
+    return item.find(".fb-logical-file-type").attr("data-logical-file-type") === "GenericLogicalFile";
+}
+
 function previewData() {
     let selected = $("#fb-files-container li.ui-selected");
     let previewDataURL = selected.children('span.fb-preview-data-url').text();
@@ -1647,7 +1675,7 @@ function refreshFileBrowser(name) {
         }).complete(function(res) {
             if (res.responseText) {
                 let extRefs = JSON.parse(res.responseText).filenames
-                if (extRefs.length && RESOURCE_MODE === 'Edit') {
+                if (extRefs.length && RESOURCE_MODE === 'Edit' && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
                     document.getElementById('edit-citation-control').style.display = 'block'
                 } else {
                     document.getElementById('edit-citation-control').style.display = 'none'
@@ -1750,13 +1778,46 @@ function warnExternalContent(shortId) {
 function onUploadSuccess(file, response) {
     // uploaded files can affect metadata in composite resource.
     // Use the json data returned from backend to update UI
-    if (RES_TYPE === 'Composite Resource') {
+    if (RES_TYPE === 'Resource') {
         updateResourceUI();
     }
     showCompletedMessage(response);
 }
 
 $(document).ready(function () {
+    // Download All method
+    $("#btn-download-all, #download-bag-btn").click(function (event) {
+        const btnDownloadAll = $("#btn-download-all");
+        const icon = $('#btn-download-all > span:first-child');
+        const initialClass = icon.attr("class");
+        const dataAgreeRequired = btnDownloadAll.attr("data-toggle") === "modal";
+
+        if (event.currentTarget.id === "download-bag-btn" || !dataAgreeRequired) {
+            icon.attr("class", "fa fa-spinner fa-pulse fa-lg download-spinner");
+            btnDownloadAll.css("cursor", "wait");
+        }
+        
+        if (dataAgreeRequired && event.currentTarget.id !== "download-bag-btn") {
+            return; // download will be triggered from Agreement modal
+        }
+
+        btnDownloadAll.toggleClass("disabled", true);
+        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
+
+        $.ajax({
+            type: "GET",
+            url: bagUrl,
+        }).done(function (task) {
+            notificationsApp.registerTask(task);
+            notificationsApp.show();
+        }).always((event) => {
+            const btnDownloadAll = $("#btn-download-all");
+            btnDownloadAll.toggleClass("disabled", false);
+            btnDownloadAll.css("cursor", "");
+            icon.attr("class", initialClass)
+        });
+    });
+
     if (!$("#hs-file-browser").length) {
         return;
     }
@@ -1809,7 +1870,7 @@ $(document).ready(function () {
     var mode = $("#hs-file-browser").attr("data-mode");
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
-    if (mode === "edit" && !RESOURCE_PUBLISHED) {
+    if (mode === "edit" && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
         no_metadata_alert +=
         '<div class="text-center">' +
             '<a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">' +
@@ -1913,7 +1974,7 @@ $(document).ready(function () {
                     pathLog.push(JSON.parse(sessionStorage.currentBrowsepath));
                     pathLogIndex = pathLog.length - 1;
 
-                    if (resourceType === 'Composite Resource') {
+                    if (resourceType === 'Resource') {
                         sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
                         refreshFileBrowser();
                     }
@@ -1925,6 +1986,19 @@ $(document).ready(function () {
 
                 // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
                 this.on("error", function (error, errorMessage) {
+                    let errorMsg = JSON.stringify(errorMessage);
+                    try {
+                        let errorMessageJSON = JSON.parse(errorMessage);
+                        if (errorMessageJSON.hasOwnProperty("validation_error")) {
+                            errorMsg = errorMessageJSON.validation_error;
+                        }
+                        else if(errorMessageJSON.hasOwnProperty("file_size_error")) {
+                            errorMsg = errorMessageJSON.file_size_error;
+                        }
+                    } catch (e) {
+
+                    }
+
                     $("#fb-alerts .upload-failed-alert").remove();
                     $("#hsDropzone").toggleClass("glow-blue", false);
 
@@ -1936,7 +2010,7 @@ $(document).ready(function () {
                                     '<strong>File Upload Failed</strong>'+
                                 '</div>'+
                                 '<div>'+
-                                    '<span>' + JSON.stringify(errorMessage) + '</span>' +
+                                    '<span>' + errorMsg + '</span>' +
                                 '</div>'+
                             '</div>').fadeIn(200);
                 });
@@ -2049,8 +2123,24 @@ $(document).ready(function () {
     });
 
     $("[data-fb-action='zip']").click(function() {
-         var folderName =$("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        $("#txtZipName").val(folderName);
+        let selected = $("#fb-files-container li.ui-selected");
+        let zipFileName = '';
+        if (isVirtualFolder(selected)) {
+            const aggregationPath = selected.attr('data-url').split('/data/contents/').pop();
+            let aggregationMainFileName = '';
+            if (aggregationPath.indexOf('/') > -1) {
+                aggregationMainFileName = aggregationPath.split('/').pop();
+            }
+            else {
+                aggregationMainFileName = aggregationPath;
+            }
+            zipFileName = aggregationMainFileName.split('.')[0];
+        }
+        else {
+            zipFileName =$("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        }
+
+        $("#txtZipName").val(zipFileName);
     });
 
     $('#zip-folder-dialog').on('shown.bs.modal', function () {
@@ -2222,6 +2312,67 @@ $(document).ready(function () {
         return false;
     });
 
+    // User clicked Proceed button on confirm whether to override files warning dialog - need to override files
+    $("#btn-file-override-proceed").click(function () {
+        var calls = [];
+        var source = JSON.parse($("#source_paths").val());
+        var target = $("#target_path").val();
+        calls.push(move_to_folder_ajax_submit(source, target, true));
+        // Disable the Cancel button until request has finished
+        $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
+        function afterRequest() {
+            $('#btn-file-override-proceed').parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            $("#move-override-confirm-dialog").modal('hide');
+            refreshFileBrowser();
+        }
+
+        $.when.apply($, calls).done(afterRequest);
+        $.when.apply($, calls).fail(afterRequest);
+        return false;
+    });
+
+    // User clicked Proceed button on confirm whether to override files warning dialog - need to override files
+    $("#btn-aggr-file-override-proceed").click(function () {
+        var calls = [];
+        var file_type = $("#file_type").val();
+        var file_type_id = $("#file_type_id").val();
+        var target_path = $("#target_path").val();
+        calls.push(move_virtual_folder_ajax_submit(file_type, file_type_id, target_path, true));
+        // Disable the Cancel button until request has finished
+        $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
+        function afterRequest() {
+            $('#btn-aggr-file-override-proceed').parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            $("#move-aggr-override-confirm-dialog").modal('hide');
+            refreshFileBrowser();
+        }
+
+        $.when.apply($, calls).done(afterRequest);
+        $.when.apply($, calls).fail(afterRequest);
+        return false;
+    });
+
+    // User clicked Proceed button on confirm whether to override files dialog when unzipping - need to override files
+    $("#btn-unzip-file-override-proceed").click(function () {
+        var calls = [];
+        var res_id = $("#unzip_res_id").val();
+        var zip_with_rel_path = $("#zip_with_rel_path").val();
+        calls.push(unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite='true', unzip_to_folder='false'));
+        // Disable the Cancel button until request has finished
+        $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
+        function afterDoneRequest() {
+            $('#btn-unzip-file-override-proceed').parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            $("#unzip-override-confirm-dialog").modal('hide');
+        }
+        function afterFailRequest() {
+            afterDoneRequest();
+            refreshFileBrowser();
+        }
+
+        $.when.apply($, calls).done(afterDoneRequest);
+        $.when.apply($, calls).fail(afterFailRequest);
+        return false;
+    });
+
     // User clicked Proceed button on invalid URL warning dialog - need to add url without validation
     $("#btn-reference-url-without-validation").click(function () {
         var refName = $("#ref_name_passover").val();
@@ -2354,7 +2505,10 @@ $(document).ready(function () {
         var filesToDelete = "";
 
         if (deleteList.length) {
-            $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+            // add spinners to files that will be deleted
+            deleteList.prepend('<i class="fa fa-spinner fa-pulse fa-lg icon-blue fb-cust-spinner" style="z-index: 1; position: absolute;"></i>');
+            deleteList.css("cursor", "wait").addClass("deleting");
+
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
                 let item = $(deleteList[i]);
@@ -2380,41 +2534,31 @@ $(document).ready(function () {
                     }
                 }
             }
-
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
                 if (filesToDelete !== "") {
-                    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
-                    $("#fb-delete-files-form").submit();
+                    deleteRemainingFiles(filesToDelete);
                 }
                 else {
-                    refreshFileBrowser();
+                    resetAfterFBDelete();
                 }
                 if (removeCitationIntent) {
                     $.ajax({
                       type: "POST",
                       url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
                     }).complete(function() {
-                        document.body.style.cursor = 'default';
-                        if (window.location.href.includes('?resource-mode=edit')) {
-                            location.reload();
-                        } else {
-                            window.location.href = window.location.href + '?resource-mode=edit';
-                        }
+                        resetAfterFBDelete();
                     });
                 }
-                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
 
             $.when.apply($, calls).fail(function () {
                 if (filesToDelete !== "") {
-                    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
-                    $("#fb-delete-files-form").submit();
+                    deleteRemainingFiles(filesToDelete);
                 }
                 else {
-                    refreshFileBrowser();
+                    resetAfterFBDelete();
                 }
-                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             });
         }
     });
@@ -2598,10 +2742,17 @@ $(document).ready(function () {
     // Zip method
     $("#btn-confirm-zip").click(async function () {
         if ($("#txtZipName").val().trim() !== "") {
-            const folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+            let selected = $("#fb-files-container li.ui-selected");
             const fileName = $("#txtZipName").val() + ".zip";
-            const path = getCurrentPath().path.concat(folderName);
-            await zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
+            if (isVirtualFolder(selected) || isSingleFileAggregation(selected)) {
+                const aggregationPath = selected.attr('data-url').split('/data/contents/').pop();
+                await zip_by_aggregation_file_ajax_submit(SHORT_ID, aggregationPath, fileName)
+            }
+            else {
+                const folderName = selected.children(".fb-file-name").text();
+                const path = getCurrentPath().path.concat(folderName);
+                await zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
+            }
             refreshFileBrowser();
         }
     });
@@ -2609,40 +2760,34 @@ $(document).ready(function () {
     // Unzip method
     $("#btn-unzip, #fb-unzip").click(function () {
         var files = $("#fb-files-container li.ui-selected");
-
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/')));
+            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='false'));
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure
-        $.when.apply($, calls).done(function () {
-            refreshFileBrowser();
-        });
-
+        // don't refresh browser when unzip async task is ongoing since a temporary folder is being created to check
+        // whether file override will happen
         $.when.apply($, calls).fail(function () {
             refreshFileBrowser();
         });
     });
 
-    // Download All method
-    $("#btn-download-all, #download-bag-btn").click(function (event) {
-        $(event.currentTarget).toggleClass("disabled", true);
-        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
-
-        if (!bagUrl) {
-            return; // If no url, it means download will be triggered from Agreement modal
+    // Unzip to folder method
+    $("#btn-unzip-to-folder, #fb-unzip-to-folder").click(function () {
+        var files = $("#fb-files-container li.ui-selected");
+        var calls = [];
+        for (let i = 0; i < files.length; i++) {
+            let fileName = $(files[i]).children(".fb-file-name").text();
+            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='true'));
         }
 
-        $.ajax({
-            type: "GET",
-            url: bagUrl,
-            success: function (task) {
-                notificationsApp.registerTask(task);
-                notificationsApp.show();
-                $(event.currentTarget).toggleClass("disabled", false);
-            }
+        // If asynchronous calls for unzipping failed, refresh file browser; otherwise, if it succeeds which triggers
+        // putting unzipping async task in the queue to be executed, there is no need to refresh file browser while
+        // the unzipping async task is scheduled to run
+        $.when.apply($, calls).fail(function () {
+            refreshFileBrowser();
         });
     });
 

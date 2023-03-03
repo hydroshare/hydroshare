@@ -1,7 +1,7 @@
 
 # unit test for get_checksum() from resource.py
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
@@ -23,7 +23,7 @@ class TestGetChecksum(MockIRODSTestCaseMixin, TestCase):
 
         # create a resource
         self.res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user1,
             'Test Resource',
         )
@@ -31,4 +31,3 @@ class TestGetChecksum(MockIRODSTestCaseMixin, TestCase):
     def test_get_checksum(self):
         with self.assertRaises(NotImplementedError):
             hydroshare.get_checksum(self.res.short_id)
-

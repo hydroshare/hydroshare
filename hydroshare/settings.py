@@ -1,13 +1,15 @@
-
-#TEST_RUNNER='django_nose.NoseTestSuiteRunner'
-TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
-TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
-
-import os
+# TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 import sys
+
+from PIL import ImageFile
+import os
+TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
+TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
+
+
 # import importlib
 
-local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
+local_settings_module = os.environ.get("LOCAL_SETTINGS", "hydroshare.local_settings")
 
 ######################
 # MEZZANINE SETTINGS #
@@ -102,8 +104,8 @@ ADMINS = (
 MANAGERS = ADMINS
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
-# See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
+# https://docs.djangoproject.com/en/3.2/ref/settings/#allowed-hosts
+ALLOWED_HOSTS = ["*"]
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -122,15 +124,19 @@ USE_TZ = True
 LANGUAGE_CODE = "en"
 
 # Supported languages
-_ = lambda s: s
-LANGUAGES = (
-    ('en', _('English')),
-)
+def _(s): return s # noqa
+
+
+LANGUAGES = (("en", _("English")),)
 
 # A boolean that turns on/off debug mode. When set to ``True``, stack traces
 # are displayed for error pages. Should always be set to ``False`` in
 # production. Best set to ``True`` in local_settings.py
 DEBUG = False
+
+# A boolean that determines whether tasks related emails should be sent.
+# Best set to ``True`` in local_settings.py
+DISABLE_TASK_EMAILS = False
 
 # Whether a user's session cookie expires when the Web browser is closed.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -162,7 +168,7 @@ AUTHENTICATION_BACKENDS = ("theme.backends.CaseInsensitiveMezzanineBackend",)
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    "django.contrib.staticfiles.finders.DefaultStorageFinder",
 )
 
 # The numeric mode to set newly-uploaded files to. The value should be
@@ -174,7 +180,7 @@ FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
 
 # Sitemap for robots
 ROBOTS_SITEMAP_URLS = [
-    'http://localhost:8000/sitemap/',
+    "http://localhost:8000/sitemap/",
 ]
 
 #############
@@ -198,12 +204,12 @@ DATABASES = {
     }
 }
 
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 #########
 # PATHS #
 #########
 
-import os
 
 # Full filesystem path to the project.
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -219,7 +225,17 @@ CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = "/static/"
+
+#  Had to change STATIC_URL as required since django 2.2 when running in DEBUG mode
+#  Django does the following check in django =>2.2:
+# if (settings.DEBUG and settings.MEDIA_URL and settings.STATIC_URL and
+# 		settings.MEDIA_URL.startswith(settings.STATIC_URL)):
+# 	raise ImproperlyConfigured(
+# 		"runserver can't serve media if MEDIA_URL is within STATIC_URL."
+# 	)
+# that means path for STATIC_URL can't be a parent directory of path for MEDIA_URL
+# Ref: https://docs.djangoproject.com/en/2.2/ref/settings/#media-root
+STATIC_URL = "/static/static/"
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -227,10 +243,28 @@ STATIC_URL = "/static/"
 # Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 
+# using this storage class might cause issues for future tests
+# The documentation suggests using the default storage backend when testing
+# https://docs.djangoproject.com/en/1.11/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
+STATICFILES_STORAGE = "hydroshare.storage.ForgivingManifestStaticFilesStorage"
+
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = STATIC_URL + "media/"
+
+# Note: MEDIA_URL needs to be set to a path so that STATIC_URL is not a parent folder of MEDIA_URL
+MEDIA_URL = "/static/media/"
+
+# Sorl settings for generating thumbnails
+THUMBNAIL_PRESERVE_FORMAT = True
+THUMBNAIL_QUALITY = 95
+THUMBNAIL_DUMMY = True
+THUMBNAIL_DUMMY_SOURCE = STATIC_URL + "img/home-page/step4.png"
+THUMBNAIL_DUMMY_RATIO = 1
+
+# Allow PIL to ignore imgs with lots of metadata
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
@@ -239,15 +273,15 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
 
-ADAPTOR_INPLACEEDIT_EDIT = 'hs_core.models.HSAdaptorEditInline'
-INPLACE_SAVE_URL = '/hsapi/save_inline/'
+ADAPTOR_INPLACEEDIT_EDIT = "hs_core.models.HSAdaptorEditInline"
+INPLACE_SAVE_URL = "/hsapi/save_inline/"
 
 ################
 # APPLICATIONS #
 ################
 
 INSTALLED_APPS = (
-    'test_without_migrations',
+    "test_without_migrations",
     "autocomplete_light",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -261,7 +295,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
-    "inplaceeditform",
+    "django.contrib.messages",
     "django_nose",
     "django_irods",
     "drf_yasg",
@@ -281,25 +315,16 @@ INSTALLED_APPS = (
     "haystack",
     "rest_framework",
     "robots",
+    "sorl.thumbnail",
     "hs_core",
     "hs_access_control",
     "hs_labels",
     "hs_metrics",
     "irods_browser_app",
-    "hs_geo_raster_resource",
-    "ref_ts",
-    "hs_app_timeseries",
     "widget_tweaks",
-    "hs_app_netCDF",
-    "hs_model_program",
-    "hs_modelinstance",
     "hs_tools_resource",
-    "hs_swat_modelinstance",
-    "hs_geographic_feature_resource",
-    "hs_script_resource",
     "hs_sitemap",
     "hs_collection_resource",
-    "hs_modflow_modelinstance",
     "hs_tracking",
     "hs_file_types",
     "hs_composite_resource",
@@ -311,52 +336,57 @@ INSTALLED_APPS = (
     "markdown",
     "hs_communities",
     "hs_discover",
-    "hs_upload"
+    "hs_upload",
+    "health_check",
+    "health_check.db",
+    "health_check.cache",
+    "health_check.storage",
+    "health_check.contrib.migrations",
+    "health_check.contrib.celery",
+    "health_check.contrib.celery_ping",
+    "health_check.contrib.psutil",
+    "health_check.contrib.rabbitmq",
 )
 
 SWAGGER_SETTINGS = {
-    'DEFAULT_GENERATOR_CLASS': 'hs_rest_api2.serializers.NestedSchemaGenerator'
+    "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
 }
 
-OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
+OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
-    'rest_framework',
-    'django_nose',
-    'inplaceeditform',
-    'grappelli_safe',
-    'django_irods',
-    'crispy_forms',
-    'autocomplete_light',
-    'widget_tweaks',
-    'oauth2_provider',
-    'debug_toolbar',
-    'corsheaders',
-    'security',
-    'django_comments',
-    'haystack'
-    'test_without_migrations',
-    'robots',
-    'heartbeat',
-    'filebrowser_safe'
+    "rest_framework",
+    "django_nose",
+    "grappelli_safe",
+    "django_irods",
+    "crispy_forms",
+    "autocomplete_light",
+    "widget_tweaks",
+    "oauth2_provider",
+    "debug_toolbar",
+    "corsheaders",
+    "security",
+    "django_comments",
+    "haystack" "test_without_migrations",
+    "robots",
+    "heartbeat",
+    "filebrowser_safe"
     # etc...
 )
 
 # List of processors used by RequestContext to populate the context.
 # Each one should be a callable that takes the request object as its
 # only parameter and returns a dictionary to add to the context.
-#TEMPLATE_CONTEXT_PROCESSORS = ()
+# TEMPLATE_CONTEXT_PROCESSORS = ()
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            (os.path.join(BASE_DIR, "hs_core", "templates"),)
-        ],
-        'OPTIONS': {
-            'context_processors': [
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [os.path.join(BASE_DIR, "hs_core", "templates")],
+        "OPTIONS": {
+            "context_processors": [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.debug",
@@ -372,7 +402,13 @@ TEMPLATES = [
                 "mezzanine.template.loaders.host_themes.Loader",
                 "django.template.loaders.filesystem.Loader",
                 "django.template.loaders.app_directories.Loader",
-            ]
+            ],
+            "builtins": [
+                "django.templatetags.static",
+            ],
+            "libraries": {
+                "staticfiles": "django.templatetags.static",
+            },
         },
     },
 ]
@@ -405,11 +441,11 @@ MIDDLEWARE = (
 USE_SECURITY = False
 if USE_SECURITY:
     MIDDLEWARE += (
-        'security.middleware.XssProtectMiddleware',
-        'security.middleware.ContentSecurityPolicyMiddleware',
-        'security.middleware.ContentNoSniff',
-        'security.middleware.XFrameOptionsMiddleware',
-        'django.middleware.security.SecurityMiddleware',
+        "security.middleware.XssProtectMiddleware",
+        "security.middleware.ContentSecurityPolicyMiddleware",
+        "security.middleware.ContentNoSniff",
+        "security.middleware.XFrameOptionsMiddleware",
+        "django.middleware.security.SecurityMiddleware",
     )
 
 # Store these package names here as they may change in the future since
@@ -466,48 +502,53 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
 
 ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
-CRISPY_TEMPLATE_PACK = 'bootstrap'
+CRISPY_TEMPLATE_PACK = "bootstrap"
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100,
-    'PAGE_SIZE_QUERY_PARAM': 'PAGE_SIZE',
-    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 100,
+    "PAGE_SIZE_QUERY_PARAM": "PAGE_SIZE",
+    "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
     ),
-    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
 }
 
-SOLR_HOST = os.environ.get('SOLR_PORT_8983_TCP_ADDR', 'localhost')
-SOLR_PORT = '8983'
+SOLR_HOST = os.environ.get("SOLR_PORT_8983_TCP_ADDR", "localhost")
+SOLR_PORT = "8983"
 HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr/collection1'.format(**globals()),
-        'ADMIN_URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr/admin/cores'.format(**globals()),
+    "default": {
+        "ENGINE": "haystack.backends.solr_backend.SolrEngine",
+        "URL": "http://{SOLR_HOST}:{SOLR_PORT}/solr/collection1".format(**globals()),
+        "ADMIN_URL": "http://{SOLR_HOST}:{SOLR_PORT}/solr/admin/cores".format(
+            **globals()
+        ),
         # ...or for multicore...
         # 'URL': 'http://127.0.0.1:8983/solr/mysite',
     },
 }
-HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealtimeSignalProcessor"
+HAYSTACK_SIGNAL_PROCESSOR = (
+    "hs_core.hydro_realtime_signal_processor.HydroRealtimeSignalProcessor"
+)
 
 
 # customized value for password reset token, email verification and group invitation link token
 # to expire in 7 days
-PASSWORD_RESET_TIMEOUT_DAYS = 7
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 
 # customized temporary file path for large files retrieved from iRODS user zone for metadata
 # extraction
-TEMP_FILE_DIR = '/hs_tmp'
+TEMP_FILE_DIR = "/hs_tmp"
 
 ####################
 # OAUTH TOKEN SETTINGS #
 ####################
 
 OAUTH2_PROVIDER = {
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,  # 30 days
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 2592000,  # 30 days
+    "PKCE_REQUIRED": False,
 }
 
 ####################
@@ -515,82 +556,85 @@ OAUTH2_PROVIDER = {
 ####################
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            'datefmt': "%d/%b/%Y %H:%M:%S"
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            "datefmt": "%d/%b/%Y %H:%M:%S",
         },
-        'simple': {
-            'format': '[%(asctime)s] %(levelname)s %(message)s',
-            'datefmt': "%d/%b/%Y %H:%M:%S"
-        },
-    },
-    'handlers': {
-        'djangolog': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/hydroshare/log/django.log',
-            'formatter': 'verbose',
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-        },
-        'hydrosharelog': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/hydroshare/log/hydroshare.log',
-            'formatter': 'verbose',
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-        },
-        'celerylog': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/hydroshare/log/celery.log',
-            'formatter': 'verbose',
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
+        "simple": {
+            "format": "[%(asctime)s] %(levelname)s %(message)s",
+            "datefmt": "%d/%b/%Y %H:%M:%S",
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['djangolog'],
-            'propagate': False,
-            'level': 'DEBUG',
+    "handlers": {
+        "djangolog": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "/hydroshare/log/django.log",
+            "formatter": "verbose",
+            "maxBytes": 1024 * 1024 * 15,  # 15MB
+            "backupCount": 10,
+        },
+        "hydrosharelog": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "/hydroshare/log/hydroshare.log",
+            "formatter": "verbose",
+            "maxBytes": 1024 * 1024 * 15,  # 15MB
+            "backupCount": 10,
+        },
+        "celerylog": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "/hydroshare/log/celery.log",
+            "formatter": "verbose",
+            "maxBytes": 1024 * 1024 * 15,  # 15MB
+            "backupCount": 10,
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["djangolog"],
+            "propagate": False,
+            "level": "DEBUG",
         },
         # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
-        'django.template': {
-            'handlers': ['djangolog'],
-            'level': 'INFO',
-            'propagate': False,
+        "django.template": {
+            "handlers": ["djangolog"],
+            "level": "INFO",
+            "propagate": False,
         },
-        'django.db.backends': {
-            'handlers': ['djangolog'],
-            'level': 'WARNING',
-            'propagate': False,
+        "django.db.backends": {
+            "handlers": ["djangolog"],
+            "level": "WARNING",
+            "propagate": False,
         },
-        'celery': {
-            'handlers': ['celerylog'],
-            'level': 'WARNING',
-            'propagate': False,
+        "celery": {
+            "handlers": ["celerylog"],
+            "level": "WARNING",
+            "propagate": False,
         },
         # Catch-all logger for HydroShare apps
-        '': {
-            'handlers': ['hydrosharelog'],
-            'propagate': False,
-            'level': 'DEBUG'
-        },
-    }
+        "": {"handlers": ["hydrosharelog"], "propagate": False, "level": "DEBUG"},
+    },
 }
 
 # hs_tracking settings
 TRACKING_SESSION_TIMEOUT = 60 * 15
-TRACKING_PROFILE_FIELDS = ["title", "user_type", "subject_areas", "public", "state", "country"]
+TRACKING_PROFILE_FIELDS = [
+    "title",
+    "user_type",
+    "subject_areas",
+    "public",
+    "state",
+    "country",
+]
 TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]
 
 # info django that a reverse proxy sever (nginx) is handling ssl/https for it
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Content Security Policy
@@ -598,7 +642,9 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # sha256-* strings are hashes of inline scripts and styles
 
 CSP_DICT = {
-    "default-src": ["none", ],
+    "default-src": [
+        "none",
+    ],
     "script-src": [
         "self",
         "*.google.com",
@@ -649,7 +695,7 @@ CSP_DICT = {
         "'sha256-rQJ6epAwyFQxC0sb4uq4sgIKJLr2jP19K4M0Bork7kM='",
         "'sha256-hH6THo5mChVoQ5wrDhew4wuTZxOayUnEJC3U1SK80VQ='",
         "'sha256-fUjKhLcjxDsHY0YkuZGJ9RcBu+3nIlSqpSUI9biHAJw='",
-        "'sha256-7ydyyMhpPIo0fTHZtxmllQ+MJpMVM299EkUKAf0K1hs='"
+        "'sha256-7ydyyMhpPIo0fTHZtxmllQ+MJpMVM299EkUKAf0K1hs='",
     ],
     "style-src": [
         "self",
@@ -670,21 +716,11 @@ CSP_DICT = {
         "*.datatables.net",
         "*.googleapis.com",
         "*.gstatic.com",
-        "*.google.com"
+        "*.google.com",
     ],
-    "connect-src": [
-        "self",
-        "*.github.com"
-    ],
-    "font-src": [
-        "self",
-        "*.gstatic.com",
-        "*.bootstrapcdn.com"
-    ],
-    "frame-src": [
-        "self",
-        "*.hydroshare.org"
-    ]
+    "connect-src": ["self", "*.github.com"],
+    "font-src": ["self", "*.gstatic.com", "*.bootstrapcdn.com"],
+    "frame-src": ["self", "*.hydroshare.org"],
 }
 
 
@@ -697,36 +733,34 @@ SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
-# detect test mode to turn off some features
-TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
-
 # Categorization in discovery of content types
-# according to file extension of otherwise unaggregated files. 
-DISCOVERY_EXTENSION_CONTENT_TYPES = { 
-    'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf', 'tex', 'latex']),
-    'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
-    'Presentation': set(['ppt', 'pptx', 'odp']),
-    'Jupyter Notebook': set(['ipynb']),
-    'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
-    'Multidimensional (NetCDF)': set(['nc'])
-} 
+# according to file extension of otherwise unaggregated files.
+DISCOVERY_EXTENSION_CONTENT_TYPES = {
+    "Document": set(["doc", "docx", "pdf", "odt", "rtf", "tex", "latex"]),
+    "Spreadsheet": set(["csv", "xls", "xlsx", "ods"]),
+    "Presentation": set(["ppt", "pptx", "odp"]),
+    "Jupyter Notebook": set(["ipynb"]),
+    "Image": set(["gif", "jpg", "jpeg", "tif", "tiff", "png"]),
+    "Multidimensional (NetCDF)": set(["nc"]),
+}
 
 HSWS_ACTIVATED = False
 
 # HydroShare THREDDS Data Server URL
-THREDDS_SERVER_URL = 'https://thredds.hydroshare.org/thredds/'
+THREDDS_SERVER_URL = "https://thredds.hydroshare.org/thredds/"
 # HydroShare Geoserver URL
-HSWS_GEOSERVER_URL = 'https://geoserver.hydroshare.org/geoserver'
+HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
 
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
-    'hs_core.tasks.create_bag_by_irods',
-    'hs_core.tasks.create_temp_zip',
-    'hs_core.tasks.unzip_task',
-    'hs_core.tasks.copy_resource_task',
-    'hs_core.tasks.replicate_resource_bag_to_user_zone_task',
-    'hs_core.tasks.create_new_version_resource_task',
-    'hs_core.tasks.delete_resource_task'
+    "hs_core.tasks.create_bag_by_irods",
+    "hs_core.tasks.create_temp_zip",
+    "hs_core.tasks.unzip_task",
+    "hs_core.tasks.copy_resource_task",
+    "hs_core.tasks.replicate_resource_bag_to_user_zone_task",
+    "hs_core.tasks.create_new_version_resource_task",
+    "hs_core.tasks.delete_resource_task",
+    "hs_core.tasks.move_aggregation_task",
 ]
 
 ####################################
@@ -740,9 +774,18 @@ TASK_NAME_LIST = [
 # Allow any settings to be defined in local_settings.py which should be
 # ignored in your version control system allowing for settings to be
 # defined per machine.
-local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
+local_settings = __import__(local_settings_module, globals(), locals(), ["*"])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
+
+if 'test' in sys.argv:
+    import logging
+
+    logging.disable(logging.CRITICAL)
+    DISABLE_HAYSTACK = True
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
 
 ####################
 # DYNAMIC SETTINGS #
@@ -764,8 +807,10 @@ else:
 ####################
 # Allow Unicode printout to terminals
 ####################
-#import codecs
-#sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-#sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+# import codecs
+# sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+# sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
-MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = "/hydroshare/hs_file_types/model_meta_schema_templates"
+MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
+    "/hydroshare/hs_file_types/model_meta_schema_templates"
+)

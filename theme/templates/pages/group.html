@@ -1,8 +1,8 @@
 {% extends "pages/page.html" %}
-{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags thumbnail %}
 
 {% block extra_css %}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
 {% block main %}
@@ -40,17 +40,17 @@
 
             <div class="col-sm-3">
                 {#  Group Picture #}
-                {% if group.gaccess.picture and group.gaccess.picture.url %}
-                    <div class="group-image-wrapper group-image-wrapper-medium">
-                        <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                    </div>
-
-                {% else %}
-                    <div class="group-image-wrapper group-image-wrapper-medium">
-                        <div class="group-image group-preview-image-default"
-                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                    </div>
-                {% endif %}
+                <div class="group-image-wrapper group-image-wrapper-medium">
+                    {% if group.gaccess.picture and group.gaccess.picture.url %}
+                        {% thumbnail group.gaccess.picture "x130" crop="center" as im %}
+                            <div class="group-image" style="background-image: url({{ im.url }})"></div>
+                        {% endthumbnail %}
+                    {% else %}
+                            <div class="group-image group-preview-image-default"
+                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                            </div>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="col-sm-7">
@@ -196,9 +196,11 @@
                                     <tr data-filter-by="edit-user">
                                         <td>
                                             {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
+                                                {% thumbnail owner.userprofile.picture "x80" crop="center" as im %}
+                                                    <div style="background-image: url('{{ im.url }}');"
+                                                        class="profile-pic-thumbnail round-image pull-left">
+                                                    </div>
+                                                {% endthumbnail %}
                                             {% else %}
                                                 <div class="profile-pic-thumbnail-small round-image user-icon"></div>
                                             {% endif %}
@@ -293,9 +295,11 @@
                                     <tr data-filter-by="view-user">
                                         <td>
                                             {% if member.userprofile.picture and member.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ member.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
+                                                {% thumbnail member.userprofile.picture "x80" crop="center" as im %}
+                                                    <div style="background-image: url('{{ im.url }}');"
+                                                        class="profile-pic-thumbnail round-image pull-left">
+                                                    </div>
+                                                {% endthumbnail %}
                                             {% else %}
                                                 <div class="profile-pic-thumbnail-small round-image user-icon"></div>
                                             {% endif %}
@@ -355,9 +359,11 @@
                                             <tr>
                                                 <td data-id="picture">
                                                     {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
-                                                        <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
-                                                             class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
+                                                        {% thumbnail pendingrequest.request_from.userprofile.picture "x80" crop="center" as im %}
+                                                            <div style="background-image: url('{{ im.url }}');"
+                                                                class="profile-pic-thumbnail round-image pull-left">
+                                                            </div>
+                                                        {% endthumbnail %}
                                                     {% else %}
                                                         <div class="profile-pic-thumbnail-small round-image user-icon"></div>
                                                     {% endif %}
@@ -406,9 +412,11 @@
                                             <tr>
                                                 <td data-id="picture">
                                                     {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
-                                                        <div style="background-image: url('{{ pendingrequest.invitation_to.userprofile.picture.url }}');"
-                                                             class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
+                                                        {% thumbnail pendingrequest.invitation_to.userprofile.picture "x80" crop="center" as im %}
+                                                            <div style="background-image: url('{{ im.url }}');"
+                                                                class="profile-pic-thumbnail round-image pull-left">
+                                                            </div>
+                                                        {% endthumbnail %}
                                                     {% else %}
                                                         <div class="profile-pic-thumbnail-small round-image user-icon"></div>
                                                     {% endif %}
@@ -497,41 +505,15 @@
                                                     <div class="shadow-md dropdown-menu dropdown-menu-left" role="menu">
                                                         <form class="form-horizontal" role="form">
                                                             <div class="form-group">
-                                                                <label for="filter">Resource Type</label>
+                                                                <label for="filter">Type</label>
                                                                 <select id="input-resource-type"
                                                                         class="form-control pull-left">
                                                                     <option value="" selected>All</option>
                                                                     <option value="collection resource">Collection
                                                                     </option>
-                                                                    <option value="composite resource">Composite
+                                                                    <option value="composite resource">Resource
                                                                     </option>
-                                                                    <option value="generic">Generic</option>
-                                                                    <option value="geographic feature">Geographic
-                                                                        Feature (ESRI Shapefiles)
-                                                                    </option>
-                                                                    <option value="geographic raster">Geographic
-                                                                        Raster
-                                                                    </option>
-                                                                    <option value="his referenced time series">HIS
-                                                                        Referenced Time Series
-                                                                    </option>
-                                                                    <option value="model instance resource">Model
-                                                                        Instance
-                                                                    </option>
-                                                                    <option value="model program">Model Program</option>
-                                                                    <option value="modflow model instance resource">
-                                                                        MODFLOW Model Instance
-                                                                    </option>
-                                                                    <option value="multidimensional">Multidimensional
-                                                                        (NetCDF)
-                                                                    </option>
-                                                                    <option value="script resource">Script Resource
-                                                                    </option>
-                                                                    <option value="swat model instance resource">Swat
-                                                                        Model Instance
-                                                                    </option>
-                                                                    <option value="time series">Time Series</option>
-                                                                    <option value="web app resource">Web App</option>
+                                                                    <option value="web app resource">App Connector</option>
                                                                 </select>
                                                             </div>
                                                             <div class="form-group">
@@ -643,16 +625,18 @@
                                         {# Date Created #}
                                         <td>{{ res.created|date:"d M, Y" }} {{ res.created|time }}</td>
                                         {# Last Modified #}
-                                        <td>{{ res.last_updated|date:"d M, Y" }} {{ res.last_updated|time }}</td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td>{{ res.last_updated|date:"U" }}</td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td>{{ res.created|date:"U" }}</td>
-                                        <td>{{ res.grantor.id }}</td>
+                                        {% with last_updated=res.last_updated %}
+                                            <td>{{ last_updated|date:"d M, Y" }} {{ last_updated|time }}</td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td>{{ last_updated|date:"U" }}</td>
+                                            <td><!-- Needed for datatable to function properly --></td>
+                                            <td>{{ res.created|date:"U" }}</td>
+                                            <td>{{ res.grantor.id }}</td>
+                                        {% endwith %}
                                     </tr>
                                 {% endfor %}
                                 </tbody>
@@ -805,7 +789,7 @@
                                 <fieldset class="col-sm-12">
                                     <input id="requires_explanation" type="checkbox"  name="requires_explanation"
                                             {% if group.gaccess.requires_explanation %}checked{% endif %}>
-                                    <label class="checkbox-label" for="requires_explanation">Require members to provide explanation when requesting membership</label>
+                                    <label class="checkbox-label" for="requires_explanation">Require explanation when requesting membership</label>
                                 </fieldset>
 
                                 {# Picture #}
@@ -817,7 +801,7 @@
                                             <span class="input-group-btn">
                                                 <span id="cv-custom-upload" class="btn btn-default btn-file">
                                                     Browse&hellip; <input class="upload-picture" type="file"
-                                                                          name="picture">
+                                                                          name="picture" accept=".png, .jpg, .jpeg, .gif">
                                                 </span>
                                             </span>
                                             <input type="text" class="form-control" readonly>
@@ -880,7 +864,7 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/group.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs_resource_table.js' %}"></script>
 {% endblock %}

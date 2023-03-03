@@ -15,22 +15,22 @@ let relevantToolsApp = new Vue({
     methods: {
         // Returns the Url needed to launch the app with this resource
         getResAppUrl: function (tool) {
-            return this.trackingAppLaunchUrl + '?url=' + tool.url + ';name=' +  tool.title +
-                ';tool_res_id=' + tool.res_id + ';res_id=' + this.resId;
+            return this.trackingAppLaunchUrl + '?url=' + tool.url + '&name=' +  tool.title +
+                '&tool_res_id=' + tool.res_id + '&res_id=' + this.resId;
         },
         // Returns the Url needed to launch a file in this resource
         getFileAppUrl: function (tool) {
             if (tool.hasOwnProperty('file_extensions') && tool.url_file) {
-                return this.trackingAppLaunchUrl + '?url=' + tool.url_file + ';name=' + tool.title +
-                    ';tool_res_id=' + tool.res_id + ';res_id=' + this.resId;
+                return this.trackingAppLaunchUrl + '?url=' + tool.url_file + '&name=' + tool.title +
+                    '&tool_res_id=' + tool.res_id + '&res_id=' + this.resId;
             }
             return null;    // default
         },
         // Returns the Url needed to launch a file in this resource
         getAggregationAppUrl: function (tool) {
             if (tool.hasOwnProperty('agg_types') && tool.url_aggregation) {
-                return this.trackingAppLaunchUrl + '?url=' + tool.url_aggregation + ';name=' + tool.title +
-                    ';tool_res_id=' + tool.res_id + ';res_id=' + this.resId;
+                return this.trackingAppLaunchUrl + '?url=' + tool.url_aggregation + '&name=' + tool.title +
+                    '&tool_res_id=' + tool.res_id + '&res_id=' + this.resId;
             }
             return null;    // default
         }
@@ -110,18 +110,29 @@ let relevantToolsApp = new Vue({
                     const path = file.attr("data-url").split(new RegExp("resource/[a-z0-9]*/data/contents/"))[1];
                     let fullURL;
                     if ($(this).attr("data-url-aggregation")) {
-                        fullURL = $(this).attr("data-url-aggregation").replace("HS_JS_AGG_KEY", path);
+                        fullURL = $(this).attr("data-url-aggregation")
+                        if(fullURL.includes('HS_JS_AGG_KEY')) {
+                            fullURL = fullURL + '&HS_JS_AGG_KEY=' + path;
+                        }
+
                         if (file.children('span.fb-file-type').text() === 'File Folder') {
                             // TODO: populate main_file value in aggregation object of structure response
-                            fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.attr("data-main-file"));
+                            if(fullURL.includes('HS_JS_MAIN_FILE_KEY')) {
+                                fullURL = fullURL + '&HS_JS_MAIN_FILE_KEY=' + file.attr("data-main-file");
+                            }
                         }
                         else {
-                            fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.children('span.fb-file-name').text());
+                            if(fullURL.includes('HS_JS_MAIN_FILE_KEY')) {
+                                fullURL = fullURL + '&HS_JS_MAIN_FILE_KEY=' + file.children('span.fb-file-name').text();
+                            }
                         }
                     }
                     else {
                         // not an aggregation
-                        fullURL = $(this).attr("data-url-file").replace("HS_JS_FILE_KEY", path);
+                        fullURL = $(this).attr("data-url-file");
+                        if(fullURL.includes('HS_JS_FILE_KEY')) {
+                            fullURL = fullURL + '&HS_JS_FILE_KEY=' + path;
+                        }
                     }
                     window.open(fullURL);
                 });

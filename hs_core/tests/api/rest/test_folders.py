@@ -10,7 +10,7 @@ from .base import HSRESTTestCase
 class TestFolders(HSRESTTestCase):
 
     def test_create_folder(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
                   'title': title,
@@ -29,14 +29,10 @@ class TestFolders(HSRESTTestCase):
         # should not be able to ls non-existent folder
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        content = json.loads(response.content.decode())
-        self.assertEqual(content, 'Cannot list path')
 
         # should not be able to delete non-existent folder
         response = self.client.delete(url2, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        content = json.loads(response.content.decode())
-        self.assertEqual(content, "Cannot remove folder")
 
         # create a folder
         response = self.client.put(url2, {})
@@ -59,11 +55,9 @@ class TestFolders(HSRESTTestCase):
         # should not be able to ls non-existent folder
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        content = json.loads(response.content.decode())
-        self.assertEqual(content, 'Cannot list path')
 
     def test_file_in_folder(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
                   'title': title,

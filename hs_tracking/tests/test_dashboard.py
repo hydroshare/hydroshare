@@ -43,7 +43,7 @@ class TestDashboard(TestCase):
         self.groups_to_delete = []
 
         self.holes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='all about dog holes',
             metadata=[],
@@ -52,7 +52,7 @@ class TestDashboard(TestCase):
         self.resources_to_delete.append(self.holes.short_id)
 
         self.squirrels = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='where to find squirrels',
             metadata=[],

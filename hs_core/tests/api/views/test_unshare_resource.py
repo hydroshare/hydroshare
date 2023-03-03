@@ -3,7 +3,7 @@ import json
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 
@@ -55,9 +55,9 @@ class TestUnshareResource(MockIRODSTestCaseMixin, TestCase):
             purpose="Testing group access to resource")
 
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.owner,
-            title='Generic Resource Share Resource Testing'
+            title='Resource Share Resource Testing'
         )
 
         self.factory = RequestFactory()

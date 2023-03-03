@@ -4,7 +4,7 @@ import json
 from mock import patch
 
 from django.test import Client
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth.models import Group
 from django.db import transaction
 from django.utils.http import int_to_base36
@@ -50,7 +50,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         )
 
         # create a resource for sharing with group
-        self.resource = hydroshare.create_resource(resource_type='GenericResource',
+        self.resource = hydroshare.create_resource(resource_type='CompositeResource',
                                                    owner=self.john,
                                                    title='Test Resource',
                                                    metadata=[]

@@ -2,7 +2,7 @@ import os
 import json
 import tempfile
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from hsmodels.schemas.resource import ResourceMetadataIn
 from hsmodels.schemas.aggregations import GeographicFeatureMetadataIn, GeographicRasterMetadataIn, \
     MultidimensionalMetadataIn, SingleFileMetadataIn, FileSetMetadataIn, TimeSeriesMetadataIn, \
@@ -54,7 +54,7 @@ class TestFileBasedJSON(HSRESTTestCase):
             'CompositeResource',
             self.user,
             'triceratops'
-            )
+        )
 
         self.test_bag_path = 'hs_rest_api2/tests/data/test_resource_metadata_files.zip'
 
@@ -75,7 +75,7 @@ class TestFileBasedJSON(HSRESTTestCase):
                 # overwrite system metadata fields for comparison
                 result_json['modified'] = expected_json['modified']
                 result_json['created'] = expected_json['created']
-                result_json['creators'][0]['description'] = expected_json['creators'][0]['description']
+                result_json['creators'][0]['hydroshare_user_id'] = expected_json['creators'][0]['hydroshare_user_id']
 
             self.assertEqual(sorting(result_json), sorting(expected_json))
 
@@ -89,6 +89,12 @@ class TestFileBasedJSON(HSRESTTestCase):
             expected_json = json.loads(normalize_metadata(f.read(), self.res.short_id))
         schema_in_instance = schema_in(**expected_json)
         in_json = schema_in_instance.dict(exclude_defaults=True)
+
+        # for hydroshare_user_id, use id of an existing user
+        if 'creators' in in_json:
+            for creator in in_json['creators']:
+                if 'hydroshare_user_id' in creator:
+                    creator['hydroshare_user_id'] = self.user.id
 
         put_response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_json, format="json")
         self.assertEqual(put_response.status_code, status.HTTP_200_OK)

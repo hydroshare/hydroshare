@@ -2,7 +2,7 @@ import json
 
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 
@@ -437,7 +437,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = move_aggregation(request, resource_id=self.composite_resource.short_id,
                                     file_type_id=logical_file.id,
-                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder)
+                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder, run_async=False)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # test there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
@@ -487,7 +487,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = move_aggregation(request, resource_id=self.composite_resource.short_id,
                                     file_type_id=logical_file.id,
-                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder)
+                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder, run_async=False)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # test there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
@@ -537,7 +537,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = move_aggregation(request, resource_id=self.composite_resource.short_id,
                                     file_type_id=logical_file.id,
-                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder)
+                                    hs_file_type='NetCDFLogicalFile', tgt_path=tgt_folder, run_async=False)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # test there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
@@ -585,7 +585,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = move_aggregation(request, resource_id=self.composite_resource.short_id,
                                     file_type_id=logical_file.id,
-                                    hs_file_type='NetCDFLogicalFile')
+                                    hs_file_type='NetCDFLogicalFile', run_async=False)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # test there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
@@ -898,75 +898,6 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         temporal_coverage = logical_file.metadata.temporal_coverage
         self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
         self.assertEqual(temporal_coverage.value['end'], '2016-12-12')
-
-        # test updating OriginalCoverage element
-        # there should be original coverage for the netcdf file type
-        self.assertNotEqual(logical_file.metadata.original_coverage, None)
-        orig_coverage = logical_file.metadata.original_coverage
-        self.assertEqual(float(orig_coverage.value['northlimit']), 4.63515e+06)
-
-        # reset update file flag
-        logical_file.metadata.is_update_file = False
-        logical_file.metadata.save()
-        coverage_data = {'northlimit': 111.333, 'southlimit': 42.678, 'eastlimit': 123.789,
-                         'westlimit': 40.789, 'units': 'meters'}
-        url_params['element_name'] = 'originalcoverage'
-        url_params['element_id'] = logical_file.metadata.original_coverage.id
-        url = reverse('update_file_metadata', kwargs=url_params)
-        request = self.factory.post(url, data=coverage_data)
-        request.user = self.user
-        # this is the view function we are testing
-        response = update_metadata_element(request, hs_file_type="NetCDFLogicalFile",
-                                           file_type_id=logical_file.id,
-                                           element_name='originalcoverage',
-                                           element_id=logical_file.metadata.original_coverage.id)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content.decode())
-        self.assertEqual('success', response_dict['status'])
-        # test the metadata for the aggregation is in dirty state
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
-        self.assertTrue(logical_file.metadata.is_dirty)
-        # test that the update file (.nc file) state is true
-        self.assertTrue(logical_file.metadata.is_update_file)
-        orig_coverage = logical_file.metadata.original_coverage
-        self.assertEqual(float(orig_coverage.value['northlimit']), 111.333)
-
-        # test updating spatial coverage
-        # there should be spatial coverage for the netcdf file type
-        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
-        spatial_coverage = logical_file.metadata.spatial_coverage
-        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.86712640899591)
-        # reset update file flag
-        logical_file.metadata.is_update_file = False
-        logical_file.metadata.save()
-
-        coverage_data = {'type': 'box', 'projection': 'WGS 84 EPSG:4326', 'northlimit': 41.87,
-                         'southlimit': 41.863,
-                         'eastlimit': -111.505,
-                         'westlimit': -111.511, 'units': 'meters'}
-
-        url_params['element_name'] = 'coverage'
-        url_params['element_id'] = spatial_coverage.id
-        url = reverse('update_file_metadata', kwargs=url_params)
-        request = self.factory.post(url, data=coverage_data)
-        request.user = self.user
-        # this is the view function we are testing
-        response = update_metadata_element(request, hs_file_type="NetCDFLogicalFile",
-                                           file_type_id=logical_file.id,
-                                           element_name='coverage',
-                                           element_id=spatial_coverage.id)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content.decode())
-        self.assertEqual('success', response_dict['status'])
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
-        # test the metadata for the aggregation is in dirty state
-        self.assertTrue(logical_file.metadata.is_dirty)
-        # test that the update file (.nc file) state is true
-        self.assertTrue(logical_file.metadata.is_update_file)
-        spatial_coverage = logical_file.metadata.spatial_coverage
-        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.87)
 
         # test update Variable element
         variable = logical_file.metadata.variables.first()

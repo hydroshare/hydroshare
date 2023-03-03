@@ -1,6 +1,6 @@
 {% extends "pages/page.html" %}
 
-{% load hydroshare_tags %}
+{% load hydroshare_tags thumbnail %}
 
 {% block main %}
 
@@ -31,20 +31,22 @@
             </div>
         </div>
 
-        <div class="row group-thumbnails">
+        <div class="group-thumbnails">
             {% if groups %}
             {% for group in groups %}
                 {% if group.gaccess.public or group.gaccess.discoverable or group.is_user_member %}
-                    <div class="col-sm-6 col-md-4 group-container">
+                    <div class="group-container">
                         <div class="group-thumbnail contribution">
                             {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                <div class="group-preview-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                                {% thumbnail group.gaccess.picture "x150" crop="center" as im %}
+                                    <div class="group-preview-image" style="background-image: url({{ im.url }})"></div>
+                                {% endthumbnail %}
                             {% else %}
                                 <div class="group-preview-image group-preview-image-default" style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                             {% endif %}
                             <div class="group-caption">
                                 <h3 class="group-name"><a href="/group/{{ group.id }}">{{ group.name }}</a></h3>
-                                <div class="group-purpose" style="overflow-y: auto">
+                                <div class="group-purpose">
                                     <p>{{ group.gaccess.purpose|linebreaks}}</p>
                                 </div>
                                 <div class="group-description"><p>{{ group.gaccess.description|linebreaks }}</p></div>
@@ -53,78 +55,84 @@
 
                                 <div class="text-center group-thumbnail-footer">
                                     {% if group.gaccess.public %}
-                                        <div class="users-joined height-fix">
-                                            <div class="link-members"><a class="text-muted" href="#" data-toggle="modal" data-target="#modal-members-list-{{ group.id }}">MEMBERS</a></div>
-                                            {% for member in group.gaccess.members|slice:":5" %}
-                                                {% if  member.userprofile.picture and member.userprofile.picture.url %}
-                                                    <div style="background-image: url('{{ member.userprofile.picture.url }}');"
-                                                         class="round-image profile-pic-thumbnail"
-                                                         title="{{ member|best_name }}">
-                                                    </div>
-                                                {% else %}
-                                                    <div class="profile-pic-thumbnail-small round-image"
-                                                         title="{{ member|best_name }}"></div>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </div>
-                                        {% if group.gaccess.members|length > 5 %}
-                                            <div>
-                                                <small class="text-muted">and {{ group.gaccess.members|length|add:"-5" }} others have joined</small>
+                                        {% if group.members|length > 0 %}
+                                            <div class="users-joined height-fix">
+                                                <div class="link-members"><a class="text-muted" href="#" data-toggle="modal" data-target="#modal-members-list-{{ group.id }}">MEMBERS</a></div>
+                                                {% for member in group.members|slice:":5" %}
+                                                    {% if  member.userprofile.picture and member.userprofile.picture.url %}
+                                                        {% thumbnail member.userprofile.picture "x80" crop="center" as im %}
+                                                            <div style="background-image: url('{{ im.url }}');"
+                                                                class="round-image profile-pic-thumbnail"
+                                                                title="{{ member|best_name }}">
+                                                            </div>
+                                                        {% endthumbnail %}
+                                                    {% else %}
+                                                        <div class="profile-pic-thumbnail-small round-image"
+                                                            title="{{ member|best_name }}"></div>
+                                                    {% endif %}
+                                                {% endfor %}
                                             </div>
-                                        {% endif %}
+                                            {% if group.members|length > 5 %}
+                                                <div>
+                                                    <small class="text-muted">and {{ group.members|length|add:"-5" }} others have joined</small>
+                                                </div>
+                                            {% endif %}
 
-                                        <!-- Members List Modal -->
-                                        <div class="modal fade members-modal" id="modal-members-list-{{ group.id }}" tabindex="-1" role="dialog"
-                                             aria-labelledby="Invite">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <button type="button" class="close" data-dismiss="modal"
-                                                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                                                        </button>
-                                                        <h4 class="modal-title">Members</h4>
+                                            <!-- Members List Modal -->
+                                            <div class="modal fade members-modal" id="modal-members-list-{{ group.id }}" tabindex="-1" role="dialog"
+                                                aria-labelledby="Invite">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                    aria-label="Close"><span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                            <h4 class="modal-title">Members</h4>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <table class="table access-table members-table"
+                                                                style="text-align: left;">
+                                                                <tbody>
+                                                                {% for u in group.members %}
+                                                                    <tr id="row-id-{{ u.pk }}"
+                                                                        {% if owners|length == 1 or not self_access_level == 'owner' %}class="hide-actions"{% endif %}>
+                                                                        <td>
+                                                                            <div class="user-scope">
+                                                                                {% if u.userprofile.picture %}
+                                                                                    {% thumbnail u.userprofile.picture "x80" crop="center" as im %}
+                                                                                        <div style="background-image: url('{{ im.url }}');"
+                                                                                            class="round-image profile-pic-thumbnail">
+                                                                                        </div>
+                                                                                    {% endthumbnail %}
+                                                                                {% else %}
+                                                                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                                                {% endif %}
+
+                                                                                <a data-col="name"
+                                                                                class="user-name">{{ u|contact }}</a>
+                                                                                {% if u.pk == current_user.pk %}
+                                                                                    <span class="text-muted you-flag">(You)</span>
+                                                                                {% endif %}
+                                                                                <br>
+                                                                                <span data-col="user-name" class="user-username-content">{{ u.username }}</span>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-default"
+                                                                    data-dismiss="modal">Close
+                                                            </button>
+                                                        </div>
                                                     </div>
-
-                                                    <div class="modal-body">
-                                                        <table class="table access-table members-table"
-                                                               style="text-align: left;">
-                                                            <tbody>
-                                                            {% for u in group.gaccess.members %}
-                                                                <tr id="row-id-{{ u.pk }}"
-                                                                    {% if owners|length == 1 or not self_access_level == 'owner' %}class="hide-actions"{% endif %}>
-                                                                    <td>
-                                                                        <div class="user-scope">
-                                                                            {% if u.userprofile.picture %}
-                                                                                <div style="background-image: url('{{ u.userprofile.picture.url }}');"
-                                                                                     class="profile-pic-thumbnail round-image"></div>
-                                                                            {% else %}
-                                                                                <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                                                            {% endif %}
-
-                                                                            <a data-col="name"
-                                                                               class="user-name">{{ u|contact }}</a>
-                                                                            {% if u.pk == current_user.pk %}
-                                                                                <span class="text-muted you-flag">(You)</span>
-                                                                            {% endif %}
-                                                                            <br>
-                                                                            <span data-col="user-name" class="user-username-content">{{ u.username }}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            {% endfor %}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-default"
-                                                                data-dismiss="modal">Close
-                                                        </button>
-                                                    </div>
-
                                                 </div>
                                             </div>
-                                        </div>
+                                        {% endif %}
                                     {% endif %}
 
                                     <br>
@@ -226,7 +234,7 @@
                             {# explanation #}
                             <fieldset class="col-sm-12">
                                 <input id="requires_explanation" type="checkbox"  name="requires_explanation">
-                                <label class="checkbox-label" for="requires_explanation">Require members to provide explanation when requesting membership</label>
+                                <label class="checkbox-label" for="requires_explanation">Require explanation when requesting membership</label>
                              </fieldset>
 
                             {# Picture #}
@@ -237,7 +245,7 @@
                                     <div class="input-group">
                                         <span class="input-group-btn">
                                             <span id="group-image-upload" class="btn btn-default btn-file">
-                                                Browse&hellip; <input class="upload-picture" type="file" name="picture">
+                                                Browse&hellip; <input class="upload-picture" type="file" name="picture" accept=".png, .jpg, .jpeg, .gif">
                                             </span>
                                         </span>
                                         <input type="text" class="form-control" readonly>
@@ -295,6 +303,6 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-toolkit.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/collaborate.js"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-toolkit.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/collaborate.js' %}"></script>
 {% endblock %}

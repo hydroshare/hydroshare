@@ -765,7 +765,7 @@ li.account p{
 	table-layout: fixed;
 }
 
-.authors-wrapper > a:not(:first-child)::before,
+.authors-wrapper > a:not(:first-child):not(.fa-youtube-play)::before,
 .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
 .authors-wrapper > .ui-state-highlight:not(:first-child)::before,
 .owners-wrapper > a:not(:first-child)::before,
@@ -840,7 +840,6 @@ li.account p{
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-
 
 #relatedResourcesTab{
     overflow:hidden;
@@ -1466,6 +1465,14 @@ body > .main-container {
     color: #428BD2
 }
 
+.icon-red {
+  color: red !important;
+}
+
+.icon-guide {
+  font-size: 20px;
+}
+
 .icon-green {
     color: #10ae10
 }
@@ -1561,6 +1568,14 @@ body > .main-container {
 
 .flex {
 	display: flex;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.gap-1x {
+  gap: 8px;
 }
 
 #citation-text a, .citation-description, .rights-url a {
@@ -1906,6 +1921,17 @@ a.tag:hover {
   .bs-sidebar.affix-bottom,
   .bs-sidebar.affix {
     width: 360px;
+  }
+}
+@media (min-width: 1440px) {
+  /* override bootstrap default container width for large screens */
+  .container{
+	width: 1440px;
+	max-width: 1440px;
+  }
+  .owl-stage {
+	  justify-content: space-around;
+	  margin:auto;
   }
 }
 
@@ -2369,8 +2395,9 @@ div#coverage-spatial .coordinates-label-addon {
 }
 
 #coverageMap {
-	height:350px;
-	border:1px solid #DDD;
+	height: 350px;
+	border: 1px solid #DDD;
+	z-index: 2;
 }
 
 .coverage-container {
@@ -2751,12 +2778,14 @@ span.you-flag {
 	display: none;
 }
 
-#item-selectors {
-    display: none;
+.no-interact {
+	cursor: wait;
+	pointer-events: none;
+	color: #b3b3b3;
 }
 
-#items-discovered, #item-selectors {
-	width: calc(100% - 2px) !important;		/* Makes up for border width */
+#item-selectors {
+    display: none;
 }
 
 .resource-custom-table {
@@ -2765,6 +2794,7 @@ span.you-flag {
 	margin-bottom: 10px !important;
 	border-top-right-radius: 4px;
 	border-top-left-radius: 4px;
+	width: calc(100% - 2px) !important;     /* Makes up for border width */
 }
 
 #collected-by-table {
@@ -3346,7 +3376,7 @@ span.you-flag {
 
 /* =================================== */
 .steps-container {
-  display: grid;
+  display: flex;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
 }
@@ -3583,6 +3613,15 @@ div.btn-update-picture:hover {
 	margin-bottom: 60px;
 }
 
+.organization-divider{
+	margin-bottom: .6em;
+	border-color: #ddd;
+	width: fit-content;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	word-wrap: anywhere;
+  }
+
 .form-invalid {
     border-color: #E96666;
     outline: 0;
@@ -3663,12 +3702,9 @@ input.no-style {
 }
 
 div.group-thumbnails {
-	display: flex;
-	flex-wrap: wrap;
-}
-
-.group-container {
-    margin-bottom: 20px;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(34rem, 100%), 1fr));
+	gap: 2rem;
 }
 
 .group-thumbnail img {
@@ -3684,7 +3720,7 @@ div.group-thumbnails {
 }
 
 .spacer {
-	flex: 1 1 auto;
+	flex: 1 2 auto;
 }
 
 .users-joined {
@@ -3693,9 +3729,13 @@ div.group-thumbnails {
 
 .group-description {
     margin-top:20px;
-	max-height:105px;
+	flex: 2 1 150px;
 	overflow-y: auto;
 	word-break: break-word;
+}
+
+.group-purpose {
+	overflow-y: auto;
 }
 
 .group-name {
@@ -4285,6 +4325,11 @@ ul#fb-files-container .hs-upload-indicator {
 
 .selection-menu li.disabled, #fb-inner-controls button.disabled > span {
 	color: #b3b3b3;
+	pointer-events:none;
+}
+
+#fb-files-container li.deleting {
+	background: rgba(252, 161, 161, 0.14);
 	pointer-events:none;
 }
 
@@ -4994,19 +5039,27 @@ a[data-toggle="modal"] {
 }
 
 .space-top {
-	margin-top: 15px;
+	margin-top: 16px;
 }
 
 .space-bottom {
-	margin-bottom: 15px;
+	margin-bottom: 16px;
 }
 
 .space-right {
-	margin-right: 15px;
+	margin-right: 16px;
 }
 
 .space-left {
-	margin-left: 15px;
+	margin-left: 16px;
+}
+
+.space-left-1x {
+  margin-left: 8px;
+}
+
+.space-right-1x {
+  margin-right: 8px;
 }
 
 .border-gray {
@@ -5015,6 +5068,10 @@ a[data-toggle="modal"] {
 
 .c-pointer {
 	cursor: pointer;
+}
+
+a.no-decoration {
+  text-decoration: none;
 }
 
 label.form-check-label {

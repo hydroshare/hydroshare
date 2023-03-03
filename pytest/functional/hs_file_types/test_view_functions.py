@@ -3,7 +3,7 @@ import os
 
 import pytest
 from django.core.files.uploadedfile import UploadedFile
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import RequestFactory
 from rest_framework import status
 
@@ -101,13 +101,14 @@ def test_create_model_aggregation_from_folder(composite_resource, aggr_type, moc
 def test_update_model_program_metadata(composite_resource_with_mp_aggregation, mock_irods):
     res, user = composite_resource_with_mp_aggregation
     mp_aggr = next(res.logical_files)
-    mp_program_type = "SWAT Model Program"
+    code_repo = "https://github.com/swat"
+    version = "2.1"
     assert isinstance(mp_aggr, ModelProgramLogicalFile)
     assert mp_aggr.metadata.version is None
-    assert mp_aggr.model_program_type != mp_program_type
+
     url_params = {'file_type_id': mp_aggr.id}
     url = reverse('update_modelprogram_metadata', kwargs=url_params)
-    post_data = {"version": "2.1", "mp_program_type": mp_program_type}
+    post_data = {"version": version, "code_repository": code_repo}
     factory = RequestFactory()
     request = factory.post(url, data=post_data)
     request.user = user
@@ -115,9 +116,10 @@ def test_update_model_program_metadata(composite_resource_with_mp_aggregation, m
     response = update_model_program_metadata(request, file_type_id=mp_aggr.id)
     assert response.status_code == status.HTTP_200_OK
     mp_aggr.metadata.refresh_from_db()
-    assert mp_aggr.metadata.version == "2.1"
+    assert mp_aggr.metadata.version == version
+    assert mp_aggr.metadata.code_repository == code_repo
     mp_aggr.refresh_from_db()
-    assert mp_aggr.model_program_type == mp_program_type
+
     assert mp_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
@@ -259,7 +261,7 @@ def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregati
     request = factory.post(url)
     request.user = user
     response = move_aggregation(request, resource_id=res.short_id, hs_file_type=aggr_class_name,
-                                file_type_id=move_aggr.id, tgt_path=mi_folder)
+                                file_type_id=move_aggr.id, tgt_path=mi_folder, run_async=False)
     assert response.status_code == status.HTTP_200_OK
     assert move_aggr_cls.objects.count() == 1
     move_aggr.refresh_from_db()

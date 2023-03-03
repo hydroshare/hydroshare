@@ -3,7 +3,6 @@ import unittest
 import xml.sax
 
 from hs_core.serialization import GenericResourceSAXHandler
-from hs_geo_raster_resource.serialization import RasterResourceSAXHandler
 
 
 class TestGenericResourceMetaSax(unittest.TestCase):
@@ -69,69 +68,3 @@ class TestGenericResourceMetaSax(unittest.TestCase):
         self.assertEqual(handler.contributors[1].email, 'bar@icloud.com')
         self.assertEqual(handler.contributors[1].address, '123 Wall Street')
         self.assertEqual(handler.contributors[1].phone, '412-555-2121')
-
-class TestRasterResourceMetaSax(unittest.TestCase):
-    def setUp(self):
-
-        self.parse_sample = """<?xml version="1.0"?>
-        <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
-        "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">
-        <rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:hsterms="https://www.hydroshare.org/terms/">
-          <rdf:Description rdf:about="http://localhost:8000/resource/dc52e6aa93154521af08522de27ec276">
-            <hsterms:BandInformation>
-              <rdf:Description>
-                <hsterms:name>Band_1</hsterms:name>
-                <hsterms:variableName>red</hsterms:variableName>
-                <hsterms:variableUnit>DN</hsterms:variableUnit>
-                <hsterms:method>measured</hsterms:method>
-                <hsterms:comment>real good.</hsterms:comment>
-              </rdf:Description>
-            </hsterms:BandInformation>
-            <hsterms:BandInformation>
-              <rdf:Description>
-                <hsterms:name>Band_2</hsterms:name>
-                <hsterms:variableName>green</hsterms:variableName>
-                <hsterms:variableUnit>DN</hsterms:variableUnit>
-                <hsterms:method>guessed</hsterms:method>
-                <hsterms:comment>not so good.</hsterms:comment>
-              </rdf:Description>
-            </hsterms:BandInformation>
-            <hsterms:BandInformation>
-              <rdf:Description>
-                <hsterms:name>Band_3</hsterms:name>
-                <hsterms:variableName>blue</hsterms:variableName>
-                <hsterms:variableUnit>DN</hsterms:variableUnit>
-                <hsterms:method>random</hsterms:method>
-                <hsterms:comment>random like.</hsterms:comment>
-              </rdf:Description>
-            </hsterms:BandInformation>
-          </rdf:Description>
-        </rdf:RDF>
-        """
-
-    def tearDown(self):
-        pass
-
-    def test_sax_parsing(self):
-        handler = RasterResourceSAXHandler()
-        xml.sax.parseString(self.parse_sample, handler)
-
-        self.assertTrue(len(handler.band_info) == 3)
-        self.assertEqual(handler.band_info[0].name, 'Band_1')
-        self.assertEqual(handler.band_info[0].variableName, 'red')
-        self.assertEqual(handler.band_info[0].variableUnit, 'DN')
-        self.assertEqual(handler.band_info[0].method, 'measured')
-        self.assertEqual(handler.band_info[0].comment, 'real good.')
-
-        self.assertEqual(handler.band_info[1].name, 'Band_2')
-        self.assertEqual(handler.band_info[1].variableName, 'green')
-        self.assertEqual(handler.band_info[1].variableUnit, 'DN')
-        self.assertEqual(handler.band_info[1].method, 'guessed')
-        self.assertEqual(handler.band_info[1].comment, 'not so good.')
-
-        self.assertEqual(handler.band_info[2].name, 'Band_3')
-        self.assertEqual(handler.band_info[2].variableName, 'blue')
-        self.assertEqual(handler.band_info[2].variableUnit, 'DN')
-        self.assertEqual(handler.band_info[2].method, 'random')
-        self.assertEqual(handler.band_info[2].comment, 'random like.')
-

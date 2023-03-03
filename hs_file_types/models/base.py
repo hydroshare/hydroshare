@@ -1,34 +1,30 @@
-import os
 import copy
-from uuid import uuid4
-import shutil
-import random
 import logging
+import os
+import random
+import shutil
+from uuid import uuid4
 
-from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
-
-from django.db import models
-from django.core.files.uploadedfile import UploadedFile
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.forms.models import model_to_dict
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import HStoreField, ArrayField
-
-from mezzanine.conf import settings
-
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.files.uploadedfile import UploadedFile
+from django.db import models
+from django.forms.models import model_to_dict
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
     span, a, form, button, label, textarea, h4, h3, _input, ul, li, p
-
-from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
-from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
-    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
-from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
-from hs_core.hydroshare.resource import delete_resource_file
-from hs_core.signals import post_remove_file_aggregation
+from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
+from mezzanine.conf import settings
 from rdflib import Literal, Namespace, BNode, URIRef, Graph
 from rdflib.namespace import DC
 
+from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
+from hs_core.hydroshare.resource import delete_resource_file
+from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
+    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
+from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
+from hs_core.signals import post_remove_file_aggregation
 
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
@@ -88,10 +84,10 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     # one temporal coverage and one spatial coverage
     coverages = GenericRelation(Coverage)
     # key/value metadata
-    extra_metadata = HStoreField(default={})
+    extra_metadata = HStoreField(default=dict)
 
     # keywords
-    keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[])
+    keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=list)
     # to track if any metadata element has been modified to trigger file update
     is_dirty = models.BooleanField(default=False)
 
@@ -234,12 +230,12 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             with form(id="id-keywords-filetype", action=action, method="post",
                       enctype="multipart/form-data"):
                 _input(id="id-delete-keyword-filetype-action", type="hidden",
-                           value=delete_action)
+                       value=delete_action)
                 with div(cls="tags"):
                     with div(id="add-keyword-wrapper", cls="input-group"):
                         _input(id="txt-keyword-filetype", cls="form-control",
-                                   placeholder="keyword",
-                                   type="text", name="keywords")
+                               placeholder="keyword",
+                               type="text", name="keywords")
                         with span(cls="input-group-btn"):
                             a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
                               type="button")
@@ -331,13 +327,16 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         return root_div
 
     def has_all_required_elements(self):
+        if self.get_required_missing_elements():
+            # required metadata is missing
+            return False
         return True
 
     @classmethod
     def get_supported_element_names(cls):
         return ['Coverage']
 
-    def get_required_missing_elements(self):
+    def get_required_missing_elements(self, *args):
         return []
 
     @property
@@ -480,12 +479,18 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         self.is_dirty = True
         self.save()
 
+    def get_element(self, element_model_name, element_id):
+        """Gets a metadata element record based on name of the metadata element and id."""
+
+        model_type = self._get_metadata_element_model_type(element_model_name)
+        return model_type.model_class().objects.get(id=element_id)
+
     def _get_metadata_element_model_type(self, element_model_name):
         element_model_name = element_model_name.lower()
         if not self._is_valid_element(element_model_name):
             raise ValidationError("Metadata element type:%s is not one of the "
                                   "supported metadata elements for %s."
-                                  % element_model_name, type(self))
+                                  % (element_model_name, type(self)))
 
         unsupported_element_error = "Metadata element type:%s is not supported." \
                                     % element_model_name
@@ -528,9 +533,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                         legend('Title')
                         with div(cls="controls"):
                             _input(value=dataset_name,
-                                       cls="form-control input-sm textinput textInput",
-                                       id="file_dataset_name", maxlength="250",
-                                       name="dataset_name", type="text")
+                                   cls="form-control input-sm textinput textInput",
+                                   id="file_dataset_name", maxlength="250",
+                                   name="dataset_name", type="text")
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                         button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
@@ -614,20 +619,20 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                                                   fr="file_extra_meta_key_original")
                                             with div(cls="controls"):
                                                 _input(value=k, readonly="readonly",
-                                                           cls="form-control input-sm textinput "
-                                                               "textInput",
-                                                           id="file_extra_meta_key_original",
-                                                           maxlength="100",
-                                                           name="key_original", type="text")
+                                                       cls="form-control input-sm textinput "
+                                                       "textInput",
+                                                       id="file_extra_meta_key_original",
+                                                       maxlength="100",
+                                                       name="key_original", type="text")
                                         with div(cls="control-group"):
                                             label("Key", cls="control-label requiredField",
                                                   fr="file_extra_meta_key")
                                             with div(cls="controls"):
                                                 _input(value=k,
-                                                           cls="form-control input-sm textinput "
-                                                               "textInput",
-                                                           id="file_extra_meta_key", maxlength="100",
-                                                           name="key", type="text")
+                                                       cls="form-control input-sm textinput "
+                                                       "textInput",
+                                                       id="file_extra_meta_key", maxlength="100",
+                                                       name="key", type="text")
                                         with div(cls="control-group"):
                                             label("Value", cls="control-label requiredField",
                                                   fr="file_extra_meta_value")
@@ -678,7 +683,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                                                   fr="file_extra_meta_name")
                                             with div(cls="controls"):
                                                 _input(cls="form-control input-sm textinput "
-                                                               "textInput", value=k,
+                                                       "textInput", value=k,
                                                            id="file_extra_meta_key", maxlength="100",
                                                            name="key", type="text", readonly="readonly")
                                         with div(cls="control-group"):
@@ -708,7 +713,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 class AbstractLogicalFile(models.Model):
     """ base class for HydroShare file types """
 
-    resource = models.ForeignKey('hs_composite_resource.CompositeResource')
+    resource = models.ForeignKey('hs_composite_resource.CompositeResource', on_delete=models.CASCADE)
     # files associated with this logical file group
     files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
                             object_id_field='logical_file_object_id')
@@ -716,13 +721,13 @@ class AbstractLogicalFile(models.Model):
     dataset_name = models.CharField(max_length=255, null=True, blank=True)
     # this will be used for dc:type in resourcemetadata.xml
     # each specific logical type needs to reset this field
-    # also this data type needs to be defined in in terms.html page
+    # also this data type needs to be defined in terms.html page
     data_type = "Generic"
 
     # this field is for logical file to store extra key:value pairs, e.g., currently for .url
     # file to store url value for easy redirection when opening the file
     # for internal use only - won't get recorded in bag and shouldn't be used for storing metadata
-    extra_data = HStoreField(default={})
+    extra_data = HStoreField(default=dict)
 
     class Meta:
         abstract = True
@@ -788,12 +793,13 @@ class AbstractLogicalFile(models.Model):
         return None
 
     @classmethod
-    def can_set_folder_to_aggregation(cls, resource, dir_path):
+    def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """helper to check if the specified folder *dir_path* can be set to this aggregation type
 
         :param  resource: an instance of composite resource in which the folder to be checked
         :param dir_path: Resource file directory path (full folder path starting with resource id)
         for which this aggregation type to be set
+        :param  aggregations: a list of aggregations in *resource*
         :return True or False
         """
         return False
@@ -934,7 +940,7 @@ class AbstractLogicalFile(models.Model):
         return res_file, folder_path
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Returns one specific file as the primary file from the list of resource
         files *resource_files*. A file is a primary file which can be used for creating a
         file type (aggregation). Subclasses must implement this.
@@ -1038,8 +1044,8 @@ class AbstractLogicalFile(models.Model):
     @property
     def supports_zip(self):
         """a folder containing resource file(s) that are part of this logical file type
-        is not allowed to be zipped"""
-        return False
+        is allowed to be zipped"""
+        return True
 
     @property
     def supports_delete_folder_on_zip(self):
@@ -1055,7 +1061,7 @@ class AbstractLogicalFile(models.Model):
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
 
-        primary_file = self.get_primary_resouce_file(self.files.all())
+        primary_file = self.get_primary_resource_file(self.files.all())
         if not primary_file:
             return ""
         return primary_file.short_path
@@ -1107,7 +1113,7 @@ class AbstractLogicalFile(models.Model):
         is already associated with any other logical file object, this function does not do
         anything to that logical object. The caller needs to take necessary action for the
         previously associated logical file object. If res_file is already part of this
-        logical file, it raise ValidationError.
+        logical file, it raises ValidationError.
 
         :param res_file an instance of ResourceFile
         """
@@ -1192,7 +1198,7 @@ class AbstractLogicalFile(models.Model):
             element_args.pop('content_type')
             element_args.pop('id')
             element_args.pop('object_id')
-            copy_of_logical_file.metadata.create_element(element.term, **element_args)
+            copy_of_logical_file.metadata.create_element(element.__class__.__name__, **element_args)
 
         return copy_of_logical_file
 
@@ -1206,12 +1212,12 @@ class AbstractLogicalFile(models.Model):
         Deletes the logical file as well as all resource files associated with this logical file.
         This function is primarily used by the system to delete logical file object and associated
         metadata as part of deleting a resource file object. Any time a request is made to
-        deleted a specific resource file object, if the the requested file is part of a
+        delete a specific resource file object, if the the requested file is part of a
         logical file then all files in the same logical file group will be deleted. if custom logic
         requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
         use LFO.logical_delete()
-        :param  user    user who is deleting file type/aggregation
-        :param delete_res_files If True all resource files that are part of this logical file will
+        :param  user:  user who is deleting file type/aggregation
+        :param delete_res_files: If True all resource files that are part of this logical file will
         be deleted
         """
 
@@ -1242,7 +1248,7 @@ class AbstractLogicalFile(models.Model):
             # the metadata object
             metadata.delete()
 
-        # if the this deleted aggregation has a parent aggregation - xml files for the parent
+        # if this deleted aggregation has a parent aggregation - xml files for the parent
         # aggregation needs to be generated so that the references to the deleted aggregation can be removed
         # setting parent aggregation metadata dirty will regenerate xml files for parent aggregation at the time
         # of download
@@ -1338,7 +1344,7 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def has_children(self):
-        """Returns True if the this aggregation contains any other aggregations, otherwise False"""
+        """Returns True if this aggregation contains any other aggregations, otherwise False"""
         return len(self.get_children()) > 0
 
     @property
@@ -1355,7 +1361,7 @@ class AbstractLogicalFile(models.Model):
 
     def set_metadata_dirty(self):
         self.metadata.is_dirty = True
-        self.metadata.save()
+        self.metadata.save(update_fields=["is_dirty"])
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         """Creates aggregation map xml and aggregation metadata xml files
@@ -1543,6 +1549,7 @@ class FileTypeContext(object):
     :param  is_temp_file if True resource file specified by file_id will be retrieved from
     irods to temp directory
     """
+
     def __init__(self, aggr_cls, user, resource, file_id=None, folder_path='',
                  post_aggr_signal=None, is_temp_file=True):
 
@@ -1570,7 +1577,7 @@ class FileTypeContext(object):
 
         if self.is_temp_file:
             # need to get the file from irods to temp dir
-            self.temp_file = get_file_from_irods(self.res_file)
+            self.temp_file = get_file_from_irods(resource=self.resource, file_path=self.res_file.storage_path)
             self.temp_dir = os.path.dirname(self.temp_file)
         return self  # control returned to the caller
 

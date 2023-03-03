@@ -12,14 +12,14 @@
     <meta name="description" content="{% block meta_description %}{% endblock %}">
     <title>
         {% block meta_title %}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
-    <link rel="shortcut icon" href="/static/img/favicon.png">
+    <link rel="shortcut icon" href="{% static 'img/favicon.png' %}">
 
-    <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_fonts.css" rel="stylesheet"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.3.0.2.min.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/elements.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_core.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/identifiers.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_extends.css"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_fonts.css' %}" rel="stylesheet"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.3.0.2.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/elements.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_core.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/identifiers.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_extends.css' %}"/>
     <style>
         #toplevel-nav-container {
             display: block;
@@ -79,11 +79,11 @@
             display: block;
         }
     </style>
-    <script src="/static/mezzanine/js/jquery-1.8.3.min.js"></script>
-    <script src="/static/js/custom.js"></script>
-    <script src="/static/js/scrolltopcontrol.js"></script>
-    <script src="/static/js/bootstrap.3.0.2.min.js"></script>
-    <script src="/static/js/bootstrap-extras.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="{% static 'js/custom.js' %}"></script>
+    <script src="{% static 'js/scrolltopcontrol.js' %}"></script>
+    <script src="{% static 'js/bootstrap.3.0.2.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-extras.js' %}"></script>
     {% include 'autocomplete_light/static.html' %}
 
     {% if not page|is_debug %}

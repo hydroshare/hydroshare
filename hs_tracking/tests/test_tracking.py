@@ -56,8 +56,8 @@ class ViewTests(TestCase):
 
         # sample request with mocked ip address
         self.request.META = {
-            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0,' +
-                                    '127.0.0.1, 198.84.193.157, '
+            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0,'
+                                    + '127.0.0.1, 198.84.193.157, '
             '177.139.233.139',
             'HTTP_X_REAL_IP': '177.139.233.132',
             'REMOTE_ADDR': '177.139.233.133',
@@ -81,13 +81,13 @@ class ViewTests(TestCase):
 
         # build request 'GET'
         res_id = 'D7a7de92941a044049a7b8ad09f4c75bb'
-        res_type = 'GenericResource'
+        res_type = 'CompositeResource'
         app_name = 'test'
         request_url = 'https://apps.hydroshare.org/apps/hydroshare-gis/' \
                       '?res_id=%s&res_type=%s' % (res_id, res_type)
 
         app_url = urllib.parse.quote(request_url)
-        href = 'url=%s;name=%s' % (app_url, app_name)
+        href = 'url=%s&name=%s' % (app_url, app_name)
         r.GET = QueryDict(href)
 
         # invoke the app logging endpoint
@@ -134,7 +134,7 @@ class ViewTests(TestCase):
 
         # build request 'GET'
         res_id = 'D7a7de92941a044049a7b8ad09f4c75bb'
-        res_type = 'GenericResource'
+        res_type = 'CompositeResource'
         app_name = 'test'
         request_url = 'https://www.youtube.com/' \
                       '?res_id=%s&res_type=%s' % (res_id, res_type)
@@ -179,8 +179,8 @@ class TrackingTests(TestCase):
 
         # sample request with mocked ip address
         request.META = {
-            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, ' +
-                                    '127.0.0.1, 198.84.193.157, '
+            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, '
+                                    + '127.0.0.1, 198.84.193.157, '
             '177.139.233.139',
             'HTTP_X_REAL_IP': '177.139.233.132',
             'REMOTE_ADDR': '177.139.233.133',
@@ -321,7 +321,7 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(list(kvp.keys())),  3)
+        self.assertEqual(len(list(kvp.keys())), 3)
 
         kvp = dict(tuple(pair.split('=')) for pair in var2.value.split('|'))
         self.assertEqual(var2.name, 'login')
@@ -345,7 +345,7 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(list(kvp.keys())),  3)
+        self.assertEqual(len(list(kvp.keys())), 3)
 
         client.logout()
 
@@ -406,19 +406,19 @@ class UtilsTests(TestCase):
 
         # list of common and unusual valid email address formats
         valid_emails = [
-                ('email@example.com', 'com'),
-                ('firstname.lastname@example.com', 'com'),
-                ('firstname+lastname@example.com', 'com'),
-                ('"email"@example.com', 'com'),
-                ('1234567890@example.com', 'com'),
-                ('email@example-one.com', 'com'),
-                ('_______@example.com', 'com'),
-                ('email@example.co.uk', 'co.uk'),
-                ('firstname-lastname@example.com', 'com'),
-                ('much."more\ unusual"@example.com', 'com'),
-                ('very.unusual."@".unusual.com@example.com', 'com'),
-                ('very."(),:;<>[]".VERY."very@\\ "very".unusual@strange.example.com', 'example.com')
-                ]
+            ('email@example.com', 'com'),
+            ('firstname.lastname@example.com', 'com'),
+            ('firstname+lastname@example.com', 'com'),
+            ('"email"@example.com', 'com'),
+            ('1234567890@example.com', 'com'),
+            ('email@example-one.com', 'com'),
+            ('_______@example.com', 'com'),
+            ('email@example.co.uk', 'co.uk'),
+            ('firstname-lastname@example.com', 'com'),
+            ('much."more\ unusual"@example.com', 'com'), # noqa
+            ('very.unusual."@".unusual.com@example.com', 'com'),
+            ('very."(),:;<>[]".VERY."very@\\ "very".unusual@strange.example.com', 'example.com')
+        ]
 
         # create session for each email and test email domain parsing
         for email, dom in valid_emails:

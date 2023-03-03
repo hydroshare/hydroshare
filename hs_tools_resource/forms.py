@@ -115,7 +115,6 @@ class UrlBaseFileForm(ModelForm):
 
 class UrlValidationForm(forms.Form):
     value = forms.URLField(max_length=1024, required=False)
-    data_url = forms.CharField(required=False)
 
 
 class AppResourceLevelUrlValidationForm(forms.Form):
@@ -527,8 +526,8 @@ class ToolIconForm(ModelForm):
 
 
 class ToolIconValidationForm(forms.Form):
-    value = forms.CharField(max_length=1024, required=False)
-    data_url = forms.URLField(required=False)
+    value = forms.URLField(max_length=1024, required=False)
+    data_url = forms.CharField(required=False)
 
 
 class MetadataField(Field):
@@ -546,7 +545,7 @@ class SupportedResTypeFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('supported_res_types'))
-        kwargs['element_name_label'] = 'Supported Resource Types'
+        kwargs['element_name_label'] = 'Support'
         super(SupportedResTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                          element_name, layout, *args, **kwargs)
 
@@ -560,7 +559,7 @@ class SupportedResTypesForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         model_instance = kwargs.get('instance')
         super(SupportedResTypesForm, self).__init__(*args, **kwargs)
-        self.fields['supported_res_types'].label = "Choose Resource Types:"
+        self.fields['supported_res_types'].label = "Choose what this app connector supports (can act on):"
         self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id,
                                                  element_name='SupportedResTypes')
 
@@ -641,7 +640,7 @@ class SupportedSharingStatusFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('sharing_status'))
-        kwargs['element_name_label'] = 'Supported Resource Sharing Status'
+        kwargs['element_name_label'] = 'Sharing Status'
         super(SupportedSharingStatusFormHelper, self). \
             __init__(allow_edit, res_short_id, element_id,
                      element_name, layout, *args, **kwargs)
@@ -655,7 +654,7 @@ class SupportedSharingStatusForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         model_instance = kwargs.get('instance')
         super(SupportedSharingStatusForm, self).__init__(*args, **kwargs)
-        self.fields['sharing_status'].label = "Choose Sharing Status:"
+        self.fields['sharing_status'].label = "Choose the sharing status required by this app connector:"
         self.helper = SupportedSharingStatusFormHelper(allow_edit, res_short_id, element_id,
                                                        element_name='SupportedSharingStatus')
         if model_instance:

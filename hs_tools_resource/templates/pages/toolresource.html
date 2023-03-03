@@ -1,6 +1,5 @@
-{% extends "pages/genericresource.html" %}
+{% extends "pages/baseresource.html" %}
 {% load pages_tags mezzanine_tags crispy_forms_tags %}
-{% load staticfiles  %}
 
 {% block content %}
 {% endblock %}
@@ -62,7 +61,7 @@
         {% endif %}
         {% if supported_res_types %}
             <div class="col-lg-6 col-xs-12">
-                <h4>Supported Resource Types:</h4>
+                <h4>Support:</h4>
                 <div class="row">
                     <div class="col-sm-8">{{ supported_res_types }}</div>
                 </div>
@@ -80,7 +79,7 @@
         {% endif %}
         {% if supported_sharing_status %}
             <div class="col-lg-6 col-xs-12">
-                <h4>Supported Resource Sharing Status:</h4>
+                <h4>Sharing Status:</h4>
                 <div class="row">
                     <div class="col-sm-8">{{ supported_sharing_status }}</div>
                 </div>

@@ -9,8 +9,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, HTML
 from crispy_forms.bootstrap import Field
 
-from .hydroshare import utils
-from .models import Party, Creator, Contributor, validate_user_url, Relation, Identifier, \
+from .models import Party, Creator, Contributor, validate_hydroshare_user_id, Relation, Identifier, \
     FundingAgency, Description
 
 
@@ -25,37 +24,37 @@ class Helper(object):
         """
         modal_title = "Add %s" % element_name.title()
         layout = Layout(
-                        HTML('<div class="modal fade" id="add-element-dialog" tabindex="-1" '
-                             'role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
-                             '<div class="modal-dialog">'
-                             '<div class="modal-content">'),
-                        HTML('<form action="{{ form.action }}" '
-                             'method="POST" enctype="multipart/form-data"> '),
-                        HTML('{% csrf_token %} '
-                             '<input name="resource-mode" type="hidden" value="edit"/>'
-                             '<div class="modal-header">'
-                             '<button type="button" class="close" '
-                             'data-dismiss="modal" aria-hidden="true">&times;'
-                             '</button>'),
-                        HTML('<h4 class="modal-title" id="myModalLabel"> Add Element </h4>'),
-                        HTML('</div>'
-                             '<div class="modal-body">'
-                             '{% csrf_token %}'
-                             '<div class="form-group">'),
-                        HTML('{% load crispy_forms_tags %} {% crispy add_creator_modal_form %} '),
-                        HTML('</div>'
-                             '</div>'
-                             '<div class="modal-footer">'
-                             '<button type="button" class="btn btn-default" '
-                             'data-dismiss="modal">Close</button>'
-                             '<button type="submit" class="btn btn-primary">'
-                             'Save changes</button>'
-                             '</div>'
-                             '</form>'
-                             '</div>'
-                             '</div>'
-                             '</div>')
-                        )
+            HTML('<div class="modal fade" id="add-element-dialog" tabindex="-1" '
+                 'role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+                 '<div class="modal-dialog">'
+                 '<div class="modal-content">'),
+            HTML('<form action="{{ form.action }}" '
+                 'method="POST" enctype="multipart/form-data"> '),
+            HTML('{% csrf_token %} '
+                 '<input name="resource-mode" type="hidden" value="edit"/>'
+                 '<div class="modal-header">'
+                 '<button type="button" class="close" '
+                 'data-dismiss="modal" aria-hidden="true">&times;'
+                 '</button>'),
+            HTML('<h4 class="modal-title" id="myModalLabel"> Add Element </h4>'),
+            HTML('</div>'
+                 '<div class="modal-body">'
+                 '{% csrf_token %}'
+                 '<div class="form-group">'),
+            HTML('{% load crispy_forms_tags %} {% crispy add_creator_modal_form %} '),
+            HTML('</div>'
+                 '</div>'
+                 '<div class="modal-footer">'
+                 '<button type="button" class="btn btn-default" '
+                 'data-dismiss="modal">Close</button>'
+                 '<button type="submit" class="btn btn-primary">'
+                 'Save changes</button>'
+                 '</div>'
+                 '</form>'
+                 '</div>'
+                 '</div>'
+                 '</div>')
+        )
 
         layout[0] = HTML('<div class="modal fade" id="add-%s-dialog" tabindex="-1" role="dialog" '
                          'aria-labelledby="myModalLabel" aria-hidden="true">'
@@ -75,31 +74,31 @@ class Helper(object):
 # the 1st and the 3rd HTML layout objects get replaced in MetaDataElementDeleteForm class
 def _get_modal_confirm_delete_matadata_element():
     layout = Layout(
-                    HTML('<div class="modal fade" id="delete-metadata-element-dialog" '
-                         'tabindex="-1" role="dialog" aria-labelledby="myModalLabel" '
-                         'aria-hidden="true">'),
-                    HTML('<div class="modal-dialog">'
-                         '<div class="modal-content">'
-                         '<div class="modal-header">'
-                         '<button type="button" class="close" data-dismiss="modal" '
-                         'aria-hidden="true">&times;</button>'
-                         '<h4 class="modal-title" id="myModalLabel">'
-                         'Delete metadata element</h4>'
-                         '</div>'
-                         '<div class="modal-body">'
-                         '<strong>Are you sure you want to delete this metadata '
-                         'element?</strong>'
+        HTML('<div class="modal fade" id="delete-metadata-element-dialog" '
+             'tabindex="-1" role="dialog" aria-labelledby="myModalLabel" '
+             'aria-hidden="true">'),
+        HTML('<div class="modal-dialog">'
+             '<div class="modal-content">'
+             '<div class="modal-header">'
+             '<button type="button" class="close" data-dismiss="modal" '
+             'aria-hidden="true">&times;</button>'
+             '<h4 class="modal-title" id="myModalLabel">'
+             'Delete metadata element</h4>'
+             '</div>'
+             '<div class="modal-body">'
+             '<strong>Are you sure you want to delete this metadata '
+             'element?</strong>'
 
-                         '</div>'
-                         '<div class="modal-footer">'
-                         '<button type="button" class="btn btn-default" '
-                         'data-dismiss="modal">Cancel</button>'),
-                    HTML('<a type="button" class="btn btn-danger" href="">Delete</a>'),
-                    HTML('</div>'
-                         '</div>'
-                         '</div>'
-                         '</div>'),
-                    )
+             '</div>'
+             '<div class="modal-footer">'
+             '<button type="button" class="btn btn-default" '
+             'data-dismiss="modal">Cancel</button>'),
+        HTML('<a type="button" class="btn btn-danger" href="">Delete</a>'),
+        HTML('</div>'
+             '</div>'
+             '</div>'
+             '</div>'),
+    )
     return layout
 
 
@@ -151,7 +150,7 @@ class CreatorFormSetHelper(FormHelper):
         self.layout = Layout(
             Fieldset('Creator',
                      Field('name', css_class=field_width),
-                     Field('description', css_class=field_width),
+                     Field('hydroshare_user_id', css_class=field_width),
                      Field('organization', css_class=field_width),
                      Field('email', css_class=field_width),
                      Field('address', css_class=field_width),
@@ -167,14 +166,7 @@ class PartyForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Render form for creating and editing Party models, aka people.
-
-        Removes profile link formset and renders proper description URL
         """
-        if 'initial' in kwargs:
-            if 'description' in kwargs['initial']:
-                if kwargs['initial']['description']:
-                    kwargs['initial']['description'] = utils.current_site_url() + \
-                                                       kwargs['initial']['description']
         super(PartyForm, self).__init__(*args, **kwargs)
         self.profile_link_formset = None
         self.number = 0
@@ -186,10 +178,10 @@ class PartyForm(ModelForm):
         """
 
         model = Party
-        fields = ['name', 'description', 'organization', 'email', 'address', 'phone', 'homepage']
+        fields = ['name', 'hydroshare_user_id', 'organization', 'email', 'address', 'phone', 'homepage']
 
         # TODO: field labels and widgets types to be specified
-        labels = {'description': 'HydroShare User Identifier (URL)'}
+        labels = {'hydroshare_user_id': 'HydroShare User Identifier'}
 
 
 class CreatorForm(PartyForm):
@@ -239,7 +231,7 @@ class CreatorForm(PartyForm):
 class PartyValidationForm(forms.Form):
     """Validate form for Party models."""
 
-    description = forms.CharField(required=False, validators=[validate_user_url])
+    hydroshare_user_id = forms.IntegerField(required=False, validators=[validate_hydroshare_user_id])
     name = forms.CharField(required=False, max_length=100)
     organization = forms.CharField(max_length=200, required=False)
     email = forms.EmailField(required=False)
@@ -247,15 +239,6 @@ class PartyValidationForm(forms.Form):
     phone = forms.CharField(max_length=25, required=False)
     homepage = forms.URLField(required=False)
     identifiers = forms.CharField(required=False)
-
-    def clean_description(self):
-        """Create absolute URL for Party.description field."""
-        user_absolute_url = self.cleaned_data['description']
-        if user_absolute_url:
-            url_parts = user_absolute_url.split('/')
-            if len(url_parts) > 4:
-                return '/user/{user_id}/'.format(user_id=url_parts[4])
-        return user_absolute_url
 
     def clean_identifiers(self):
         data = self.cleaned_data['identifiers']
@@ -317,7 +300,7 @@ class ContributorFormSetHelper(FormHelper):
         self.layout = Layout(
             Fieldset('Contributor',
                      Field('name', css_class=field_width),
-                     Field('description', css_class=field_width),
+                     Field('hydroshare_user_id', css_class=field_width),
                      Field('organization', css_class=field_width),
                      Field('email', css_class=field_width),
                      Field('address', css_class=field_width),
@@ -455,6 +438,13 @@ class RelationValidationForm(forms.Form):
     value = forms.CharField()
 
 
+class GeospatialRelationValidationForm(RelationValidationForm):
+    """Validate GeospatialRelationForm 'text' and 'value' CharFields."""
+    type = forms.CharField(max_length=100)
+    value = forms.CharField()
+    text = forms.CharField(max_length=100)
+
+
 class IdentifierFormSetHelper(FormHelper):
     """Render layout for Identifier form including HTML5 valdiation and errors."""
 
@@ -588,7 +578,7 @@ class BaseFormHelper(FormHelper):
     """Render non-repeatable element related forms."""
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
-                 element_layout=None,  *args, **kwargs):
+                 element_layout=None, *args, **kwargs):
         """Render non-repeatable element related forms."""
         coverage_type = kwargs.pop('coverage', None)
         element_name_label = kwargs.pop('element_name_label', None)
@@ -626,22 +616,22 @@ class BaseFormHelper(FormHelper):
             element_name = "Abstract"
         if res_short_id and allow_edit:
             self.layout = Layout(
-                            Fieldset(element_name,
-                                     element_layout,
-                                     HTML('<div style="margin-top:10px">'),
-                                     HTML('<button type="button" '
-                                          'class="btn btn-primary pull-right btn-form-submit" '
-                                          'return false;">Save changes</button>'),
-                                     HTML('</div>')
-                                     ),
-                         )  # TODO: TESTING
+                Fieldset(element_name,
+                         element_layout,
+                         HTML('<div style="margin-top:10px">'),
+                         HTML('<button type="button" '
+                              'class="btn btn-primary pull-right btn-form-submit" '
+                              'return false;">Save changes</button>'),
+                         HTML('</div>')
+                         ),
+            )  # TODO: TESTING
         else:
             self.form_tag = False
             self.layout = Layout(
-                            Fieldset(element_name,
-                                     element_layout,
-                                     ),
-                          )
+                Fieldset(element_name,
+                         element_layout,
+                         ),
+            )
 
 
 class TitleValidationForm(forms.Form):
@@ -667,11 +657,11 @@ class SubjectsFormHelper(BaseFormHelper):
         """
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('value', css_class=field_width),
-                 )
+            Field('value', css_class=field_width),
+        )
 
         super(SubjectsFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                 element_name, layout,  *args, **kwargs)
+                                                 element_name, layout, *args, **kwargs)
 
 
 class SubjectsForm(forms.Form):
@@ -712,11 +702,11 @@ class AbstractFormHelper(BaseFormHelper):
         """
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('abstract', css_class=field_width),
-                 )
+            Field('abstract', css_class=field_width),
+        )
 
         super(AbstractFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                 element_name, layout,  *args, **kwargs)
+                                                 element_name, layout, *args, **kwargs)
 
 
 class AbstractForm(ModelForm):
@@ -749,19 +739,8 @@ class AbstractValidationForm(forms.Form):
 class RightsValidationForm(forms.Form):
     """Validate Rights form with statement and URL field."""
 
-    statement = forms.CharField(required=False)
+    statement = forms.CharField()
     url = forms.URLField(required=False, max_length=500)
-
-    def clean(self):
-        """Clean data and render proper error messages."""
-        cleaned_data = super(RightsValidationForm, self).clean()
-        statement = cleaned_data.get('statement', None)
-        url = cleaned_data.get('url', None)
-        if not statement and not url:
-            self._errors['statement'] = ["A value for statement is missing"]
-            self._errors['url'] = ["A value for Url is missing"]
-
-        return self.cleaned_data
 
 
 class CoverageTemporalFormHelper(BaseFormHelper):
@@ -782,7 +761,7 @@ class CoverageTemporalFormHelper(BaseFormHelper):
         kwargs['coverage'] = 'temporal'
 
         super(CoverageTemporalFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                         element_name, layout,  *args, **kwargs)
+                                                         element_name, layout, *args, **kwargs)
 
 
 class CoverageTemporalForm(forms.Form):
@@ -870,7 +849,7 @@ class CoverageSpatialFormHelper(BaseFormHelper):
             layout.append(field)
         kwargs['coverage'] = 'spatial'
         super(CoverageSpatialFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                        element_name, layout,  *args, **kwargs)
+                                                        element_name, layout, *args, **kwargs)
 
 
 class CoverageSpatialForm(forms.Form):

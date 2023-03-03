@@ -5,7 +5,6 @@ import random
 import shutil
 from uuid import uuid4
 
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from foresite import utils, Aggregation, URIRef, AggregatedResource, RdfLibSerializer
@@ -26,7 +25,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
 
     # metadata schema (in json format) for model instance aggregation
     # metadata for the model instance aggregation is validated based on this schema
-    metadata_schema_json = JSONField(default=dict)
+    metadata_schema_json = models.JSONField(default=dict)
 
     class Meta:
         abstract = True
@@ -108,7 +107,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets any one resource file from the list of files *resource_files* """
 
         return resource_files[0] if resource_files else None
@@ -444,12 +443,12 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         return self.folder is None
 
     @classmethod
-    def can_set_folder_to_aggregation(cls, resource, dir_path):
+    def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """helper to check if the specified folder *dir_path* can be set to ModelProgram or ModelInstance aggregation
         """
 
         # checking target folder for any aggregation
-        if resource.get_folder_aggregation_object(dir_path) is not None:
+        if resource.get_folder_aggregation_object(dir_path, aggregations=aggregations) is not None:
             # target folder is already an aggregation
             return False
 
@@ -488,7 +487,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         while '/' in path:
             if path == resource.file_path:
                 break
-            parent_aggregation = resource.get_folder_aggregation_object(path)
+            parent_aggregation = resource.get_folder_aggregation_object(path, aggregations=aggregations)
             if parent_aggregation is not None:
                 # this is the first parent folder that represents an aggregation
                 break
@@ -522,8 +521,8 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                 else:
                     # if any of the files is part of a model instance aggr or fileset - folder can't be
                     # set to model instance
-                    return not any(res_file.has_logical_file and (res_file.logical_file.is_model_instance or
-                                                                  res_file.logical_file.is_fileset) for
+                    return not any(res_file.has_logical_file and (res_file.logical_file.is_model_instance
+                                                                  or res_file.logical_file.is_fileset) for
                                    res_file in files_in_path)
 
             # path has no files - can't set the folder to aggregation

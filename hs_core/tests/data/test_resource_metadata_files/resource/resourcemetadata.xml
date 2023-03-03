@@ -141,5 +141,17 @@
           <hsterms:isDescribedBy>https://www.google.com</hsterms:isDescribedBy>
       </rdf:Description>
     </dc:relation>
+    <hsterms:geospatialRelation>
+      <rdf:Description>
+        <dcterms:relation rdf:resource="https://geoconnex.us/ref/hu10/1802015303"/>
+        <hsterms:relation_name>Battle Creek [hu10/1802015303]</hsterms:relation_name>
+      </rdf:Description>
+    </hsterms:geospatialRelation>
+    <hsterms:geospatialRelation>
+      <rdf:Description>
+        <hsterms:relation_name>California Region [hu02/18]</hsterms:relation_name>
+        <dcterms:relation rdf:resource="https://geoconnex.us/ref/hu02/18"/>
+      </rdf:Description>
+    </hsterms:geospatialRelation>
   </hsterms:CompositeResource>
 </rdf:RDF>

@@ -10,7 +10,7 @@ from rest_framework import serializers
 
 from hs_core import hydroshare
 from hs_core.models import Contributor, CoreMetaData, Coverage, Creator, Date, \
-    Format, FundingAgency, Identifier, Subject, Relation
+    Format, FundingAgency, Identifier, Subject, Relation, GeospatialRelation
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
@@ -23,7 +23,7 @@ class Identifiers(serializers.DictField):
 
 class PartySerializer(serializers.Serializer):
     name = serializers.CharField()
-    description = serializers.URLField(required=False)
+    hydroshare_user_id = serializers.IntegerField(required=False)
     organization = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
     address = serializers.CharField(required=False)
@@ -33,7 +33,7 @@ class PartySerializer(serializers.Serializer):
 
     class Meta:
         model = Creator
-        fields = {'name', 'description', 'organization', 'email',
+        fields = {'name', 'hydroshare_user_id', 'organization', 'email',
                   'address', 'phone', 'homepage', 'identifiers'}
 
 
@@ -105,6 +105,15 @@ class RelationSerializer(serializers.Serializer):
         model = Relation
 
 
+class GeospatialRelationSerializer(RelationSerializer):
+    type = serializers.CharField(required=False)
+    value = serializers.CharField(required=False)
+    text = serializers.CharField(required=False)
+
+    class Meta:
+        model = GeospatialRelation
+
+
 class CoreMetaDataSerializer(serializers.Serializer):
     title = serializers.CharField(required=False)
     creators = CreatorSerializer(required=False, many=True)
@@ -121,6 +130,7 @@ class CoreMetaDataSerializer(serializers.Serializer):
     publisher = serializers.CharField(required=False)
     subjects = SubjectSerializer(required=False, many=True)
     relations = RelationSerializer(required=False, many=True)
+    geospatialrelations = GeospatialRelationSerializer(required=False, many=True)
 
     class Meta:
         model = CoreMetaData
@@ -190,7 +200,7 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
         except Exception as ex:
             error_msg = {
                 'resource': "Resource metadata update failed: %s, %s"
-                            % (ex.__class__, ex.message)
+                            % (ex.__class__, str(ex))
             }
             raise ValidationError(detail=error_msg)
 

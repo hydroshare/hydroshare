@@ -12,7 +12,7 @@
             </h2>
         </div>
         <div class="col-lg-2" id="facets">
-            <div class="panel panel-default">
+            <div id="filter-panel" class="panel panel-default">
                 <div class="panel-heading">
                     <h4 class="panel-title">
                         <span class="glyphicon glyphicon glyphicon-search"></span>
@@ -24,30 +24,30 @@
                         <div class="list-group">
                             <ul class="list-group inputs-group">
                                 <li class="list-group-item">
-                                    <span data-facet="owned" class="badge">0</span>
+                                    <span data-facet="owned" class="badge"></span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="owned" value="Owned" checked>Owned
                                         by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="shared" class="badge">0</span>
+                                    <span data-facet="shared" class="badge"></span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="shared" value="Shared">Shared with me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="discovered" class="badge">0</span>
+                                    <span data-facet="discovered" class="badge"></span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="discovered" value="Discovered"
                                                checked>Added by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="favorites" class="badge">0</span>
+                                    <span data-facet="favorites" class="badge"></span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="favorites"
                                                value="Favorites" checked>Favorites</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="recent" class="badge">0</span>
+                                    <span data-facet="recent" class="badge"></span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="recent" value="Recent">Recently
                                         Updated</label>
@@ -96,23 +96,12 @@
                                     <div class="dropdown-menu dropdown-menu-left shadow-md" role="menu">
                                         <form class="form-horizontal" role="form">
                                             <div class="form-group">
-                                                <label for="filter">Resource Type</label>
+                                                <label for="filter">Type</label>
                                                 <select id="input-resource-type" class="form-control pull-left">
                                                     <option value="" selected>All</option>
                                                     <option value="collection resource">Collection</option>
-                                                    <option value="composite resource">Composite Resource</option>
-                                                    <option value="generic">Generic</option>
-                                                    <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
-                                                    <option value="geographic raster">Geographic Raster</option>
-                                                    <option value="his referenced time series">HIS Referenced Time Series</option>
-                                                    <option value="model instance resource">Model Instance</option>
-                                                    <option value="model program">Model Program</option>
-                                                    <option value="modflow model instance resource">MODFLOW Model Instance</option>
-                                                    <option value="multidimensional">Multidimensional (NetCDF)</option>
-                                                    <option value="script resource">Script Resource</option>
-                                                    <option value="swat model instance resource">Swat Model Instance</option>
-                                                    <option value="time series">Time Series</option>
-                                                    <option value="web app resource">Web App</option>
+                                                    <option value="composite resource">Resource</option>
+                                                    <option value="web app resource">App Connector</option>
                                                 </select>
                                             </div>
                                             <div class="form-group">
@@ -166,8 +155,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- /input-group -->
             <table id="item-selectors" class="table-hover table-striped resource-custom-table">
                 <thead>
                 <tr>
@@ -188,116 +175,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                    {% for res in collection %}
-                        <tr class="data-row">
-                            {# Selection controls #}
-                            <td  data-col="actions">
-                                <input class="row-selector" type="checkbox">
-                                {# Delete resource forms #}
-                                <form class="hidden-form" data-id="form-delete-{{ res.short_id }}"
-                                      data-form-type="delete-resource" method="POST"
-                                      action="/hsapi/_internal/{{ res.short_id }}/delete-resource/">
-                                    {% csrf_token %}
-                                </form>
-                                {% if res.is_favorite %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}"
-                                          data-form-type="toggle-favorite"
-                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
-
-                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                          method="POST">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="DELETE">
-                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                    </form>
-                                {% else %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}"
-                                          data-form-type="toggle-favorite"
-                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>
-
-                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                          method="POST">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="CREATE">
-                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                    </form>
-                                {% endif %}
-
-                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown"
-                                      aria-expanded="false"></span>
-
-                                <div class="dropdown-menu inline-dropdown" role="menu">
-                                    <div class="panel-body" role="form">
-                                        <ul data-resource-id="{{ res.short_id }}" class="list-group list-labels">
-                                        </ul>
-                                    </div>
-                                </div>
-                            </td>
-                            {# Type #}
-                            <td data-col="resource-type">
-                                {% include "includes/res_type_col.html" with resource=res %}
-                            </td>
-                            {# Title #}
-                            <td>
-                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title|escape }}</a>
-                                </strong>
-                            </td>
-                            {# First Author #}
-                            <td>{{ res|resource_first_author }}</td>
-
-                            {# Date Created #}
-                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
-                            {# Last Modified #}
-                            <td>{{ res.last_updated|date:"M d, Y" }} at {{ res.last_updated|time }}</td>
-                            <td>
-                                {% for kw in res.metadata.subjects.all %}
-                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% for creator in res.metadata.creators.all %}
-                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                    {% if creator.description %}
-                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                    {% else %}
-                                        <span>{{ creator.name }}</span>
-                                    {% endif %}
-                                {% endfor %}
-                            </td>
-                            {% if res.owned %}
-                                <td>Owned</td>
-                            {% elif res.discovered %}
-                                <td>Discovered</td>
-                            {% else %}
-                                <td></td>
-                            {% endif %}
-                            <td class="col-labels">
-                                {% for label in res|user_resource_labels:user %}
-                                    {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
-                                {% endfor %}
-                            </td>
-                            <td class="col-is-favorite">
-                                {% if res.is_favorite %}
-                                    Favorite
-                                {% endif %}
-                            </td>
-                            <td>{{ res.last_updated|date:"U" }}</td>
-                            <td>
-                                {% if res.raccess.published %}
-                                    Published
-                                {% elif res.raccess.public %}
-                                    Public
-                                {% elif res.raccess.discoverable %}
-                                    Discoverable
-                                {% else %}
-                                    Private
-                                {% endif %}
-                            </td>
-                            <td>{{ res.created|date:"U" }}</td>
-                        </tr>
-                    {% endfor %}
+                    {% include "includes/my-resources-trows.html" %}
                 </tbody>
             </table>
             <br>
@@ -429,12 +307,12 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/my-resources.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/my-resources.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs_resource_table.js' %}"></script>
 {% endblock %}

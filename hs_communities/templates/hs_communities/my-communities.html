@@ -1,6 +1,6 @@
 {% extends "pages/page.html" %}
 
-{% load hydroshare_tags %}
+{% load hydroshare_tags thumbnail %}
 
 {% block meta_title %}My Communities {% endblock %}
 
@@ -30,21 +30,20 @@
                                 {% for c in communities_list %}
                                     <tr>
                                         <td>
-                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                                <div class="group-image-wrapper">
+                                            <div class="group-image-wrapper">
+                                                {% if group.gaccess.picture and group.gaccess.picture.url %}
+                                                    {% thumbnail group.gaccess.picture "x80" crop="center" as im %}
+                                                        <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                                                    {% endthumbnail %}
+                                                {% else %}
                                                     <div class="group-image-small"
-                                                         style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                                                </div>
-                                            {% else %}
-                                                <div class="group-image-wrapper">
-                                                    <div class="group-image-small"
-                                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                                </div>
-                                            {% endif %}
+                                                        style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                         <td>
                                             <h4><a href="/community/{{ c.id }}">{{ c.name }}</a></h4>
-                                            <img src="{{ STATIC_URL }}img/public.png" alt="Public Community"
+                                            <img src="{% static 'img/public.png' %}" alt="Public Community"
                                                  title="Public Community">
                                             <small class="text-muted"> Public Community</small>
                                         </td>
@@ -66,5 +65,5 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
 {% endblock %}

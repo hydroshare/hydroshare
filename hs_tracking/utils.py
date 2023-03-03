@@ -44,10 +44,10 @@ def get_std_log_fields(request, session=None):
         user_email = get_user_email_domain(session)
 
     return {
-             'user_ip': get_client_ip(request),
-             'user_type': user_type,
-             'user_email_domain': user_email,
-            }
+        'user_ip': get_client_ip(request),
+        'user_type': user_type,
+        'user_email_domain': user_email,
+    }
 
 
 def authentic_redirect_url(url):
@@ -60,5 +60,5 @@ def authentic_redirect_url(url):
     u = urlparse(url)
     url_base = "{}://{}".format(u.scheme, u.netloc)
     return RequestUrlBase.objects.filter(value__startswith=url_base).exists() \
-           or RequestUrlBaseAggregation.objects.filter(value__startswith=url_base).exists() \
-           or RequestUrlBaseFile.objects.filter(value__startswith=url_base).exists()
+        or RequestUrlBaseAggregation.objects.filter(value__startswith=url_base).exists() \
+        or RequestUrlBaseFile.objects.filter(value__startswith=url_base).exists()

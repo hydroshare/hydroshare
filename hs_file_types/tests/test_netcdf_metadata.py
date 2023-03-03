@@ -1,16 +1,14 @@
 import os
 
-from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
-
+from django.test import TransactionTestCase
 from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
-
 from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData, OriginalCoverage, Variable
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from .utils import assert_netcdf_file_type_metadata, CompositeResourceTestMixin, \
@@ -31,12 +29,18 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             groups=[self.group]
         )
 
+        test_file_base_path = 'hs_file_types/tests'
         self.res_title = "Testing NetCDF File Type"
 
         self.netcdf_file_name = 'netcdf_valid.nc'
-        self.netcdf_file = 'hs_file_types/tests/{}'.format(self.netcdf_file_name)
+        self.netcdf_file = f'{test_file_base_path}/{self.netcdf_file_name}'
         self.netcdf_invalid_file_name = 'netcdf_invalid.nc'
-        self.netcdf_invalid_file = 'hs_file_types/tests/{}'.format(self.netcdf_invalid_file_name)
+        self.netcdf_invalid_file = f'{test_file_base_path}/{self.netcdf_invalid_file_name}'
+        self.netcdf_no_coverage_file_name = 'nc_no_spatial_ref.nc'
+        self.netcdf_no_coverage_file = f'{test_file_base_path}/data/{self.netcdf_no_coverage_file_name}'
+        self.netcdf_sphere_lambert_conformal_conic_file_name = 'sample.nc'
+        self.netcdf_sphere_lambert_conformal_conic_file = \
+            f'{test_file_base_path}/data/{self.netcdf_sphere_lambert_conformal_conic_file_name}'
 
     def test_create_aggregation_from_nc_file_1(self):
         # here we are using a valid nc file for setting it
@@ -69,6 +73,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertFalse(logical_file.metadata.is_update_file)
         self.assertEqual(len(logical_file.metadata.keywords), 1)
         self.assertEqual(logical_file.metadata.keywords[0], 'Snow water equivalent')
+        # check that there are no required missing metadata for the netcdf aggregation
+        self.assertEqual(len(logical_file.metadata.get_required_missing_elements()), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -212,6 +218,39 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
+    def test_create_aggregation_from_nc_file_5(self):
+        # here we are using a valid nc file for setting it
+        # to NetCDF file type which includes metadata extraction
+        # the nc file in this case has spatial reference with coordinate system of 'Sphere_Lambert_Conformal_Conic'
+        # and we are testing that spatial coverage is computed from spatial reference as part of the metadata extraction
+
+        self.create_composite_resource(self.netcdf_sphere_lambert_conformal_conic_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        # check that there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        # set the nc file to NetCDF file type
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        # test computed spatial coverage
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test the metadata for the aggregation is in dirty state
+        self.assertTrue(logical_file.metadata.is_dirty)
+        # test that the update file (.nc file) state is false
+        self.assertFalse(logical_file.metadata.is_update_file)
+        self.assertNotEqual(logical_file.metadata.originalCoverage, None)
+        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
+        # check that there are no required missing metadata for the netcdf aggregation
+        self.assertEqual(len(logical_file.metadata.get_required_missing_elements()), 0)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
+        self.composite_resource.delete()
+
     def test_create_aggregation_for_netcdf_resource_title(self):
         # here we are using a valid nc file for setting it
         # to NetCDF file type which includes metadata extraction
@@ -280,25 +319,28 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def test_aggregation_metadata_CRUD(self):
-        # here we are using a valid nc file for creating a NetCDF file type (aggregation)
+        # here we are using a valid nc file (has no spatial reference) for creating a NetCDF file type (aggregation)
         # then testing with metadata CRUD actions for the  aggregation
 
         self.create_composite_resource()
         new_folder = 'nc_folder'
         ResourceFile.create_folder(self.composite_resource, new_folder)
         # add the the nc file to the resource at the above folder
-        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
-        # make the netcdf file part of the NetCDFLogicalFile
+        self.add_file_to_resource(file_to_add=self.netcdf_no_coverage_file, upload_folder=new_folder)
+        # create a NetCDFLogicalFile using the uploaded file
         res_file = self.composite_resource.files.first()
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
-        netcdf_logical_file = NetCDFLogicalFile.create(self.composite_resource)
-        netcdf_logical_file.save()
+        NetCDFLogicalFile.set_file_type(resource=self.composite_resource, user=self.user, file_id=res_file.id)
+
         self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
-        netcdf_logical_file.add_resource_file(res_file)
+        netcdf_logical_file = NetCDFLogicalFile.objects.first()
+
+        # check that there are no required missing metadata for the netcdf aggregation
+        self.assertEqual(len(netcdf_logical_file.metadata.get_required_missing_elements()), 0)
 
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, 'NetCDFLogicalFile')
-        self.assertEqual(netcdf_logical_file.files.count(), 1)
+        self.assertEqual(netcdf_logical_file.files.count(), 2)
 
         # create keywords - note it is possible to have duplicate keywords
         # appropriate view functions need to disallow duplicate keywords
@@ -318,27 +360,18 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(float(netcdf_logical_file.metadata.original_coverage.value['northlimit']),
                          121.345)
 
-        # test updating OriginalCoverage element
+        # test updating OriginalCoverage is not allowed
         orig_coverage = netcdf_logical_file.metadata.original_coverage
         coverage_data = {'northlimit': 111.333, 'southlimit': 42.678, 'eastlimit': 123.789,
-                         'westlimit': 40.789, 'units': 'meters'}
-        netcdf_logical_file.metadata.update_element('OriginalCoverage', orig_coverage.id,
-                                                    value=coverage_data)
-        self.assertEqual(float(netcdf_logical_file.metadata.original_coverage.value['northlimit']),
-                         111.333)
-
-        # trying to create a 2nd OriginalCoverage element should raise exception
-        with self.assertRaises(Exception):
-            netcdf_logical_file.metadata.create_element('OriginalCoverage', value=coverage_data)
-
-        # trying to update bounding box values with non-numeric values
-        # (e.g., 'north_limit' key with a non-numeric value) should raise exception
-        coverage_data = {'northlimit': '121.345a', 'southlimit': 42.678, 'eastlimit': 123.789,
                          'westlimit': 40.789, 'units': 'meters'}
         with self.assertRaises(ValidationError):
             netcdf_logical_file.metadata.update_element('OriginalCoverage', orig_coverage.id,
                                                         value=coverage_data)
-        # test creating spatial coverage
+        # trying to create a 2nd OriginalCoverage element should raise exception
+        with self.assertRaises(Exception):
+            netcdf_logical_file.metadata.create_element('OriginalCoverage', value=coverage_data)
+
+        # test that spatial coverage can be created
         # there should not be any spatial coverage for the netcdf file type
         self.assertEqual(netcdf_logical_file.metadata.spatial_coverage, None)
         coverage_data = {'projection': 'WGS 84 EPSG:4326', 'northlimit': 41.87,
@@ -350,29 +383,29 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         spatial_coverage = netcdf_logical_file.metadata.spatial_coverage
         self.assertEqual(float(spatial_coverage.value['northlimit']), 41.87)
 
-        # test updating spatial coverage
+        # test spatial coverage can't be updated when there is spatial reference coverage (original coverage)
+        self.assertNotEqual(netcdf_logical_file.metadata.original_coverage, None)
         coverage_data = {'projection': 'WGS 84 EPSG:4326', 'northlimit': 41.87706,
                          'southlimit': 41.863,
                          'eastlimit': -111.505,
                          'westlimit': -111.511, 'units': 'meters'}
-        netcdf_logical_file.metadata.update_element('Coverage', element_id=spatial_coverage.id,
-                                                    type="box", value=coverage_data)
-        spatial_coverage = netcdf_logical_file.metadata.spatial_coverage
-        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.87706)
 
+        with self.assertRaises(ValidationError):
+            netcdf_logical_file.metadata.update_element('Coverage', element_id=spatial_coverage.id,
+                                                        type="box", value=coverage_data)
         # create Variable element
-        self.assertEqual(netcdf_logical_file.metadata.variables.count(), 0)
+        self.assertEqual(netcdf_logical_file.metadata.variables.count(), 2)
         variable_data = {'name': 'variable_name', 'type': 'Int', 'unit': 'deg F',
                          'shape': 'variable_shape'}
         netcdf_logical_file.metadata.create_element('Variable', **variable_data)
-        self.assertEqual(netcdf_logical_file.metadata.variables.count(), 1)
-        self.assertEqual(netcdf_logical_file.metadata.variables.first().name, 'variable_name')
-
+        self.assertEqual(netcdf_logical_file.metadata.variables.count(), 3)
+        variable_names = [variable.name for variable in netcdf_logical_file.metadata.variables.all()]
+        self.assertIn('variable_name', variable_names)
         # test that multiple Variable elements can be created
         variable_data = {'name': 'variable_name_2', 'type': 'Int', 'unit': 'deg F',
                          'shape': 'variable_shape_2'}
         netcdf_logical_file.metadata.create_element('Variable', **variable_data)
-        self.assertEqual(netcdf_logical_file.metadata.variables.count(), 2)
+        self.assertEqual(netcdf_logical_file.metadata.variables.count(), 4)
 
         # test update Variable element
         variable = netcdf_logical_file.metadata.variables.first()
@@ -383,6 +416,54 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(variable.name, 'variable_name_updated')
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
+
+    def test_coverage_editing(self):
+        """
+        Here we are using a valid nc file for setting it
+        to NetCDF file type which includes metadata extraction
+        The nc file in this case is at the root of the folder hierarchy
+        The file used here for creating a netcdf aggregation has spatial reference and spatial coverage
+        gets computed from spatial reference
+        Here we are testing that coverage can't be updated.
+        """
+
+        self.create_composite_resource(self.netcdf_file)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        # check that there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        base_file_name, _ = os.path.splitext(res_file.file_name)
+        expected_res_file_folder_path = res_file.file_folder
+        # set the nc file to NetCDF file type
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        # test extracted metadata
+        assert_netcdf_file_type_metadata(self, self.res_title,
+                                         aggr_folder=expected_res_file_folder_path)
+        # test editing of coverage
+        netcdf_logical_file = NetCDFLogicalFile.objects.first()
+        self.assertNotEqual(netcdf_logical_file.metadata.original_coverage, None)
+        self.assertNotEqual(netcdf_logical_file.metadata.spatial_coverage, None)
+        # test that original coverage can't be updated
+        orig_coverage = netcdf_logical_file.metadata.original_coverage
+        coverage_data = {'northlimit': 111.333, 'southlimit': 42.678, 'eastlimit': 123.789,
+                         'westlimit': 40.789, 'units': 'meters'}
+        with self.assertRaises(ValidationError):
+            netcdf_logical_file.metadata.update_element('OriginalCoverage', orig_coverage.id,
+                                                        value=coverage_data)
+        # test that spatial coverage can't be updated
+        spatial_coverage = netcdf_logical_file.metadata.spatial_coverage
+        coverage_data = {'projection': 'WGS 84 EPSG:4326', 'northlimit': 41.87706,
+                         'southlimit': 41.863,
+                         'eastlimit': -111.505,
+                         'westlimit': -111.511, 'units': 'meters'}
+
+        with self.assertRaises(ValidationError):
+            netcdf_logical_file.metadata.update_element('Coverage', element_id=spatial_coverage.id,
+                                                        type="box", value=coverage_data)
 
     def test_aggregation_metadata_on_logical_file_delete(self):
         # test that when the NetCDFLogicalFile instance is deleted
@@ -584,17 +665,20 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         for res_file in self.composite_resource.files.all():
             base_file_name, ext = os.path.splitext(res_file.file_name)
             self.assertEqual(res_file.file_folder, expected_folder_path)
-            if expected_folder_path is not None:
+
+            if expected_folder_path:
                 src_path = 'data/contents/{0}/{1}'.format(expected_folder_path, res_file.file_name)
             else:
                 src_path = 'data/contents/{}'.format(res_file.file_name)
 
-            new_file_name = 'some_netcdf.{}'.format(ext)
+            new_file_name = 'some_netcdf{}'.format(ext)
+
             self.assertNotEqual(res_file.file_name, new_file_name)
-            if expected_folder_path is not None:
+            if expected_folder_path:
                 tgt_path = 'data/contents/{}/{}'.format(expected_folder_path, new_file_name)
             else:
                 tgt_path = 'data/contents/{}'.format(new_file_name)
+
             with self.assertRaises(DRF_ValidationError):
                 move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                               tgt_path)

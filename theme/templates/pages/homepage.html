@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% load mezzanine_tags static blog_tags accounts_tags hydroshare_tags %}
+{% load mezzanine_tags blog_tags accounts_tags hydroshare_tags %}
 
 {% block meta_title %}Find, Analyze and Share Water Data{% endblock %}
 
@@ -95,7 +95,7 @@
             <h2 class="home-page-block-title">How can HydroShare support your research?</h2>
             <div class="features-container row slideInBlock">
                 <div class="feature col-xs-12" style="justify-content: center; flex-direction: column;">
-                  <img class="feature-icon" src="{{ STATIC_URL }}img/home-page/FAIR.png" style="max-width: 350px;" alt="FAIR">
+                  <img class="feature-icon" src="{% static 'img/home-page/FAIR.png' %}" style="max-width: 350px;" alt="FAIR">
                   <p>Sharing research products with colleagues and others using FAIR Data Principles</p>
                 </div>
 
@@ -148,7 +148,7 @@
             <div class="steps-container col-xs-12">
                 <div class="step-item slideInBlock">
                     <a href="https://help.hydroshare.org/hydroshare-resources/content-types/">
-                      <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step1.png" alt="Create data">
+                      <img class="img-responsive img-step" src="{% static 'img/home-page/step1.png' %}" alt="Create data">
                     </a>
                     <hr>
                     <div class="step-number">1</div>
@@ -160,7 +160,7 @@
 
                 <div class="step-item slideInBlock">
                     <a href="https://help.hydroshare.org/creating-and-managing-resources/creating-resources/">
-                      <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step2.png" alt="Upload to HydroShare">
+                      <img class="img-responsive img-step" src="{% static 'img/home-page/step2.png' %}" alt="Upload to HydroShare">
                     </a>
                     <hr>
                     <div class="step-number">2</div>
@@ -173,7 +173,7 @@
 
                 <div class="step-item slideInBlock">
                     <a href="https://help.hydroshare.org/creating-and-managing-resources/best-practices-for-describing-your-resource-with-metadata/">
-                      <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step3.png" alt="Describe with metadata">
+                      <img class="img-responsive img-step" src="{% static 'img/home-page/step3.png' %}" alt="Describe with metadata">
                     </a>
                     <hr>
                     <div class="step-number">3</div>
@@ -185,7 +185,7 @@
 
                 <div class="step-item slideInBlock">
                     <a href="https://help.hydroshare.org/sharing-and-privacy/">
-                      <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step4.png" alt="Share with colleagues">
+                      <img class="img-responsive img-step" src="{% static 'img/home-page/step4.png' %}" alt="Share with colleagues">
                     </a>
                     <hr>
                     <div class="step-number">4</div>
@@ -197,7 +197,7 @@
 
                 <div class="step-item slideInBlock">
                     <a href="https://help.hydroshare.org/creating-and-managing-resources/formally-publishing-data/">
-                      <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step5.png" alt="Formally Publish">
+                      <img class="img-responsive img-step" src="{% static 'img/home-page/step5.png' %}" alt="Formally Publish">
                     </a>
                     <hr>
                     <div class="step-number">5</div>
@@ -219,10 +219,10 @@
             <p>HydroShare provides Data Services to meet the needs of many different research organizations.</p>
             <div class="carousel-wrapper">
               <div class="featured-organizations groups-carousel owl-carousel">
-                  <a href="https://www.hydroshare.org/group/6" target="_self"><img src="{{ STATIC_URL }}img/home-page/iutah_logo.png" alt="iUtah logo"></a>
-                  <a href="https://www.criticalzone.org/" target="_blank"><img src="{{ STATIC_URL }}img/home-page/CZN_Logo.png" alt="CZN logo"></a>
-                  <a href="https://www.hydroshare.org/community/1/" target="_self"><img src="{{ STATIC_URL }}img/home-page/czo_logo.png" alt="CZO logo"></a>
-                  <a href="https://www.hydroshare.org/group/138" target="_self"><img src="{{ STATIC_URL }}img/home-page/lro_logo.png" alt="LRO logo"></a>
+                  <a href="https://www.hydroshare.org/group/6" target="_self"><img src="{% static 'img/home-page/iutah_logo.png' %}" alt="iUtah logo"></a>
+                  <a href="https://www.criticalzone.org/" target="_blank"><img src="{% static 'img/home-page/CZN_Logo.png' %}" alt="CZN logo"></a>
+                  <a href="https://www.hydroshare.org/community/1/" target="_self"><img src="{% static 'img/home-page/czo_logo.png' %}" alt="CZO logo"></a>
+                  <a href="https://www.hydroshare.org/group/138" target="_self"><img src="{% static 'img/home-page/lro_logo.png' %}" alt="LRO logo"></a>
               </div>
             </div>
             <p>Want your organization to be featured here? <a href="mailto:help.cuahsi.org?subject=How we use HydroShare">Tell us how you are using HydroShare!</a></p>
@@ -235,25 +235,24 @@
         <a class="btn btn-primary" href="https://help.hydroshare.org/about-hydroshare/hydroshare-a-trusted-repository-for-the-water-science-community/">Learn more</a>
         <div class="carousel-wrapper">
             <div class="featured-institutions institutions-carousel owl-carousel">
-                <a href="https://fairsharing.org/" target="_blank"><img src="{{ STATIC_URL }}img/home-page/FAIRsharing-sdp.svg" alt="Fair Sharing logo"></a>
-                <a href="https://www.re3data.org/" target="_blank"><img src="{{ STATIC_URL }}img/home-page/re3datalogo_black.png" alt="re3data logo"></a>
-                <a href="https://www.springernature.com/gp" target="_blank"><img src="{{ STATIC_URL }}img/home-page/springer_nature_logo.png" alt="CZO logo"></a>
-                <a href="https://agupubs.onlinelibrary.wiley.com/journal/21698961" target="_blank"><img src="{{ STATIC_URL }}img/home-page/jgr_logo.png" alt="JGR Biogeosciences logo"></a>
-                <a href="https://www.nature.com/sdata/policies/repositories" target="_blank"><img src="{{ STATIC_URL }}img/home-page/scientific_data_logo.jpg" alt="Scientific Data logo"></a>
-                <a href="https://ascelibrary.org/page/dataavailability" target="_blank"><img src="{{ STATIC_URL }}img/home-page/asce_logo.png" alt="ASCE Journal of Water Resources Planning and Management logo"></a>
-                <a href="https://data.agu.org/resources/useful-domain-repositories" target="_blank"><img src="{{ STATIC_URL }}img/home-page/agu_logo.png" alt="AGU logo"></a>
-                <a href="https://copdess.org/" target="_blank"><img src="{{ STATIC_URL }}img/home-page/copdess_logo.png" alt="COPDESS logo"></a>
+                <a href="https://fairsharing.org/" target="_blank"><img src="{% static 'img/home-page/FAIRsharing-sdp.svg' %}" alt="Fair Sharing logo"></a>
+                <a href="https://www.re3data.org/" target="_blank"><img src="{% static 'img/home-page/re3datalogo_black.png' %}" alt="re3data logo"></a>
+                <a href="https://www.springernature.com/gp" target="_blank"><img src="{% static 'img/home-page/springer_nature_logo.png' %}" alt="CZO logo"></a>
+                <a href="https://agupubs.onlinelibrary.wiley.com/journal/21698961" target="_blank"><img src="{% static 'img/home-page/jgr_logo.png' %}" alt="JGR Biogeosciences logo"></a>
+                <a href="https://www.nature.com/sdata/policies/repositories" target="_blank"><img src="{% static 'img/home-page/scientific_data_logo.jpg' %}" alt="Scientific Data logo"></a>
+                <a href="https://ascelibrary.org/page/dataavailability" target="_blank"><img src="{% static 'img/home-page/asce_logo.png' %}" alt="ASCE Journal of Water Resources Planning and Management logo"></a>
+                <a href="https://data.agu.org/resources/useful-domain-repositories" target="_blank"><img src="{% static 'img/home-page/agu_logo.png' %}" alt="AGU logo"></a>
+                <a href="https://copdess.org/" target="_blank"><img src="{% static 'img/home-page/copdess_logo.png' %}" alt="COPDESS logo"></a>
             </div>
         </div>
     </section>
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/home-page.js"></script>
+    <script type="text/javascript" src="{% static 'js/home-page.js' %}"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
 
 {% endblock %}
 
 {% block extra_head %}
-{% if not page|is_debug %}
 <script type="application/ld+json">
 {
     "@context": {
@@ -413,5 +412,4 @@
     ]
 }
 </script>
-{% endif %}
 {% endblock %}

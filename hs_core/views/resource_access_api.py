@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Group
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework import generics, serializers
 from rest_framework import status
@@ -13,7 +14,7 @@ from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
 class PrivilegeField(serializers.Field):
     def to_representation(self, privilege):
-        return PrivilegeCodes.CHOICES[privilege-1][1]
+        return PrivilegeCodes.CHOICES[privilege - 1][1]
 
 
 class GroupResourcePrivilegeSerializer(serializers.ModelSerializer):
@@ -102,14 +103,14 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
                     user_to_add = utils.user_from_id(request.data['user_id'])
                     user_access.share_resource_with_user(resource,
                                                          user_to_add,
-                                                         request.data['privilege'])
+                                                         int(request.data['privilege']))
                     return Response(
                         data={'success': "Resource access privileges added."},
                         status=status.HTTP_202_ACCEPTED
                     )
-                except Exception:
+                except PermissionDenied as e:
                     return Response(
-                        data={'error': "This resource may not be shared with that user."},
+                        data={'error': f"This resource may not be shared with that user. {str(e)}"},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
@@ -119,14 +120,14 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
                 try:
                     user_access.share_resource_with_group(resource,
                                                           group_to_add,
-                                                          request.data['privilege'])
+                                                          int(request.data['privilege']))
                     return Response(
                         data={'success': "Resource access privileges added."},
                         status=status.HTTP_202_ACCEPTED
                     )
-                except Exception:
+                except PermissionDenied as e:
                     return Response(
-                        data={'error': "This group may not be added to any resources."},
+                        data={'error': f"This group may not be added to any resources. {str(e)}"},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 

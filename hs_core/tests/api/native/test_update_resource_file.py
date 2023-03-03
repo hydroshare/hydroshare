@@ -5,7 +5,7 @@ from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
@@ -18,7 +18,8 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         super(TestUpdateResourceFileAPI, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
-        GenericResource.objects.all().delete()
+        self.new_res.delete()
+        BaseResource.objects.all().delete()
         self.original_file.close()
         os.remove(self.original_file.name)
         self.new_file.close()
@@ -35,14 +36,14 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
             groups=[]
         )
 
-        new_res = hydroshare.create_resource(
-            'GenericResource',
+        self.new_res = hydroshare.create_resource(
+            'CompositeResource',
             self.user_creator,
             'My Test Resource'
-            )
+        )
 
         # resource should not have any files at this point
-        self.assertEqual(new_res.files.all().count(), 0, msg="resource file count didn't match")
+        self.assertEqual(self.new_res.files.all().count(), 0, msg="resource file count didn't match")
 
         # create a file
         original_file_name = 'original.txt'
@@ -53,15 +54,15 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
 
         original_file = open(original_file_name, 'rb')
         # add the file to the resource
-        added_files = hydroshare.add_resource_files(new_res.short_id, original_file)
+        added_files = hydroshare.add_resource_files(self.new_res.short_id, original_file)
 
         # resource should have only one file at this point
         self.assertEqual(len(added_files), 1)
-        self.assertEqual(new_res.files.all().count(), 1, msg="resource file count didn't match")
+        self.assertEqual(self.new_res.files.all().count(), 1, msg="resource file count didn't match")
 
         self.assertIn(
             original_file_name,
-            [os.path.basename(f.resource_file.name) for f in new_res.files.all()],
+            [os.path.basename(f.resource_file.name) for f in self.new_res.files.all()],
             msg='%s is not one of the resource files.' % original_file_name
         )
 
@@ -74,17 +75,17 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         new_file = open(new_file_name, 'rb')
 
         # this is the api call we are testing
-        rf = hydroshare.update_resource_file(new_res.short_id, original_file_name, new_file)
+        rf = hydroshare.update_resource_file(self.new_res.short_id, original_file_name, new_file)
 
         # test if the file name matches
         self.assertEqual(os.path.basename(rf.resource_file.name), new_file_name, msg="resource file name didn't match")
 
         # since we are updating a file the number of files in the resource needs to be still 1
-        self.assertEqual(new_res.files.all().count(), 1, msg="resource file count didn't match")
+        self.assertEqual(self.new_res.files.all().count(), 1, msg="resource file count didn't match")
 
         # test if the content of the file matches
-        resource_file = hydroshare.get_resource_file(new_res.short_id, new_file_name).resource_file
-        self.assertEqual(resource_file.read().decode('utf-8'),  new_file_data, msg="resource file content didn't match")
+        resource_file = hydroshare.get_resource_file(self.new_res.short_id, new_file_name).resource_file
+        self.assertEqual(resource_file.read().decode('utf-8'), new_file_data, msg="resource file content didn't match")
 
         # reset the original resource file name for 2nd time resource file update
         original_file_name = new_file_name
@@ -98,7 +99,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         new_file = open(new_file_name, 'rb')
 
         # this is the api call we are testing
-        rf = hydroshare.update_resource_file(new_res.short_id, original_file_name, new_file)
+        rf = hydroshare.update_resource_file(self.new_res.short_id, original_file_name, new_file)
 
         # test if the file name matches
         self.assertEqual(os.path.basename(rf.resource_file.name), new_file_name,
@@ -107,5 +108,4 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         # exception ObjectDoesNotExist should be raised if resource does not have a file
         # for the given file name (file_not_in_resource.txt) to update
         with self.assertRaises(ObjectDoesNotExist):
-            hydroshare.update_resource_file(new_res.short_id, 'file_not_in_resource.txt', new_file)
-
+            hydroshare.update_resource_file(self.new_res.short_id, 'file_not_in_resource.txt', new_file)

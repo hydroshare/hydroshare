@@ -28,6 +28,10 @@ preflight_nginx() {
         yes | cp -rf ${NGINX_CONFIG_DIRECTORY}/hydroshare-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
         sed -i 's/FQDN_OR_IP/'${FQDN_OR_IP}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf;
     fi
+
+    # Copy custom error page for 503
+    cp server_error_on.html ../hydroshare/static/server_error_on.html
+
     # Configure access based on USE_HTTP_AUTH
     if [ "${USE_HTTP_AUTH,,}" = true ]; then
         # check for existence of .htpasswd file

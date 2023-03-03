@@ -62,7 +62,7 @@ class T11PreserveOwnership(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.scratching = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='all about sofas as scrathing posts',
             metadata=[],

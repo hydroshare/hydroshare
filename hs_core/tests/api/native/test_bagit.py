@@ -5,7 +5,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import hs_bagit
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.tasks import create_bag_by_irods
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from django_irods.storage import IrodsStorage
 from hs_core.task_utils import _retrieve_task_id
 
@@ -25,16 +25,16 @@ class TestBagIt(TestCase):
 
         # note: creating a resource calls the hs_bagit.create_bag() api
         self.test_res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource'
-            )
+        )
 
     def tearDown(self):
         super(TestBagIt, self).tearDown()
         if self.test_res:
             self.test_res.delete()
-        GenericResource.objects.all().delete()
+        BaseResource.objects.all().delete()
 
     def test_create_bag_files(self):
         # this is the api call we are testing
@@ -71,16 +71,16 @@ class TestBagIt(TestCase):
                                                        'redelivered': False,
                                                        'routing_key': 'task.default',
                                                        'exchange': 'default'},
-                                      'hostname': 'celery@6337f5f9054c',
-                                      'acknowledged': True,
-                                      'kwargs': {},
-                                      'id': mock_active_and_reserved_job_id,
-                                      'worker_pid': 60}]}
+                                     'hostname': 'celery@6337f5f9054c',
+                                     'acknowledged': True,
+                                     'kwargs': {},
+                                     'id': mock_active_and_reserved_job_id,
+                                     'worker_pid': 60}]}
         mock_scheduled_job_id = '586be52d-3409-4258-959f-f91a5b81a493'
         mock_scheduled_jobs = {
             'celery@6337f5f9054c': [{'priority': 6,
                                      'eta': '2019-12-11T19:42:51.864720+00:00',
-                                     'request':{
+                                     'request': {
                                          'args': [mock_res_id],
                                          'time_start': None,
                                          'name': 'hs_core.tasks.create_bag_by_irods',
