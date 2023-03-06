@@ -34,7 +34,7 @@ def user_json(user):
 
         return {
             "id": user.id,
-            "pictureUrl": picture or "",
+            "pictureUrl": picture or '',
             "best_name": best_name(user),
             "user_name": user.username,
             "type": "User",
@@ -48,8 +48,8 @@ def user_json(user):
             "viewable_contributions": user.viewable_contributions if user.is_active else None,
             "subject_areas": user.userprofile.subject_areas or '',
             "identifiers": user.userprofile.identifiers,
-            "state": user.userprofile.state,
-            "country": user.userprofile.country,
+            "state": user.userprofile.state or '',
+            "country": user.userprofile.country or '',
             "joined": user.date_joined.strftime("%d %b, %Y"),
             "is_active": 1 if user.is_active else 0
         }
