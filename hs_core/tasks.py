@@ -77,7 +77,9 @@ class FileOverrideException(Exception):
 
 
 class HydroshareRequest(Request):
-    'A Celery custom request to log failures.'
+    '''A Celery custom request to log failures.
+    https://docs.celeryq.dev/en/v4.4.7/userguide/tasks.html?#requests-and-custom-requests
+    '''
     def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
         super(HydroshareRequest, self).on_failure(
             exc_info,
@@ -86,12 +88,21 @@ class HydroshareRequest(Request):
         )
         warning_message = f'Failure detected for task {self.task.name}'
         logger.warning(warning_message)
-        subject = 'Notification of failing Celery task'
-        send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+        if not settings.DISABLE_TASK_EMAILS:
+            subject = 'Notification of failing Celery task'
+            send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
 
 class HydroshareTask(Task):
+    '''Custom Celery Task configured for Hydroshare
+    https://docs.celeryq.dev/en/v4.4.7/userguide/tasks.html?#automatic-retry-for-known-exceptions
+    '''
     Request = HydroshareRequest
+    autoretry_for = (Exception, KeyError)
+    retry_kwargs = {'max_retries': 3}
+    retry_backoff = True
+    retry_backoff_max = 600
+    retry_jitter = True
 
 
 @celery_app.on_after_finalize.connect
@@ -106,9 +117,10 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
                                  send_over_quota_emails.s())
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
-        sender.add_periodic_task(crontab(day_of_month=1), monthly_group_membership_requests_cleanup.s())
+        sender.add_periodic_task(
+            crontab(minute=15, hour=1, day_of_month=1), monthly_group_membership_requests_cleanup.s())
         sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
-        sender.add_periodic_task(crontab(day_of_week=1), task_notification_cleanup.s())
+        sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
         sender.add_periodic_task(crontab(minute=0, hour=1), nightly_periodic_task_check.s())
 
 
@@ -779,35 +791,26 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
         response = session.post(rest_url, timeout=timeout)
 
         if publish_urls and response.status_code == status.HTTP_201_CREATED:
-            try:
+            resource = utils.get_resource_by_shortkey(res_id)
+            response_content = json.loads(response.content.decode())
+            if "resource" in response_content:
+                for key, value in response_content["resource"].items():
+                    resource.extra_metadata[key] = value
+                    resource.save()
 
-                resource = utils.get_resource_by_shortkey(res_id)
-                response_content = json.loads(response.content.decode())
-
-                if "resource" in response_content:
-                    for key, value in response_content["resource"].items():
-                        resource.extra_metadata[key] = value
-                        resource.save()
-
-                if "content" in response_content:
-                    for url in response_content["content"]:
-                        logical_files = list(resource.logical_files)
-                        lf = logical_files[[i.aggregation_name for i in
-                                            logical_files].index(
-                            url["layer_name"].encode()
-                        )]
-                        lf.metadata.extra_metadata["Web Services URL"] = url["message"]
-                        lf.metadata.save()
-
-            except Exception as e:
-                logger.error(e)
-                return e
-
-        return response
-
-    except (requests.exceptions.RequestException, ValueError) as e:
-        logger.error(e)
-        return e
+            if "content" in response_content:
+                for url in response_content["content"]:
+                    logical_files = list(resource.logical_files)
+                    lf = logical_files[[i.aggregation_name for i in
+                                        logical_files].index(
+                        url["layer_name"].encode()
+                    )]
+                    lf.metadata.extra_metadata["Web Services URL"] = url["message"]
+                    lf.metadata.save()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Error updating web services: {str(e)}")
+        raise
 
 
 @shared_task
@@ -874,7 +877,7 @@ def monthly_group_membership_requests_cleanup():
     Delete expired and redeemed group membership requests
     """
     two_months_ago = datetime.today() - timedelta(days=60)
-    GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
+    GroupMembershipRequest.objects.filter(date_requested__lte=two_months_ago).delete()
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
