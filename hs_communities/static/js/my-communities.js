@@ -5,7 +5,12 @@ $(document).ready(function () {
     data: {
       isRemoving: {},
       targetRequest: null,
-      pendingRequests: PENDING_REQUESTS
+      pendingRequests: []
+    },
+    beforeMount() {
+      // Load data
+      const appData = JSON.parse(document.getElementById('my-communities-app-data').textContent);
+      this.pendingRequests = appData;
     },
     methods: {
       remove: async function(id) {

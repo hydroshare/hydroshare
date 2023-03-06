@@ -9,6 +9,8 @@
 {% endblock %}
 
 {% block main %}
+    <!-- Load context data needed in Vue app -->
+    {{ user_pending_requests|json_script:"my-communities-app-data" }}
     {% include 'hs_communities/communities-nav.html' with active='my_communities' %}
     <div class="container">
         <div id="my-communities-app" class="row">
@@ -103,10 +105,6 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript">
-        // Constants here
-        const PENDING_REQUESTS = {{ user_pending_requests|safe }}
-      </script>
     <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/my-communities.js' %}"></script>
 {% endblock %}
