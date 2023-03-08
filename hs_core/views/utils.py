@@ -1127,6 +1127,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
     unzip_to_folder_path = ''
     unzip_path_temp = ''
+    unzip_folder_name = ''
     try:
         # unzip to a temporary folder first to validate contents of the zip file
         unzip_folder_name = uuid4().hex
@@ -1167,10 +1168,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 for res_file in res_files:
                     resource.add_file_to_aggregation(res_file)
         else:
-            # unzip to the current folder
             dir_file_list = istorage.listdir(unzip_path_temp)
             unzip_subdir_list = dir_file_list[0]
-            unzipped_foldername = os.path.basename(unzip_path_temp)
             override_tgt_paths = []
             for sub_dir_name in unzip_subdir_list:
                 dest_sub_path = os.path.join(os.path.dirname(zip_with_full_path), sub_dir_name)
@@ -1185,7 +1184,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 res_files, meta_files, map_files = identify_metadata_files(res_files)
 
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                destination_file = _get_destination_filename(file.name, unzip_folder_name)
                 if istorage.exists(destination_file):
                     override_tgt_paths.append(destination_file)
 
@@ -1221,12 +1220,12 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
             # now move each file to the destination
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                destination_file = _get_destination_filename(file.name, unzip_folder_name)
                 istorage.moveFile(file.name, destination_file)
             # and now link them to the resource
             added_resource_files = []
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                destination_file = _get_destination_filename(file.name, unzip_folder_name)
                 destination_file = destination_file.replace(res_id + "/", "", 1)
                 destination_file = resource.get_irods_path(destination_file)
                 res_file = link_irods_file_to_django(resource, destination_file)
@@ -1245,7 +1244,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 delete_resource_file(res_id, zip_with_rel_path, user)
 
                 from hs_file_types.utils import ingest_metadata_files
-                ingest_metadata_files(resource, meta_files, map_files)
+                ingest_metadata_files(resource, meta_files, map_files, unzip_folder_name)
     except Exception as err:
         logger.exception(f"Failed to unzip file:{zip_with_full_path}. Error:{str(err)}")
         if unzip_to_folder_path and istorage.exists(unzip_to_folder_path):

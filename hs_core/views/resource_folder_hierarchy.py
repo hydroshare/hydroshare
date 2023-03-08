@@ -476,6 +476,9 @@ def data_store_folder_unzip(request, **kwargs):
         except (DRF_ValidationError, SuspiciousFileOperation) as ex:
             err_msg = ex.detail if isinstance(ex, DRF_ValidationError) else str(ex)
             return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as ex:
+            err_msg = str(ex)
+            return JsonResponse({"error": err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # this unzipped_path can be used for POST request input to data_store_structure()
         # to list the folder structure after unzipping

@@ -324,14 +324,14 @@ def identify_and_ingest_metadata_files(resource, files):
     ingest_metadata_files(resource, meta_files, map_files)
 
 
-def ingest_metadata_files(resource, meta_files, map_files):
+def ingest_metadata_files(resource, meta_files, map_files, unzip_temp_folder=""):
     # refresh to pick up any new possible aggregations
     resource_metadata_file = None
     for f in meta_files:
         if is_resource_metadata_file(f):
             resource_metadata_file = f
         elif is_aggregation_metadata_file(f):
-            ingest_logical_file_metadata_from_file(f, resource, map_files)
+            ingest_logical_file_metadata_from_file(f, resource, map_files, unzip_temp_folder)
     # process the resource level metadata last, some aggregation metadata is pushed to the resource level
     if resource_metadata_file:
         resource.refresh_from_db()
@@ -361,11 +361,17 @@ def identify_metadata_files(files):
     return res_files, meta_files, map_files
 
 
-def get_map_graph(subject, map_files):
+def get_map_graph(subject, map_files, unzip_temp_folder=""):
     map_name = subject.split("data/contents/", 1)[1]
     map_name = map_name.split("#", 1)[0]
+    if unzip_temp_folder:
+        unzip_temp_folder = f"/{unzip_temp_folder}"
     for map_file in map_files:
-        if map_file.name.endswith(map_name):
+        if unzip_temp_folder in map_file.name:
+            map_file_name = map_file.name.replace(unzip_temp_folder, "", 1)
+        else:
+            map_file_name = map_file.name
+        if map_file_name.endswith(map_name):
             return Graph().parse(data=map_file.read())
     raise Exception(f"Could not find _resmap.xml for {subject}")
 
@@ -380,17 +386,17 @@ def get_aggregation_files(map_graph):
     return files
 
 
-def ingest_logical_file_metadata_from_file(metadata_file, resource, map_files=[]):
-    ingest_logical_file_metadata_from_string(metadata_file.read(), resource, map_files)
+def ingest_logical_file_metadata_from_file(metadata_file, resource, map_files=[], unzip_temp_folder=""):
+    ingest_logical_file_metadata_from_string(metadata_file.read(), resource, map_files, unzip_temp_folder)
 
 
-def ingest_logical_file_metadata_from_string(metadata_str, resource, map_files=[]):
+def ingest_logical_file_metadata_from_string(metadata_str, resource, map_files=[], unzip_temp_folder=""):
     graph = Graph()
     graph = graph.parse(data=metadata_str)
-    ingest_logical_file_metadata(graph, resource, map_files)
+    ingest_logical_file_metadata(graph, resource, map_files, unzip_temp_folder)
 
 
-def ingest_logical_file_metadata(graph, resource, map_files=[]):
+def ingest_logical_file_metadata(graph, resource, map_files=[], unzip_temp_folder=""):
     resource.refresh_from_db()
 
     agg_type_name = None
@@ -412,7 +418,7 @@ def ingest_logical_file_metadata(graph, resource, map_files=[]):
 
     if not lf:
         # see if the files exist and create it
-        map_graph = get_map_graph(subject, map_files)
+        map_graph = get_map_graph(subject, map_files, unzip_temp_folder)
         aggregation_files = get_aggregation_files(map_graph)
         # making an assumption that model program/instance is not folder based when there is only one file
         is_folder_based = (
