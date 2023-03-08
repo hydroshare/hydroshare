@@ -10,11 +10,10 @@ from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import move_or_rename_file_or_folder
-from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile
+from hs_file_types.models import GenericLogicalFile, GeoRasterFileMetaData, GeoRasterLogicalFile
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
-from hs_file_types.models.raster import OriginalCoverageRaster, CellInformation, BandInformation
-from .utils import assert_raster_file_type_metadata, CompositeResourceTestMixin, \
-    get_path_with_no_file_extension
+from hs_file_types.models.raster import BandInformation, CellInformation, OriginalCoverageRaster
+from .utils import CompositeResourceTestMixin, assert_raster_file_type_metadata, get_path_with_no_file_extension
 
 
 class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
