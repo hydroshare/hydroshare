@@ -1,6 +1,5 @@
 import os
 import tempfile
-# import zipfile
 
 from rest_framework import status
 

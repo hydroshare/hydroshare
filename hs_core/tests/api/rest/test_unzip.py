@@ -6,7 +6,6 @@ from rest_framework import status
 
 from hs_core.hydroshare import resource
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
-from hs_core.tasks import FileOverrideException
 from .base import HSRESTTestCase
 
 
@@ -69,10 +68,10 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         response = self.client.get(list_url, data={})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        # second run of unzip of the same file should raise FileOverrideException
-        with self.assertRaises(FileOverrideException):
-            unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
-            self.client.post(unzip_url, data={})
+        # second run of unzip of the same file should fail
+        unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
+        response = self.client.post(unzip_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # test unzip to folder
         unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
@@ -123,13 +122,13 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         response = self.client.get(list_url, data={})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        # second run of unzip of the same file should raise FileOverrideException
-        with self.assertRaises(FileOverrideException):
-            unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
-            self.client.post(unzip_url, data={})
+        # second run of unzip of the same file should fail
+        unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
+        response = self.client.post(unzip_url, data={})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         list_url = "/hsapi/resource/%s/folders/foo/test-1/" % self.pid
-        self.client.get(list_url, data={})
+        response = self.client.get(list_url, data={})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_deep_unzip_overwrite(self):
