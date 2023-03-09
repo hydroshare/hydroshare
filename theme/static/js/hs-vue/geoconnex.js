@@ -1256,8 +1256,8 @@ const geoconnexApp = new Vue({
       const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
         {
           url: url,
+          forceFresh: true,
         },
-        (forceFresh = true)
       );
       const contexts = featureJsonLd["@context"];
       for (let context of contexts) {
@@ -1279,8 +1279,8 @@ const geoconnexApp = new Vue({
       const featureJson = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
         {
           url: url,
+          forceFresh: true,
         },
-        (forceFresh = true)
       );
       const properties = featureJson.features[0].properties;
       const match = Object.keys(properties).filter((key) =>
