@@ -115,7 +115,6 @@ const geoconnexApp = new Vue({
       geoconnexApp.map.closePopup();
 
       if (newLength > oldLength) {
-        geoconnexApp.hasSearches = true;
         const newCollection = newValue.at(-1);
         if (geoconnexApp.resSpatialType) {
           geoconnexApp.fetchGeoconnexFeaturesInBbox({
@@ -134,6 +133,7 @@ const geoconnexApp = new Vue({
             The limit is ${limitNumberOfFeaturesPerRequest} so no geometries were mapped.
             We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds`;
             geoconnexApp.searchingDescription = "";
+            geoconnexApp.hasSearches = true;
             return;
           }
           const featureCollection =
@@ -143,13 +143,14 @@ const geoconnexApp = new Vue({
               skipGeometry: false,
             });
           if (featureCollection.features) {
-            geoconnexApp.addSearchFeaturesToMap(
+            await geoconnexApp.addSearchFeaturesToMap(
               featureCollection.features,
               featureCollection.collection
             );
           } else {
             geoconnexApp.searchResultString = `Your search in ${newCollection.description} didn't return any features.`;
           }
+          geoconnexApp.hasSearches = true;
           geoconnexApp.searchingDescription = "";
         }
       } else if (newLength < oldLength) {
@@ -430,6 +431,7 @@ const geoconnexApp = new Vue({
             geoconnexApp.searchResultString = `Your search in ${collection.id} returned too many features.
             The limit is ${limitNumberOfFeaturesPerRequest} so no geometries were mapped.
             We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds`;
+            geoconnexApp.hasSearches = true;
             return;
           }
           promises.push(
@@ -446,10 +448,12 @@ const geoconnexApp = new Vue({
         features = results.flat().filter(Boolean);
         if (features.length > 0) {
           geoconnexApp.searchResultString = "";
-          geoconnexApp.addSearchFeaturesToMap(features);
+          await geoconnexApp.addSearchFeaturesToMap(features);
+          geoconnexApp.hasSearches = true;
         } else {
           geoconnexApp.searchResultString = `Your search didn't return any features.`;
           geoconnexApp.mapDisplayNoFoundFeatures(bbox);
+          geoconnexApp.hasSearches = true;
         }
       } catch (e) {
         geoconnexApp.error(
@@ -1011,6 +1015,8 @@ const geoconnexApp = new Vue({
     },
     searchForFeaturesUsingVisibleMapBounds() {
       const geoconnexApp = this;
+      // reset to prevent editing during mapping
+      geoconnexApp.hasSearches = false;
       geoconnexApp.searchingDescription = `${
         geoconnexApp.collectionsSelectedToSearch.at(-1).description
       }`;
@@ -1021,6 +1027,7 @@ const geoconnexApp = new Vue({
         })
         .then(() => {
           geoconnexApp.searchingDescription = "";
+          geoconnexApp.hasSearches = true;
         });
     },
     mapDisplayNoFoundFeatures(bbox) {
