@@ -1252,9 +1252,10 @@ const geoconnexApp = new Vue({
     async getFeatureNameField(collectionName) {
       const geoconnexApp = this;
       const url = `${geoconnexApp.geoconnexUrl}/${collectionName}/items?f=jsonld&lang=en-US&skipGeometry=true&limit=1`;
+      // don't fetch the contexts from cache, get it direct from Geoconnex api
       const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
         url: url,
-      });
+      }, forceFresh=true);
       const contexts = featureJsonLd["@context"];
       for (let context of contexts) {
         const nameField = Object.keys(context).find(
@@ -1262,7 +1263,17 @@ const geoconnexApp = new Vue({
         );
         if (nameField) return nameField;
       }
-      return "NAME";
+      return geoconnexApp.getFirstFeatureNameField(collectionName);
+    },
+    async getFirstFeatureNameField(collectionName) {
+      const geoconnexApp = this;
+      const url = `${geoconnexApp.geoconnexUrl}/${collectionName}/items?f=json&lang=en-US&skipGeometry=true&limit=1`;
+      const featureJson = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
+        url: url,
+      });
+      const properties = featureJson.features[0].properties;
+      const match = Object.keys(properties).filter((key) => /.*name.*/.test(key));
+      return match[0];
     },
     async getFeatureProperties(feature) {
       const geoconnexApp = this;
