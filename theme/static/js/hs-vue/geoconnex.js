@@ -466,9 +466,9 @@ const geoconnexApp = new Vue({
       const geoconnexApp = this;
       geoconnexApp.searchingDescription = collection.description;
       let response = {};
-      const propertiesParameter = `&properties=uri,${await geoconnexApp.getFeatureNameField(
-        collection.id
-      )}`;
+      let nameProperty = await geoconnexApp.getFeatureNameField(collection.id)
+      nameProperty = nameProperty ? `,${nameProperty}` : "";
+      const propertiesParameter = `&properties=uri${nameProperty}`;
       const bboxParameter = bbox ? `&bbox=${bbox.toString()}` : "";
       const query = `${geoconnexApp.geoconnexUrl}/${collection.id}/${geoconnexBaseURLQueryParam}${propertiesParameter}${bboxParameter}`;
       response = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
@@ -541,9 +541,9 @@ const geoconnexApp = new Vue({
       skipGeometry = true,
     }) {
       const geoconnexApp = this;
-      const propertiesParameter = `&properties=uri,${await geoconnexApp.getFeatureNameField(
-        collection.id
-      )}`;
+      let nameProperty = await geoconnexApp.getFeatureNameField(collection.id)
+      nameProperty = nameProperty ? `,${nameProperty}` : "";
+      const propertiesParameter = `&properties=uri${nameProperty}`;
       const url = `${geoconnexApp.geoconnexUrl}/${
         collection.id
       }/${geoconnexBaseURLQueryParam}${propertiesParameter}&skipGeometry=${skipGeometry.toString()}`;
@@ -1272,8 +1272,8 @@ const geoconnexApp = new Vue({
         url: url,
       });
       const properties = featureJson.features[0].properties;
-      const match = Object.keys(properties).filter((key) => /.*name.*/.test(key));
-      return match[0];
+      const match = Object.keys(properties).filter((key) => /.*name.*/i.test(key));
+      return match[0] || "";
     },
     async getFeatureProperties(feature) {
       const geoconnexApp = this;
