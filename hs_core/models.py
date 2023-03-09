@@ -23,6 +23,7 @@ from django.urls import reverse
 from django.core.validators import URLValidator
 from django.db import models
 from django.db import transaction
+from django.db import IntegrityError
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -4579,7 +4580,10 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 date_type = kwargs.get('type', '')
                 if date_type and date_type not in ('modified', 'published'):
                     raise ValidationError("{} date can't be created for a published resource".format(date_type))
-        element = model_type.model_class().create(**kwargs)
+        try: 
+            element = model_type.model_class().create(**kwargs)
+        except IntegrityError as e: 
+            logger.warn("duplicate key prevented in metadata: {}".format(e))
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):

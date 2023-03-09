@@ -54,8 +54,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     6. a previously zipped file that was zipped asynchronously.
 
     """
-    if not settings.DEBUG:
-        logger.debug("request path is {}".format(path))
+    logger.debug("request path is {}".format(path))
 
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':
@@ -83,8 +82,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     else:  # regular download request
         res_id = split_path_strs[0]
 
-    if not settings.DEBUG:
-        logger.debug("resource id is {}".format(res_id))
+    logger.debug("resource id is {}".format(res_id))
 
     # now we have the resource Id and can authorize the request
     # if the resource does not exist in django, authorized will be false
@@ -135,11 +133,9 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
             irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
-            if not settings.DEBUG:
-                logger.debug("automatically zipping folder {} to {}".format(path, output_path))
+            logger.debug("automatically zipping folder {} to {}".format(path, output_path))
         elif istorage.exists(irods_path):
-            if not settings.DEBUG:
-                logger.debug("request for single file {}".format(path))
+            logger.debug("request for single file {}".format(path))
             is_sf_request = True
 
             if is_zip_request:
@@ -206,8 +202,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
         res.update_relation_meta()
         bag_modified = res.getAVU('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
-        if not settings.DEBUG:
-            logger.debug("irods_output_path is {}".format(irods_output_path))
+        logger.debug("irods_output_path is {}".format(irods_output_path))
         if bag_modified is None or not bag_modified:
             if not istorage.exists(irods_output_path):
                 bag_modified = True
@@ -267,11 +262,9 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             return JsonResponse(task_dict)
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
-
-        if path in [f"{res_id}/data/resourcemap.xml", f"{res_id}/data/resourcemetadata.xml",
-                    f"{res_id}/manifest-md5.txt", f"{res_id}/tagmanifest-md5.txt", f"{res_id}/readme.txt",
-                    f"{res_id}/bagit.txt"]:
-
+        if path in ["{res_id}/data/resourcemap.xml", "{res_id}/data/resourcemetadata.xml",
+                    "{res_id}/manifest-md5.txt", "{res_id}/tagmanifest-md5.txt", "{res_id}/readme.txt",
+                    "{res_id}/bagit.txt"]:
             res.update_relation_meta()
             bag_modified = res.getAVU("bag_modified")
             if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
@@ -337,8 +330,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
         response['Content-Length'] = flen
         response['X-Accel-Redirect'] = '/'.join([
             getattr(settings, 'IRODS_DATA_URI', '/irods-data'), output_path])
-        if not settings.DEBUG:
-            logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
+        logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
         return response
 
     # if we get here, none of the above conditions are true
@@ -347,8 +339,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
 
     options = ('-',)  # we're redirecting to stdout.
     # this unusual way of calling works for streaming federated or local resources
-    if not settings.DEBUG:
-        logger.debug("Locally streaming {}".format(output_path))
+    logger.debug("Locally streaming {}".format(output_path))
     # track download count
     res.update_download_count()
     proc = session.run_safe('iget', None, irods_output_path, *options)
@@ -364,7 +355,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
 @api_view(['GET'])
 def rest_download(request, path, *args, **kwargs):
     # need to have a separate view function just for REST API call
-    return download(request, path, rest_call=True, *args, **kwargs)
+    return download(request, path, *args, **kwargs)
 
 
 @swagger_auto_schema(method='get', auto_schema=None)

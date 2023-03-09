@@ -152,6 +152,7 @@ urlpatterns = i18n_patterns(
         r"^group/(?P<group_id>[0-9]+)", hs_core_views.GroupView.as_view(), name="group"
     ),
     url(r"^apps/$", hs_core_views.apps.AppsView.as_view(), name="apps"),
+    url(r'^hs_upload/', include('hs_upload.urls'))
 )
 
 # Filebrowser admin media library.
@@ -203,7 +204,7 @@ urlpatterns += [
     # one homepage pattern, so if you use a different one, comment this
     # one out.
     # url("^$", direct_to_template, {"template": "index.html"}, name="home"),
-    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),
+    # QUNIT_TESTS_OFF
     # HOMEPAGE AS AN EDITABLE PAGE IN THE PAGE TREE
     # ---------------------------------------------
     # This pattern gives us a normal ``Page`` object, so that your

@@ -1,0 +1,5 @@
+#! /bin/sh
+ 
+# implicit directory is /app
+
+node /app/server.js

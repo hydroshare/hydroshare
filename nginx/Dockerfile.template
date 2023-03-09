@@ -6,6 +6,7 @@ RUN cp /tmp/config-files/hs-nginx.conf /etc/nginx/conf.d/default.conf \
     && cp /tmp/config-files/nginx.conf-default /etc/nginx/nginx.conf \
     && cp /tmp/.htpasswd /etc/nginx/.htpasswd \
     && cp /tmp/docker-entrypoint.sh /docker-entrypoint.sh \
+    && echo 'hydro-service:x:HS_SERVICE_UID:HS_SERVICE_GID:::/bin/bash' >> /etc/passwd \
     && groupadd -g SENDFILE_IRODS_GROUP_ID SENDFILE_IRODS_GROUP \
     && echo 'SENDFILE_IRODS_USER:x:SENDFILE_IRODS_USER_ID:SENDFILE_IRODS_GROUP_ID::/home/SENDFILE_IRODS_USER:/bin/bash' >> /etc/passwd
 
