@@ -828,7 +828,7 @@ const geoconnexApp = new Vue({
       const geoconnexApp = this;
       const abortSignal = geoconnexApp.abortController.signal;
       for (const feature of features) {
-        if ( abortSignal.aborted ) {
+        if (abortSignal.aborted) {
           return;
         }
         // deal with collection first
@@ -913,7 +913,7 @@ const geoconnexApp = new Vue({
     }) {
       const geoconnexApp = this;
       const abortSignal = geoconnexApp.abortController.signal;
-      if ( abortSignal.aborted ) {
+      if (abortSignal.aborted) {
         return;
       }
       try {
@@ -974,9 +974,12 @@ const geoconnexApp = new Vue({
           });
         }
       } catch (e) {
-        if (e instanceof TypeError && e.message.includes('searchLayerGroupDictionary')){
+        if (
+          e instanceof TypeError &&
+          e.message.includes("searchLayerGroupDictionary")
+        ) {
           console.log("Geoconnex warning:", e.message);
-        }else{
+        } else {
           geoconnexApp.error(e.message);
           geoconnexApp.generateAppMessage(
             `Error while attempting to add item to map: ${e.message}`
@@ -1269,12 +1272,10 @@ const geoconnexApp = new Vue({
       const geoconnexApp = this;
       const url = `${geoconnexApp.geoconnexUrl}/${collectionName}/items?f=jsonld&lang=en-US&skipGeometry=true&limit=1`;
       // don't fetch the contexts from cache, get it direct from Geoconnex api
-      const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
-        {
-          url: url,
-          forceFresh: true,
-        },
-      );
+      const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
+        url: url,
+        forceFresh: true,
+      });
       const contexts = featureJsonLd["@context"];
       for (let context of contexts) {
         const nameField = Object.keys(context).find(
@@ -1292,12 +1293,10 @@ const geoconnexApp = new Vue({
     async getFirstFeatureNameField(collectionName) {
       const geoconnexApp = this;
       const url = `${geoconnexApp.geoconnexUrl}/${collectionName}/items?f=json&lang=en-US&skipGeometry=true&limit=1`;
-      const featureJson = await geoconnexApp.fetchURLFromCacheOrGeoconnex(
-        {
-          url: url,
-          forceFresh: true,
-        },
-      );
+      const featureJson = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
+        url: url,
+        forceFresh: true,
+      });
       const properties = featureJson.features[0].properties;
       const match = Object.keys(properties).filter((key) =>
         /.*name.*/i.test(key)
