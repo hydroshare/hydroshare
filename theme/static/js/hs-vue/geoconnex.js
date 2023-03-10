@@ -57,6 +57,7 @@ const geoconnexApp = new Vue({
       westLong: null,
       bBox: null,
       resSpatialExtentArea: null,
+      abortController: {},
 
       ////// Messages and logging //////
       searchingDescription: "",
@@ -824,7 +825,12 @@ const geoconnexApp = new Vue({
       geoconnexApp.setMapEvents();
     },
     async addSearchFeaturesToMap(features, collectionOverride = null) {
+      const geoconnexApp = this;
+      const abortSignal = geoconnexApp.abortController.signal;
       for (const feature of features) {
+        if ( abortSignal.aborted ) {
+          return;
+        }
         // deal with collection first
         const collection = collectionOverride
           ? collectionOverride
@@ -906,6 +912,10 @@ const geoconnexApp = new Vue({
       marker = false,
     }) {
       const geoconnexApp = this;
+      const abortSignal = geoconnexApp.abortController.signal;
+      if ( abortSignal.aborted ) {
+        return;
+      }
       try {
         const leafletLayer = L.geoJSON(geojson, {
           onEachFeature: function (feature, layer) {
@@ -964,10 +974,14 @@ const geoconnexApp = new Vue({
           });
         }
       } catch (e) {
-        geoconnexApp.error(e.message);
-        geoconnexApp.generateAppMessage(
-          `Error while attempting to add item to map: ${e.message}`
-        );
+        if (e instanceof TypeError && e.message.includes('searchLayerGroupDictionary')){
+          console.log("Geoconnex warning:", e.message);
+        }else{
+          geoconnexApp.error(e.message);
+          geoconnexApp.generateAppMessage(
+            `Error while attempting to add item to map: ${e.message}`
+          );
+        }
       }
     },
     fitMapToFeatures({ group = null, overrideShouldFit = false } = {}) {
@@ -1039,6 +1053,8 @@ const geoconnexApp = new Vue({
     },
     clearMapOfSearches() {
       const geoconnexApp = this;
+      geoconnexApp.abortController.abort();
+      geoconnexApp.abortController = new AbortController();
       geoconnexApp.searchFeatureGroup.clearLayers();
       for (const key in geoconnexApp.searchLayerGroupDictionary) {
         geoconnexApp.layerControl.removeLayer(
@@ -1400,6 +1416,7 @@ const geoconnexApp = new Vue({
   },
   async mounted() {
     const geoconnexApp = this;
+    geoconnexApp.abortController = new AbortController();
     geoconnexApp.isLoading = true;
     geoconnexApp.configureLogging();
     if (
