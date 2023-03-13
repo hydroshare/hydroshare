@@ -216,20 +216,23 @@ class TestFileBasedJSON(HSRESTTestCase):
         prepare_resource(self, "resource")
         self.res.raccess.published = True
         self.res.raccess.save()
-        try:
-            self._test_metadata_update_retrieve("hsapi2:resource_metadata_json", ResourceMetadataIn, "resource.json")
-            self.fail("Published resources may not be edited via API")
-        except PermissionDenied:
-            pass
+        with open(os.path.join(self.base_dir, "resource.json"), "r") as f:
+            expected_json = json.loads(normalize_metadata(f.read(), self.res.short_id))
+        schema_in_instance = ResourceMetadataIn(**expected_json)
+        in_json = schema_in_instance.dict(exclude_defaults=True)
+        kwargs = {"pk": self.res.short_id}
+        response = self.client.put(reverse("hsapi2:resource_metadata_json", kwargs=kwargs), data=in_json, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_aggregation_metadata_update_published(self):
         prepare_resource(self, "reference_timeseries")
         self.res.raccess.published = True
         self.res.raccess.save()
-        try:
-            self._test_metadata_update_retrieve("hsapi2:referenced_time_series_metadata_json",
-                                                ReferencedTimeSeriesMetadataIn, "referencedtimeseries.refts.json",
-                                                "msf_version.refts.json")
-            self.fail("Published resources may not be edited via API")
-        except PermissionDenied:
-            pass
+        with open(os.path.join(self.base_dir, "referencedtimeseries.refts.json"), "r") as f:
+            expected_json = json.loads(normalize_metadata(f.read(), self.res.short_id))
+        schema_in_instance = ReferencedTimeSeriesMetadataIn(**expected_json)
+        in_json = schema_in_instance.dict(exclude_defaults=True)
+        kwargs = {"pk": self.res.short_id, "aggregation_path": "msf_version.refts.json"}
+        response = self.client.put(reverse("hsapi2:referenced_time_series_metadata_json",
+                                           kwargs=kwargs), data=in_json, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
