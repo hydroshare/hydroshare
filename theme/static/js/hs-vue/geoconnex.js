@@ -1053,10 +1053,6 @@ const geoconnexApp = new Vue({
     async clearMapOfSearches() {
       const geoconnexApp = this;
       geoconnexApp.abortController.abort();
-      // await new Promise((resolve)=>{
-      //   geoconnexApp.abortController.abort();
-      //   setTimeout(resolve, 100)
-      // });
       geoconnexApp.abortController = new AbortController();
       for (const key in geoconnexApp.searchLayerGroupDictionary) {
         geoconnexApp.layerControl.removeLayer(
