@@ -253,7 +253,6 @@
 {% endblock %}
 
 {% block extra_head %}
-{% if not page|is_debug %}
 <script type="application/ld+json">
 {
     "@context": {
@@ -413,5 +412,4 @@
     ]
 }
 </script>
-{% endif %}
 {% endblock %}

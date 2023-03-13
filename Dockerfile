@@ -1,10 +1,8 @@
-FROM hydroshare/hs_docker_base:2.2.0
+FROM hydroshare/hs_docker_base:2.2.4
 
 # Set the locale. TODO - remove once we have a better alternative worked out
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
-
-RUN pip install django-health-check==3.17.0
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en

@@ -2,7 +2,6 @@ import datetime
 import os
 import logging
 
-from django.core.validators import RegexValidator
 from django.utils import timezone
 from django.dispatch import receiver
 from django.contrib.auth.models import User
@@ -320,15 +319,8 @@ class UserProfile(models.Model):
         blank=True,
         help_text="The name of the organization you work for.",
     )
-    phone_regex = RegexValidator(
-        regex=r"^\d{8,15}$",
-        message="Our validation for phone numbers has recently changed. Please ensure that "
-        "your phone number is entered in the following format: '999999999'. Up to 16 "
-        "digits are allowed.  If you made other changes to your profile - please make "
-        "sure they saved successfully.",
-    )
     phone_1 = models.CharField(
-        validators=[phone_regex], max_length=16, null=True, blank=True
+        max_length=32, null=True, blank=True
     )
     phone_1_type = models.CharField(
         max_length=1024,
@@ -341,7 +333,7 @@ class UserProfile(models.Model):
         ),
     )
     phone_2 = models.CharField(
-        validators=[phone_regex], max_length=16, null=True, blank=True
+        max_length=32, null=True, blank=True
     )
     phone_2_type = models.CharField(
         max_length=1024,

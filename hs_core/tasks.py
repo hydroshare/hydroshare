@@ -233,6 +233,12 @@ def manage_task_hourly():
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))
 
+    pending_unpublished_resources = BaseResource.objects.filter(raccess__published=False,
+                                                                doi__contains='pending')
+    for res in pending_unpublished_resources:
+        msg_lst.append(f"{res.short_id} has pending in DOI but resource_acceess shows unpublished. "
+                       "This indicates an issue with the resource, please notify a developer")
+
     if msg_lst and not settings.DISABLE_TASK_EMAILS:
         email_msg = '\n'.join(msg_lst)
         subject = 'Notification of pending DOI deposition/activation of published resources'
@@ -785,35 +791,26 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
         response = session.post(rest_url, timeout=timeout)
 
         if publish_urls and response.status_code == status.HTTP_201_CREATED:
-            try:
+            resource = utils.get_resource_by_shortkey(res_id)
+            response_content = json.loads(response.content.decode())
+            if "resource" in response_content:
+                for key, value in response_content["resource"].items():
+                    resource.extra_metadata[key] = value
+                    resource.save()
 
-                resource = utils.get_resource_by_shortkey(res_id)
-                response_content = json.loads(response.content.decode())
-
-                if "resource" in response_content:
-                    for key, value in response_content["resource"].items():
-                        resource.extra_metadata[key] = value
-                        resource.save()
-
-                if "content" in response_content:
-                    for url in response_content["content"]:
-                        logical_files = list(resource.logical_files)
-                        lf = logical_files[[i.aggregation_name for i in
-                                            logical_files].index(
-                            url["layer_name"].encode()
-                        )]
-                        lf.metadata.extra_metadata["Web Services URL"] = url["message"]
-                        lf.metadata.save()
-
-            except Exception as e:
-                logger.error(e)
-                return e
-
-        return response
-
-    except (requests.exceptions.RequestException, ValueError) as e:
-        logger.error(e)
-        return e
+            if "content" in response_content:
+                for url in response_content["content"]:
+                    logical_files = list(resource.logical_files)
+                    lf = logical_files[[i.aggregation_name for i in
+                                        logical_files].index(
+                        url["layer_name"].encode()
+                    )]
+                    lf.metadata.extra_metadata["Web Services URL"] = url["message"]
+                    lf.metadata.save()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Error updating web services: {str(e)}")
+        raise
 
 
 @shared_task

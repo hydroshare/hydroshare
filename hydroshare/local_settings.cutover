@@ -182,7 +182,7 @@ MAPS_KEY = ''
 
 with open(os.path.dirname(os.path.abspath(__file__)) + "/../config/hydroshare-config.yaml", 'r') as stream:
     try:
-        EXTERNAL_CONFIG = yaml.load(stream)
+        EXTERNAL_CONFIG = yaml.safe_load(stream)
     except yaml.YAMLError as exc:
         print(exc)
 
