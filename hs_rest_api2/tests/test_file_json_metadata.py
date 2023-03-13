@@ -2,6 +2,7 @@ import os
 import json
 import tempfile
 
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from hsmodels.schemas.resource import ResourceMetadataIn
 from hsmodels.schemas.aggregations import GeographicFeatureMetadataIn, GeographicRasterMetadataIn, \
@@ -210,3 +211,25 @@ class TestFileBasedJSON(HSRESTTestCase):
         prepare_resource(self, "model_program")
         prepare_resource(self, "model_instance")
         self._test_metadata_update_unknown_field("hsapi2:model_instance_metadata_json", "generic_file.txt")
+
+    def test_resource_metadata_update_published(self):
+        prepare_resource(self, "resource")
+        self.res.raccess.published = True
+        self.res.raccess.save()
+        try:
+            self._test_metadata_update_retrieve("hsapi2:resource_metadata_json", ResourceMetadataIn, "resource.json")
+            self.fail("Published resources may not be edited via API")
+        except PermissionDenied:
+            pass
+
+    def test_aggregation_metadata_update_published(self):
+        prepare_resource(self, "reference_timeseries")
+        self.res.raccess.published = True
+        self.res.raccess.save()
+        try:
+            self._test_metadata_update_retrieve("hsapi2:referenced_time_series_metadata_json",
+                                                ReferencedTimeSeriesMetadataIn, "referencedtimeseries.refts.json",
+                                                "msf_version.refts.json")
+            self.fail("Published resources may not be edited via API")
+        except PermissionDenied:
+            pass
