@@ -976,8 +976,10 @@ const geoconnexApp = new Vue({
       } catch (e) {
         if (
           e instanceof TypeError &&
-          e.message.includes("searchLayerGroupDictionary")
+          (e.message.includes("searchLayerGroupDictionary") || 
+          e.message.includes("addLayer"))
         ) {
+          // When mapping is aborted, errors occur when layers attempt add to nonexistent layerGroups
           console.log("Geoconnex warning:", e.message);
         } else {
           geoconnexApp.error(e.message);
