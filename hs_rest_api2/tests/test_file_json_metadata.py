@@ -2,7 +2,6 @@ import os
 import json
 import tempfile
 
-from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from hsmodels.schemas.resource import ResourceMetadataIn
 from hsmodels.schemas.aggregations import GeographicFeatureMetadataIn, GeographicRasterMetadataIn, \
