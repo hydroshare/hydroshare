@@ -912,6 +912,7 @@
     <script>
         var PHONES = {'phone_1': "{{profile_user.userprofile.phone_1}}", 'phone_2': "{{profile_user.userprofile.phone_2}}" };
         var OLD_STATE = "{{ profile_user.userprofile.state }}";
+        const DATA_UPLOAD_MAX_MEMORY_SIZE = "{{ data_upload_max }}";
     </script>
     <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/profile.js' %}"></script>

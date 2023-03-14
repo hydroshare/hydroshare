@@ -1,7 +1,8 @@
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.core.exceptions import RequestDataTooBig
 from django.conf import settings
 from hs_tools_resource.utils import convert_size
+from django.urls import resolve
 
 
 class CheckRequest():
@@ -17,25 +18,8 @@ class CheckRequest():
         try:
             _ = request.body
         except RequestDataTooBig:
-            limit = convert_size(settings.DATA_UPLOAD_MAX_MEMORY_SIZE)
-            return JsonResponse({"message": f"The upload was too big. Limit: {limit}"})
-
-        response = self.get_response(request)
-        return response
-
-    def process_request(self, request):
-        try:
-            request.body
-        except RequestDataTooBig as e:
-            response = self.process_exception(request, e)
-            if response is not None:
-                return response
-            else:
-                pass
-
-        return None
-
-    def process_exception(self, request, exception):
-        if isinstance(exception, RequestDataTooBig):
-            return HttpResponse(status=413)
-        return None
+            view_name = resolve(request.path).view_name
+            if view_name == "update_metadata_element":
+                limit = convert_size(settings.DATA_UPLOAD_MAX_MEMORY_SIZE)
+                return JsonResponse({"message": f"The upload was too big. Limit: {limit}"})
+        return self.get_response(request)
