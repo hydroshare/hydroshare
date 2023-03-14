@@ -420,10 +420,12 @@ def ingest_logical_file_metadata(graph, resource, map_files=[], unzip_temp_folde
         # see if the files exist and create it
         map_graph = get_map_graph(subject, map_files, unzip_temp_folder)
         aggregation_files = get_aggregation_files(map_graph)
-        # making an assumption that model program/instance is not folder based when there is only one file
-        is_folder_based = (
-            logical_file_class is FileSetLogicalFile or len(aggregation_files) > 1
-        )
+
+        if logical_file_class.__name__ in ("ModelInstanceLogicalFile", "ModelProgramLogicalFile"):
+            # making an assumption that model program/instance is folder based when there is more than one file
+            is_folder_based = len(aggregation_files) > 1
+        else:
+            is_folder_based = logical_file_class.supports_folder_based_aggregation()
 
         if is_folder_based:
             file_path = subject.rsplit("/", 1)[0]
