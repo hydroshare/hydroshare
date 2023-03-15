@@ -247,7 +247,7 @@
                         <table class="table hs-table info-table">
                             <tr v-for="value in selectedReferenceFeatures" style="padding-bottom: 20px">
                                 <td v-if="isUrl(value.value)" class="dataset-details">
-                                    <a v-if="isUrl(value.value)" target="_blank" :href="value.value"> ${value.text}</a>
+                                    <a target="_blank" :href="value.value"> ${value.text}</a>
                                     <i class="fa fa-external-link"></i>
                                 </td>
                                 <td v-else class="dataset-details">${value.text}</td>
@@ -277,7 +277,7 @@
                                 <i class="fa fa-minus"></i>Hide Map
                             </button>
                         </div>
-                        <div v-show="resSpatialType && showingMap && hasSearches && searchingDescription ==''">
+                        <div v-show="showingMap && hasSearches && searchingDescription ==''">
                             <button @click="searchForFeaturesUsingVisibleMapBounds" class="btn btn-info" depressed small>
                                 <i class="fa fa-search"></i>Search using visible map bounds
                             </button>
