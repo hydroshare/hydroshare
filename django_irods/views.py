@@ -120,7 +120,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
                     if hasattr(aggregation, 'redirect_url'):
                         return HttpResponseRedirect(aggregation.redirect_url)
             # point to the main file path
-            path = aggregation.get_main_file.url[len("/resource/"):]
+            path = aggregation.get_main_file.public_path
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
