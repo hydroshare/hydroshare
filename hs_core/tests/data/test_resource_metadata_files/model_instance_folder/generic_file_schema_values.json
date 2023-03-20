@@ -1,0 +1,75 @@
+{
+    "studyArea": {
+        "totalWidth": 1,
+        "totalLength": 2,
+        "maximumElevation": 3,
+        "minimumElevation": 4
+    },
+    "modelSolver": "DE4",
+    "stressPeriod": {
+        "type": "Steady",
+        "lengthOfSteadyStateStressPeriod": 1,
+        "TypeOfTransientStateStressPeriod": "Annually",
+        "lengthOfTransientStateStressPeriod": 1
+    },
+    "gridDimensions": {
+        "typeOfRows": "Regular",
+        "NumberOfRows": 1,
+        "typeOfColumns": "Regular",
+        "numberOfLayers": 1,
+        "NumberOfColumns": 1
+    },
+    "modelParameter": "qwer",
+    "groundwaterFlow": {
+        "flowPackage": "BCF6",
+        "flowParameter": "Hydraulic Conductivity",
+        "IncludesUnsaturatedZonePackage": false,
+        "IncludesSeawaterIntrusionPackage": false,
+        "IncludesHorizontalFlowBarrierPackage": true
+    },
+    "modelCalibration": {
+        "observationType": "observed",
+        "calibrationMethod": "method",
+        "calibratedParameter": "calibrated",
+        "observationProcessPackage": "ADV2"
+    },
+    "subsidencePackage": "IBS",
+    "outputControlPackage": {
+        "OC": false,
+        "HYD": false,
+        "GAGE": true,
+        "LMT6": false,
+        "MNWI": false
+    },
+    "specifiedFluxBoundaryPackages": {
+        "FHB": false,
+        "RCH": true,
+        "WEL": false,
+        "OtherPackages": "asdf"
+    },
+    "specifiedHeadBoundaryPackages": {
+        "BFH": true,
+        "CHD": false,
+        "FHB": false,
+        "OtherPackages": ""
+    },
+    "headDependentFluxBoundaryPackages": {
+        "DAF": true,
+        "DRN": false,
+        "DRT": false,
+        "ETS": false,
+        "EVT": false,
+        "GHB": true,
+        "LAK": false,
+        "RES": false,
+        "RIP": false,
+        "RIV": false,
+        "SFR": false,
+        "STR": false,
+        "UZF": false,
+        "DAFG": false,
+        "MNW1": false,
+        "MNW2": false,
+        "OtherPackages": "fds"
+    }
+}

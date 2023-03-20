@@ -113,6 +113,11 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         return resource_files[0] if resource_files else None
 
     @classmethod
+    def supports_folder_based_aggregation(cls):
+        """A model program/model instance aggregation can be created from a folder"""
+        return True
+
+    @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """Makes all physical files that are in a folder (*folder_path*) part of a model program/instance
         aggregation type or a single file (*file_id*) part of this aggregation type.

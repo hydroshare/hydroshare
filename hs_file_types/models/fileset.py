@@ -86,6 +86,11 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
+    def supports_folder_based_aggregation(cls):
+        """A fileset aggregation must be created from a folder"""
+        return True
+
+    @classmethod
     def get_primary_resource_file(cls, resource_files):
         """Gets any one resource file from the list of files *resource_files* """
 
