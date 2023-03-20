@@ -11,6 +11,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import resource_file_add_process
 from hs_core.models import ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.views.utils import move_or_rename_file_or_folder
 from hs_file_types.models import GeoRasterLogicalFile
 
 
@@ -58,14 +59,15 @@ class TestAggregationZipDownload(MockIRODSTestCaseMixin, ViewTestCase):
     def test_aggregation_download_as_zip_4(self):
         """test we can download an aggregation that is at the root of the resource - aggregation path
         contains spaces due to the spaces in the uploaded tif file name"""
-        self._test_aggregation_download_zip(folder="", raster_file=self.raster_file_path_2)
+        self._test_aggregation_download_zip(folder="", raster_file=self.raster_file_path_2, auto_aggregate=False)
 
     def test_aggregation_download_as_zip_5(self):
         """test we can download an aggregation that is inside a folder - aggregation path
         contains spaces due to the spaces in the uploaded tif file name and spaces in the name of the folder"""
-        self._test_aggregation_download_zip(folder="raster aggregation", raster_file=self.raster_file_path_2)
+        self._test_aggregation_download_zip(folder="raster aggregation", raster_file=self.raster_file_path_2,
+                                            auto_aggregate=False)
 
-    def _test_aggregation_download_zip(self, folder, raster_file):
+    def _test_aggregation_download_zip(self, folder, raster_file, auto_aggregate=True):
         aggr_folder = folder
         if folder:
             ResourceFile.create_folder(resource=self.resource, folder=aggr_folder)
@@ -78,7 +80,19 @@ class TestAggregationZipDownload(MockIRODSTestCaseMixin, ViewTestCase):
         uploaded_file = UploadedFile(file=tif_file_obj,
                                      name=os.path.basename(tif_file_obj.name))
         resource_file_add_process(resource=self.resource, files=(uploaded_file,), folder=aggr_folder, user=self.user,
-                                  auto_aggregate=True)
+                                  auto_aggregate=auto_aggregate)
+
+        if not auto_aggregate:
+            # rename the uploaded file to create spaces in the file name
+            base_path = "data/contents"
+            if folder:
+                base_path = f"{base_path}/{folder}"
+            res_file = self.resource.files.first()
+            src_path = f'{base_path}/{res_file.file_name}'
+            file_name_non_preferred = 'tif file name with spaces.tif'
+            tgt_path = f'{base_path}/{file_name_non_preferred}'
+            move_or_rename_file_or_folder(self.user, self.resource.short_id, src_path, tgt_path)
+            GeoRasterLogicalFile.set_file_type(resource=self.resource, file_id=res_file.id, user=self.user)
 
         # there should be 1 raster aggregation
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
