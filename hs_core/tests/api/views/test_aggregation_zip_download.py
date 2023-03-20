@@ -37,7 +37,6 @@ class TestAggregationZipDownload(MockIRODSTestCaseMixin, ViewTestCase):
         self.raster_file_path_1 = 'hs_core/tests/data/cea.tif'
         self.raster_file_path_2 = 'hs_core/tests/data/cea with spaces.tif'
 
-
     def tearDown(self):
         self.resource.delete()
         super(TestAggregationZipDownload, self).tearDown()
