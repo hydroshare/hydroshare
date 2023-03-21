@@ -2057,13 +2057,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
 
-    def update_view_count(self, request):
+    def update_view_count(self):
         self.view_count += 1
-        self.save(update_fields=["view_count"])
+        type(self).objects.filter(id=self.id).update(view_count=self.view_count)
 
     def update_download_count(self):
         self.download_count += 1
-        self.save(update_fields=["download_count"])
+        type(self).objects.filter(id=self.id).update(download_count=self.download_count)
 
     # definition of resource logic
     @property
