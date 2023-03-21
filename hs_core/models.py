@@ -2059,10 +2059,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     def update_view_count(self):
         self.view_count += 1
+        # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
         type(self).objects.filter(id=self.id).update(view_count=self.view_count)
 
     def update_download_count(self):
         self.download_count += 1
+        # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
         type(self).objects.filter(id=self.id).update(download_count=self.download_count)
 
     # definition of resource logic
