@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
 from hs_rest_api2.metadata import ingest_resource_metadata, ingest_aggregation_metadata, \
@@ -18,6 +19,8 @@ from hs_rest_api2 import serializers
 def resource_metadata_json(request, pk):
     if request.method == 'PUT':
         resource, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        if resource.raccess.published:
+            raise PermissionDenied
         md = request.data
         return JsonResponse(ingest_resource_metadata(resource, md))
 
@@ -30,6 +33,8 @@ def aggregation_metadata_json(request, pk, aggregation_path):
     if request.method == 'PUT':
         resource, _, _ = authorize(request, pk,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        if resource.raccess.published:
+            raise PermissionDenied
         metadata_json = request.data
         return JsonResponse(ingest_aggregation_metadata(resource, metadata_json, aggregation_path))
 
