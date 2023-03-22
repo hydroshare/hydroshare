@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.http import JsonResponse
 from rest_framework import status
@@ -21,6 +22,24 @@ from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivi
 def get_user_resource_privilege_endpoint(request, user_identifier, resource_id):
     privilege = get_user_resource_privilege(user_identifier, resource_id)
     return JsonResponse({"privilege": privilege}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET',])
+def get_user_resources(request, user_identifier):
+    privileges = get_user_resources_privileges(user_identifier)
+    return JsonResponse(privileges, status=status.HTTP_200_OK)
+
+
+def get_user_resources_privileges(email):
+
+    user = User.objects.get(email=email)
+    owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
+    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE, via_group=True)
+    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW, via_group=True)
+
+    return {"owner": list(owned_resources.values_list("short_id", flat=True).iterator()),
+            "edit": list(editable_resources.values_list("short_id", flat=True).iterator()),
+            "view": list(viewable_resources.values_list("short_id", flat=True).iterator())}
 
 
 def get_user_resource_privilege(email, short_id):
