@@ -957,8 +957,8 @@ const geoconnexApp = new Vue({
           if (!geojson.collection) {
             geojson.collection = "Search Bounds";
           }
-          if (!geoconnexApp.searchLayerGroupDictionary[geojson.collection]){
-            return
+          if (!geoconnexApp.searchLayerGroupDictionary[geojson.collection]) {
+            return;
           }
           geoconnexApp.searchLayerGroupDictionary[geojson.collection].addLayer(
             leafletLayer
@@ -1262,19 +1262,17 @@ const geoconnexApp = new Vue({
       if (feature.NAME) return;
       const geoconnexApp = this;
       let nameField;
-      if (feature.collection in geoconnexApp.featureNameMap){
-        nameField = geoconnexApp.featureNameMap[feature.collection]
-      }else{
-        nameField = await geoconnexApp.getFeatureNameField(
-          feature.collection
-        );
+      if (feature.collection in geoconnexApp.featureNameMap) {
+        nameField = geoconnexApp.featureNameMap[feature.collection];
+      } else {
+        nameField = await geoconnexApp.getFeatureNameField(feature.collection);
         geoconnexApp.featureNameMap[feature.collection] = nameField;
       }
       feature.NAME = feature.properties[nameField] || "";
     },
     async getFeatureNameField(collectionName) {
       const geoconnexApp = this;
-      if (collectionName in geoconnexApp.featureNameMap){
+      if (collectionName in geoconnexApp.featureNameMap) {
         return geoconnexApp.featureNameMap[collectionName];
       }
       const url = `${geoconnexApp.geoconnexUrl}/${collectionName}/items?f=jsonld&lang=en-US&skipGeometry=true&limit=1`;
@@ -1288,7 +1286,7 @@ const geoconnexApp = new Vue({
         const nameField = Object.keys(context).find(
           (key) => context[key] === "schema:name"
         );
-        if (nameField){
+        if (nameField) {
           geoconnexApp.featureNameMap[collectionName] = nameField;
           return nameField;
         }
