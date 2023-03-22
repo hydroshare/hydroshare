@@ -14,7 +14,7 @@ const geoconnexApp = new Vue({
       features: [],
       collectionsSelectedToSearch: [],
       selectedReferenceFeatures: [],
-      ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
+      ignoredCollections: [],
       // collection: features that will not be mapped or allowed for list selection
       ignoredFeatures: {
         nat_aq: ["N9999OTHER"],
