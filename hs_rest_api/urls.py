@@ -249,5 +249,6 @@ urlpatterns = [
         name='model_instance_metadata_in_json'),
 
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/authorization/(?P<user_identifier>.+)/$', get_user_resource_privilege_endpoint),
+
     url(r'^resources/authorization/(?P<user_identifier>.+)/$', get_user_resources),
 ]
