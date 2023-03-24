@@ -142,40 +142,9 @@ def save_resource_metadata_xml(resource):
     istorage.saveFile(from_file_name, to_file_name, True)
 
 
-def create_bag_metadata_files(resource):
-    """
-    create and update files needed by bagit operation that is conducted on iRODS server;
-    no bagit operation is performed, only files that will be included in the bag are created
-    or updated.
-
-    Parameters:
-    :param resource: A resource whose files will be created or updated to be included in the
-    resource bag.
-    :return: istorage, an IrodsStorage object that will be used by subsequent operation to
-    create a bag on demand as needed.
-    """
+def create_resource_map_xml(resource):
     from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
     from hs_core.hydroshare import encode_resource_url
-
-    istorage = resource.get_irods_storage()
-
-    # the temp_path is a temporary holding path to make the files available to iRODS
-    # we have to make temp_path unique even for the same resource with same update time
-    # to accommodate asynchronous multiple file move operations for the same resource
-
-    # TODO: This is always in /tmp; otherwise code breaks because open() is called on the result!
-    temp_path = _create_temp_dir_on_irods(istorage)
-
-    # an empty visualization directory will not be put into the zipped bag file by ibun command,
-    # so creating an empty visualization directory to be put into the zip file as done by the two
-    # statements below does not work. However, if visualization directory has content to be
-    # uploaded, it will work. This is to be implemented as part of the resource model in the future.
-    # The following two statements are placeholders serving as reminder
-    # to_file_name = '{res_id}/data/visualization/'.format(res_id=resource.short_id)
-    # istorage.saveFile('', to_file_name, create_directory=True)
-
-    # create resourcemetadata.xml in local directory and upload it to iRODS
-    save_resource_metadata_xml(resource)
 
     # URLs are found in the /data/ subdirectory to comply with bagit format assumptions
     current_site_url = current_site_url()
@@ -280,6 +249,43 @@ def create_bag_metadata_files(resource):
     # <ore:aggregates rdf:resource="[hydroshare domain]/terms/[Resource class name]"/>
     xml_string = xml_string.replace(
         '<ore:aggregates rdf:resource="%s"/>\n' % str(resource.metadata.type.url), '')
+    return xml_string
+
+
+def create_bag_metadata_files(resource):
+    """
+    create and update files needed by bagit operation that is conducted on iRODS server;
+    no bagit operation is performed, only files that will be included in the bag are created
+    or updated.
+
+    Parameters:
+    :param resource: A resource whose files will be created or updated to be included in the
+    resource bag.
+    :return: istorage, an IrodsStorage object that will be used by subsequent operation to
+    create a bag on demand as needed.
+    """
+
+    istorage = resource.get_irods_storage()
+
+    # the temp_path is a temporary holding path to make the files available to iRODS
+    # we have to make temp_path unique even for the same resource with same update time
+    # to accommodate asynchronous multiple file move operations for the same resource
+
+    # TODO: This is always in /tmp; otherwise code breaks because open() is called on the result!
+    temp_path = _create_temp_dir_on_irods(istorage)
+
+    # an empty visualization directory will not be put into the zipped bag file by ibun command,
+    # so creating an empty visualization directory to be put into the zip file as done by the two
+    # statements below does not work. However, if visualization directory has content to be
+    # uploaded, it will work. This is to be implemented as part of the resource model in the future.
+    # The following two statements are placeholders serving as reminder
+    # to_file_name = '{res_id}/data/visualization/'.format(res_id=resource.short_id)
+    # istorage.saveFile('', to_file_name, create_directory=True)
+
+    # create resourcemetadata.xml in local directory and upload it to iRODS
+    save_resource_metadata_xml(resource)
+    xml_string = create_resource_map_xml(resource)
+
 
     # create resourcemap.xml and upload it to iRODS
     from_file_name = os.path.join(temp_path, 'resourcemap.xml')

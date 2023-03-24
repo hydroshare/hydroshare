@@ -13,6 +13,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 
+from .resources.metadata import all_metadata_files
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
 from .discovery import DiscoverSearchView
 
@@ -251,4 +252,7 @@ urlpatterns = [
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/authorization/(?P<user_identifier>.+)/$', get_user_resource_privilege_endpoint),
 
     url(r'^resources/authorization/(?P<user_identifier>.+)/$', get_user_resources),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/metadata-xml-strings/$',
+        all_metadata_files, name="metadata-xml-strings"),
 ]
