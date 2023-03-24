@@ -15,12 +15,12 @@ def all_metadata_files(request, resource_id):
     metadata_json = {}
     res_metadata = resource.get_metadata_xml()
     res_map = create_resource_map_xml(resource)
-    metadata_json[os.path.join(url_base, resource.resmap_path)] = res_metadata
-    metadata_json[os.path.join(url_base, resource.scimeta_path)] = res_map
+    metadata_json[os.path.join(url_base, "resource", resource.resmap_path)] = res_metadata
+    metadata_json[os.path.join(url_base, "resource", resource.scimeta_path)] = res_map
 
 
     for aggregation in resource.logical_files:
-        metadata_json[os.path.join(url_base, aggregation.map_file_path)] = aggregation.generate_map_xml()
-        metadata_json[os.path.join(url_base, aggregation.metadata_file_path)] = aggregation.metadata.get_xml()
+        metadata_json[os.path.join(url_base, "resource", aggregation.map_file_path)] = aggregation.generate_map_xml()
+        metadata_json[os.path.join(url_base, "resource", aggregation.metadata_file_path)] = aggregation.metadata.get_xml()
 
     return JsonResponse(metadata_json)
