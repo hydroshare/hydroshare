@@ -956,8 +956,8 @@ const geoconnexApp = new Vue({
           if (!geojson.collection) {
             geojson.collection = "Search Bounds";
           }
-          if (!geoconnexApp.searchLayerGroupDictionary[geojson.collection]){
-            return
+          if (!geoconnexApp.searchLayerGroupDictionary[geojson.collection]) {
+            return;
           }
           geoconnexApp.searchLayerGroupDictionary[geojson.collection].addLayer(
             leafletLayer
