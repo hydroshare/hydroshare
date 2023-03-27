@@ -14,12 +14,13 @@ const geoconnexApp = new Vue({
       features: [],
       collectionsSelectedToSearch: [],
       selectedReferenceFeatures: [],
-      ignoredCollections: ["pws"], // currently ignored because requests return as 500 errors
+      ignoredCollections: [],
       // collection: features that will not be mapped or allowed for list selection
       ignoredFeatures: {
         nat_aq: ["N9999OTHER"],
         principal_aq: [999],
       },
+      featureNameMap: {},
 
       ////// Resource-level data //////
       resShortId: SHORT_ID,
@@ -84,8 +85,8 @@ const geoconnexApp = new Vue({
 
       ////// UI "theme" //////
       stringLengthLimit: 40, // after which ellipse...
-      collectionMessageColor: "orange",
-      collectionMessageColorDarker: "orange",
+      featureMessageColor: "orange",
+      collectionColor: "orange",
       mappedPointFillColor: "rgba(255, 165, 0, 0.32)",
       collectionSearchColor: "orange",
       featureSelectColor: "rgba(0,0,0,.87)",
@@ -133,7 +134,7 @@ const geoconnexApp = new Vue({
           if (featureCount >= limitNumberOfFeaturesPerRequest) {
             geoconnexApp.searchResultString = `Your search in ${newCollection.id} returned too many features.
             The limit is ${limitNumberOfFeaturesPerRequest} so no geometries were mapped.
-            We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds`;
+            We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds.`;
             geoconnexApp.searchingDescription = "";
             return;
           }
@@ -430,7 +431,7 @@ const geoconnexApp = new Vue({
           if (featureCount >= limitNumberOfFeaturesPerRequest) {
             geoconnexApp.searchResultString = `Your search in ${collection.id} returned too many features.
             The limit is ${limitNumberOfFeaturesPerRequest} so no geometries were mapped.
-            We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds`;
+            We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds.`;
             return;
           }
           promises.push(
@@ -956,8 +957,8 @@ const geoconnexApp = new Vue({
           if (!geojson.collection) {
             geojson.collection = "Search Bounds";
           }
-          if (!geoconnexApp.searchLayerGroupDictionary[geojson.collection]){
-            return
+          if (!geoconnexApp.searchLayerGroupDictionary[geojson.collection]) {
+            return;
           }
           geoconnexApp.searchLayerGroupDictionary[geojson.collection].addLayer(
             leafletLayer
@@ -1258,14 +1259,22 @@ const geoconnexApp = new Vue({
       }
     },
     async setFeatureName(feature) {
+      if (feature.NAME) return;
       const geoconnexApp = this;
-      const nameField = await geoconnexApp.getFeatureNameField(
-        feature.collection
-      );
+      let nameField;
+      if (feature.collection in geoconnexApp.featureNameMap) {
+        nameField = geoconnexApp.featureNameMap[feature.collection];
+      } else {
+        nameField = await geoconnexApp.getFeatureNameField(feature.collection);
+        geoconnexApp.featureNameMap[feature.collection] = nameField;
+      }
       feature.NAME = feature.properties[nameField] || "";
     },
     async getFeatureNameField(collectionName) {
       const geoconnexApp = this;
+      if (collectionName in geoconnexApp.featureNameMap) {
+        return geoconnexApp.featureNameMap[collectionName];
+      }
       const url = `${geoconnexApp.geoconnexUrl}/${collectionName}/items?f=jsonld&lang=en-US&skipGeometry=true&limit=1`;
       // don't fetch the contexts from cache, get it direct from Geoconnex api
       const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
@@ -1277,7 +1286,10 @@ const geoconnexApp = new Vue({
         const nameField = Object.keys(context).find(
           (key) => context[key] === "schema:name"
         );
-        if (nameField) return nameField;
+        if (nameField) {
+          geoconnexApp.featureNameMap[collectionName] = nameField;
+          return nameField;
+        }
       }
       return geoconnexApp.getFirstFeatureNameField(collectionName);
     },
@@ -1297,7 +1309,12 @@ const geoconnexApp = new Vue({
       const match = Object.keys(properties).filter((key) =>
         /.*name.*/i.test(key)
       );
-      return match[0] || "";
+      let first = match[0];
+      if (first) {
+        geoconnexApp.featureNameMap[collectionName] = first;
+        return first;
+      }
+      return "";
     },
     async getFeatureProperties(feature) {
       const geoconnexApp = this;
