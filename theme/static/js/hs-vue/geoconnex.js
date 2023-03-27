@@ -84,8 +84,8 @@ const geoconnexApp = new Vue({
 
       ////// UI "theme" //////
       stringLengthLimit: 40, // after which ellipse...
-      collectionMessageColor: "orange",
-      collectionMessageColorDarker: "orange",
+      featureMessageColor: "orange",
+      collectionColor: "orange",
       mappedPointFillColor: "rgba(255, 165, 0, 0.32)",
       collectionSearchColor: "orange",
       featureSelectColor: "rgba(0,0,0,.87)",
@@ -133,7 +133,7 @@ const geoconnexApp = new Vue({
           if (featureCount >= limitNumberOfFeaturesPerRequest) {
             geoconnexApp.searchResultString = `Your search in ${newCollection.id} returned too many features.
             The limit is ${limitNumberOfFeaturesPerRequest} so no geometries were mapped.
-            We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds`;
+            We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds.`;
             geoconnexApp.searchingDescription = "";
             return;
           }
@@ -430,7 +430,7 @@ const geoconnexApp = new Vue({
           if (featureCount >= limitNumberOfFeaturesPerRequest) {
             geoconnexApp.searchResultString = `Your search in ${collection.id} returned too many features.
             The limit is ${limitNumberOfFeaturesPerRequest} so no geometries were mapped.
-            We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds`;
+            We recommend that you refine resource extent, conduct a point search by clicking on the map, or search using map bounds.`;
             return;
           }
           promises.push(
