@@ -20,6 +20,7 @@ const geoconnexApp = new Vue({
         nat_aq: ["N9999OTHER"],
         principal_aq: [999],
       },
+      featureNameMap: {},
 
       ////// Resource-level data //////
       resShortId: SHORT_ID,
@@ -1258,14 +1259,22 @@ const geoconnexApp = new Vue({
       }
     },
     async setFeatureName(feature) {
+      if (feature.NAME) return;
       const geoconnexApp = this;
-      const nameField = await geoconnexApp.getFeatureNameField(
-        feature.collection
-      );
+      let nameField;
+      if (feature.collection in geoconnexApp.featureNameMap) {
+        nameField = geoconnexApp.featureNameMap[feature.collection];
+      } else {
+        nameField = await geoconnexApp.getFeatureNameField(feature.collection);
+        geoconnexApp.featureNameMap[feature.collection] = nameField;
+      }
       feature.NAME = feature.properties[nameField] || "";
     },
     async getFeatureNameField(collectionName) {
       const geoconnexApp = this;
+      if (collectionName in geoconnexApp.featureNameMap) {
+        return geoconnexApp.featureNameMap[collectionName];
+      }
       const url = `${geoconnexApp.geoconnexUrl}/${collectionName}/items?f=jsonld&lang=en-US&skipGeometry=true&limit=1`;
       // don't fetch the contexts from cache, get it direct from Geoconnex api
       const featureJsonLd = await geoconnexApp.fetchURLFromCacheOrGeoconnex({
@@ -1277,7 +1286,10 @@ const geoconnexApp = new Vue({
         const nameField = Object.keys(context).find(
           (key) => context[key] === "schema:name"
         );
-        if (nameField) return nameField;
+        if (nameField) {
+          geoconnexApp.featureNameMap[collectionName] = nameField;
+          return nameField;
+        }
       }
       return geoconnexApp.getFirstFeatureNameField(collectionName);
     },
@@ -1297,7 +1309,12 @@ const geoconnexApp = new Vue({
       const match = Object.keys(properties).filter((key) =>
         /.*name.*/i.test(key)
       );
-      return match[0] || "";
+      let first = match[0];
+      if (first) {
+        geoconnexApp.featureNameMap[collectionName] = first;
+        return first;
+      }
+      return "";
     },
     async getFeatureProperties(feature) {
       const geoconnexApp = this;
