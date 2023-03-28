@@ -522,6 +522,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
+    tgt_path = tgt_path.strip()
     if tgt_path:
         tgt_model_aggr = res.get_model_aggregation_in_path(tgt_path)
         src_model_aggr = res.get_model_aggregation_in_path(aggregation.aggregation_name)
@@ -555,14 +556,17 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     istorage = res.get_irods_storage()
     for file in res_files:
         file_name = os.path.basename(file.storage_path)
-        tgt_full_path = os.path.join(res.file_path, tgt_path, file_name)
+        if tgt_path:
+            tgt_full_path = os.path.join(res.file_path, tgt_path, file_name)
+        else:
+            tgt_full_path = os.path.join(res.file_path, file_name)
         if istorage.exists(tgt_full_path):
             override_tgt_paths.append(tgt_full_path)
             override_tgt_res_files.append(ResourceFile.get(res, file=file_name, folder=tgt_path))
 
     if override_tgt_paths:
         if not file_override:
-            override_file_names = ', '.join([os.path.basename(tgt_path) for tgt_path in override_tgt_paths])
+            override_file_names = ', '.join([os.path.basename(otgt_path) for otgt_path in override_tgt_paths])
             message = f'aggregation move would overwrite {override_file_names}'
             return HttpResponse(message, status=status.HTTP_300_MULTIPLE_CHOICES)
         # delete conflicting files so that move can succeed
