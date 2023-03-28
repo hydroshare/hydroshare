@@ -239,7 +239,9 @@ def move_aggregation_public(request, resource_id, hs_file_type, file_path, tgt_p
     res_file = get_res_file(resource_id, file_path)
     if isinstance(res_file, Response):
         return res_file
-    return move_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, tgt_path, **kwargs)
+
+    return move_aggregation(request, resource_id=resource_id, hs_file_type=hs_file_type,
+                            file_type_id=res_file.logical_file.id, tgt_path=tgt_path)
 
 
 @swagger_auto_schema(method="get", responses={200: serializers.ModelProgramMetaTemplateSchemaSerializer})
