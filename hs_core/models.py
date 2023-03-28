@@ -890,6 +890,7 @@ class Date(AbstractMetaDataElement):
 
         unique_together = ("type", "content_type", "object_id")
 
+    # TODO: fix date to account for HSTERMS
     def rdf_triples(self, subject, graph):
         date_node = BNode()
         graph.add((subject, self.get_class_term(), date_node))
