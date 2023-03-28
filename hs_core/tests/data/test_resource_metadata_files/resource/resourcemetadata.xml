@@ -87,9 +87,9 @@
       </dcterms:modified>
     </dc:date>
     <dc:date>
-      <dcterms:reviewStarted>
+      <hsterms:reviewStarted>
         <rdf:value>2020-07-16T23:12:19.334831+00:00</rdf:value>
-      </dcterms:reviewStarted>
+      </hsterms:reviewStarted>
     </dc:date>
     <dc:subject>key2</dc:subject>
     <dc:description>

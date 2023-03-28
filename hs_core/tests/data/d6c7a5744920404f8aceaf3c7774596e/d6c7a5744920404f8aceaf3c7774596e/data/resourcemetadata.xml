@@ -31,9 +31,9 @@
       </dcterms:modified>
     </dc:date>
     <dc:date>
-      <dcterms:reviewStarted>
+      <hsterms:reviewStarted>
         <rdf:value>2022-04-13T17:43:07.468505+00:00</rdf:value>
-      </dcterms:reviewStarted>
+      </hsterms:reviewStarted>
     </dc:date>
     <dc:rights>
       <rdf:Description>
