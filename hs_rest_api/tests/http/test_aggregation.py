@@ -49,9 +49,9 @@ class TestFileSetEndpoint(HSRESTTestCase, CompositeResourceTestMixin):
         new_folder = 'netcdf_aggregation'
         ResourceFile.create_folder(self.composite_resource, new_folder)
         move_aggr_url = reverse('move_aggregation_public', kwargs={"resource_id": self.composite_resource.short_id,
-                                                               "file_path": nc_aggr.aggregation_name,
-                                                               "tgt_path": new_folder,
-                                                               "hs_file_type": "NetCDFLogicalFile"})
+                                                                   "file_path": nc_aggr.aggregation_name,
+                                                                   "tgt_path": new_folder,
+                                                                   "hs_file_type": "NetCDFLogicalFile"})
         self.client.post(move_aggr_url, data={})
         self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
         nc_aggr = NetCDFLogicalFile.objects.first()
