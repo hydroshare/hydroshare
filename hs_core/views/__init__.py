@@ -2653,6 +2653,7 @@ class GroupView(TemplateView):
                 group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 
             context["group_resources"] = group_resources
+            context["profile_user"] = u
             data["is_group_owner"] = u.is_group_owner
         else:
             public_group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
