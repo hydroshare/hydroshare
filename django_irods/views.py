@@ -382,4 +382,3 @@ def rest_check_task_status(request, task_id, *args, **kwargs):
 
     task = get_task(task_id)
     return JsonResponse(task)
-
