@@ -1,25 +1,22 @@
 import datetime
+import logging
 import mimetypes
 import os
 import urllib
 from uuid import uuid4
-from celery.result import AsyncResult
 
 from django.conf import settings
-from django.http import HttpResponse, FileResponse, HttpResponseRedirect, JsonResponse
+from django.http import FileResponse, HttpResponse, HttpResponseRedirect, JsonResponse
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
-from rest_framework import status
 
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
-from hs_core.task_utils import get_resource_bag_task, get_or_create_task_notification, get_task_user_id, get_task
-
-from hs_core.signals import pre_download_file, pre_check_bag_flag
+from hs_core.signals import pre_check_bag_flag, pre_download_file
+from hs_core.task_utils import get_or_create_task_notification, get_resource_bag_task, get_task, get_task_user_id
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from drf_yasg.utils import swagger_auto_schema
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 
-import logging
 logger = logging.getLogger(__name__)
 
 

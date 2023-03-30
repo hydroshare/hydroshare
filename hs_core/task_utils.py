@@ -171,6 +171,7 @@ def set_task_delivered_by_id(task_id):
         }
     return task_dict
 
+
 def get_task(task_id):
     task_dict = get_or_create_task_notification(task_id)
     return task_dict
