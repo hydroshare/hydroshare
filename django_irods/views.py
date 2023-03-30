@@ -12,7 +12,7 @@ from rest_framework import status
 
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
-from hs_core.task_utils import get_resource_bag_task, get_or_create_task_notification, get_task_user_id
+from hs_core.task_utils import get_resource_bag_task, get_or_create_task_notification, get_task_user_id, get_task
 
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
@@ -174,6 +174,8 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             delete_zip.apply_async((irods_output_path,),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
             if api_request:
+                get_or_create_task_notification(task_id, name='zip download', payload=download_path,
+                                                username=user_id)
                 return JsonResponse({
                     'zip_status': 'Not ready',
                     'task_id': task.task_id,
@@ -380,16 +382,7 @@ def rest_check_task_status(request, task_id, *args, **kwargs):
     '''
     if not task_id:
         task_id = request.POST.get('task_id')
-    result = AsyncResult(task_id)
-    if result.ready():
-        try:
-            ret_value = result.get()
-            return JsonResponse({"status": 'true',
-                                 'payload': str(ret_value)})
-        # use the Broad scope Exception to catch all exception types since this view function can be used for all tasks
-        except Exception:
-            # logging exception will log the full stack trace and prepend a line with the message str input argument
-            logger.exception('An exception is raised from task {}'.format(task_id))
-            return JsonResponse({"status": 'false'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return JsonResponse({"status": None})
+
+    task = get_task(task_id)
+    return JsonResponse(task)
+
