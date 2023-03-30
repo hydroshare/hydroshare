@@ -167,11 +167,12 @@
                                         <form id="join-{{ group.id }}" method="post"
                                               action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
                                             {% csrf_token %}
-                                            <a href="#"
+                                            <button
+                                               type="button"
                                                data-form-id="join-{{ group.id }}"
                                                requires_explanation="{{ group.gaccess.requires_explanation }}"
                                                class="btn btn-primary btn-ask-to-join"
-                                               role="button">Ask to join</a>
+                                               role="button">Ask to join</button>
                                         </form>
                                     {% endif %}
                                     {% endif %}
@@ -202,5 +203,6 @@
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" src="{% static 'js/bootstrap-toolkit.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/group-actions.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/collaborate.js' %}"></script>
 {% endblock %}
