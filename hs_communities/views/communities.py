@@ -107,7 +107,8 @@ class CommunityView(TemplateView):
                 for g in groups.filter(gaccess__active=True) \
                         .exclude(Q(invite_g2gcr__community=community) & Q(invite_g2gcr__redeemed=False)) \
                         .exclude(g2gcp__community=community) \
-                        .order_by("name"):
+                        .order_by("name") \
+                        .select_related("gaccess"):
                     data["groups"].append(group_json(g))
 
                 logger.info("COMMUNITY - loaded groups")
