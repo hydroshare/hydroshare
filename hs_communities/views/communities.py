@@ -88,18 +88,18 @@ class CommunityView(TemplateView):
                 else:
                     logger.debug("COMMUNITY - non-owner accessing community page")
 
-                is_admin = 0
+                # is_admin = 0
                 if is_admin:
                     # logger.debug("COMMUNITY - owner accessing community page")
                     # Community owners can invite any group
                     groups = Group.objects
 
                     # forms needed for admin actions
+                    logger.debug("COMMUNITY - adding generic context")
                     hs_core_dublin_context = add_generic_context(self.request, None)
                     context.update(hs_core_dublin_context)
-                    # logger.debug("COMMUNITY - added generic context")
+                    logger.debug("COMMUNITY - added generic context")
                 else:
-                    # logger.debug("COMMUNITY - non-owner accessing community page")
                     # Other users can invite groups they own
                     groups = user.uaccess.owned_groups
 
@@ -109,6 +109,8 @@ class CommunityView(TemplateView):
                         .exclude(g2gcp__community=community) \
                         .order_by("name"):
                     data["groups"].append(group_json(g))
+
+                logger.debug("COMMUNITY - loaded groups")
 
                 # list of all available communities
                 data["all_communities"] = []
@@ -169,6 +171,7 @@ class CommunityView(TemplateView):
                 data["members"].append(group_json(g))
 
             context['data'] = data
+            logger.debug("COMMUNITY - loaded context")
             return context
 
         else:  # non-empty denied means an error.
