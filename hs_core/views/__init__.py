@@ -2024,11 +2024,15 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                         group_owner=grp_owner,
                         explanation=explanation,
                     )
-        messages.success(request, message)
+        return JsonResponse({ 
+            "status": "success", 
+            "message": message 
+        })
     except PermissionDenied as ex:
-        messages.error(request, str(ex))
-
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return JsonResponse({ 
+            "status": "error", 
+            "message": str(ex),
+        })
 
 
 def group_membership(request, uidb36, token, membership_request_id, **kwargs):
