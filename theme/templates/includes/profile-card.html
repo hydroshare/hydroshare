@@ -88,8 +88,10 @@
     <div v-if="showDetails" class="profile-link flex align-center"
         v-on:click="$emit('load-card', { user: user, event: $event })"
         data-toggle="dropdown">
-        <div :class="{'dropdown-user-icon': !user.pictureUrl}"
-                :style="{backgroundImage: user.pictureUrl ? 'url(' + user.pictureUrl + ')' : 'none'}"
+        <div v-if="user.pictureUrl" :style="{backgroundImage: 'url(' + user.pictureUrl + ')'}"
+            class="profile-pic-thumbnail round-image">
+        </div>
+        <div v-else class="dropdown-user-icon"
             class="profile-pic-thumbnail-small details-profile-pic round-image">
         </div>
         <div>
