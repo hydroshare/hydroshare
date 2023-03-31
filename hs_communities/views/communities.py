@@ -80,6 +80,7 @@ class CommunityView(TemplateView):
                                                                       privilege=PrivilegeCodes.OWNER).exists() else 0
                 data["is_admin"] = is_admin
                 data["user"] = user_json(user)
+                context["is_admin"] = is_admin
 
                 # Groups that can be invited
                 data["groups"] = []
@@ -99,6 +100,7 @@ class CommunityView(TemplateView):
                 for g in groups.filter(gaccess__active=True) \
                         .exclude(Q(invite_g2gcr__community=community) & Q(invite_g2gcr__redeemed=False)) \
                         .exclude(g2gcp__community=community) \
+                        .select_related("gaccess") \
                         .order_by("name"):
                     data["groups"].append(group_json(g))
 
@@ -157,7 +159,7 @@ class CommunityView(TemplateView):
 
             # group members of community
             data["members"] = []
-            for g in Group.objects.filter(g2gcp__community=community).order_by("name"):
+            for g in Group.objects.filter(g2gcp__community=community).select_related("gaccess").order_by("name"):
                 data["members"].append(group_json(g))
 
             context['data'] = data

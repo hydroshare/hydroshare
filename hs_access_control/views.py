@@ -57,7 +57,7 @@ def user_json(user):
         return {}
 
 
-def group_json(group):
+def group_json(group, include_owners=False):
     """ JSON format for group data suitable for UI """
     if group is not None:
         try:
@@ -79,7 +79,7 @@ def group_json(group):
             'email': group.gaccess.email or '',
             'date_created': group.gaccess.date_created.strftime("%m/%d/%Y, %H:%M:%S"),
             'picture': url or '',
-            'owners': [user_json(u) for u in group.gaccess.owners],
+            'owners': [user_json(u) for u in group.gaccess.owners] if include_owners else []
         }
     else:
         return {}
@@ -246,7 +246,7 @@ class GroupCommunityViewMixin(View):
     @staticmethod
     def get_group_members(community):
         members = []
-        for g in Group.objects.filter(g2gcp__community=community).order_by('name'):
+        for g in Group.objects.filter(g2gcp__community=community).select_related("gaccess").order_by('name'):
             members.append(group_json(g))
 
         return members
@@ -411,7 +411,7 @@ class GroupView(GroupCommunityViewMixin):
         context = {}
         context['denied'] = denied  # empty string means ok
         context['user'] = user_json(user)
-        context['group'] = group_json(group)
+        context['group'] = group_json(group, include_owners=True)
 
         # communities joined
         context['joined'] = []
@@ -555,6 +555,7 @@ class CommunityView(GroupCommunityViewMixin):
         for g in Group.objects.filter(gaccess__active=True)\
                               .exclude(invite_g2gcr__community=community)\
                               .exclude(g2gcp__community=community)\
+                              .select_related("gaccess")\
                               .order_by('name'):
             groups.append(group_json(g))
         return groups
