@@ -13,12 +13,12 @@ $(document).ready(function () {
       this.pendingRequests = appData;
     },
     methods: {
-      remove: async function(id) {
+      cancelRequest: async function(id) {
         this.$set(this.isRemoving, id, true)
-        const url = '/access/_internal/crequest/remove/' + id + '/';
+        const url = '/access/_internal/crequest/cancel/' + id + '/';
         try {
           const response = await $.post(url)
-          if (response.message === "Request removed") {
+          if (response.message === "Request has been cancelled") {
             this.pendingRequests = response.pending
           }
           this.$set(this.isRemoving, id, false)

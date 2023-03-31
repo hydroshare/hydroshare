@@ -271,6 +271,7 @@ class RequestCommunity(models.Model):
     date_processed = models.DateTimeField(editable=False, null=True)
     pending_approval = models.BooleanField(default=True)
     declined = models.BooleanField(default=False)
+    cancelled = models.BooleanField(default=False)
     decline_reason = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -278,7 +279,7 @@ class RequestCommunity(models.Model):
 
     @property
     def approved(self):
-        return not self.declined and not self.pending_approval
+        return not self.declined and not self.pending_approval and not self.cancelled
 
     def approve(self):
         """Helper to approve a request to create a new community
@@ -286,6 +287,7 @@ class RequestCommunity(models.Model):
         """
         assert self.pending_approval is True
         assert self.declined is False
+        assert self.cancelled is False
 
         self.date_processed = datetime.now()
         self.pending_approval = False
@@ -301,6 +303,7 @@ class RequestCommunity(models.Model):
         assert self.declined is True
 
         self.pending_approval = True
+        self.cancelled = False
         self.declined = False
         self.decline_reason = None
         self.save()
@@ -322,6 +325,20 @@ class RequestCommunity(models.Model):
         self.declined = True
         self.decline_reason = reason
         # upon declining the request, the associated community is set to inactive
+        self.community_to_approve.active = False
+        self.community_to_approve.save()
+        self.save()
+
+    def cancel(self):
+        """Helper to cancel a request to create a new community
+        """
+        assert self.pending_approval is True
+        assert self.declined is False
+
+        self.date_processed = datetime.now()
+        self.pending_approval = False
+        self.cancelled = True
+        # upon canceling the request, the associated community is set to inactive
         self.community_to_approve.active = False
         self.community_to_approve.save()
         self.save()

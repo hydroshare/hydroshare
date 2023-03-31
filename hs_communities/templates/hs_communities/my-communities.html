@@ -51,7 +51,7 @@
                                         Close
                                     </button>
                                     <button class="btn btn-danger"
-                                            @click="remove(targetRequest.id)" :disabled="isRemoving[targetRequest.id]"
+                                            @click="cancelRequest(targetRequest.id)" :disabled="isRemoving[targetRequest.id]"
                                             value="clear">Cancel Request
                                     </button>
                                 </div>

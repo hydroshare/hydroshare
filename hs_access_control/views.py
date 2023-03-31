@@ -145,8 +145,11 @@ def community_request_json(cr):
             'requested_by': user_json(cr.requested_by),
             'community_to_approve': community_json(cr.community_to_approve),
             'date_requested': cr.date_requested.strftime("%m/%d/%Y, %H:%M:%S"),
-            'date_processed': 0 if cr.pending_approval else cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S"),
-            'status': 'Approved' if cr.approved is True else 'Submitted' if cr.pending_approval is True else 'Rejected',
+            'date_processed': 0 if cr.pending_approval or not cr.date_processed else cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S"),
+            'status': 'Approved' if cr.approved is True
+              else 'Submitted' if cr.pending_approval is True
+              else 'Cancelled' if cr.pending_approval is False and cr.declined is False
+              else 'Rejected',
             'decline_reason': cr.decline_reason if cr.decline_reason is not None else '',
         }
     else:
@@ -819,6 +822,9 @@ class CommunityRequestView(View):
             message = "Request has been resubmitted"
             CommunityRequestEmailNotification(request=self.request, community_request=cr,
                                               on_event=CommunityRequestEvents.RESUBMITTED).send()
+        elif action == CommunityRequestActions.CANCEL:  # cancel a request to create a community
+            cr.cancel()
+            message = "Request has been cancelled"
         else:
             assert action == CommunityRequestActions.REMOVE
             if user == cr.requested_by or user.is_superuser:

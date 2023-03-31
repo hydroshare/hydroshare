@@ -34,6 +34,7 @@ class CommunityRequestActions(str, enum.Enum):
     APPROVE = 'approve'
     DECLINE = 'decline'
     REMOVE = 'remove'
+    CANCEL = 'cancel'
     RESUBMIT = 'resubmit'
 
 
