@@ -169,7 +169,7 @@ class CommunityRequestEmailNotification:
             """
         else:
             # community request approved event
-            community_url = f"{site_domain}/communities/{self.community_request.community_to_approve.id}"
+            community_url = f"{site_domain}/community/{self.community_request.community_to_approve.id}"
             assert self.on_event == CommunityRequestEvents.APPROVED
             recipient_emails = [self.community_request.requested_by.email]
             subject = "HydroShare Community Create Request Approved"
