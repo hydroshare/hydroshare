@@ -2024,13 +2024,13 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                         group_owner=grp_owner,
                         explanation=explanation,
                     )
-        return JsonResponse({ 
-            "status": "success", 
-            "message": message 
+        return JsonResponse({
+            "status": "success",
+            "message": message
         })
     except PermissionDenied as ex:
-        return JsonResponse({ 
-            "status": "error", 
+        return JsonResponse({
+            "status": "error",
             "message": str(ex),
         })
 
