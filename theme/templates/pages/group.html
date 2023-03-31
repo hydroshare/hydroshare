@@ -360,8 +360,21 @@
                                     {# Last Modified #}
                                     {% with last_updated=res.last_updated %}
                                         <td>{{ last_updated|date:"d M, Y" }} {{ last_updated|time }}</td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td>
+                                            {% for kw in res.metadata.subjects.all %}
+                                                {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% for creator in res.metadata.creators.all %}
+                                                {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                                {% if creator.relative_uri and creator.is_active_user %}
+                                                    <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
+                                                {% else %}
+                                                    <span>{{ creator.name }}</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
                                         <td><!-- Needed for datatable to function properly --></td>
                                         <td><!-- Needed for datatable to function properly --></td>
                                         <td><!-- Needed for datatable to function properly --></td>

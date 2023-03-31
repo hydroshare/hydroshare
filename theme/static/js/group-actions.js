@@ -274,7 +274,12 @@ function updateMembersLabelCount() {
 
   $("#members-filter .badge[data-filter-by='All']").text(viewCount + editCount);
   $("#members-filter .badge[data-filter-by='Owners']").text(editCount);
-  $("#members-filter .badge[data-filter-by='Pending']").text(pendingCount);
+  
+  const pendingBadge = $("#members-filter .badge[data-filter-by='Pending']")
+  pendingBadge.text(pendingCount);
+  if (pendingCount > 0) {
+    pendingBadge.css('background-color', '#428BCA');
+  }
 
   // Disable options to leave or remove for last owner item.
   if (editCount == 1) {

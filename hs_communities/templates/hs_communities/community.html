@@ -145,10 +145,52 @@
                                           <span id="btn-clear-search-input"
                                               class="glyphicon glyphicon-remove-sign btn-clear-search"
                                               style="right: 10px"></span>
+
+                                          <div class="input-group-btn">
+                                              <div class="btn-group" role="group">
+                                                  <div class="dropdown dropdown-lg">
+                                                      <button type="button" class="btn btn-default dropdown-toggle"
+                                                              data-toggle="dropdown"
+                                                              aria-expanded="false"><span class="caret"></span></button>
+      
+                                                      <div class="shadow-md dropdown-menu dropdown-menu-left" role="menu">
+                                                          <form class="form-horizontal" role="form">
+                                                              <div class="form-group">
+                                                                  <label for="filter">Type</label>
+                                                                  <select id="input-resource-type"
+                                                                          class="form-control pull-left">
+                                                                      <option value="" selected>All</option>
+                                                                      <option value="collection resource">Collection
+                                                                      </option>
+                                                                      <option value="composite resource">Resource
+                                                                      </option>
+                                                                      <option value="web app resource">App Connector</option>
+                                                                  </select>
+                                                              </div>
+                                                              <div class="form-group">
+                                                                  <label for="contain">Author</label>
+                                                                  <input id="input-author" class="form-control"
+                                                                          type="text"/>
+                                                                  <span id="btn-clear-author-input"
+                                                                          class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
+                                                              </div>
+                                                              <div class="form-group">
+                                                                  <label for="contain">Subject</label>
+                                                                  <input id="input-subject" class="form-control"
+                                                                          type="text"/>
+                                                                  <span id="btn-clear-subject-input"
+                                                                          class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
+                                                              </div>
+                                                          </form>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </div>
                                       </div>
                                   </div>
                               </div>
                               <!-- /input-group -->
+                              <!-- TODO: turn this table into a reusable template that takes in a list of resources -->
                               <table id="item-selectors" class="table-hover table-striped resource-custom-table">
                                   <thead>
                                       <tr>
@@ -223,8 +265,21 @@
                                           <td>{{ res.created|date:"d M Y" }} {{ res.created|time }}</td>
                                           {# Last Modified #}
                                           <td>{{ res.updated|date:"d M Y" }} {{ res.updated|time }}</td>
-                                          <td><!-- Needed for datatable to function properly --></td>
-                                          <td><!-- Needed for datatable to function properly --></td>
+                                          <td>
+                                              {% for kw in res.metadata.subjects.all %}
+                                                  {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
+                                              {% endfor %}
+                                          </td>
+                                          <td>
+                                              {% for creator in res.metadata.creators.all %}
+                                                  {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                                  {% if creator.relative_uri and creator.is_active_user %}
+                                                      <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
+                                                  {% else %}
+                                                      <span>{{ creator.name }}</span>
+                                                  {% endif %}
+                                              {% endfor %}
+                                          </td>
                                           <td><!-- Needed for datatable to function properly --></td>
                                           <td><!-- Needed for datatable to function properly --></td>
                                           <td><!-- Needed for datatable to function properly --></td>
@@ -257,5 +312,5 @@
 {{ block.super }}
 <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/community.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/hs_resource_table_community.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/hs_resource_table.js' %}"></script>
 {% endblock %}
