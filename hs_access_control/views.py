@@ -18,7 +18,7 @@ from .enums import (
     CommunityRequestEvents,
     CommunityJoinRequestTypes,
 )
-from hs_access_control.models.privilege import PrivilegeCodes
+from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPrivilege
 
 logger = logging.getLogger(__name__)
 
@@ -646,6 +646,10 @@ class CommunityView(GroupCommunityViewMixin):
                     if not newuser.uaccess.owns_community(community):
                         user.uaccess.share_community_with_user(
                             community, newuser, PrivilegeCodes.OWNER)
+                        context = {
+                            'community': community_json(community)
+                        }
+                        return JsonResponse(context)
                     else:
                         denied = "user '{}' already owns community".format(uid)
                 elif addrem == CommunityActions.REMOVE:
@@ -656,6 +660,13 @@ class CommunityView(GroupCommunityViewMixin):
                     else:
                         user.uaccess.unshare_community_with_user(
                             community, newuser)
+                        is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
+                                                                      privilege=PrivilegeCodes.OWNER).exists() else 0
+                        context = {
+                            'community': community_json(community),
+                            'is_admin': is_admin
+                        }
+                        return JsonResponse(context)
                 else:
                     denied = "unknown user action {}".format(addrem)
             except User.DoesNotExist:
