@@ -49,9 +49,16 @@ function request_join_group_ajax_submit() {
   var target = $(this);
   var dataFormID = $(this).attr("data-form-id");
   var form = $("#" + dataFormID);
-  var datastring = form.serialize();
+  // var datastring = form.serialize();
+
+  const formData = form.serializeArray();
+  const dataToSend = {};
+  $(formData).each(function(index, obj){
+      dataToSend[obj.name] = obj.value;
+  });
+
   var url = form.attr("action");
-  
+
   if ($(this).attr("requires_explanation") === "True") {
     // show a modal requesting explanation
     $("#explanation-dialog").modal("show");
@@ -59,26 +66,28 @@ function request_join_group_ajax_submit() {
 
     // on modal submission
     $("#explanation_btn").click(() => {
-      let explanation = $("#explanation").val().trim();
+      const explanation = $("#explanation").val().trim();
+      const sanitized_explanation = $("<div/>").html(explanation).text();
 
-      let sanitized_explanation = $("<div/>").html(explanation.trim()).text();
       if (sanitized_explanation !== explanation) {
         showError(
           "The explanation text contains html code and cannot be saved."
         );
-        return;
       } else if (sanitized_explanation == 0) {
         showError(
           "Justificaiton is a required field that cannot be left blank."
         );
-        return;
       } else if (sanitized_explanation.length > 300) {
         showError(
           "The justificaiton is too long. Please shorten to 300 characters."
         );
-        return;
       } else {
-        submitGroupRequest(datastring + "&" + $("#explanation").serialize());
+        const explanationData = $("#explanation").serializeArray();
+        $(explanationData).each(function(index, obj){
+            dataToSend[obj.name] = obj.value;
+        });
+
+        submitGroupRequest(dataToSend);
         $("#explanation-dialog").modal("hide");
       }
     });
@@ -94,28 +103,45 @@ function request_join_group_ajax_submit() {
       });
     }
   } else {
-    submitGroupRequest(datastring);
+    submitGroupRequest(dataToSend);
   }
 
-  function submitGroupRequest(data) {
-    $.ajax({
-      type: "POST",
-      url: url,
-      dataType: "html",
-      data: data,
-      success: function (result) {
-        var container = target.parent().parent();
+  /** Submit a request to join a group or an invitation and handles the response */
+  async function submitGroupRequest(data) {
+    try {
+      const response = await $.post(url, data);
+      if (response.status === 'success') {
+        const container = target.parent().parent();
         target.parent().remove();
-        container.append(
-          '<h4 class="flag-joined"><span class="fa fa-send"></span> Request Sent</h4>'
-        );
-      },
-      error: function (XMLHttpRequest, textStatus, errorThrown) {
-        console.log("error");
-      },
-    });
+
+        if (response.message === 'You are now a member of this group') {
+          // The requestt was auto-approved
+          if (window.location.pathname.startsWith('/group/')) {
+            // From the Group page we need to refresh the page
+            location.reload() ;
+          }
+          else if (window.location.pathname === '/groups') {
+            // From the Find Groups page we need to update UI
+            container.append(
+              '<h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group</h4>'
+            );
+          }
+        }
+        else {
+          // The request was sent
+          container.append(
+            '<h4 class="flag-joined"><span class="fa fa-send"></span> Request Sent</h4>'
+          );
+        }
+      }
+      else {
+        console.log(response.message)
+      }
+    }
+    catch (e) {
+      console.log("Failed to submit group request", e);
+    }
   }
-  return false;
 }
 
 function act_on_request_ajax_submit() {
