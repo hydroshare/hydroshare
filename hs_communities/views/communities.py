@@ -83,15 +83,23 @@ class CommunityView(TemplateView):
 
                 # Groups that can be invited
                 data["groups"] = []
-
                 if is_admin:
+                    logger.debug("COMMUNITY - owner accessing community page")
+                else:
+                    logger.debug("COMMUNITY - non-owner accessing community page")
+
+                is_admin = 0
+                if is_admin:
+                    # logger.debug("COMMUNITY - owner accessing community page")
                     # Community owners can invite any group
                     groups = Group.objects
 
                     # forms needed for admin actions
                     hs_core_dublin_context = add_generic_context(self.request, None)
                     context.update(hs_core_dublin_context)
+                    # logger.debug("COMMUNITY - added generic context")
                 else:
+                    # logger.debug("COMMUNITY - non-owner accessing community page")
                     # Other users can invite groups they own
                     groups = user.uaccess.owned_groups
 
