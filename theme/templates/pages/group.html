@@ -7,6 +7,8 @@
 <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
+{% block meta_title %}{{ group.name }}{% endblock %}
+
 {% block main %}
     {% include 'includes/groups-nav.html' with active='my_groups' %}
 

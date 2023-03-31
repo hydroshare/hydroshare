@@ -97,8 +97,6 @@ $(document).on("change", ".btn-file :file", function () {
 });
 
 $(document).ready(function () {
-  $("title").text($(".group-title").text() + " | HydroShare"); // Fix page title
-
   $("#id_user-autocomplete").addClass("form-control");
 
   $("#list-roles a").click(onRoleSelect);

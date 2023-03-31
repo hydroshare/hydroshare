@@ -11,7 +11,6 @@ $(document).on("change", ".btn-file :file", function () {
 });
 
 $(document).ready(function () {
-  $("title").text("Find Groups | HydroShare"); // Fix page title
   $("#id-Group-Search-Result-Msg").hide();
   $(".btn-ask-to-join").click(request_join_group_ajax_submit);
   $(".btn-act-on-request").click(act_on_request_ajax_submit);
