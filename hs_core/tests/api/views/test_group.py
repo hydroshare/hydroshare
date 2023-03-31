@@ -589,15 +589,13 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         request.META['HTTP_REFERER'] = "/some_url/"
         request.user = self.mike
         response = make_group_membership_request(request, group_id=new_group.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response.status, 'success')
         # now there should be one GroupMembershipRequest associated with Mike
         self.assertEqual(self.mike.uaccess.group_membership_requests.count(), 1)
 
         # test user making request more than once for the same group should fail
         response = make_group_membership_request(request, group_id=new_group.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response.status, 'success')
         # there should be still one GroupMembershipRequest associated with Mike
         self.assertEqual(self.mike.uaccess.group_membership_requests.count(), 1)
 
@@ -617,15 +615,13 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         request.META['HTTP_REFERER'] = "/some_url/"
         request.user = self.john
         response = make_group_membership_request(request, group_id=new_group.id, user_id=self.mike.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response.status, 'success')
         # now there should be one GroupMembershipRequest associated with John
         self.assertEqual(self.john.uaccess.group_membership_requests.count(), 1)
 
         # test group owner inviting same user to the same group more than once should fail
         response = make_group_membership_request(request, group_id=new_group.id, user_id=self.mike.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response.status, 'success')
         # there should be still one GroupMembershipRequest associated with John
         self.assertEqual(self.john.uaccess.group_membership_requests.count(), 1)
 
