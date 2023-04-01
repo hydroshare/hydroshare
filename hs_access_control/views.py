@@ -145,11 +145,12 @@ def community_request_json(cr):
             'requested_by': user_json(cr.requested_by),
             'community_to_approve': community_json(cr.community_to_approve),
             'date_requested': cr.date_requested.strftime("%m/%d/%Y, %H:%M:%S"),
-            'date_processed': 0 if cr.pending_approval or not cr.date_processed else cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S"),
+            'date_processed': 0 if cr.pending_approval or not cr.date_processed
+            else cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S"),
             'status': 'Approved' if cr.approved is True
-              else 'Submitted' if cr.pending_approval is True
-              else 'Cancelled' if cr.pending_approval is False and cr.declined is False
-              else 'Rejected',
+            else 'Submitted' if cr.pending_approval is True
+            else 'Cancelled' if cr.pending_approval is False and cr.declined is False
+            else 'Rejected',
             'decline_reason': cr.decline_reason if cr.decline_reason is not None else '',
         }
     else:
@@ -660,11 +661,11 @@ class CommunityView(GroupCommunityViewMixin):
                     else:
                         user.uaccess.unshare_community_with_user(
                             community, newuser)
-                        is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
-                                                                      privilege=PrivilegeCodes.OWNER).exists() else 0
+                        is_admin = UserCommunityPrivilege.objects.filter(
+                            user=user, community=community, privilege=PrivilegeCodes.OWNER).exists()
                         context = {
                             'community': community_json(community),
-                            'is_admin': is_admin
+                            'is_admin': 1 if is_admin else 0
                         }
                         return JsonResponse(context)
                 else:
