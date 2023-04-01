@@ -81,15 +81,15 @@ def zone_of_influence(send=True, **kwargs):
         raise PolymorphismError("Too few arguments")
     if 'resource' in kwargs:
         if 'user' in kwargs:
-            users = list([kwargs['user'].username])
-            resources = list([kwargs['resource'].short_id])
+            users = [kwargs['user'].username]
+            resources = [kwargs['resource'].short_id]
         elif 'group' in kwargs:
             users = list(User.objects
                              .filter(u2ugp__group=kwargs['group'])
                              .values_list('username', flat=True))
-            resources = list([kwargs['resource'].short_id])
+            resources = [kwargs['resource'].short_id]
     elif 'user' in kwargs and 'group' in kwargs:
-        users = list([kwargs['user'].username])
+        users = [kwargs['user'].username]
         resources = list(BaseResource.objects
                                      .filter(r2grp__group=kwargs['group'])
                                      .values_list('short_id', flat=True))
