@@ -5,11 +5,12 @@ from hs_access_control.models.privilege import PrivilegeCodes, PrivilegeBase, \
     UserResourcePrivilege, GroupResourcePrivilege
 from hs_access_control.models.exceptions import PolymorphismError
 from hs_core.models import BaseResource
-import hs_access_control.signals 
+import hs_access_control.signals
 from django.dispatch import receiver
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 #############################################
 # Shortcut query for data access
@@ -72,7 +73,7 @@ def get_user_resource_privilege(email, short_id):
 # this sends signal access_changed.
 
 def zone_of_influence(send=True, **kwargs):
-    for k in kwargs: 
+    for k in kwargs:
         print("{}: {}".format(k, kwargs[k]))
     if len(kwargs) > 2:
         raise PolymorphismError("Too many arguments")
@@ -84,19 +85,38 @@ def zone_of_influence(send=True, **kwargs):
             resources = list([kwargs['resource'].short_id])
         elif 'group' in kwargs:
             users = list(User.objects
-                .filter(u2ugp__group=kwargs['group'])
-                .values_list('username', flat=True))
+                             .filter(u2ugp__group=kwargs['group'])
+                             .values_list('username', flat=True))
             resources = list([kwargs['resource'].short_id])
     elif 'user' in kwargs and 'group' in kwargs:
         users = list([kwargs['user'].username])
         resources = list(BaseResource.objects
-            .filter(r2grp__group=kwargs['group'])
-            .values_list('short_id', flat=True))
-    if send: 
+                                     .filter(r2grp__group=kwargs['group'])
+                                     .values_list('short_id', flat=True))
+    if send:
         hs_access_control.signals.access_changed.send(
             sender=PrivilegeBase, users=users, resources=resources)
-    else: 
-        return (users, resources) 
+    else:
+        return (users, resources)
+
+
+def zone_of_publicity(send=True, **kwargs):
+    for k in kwargs:
+        print("{}: {}".format(k, kwargs[k]))
+    if len(kwargs) > 1:
+        raise PolymorphismError("Too many arguments")
+    if len(kwargs) < 1:
+        raise PolymorphismError("Too few arguments")
+    if 'resource' in kwargs:
+        users = []
+        resources = [kwargs['resource'].short_id]
+    else:
+        raise PolymorphismError("Invalid argument")
+    if send:
+        hs_access_control.signals.access_changed.send(
+            sender=PrivilegeBase, users=users, resources=resources)
+    else:
+        return (users, resources)
 
 
 @receiver(hs_access_control.signals.access_changed, sender=PrivilegeBase)

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import Group
 
-from hs_access_control.models.shortcut import zone_of_influence
+from hs_access_control.models.shortcut import zone_of_influence, zone_of_publicity
 from hs_access_control.models.privilege import PrivilegeCodes
 from hs_access_control.models import PolymorphismError
 
@@ -101,16 +101,19 @@ class T05ShareResource(TestCase):
         self.assertTrue(is_equal_to_as_set(bar, [holes.short_id, posts.short_id]))
 
         (foo, bar) = zone_of_influence(send=False, group=meowers, resource=posts)
-        self.assertTrue(foo, [cat.username])
-        self.assertTrue(bar, [holes.short_id, posts.short_id])
+        self.assertTrue(is_equal_to_as_set(foo, [cat.username]))
+        self.assertTrue(is_equal_to_as_set(bar, [posts.short_id]))
 
-    def test_02_polymorphism_error(self): 
+    def test_02_polymorphism_error(self):
         """Invalid calls throw exceptions"""
         holes = self.holes
-        posts = self.posts
         meowers = self.meowers
         cat = self.cat
         dog = self.dog
+
+        with self.assertRaises(PolymorphismError) as cm:
+            (foo, bar) = zone_of_influence(send=False)
+        self.assertEqual(str(cm.exception), 'Too few arguments')
 
         with self.assertRaises(PolymorphismError) as cm:
             (foo, bar) = zone_of_influence(send=False, user=dog)
@@ -127,3 +130,34 @@ class T05ShareResource(TestCase):
         with self.assertRaises(PolymorphismError) as cm:
             (foo, bar) = zone_of_influence(send=False, user=cat, group=meowers, resource=holes)
         self.assertEqual(str(cm.exception), 'Too many arguments')
+
+        with self.assertRaises(PolymorphismError) as cm:
+            (foo, bar) = zone_of_publicity(send=False, user=cat, resource=holes)
+        self.assertEqual(str(cm.exception), 'Too many arguments')
+
+        with self.assertRaises(PolymorphismError) as cm:
+            (foo, bar) = zone_of_publicity(send=False, group=meowers, resource=holes)
+        self.assertEqual(str(cm.exception), 'Too many arguments')
+
+        with self.assertRaises(PolymorphismError) as cm:
+            (foo, bar) = zone_of_publicity(send=False, group=meowers, resource=holes, user=cat)
+        self.assertEqual(str(cm.exception), 'Too many arguments')
+
+        with self.assertRaises(PolymorphismError) as cm:
+            (foo, bar) = zone_of_publicity(send=False, group=meowers)
+        self.assertEqual(str(cm.exception), 'Invalid argument')
+
+        with self.assertRaises(PolymorphismError) as cm:
+            (foo, bar) = zone_of_publicity(send=False, user=cat)
+        self.assertEqual(str(cm.exception), 'Invalid argument')
+
+        with self.assertRaises(PolymorphismError) as cm:
+            (foo, bar) = zone_of_publicity(send=False)
+        self.assertEqual(str(cm.exception), 'Too few arguments')
+
+    def test_03_publicity(self):
+        """ zone_of_publicity """
+        posts = self.posts
+        (foo, bar) = zone_of_publicity(send=False, resource=posts)
+        self.assertTrue(is_equal_to_as_set(foo, []))
+        self.assertTrue(is_equal_to_as_set(bar, [posts.short_id]))
