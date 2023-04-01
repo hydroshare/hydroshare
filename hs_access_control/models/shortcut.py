@@ -145,7 +145,7 @@ def access_changed(sender, **kwargs):
     for username in kwargs['users']:
         user = User.objects.get(username=username)
         refresh_minio_policy(user)
-    print("access_changed: users: {} resources: {}".format(kwargs['users'], kwargs['resources']))
+    logger.info("access_changed: users: {} resources: {}".format(kwargs['users'], kwargs['resources']))
 
 
 def admin_policy_create(**kwargs):
