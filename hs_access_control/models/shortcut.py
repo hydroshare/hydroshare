@@ -1,12 +1,17 @@
-from django.contrib.auth.models import User
+import json
+import os
+import tempfile
+import bmc
+
+from bmc._utils import Command
+
 from django.db.models import Q
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
 
 from django.contrib.auth.models import User
-from hs_access_control.models.privilege import PrivilegeCodes, PrivilegeBase, \
-    UserResourcePrivilege, GroupResourcePrivilege
+from hs_access_control.models.privilege import PrivilegeBase
 from hs_access_control.models.exceptions import PolymorphismError
 from hs_core.models import BaseResource
 import hs_access_control.signals 
@@ -14,6 +19,11 @@ from django.dispatch import receiver
 import logging
 
 logger = logging.getLogger(__name__)
+
+from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivilege, \
+    GroupResourcePrivilege
+
+from django.db.models.signals import post_save
 
 #############################################
 # Shortcut query for data access
@@ -39,13 +49,19 @@ def get_user_resources(request, user_identifier):
 def get_user_resources_privileges(email):
 
     user = User.objects.get(email=email)
+    return user_resource_privileges(user)
+
+
+def user_resource_privileges(user):
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE, via_group=True)
     viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW, via_group=True)
-
-    return {"owner": list(owned_resources.values_list("short_id", flat=True).iterator()),
-            "edit": list(editable_resources.values_list("short_id", flat=True).iterator()),
-            "view": list(viewable_resources.values_list("short_id", flat=True).iterator())}
+    return {"owner": list(
+        owned_resources.filter(resource_type="ExternalResource").values_list("short_id", flat=True).iterator()),
+            "edit": list(editable_resources.filter(resource_type="ExternalResource").values_list("short_id",
+                                                                                                 flat=True).iterator()),
+            "view": list(viewable_resources.filter(resource_type="ExternalResource").values_list("short_id",
+                                                                                                 flat=True).iterator())}
 
 
 def get_user_resource_privilege(email, short_id):
@@ -126,4 +142,53 @@ def zone_of_influence(**kwargs):
 
 @receiver(hs_access_control.signals.access_changed, sender=PrivilegeBase)
 def access_changed(sender, **kwargs):
+    for username in kwargs['users']:
+        user = User.objects.get(username=username)
+        refresh_minio_policy(user)
     print("access_changed: users: {} resources: {}".format(kwargs['users'], kwargs['resources']))
+
+
+def admin_policy_create(**kwargs):
+    cmd = Command('mc {flags} admin policy create {target} {name} {file}')
+    return cmd(**kwargs)
+
+
+def base_statement(action = [], resource = []):
+    return {
+                "Effect": "Allow",
+                "Action": action,
+                "Resource": resource
+            }
+def view_statement(resource):
+    action = ["s3:GetBucketLocation", "s3:GetObject", "s3:ListBucket"]
+    statement = base_statement(action, resource)
+    return statement
+
+def edit_statement(resource):
+    action = ["s3:*"]
+    statement = base_statement(action, resource)
+    return statement
+
+def refresh_minio_policy(user):
+    user_privileges = user_resource_privileges(user)
+    policy = {
+        "Version": "2012-10-17",
+        "Statement": []
+    }
+    if user_privileges["view"]:
+        resource_list = [f"arn:aws:s3:::{resource}" for resource in user_privileges["view"]]
+        policy["Statement"].append(view_statement(resource_list))
+    if user_privileges["edit"] or user_privileges["owner"]:
+        resource_list = [f"arn:aws:s3:::{resource}" for resource in user_privileges["owner"]] + \
+                        [f"arn:aws:s3:::{resource}" for resource in user_privileges["edit"]]
+        policy["Statement"].append(edit_statement(resource_list))
+
+    if policy["Statement"]:
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            filepath = os.path.join(tmpdirname, "metadata.json")
+            fp = open(filepath, "w")
+            fp.write(json.dumps(policy))
+            fp.close()
+            return admin_policy_create(target='cuahsi', name=user.username, file=filepath)
+    else:
+        bmc.admin_policy_remove(target='cuahsi', name=user.username)

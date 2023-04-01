@@ -1,9 +1,11 @@
 import os
+import tempfile
 import zipfile
 import shutil
 import logging
 import requests
 import datetime
+import json
 from dateutil import tz
 
 from django.conf import settings
@@ -26,6 +28,8 @@ from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
+
+from minio import Minio
 
 
 FILE_SIZE_LIMIT = 1 * (1024 ** 3)
@@ -461,6 +465,20 @@ def create_resource(
         )
 
         resource.resource_type = resource_type
+
+        if resource_type == "ExternalResource":
+            client = Minio(
+                "api.minio.cuahsi.io",
+                access_key=settings.MINIO_KEY,
+                secret_key=settings.MINIO_SECRET,
+            )
+            client.make_bucket(resource.short_id)
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                filepath = os.path.join(tmpdirname, "metadata.json")
+                fp = open(filepath, "w")
+                fp.write(json.dumps({"hello": "world"}))
+                fp.close()
+                client.fput_object(resource.short_id, "metadata.json", filepath)
 
         # by default make resource private
         resource.slug = 'resource{0}{1}'.format('/', resource.short_id)
