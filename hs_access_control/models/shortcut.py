@@ -71,11 +71,13 @@ def get_user_resource_privilege(email, short_id):
 # both multiple users and multiple resources.
 # this sends signal access_changed.
 
-def zone_of_influence(**kwargs):
+def zone_of_influence(send=True, **kwargs):
     for k in kwargs: 
         print("{}: {}".format(k, kwargs[k]))
     if len(kwargs) > 2:
         raise PolymorphismError("Too many arguments")
+    if len(kwargs) < 2:
+        raise PolymorphismError("Too few arguments")
     if 'resource' in kwargs:
         if 'user' in kwargs:
             users = list([kwargs['user'].username])
@@ -90,9 +92,11 @@ def zone_of_influence(**kwargs):
         resources = list(BaseResource.objects
             .filter(r2grp__group=kwargs['group'])
             .values_list('short_id', flat=True))
-    else:
-        raise PolymorphismError("Too few arguments")
-    hs_access_control.signals.access_changed.send(sender=PrivilegeBase, users=users, resources=resources)
+    if send: 
+        hs_access_control.signals.access_changed.send(
+            sender=PrivilegeBase, users=users, resources=resources)
+    else: 
+        return (users, resources) 
 
 
 @receiver(hs_access_control.signals.access_changed, sender=PrivilegeBase)
