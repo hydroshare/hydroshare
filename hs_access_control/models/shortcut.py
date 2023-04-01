@@ -162,12 +162,12 @@ def base_statement(action = [], resource = []):
 def view_statement(resource):
     action = ["s3:GetBucketLocation", "s3:GetObject", "s3:ListBucket"]
     statement = base_statement(action, resource)
-    return statement
+    return [statement]
 
 def edit_statement(resource):
     action = ["s3:*"]
     statement = base_statement(action, resource)
-    return statement
+    return [statement]
 
 def refresh_minio_policy(user):
     user_privileges = user_resource_privileges(user)
@@ -177,11 +177,11 @@ def refresh_minio_policy(user):
     }
     if user_privileges["view"]:
         resource_list = [f"arn:aws:s3:::{resource}" for resource in user_privileges["view"]]
-        policy["Statement"].append(view_statement(resource_list))
+        policy["Statement"].extend(view_statement(resource_list))
     if user_privileges["edit"] or user_privileges["owner"]:
         resource_list = [f"arn:aws:s3:::{resource}" for resource in user_privileges["owner"]] + \
                         [f"arn:aws:s3:::{resource}" for resource in user_privileges["edit"]]
-        policy["Statement"].append(edit_statement(resource_list))
+        policy["Statement"].extend(edit_statement(resource_list))
 
     if policy["Statement"]:
         with tempfile.TemporaryDirectory() as tmpdirname:
