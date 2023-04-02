@@ -190,7 +190,7 @@ def edit_statement(resource):
     statement = base_statement(action, resource)
     return [statement]
 
-def refresh_minio_policy(user):
+def minio_policy(user):
     user_privileges = user_resource_privileges(user)
     policy = {
         "Version": "2012-10-17",
@@ -203,8 +203,14 @@ def refresh_minio_policy(user):
         resource_list = [f"arn:aws:s3:::{resource}" for resource in user_privileges["owner"]] + \
                         [f"arn:aws:s3:::{resource}" for resource in user_privileges["edit"]]
         policy["Statement"].extend(edit_statement(resource_list))
-
     if policy["Statement"]:
+        return policy
+    return None
+
+
+def refresh_minio_policy(user):
+    policy = minio_policy(user)
+    if policy:
         with tempfile.TemporaryDirectory() as tmpdirname:
             filepath = os.path.join(tmpdirname, "metadata.json")
             fp = open(filepath, "w")
