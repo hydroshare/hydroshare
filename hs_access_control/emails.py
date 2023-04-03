@@ -33,7 +33,7 @@ class CommunityGroupEmailNotification:
             message = f"""Dear Group owners,
             <p>Please consider your group <a href="{group_url}">
             {self.group_community_request.group.name}</a> to join the community <a href="{community_url}">
-            {self.group_community_request.community.name}</a></p>.
+            {self.group_community_request.community.name}</a>.</p>
             <p>Thank you,</p>
             <p>The HydroShare Team</p>
             """
