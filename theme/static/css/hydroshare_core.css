@@ -3606,7 +3606,7 @@ div.btn-update-picture:hover {
     font-style: italic;
 }
 
-#user-profile-tabs {
+#user-profile-tabs, #group-tabs, #community-tabs {
 	margin-top: 20px;
 	margin-bottom: 60px;
 }

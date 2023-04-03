@@ -97,6 +97,9 @@ $(document).on("change", ".btn-file :file", function () {
 });
 
 $(document).ready(function () {
+  // Make the first rendered tab active
+  $('#group-tabs > ul a:first').tab('show');
+
   $("#id_user-autocomplete").addClass("form-control");
 
   $("#list-roles a").click(onRoleSelect);

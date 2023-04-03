@@ -2533,16 +2533,30 @@ def request_new_community(request, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+# Any HydroShare user (whether authenticated or not) can access the landing page for a public or discoverable Group. When they do, they will see the Group’s metadata.
+# For public groups, anyone will be able to see the Group’s public and published resources and group membership.
+# For discoverable Groups, the list of resources and membership will only be accessible to Group members.
 class GroupView(TemplateView):
     template_name = "pages/group.html"
 
     def hydroshare_denied(self, gid):
         try:
-            Group.objects.get(id=gid)
+            g = Group.objects.select_related("gaccess").get(pk=gid)
         except Group.DoesNotExist:
             message = "group id {} not found".format(gid)
             logger.error(message)
             return message
+        
+        if not (g.gaccess.public or g.gaccess.discoverable):
+            if not self.request.user.is_authenticated:
+                message = 'You need to sign in to access the contents of this private Group'
+                return message
+            
+            u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
+            
+            if not u in g.gaccess.members:
+                message = 'Only Group members can access the content of this private Group'
+                return message
 
         return ''
 
@@ -2606,6 +2620,8 @@ class GroupView(TemplateView):
                 data["community_declined"].append(r)
         else:  # non-empty denied means an error.
             data["denied"] = denied
+            context["denied"] = denied
+            return context
 
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
@@ -2622,16 +2638,13 @@ class GroupView(TemplateView):
 
         context["group"] = g
         context["view_users"] = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
-        context["add_view_user_form"] = AddUserForm()
 
         if self.request.user.is_authenticated:
             group_members = g.gaccess.members
             u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
             u.is_group_editor = g in u.uaccess.edit_groups
-            u.is_group_viewer = (
-                g in u.uaccess.view_groups or g.gaccess.public or g.gaccess.discoverable
-            )
+            u.is_group_viewer = g in u.uaccess.view_groups or g.gaccess.public or g.gaccess.discoverable
             u.is_group_member = u in group_members
 
             g.join_request_waiting_owner_action = (
@@ -2653,15 +2666,21 @@ class GroupView(TemplateView):
                 )
             )
 
-            if u not in group_members:
+            if u.is_group_member:
+                context["group_resources"] = group_resources
+            elif g.gaccess.public:
+                # If the group is public, anyone can see the group's public and published resources and group membership
                 group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
-
-            context["group_resources"] = group_resources
+                context["group_resources"] = group_resources
+                
             context["profile_user"] = u
+            context["add_view_user_form"] = AddUserForm()
             data["is_group_owner"] = u.is_group_owner
         else:
-            public_group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
-            context["group_resources"] = public_group_resources
+            # If the group is public, anonymous users can see discoverable and public resources shared with the group
+            if group.gaccess.public:
+                public_group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
+                context["group_resources"] = public_group_resources
 
         context["data"] = data
         return context
