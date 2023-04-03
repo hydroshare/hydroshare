@@ -23,7 +23,7 @@ from django.contrib.auth.models import User, Group
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.files.storage import DefaultStorage
-from django.core.validators import validate_email
+from django.core.validators import validate_email, URLValidator
 from hs_access_control.models.community import Community
 
 from mezzanine.conf import settings
@@ -490,12 +490,24 @@ async def update_geoconnex_texts(relations=[]):
     # Task to update Relations from Geoconnex API
     if not relations:
         relations = await _get_relations()
+    validator = URLValidator(regex="geoconnex")
+    relations = [r for r in relations if isGeoconnexUrl(r.value, validator)]
     async with aiohttp.ClientSession("https://reference.geoconnex.us") as client:
         await asyncio.gather(*[
             get_jsonld_from_geoconnex(relation, client)
             for relation in relations
         ])
     logger.debug("DONE CHECKING RELATIONS")
+
+
+def isGeoconnexUrl(text, validator=None):
+    if not validator:
+        validator = URLValidator(regex="geoconnex")
+    try:
+        validator(text)
+        return True
+    except ValidationError:
+        return False
 
 
 def copy_and_create_metadata(src_res, dest_res):
