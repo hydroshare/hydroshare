@@ -22,6 +22,9 @@ Vue.component('profile-card', {
     computed: {
         hasIdentifiers: function () {
             return !$.isEmptyObject(this.user.identifiers);
+        },
+        expandedSubjectAreas: function () {
+            return this.user.subject_areas.replace(',', ', ')
         }
     },
     data: function () {

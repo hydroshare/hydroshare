@@ -45,7 +45,7 @@ from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
 from hs_core.views.utils import run_ssh_command
-from hs_dictionary.models import University, UncategorizedTerm, SubjectArea
+from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm

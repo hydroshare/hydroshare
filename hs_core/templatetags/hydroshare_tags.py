@@ -201,6 +201,14 @@ def name_without_commas(name):
     return name  # default
 
 
+@register.filter(name='expand')
+def expand(value, delimiter):
+    """
+        Returns the value with whitespace after delimiter
+    """
+    return value.replace(f'{delimiter}', f'{delimiter} ')
+
+
 @register.filter
 def display_name(user):
     """

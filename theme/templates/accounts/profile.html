@@ -125,7 +125,11 @@
                                         {% if profile.subject_areas %}
                                             <tr>
                                                 <td><span class="text-muted">Subject Areas: </span></td>
-                                                <td>{{ profile.subject_areas }}</td>
+                                                <td>
+                                                    {% with profile.subject_areas|expand:"," as subject_areas %}
+                                                        {{subject_areas}}
+                                                    {% endwith %}
+                                                </td>
                                             </tr>
                                         {% endif %}
                                         </tbody>
