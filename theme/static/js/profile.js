@@ -448,7 +448,7 @@ $(document).ready(function () {
         }
     );
 
-    $('.tagsinput').tagsInput({
+    $('#organization_input').tagsInput({
       interactive: true,
       placeholder: "Organization(s)",
       delimiter: [";"],
@@ -461,6 +461,20 @@ $(document).ready(function () {
         }
       }
     });
+
+    $('#subject_areas').tagsInput({
+        interactive: true,
+        placeholder: "Subject Area(s)",
+        delimiter: [","],
+        autocomplete: {
+          source: "/hsapi/dictionary/subject_areas/",
+          minLength: 3,
+          delay: 500,
+          classes: {
+              "ui-autocomplete": "minHeight"
+          }
+        }
+      });
 
     $('.ui-autocomplete-input').on('blur', function(e) {
       e.preventDefault();

@@ -165,7 +165,7 @@
                                         {# Organization #}
                                         <fieldset class="col-xs-12">
                                             <label>Organization *</label>
-                                            <input class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                            <input id="organization_input" class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
                                             <small class="text-muted">The names of the organizations you are associated with.</small><br />
                                         </fieldset>
                                         <br>
@@ -217,7 +217,7 @@
                                 {# Subject areas #}
                                 <fieldset>
                                     <label>Subject areas</label>
-                                    <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
+                                    <input id="subject_areas" class="form-control tagsinput" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
                                     <small class="text-muted">A comma-separated list of subject areas you are interested
                                         in researching. e.g. "Computer Science, Hydrology, Water Management"
                                     </small>

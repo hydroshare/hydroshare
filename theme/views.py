@@ -45,7 +45,7 @@ from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
 from hs_core.views.utils import run_ssh_command
-from hs_dictionary.models import University, UncategorizedTerm
+from hs_dictionary.models import University, UncategorizedTerm, SubjectArea
 from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
@@ -297,13 +297,13 @@ def update_user_profile(request, profile_user_id):
         messages.error(request, "Update failed. {}".format(str(ex)))
         return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
-    dict_items = request.POST["organization"].split(";")
-    for dict_item in dict_items:
+    org_items = request.POST["organization"].split(";")
+    for org_item in org_items:
         # Update Dictionaries
         try:
-            University.objects.get(name=dict_item)
+            University.objects.get(name=org_item)
         except ObjectDoesNotExist:
-            new_term = UncategorizedTerm(name=dict_item)
+            new_term = UncategorizedTerm(name=org_item)
             new_term.save()
         except MultipleObjectsReturned:
             pass
