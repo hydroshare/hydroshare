@@ -2422,7 +2422,22 @@ class FindGroupsView(TemplateView):
                 .select_related("gaccess")
                 .order_by('name')
             )
+            gmr_waiting_owner_action = GroupMembershipRequest.objects \
+                .filter(request_from=u, group_to_join__gaccess__active=True, redeemed=False) \
+                .values_list("group_to_join__id", flat=True)
+
+            gmr_waiting_user_action = GroupMembershipRequest.objects \
+                .filter(invitation_to=u, group_to_join__gaccess__active=True, redeemed=False) \
+                .values_list("group_to_join__id", flat=True)
+
+            gmr_pending = GroupMembershipRequest.objects \
+                .filter(group_to_join__gaccess__active=True, redeemed=False) \
+                .filter(Q(request_from=u) | Q(invitation_to=u)).select_related("group_to_join")
+
             for g in groups:
+                # TODO: This (g.gaccess.members) is N+1 query (we should perhaps show a count of members of a group
+                #  and display group member details on demand. Here we are looping over all the groups in the system
+                #  so this N+1 query can potentially cause timeout error as more groups are created
                 g.members = g.gaccess.members
                 g.is_user_member = u in g.members
                 g.join_request = None
@@ -2430,38 +2445,29 @@ class FindGroupsView(TemplateView):
                     g.join_request_waiting_owner_action = False
                     g.join_request_waiting_user_action = False
                 else:
-                    g.join_request_waiting_owner_action = (
-                        g.gaccess.group_membership_requests.filter(
-                            request_from=u
-                        ).exists()
-                    )
-                    g.join_request_waiting_user_action = (
-                        g.gaccess.group_membership_requests.filter(
-                            invitation_to=u
-                        ).exists()
-                    )
+                    g.join_request_waiting_owner_action = g.id in gmr_waiting_owner_action
+                    g.join_request_waiting_user_action = g.id in gmr_waiting_user_action
 
                     if (
                         g.join_request_waiting_owner_action
                         or g.join_request_waiting_user_action
                     ):
-                        g.join_request = (
-                            g.gaccess.group_membership_requests.filter(
-                                request_from=u
-                            ).first()
-                            or g.gaccess.group_membership_requests.filter(
-                                invitation_to=u
-                            ).first()
-                        )
+                        g.join_request = None
+                        for gmr in gmr_pending:
+                            if g.id == gmr.group_to_join.id:
+                                g.join_request = gmr
+                                break
+
             return {"profile_user": u, "groups": groups}
         else:
             # for anonymous user
             groups = Group.objects.filter(
                 Q(gaccess__active=True)
                 & (Q(gaccess__discoverable=True) | Q(gaccess__public=True))
-            ).exclude(name="Hydroshare Author")
+            ).exclude(name="Hydroshare Author").select_related("gaccess")
 
             for g in groups:
+                # TODO: N+1 query fix
                 g.members = g.gaccess.members
             return {"groups": groups}
 
@@ -2477,11 +2483,7 @@ class MyGroupsView(TemplateView):
         u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
 
         groups = u.uaccess.my_groups
-        group_membership_requests = (
-            GroupMembershipRequest.objects.filter(invitation_to=u, redeemed=False)
-            .exclude(group_to_join__gaccess__active=False)
-            .all()
-        )
+
         # for each group object, set a dynamic attribute to know if the user owns the group
         for g in groups:
             g.is_group_owner = u.uaccess.owns_group(g)
@@ -2491,6 +2493,12 @@ class MyGroupsView(TemplateView):
         my_pending_requests = GroupMembershipRequest.objects.filter(
             request_from=u, redeemed=False
         ).exclude(group_to_join__gaccess__active=False)
+
+        group_membership_requests = (
+            GroupMembershipRequest.objects.filter(invitation_to=u, redeemed=False)
+            .exclude(group_to_join__gaccess__active=False)
+            .all()
+        )
         return {
             "profile_user": u,
             "groups": active_groups,
@@ -2552,7 +2560,7 @@ class GroupView(TemplateView):
                 message = 'You need to sign in to access the contents of this private Group'
                 return message
             
-            u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
+            u = User.objects.get(pk=self.request.user.id)
             
             if not u in g.gaccess.members:
                 message = 'Only Group members can access the content of this private Group'
@@ -2567,14 +2575,12 @@ class GroupView(TemplateView):
         context = {}
         message = ""
         group_id = kwargs["group_id"]
-        g = Group.objects.select_related("gaccess").get(pk=group_id)
+        group = Group.objects.select_related("gaccess").get(pk=group_id)
 
         denied = self.hydroshare_denied(group_id)
         data = {}   # JSON serializable data to be used in Vue app
 
         if denied == "":
-            group = Group.objects.get(id=group_id)
-
             data["denied"] = denied  # empty string means ok
             data["message"] = message
             data["gid"] = group_id
@@ -2626,41 +2632,48 @@ class GroupView(TemplateView):
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
-        for res in g.gaccess.view_resources:
-            grp = GroupResourcePrivilege.objects.select_related("grantor").get(resource=res, group=g)
-            res.grantor = grp.grantor
-            res.date_granted = grp.start
-            group_resources.append(res)
+        view_resources = group.gaccess.view_resources
+        res_ids = [res.short_id for res in view_resources]
+        grp_qs = GroupResourcePrivilege.objects \
+            .filter(group=group, resource__short_id__in=res_ids) \
+            .select_related("grantor", "resource")
+
+        for res in view_resources:
+            for grp in grp_qs:
+                if res.short_id == grp.short_id:
+                    res.grantor = grp.grantor
+                    res.date_granted = grp.start
+                    group_resources.append(res)
 
         group_resources = sorted(
             group_resources, key=lambda x: x.date_granted, reverse=True
         )
 
-        context["group"] = g
-        context["view_users"] = g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
+        context["group"] = group
+        context["view_users"] = group.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
 
         if self.request.user.is_authenticated:
-            group_members = g.gaccess.members
+            group_members = group.gaccess.members
             u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
-            u.is_group_owner = u.uaccess.owns_group(g)
-            u.is_group_editor = g in u.uaccess.edit_groups
-            u.is_group_viewer = g in u.uaccess.view_groups or g.gaccess.public or g.gaccess.discoverable
+            u.is_group_owner = u.uaccess.owns_group(group)
+            u.is_group_editor = group in u.uaccess.edit_groups
+            u.is_group_viewer = group.gaccess.public or group.gaccess.discoverable or group in u.uaccess.view_groups
             u.is_group_member = u in group_members
 
-            g.join_request_waiting_owner_action = (
-                g.gaccess.group_membership_requests.filter(request_from=u).exists()
+            group.join_request_waiting_owner_action = (
+                group.gaccess.group_membership_requests.filter(request_from=u).exists()
             )
-            g.join_request_waiting_user_action = (
-                g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
+            group.join_request_waiting_user_action = (
+                group.gaccess.group_membership_requests.filter(invitation_to=u).exists()
             )
-            g.join_request = g.gaccess.group_membership_requests.filter(
+            group.join_request = group.gaccess.group_membership_requests.filter(
                 invitation_to=u
             ).first()
 
             # This will exclude requests from inactive users made for themselves
             # as well as invitations from innactive users to others
-            g.gaccess.active_group_membership_requests = (
-                g.gaccess.group_membership_requests.filter(
+            group.gaccess.active_group_membership_requests = (
+                group.gaccess.group_membership_requests.filter(
                     Q(request_from__is_active=True),
                     Q(invitation_to=None) | Q(invitation_to__is_active=True),
                 )
@@ -2668,7 +2681,7 @@ class GroupView(TemplateView):
 
             if u.is_group_member:
                 context["group_resources"] = group_resources
-            elif g.gaccess.public:
+            elif group.gaccess.public:
                 # If the group is public, anyone can see the group's public and published resources and group membership
                 group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
                 context["group_resources"] = group_resources
