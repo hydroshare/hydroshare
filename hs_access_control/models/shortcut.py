@@ -1,9 +1,6 @@
 import json
 import os
 import tempfile
-import bmc
-
-from bmc._utils import Command
 
 from django.db.models import Q
 from django.http import JsonResponse
@@ -168,10 +165,24 @@ def access_changed(sender, **kwargs):
         refresh_minio_policy(user)
     logger.info("access_changed: users: {} resources: {}".format(kwargs['users'], kwargs['resources']))
 
+import subprocess
+def admin_policy_create(target, name, file):
+    arguments = ['mc', '--json', 'admin', 'policy', 'create', target, name, file]
+    logger.info(arguments)
+    try:
+        _output = subprocess.check_output(arguments, user='hydro-service')
+    except subprocess.CalledProcessError as e:
+        logger.exception(e.output)
+    logger.info(_output)
 
-def admin_policy_create(**kwargs):
-    cmd = Command('mc {flags} admin policy create {target} {name} {file}')
-    return cmd(**kwargs)
+def admin_policy_remove(target, name):
+    arguments = ['mc', '--json', 'admin', 'policy', 'remove', target, name]
+    logger.info(arguments)
+    try:
+        _output = subprocess.check_output(arguments, user='hydro-service')
+    except subprocess.CalledProcessError as e:
+        logger.exception(e.output)
+    logger.info(_output)
 
 
 def base_statement(action = [], resource = []):
@@ -210,12 +221,13 @@ def minio_policy(user):
 
 def refresh_minio_policy(user):
     policy = minio_policy(user)
+    logger.info(json.dumps(policy, indent=2))
     if policy:
-        with tempfile.TemporaryDirectory() as tmpdirname:
+        with tempfile.TemporaryDirectory(dir='/hs_tmp') as tmpdirname:
             filepath = os.path.join(tmpdirname, "metadata.json")
             fp = open(filepath, "w")
             fp.write(json.dumps(policy))
             fp.close()
-            return admin_policy_create(target='cuahsi', name=user.username, file=filepath)
+            admin_policy_create(target='cuahsi', name=user.username, file=filepath)
     else:
-        bmc.admin_policy_remove(target='cuahsi', name=user.username)
+        admin_policy_remove(target='cuahsi', name=user.username)
