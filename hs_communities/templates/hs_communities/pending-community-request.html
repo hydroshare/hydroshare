@@ -37,13 +37,14 @@
       <div v-if="request.status === 'Submitted'" class="alert alert-warning col-xs-12 col-sm-7">This request is pending
         approval.</div>
 
-      <div v-if="request.status === 'Cancelled'" class="alert alert-warning col-xs-12 col-sm-7">This request has been cancelled.</div>
 
-      <div v-else-if="request.status === 'Rejected'" class="alert alert-danger col-xs-12 col-sm-7">
+      <div v-if="request.status === 'Rejected'" class="alert alert-danger col-xs-12 col-sm-7">
         <div>This request has been rejected.</div>
         <br>
         <p><b>Reason for rejection:</b> ${request.decline_reason}</p>
       </div>
+
+      <div v-if="request.is_cancelled" class="alert alert-warning col-xs-12 col-sm-7">The user has cancelled this request.</div>
 
       <template>
         {% include 'hs_communities/pending-community-request-form.html' %}

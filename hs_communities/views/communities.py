@@ -216,6 +216,7 @@ class MyCommunitiesView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
+        data = {}   # JSON serializable data to be used in Vue app
         user_groups = []
         user = self.request.user
 
@@ -265,9 +266,11 @@ class MyCommunitiesView(TemplateView):
             context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
 
         context["communities_list"] = communities_member_of
-        context["user_pending_requests"] = user_pending_requests
-        context["user_declined_requests"] = user_declined_requests
         context["user_is_admin"] = user_is_admin
+        context['data'] = data
+
+        data["user_pending_requests"] = user_pending_requests
+        data["user_declined_requests"] = user_declined_requests
         return context
 
 

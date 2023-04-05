@@ -2808,7 +2808,7 @@ span.you-flag {
     border: 0 !important;
 }
 
-.resource-custom-table tbody td {
+.resource-custom-table > tbody > tr > td {
 	border-bottom: 1px solid #EEE;
 	padding: 8px 10px;
 	word-break: keep-all;

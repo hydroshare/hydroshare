@@ -40,7 +40,8 @@
                                     </profile-link>
                                     <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
                                 </td>
-                                <td :class="{ 'text-success': request.status === 'Approved', 'text-danger': request.status === 'Rejected' }">${ request.status }</td>
+                                <td :class="{ 'text-success': request.status === 'Approved', 'text-danger': request.status === 'Rejected' }"
+                                  >${ request.status }${ request.is_cancelled ? ' & Cancelled' : ''}</td>
                             </tr>
                         </tbody>
                     </table>
