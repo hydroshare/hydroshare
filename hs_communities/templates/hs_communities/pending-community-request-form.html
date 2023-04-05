@@ -4,7 +4,8 @@
     <div class="col-xs-12 col-sm-7">
       <div class="row">
         <div class="text-right col-sm-12">
-          <button v-if="!isEditMode && (request.status === 'Submitted' || request.status === 'Rejected')" type="button" role="button" class="btn btn-default" @click.prevent="isEditMode = true">Edit</button>
+          <button v-if="!isEditMode && (request.status === 'Submitted' || request.status === 'Rejected')" type="button"
+            role="button" class="btn btn-default" @click.prevent="isEditMode = true">Edit</button>
           <template v-if="isEditMode">
             <button type="button" class="btn btn-default" :disabled="isSaving" @click.prevent="onCancel">Cancel</button>
             <button type="submit" class="btn btn-success" :disabled="isSaving" @click.prevent="onUpdate">
@@ -16,9 +17,9 @@
         {# Community Name #}
         <fieldset class="col-sm-12" :disabled="!isEditMode || isSaving">
           <label>Community Name *</label>
-          <input ref="name" type="text" :value="request.community_to_approve.name" class="form-control" required="required"
-            name="name" maxlength="79">
-          <small class="text-muted">Community name may be 79 characters or less.</small>
+          <small class="text-muted">300 characters or less</small>
+          <textarea ref="name" class="form-control" required="required" name="name" maxlength="300" rows="1"
+            placeholder="Descriptive name for the Community">${request.community_to_approve.name}</textarea>
         </fieldset>
 
         <br>
@@ -63,18 +64,21 @@
         </fieldset>
         <br>
       </div>
-      
+
       <template v-if="!isEditMode">
         {% if user.is_superuser %}
-        <button v-if="request.status === 'Submitted'" data-toggle="modal" data-target="#reject-new-community-creation-request-dialog"
+        <button v-if="request.status === 'Submitted'" data-toggle="modal"
+          data-target="#reject-new-community-creation-request-dialog"
           :disabled="isApproving || isRejecting || request.status === 'Rejected'" type="button" class="btn btn-default">
           ${ isRejecting ? 'Rejecting Community...' : 'Reject' }
         </button>
-        <button v-if="request.status === 'Submitted'" @click="onApprove" :disabled="isApproving || isRejecting" type="button" class="btn btn-success has-space-right">
+        <button v-if="request.status === 'Submitted'" @click="onApprove" :disabled="isApproving || isRejecting"
+          type="button" class="btn btn-success has-space-right">
           ${ isApproving ? 'Approving Community...' : 'Approve' }
         </button>
         {% endif %}
-        <button v-if="request.status === 'Rejected'" @click="onResubmit" :disabled="isResubmitting" type="button" class="btn btn-default">
+        <button v-if="request.status === 'Rejected'" @click="onResubmit" :disabled="isResubmitting" type="button"
+          class="btn btn-default">
           ${ isResubmitting ? 'Resubmitting...' : 'Resubmit' }
         </button>
       </template>

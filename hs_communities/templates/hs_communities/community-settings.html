@@ -12,9 +12,9 @@
             {# Community Name #}
             <fieldset class="col-sm-12">
               <label>Community Name *</label>
-              <input type="text" value="{{ community.name }}" class="form-control" required="required" name="name"
-                maxlength="79">
-              <small class="text-muted">Community name may be 79 characters or less.</small>
+              <textarea type="text" class="form-control" rows="1"
+                required="required" name="name" placeholder="Descriptive name for the Community"
+                >{{ community.name }}</textarea>
             </fieldset>
     
             {# Community Contact Email #}
@@ -80,7 +80,7 @@
                 <input type="text" :value="selectedBanner" class="form-control" readonly>
               </div>
               <small class="text-muted hint">Add a custom banner image that will display at the top of the Community page. Custom
-                banner images must be uploaded in JPEG format.</small>
+                banner images must be uploaded in JPEG format and must have dimensions of 120 x 120 pixels to display correctly.</small>
             </fieldset>
     
             {# Logo image #}
@@ -96,7 +96,7 @@
                 <input type="text" :value="selectedLogo" class="form-control" readonly>
               </div>
               <small class="text-muted hint">Add a custom Community logo image that will display at the top of the Community
-                page. Custom logo images must be uploaded in JPEG format and must have dimensions of 120 x 120 pixels to display correctly.</small>
+                page. Custom logo images must be uploaded in JPEG format and must have dimensions of 1400 x 200 pixels (or wider) to display correctly.</small>
             </fieldset>
     
             <fieldset class="col-sm-12 has-space-top">

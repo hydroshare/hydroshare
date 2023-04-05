@@ -52,9 +52,11 @@
                 {% endif %}
             </div>
 
-            <div class="flex-grow-1">
+            <div class="flex-grow-1 full-width">
                 <div class="group-title-container flex justify-space-between align-flex-start">
                     <h2 class="group-title is-marginless">{{ group.name }}</h2>
+
+                    <div class="spacer"></div>
 
                     <div class="group-actions flex">
                         {% if profile_user.is_group_member %}
@@ -426,9 +428,9 @@
                                 {# Group Name #}
                                 <fieldset class="col-sm-12">
                                     <label>Group Name *</label>
-                                    <input type="text" value="{{ group.name }}" class="form-control" required="required"
-                                        name="name" maxlength="79">
-                                    <small class="text-muted">Group name may be 79 characters or less.</small>
+                                    <small class="text-muted">300 characters or less</small>
+                                    <textarea class="form-control" required="required" name="name" maxlength="300"
+                                      >{{ group.name }}</textarea>
                                 </fieldset>
 
                                 {# Group Contact Email #}
