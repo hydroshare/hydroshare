@@ -123,14 +123,14 @@ function request_join_group_ajax_submit() {
           else if (window.location.pathname === '/groups') {
             // From the Find Groups page we need to update UI
             container.append(
-              '<h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group</h4>'
+              '<div class="flag-joined text-right"><i class="fa fa-check-circle-o"></i></span> <b>You have joined this group</b></div>'
             );
           }
         }
         else {
           // The request was sent
           container.append(
-            '<h4 class="flag-joined"><span class="fa fa-send"></span> Request Sent</h4>'
+            '<span class="badge badge-success"><i class="fa fa-paper-plane"></i> Request Sent</span>'
           );
         }
       }

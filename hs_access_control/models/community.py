@@ -332,10 +332,6 @@ class RequestCommunity(models.Model):
     def cancel(self):
         """Helper to cancel a request to create a new community
         """
-        assert self.pending_approval is True
-        assert self.declined is False
-
-        self.date_processed = datetime.now()
         self.pending_approval = False
         self.cancelled = True
         # upon canceling the request, the associated community is set to inactive
@@ -407,5 +403,5 @@ class RequestCommunity(models.Model):
 
     @classmethod
     def declined_requests(cls):
-        """Gets a queryset of all declined community requests"""
-        return cls.objects.filter(declined=True).select_related('community_to_approve')
+        """Gets a queryset of all declined community requests that have not also been cancelled by the sender """
+        return cls.objects.filter(declined=True, cancelled=False).select_related('community_to_approve')

@@ -148,10 +148,10 @@ def community_request_json(cr):
             'date_processed': 0 if cr.pending_approval or not cr.date_processed
             else cr.date_processed.strftime("%m/%d/%Y, %H:%M:%S"),
             'status': 'Approved' if cr.approved is True
-            else 'Submitted' if cr.pending_approval is True
-            else 'Cancelled' if cr.pending_approval is False and cr.declined is False
-            else 'Rejected',
+            else 'Rejected' if cr.decline_reason is not None
+            else 'Submitted',
             'decline_reason': cr.decline_reason if cr.decline_reason is not None else '',
+            'is_cancelled': 1 if cr.cancelled is True else 0
         }
     else:
         return {}
@@ -728,33 +728,23 @@ class CommunityRequestView(View):
         if context is None:
             context = {}
 
-        context['approved'] = []
+        # context['approved'] = []
         context['declined'] = []
         context['pending'] = []
 
         # privileged (super user) user sees all
 
         # approved requests
-        approved_qs = RequestCommunity.objects.filter(pending_approval=False, declined=False)
+        # approved_qs = RequestCommunity.objects.filter(pending_approval=False, declined=False, requested_by=user)
 
         # declined requests
-        declined_qs = RequestCommunity.objects.filter(declined=True)
+        declined_qs = RequestCommunity.objects.filter(declined=True, cancelled=False, requested_by=user)
 
         # pending requests
-        pending_qs = RequestCommunity.objects.filter(pending_approval=True)
+        pending_qs = RequestCommunity.objects.filter(pending_approval=True, requested_by=user)
 
-        if not user.is_superuser:  # just for current user
-            # approved requests
-            approved_qs = approved_qs.filter(requested_by=user)
-
-            # declined requests
-            declined_qs = declined_qs.filter(requested_by=user)
-
-            # pending requests
-            pending_qs = pending_qs.filter(requested_by=user)
-
-        for a_cr in approved_qs:
-            context['approved'].append(community_request_json(a_cr))
+        # for a_cr in approved_qs:
+        #     context['approved'].append(community_request_json(a_cr))
 
         for d_cr in declined_qs:
             context['declined'].append(community_request_json(d_cr))

@@ -2555,8 +2555,7 @@ form.act-on-request button {
 }
 
 form.act-on-request {
-    text-align: center;
-	margin:10px;
+  text-align: center;
 	display: inline;
 }
 
@@ -2808,7 +2807,7 @@ span.you-flag {
     border: 0 !important;
 }
 
-.resource-custom-table tbody td {
+.resource-custom-table > tbody > tr > td {
 	border-bottom: 1px solid #EEE;
 	padding: 8px 10px;
 	word-break: keep-all;
@@ -3021,6 +3020,10 @@ span.you-flag {
 
 .facet-list .badge {
 	  margin-top: 5px;
+}
+
+.badge-success {
+  background-color: #5CB85C;
 }
 
 #facets .panel-heading {
@@ -3661,12 +3664,24 @@ input.no-style {
   justify-content: space-between;
 }
 
+.justify-flex-start {
+  justify-content: flex-start;
+}
+
+.justify-flex-end {
+  justify-content: flex-end;
+}
+
 .align-center {
   align-items: center;
 }
 
 .align-flex-start {
   align-items: flex-start;
+}
+
+.align-flex-end {
+  align-items: flex-end;
 }
 
 .flex-grow-1 {

@@ -55,8 +55,6 @@
 }
 
 .group-thumbnail {
-  padding: 4px;
-  margin-bottom: 20px;
   line-height: 1.42857143;
   background-color: #fff;
   border: 1px solid #ddd;
@@ -71,10 +69,10 @@ div.group-thumbnails {
   gap: 2rem;
 }
 
-.group-thumbnail img {
+/* .group-thumbnail > img {
   max-height: 200px;
   width: 100%;
-}
+} */
 
 .group-caption {
   padding: 10px;
@@ -92,7 +90,6 @@ div.group-thumbnails {
 }
 
 .group-description {
-  margin-top: 20px;
   flex: 2 1 150px;
   overflow-y: auto;
   word-break: break-word;
@@ -147,8 +144,7 @@ div.group-thumbnails {
   height: 120px;
   text-align: center;
   width: 120px;
-  background-size: contain;
-  background-repeat: no-repeat;
+  background-size: cover;
   background-position: center center;
   background-color: #093e54;
   display: inline-block;
@@ -156,10 +152,11 @@ div.group-thumbnails {
 
 .group-image-wrapper {
   border: 1px solid #DDD;
+  background: #FFF;
   padding: 4px;
-  box-shadow: 1px 1px 5px #E8E8E8;
-  -moz-box-shadow: 1px 1px 5px #E8E8E8;
-  -webkit-box-shadow: 1px 1px 5px #E8E8E8;
+  box-shadow: 1px 1px 5px #00000029;
+  -moz-box-shadow: 1px 1px 5px #00000029;
+  -webkit-box-shadow: 1px 1px 5px #00000029;
   width: 90px;
   height: 90px;
 }
@@ -366,6 +363,28 @@ div.group-add-photo {
 
 .request-block .activity-block {
   padding: 2px;
+}
+
+.group-thumbnail .community-banner {
+  height: 12rem;
+  background-size: cover;
+  background-position: center center;
+  margin-bottom: -4rem;
+}
+
+.group-thumbnail .community-banner {
+  background-color: #093e54;
+}
+
+.group-thumbnail.community .group-image-wrapper {
+  margin-top: 0;
+  margin-left: 1rem;
+}
+
+.group-thumbnail-header {
+  padding: 1rem;
+  background: #f5f5f5;
+  border-bottom: 1px solid #DDD;
 }
 
 /* --------------------------------------------------------- */

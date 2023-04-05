@@ -10,7 +10,8 @@
 
 {% block main %}
     <!-- Load context data needed in Vue app -->
-    {{ user_pending_requests|json_script:"my-communities-app-data" }}
+    {{ data|json_script:"my-communities-app-data" }}
+
     {% include 'hs_communities/communities-nav.html' with active='my_communities' %}
     <div class="container">
         <div id="my-communities-app" class="row">
@@ -23,13 +24,16 @@
                 </a>
 
                 <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Requests</h4>
-                <i v-if="!pendingRequests.length">No pending requests.</i>
+                <i v-if="!allRequests.length">No pending requests.</i>
                 <template v-else>
-                    <div v-for="request of pendingRequests" class="request-block">
+                    <div v-for="request of allRequests" class="request-block">
+                        <span v-if="request.status === 'Submitted'" class="badge pull-right">Pending Approval</span>
+                        <span v-if="request.status === 'Rejected'" class="badge pull-right" style="background-color: #d9534f;">Rejected</span>
                         <h5><a :href="`{% url "manage_requests" %}${request.id}`">${ request.community_to_approve.name }</a></h5>
                         <div class="text-muted">${ request.date_requested }</div>
                         <br>
-                        <button type="submit" class="btn btn-warning" @click="targetRequest = request" :disabled="isRemoving[request.id]"
+                        <button type="submit" class="btn btn-default"
+                            @click="targetRequest = request" :disabled="isRemoving[request.id]"
                             data-toggle="modal" data-target="#remove-community-request-modal">Cancel Request</button>
                     </div>
                     <!-- Remove Community Request Modal -->
