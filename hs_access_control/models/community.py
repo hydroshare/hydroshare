@@ -404,3 +404,8 @@ class RequestCommunity(models.Model):
     def pending_requests(cls):
         """Gets a queryset of all pending community requests"""
         return cls.objects.filter(pending_approval=True).select_related('community_to_approve')
+
+    @classmethod
+    def declined_requests(cls):
+        """Gets a queryset of all declined community requests"""
+        return cls.objects.filter(declined=True).select_related('community_to_approve')

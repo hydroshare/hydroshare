@@ -249,6 +249,12 @@ class MyCommunitiesView(TemplateView):
         for rc in rc_pending_qs:
             user_pending_requests.append(community_request_json(rc))
 
+        # get the list of any declined community create requests by this user
+        user_declined_requests = []
+        rc_declined_qs = RequestCommunity.declined_requests().filter(requested_by=user)
+        for rc in rc_declined_qs:
+            user_declined_requests.append(community_request_json(rc))
+
         user_is_admin = user.is_authenticated and user.is_superuser
 
         if user_is_admin:
@@ -260,6 +266,7 @@ class MyCommunitiesView(TemplateView):
 
         context["communities_list"] = communities_member_of
         context["user_pending_requests"] = user_pending_requests
+        context["user_declined_requests"] = user_declined_requests
         context["user_is_admin"] = user_is_admin
         return context
 
