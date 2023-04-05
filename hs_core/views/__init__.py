@@ -2541,7 +2541,8 @@ def request_new_community(request, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
-# Any HydroShare user (whether authenticated or not) can access the landing page for a public or discoverable Group. When they do, they will see the Group’s metadata.
+# Any HydroShare user (whether authenticated or not) can access the landing page for a public or discoverable Group.
+# When they do, they will see the Group’s metadata.
 # For public groups, anyone will be able to see the Group’s public and published resources and group membership.
 # For discoverable Groups, the list of resources and membership will only be accessible to Group members.
 class GroupView(TemplateView):
@@ -2554,14 +2555,13 @@ class GroupView(TemplateView):
             message = "group id {} not found".format(gid)
             logger.error(message)
             return message
-        
+
         if not (g.gaccess.public or g.gaccess.discoverable):
             if not self.request.user.is_authenticated:
                 message = 'You need to sign in to access the contents of this private Group'
                 return message
-            
+
             u = User.objects.get(pk=self.request.user.id)
-            
             if not u in g.gaccess.members:
                 message = 'Only Group members can access the content of this private Group'
                 return message
@@ -2685,7 +2685,7 @@ class GroupView(TemplateView):
                 # If the group is public, anyone can see the group's public and published resources and group membership
                 group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
                 context["group_resources"] = group_resources
-                
+
             context["profile_user"] = u
             context["add_view_user_form"] = AddUserForm()
             data["is_group_owner"] = u.is_group_owner
