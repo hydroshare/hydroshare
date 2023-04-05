@@ -60,17 +60,6 @@ class CommunityView(TemplateView):
         else:
             cid = None
 
-        if "gid" in kwargs:
-            gid = int(kwargs["gid"])
-        else:
-            gid = None
-
-        if "action" in kwargs:
-            action = kwargs["action"]
-        else:
-            action = None
-
-        logger.debug("cid={} action={} gid={}".format(cid, action, gid))
         denied = self.hydroshare_denied(cid)
         logger.debug("denied is {}".format(denied))
         if denied == "":
@@ -115,31 +104,39 @@ class CommunityView(TemplateView):
                     data["all_communities"].append(community_json(c))
 
                 data["pending"] = []
-                for r in GroupCommunityRequest.objects.filter(
-                        community=community, redeemed=False).order_by("group__name"):
+                for r in GroupCommunityRequest.objects \
+                        .filter(community=community, redeemed=False) \
+                        .select_related("community", "group") \
+                        .order_by("group__name"):
                     data["pending"].append(group_community_request_json(r))
 
-                # requests that were declined by this commmunity
+                # requests that were declined by this community
                 data["community_declined"] = []
-                for r in GroupCommunityRequest.objects.filter(
-                        community=community, redeemed=True, approved=False,
-                        when_group__lt=F("when_community")).order_by("group__name"):
+                for r in GroupCommunityRequest.objects \
+                        .filter(community=community, redeemed=True, approved=False,
+                                when_group__lt=F("when_community")) \
+                        .select_related("community", "group") \
+                        .order_by("group__name"):
                     data["community_declined"].append(group_community_request_json(r))
 
                 # requests that were declined by the groups invited
                 data["group_declined"] = []
-                for r in GroupCommunityRequest.objects.filter(
-                        community=community, redeemed=True, approved=False,
-                        when_group__gt=F("when_community")).order_by("group__name"):
+                for r in GroupCommunityRequest.objects \
+                        .filter(community=community, redeemed=True, approved=False,
+                                when_group__gt=F("when_community")) \
+                        .select_related("community", "group") \
+                        .order_by("group__name"):
                     data["group_declined"].append(group_community_request_json(r))
 
                 # group requests to be approved
                 data["approvals"] = []
                 for r in GroupCommunityRequest.objects.filter(
-                        community=Community.objects.get(id=int(cid)),
+                        community=community,
                         group__gaccess__active=True,
                         community_owner__isnull=True,
-                        redeemed=False).order_by("group__name"):
+                        redeemed=False) \
+                        .select_related("community", "group") \
+                        .order_by("group__name"):
                     data["approvals"].append(group_community_request_json(r))
 
             # Both authenticated and anonymous users can make use of the data below
@@ -220,7 +217,11 @@ class MyCommunitiesView(TemplateView):
         user = self.request.user
 
         # for each group set group dynamic attributes
-        user_groups_qs = UserGroupPrivilege.objects.filter(user=user, group__gaccess__active=True).only("group")
+        user_groups_qs = UserGroupPrivilege.objects\
+            .filter(user=user, group__gaccess__active=True) \
+            .select_related("group") \
+            .only("group")
+
         for ugp in user_groups_qs:
             group = ugp.group
             group.is_user_member = True
@@ -228,6 +229,7 @@ class MyCommunitiesView(TemplateView):
 
         user_in_communities_qs = GroupCommunityPrivilege.objects \
             .filter(group__id__in=[grp.id for grp in user_groups], community__active=True) \
+            .select_related("community") \
             .only("community") \
             .distinct("community")
 
@@ -236,6 +238,7 @@ class MyCommunitiesView(TemplateView):
         # Also list communities that the user owns
         user_community_qs = UserCommunityPrivilege.objects \
             .filter(user=user, privilege=PrivilegeCodes.OWNER, community__active=True) \
+            .select_related("community") \
             .only("community") \
             .distinct("community")
 
