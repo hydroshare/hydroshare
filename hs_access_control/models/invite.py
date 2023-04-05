@@ -233,6 +233,7 @@ class GroupCommunityRequest(models.Model):
             # refresh request: this has the side effect of disabling any prior denials
             elif not created:
                 request.community_owner = community_owner
+                request.group_owner = None
                 request.privilege = privilege
                 request.redeemed = False
                 request.approved = False
@@ -288,6 +289,7 @@ class GroupCommunityRequest(models.Model):
 
             elif not created:  # refresh request: this has the side effect of disabling any denials
                 request.group_owner = group_owner
+                request.community_owner = None
                 request.privilege = None
                 request.redeemed = False
                 request.approved = False
@@ -452,21 +454,26 @@ class GroupCommunityRequest(models.Model):
                 message = f"You do not own the community and cannot {action_type.value} this request."
                 return message, False
             else:
-                self.community_owner = user
                 self.privilege = PrivilegeCodes.VIEW
                 self.when_community = timezone.now()
         elif not user.uaccess.owns_group(self.group):   # community invited group to join
             message = f"You do not own the group and cannot {action_type.value} this request."
             return message, False
         else:
-            self.group_owner = user
             self.when_group = timezone.now()
 
         self.redeemed = True
         self.approved = action_type == CommunityActions.APPROVE
         self.save()
         if action_type == CommunityActions.APPROVE:
-            self.community_owner.uaccess.share_community_with_group(
+            self.user = user
+            if request_type == CommunityJoinRequestTypes.GROUP_REQUESTING:
+                # user is the community owner approving the request
+                self.user = user
+            else:
+                self.user = self.community_owner
+
+            self.user.uaccess.share_community_with_group(
                 self.community, self.group, self.privilege)
 
         message = f"Request to connect group '{self.group.name}' to " \
