@@ -6,8 +6,7 @@ class HydroShareOIDCAuthenticationBackend(OIDCAuthenticationBackend):
     def create_user(self, claims):
         return create_account(
             email=claims.get('email', ''),
-            #username=claims.get('username', ''),
-            username=self.get_username(claims),
+            username=claims.get('username', self.get_username(claims)),
             first_name=claims.get('given_name', ''),
             last_name=claims.get('family_name', ''),
             superuser=False,
