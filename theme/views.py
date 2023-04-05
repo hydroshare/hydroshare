@@ -298,15 +298,7 @@ def update_user_profile(request, profile_user_id):
         return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
     dict_items = request.POST["organization"].split(";")
-    for dict_item in dict_items:
-        # Update Dictionaries
-        try:
-            University.objects.get(name=dict_item)
-        except ObjectDoesNotExist:
-            new_term = UncategorizedTerm(name=dict_item)
-            new_term.save()
-        except MultipleObjectsReturned:
-            pass
+    check_organization_terms(dict_items)
 
     profile_form = UserProfileForm(post_data_dict, request.FILES, instance=user_profile)
     try:
@@ -377,6 +369,18 @@ def update_user_profile(request, profile_user_id):
         messages.error(request, str(ex))
 
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
+
+
+def check_organization_terms(dict_items):
+    for dict_item in dict_items:
+        # Update Dictionaries
+        try:
+            University.objects.get(name=dict_item)
+        except ObjectDoesNotExist:
+            new_term = UncategorizedTerm(name=dict_item)
+            new_term.save()
+        except MultipleObjectsReturned:
+            pass
 
 
 def resend_verification_email(request, email):
