@@ -2486,6 +2486,7 @@ class MyGroupsView(TemplateView):
 
         # for each group object, set a dynamic attribute to know if the user owns the group
         for g in groups:
+            # TODO: n+1 query problem to fix
             g.is_group_owner = u.uaccess.owns_group(g)
 
         active_groups = [g for g in groups if g.gaccess.active]
@@ -2573,12 +2574,12 @@ class GroupView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
+        data = {}  # JSON serializable data to be used in Vue app
         message = ""
         group_id = kwargs["group_id"]
-        group = Group.objects.select_related("gaccess").get(pk=group_id)
-
         denied = self.hydroshare_denied(group_id)
-        data = {}   # JSON serializable data to be used in Vue app
+        if denied == "":
+            group = Group.objects.select_related("gaccess").get(pk=group_id)
 
         if denied == "":
             data["denied"] = denied  # empty string means ok
@@ -2593,7 +2594,8 @@ class GroupView(TemplateView):
             # pending requests from this group
             data["pending"] = []
             for r in GroupCommunityRequest.objects.filter(
-                    group=group, redeemed=False)\
+                    group=group, redeemed=False) \
+                    .select_related("community", "group") \
                     .order_by("community__name"):
                 data["pending"].append(group_community_request_json(r))
 
@@ -2615,14 +2617,16 @@ class GroupView(TemplateView):
             # data["group_declined"] = []
             # for r in GroupCommunityRequest.objects.filter(
             #         group=group, redeemed=True, approved=False,
-            #         when_group__lt=F("when_community")).order_by("community__name"):
+            #         when_group__lt=F("when_community")).order_by("community__name") \
+            #         .select_related("community", "group"):
             #     data["group_declined"].append(group_community_request_json(r))
 
             # requests that were declined by us
             # data["community_declined"] = []
             # for r in GroupCommunityRequest.objects.filter(
             #         group=group, redeemed=True, approved=False,
-            #         when_group__gt=F("when_community")).order_by("community__name"):
+            #         when_group__gt=F("when_community")).order_by("community__name") \
+            #         .select_related("community", "group"):
             #     data["community_declined"].append(group_community_request_json(r))
         else:  # non-empty denied means an error.
             data["denied"] = denied
@@ -2640,7 +2644,7 @@ class GroupView(TemplateView):
 
         for res in view_resources:
             for grp in grp_qs:
-                if res.short_id == grp.short_id:
+                if res.short_id == grp.resource.short_id:
                     res.grantor = grp.grantor
                     res.date_granted = grp.start
                     group_resources.append(res)
