@@ -37,10 +37,10 @@ class GroupCommunityRequest(models.Model):
     # source
     community = models.ForeignKey(Community, on_delete=models.CASCADE, editable=False, null=False,
                                   related_name='invite_c2gcr')
-    # invitee
+    # invitee - this is set only if a group owner asks to join a community
     group_owner = models.ForeignKey(User, on_delete=models.CASCADE, editable=False, null=True, default=None,
                                     related_name='invite_go2gcr')
-    # inviter
+    # inviter - this is set only if a community owner invites a group to join
     community_owner = models.ForeignKey(User, on_delete=models.CASCADE, editable=False, null=True,
                                         related_name='invite_co2gcr')
 
