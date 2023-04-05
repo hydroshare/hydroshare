@@ -88,7 +88,8 @@ class CommunityGroupEmailNotification:
                 subject = "Group request to join a Community was approved"
                 message = f"""Dear {self.group_community_request.group_owner.first_name},
                 <p>Your request for your HydroShare Group <a href="{group_url}">
-                {self.group_community_request.group.name}</a> to join the HydroShare Community <a href="{community_url}">
+                {self.group_community_request.group.name}</a> to join the HydroShare
+                Community <a href="{community_url}">
                 {self.group_community_request.community.name}</a> was approved.</p>
                 <p>Thank you,</p>
                 <p>The HydroShare Team</p>
@@ -99,7 +100,7 @@ class CommunityGroupEmailNotification:
                 recipient_emails = [self.group_community_request.community_owner.email]
                 message = f"""Dear {self.group_community_request.community_owner.first_name},
                 <p>Your invitation for HydroShare Group <a href="{group_url}">
-                {self.group_community_request.group.name}</a> to join the HydroShare Community 
+                {self.group_community_request.group.name}</a> to join the HydroShare Community
                 <a href="{community_url}">{self.group_community_request.community.name}</a> was accepted.</p>
                 <p>Thank you,</p>
                 <p>The HydroShare Team</p>
@@ -131,7 +132,7 @@ class CommunityRequestEmailNotification:
 
             subject = "New HydroShare Community Create Request"
             message = f"""Dear HydroShare Admin,
-            <p>User {self.community_request.requested_by.first_name} is requesting creation of the following 
+            <p>User {self.community_request.requested_by.first_name} is requesting creation of the following
             HydroShare Community. Please click on the link below to review this request.
             <p><a href="{community_request_url}">
             {self.community_request.community_to_approve.name}</a></p>
