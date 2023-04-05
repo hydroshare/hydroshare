@@ -2644,7 +2644,7 @@ class GroupView(TemplateView):
 
         for res in view_resources:
             for grp in grp_qs:
-                if res.short_id == grp.short_id:
+                if res.short_id == grp.resource.short_id:
                     res.grantor = grp.grantor
                     res.date_granted = grp.start
                     group_resources.append(res)
