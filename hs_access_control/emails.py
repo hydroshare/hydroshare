@@ -88,7 +88,7 @@ class CommunityGroupEmailNotification:
                 subject = "Group request to join a Community was approved"
                 message = f"""Dear {self.group_community_request.group_owner.first_name},
                 <p>Your request for your HydroShare Group <a href="{group_url}">
-                {self.group_community_request.group.name}</a> to join the HydroShare 
+                {self.group_community_request.group.name}</a> to join the HydroShare
                 Community <a href="{community_url}">
                 {self.group_community_request.community.name}</a> was approved.</p>
                 <p>Thank you,</p>
