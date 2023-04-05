@@ -30,10 +30,13 @@ class CommunityGroupEmailNotification:
             # send emails to all group owners
             recipient_emails = [grp_owner.email for grp_owner in self.group_community_request.group.gaccess.owners]
             subject = "Invitation for your group to join Community"
-            message = f"""Dear Group owners,
-            <p>Please consider your group <a href="{group_url}">
-            {self.group_community_request.group.name}</a> to join the community <a href="{community_url}">
-            {self.group_community_request.community.name}</a>.</p>
+            message = f"""Dear Group Owners,
+            <p>Your HydroShare Group <a href="{group_url}">
+            {self.group_community_request.group.name}</a> has been invited to join the HydroShare
+            Community <a href="{community_url}">
+            {self.group_community_request.community.name}</a> To act on this request, please visit the landing
+            page for your Group in HydroShare, click on the Communities tab, and then select whether you want to
+            accept or reject this request.</p>
             <p>Thank you,</p>
             <p>The HydroShare Team</p>
             """
@@ -41,10 +44,12 @@ class CommunityGroupEmailNotification:
             # send emails to all community owners
             recipient_emails = [com_owner.email for com_owner in self.group_community_request.community.owners]
             subject = "Group wants join your Community"
-            message = f"""Dear Community owners,
-           <p>Our group <a href="{group_url}">{self.group_community_request.group.name}</a>
-            would like to join your community <a href="{community_url}">
-           {self.group_community_request.community.name}</a></p>.
+            message = f"""Dear Community Owners,
+           <p>The HydroShare Group <a href="{group_url}">{self.group_community_request.group.name}</a>
+            has requested to join your HydroShare Community <a href="{community_url}">
+           {self.group_community_request.community.name}</a>. To act on this request, please visit the landing
+           page for your Community in HydroShare, Click on the Groups tab, and then select whether you want to
+           accept or reject this request.</p>
            <p>Thank you,</p>
            <p>The HydroShare Team</p>
            """
@@ -55,8 +60,8 @@ class CommunityGroupEmailNotification:
                 recipient_emails = [self.group_community_request.group_owner.email]
                 subject = "Group request to join a Community was declined"
                 message = f"""Dear {self.group_community_request.group_owner.first_name},
-                <p>Sorry to inform that your request for group <a href="{group_url}">
-                {self.group_community_request.group.name}</a> to join the community
+                <p>Your request for HydroShare Group <a href="{group_url}">
+                {self.group_community_request.group.name}</a> to join HydroShare Community
                 <a href="{community_url}">{self.group_community_request.community.name}</a> was declined.</p>
                 <p>Thank you,</p>
                 <p>The HydroShare Team</p>
@@ -67,8 +72,8 @@ class CommunityGroupEmailNotification:
                 recipient_emails = [self.group_community_request.community_owner.email]
                 subject = "Group invitation join a Community was declined"
                 message = f"""Dear {self.group_community_request.community_owner.first_name},
-                <p>Sorry to inform that your invitation to group <a href="{group_url}">
-                {self.group_community_request.group.name}</a> to join the community
+                <p>Your invitation to HydroShare Group <a href="{group_url}">
+                {self.group_community_request.group.name}</a> to join the HydroShare Community
                 <a href="{community_url}">
                 {self.group_community_request.community.name}</a> was declined.</p>
                 <p>Thank you,</p>
@@ -82,8 +87,8 @@ class CommunityGroupEmailNotification:
                 recipient_emails = [self.group_community_request.group_owner.email]
                 subject = "Group request to join a Community was approved"
                 message = f"""Dear {self.group_community_request.group_owner.first_name},
-                <p>Glad to inform that request for your group <a href="{group_url}">
-                {self.group_community_request.group.name}</a> to join the community <a href="{community_url}">
+                <p>Your request for your HydroShare Group <a href="{group_url}">
+                {self.group_community_request.group.name}</a> to join the HydroShare Community <a href="{community_url}">
                 {self.group_community_request.community.name}</a> was approved.</p>
                 <p>Thank you,</p>
                 <p>The HydroShare Team</p>
@@ -93,9 +98,9 @@ class CommunityGroupEmailNotification:
                 subject = "Group invitation to join a Community was accepted"
                 recipient_emails = [self.group_community_request.community_owner.email]
                 message = f"""Dear {self.group_community_request.community_owner.first_name},
-                <p>Your invitation for group <a href="{group_url}">
-                {self.group_community_request.group.name}</a> to join the community <a href="{community_url}">
-                {self.group_community_request.community.name}</a> was accepted.</p>
+                <p>Your invitation for HydroShare Group <a href="{group_url}">
+                {self.group_community_request.group.name}</a> to join the HydroShare Community 
+                <a href="{community_url}">{self.group_community_request.community.name}</a> was accepted.</p>
                 <p>Thank you,</p>
                 <p>The HydroShare Team</p>
                 """
@@ -126,8 +131,8 @@ class CommunityRequestEmailNotification:
 
             subject = "New HydroShare Community Create Request"
             message = f"""Dear HydroShare Admin,
-            <p>User {self.community_request.requested_by.first_name} is requesting creation of the following community.
-            Please click on the link below to review this request.
+            <p>User {self.community_request.requested_by.first_name} is requesting creation of the following 
+            HydroShare Community. Please click on the link below to review this request.
             <p><a href="{community_request_url}">
             {self.community_request.community_to_approve.name}</a></p>
             <p>Thank you,</p>
@@ -147,7 +152,7 @@ class CommunityRequestEmailNotification:
             subject = "New HydroShare Community Request Resubmission"
             requested_by = self.community_request.requested_by.first_name
             message = f"""Dear HydroShare Admin,
-            <p>User {requested_by} has resubmitted a request to create the following community.
+            <p>User {requested_by} has resubmitted a request to create the following HydroShare Community.
             Please click on the link below to review this request.
             <p><a href="{community_request_url}">
             {self.community_request.community_to_approve.name}</a></p>
@@ -159,7 +164,7 @@ class CommunityRequestEmailNotification:
             recipient_emails = [self.community_request.requested_by.email]
             subject = "HydroShare Community Create Request Declined"
             message = f"""Dear {self.community_request.requested_by.first_name},
-            <p>Sorry to inform you that your request to create the community
+            <p>Your request to create the HydroShare Community
             <a href="{community_request_url}">
             {self.community_request.community_to_approve.name}</a> was not approved due to
             the reason stated below:</p>
@@ -174,7 +179,7 @@ class CommunityRequestEmailNotification:
             recipient_emails = [self.community_request.requested_by.email]
             subject = "HydroShare Community Create Request Approved"
             message = f"""Dear {self.community_request.requested_by.first_name},
-            <p>Glad to inform you that your request to create the community
+            <p>Your request to create the HydroShare Community
             <a href="{community_url}">
             {self.community_request.community_to_approve.name}</a> has been approved.</p>
             <p>Thank you,</p>
