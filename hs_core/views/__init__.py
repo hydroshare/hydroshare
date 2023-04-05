@@ -2607,23 +2607,23 @@ class GroupView(TemplateView):
                 data["available_to_join"].append(community_json(c))
 
             # list of all available communities
-            data["all_communities"] = []
-            for c in Community.objects.order_by("name"):
-                data["all_communities"].append(community_json(c))
+            # data["all_communities"] = []
+            # for c in Community.objects.order_by("name"):
+            #     data["all_communities"].append(community_json(c))
 
             # requests that were declined by others
-            data["group_declined"] = []
-            for r in GroupCommunityRequest.objects.filter(
-                    group=group, redeemed=True, approved=False,
-                    when_group__lt=F("when_community")).order_by("community__name"):
-                data["group_declined"].append(group_community_request_json(r))
+            # data["group_declined"] = []
+            # for r in GroupCommunityRequest.objects.filter(
+            #         group=group, redeemed=True, approved=False,
+            #         when_group__lt=F("when_community")).order_by("community__name"):
+            #     data["group_declined"].append(group_community_request_json(r))
 
             # requests that were declined by us
-            data["community_declined"] = []
-            for r in GroupCommunityRequest.objects.filter(
-                    group=group, redeemed=True, approved=False,
-                    when_group__gt=F("when_community")).order_by("community__name"):
-                data["community_declined"].append(group_community_request_json(r))
+            # data["community_declined"] = []
+            # for r in GroupCommunityRequest.objects.filter(
+            #         group=group, redeemed=True, approved=False,
+            #         when_group__gt=F("when_community")).order_by("community__name"):
+            #     data["community_declined"].append(group_community_request_json(r))
         else:  # non-empty denied means an error.
             data["denied"] = denied
             context["denied"] = denied

@@ -20,7 +20,7 @@ from hs_access_control.views import (
     community_json,
     group_community_request_json,
     group_json,
-    user_json,
+    # user_json,
     community_request_json,
 )
 
@@ -84,7 +84,7 @@ class CommunityView(TemplateView):
                 is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
                                                                       privilege=PrivilegeCodes.OWNER).exists() else 0
                 data["is_admin"] = is_admin
-                data["user"] = user_json(user)
+                # data["user"] = user_json(user)
                 context["is_admin"] = is_admin
 
                 # Groups that can be invited
@@ -110,9 +110,9 @@ class CommunityView(TemplateView):
                     data["groups"].append(group_json(g))
 
                 # list of all available communities
-                data["all_communities"] = []
-                for c in Community.objects.order_by("name"):
-                    data["all_communities"].append(community_json(c))
+                # data["all_communities"] = []
+                # for c in Community.objects.order_by("name"):
+                #     data["all_communities"].append(community_json(c))
 
                 data["pending"] = []
                 for r in GroupCommunityRequest.objects.filter(
@@ -120,27 +120,27 @@ class CommunityView(TemplateView):
                     data["pending"].append(group_community_request_json(r))
 
                 # requests that were declined by this commmunity
-                data["community_declined"] = []
-                for r in GroupCommunityRequest.objects.filter(
-                        community=community, redeemed=True, approved=False,
-                        when_group__lt=F("when_community")).order_by("group__name"):
-                    data["community_declined"].append(group_community_request_json(r))
+                # data["community_declined"] = []
+                # for r in GroupCommunityRequest.objects.filter(
+                #         community=community, redeemed=True, approved=False,
+                #         when_group__lt=F("when_community")).order_by("group__name"):
+                #     data["community_declined"].append(group_community_request_json(r))
 
                 # requests that were declined by the groups invited
-                data["group_declined"] = []
-                for r in GroupCommunityRequest.objects.filter(
-                        community=community, redeemed=True, approved=False,
-                        when_group__gt=F("when_community")).order_by("group__name"):
-                    data["group_declined"].append(group_community_request_json(r))
+                # data["group_declined"] = []
+                # for r in GroupCommunityRequest.objects.filter(
+                #         community=community, redeemed=True, approved=False,
+                #         when_group__gt=F("when_community")).order_by("group__name"):
+                #     data["group_declined"].append(group_community_request_json(r))
 
                 # group requests to be approved
-                data["approvals"] = []
-                for r in GroupCommunityRequest.objects.filter(
-                        community=Community.objects.get(id=int(cid)),
-                        group__gaccess__active=True,
-                        community_owner__isnull=True,
-                        redeemed=False).order_by("group__name"):
-                    data["approvals"].append(group_community_request_json(r))
+                # data["approvals"] = []
+                # for r in GroupCommunityRequest.objects.filter(
+                #         community=Community.objects.get(id=int(cid)),
+                #         group__gaccess__active=True,
+                #         community_owner__isnull=True,
+                #         redeemed=False).order_by("group__name"):
+                #     data["approvals"].append(group_community_request_json(r))
 
             # Both authenticated and anonymous users can make use of the data below
             context["community_resources"] = community_resources
@@ -148,7 +148,7 @@ class CommunityView(TemplateView):
             context["denied"] = denied
             context["message"] = message
             context["czo_community"] = "CZO National" in community.name
-            context["banner"] = community.banner
+            # context["banner"] = community.banner
 
             # community data is used both by the vue app and the template render
             context["community"] = community_json(community)

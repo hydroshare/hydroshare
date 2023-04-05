@@ -96,7 +96,6 @@ $(document).ready(function () {
       availableToInvite: null,
       members: null,
       community: null,
-      allCommunities: null,
       isAdmin: null,
       pending: null,
       targetGroup: null,
@@ -149,7 +148,6 @@ $(document).ready(function () {
       const appData = JSON.parse(document.getElementById('community-app-data').textContent);
 
       this.community = appData.community;
-      this.allCommunities = appData.all_communities;
       this.isAdmin = appData.is_admin;
       this.availableToInvite = appData.groups;
       this.members = appData.members;
