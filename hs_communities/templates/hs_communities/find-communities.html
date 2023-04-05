@@ -42,15 +42,29 @@
 
             {% for community in communities_list %}
                 <div class="group-container">
-                    <div class="group-thumbnail contribution">
+                    <div class="group-thumbnail contribution community">
+                        {% if community.banner and community.banner.url %}
+                        <div class="community-banner"
+                            style="background-image: url({{ community.banner.url }})">
+                        </div>
+                        {% else %}
+                        <div class="community-banner default"></div>
+                        {% endif %}
+                        
                         {% if community.picture and community.picture.url %}
                           {% thumbnail community.picture "x150" crop="center" as im %}
-                            <div class="group-preview-image" style="background-image: url({{ im.url }})"></div>
+                            <div class="group-image-wrapper group-image-wrapper-medium">
+                                <div class="group-image" style="background-image: url({{ im.url }})"></div>
+                            </div>
                           {% endthumbnail %}
                         {% else %}
-                            <div class="group-preview-image group-preview-image-default"
-                                  style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                            <div class="group-image-wrapper group-image-wrapper-medium">
+                              <div class="group-image group-preview-image-default"
+                                  style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                              </div>
+                            </div>
                         {% endif %}
+                        
                         <div class="group-caption">
                             <h3 class="group-name">
                                 <a href="/community/{{ community.id }}">{{ community.name }}</a>

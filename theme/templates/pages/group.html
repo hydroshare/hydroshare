@@ -105,7 +105,7 @@
         </div>
 
         {% if group.gaccess.description %}
-        <div class="group-description">
+        <div class="group-description has-space-top">
             {{ group.gaccess.description|linebreaks }}
         </div>
         {% endif %}
@@ -115,7 +115,7 @@
             <div>
                 {% if group.gaccess.active %}
                 <hr>
-                <h4><i>You are not a member of this group.</i></h4>
+                <h4><i>You are not a member of this group</i></h4>
                 {% if group.join_request_waiting_user_action %}
                 <div class="request-block">
                     <span class="flag-joined">You have been invited to join!</span>
@@ -140,8 +140,7 @@
                     </div>
                 </div>
                 {% elif group.join_request_waiting_owner_action %}
-                <h4 class="flag-joined"><span class="fa fa-send"></span> Request
-                    Sent</h4>
+                <span class="badge badge-success"><i class="fa fa-paper-plane"></i> Request Sent</span>
                 {% else %}
                 <form id="join-{{ group.id }}" method="post"
                     action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
