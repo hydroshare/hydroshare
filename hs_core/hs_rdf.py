@@ -83,6 +83,11 @@ class RDF_MetaData_Mixin(object):
         g = self.get_rdf_graph()
         return g.serialize(format='hydro-xml').decode()
 
+    def get_jsonld(self, pretty_print=True, include_format_elements=True):
+        """Generates ORI+RDF xml for this metadata"""
+        g = self.get_rdf_graph()
+        return g.serialize(format='json-ld-pretty').decode()
+
 
 class RDF_Term_MixIn(object):
     """

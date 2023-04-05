@@ -19,6 +19,15 @@
         <div class="col-xs-12">
             <h2 class="page-title">Sign In</h2>
         </div>
+        {% if user.is_authenticated %}
+          <p>Current user: {{ user.email }}</p>
+          <form action="{% url 'oidc_logout' %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="logout">
+          </form>
+        {% else %}
+          <a href="{% url 'oidc_authentication_init' %}">Login</a>
+        {% endif %}
         <div class="col-xs-12 col-sm-6">
             <form class="account-form space-bottom" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
                 {% csrf_token %}

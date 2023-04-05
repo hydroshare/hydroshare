@@ -55,6 +55,17 @@
             </li>
             <li>
                 <a data-toggle="tooltip" data-placement="left"
+                   title="A resource that links to files hosted in MinIO"
+                   data-modal-title="Create a External Resource"
+                   data-modal-input-title="Enter the title for the resource."
+                   data-value="ExternalResource">
+                    <img src="{% static 'img/resource-icons/collection48x48.png' %}"
+                         alt="External Resource Icon" class="resource-type-icon"/>
+                    <div class="resource-type-name">&nbsp;External</div>
+                </a>
+            </li>
+            <li>
+                <a data-toggle="tooltip" data-placement="left"
                    title="A shortcut (or reference) to an external web application that functions with HydroShare data resources."
                    data-modal-title="Create an App Connector"
                    data-modal-input-title="Enter the name for the new App Connector."
