@@ -365,14 +365,14 @@ div.group-add-photo {
   padding: 2px;
 }
 
-.community-banner {
+.group-thumbnail .community-banner {
   height: 12rem;
   background-size: cover;
   background-position: center center;
   margin-bottom: -4rem;
 }
 
-.community-banner {
+.group-thumbnail .community-banner {
   background-color: #093e54;
 }
 
