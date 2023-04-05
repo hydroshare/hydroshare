@@ -2562,7 +2562,7 @@ class GroupView(TemplateView):
                 return message
 
             u = User.objects.get(pk=self.request.user.id)
-            if not u in g.gaccess.members:
+            if u not in g.gaccess.members:
                 message = 'Only Group members can access the content of this private Group'
                 return message
 
@@ -2623,7 +2623,7 @@ class GroupView(TemplateView):
             for r in GroupCommunityRequest.objects.filter(
                     group=group, redeemed=True, approved=False,
                     when_group__gt=F("when_community")).order_by("community__name"):
-                data["community_declined"].append(r)
+                data["community_declined"].append(group_community_request_json(r))
         else:  # non-empty denied means an error.
             data["denied"] = denied
             context["denied"] = denied
