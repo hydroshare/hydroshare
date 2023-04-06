@@ -42,8 +42,7 @@ class Community(models.Model):
         """ This returns all member groups """
         if not self.active:
             return Group.objects.none()
-        return Group.objects.filter(gaccess__active=True,
-                                    g2gcp__community=self)
+        return Group.objects.filter(gaccess__active=True, g2gcp__community=self).select_related("gaccess")
 
     @property
     def member_users(self):
@@ -159,52 +158,28 @@ class Community(models.Model):
 
         return res
 
-    def resources(self, include_private=False):
+    def resources(self):
         """
-        prepare a list of everything that gets displayed about each resource in a community.
+        prepare a list of everything that gets displayed about each resource in a community - this includes
+        any public or published resource that is shared with groups in the community.
         """
-        # TODO: consider adding GenericRelation to expose reverse querying of metadata field.
-        # TODO: This would enable fast querying of first author.
-        # TODO: The side-effect of this is enabling deletion cascade, which shouldn't do anything.
 
-        # import here to avoid import loops
-        from hs_access_control.models.privilege import PrivilegeCodes
-
-        # TODO: propagated resources should be owned by a member of the publishing group,
-        #  and not just any group in the community!
-
-        # TODO: (Pabitra) This need be cleaned up and be used inside the public_resource() to remove duplicate code
         if not self.active:
             return BaseResource.objects.none()
         res = BaseResource\
             .objects\
             .filter(Q(r2grp__group__g2gcp__community=self,
                       r2grp__group__gaccess__active=True)
-                      # r2urp__privilege=PrivilegeCodes.OWNER,  # owned by member of community
-                      # r2urp__user__u2ugp__group__g2gcp__community=self)
                     | Q(r2crp__community=self)) \
+            .filter(Q(raccess__public=True)
+                    | Q(raccess__published=True)) \
             .annotate(group_name=F("r2grp__group__name"),
                       group_id=F("r2grp__group__id"),
                       public=F("raccess__public"),
                       published=F("raccess__published"),
                       discoverable=F("raccess__discoverable"))
 
-        if not include_private:
-            filter_by_res_visibility = Q(raccess__public=True) \
-                                       | Q(raccess__published=True) \
-                                       | Q(raccess__discoverable=True)
-            res.filter(filter_by_res_visibility)
-
-        res = res.only('title', 'resource_type', 'created', 'updated')
-        # # Can't do the following because the content model is polymorphic.
-        # # This is documented as only working for monomorphic content_type
-        # res = res.prefetch_related("content_object___title",
-        #                            "content_object___description",
-        #                            "content_object__creators")
-        # We want something that is not O(# resources + # content types).
-        # O(# content types) is sufficiently faster.
-        # The following strategy is documented here:
-        # https://blog.roseman.org.uk/2010/02/22/django-patterns-part-4-forwards-generic-relations/
+        res = res.only('title', 'resource_type', 'created', 'updated', 'short_id')
 
         # collect generics from resources
         generics = {}
@@ -224,12 +199,6 @@ class Community(models.Model):
         for item in res:
             setattr(item, '_content_object_cache',
                     relations[item.content_type.id][item.object_id])
-
-        # Detailed notes:
-        # This subverts chained lookup by pre-populating the content object cache
-        # that is populated by an object reference. It is very dependent upon the
-        # implementation of GenericRelation and its pre-fetching strategy.
-        # Thus it is quite brittle and vulnerable to major revisions of Generics.
 
         return res
 

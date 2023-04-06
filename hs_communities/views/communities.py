@@ -64,7 +64,7 @@ class CommunityView(TemplateView):
         if denied == "":
             user = self.request.user
             community = Community.objects.get(id=int(cid))
-            community_resources = community.resources(include_private=True).distinct()
+            community_resources = community.resources()
             grpfilter = self.request.GET.get("grp")
 
             # Only authenticated users can make use of the data below
@@ -110,7 +110,6 @@ class CommunityView(TemplateView):
             context["denied"] = denied
             context["message"] = message
             context["czo_community"] = "CZO National" in community.name
-            # context["banner"] = community.banner
 
             # community data is used both by the vue app and the template render
             context["community"] = community_json(community)
@@ -126,7 +125,7 @@ class CommunityView(TemplateView):
 
             # group members of community
             data["members"] = []
-            for g in Group.objects.filter(g2gcp__community=community).select_related("gaccess").order_by("name"):
+            for g in community.member_groups.order_by("name"):
                 data["members"].append(group_json(g))
 
             context['data'] = data
