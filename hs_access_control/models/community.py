@@ -388,13 +388,13 @@ class RequestCommunity(models.Model):
         self.community_to_approve.delete()
 
     def update_request(self, user, request):
-        """Updates data for a community that is waiting for approval"""
+        """Updates data for a community that is currently not active"""
         from ..forms import CommunityForm
 
-        # if not self.pending_approval:
-        #     raise ValidationError("Can't update this community request")
-
         community_to_update = self.community_to_approve
+        if community_to_update.active:
+            raise ValidationError("Can't update community that is in active status")
+
         cf = CommunityForm(data=request.POST)
         if cf.is_valid():
             frm_data = cf.cleaned_data
@@ -405,7 +405,7 @@ class RequestCommunity(models.Model):
             community_to_update.url = frm_data['url']
             community_to_update.save()
         else:
-            raise ValidationError("Community creation errors:{}.".format(cf.errors.as_json))
+            raise ValidationError("Community update errors:{}.".format(cf.errors.as_json))
 
         if 'picture' in request.FILES:
             # resize uploaded logo image
