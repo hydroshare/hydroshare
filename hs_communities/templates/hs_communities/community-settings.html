@@ -120,18 +120,17 @@
               <i class="fa fa-plus" aria-hidden="true"></i> Add Owner</button>
         </div>
         <div class="panel-body">
-          <fieldset>
-            {# Owners #}
-            <div v-for="owner in community.owners"
-              class="flex justify-space-between full-width align-center has-space-bottom">
-              <profile-link :user="owner" :key="owner.id" @load-card="loadOwnerCard($event)" :show-details="true">
-              </profile-link>
-              <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
-              <button type="button" data-toggle="modal" data-target="#remove-community-owner-modal"
-                class="btn btn-danger btn-sm" @click="targetOwner = owner"
-                :disabled="isRemovingOwner[owner.id] || community.owners.length === 1">Remove</button>
-            </div>
-          </fieldset>
+          {# Owners #}
+          <div v-for="owner in community.owners"
+            class="flex justify-space-between gap-1 align-center align-sm-start has-space-bottom flex-sm-column">
+            <profile-link :user="owner" :key="owner.id" @load-card="loadOwnerCard($event)"
+              :show-details="true" class="flex-shrink-0">
+            </profile-link>
+            <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
+            <button type="button" data-toggle="modal" data-target="#remove-community-owner-modal"
+              class="btn btn-danger btn-sm" @click="targetOwner = owner"
+              :disabled="isRemovingOwner[owner.id] || community.owners.length === 1">Remove</button>
+          </div>
         </div>
       </div>
     </div>

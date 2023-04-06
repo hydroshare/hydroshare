@@ -3,7 +3,7 @@ import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
-from django.db.models import F, Q
+from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
 from django.utils.html import escapejs, mark_safe
