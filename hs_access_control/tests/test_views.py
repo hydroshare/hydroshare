@@ -583,7 +583,6 @@ class TestViews(TransactionTestCase):
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
         self.assertTrue(is_equal_to_as_set(json_response['pending'], []))
-        self.assertTrue(is_equal_to_as_set(json_response['approved'], []))
         self.assertTrue(is_equal_to_as_set(json_response['declined'], []))
 
     def test_community_request_logged_in_admin(self):
@@ -595,7 +594,6 @@ class TestViews(TransactionTestCase):
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
         self.assertTrue(is_equal_to_as_set(json_response['pending'], []))
-        self.assertTrue(is_equal_to_as_set(json_response['approved'], []))
         self.assertTrue(is_equal_to_as_set(json_response['declined'], []))
 
     def test_community_request_entry(self):
@@ -656,12 +654,15 @@ class TestViews(TransactionTestCase):
         })
         self.assertEqual(result.status_code, 200)
         json_response = json.loads(result.content)
+        # the pending and declined requests in the response would be empty list as these requests are not
+        # originally created by the admin
         pending = [x['id'] for x in json_response['pending']]
-        self.assertFalse(is_equal_to_as_set(pending, []))
-        approved = [x['id'] for x in json_response['approved']]
-        self.assertTrue(is_equal_to_as_set(approved, []))
+        self.assertTrue(is_equal_to_as_set(pending, []))
         declined = [x['id'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
+        cr = RequestCommunity.objects.first()
+        self.assertTrue(cr.pending_approval)
+        self.assertFalse(cr.declined)
 
     def test_community_approve_request(self):
         """ approve a request for a regular user """
@@ -706,8 +707,6 @@ class TestViews(TransactionTestCase):
         self.assertEqual(cr.pending_approval, False)
         pending = [x['id'] for x in json_response['pending']]
         self.assertTrue(is_equal_to_as_set(pending, []))
-        approved = [x['id'] for x in json_response['approved']]
-        self.assertFalse(is_equal_to_as_set(approved, []))
         declined = [x['id'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
 
@@ -757,12 +756,15 @@ class TestViews(TransactionTestCase):
         self.assertEqual(Community.objects.filter(name='Fake news').count(), 1)
         new_community = Community.objects.filter(name='Fake news').first()
         self.assertFalse(new_community.active)
+        # the pending and declined requests in the response would be empty list as these requests are not
+        # originally created by the admin
         pending = [x['id'] for x in json_response['pending']]
         self.assertTrue(is_equal_to_as_set(pending, []))
-        approved = [x['id'] for x in json_response['approved']]
-        self.assertTrue(is_equal_to_as_set(approved, []))
         declined = [x['id'] for x in json_response['declined']]
-        self.assertFalse(is_equal_to_as_set(declined, []))
+        self.assertTrue(is_equal_to_as_set(declined, []))
+        cr = RequestCommunity.objects.first()
+        self.assertTrue(cr.declined)
+        self.assertFalse(cr.pending_approval)
 
     def test_community_delete_request(self):
         """ remove a request from a regular user """
@@ -800,7 +802,5 @@ class TestViews(TransactionTestCase):
 
         pending = [x['id'] for x in json_response['pending']]
         self.assertTrue(is_equal_to_as_set(pending, []))
-        approved = [x['id'] for x in json_response['approved']]
-        self.assertTrue(is_equal_to_as_set(approved, []))
         declined = [x['id'] for x in json_response['declined']]
         self.assertTrue(is_equal_to_as_set(declined, []))
