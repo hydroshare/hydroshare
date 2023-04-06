@@ -65,14 +65,12 @@ class CommunityView(TemplateView):
             user = self.request.user
             community = Community.objects.get(id=int(cid))
             community_resources = community.resources()
-            grpfilter = self.request.GET.get("grp")
 
             # Only authenticated users can make use of the data below
             if user.is_authenticated:
                 is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
                                                                       privilege=PrivilegeCodes.OWNER).exists() else 0
                 data["is_admin"] = is_admin
-                # data["user"] = user_json(user)
                 context["is_admin"] = is_admin
 
                 # Groups that can be invited
@@ -104,17 +102,14 @@ class CommunityView(TemplateView):
                         .order_by("group__name"):
                     data["pending"].append(group_community_request_json(r))
 
-            # generate community resources ids by group - this is used for filtering
-            # out duplicate resources in community resources listing due to same resources being shared with
-            # multiple groups of the community
+            # generate community resources ids by group - this is used for filtering resource table by group
             community_resources_by_group = {}
             for res in community_resources:
                 community_resources_by_group.setdefault(res.group_id, []).append(res.short_id)
 
             # Both authenticated and anonymous users can make use of the data below
-            context["community_resources"] = community_resources
-            context["community_resources_by_group"] = community_resources_by_group
-            context["grpfilter"] = grpfilter
+            context["community_resources"] = community_resources.order_by("short_id").distinct("short_id")
+            data["community_resources_by_group"] = community_resources_by_group
             context["denied"] = denied
             context["message"] = message
             context["czo_community"] = "CZO National" in community.name
@@ -122,14 +117,6 @@ class CommunityView(TemplateView):
             # community data is used both by the vue app and the template render
             context["community"] = community_json(community)
             data["community"] = community_json(community)
-
-            # groups that have shared resources with the community
-            raw_groups = community.groups_with_public_resources()
-            shared_by_groups = []
-            for g in raw_groups:
-                res_count = len([r for r in community_resources if r.group_name == g.name])
-                shared_by_groups.append({"id": str(g.id), "name": str(g.name), "res_count": str(res_count)})
-            context["shared_by_groups"] = shared_by_groups
 
             # group members of community
             data["members"] = []

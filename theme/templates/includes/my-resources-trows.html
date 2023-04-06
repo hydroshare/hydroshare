@@ -1,6 +1,6 @@
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% for res in collection %}
-<tr class="data-row">
+<tr class="data-row" v-show="isVisible('{{ res.short_id }}')">
     {# Selection controls #}
     <td  data-col="actions">
         <input class="row-selector" type="checkbox">

@@ -4,7 +4,7 @@ $(document).ready(function () {
     delimiters: ['${', '}'],
     data: {
       filterTo: [],
-      // groupIds: [],
+      resourcesByGroup: {},
       availableToInvite: null,
       members: null,
       community: null,
@@ -62,31 +62,15 @@ $(document).ready(function () {
       this.community = appData.community;
       this.isAdmin = appData.is_admin;
       this.availableToInvite = appData.groups;
-      this.members = appData.members;
+      this.members = appData.members.sort((a, b) => a < b ? -1 : 1);
       this.pending = appData.pending;
+      this.resourcesByGroup = appData.community_resources_by_group;
     },
     mounted() {
       // Styling and placeholder for user auto-complete
       $("input[name='user-autocomplete']")
         .attr("placeholder", "Search by name or username")
         .addClass("form-control");
-
-      // TODO: do this with vue instance
-
-      // Initialize DataTables filter data
-      // const groupIds = {};
-
-      // $('#groups-list li').each(function () {
-      //   const groupId = parseInt($(this).attr('id'));
-      //   groupIds[$(this).text()] = groupId;
-      // });
-
-      // this.$data.groupIds = groupIds;
-
-      // const filterGroup = $('#filter-querystring').text();
-      // if (filterGroup && this.$data.groupIds[filterGroup]) {
-      //   this.$data.filterTo.push(this.$data.groupIds[filterGroup])
-      // }
     },
     methods: {
       loadOwnerCard(data) {
@@ -97,20 +81,22 @@ $(document).ready(function () {
         this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
         this.cardPosition.top = el.position().top + 30;
       },
-      isVisible(groupId) {
-        if (this.$data.filterTo.length === 0) {  // If no selections show all
-          return true;
-        } else {  // Display row if Group ID found in the filterTo Array
-          return this.$data.filterTo.indexOf(groupId) > -1;
+      isVisible(resourceId) {
+        if (!this.filterTo.length) {
+          return true;  // If no selections show all
         }
+
+        return this.filterTo.some((groupId) => {
+          return this.resourcesByGroup[groupId]?.includes(resourceId);
+        });
       },
       updateContributors(groupId) {
-        const loc = this.$data.filterTo.indexOf(groupId);
+        const index = this.filterTo.indexOf(groupId);
 
-        if (loc < 0) {
-          this.$data.filterTo.push(groupId)
+        if (index < 0) {
+          this.filterTo.push(groupId)
         } else {
-          this.$data.filterTo.splice(loc, 1);
+          this.filterTo.splice(index, 1);
         }
       },
       removeGroup: async function (id) {

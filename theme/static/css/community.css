@@ -108,3 +108,7 @@
 #item-selectors td:nth-child(2) {
   min-width: 20rem;
 }
+
+#filter-shared-by .no-items-found {
+  margin: 1rem;
+}
