@@ -725,26 +725,16 @@ class CommunityRequestView(View):
         return err_msg, req_params
 
     def get_community_requests(self, user, context=None):
+        """Returns a list of declined and pending community requests originally created by the user"""
         if context is None:
             context = {}
 
-        # context['approved'] = []
         context['declined'] = []
         context['pending'] = []
 
-        # privileged (super user) user sees all
-
-        # approved requests
-        # approved_qs = RequestCommunity.objects.filter(pending_approval=False, declined=False, requested_by=user)
-
-        # declined requests
+        # collect declined requests and pending requests
         declined_qs = RequestCommunity.objects.filter(declined=True, cancelled=False, requested_by=user)
-
-        # pending requests
         pending_qs = RequestCommunity.objects.filter(pending_approval=True, requested_by=user)
-
-        # for a_cr in approved_qs:
-        #     context['approved'].append(community_request_json(a_cr))
 
         for d_cr in declined_qs:
             context['declined'].append(community_request_json(d_cr))
@@ -755,8 +745,8 @@ class CommunityRequestView(View):
         return JsonResponse(context)
 
     def get(self, *args, **kwargs):
-        """gets a list of community requests created by given user. If the use is an admin, all community requests
-        are returned
+        """Gets a list of pending/declined community requests where the requests were originally
+        created by the user making this web request.
         """
         user = self.request.user
         denied = self.hydroshare_denied()
