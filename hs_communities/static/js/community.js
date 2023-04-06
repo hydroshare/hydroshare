@@ -152,7 +152,6 @@ $(document).ready(function () {
       this.availableToInvite = appData.groups;
       this.members = appData.members;
       this.pending = appData.pending;
-      console.log(this.members)
     },
     mounted() {
       // Styling and placeholder for user auto-complete
