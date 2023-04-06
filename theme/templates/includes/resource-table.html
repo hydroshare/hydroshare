@@ -47,6 +47,7 @@
         </div>
       </div>
 
+      {% if has_selection_control_actions %}
       <div class="col-sm-4 col-xs-12 pull-left">
         <div id="resource-actions-container" class="noselect">
           <span data-toggle="tooltip" data-placement="bottom" title="Label">
@@ -80,6 +81,7 @@
           </span>
         </div>
       </div>
+      {% endif %}
     </div>
     <table id="item-selectors" class="table-hover table-striped resource-custom-table my-resources-table">
       <thead>

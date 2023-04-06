@@ -4,7 +4,7 @@ $(document).ready(function () {
     delimiters: ['${', '}'],
     data: {
       filterTo: [],
-      groupIds: [],
+      // groupIds: [],
       availableToInvite: null,
       members: null,
       community: null,
@@ -71,20 +71,22 @@ $(document).ready(function () {
         .attr("placeholder", "Search by name or username")
         .addClass("form-control");
 
+      // TODO: do this with vue instance
+
       // Initialize DataTables filter data
-      const groupIds = {};
+      // const groupIds = {};
 
-      $('#groups-list li').each(function () {
-        const groupId = parseInt($(this).attr('id'));
-        groupIds[$(this).text()] = groupId;
-      });
+      // $('#groups-list li').each(function () {
+      //   const groupId = parseInt($(this).attr('id'));
+      //   groupIds[$(this).text()] = groupId;
+      // });
 
-      this.$data.groupIds = groupIds;
+      // this.$data.groupIds = groupIds;
 
-      const filterGroup = $('#filter-querystring').text();
-      if (filterGroup && this.$data.groupIds[filterGroup]) {
-        this.$data.filterTo.push(this.$data.groupIds[filterGroup])
-      }
+      // const filterGroup = $('#filter-querystring').text();
+      // if (filterGroup && this.$data.groupIds[filterGroup]) {
+      //   this.$data.filterTo.push(this.$data.groupIds[filterGroup])
+      // }
     },
     methods: {
       loadOwnerCard(data) {
