@@ -1,0 +1,40 @@
+<div class="col-lg-2" id="facets">
+  <div class="panel panel-default">
+      <div class="panel-heading">
+          <h4 class="panel-title">
+              <span class="glyphicon glyphicon glyphicon-user"></span>
+              &nbsp;Shared by
+          </h4>
+      </div>
+      <div id="filter-shared-by" class="facet-list">
+          <div class="panel-body">
+              <div class="list-group">
+                  <div id="groups-list">
+                      <!-- this id=groups-list is used to construct the VueJS group name to id map -->
+                      {% if not shared_by_groups %}
+                      <div style="margin: 1rem 0;">
+                          <i class="list-group-item no-items-found">No resources have been
+                              shared with this community yet.</i>
+                      </div>
+                      {% else %}
+                      <ul class="list-group inputs-group">
+                          {% for g in shared_by_groups %}
+                          <li class="list-group-item" id="{{ g.id }}">
+                              <span data-facet="none" class="badge">{{ g.res_count }}</span>
+                              <label class="checkbox noselect"><input id="{{ g.id }}"
+                                      type="checkbox" data-facet="none" value="Click"
+                                      @click="updateContributors({{ g.id }})"> {{ g.name }}
+                                  {% if grpfilter == g.name %}
+                                  checked
+                                  {% endif %}
+                              </label>
+                          </li>
+                          {% endfor %}
+                      </ul>
+                      {% endif %}
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
