@@ -3,7 +3,7 @@
 {% block meta_title %}{{ community.name }}{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/community.css' %}">
-<link href="{% static 'css/collaborate.css' %}" rel="stylesheet"/>
+<link href="{% static 'css/collaborate.css' %}" rel="stylesheet" />
 <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
@@ -18,299 +18,183 @@
 {% include "hs_access_control/join-communities.html" %}
 
 {% if community.banner %}
-<div class="community-banner has-space-bottom-2x"
-  style="background-image: url({{ community.banner }})">
+<div class="community-banner has-space-bottom-2x" style="background-image: url({{ community.banner }})">
 </div>
 {% elif czo_community %}
 <div class="community-banner czo-banner has-space-bottom-2x"
-  style="background-image: url({% static 'img/czo-logo-wide.png' %})">
+    style="background-image: url({% static 'img/czo-logo-wide.png' %})">
 </div>
 {% endif %}
 
 <div id="community-app" class="container">
-  <div v-if="community" class="container full-width" style="padding: 0;">
-      <div class="container">
-          {% if is_admin %}
-          {% include 'hs_communities/community-settings-add-owner.html' %}
-          {% endif %}
+    <div v-if="community" class="container full-width" style="padding: 0;">
+        <div class="container">
+            {% if is_admin %}
+            {% include 'hs_communities/community-settings-add-owner.html' %}
+            {% endif %}
 
-          <div class="flex flex-sm-column gap-1">
-              <div class="has-space-right">
-                  <div v-if="community.logo" class="group-image-wrapper medium">
-                      <div class="group-image"
-                        style="background-image: url({{ community.logo }})"></div>
-                  </div>
-                  <div v-else class="group-image-wrapper medium">
-                      <div class="group-image group-preview-image-default"
-                          style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
-                      </div>
-                  </div>
-              </div>
+            <div class="flex flex-sm-column gap-1">
+                <div class="has-space-right">
+                    <div v-if="community.logo" class="group-image-wrapper medium">
+                        <div class="group-image" style="background-image: url({{ community.logo }})"></div>
+                    </div>
+                    <div v-else class="group-image-wrapper medium">
+                        <div class="group-image group-preview-image-default"
+                            style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                        </div>
+                    </div>
+                </div>
 
-              <div class="flex-grow-1">
-                  <div class="community-title-container flex justify-space-between align-flex-start">
-                      <h2 class="community-title is-marginless">{{ community.name }}</h2>
-                  </div>
+                <div class="flex-grow-1">
+                    <div class="community-title-container flex justify-space-between align-flex-start">
+                        <h2 class="community-title is-marginless">{{ community.name }}</h2>
+                    </div>
 
-                  <h4 v-if="community.purpose" class="text-muted">{{ community.purpose|linebreaks }}</h4>
+                    <h4 v-if="community.purpose" class="text-muted">{{ community.purpose|linebreaks }}</h4>
 
-                  <!-- Community Info -->
-                  <div v-if="community.email || community.url" class="community-info">
-                      <div v-if="community.url" class="text-muted">
-                          <i class="fa fa-link"></i> <a :href="community.url" target="_blank">{{ community.url }}</a>
-                      </div>
+                    <!-- Community Info -->
+                    <div v-if="community.email || community.url" class="community-info">
+                        <div v-if="community.url" class="text-muted">
+                            <i class="fa fa-link"></i> <a :href="community.url" target="_blank">{{ community.url }}</a>
+                        </div>
 
-                      <div v-if="community.email" class="text-muted">
-                          <i class="fa fa-envelope-o"></i> <a :href="'mailto:' + community.email">{{ community.email }}</a>
-                      </div>
-                  </div>
-              </div>
-          </div>
+                        <div v-if="community.email" class="text-muted">
+                            <i class="fa fa-envelope-o"></i> <a :href="'mailto:' + community.email">{{ community.email
+                                }}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-          <div v-if="community.description" class="community-description has-space-top">
-              {{ community.description|linebreaks }}
-          </div>
-      </div>
+            <div v-if="community.description" class="community-description has-space-top">
+                {{ community.description|linebreaks }}
+            </div>
+        </div>
 
-      <div class="container">
-          <div class="full-width-tabs-container" id="community-tabs">
-              <!-- Nav tabs -->
-              <ul class="nav nav-tabs full-width-tabs" role="tablist">
-                  <li role="presentation" class="active">
-                      <a href="#resources" aria-controls="public" role="tab" data-toggle="tab">
-                          <i class="glyphicon glyphicon-file"></i>&nbsp;RESOURCES</a>
-                  </li>
-                  <li role="presentation">
-                      <a href="#groups-tab" aria-controls="groups-tab" role="tab" data-toggle="tab">
-                          <i class="fa fa-users"></i>&nbsp;Groups</a>
-                  </li>
-                  <li v-if="isAdmin" role="presentation">
-                      <a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">
-                          <i class="fa fa-lock"></i>&nbsp;Owner Settings</a>
-                  </li>
-              </ul>
+        <div class="container">
+            <div class="full-width-tabs-container" id="community-tabs">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs full-width-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#resources" aria-controls="public" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-file"></i>&nbsp;RESOURCES</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#groups-tab" aria-controls="groups-tab" role="tab" data-toggle="tab">
+                            <i class="fa fa-users"></i>&nbsp;Groups</a>
+                    </li>
+                    <li v-if="isAdmin" role="presentation">
+                        <a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">
+                            <i class="fa fa-lock"></i>&nbsp;Owner Settings</a>
+                    </li>
+                </ul>
 
-              <!-- Tab panes -->
-              <div class="tab-content" style="size: 800px">
-                  <!-- PUBLIC -->
-                  <div role="tabpanel" class="tab-pane fade in active" id="resources">
-                      <div class="row">
-                          <div class="col-lg-2" id="facets">
-                              <div class="panel panel-default">
-                                  <div class="panel-heading">
-                                      <h4 class="panel-title">
-                                          <span class="glyphicon glyphicon glyphicon-user"></span>
-                                          &nbsp;Shared by
-                                      </h4>
-                                  </div>
-                                  <div id="filter-shared-by" class="facet-list">
-                                      <div class="panel-body">
-                                          <div class="list-group">
-                                              <div id="groups-list">
-                                                  <!-- this id=groups-list is used to construct the VueJS group name to id map -->
-                                                  {% if not shared_by_groups %}
-                                                  <div style="margin: 1rem 0;">
-                                                      <i class="list-group-item no-items-found">No resources have been
-                                                          shared with this community yet.</i>
-                                                  </div>
-                                                  {% else %}
-                                                  <ul class="list-group inputs-group">
-                                                      {% for g in shared_by_groups %}
-                                                      <li class="list-group-item" id="{{ g.id }}">
-                                                          <span data-facet="none" class="badge">{{ g.res_count }}</span>
-                                                          <label class="checkbox noselect"><input id="{{ g.id }}"
-                                                                  type="checkbox" data-facet="none" value="Click"
-                                                                  @click="updateContributors({{ g.id }})"> {{ g.name }}
-                                                              {% if grpfilter == g.name %}
-                                                              checked
-                                                              {% endif %}
-                                                          </label>
-                                                      </li>
-                                                      {% endfor %}
-                                                  </ul>
-                                                  {% endif %}
-                                              </div>
-                                          </div>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                          <div class="col-lg-10" id="items">
-                              <div class="row">
-                                  <div class="col-sm-12">
-                                      <div id="search-container" class="input-group">
-                                          <span class="glyphicon glyphicon-search search-icon"></span>
-                                          <input id="resource-search-input" type="text" class="form-control"
-                                              placeholder="Search" size="600px" />
-                                          <span id="btn-clear-search-input"
-                                              class="glyphicon glyphicon-remove-sign btn-clear-search"
-                                              style="right: 10px"></span>
-
-                                          <div class="input-group-btn">
-                                              <div class="btn-group" role="group">
-                                                  <div class="dropdown dropdown-lg">
-                                                      <button type="button" class="btn btn-default dropdown-toggle"
-                                                              data-toggle="dropdown"
-                                                              aria-expanded="false"><span class="caret"></span></button>
-      
-                                                      <div class="shadow-md dropdown-menu dropdown-menu-left" role="menu">
-                                                          <form class="form-horizontal" role="form">
-                                                              <div class="form-group">
-                                                                  <label for="filter">Type</label>
-                                                                  <select id="input-resource-type"
-                                                                          class="form-control pull-left">
-                                                                      <option value="" selected>All</option>
-                                                                      <option value="collection resource">Collection
-                                                                      </option>
-                                                                      <option value="composite resource">Resource
-                                                                      </option>
-                                                                      <option value="web app resource">App Connector</option>
-                                                                  </select>
-                                                              </div>
-                                                              <div class="form-group">
-                                                                  <label for="contain">Author</label>
-                                                                  <input id="input-author" class="form-control"
-                                                                          type="text"/>
-                                                                  <span id="btn-clear-author-input"
-                                                                          class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                                              </div>
-                                                              <div class="form-group">
-                                                                  <label for="contain">Subject</label>
-                                                                  <input id="input-subject" class="form-control"
-                                                                          type="text"/>
-                                                                  <span id="btn-clear-subject-input"
-                                                                          class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                                              </div>
-                                                          </form>
-                                                      </div>
-                                                  </div>
-                                              </div>
-                                          </div>
-                                      </div>
-                                  </div>
-                              </div>
-                              <!-- /input-group -->
-                              <!-- TODO: turn this table into a reusable template that takes in a list of resources -->
-                              <table id="item-selectors" class="table-hover table-striped resource-custom-table">
-                                  <thead>
-                                      <tr>
-                                          <th><input class="all-rows-selector" type="checkbox"></th>
-                                          <th>Type</th>
-                                          <th>Title</th>
-                                          <th>First Author</th>
-                                          <th>Date Created</th>
-                                          <th>Last modified</th>
-                                          <th>Subject</th>
-
-                                          {# Needed for datatable to function properly #}
-                                          <th>Authors</th>
-                                          <th>Permission Level</th>
-                                          <th>Labels</th>
-                                          <th>Favorite</th>
-                                          <th>Last modified</th>
-                                          <th>Sharing Status</th>
-                                          <th>Date Created</th>
-                                      </tr>
-                                  </thead>
-                                  <div id="filter-querystring" style="display: none;">{{ grpfilter|default_if_none:'' }}
-                                  </div>
-                                  <tbody>
-                                      {% for res in community_resources %}
-                                      <tr class="data-row" v-show="isVisible({{ res.group_id }})">
-                                          {# Selection controls #}
-                                          <td>
-                                              <input class="row-selector" type="checkbox">
-                                              <span data-form-id="form-favorite-{{ res.resource_id }}"
-                                                  data-form-type="toggle-favorite"
-                                                  class="glyphicon glyphicon-star btn-inline-favorite"></span>
-
-                                              <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
-                                                  action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
-                                                  method="post">
-                                                  {% csrf_token %}
-                                                  <input type="hidden" name="action" value="CREATE">
-                                                  <input type="hidden" name="label_type" value="FAVORITE">
-                                              </form>
-                                              <span class="glyphicon glyphicon-tag btn-inline-label"
-                                                  data-toggle="dropdown" aria-expanded="false"></span>
-
-                                              <div class="dropdown-menu inline-dropdown" role="menu">
-                                                  <div class="panel-body" role="form">
-                                                      <ul data-resource-id="{{ res.resource_id }}"
-                                                          class="list-group list-labels">
-                                                      </ul>
-                                                  </div>
-                                              </div>
-                                          </td>
-                                          {# Type #}
-                                          <td data-col="resource-type">
-                                              {% include "includes/res_type_col_community.html" with resource=res %}
-                                          </td>
-                                          {# Title #}
-                                          <td>
-                                              <strong>
-                                                  <a href="/{{ res.slug }}/">{{ res.title }}</a>
-                                              </strong>
-                                          </td>
-                                          {# First Author #}
-                                          {% if res.first_creator.relative_uri and res.first_creator.is_active_user %}
-                                          <td>
-                                              <a href="{{ res.first_creator.relative_uri }}">
-                                                {{ res.first_creator.name }}</a>
-                                          </td>
-                                          {% else %}
-                                          <td>{{ res.first_creator.name }}</td>
-                                          {% endif %}
-                                          {# Date Created #}
-                                          <td>{{ res.created|date:"d M Y" }} {{ res.created|time }}</td>
-                                          {# Last Modified #}
-                                          <td>{{ res.updated|date:"d M Y" }} {{ res.updated|time }}</td>
-                                          <td>
-                                              {% for kw in res.metadata.subjects.all %}
-                                                  {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
-                                              {% endfor %}
-                                          </td>
-                                          <td>
-                                              {% for creator in res.metadata.creators.all %}
-                                                  {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                  {% if creator.relative_uri and creator.is_active_user %}
-                                                      <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
-                                                  {% else %}
-                                                      <span>{{ creator.name }}</span>
-                                                  {% endif %}
-                                              {% endfor %}
-                                          </td>
-                                          <td><!-- Needed for datatable to function properly --></td>
-                                          <td><!-- Needed for datatable to function properly --></td>
-                                          <td><!-- Needed for datatable to function properly --></td>
-                                          <td>{{ res.updated|date:"U" }}</td>
-                                          <td><!-- Needed for datatable to function properly --></td>
-                                          <td>{{ res.created|date:"U" }}</td>
-                                          <td><!-- Needed for datatable to function properly --></td>
-                                      </tr>
-                                      {% endfor %}
-                                  </tbody>
-                              </table>
-                              {% include "includes/legend.html" %}
-                          </div>
-                      </div>
-                  </div>
-                  <div role="tabpanel" class="tab-pane fade in" id="groups-tab">
-                    {% include 'hs_communities/community-groups.html' %}
-                  </div>
-                  <div v-if="isAdmin" role="tabpanel" class="tab-pane fade in" id="settings">
-                      {% include 'hs_communities/community-settings.html' %}
-                  </div>
-              </div>
-          </div>
-      </div>
-  </div>
+                <!-- Tab panes -->
+                <div class="tab-content" style="size: 800px">
+                    <!-- PUBLIC -->
+                    <div role="tabpanel" class="tab-pane fade in active" id="resources">
+                        {% include "includes/resource-table.html" with rows_template='includes/my-resources-trows.html' facets_template='includes/community-resources-facets.html' collection=community_resources %}
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade in" id="groups-tab">
+                        {% include 'hs_communities/community-groups.html' %}
+                    </div>
+                    <div v-if="isAdmin" role="tabpanel" class="tab-pane fade in" id="settings">
+                        {% include 'hs_communities/community-settings.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock main %}
 
 {% block extra_js %}
 {{ block.super }}
-<script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/community.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/hs_resource_table.js' %}"></script>
+<script type="text/javascript">
+var resourceTable;
+
+var ACTIONS_COL = 0;
+var RESOURCE_TYPE_COL = 1;
+var TITLE_COL = 2;
+var OWNER_COL = 3;
+var DATE_CREATED_COL = 4;
+var LAST_MODIFIED_COL = 5;
+var SUBJECT_COL = 6;
+var AUTHORS_COL = 7;
+var PERM_LEVEL_COL = 8;
+var LABELS_COL = 9;
+var FAVORITE_COL = 10;
+var LAST_MODIF_SORT_COL = 11;
+var SHARING_STATUS_COL = 12;
+var DATE_CREATED_SORT_COL = 13;
+var ACCESS_GRANTOR_COL = 14;
+
+var colDefs = [
+    {
+    "targets": [ACTIONS_COL],     // Row selector and controls
+    "visible": false,
+    },
+    {
+    "targets": [RESOURCE_TYPE_COL],     // Resource type
+    "width": "100px"
+    },
+    {
+    "targets": [ACTIONS_COL],     // Actions
+    "orderable": false,
+    "searchable": false,
+    "width": "70px"
+    },
+    {
+    "targets": [LAST_MODIFIED_COL],     // Last modified
+    "iDataSort": LAST_MODIF_SORT_COL
+    },
+    {
+    "targets": [DATE_CREATED_COL],     // Created
+    "iDataSort": DATE_CREATED_SORT_COL
+    },
+    {
+    "targets": [SUBJECT_COL],     // Subject
+    "visible": false,
+    "searchable": true
+    },
+    {
+    "targets": [AUTHORS_COL],     // Authors
+    "visible": false,
+    "searchable": true
+    },
+    {
+    "targets": [PERM_LEVEL_COL],     // Permission level
+    "visible": false,
+    "searchable": true
+    },
+    {
+    "targets": [LABELS_COL],     // Labels
+    "visible": false,
+    "searchable": true
+    },
+    {
+    "targets": [FAVORITE_COL],     // Favorite
+    "visible": false,
+    "searchable": true
+    },
+    {
+    "targets": [LAST_MODIF_SORT_COL],     // Last modified (for sorting)
+    "visible": false,
+    "searchable": true
+    },
+    {
+    "targets": [DATE_CREATED_SORT_COL],     // Last modified (for sorting)
+    "visible": false,
+    "searchable": true
+    },
+    {
+    "targets": [SHARING_STATUS_COL],     // Sharing status
+    "visible": false,
+    "searchable": false
+    },
+];
+
+</script>
 {% endblock %}
+

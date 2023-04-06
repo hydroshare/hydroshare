@@ -1,98 +1,10 @@
-var resourceTable;
-
-var ACTIONS_COL = 0;
-var RESOURCE_TYPE_COL = 1;
-var TITLE_COL = 2;
-var OWNER_COL = 3;
-var DATE_CREATED_COL = 4;
-var LAST_MODIFIED_COL = 5;
-var SUBJECT_COL = 6;
-var AUTHORS_COL = 7;
-var PERM_LEVEL_COL = 8;
-var LABELS_COL = 9;
-var FAVORITE_COL = 10;
-var LAST_MODIF_SORT_COL = 11;
-var SHARING_STATUS_COL = 12;
-var DATE_CREATED_SORT_COL = 13;
-var ACCESS_GRANTOR_COL = 14;
-
-var colDefs = [
-    {
-        "targets": [ACTIONS_COL],     // Row selector and controls
-        "visible": false,
-    },
-    {
-        "targets": [RESOURCE_TYPE_COL],     // Resource type
-        "width": "100px"
-    },
-    {
-        "targets": [ACTIONS_COL],     // Actions
-        "orderable": false,
-        "searchable": false,
-        "width": "70px"
-    },
-    {
-        "targets": [LAST_MODIFIED_COL],     // Last modified
-        "iDataSort": LAST_MODIF_SORT_COL
-    },
-    {
-        "targets": [DATE_CREATED_COL],     // Created
-        "iDataSort": DATE_CREATED_SORT_COL
-    },
-    {
-        "targets": [SUBJECT_COL],     // Subject
-        "visible": false,
-        "searchable": true
-    },
-    {
-        "targets": [AUTHORS_COL],     // Authors
-        "visible": false,
-        "searchable": true
-    },
-    {
-        "targets": [PERM_LEVEL_COL],     // Permission level
-        "visible": false,
-        "searchable": true
-    },
-    {
-        "targets": [LABELS_COL],     // Labels
-        "visible": false,
-        "searchable": true
-    },
-    {
-        "targets": [FAVORITE_COL],     // Favorite
-        "visible": false,
-        "searchable": true
-    },
-    {
-        "targets": [LAST_MODIF_SORT_COL],     // Last modified (for sorting)
-        "visible": false,
-        "searchable": true
-    },
-    {
-        "targets": [DATE_CREATED_SORT_COL],     // Last modified (for sorting)
-        "visible": false,
-        "searchable": true
-    },
-    {
-        "targets": [SHARING_STATUS_COL],     // Sharing status
-        "visible": false,
-        "searchable": false
-    },
-    {
-        "targets": [ACCESS_GRANTOR_COL],     // Access Grantor
-        "visible": false,
-        "searchable": true
-    }
-];
-
 $(document).ready(function () {
   const CommunityApp = new Vue({
     el: "#community-app",
     delimiters: ['${', '}'],
     data: {
       filterTo: [],
-      groupIds: [],
+      resourcesByGroup: {},
       availableToInvite: null,
       members: null,
       community: null,
@@ -150,30 +62,15 @@ $(document).ready(function () {
       this.community = appData.community;
       this.isAdmin = appData.is_admin;
       this.availableToInvite = appData.groups;
-      this.members = appData.members;
+      this.members = appData.members.sort((a, b) => a < b ? -1 : 1);
       this.pending = appData.pending;
-      console.log(this.members)
+      this.resourcesByGroup = appData.community_resources_by_group;
     },
     mounted() {
       // Styling and placeholder for user auto-complete
       $("input[name='user-autocomplete']")
         .attr("placeholder", "Search by name or username")
         .addClass("form-control");
-
-      // Initialize DataTables filter data
-      const groupIds = {};
-
-      $('#groups-list li').each(function () {
-        const groupId = parseInt($(this).attr('id'));
-        groupIds[$(this).text()] = groupId;
-      });
-
-      this.$data.groupIds = groupIds;
-
-      const filterGroup = $('#filter-querystring').text();
-      if (filterGroup && this.$data.groupIds[filterGroup]) {
-        this.$data.filterTo.push(this.$data.groupIds[filterGroup])
-      }
     },
     methods: {
       loadOwnerCard(data) {
@@ -184,20 +81,22 @@ $(document).ready(function () {
         this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
         this.cardPosition.top = el.position().top + 30;
       },
-      isVisible(groupId) {
-        if (this.$data.filterTo.length === 0) {  // If no selections show all
-          return true;
-        } else {  // Display row if Group ID found in the filterTo Array
-          return this.$data.filterTo.indexOf(groupId) > -1;
+      isVisible(resourceId) {
+        if (!this.filterTo.length) {
+          return true;  // If no selections show all
         }
+
+        return this.filterTo.some((groupId) => {
+          return this.resourcesByGroup[groupId]?.includes(resourceId);
+        });
       },
       updateContributors(groupId) {
-        const loc = this.$data.filterTo.indexOf(groupId);
+        const index = this.filterTo.indexOf(groupId);
 
-        if (loc < 0) {
-          this.$data.filterTo.push(groupId)
+        if (index < 0) {
+          this.filterTo.push(groupId)
         } else {
-          this.$data.filterTo.splice(loc, 1);
+          this.filterTo.splice(index, 1);
         }
       },
       removeGroup: async function (id) {

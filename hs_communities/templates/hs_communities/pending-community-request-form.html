@@ -69,15 +69,17 @@
 
       <template v-if="!isEditMode">
         {% if user.is_superuser %}
-        <button v-if="request.status === 'Submitted'" data-toggle="modal"
-          data-target="#reject-new-community-creation-request-dialog"
-          :disabled="isApproving || isRejecting || request.status === 'Rejected'" type="button" class="btn btn-default">
-          ${ isRejecting ? 'Rejecting Community...' : 'Reject' }
-        </button>
-        <button v-if="request.status === 'Submitted'" @click="onApprove" :disabled="isApproving || isRejecting"
-          type="button" class="btn btn-success has-space-right">
-          ${ isApproving ? 'Approving Community...' : 'Approve' }
-        </button>
+        <template v-if="request.status === 'Submitted' && !request.is_cancelled">
+          <button data-toggle="modal"
+            data-target="#reject-new-community-creation-request-dialog"
+            :disabled="isApproving || isRejecting || request.status === 'Rejected'" type="button" class="btn btn-default">
+            ${ isRejecting ? 'Rejecting Community...' : 'Reject' }
+          </button>
+          <button @click="onApprove" :disabled="isApproving || isRejecting"
+            type="button" class="btn btn-success has-space-right">
+            ${ isApproving ? 'Approving Community...' : 'Approve' }
+          </button>
+        </template>
         {% endif %}
         <button v-if="request.status === 'Rejected' && !request.is_cancelled" @click="onResubmit" :disabled="isResubmitting" type="button"
           class="btn btn-default">
