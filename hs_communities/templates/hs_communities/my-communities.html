@@ -89,7 +89,7 @@
                                                  title="Public Community">
                                             <small class="text-muted"> Public Community</small>
                                         </td>
-                                        <td style="text-align: right"><span>{% if group.is_group_owner %}Owner{% else %}
+                                        <td style="text-align: right"><span>{% if c.is_user_owner %}Owner{% else %}
                                             Member{% endif %}</span></td>
                                     </tr>
                                 {% endfor %}

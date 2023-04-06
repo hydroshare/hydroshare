@@ -208,9 +208,13 @@ class MyCommunitiesView(TemplateView):
             .only("community") \
             .distinct("community")
 
-        for ucp in user_community_qs:
-            if ucp.community not in communities_member_of:
-                communities_member_of.append(ucp.community)
+        user_owned_communities = [ucp.community for ucp in user_community_qs]
+        for community in user_owned_communities:
+            if community not in communities_member_of:
+                communities_member_of.append(community)
+
+        for community in communities_member_of:
+            community.is_user_owner = community in user_owned_communities
 
         # get the list of any pending community create requests by this user
         user_pending_requests = []
