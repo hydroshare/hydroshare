@@ -64,7 +64,7 @@ class CommunityView(TemplateView):
         if denied == "":
             user = self.request.user
             community = Community.objects.get(id=int(cid))
-            community_resources = community.public_resources.distinct()
+            community_resources = community.resources(include_private=True).distinct()
             grpfilter = self.request.GET.get("grp")
 
             # Only authenticated users can make use of the data below
