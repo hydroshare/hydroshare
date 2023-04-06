@@ -104,8 +104,16 @@ class CommunityView(TemplateView):
                         .order_by("group__name"):
                     data["pending"].append(group_community_request_json(r))
 
+            # generate community resources ids by group - this is used for filtering
+            # out duplicate resources in community resources listing due to same resources being shared with
+            # multiple groups of the community
+            community_resources_by_group = {}
+            for res in community_resources:
+                community_resources_by_group.setdefault(res.group_id, []).append(res.short_id)
+
             # Both authenticated and anonymous users can make use of the data below
             context["community_resources"] = community_resources
+            context["community_resources_by_group"] = community_resources_by_group
             context["grpfilter"] = grpfilter
             context["denied"] = denied
             context["message"] = message
