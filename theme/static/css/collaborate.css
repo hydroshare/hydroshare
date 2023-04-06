@@ -17,13 +17,13 @@
 }
 
 .collaborate-header {
-  background: #093E54;
+  background: #093e54;
   padding: 20px 0;
   margin-bottom: 4rem;
 }
 
 .collaborate-header a {
-  color: #CCC;
+  color: #ccc;
   text-shadow: 1px 1px 1px rgb(0 0 0 / 30%);
 }
 
@@ -35,12 +35,12 @@
 
 .collaborate-nav-item:hover {
   text-decoration: none;
-  color: #FFF;
+  color: #fff;
   cursor: pointer;
 }
 
 .collaborate-nav-item.active {
-  color: #FFF;
+  color: #fff;
 }
 
 .collaborate-nav-item:focus {
@@ -68,11 +68,6 @@ div.group-thumbnails {
   grid-template-columns: repeat(auto-fill, minmax(min(30rem, 100%), 1fr));
   gap: 2rem;
 }
-
-/* .group-thumbnail > img {
-  max-height: 200px;
-  width: 100%;
-} */
 
 .group-caption {
   padding: 10px;
@@ -117,26 +112,15 @@ div.group-thumbnails {
   padding-left: 25px;
 }
 
-.group-preview-image {
-  height: 150px;
-  text-align: center;
-  width: 100%;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-color: #093e54;
-}
-
 .group-preview-image-default {
   background-size: initial;
   background-repeat: no-repeat;
 }
 
-.group-image-wrapper>.group-image-small,
-.community-image-wrapper>.community-image-small,
-.group-preview-image-default-preview-image-default,
+.group-image-wrapper > .group-image-small,
+.community-image-wrapper > .community-image-small,
 .group-preview-image-default {
-  background-color: #093E54;
+  background-color: #093e54;
 }
 
 .group-image,
@@ -151,8 +135,8 @@ div.group-thumbnails {
 }
 
 .group-image-wrapper {
-  border: 1px solid #DDD;
-  background: #FFF;
+  border: 1px solid #ddd;
+  background: #fff;
   padding: 4px;
   box-shadow: 1px 1px 5px #00000029;
   -moz-box-shadow: 1px 1px 5px #00000029;
@@ -168,7 +152,7 @@ div.group-thumbnails {
   margin-right: 5px;
 }
 
-.group-image-wrapper-medium {
+.group-image-wrapper.medium {
   width: 130px;
   height: 130px;
 }
@@ -198,18 +182,18 @@ div.group-thumbnails {
 }
 
 .groups-table tr {
-  border-bottom: 1px solid #DDD;
+  border-bottom: 1px solid #ddd;
 }
 
 .groups-table tr:last-child {
   border-bottom: 0;
 }
 
-.groups-table tr>td {
+.groups-table tr > td {
   padding: 10px 0;
 }
 
-.groups-table tr>td:first-child {
+.groups-table tr > td:first-child {
   width: 100px;
 }
 
@@ -222,43 +206,13 @@ div.group-thumbnails {
 }
 
 .member-badge {
-  border: 1px solid #DDD;
+  border: 1px solid #ddd;
   padding: 5px;
   text-align: center;
 }
 
 #btn-member {
   width: 100px;
-}
-
-.group-activity-block {
-  border: 1px solid #DDD !important;
-  box-shadow: 1px 1px 5px #E8E8E8;
-  -moz-box-shadow: 1px 1px 5px #E8E8E8;
-  -webkit-box-shadow: 1px 1px 5px #E8E8E8;
-  padding: 10px !important;
-  margin-bottom: 20px;
-}
-
-.group-activity-comment {
-  float: left;
-  width: 100%;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px dashed #DDD;
-}
-
-.start-conversation {
-  margin-top: 20px;
-}
-
-.start-conversation>.group-activity-comment {
-  border-top: 0;
-  margin-top: 0;
-}
-
-.conversation-description {
-  border-left: 0;
 }
 
 .table-members-list .profile-pic-thumbnail {
@@ -274,7 +228,7 @@ div.group-thumbnails {
   width: 110px;
 }
 
-.table-members-list tr>td:first-child {
+.table-members-list tr > td:first-child {
   width: 50px;
 }
 
@@ -283,39 +237,15 @@ div.group-thumbnails {
   text-overflow: ellipsis;
 }
 
-.table-members-list tr>td {
+.table-members-list tr > td {
   padding-bottom: 20px;
-}
-
-.btn-list-more {
-  cursor: pointer;
-}
-
-.group-thumbnail-footer .btn-ask-to-join {
-  margin-top: 10px;
 }
 
 hr.solid {
   border: none;
-  border-top: 1px solid #DDD;
+  border-top: 1px solid #ddd;
   height: 1px;
   width: 100%;
-}
-
-div.group-add-photo {
-  border: 1px solid #DDD;
-}
-
-.btn-ask-to-join {
-  width: 100%;
-}
-
-.request-details {
-  margin-left: 10px;
-}
-
-#collection-table_wrapper {
-  margin-bottom: 20px;
 }
 
 .link-members {
@@ -323,20 +253,11 @@ div.group-add-photo {
 }
 
 .flag-joined {
-  color: #4BB5C1;
+  color: #4bb5c1;
 }
 
 .flag-declined {
   color: #d9534f;
-}
-
-.flag-joined .glyphicon {
-  border: 1px solid #4BB5C1;
-  border-radius: 50%;
-  height: 30px;
-  width: 30px;
-  padding-top: 5px;
-  padding-right: 2px;
 }
 
 .flag-declined .glyphicon {
@@ -349,7 +270,7 @@ div.group-add-photo {
 
 .request-block {
   margin-top: 20px;
-  border: 1px solid #DDD;
+  border: 1px solid #ddd;
   padding: 10px;
   border-radius: 4px;
   word-wrap: anywhere;
@@ -372,8 +293,10 @@ div.group-add-photo {
   margin-bottom: -4rem;
 }
 
-.group-thumbnail .community-banner {
-  background-color: #093e54;
+.group-thumbnail .community-banner,
+.group-thumbnail-header {
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
 }
 
 .group-thumbnail.community .group-image-wrapper {
@@ -383,8 +306,6 @@ div.group-add-photo {
 
 .group-thumbnail-header {
   padding: 1rem;
-  background: #f5f5f5;
-  border-bottom: 1px solid #DDD;
 }
 
 /* --------------------------------------------------------- */

@@ -53,12 +53,12 @@
                         
                         {% if community.picture and community.picture.url %}
                           {% thumbnail community.picture "x150" crop="center" as im %}
-                            <div class="group-image-wrapper group-image-wrapper-medium">
+                            <div class="group-image-wrapper medium">
                                 <div class="group-image" style="background-image: url({{ im.url }})"></div>
                             </div>
                           {% endthumbnail %}
                         {% else %}
-                            <div class="group-image-wrapper group-image-wrapper-medium">
+                            <div class="group-image-wrapper medium">
                               <div class="group-image group-preview-image-default"
                                   style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
                               </div>

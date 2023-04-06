@@ -39,23 +39,12 @@
   max-width: 75rem;
 }
 
-.group-community-card .pending-invitation-badge {
-  position: absolute;
-  top: 1rem;
-  right: 2.4rem;
-  margin: 0;
-}
-
 .community-card--heading {
   font-size: 20px;
 }
 
 .community-card--info {
   flex-grow: 1;
-}
-
-.group-actions {
-  gap: 1rem;
 }
 
 .request-block {

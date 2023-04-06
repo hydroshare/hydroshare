@@ -39,13 +39,13 @@
             <div>
                 {# Group Picture #}
                 {% if group.gaccess.picture and group.gaccess.picture.url %}
-                <div class="group-image-wrapper group-image-wrapper-medium">
+                <div class="group-image-wrapper medium">
                     {% thumbnail group.gaccess.picture "x130" crop="center" as im %}
                     <div class="group-image" style="background-image: url({{ im.url }})"></div>
                     {% endthumbnail %}
                 </div>
                 {% else %}
-                <div class="group-image-wrapper group-image-wrapper-medium">
+                <div class="group-image-wrapper medium">
                     <div class="group-image group-preview-image-default"
                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                 </div>
@@ -58,7 +58,7 @@
 
                     <div class="spacer"></div>
 
-                    <div class="group-actions flex">
+                    <div class="flex gap-1">
                         {% if profile_user.is_group_member %}
                         <div>
                             <a href="#" id="btn-leave-group" class="btn btn-default" data-toggle="modal"

@@ -29,11 +29,11 @@
             </div>
 
             <div class="panel-body flex">
-              <div v-if="group.picture" class="group-image-wrapper group-image-wrapper-medium">
+              <div v-if="group.picture" class="group-image-wrapper medium">
                   <div class="group-image"
                   :style="`background-image: url(${group.picture})`"></div>
               </div>
-              <div v-else class="group-image-wrapper group-image-wrapper-medium">
+              <div v-else class="group-image-wrapper medium">
                   <div class="group-image group-preview-image-default"
                       style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
                   </div>
