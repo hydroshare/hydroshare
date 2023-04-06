@@ -3688,6 +3688,10 @@ input.no-style {
   flex-grow: 1;
 }
 
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
 .is-marginless {
   margin: 0;
 }
@@ -3711,6 +3715,10 @@ input.no-style {
 @media (max-width: 992px) {
   .flex-sm-column {
     flex-direction: column;
+  }
+
+  .align-sm-start {
+    align-items: flex-start;
   }
 }
 
