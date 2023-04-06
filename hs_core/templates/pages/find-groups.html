@@ -40,12 +40,12 @@
                 <div class="flex flex-sm-column justify-space-between gap-1 group-thumbnail-header">
                     {% if group.gaccess.picture and group.gaccess.picture.url %}
                         {% thumbnail group.gaccess.picture "x150" crop="center" as im %}
-                        <div class="group-image-wrapper group-image-wrapper-medium">
+                        <div class="group-image-wrapper medium">
                             <div class="group-image" style="background-image: url({{ im.url }})"></div>
                         </div>
                         {% endthumbnail %}
                     {% else %}
-                        <div class="group-image-wrapper group-image-wrapper-medium">
+                        <div class="group-image-wrapper medium">
                             <div class="group-image group-preview-image-default"
                                 style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
                             </div>

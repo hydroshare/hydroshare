@@ -1,9 +1,3 @@
-.community-header {
-  display: flex;
-  column-gap: 30px;
-  align-items: center;
-}
-
 .community-title-container {
   display: flex;
   column-gap: 20px;
