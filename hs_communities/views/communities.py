@@ -72,7 +72,6 @@ class CommunityView(TemplateView):
                 is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
                                                                       privilege=PrivilegeCodes.OWNER).exists() else 0
                 data["is_admin"] = is_admin
-                # data["user"] = user_json(user)
                 context["is_admin"] = is_admin
 
                 # Groups that can be invited
@@ -164,10 +163,6 @@ class FindCommunitiesView(TemplateView):
             context["user_pending_requests"] = user_pending_requests
 
         if user_is_admin:
-            admin_all_requests = []
-            for request in RequestCommunity.all_requests().order_by("-date_requested"):
-                admin_all_requests.append(community_request_json(request))
-            context["admin_all_requests"] = admin_all_requests
             context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
 
         context["communities_list"] = Community.objects.filter(active=True)
