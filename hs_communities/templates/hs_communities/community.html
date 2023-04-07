@@ -102,7 +102,10 @@
         <div class="tab-content" style="size: 800px">
           <!-- PUBLIC -->
           <div role="tabpanel" class="tab-pane fade in active" id="resources">
-            {% include "includes/resource-table.html" with rows_template='includes/my-resources-trows.html' facets_template='includes/community-resources-facets.html' collection=community_resources %}
+            <div class="row">
+              {% include 'includes/community-resources-facets.html' %}
+              {% include "includes/resource-table.html" with rows_template='includes/my-resources-trows.html' collection=community_resources %}
+            </div>
           </div>
           <div role="tabpanel" class="tab-pane fade in" id="groups-tab">
             {% include 'hs_communities/community-groups.html' %}

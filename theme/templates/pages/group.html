@@ -199,7 +199,10 @@
         <div class="tab-content">
             {% if group.gaccess.public or profile_user.is_group_member %}
             <div role="tabpanel" class="tab-pane fade" id="resources">
-              {% include "includes/resource-table.html" with rows_template='includes/my-resources-trows.html' facets_template='includes/group-facets.html' collection=group_resources %}
+              <div class="row">
+                {% include 'includes/group-facets.html' %}
+                {% include "includes/resource-table.html" with rows_template='includes/my-resources-trows.html' collection=group_resources %}
+              </div>
             </div>
             {% endif %}
 
