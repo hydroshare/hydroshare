@@ -299,6 +299,12 @@ hr.solid {
   border-bottom: 1px solid #ddd;
 }
 
+.group-thumbnail .community-banner.czo-banner {
+  background-position: left;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
 .group-thumbnail.community .group-image-wrapper {
   margin-top: 0;
   margin-left: 1rem;

@@ -20,7 +20,7 @@
 {% if community.banner %}
 <div class="community-banner has-space-bottom-2x" style="background-image: url({{ community.banner }})">
 </div>
-{% elif czo_community %}
+{% elif community.is_czo_community %}
 <div class="community-banner czo-banner has-space-bottom-2x"
   style="background-image: url({% static 'img/czo-logo-wide.png' %})">
 </div>

@@ -112,11 +112,11 @@ class CommunityView(TemplateView):
             data["community_resources_by_group"] = community_resources_by_group
             context["denied"] = denied
             context["message"] = message
-            context["czo_community"] = "CZO National" in community.name
 
             # community data is used both by the vue app and the template render
-            context["community"] = community_json(community)
-            data["community"] = community_json(community)
+            community_to_json = community_json(community)
+            context["community"] = community_to_json
+            data["community"] = community_to_json
 
             # group members of community
             data["members"] = []
