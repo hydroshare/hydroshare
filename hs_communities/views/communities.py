@@ -243,38 +243,22 @@ class CommunityCreationRequests(TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
+        # only superusers are allowed to access this page to manage community creation requests
+        user = self.request.user
+        if not user or not user.is_authenticated or not user.is_superuser:
+            return redirect("/landingPage")
         return super(CommunityCreationRequests, self).dispatch(*args, **kwargs)
 
-    def hydroshare_denied(self):
-        user = self.request.user
-        if not user or not user.is_authenticated:
-            message = "You must be logged in to access this function."
-            logger.error(message)
-            return message
-
-        if not user.is_superuser:
-            message = "user with id {} is not a superuser".format(user.id)
-            logger.error(message)
-            return message
-
-        return ""
-
     def get_context_data(self, **kwargs):
-        denied = self.hydroshare_denied()
+        admin_all_requests = []
+        for request in RequestCommunity.all_requests().order_by('-date_requested'):
+            admin_all_requests.append(community_request_json(request))
 
-        if denied == "":
-            admin_all_requests = []
-            for request in RequestCommunity.all_requests().order_by('-date_requested'):
-                admin_all_requests.append(community_request_json(request))
-
-            return {
-                "admin_all_requests": admin_all_requests,
-                "admin_pending_requests": RequestCommunity.pending_requests().count(),
-                "user_is_admin": self.request.user.is_superuser
-            }
-        else:
-            logger.error(denied)
-            return {"denied": denied}
+        return {
+            "admin_all_requests": admin_all_requests,
+            "admin_pending_requests": RequestCommunity.pending_requests().count(),
+            "user_is_admin": self.request.user.is_superuser
+        }
 
 
 class CommunityCreationRequest(TemplateView):
