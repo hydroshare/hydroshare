@@ -74,11 +74,11 @@
       <div v-for="community of joined" class="group-community-card panel panel-default">
         <div class="panel-body flex gap-1 align-center">
           <div v-if="community.logo"
-            class="group-image-wrapper medium">
+            class="group-image-wrapper medium has-space-right">
             <div class="group-image"
               :style="`background-image: url(${community.logo})`"></div>
           </div>
-          <div v-else class="group-image-wrapper medium">
+          <div v-else class="group-image-wrapper medium has-space-right">
             <div class="group-image group-preview-image-default"
                 style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
             </div>

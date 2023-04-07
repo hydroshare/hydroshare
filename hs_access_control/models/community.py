@@ -302,6 +302,11 @@ class Community(models.Model):
         else:
             return None
 
+    # TODO: we need a dedicated property instead of this check
+    # Users can mock a CZO community by renaming their existing community to trigger this conditional
+    def is_czo_community(self):
+        return "CZO National" in self.name
+
 
 class RequestCommunity(models.Model):
     """A request to create a new community

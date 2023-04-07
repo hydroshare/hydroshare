@@ -199,208 +199,10 @@
         <div class="tab-content">
             {% if group.gaccess.public or profile_user.is_group_member %}
             <div role="tabpanel" class="tab-pane fade" id="resources">
-                <div class="row">
-                    <div class="col-lg-2" id="facets">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <span class="glyphicon glyphicon glyphicon-user"></span>
-                                    <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
-                                        href="#filter-shared-by">&nbsp;Shared by</a>
-                                </h4>
-                            </div>
-                            <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
-                                <div class="panel-body">
-                                    <div class="list-group">
-                                        <ul class="list-group inputs-group">
-                                            <i class="list-group-item no-items-found text-muted">
-                                                <p class="has-space-top has-space-bottom">No resources have been
-                                                    shared with this group yet.</p>
-                                            </i>
-                                        </ul>
-                                    </div>
-
-                                    <div id="grantors-list">
-                                        {% for res in group_resources %}
-                                        <span data-grantor-id="{{ res.grantor.id }}"
-                                            data-grantor-name="{{ res.grantor|best_name }}"></span>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-10" id="items">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <div id="search-container" class="input-group">
-                                    <span class="glyphicon glyphicon-search search-icon"></span>
-                                    <input id="resource-search-input" type="text" class="form-control"
-                                        placeholder="Search" />
-                                    <span id="btn-clear-search-input"
-                                        class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
-
-                                    <div class="input-group-btn">
-                                        <div class="btn-group" role="group">
-                                            <div class="dropdown dropdown-lg">
-                                                <button type="button" class="btn btn-default dropdown-toggle"
-                                                    data-toggle="dropdown" aria-expanded="false"><span
-                                                        class="caret"></span></button>
-
-                                                <div class="shadow-md dropdown-menu dropdown-menu-left" role="menu">
-                                                    <form class="form-horizontal" role="form">
-                                                        <div class="form-group">
-                                                            <label for="filter">Type</label>
-                                                            <select id="input-resource-type"
-                                                                class="form-control pull-left">
-                                                                <option value="" selected>All</option>
-                                                                <option value="collection resource">Collection
-                                                                </option>
-                                                                <option value="composite resource">Resource
-                                                                </option>
-                                                                <option value="web app resource">App Connector</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="contain">Author</label>
-                                                            <input id="input-author" class="form-control" type="text" />
-                                                            <span id="btn-clear-author-input"
-                                                                class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="contain">Subject</label>
-                                                            <input id="input-subject" class="form-control"
-                                                                type="text" />
-                                                            <span id="btn-clear-subject-input"
-                                                                class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- /input-group -->
-                        <table id="item-selectors" class="table-hover table-striped resource-custom-table">
-                            <thead>
-                                <tr>
-                                    <th><input class="all-rows-selector" type="checkbox"></th>
-                                    <th>Type</th>
-                                    <th>Title</th>
-                                    <th>First Author</th>
-                                    <th>Date Created</th>
-                                    <th>Last Modified</th>
-                                    <th>Subject</th>
-                                    {# Used in table processing #}
-                                    <th>Authors</th>
-                                    {# Used in table processing #}
-                                    <th>Permission Level</th>
-                                    {# Used in table processing #}
-                                    <th>Labels</th>
-                                    {# Used in table processing #}
-                                    <th>Favorite</th>
-                                    {# Used in table processing #}
-                                    <th>Last modified</th>
-                                    {# Used in table processing #}
-                                    <th>Sharing Status</th>
-                                    {# Used in table processing #}
-                                    <th>Date Created</th>
-                                    {# Used in table processing #}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for res in group_resources %}
-                                <tr class="data-row">
-                                    {# Selection controls #}
-                                    <td>
-                                        <input class="row-selector" type="checkbox">
-                                        {% if res.is_favorite %}
-                                        <span data-form-id="form-favorite-{{ res.short_id }}"
-                                            data-form-type="toggle-favorite"
-                                            class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
-
-                                        <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                            action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                            method="post">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="DELETE">
-                                            <input type="hidden" name="label_type" value="FAVORITE">
-                                        </form>
-                                        {% else %}
-                                        <span data-form-id="form-favorite-{{ res.short_id }}"
-                                            data-form-type="toggle-favorite"
-                                            class="glyphicon glyphicon-star btn-inline-favorite"></span>
-
-                                        <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                            action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                            method="post">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="CREATE">
-                                            <input type="hidden" name="label_type" value="FAVORITE">
-                                        </form>
-                                        {% endif %}
-
-                                        <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown"
-                                            aria-expanded="false"></span>
-
-                                        <div class="dropdown-menu inline-dropdown" role="menu">
-                                            <div class="panel-body" role="form">
-                                                <ul data-resource-id="{{ res.short_id }}"
-                                                    class="list-group list-labels">
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    {# Type #}
-                                    <td data-col="resource-type">
-                                        {% include "includes/res_type_col.html" with resource=res %}
-                                    </td>
-                                    {# Title #}
-                                    <td>
-                                        <strong>
-                                            <a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
-                                        </strong>
-                                    </td>
-                                    {# First Author #}
-                                    <td>{{ res|resource_first_author }}</td>
-                                    {# Date Created #}
-                                    <td>{{ res.created|date:"d M, Y" }} {{ res.created|time }}</td>
-                                    {# Last Modified #}
-                                    {% with last_updated=res.last_updated %}
-                                    <td>{{ last_updated|date:"d M, Y" }} {{ last_updated|time }}</td>
-                                    <td>
-                                        {% for kw in res.metadata.subjects.all %}
-                                        {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
-                                        {% endfor %}
-                                    </td>
-                                    <td>
-                                        {% for creator in res.metadata.creators.all %}
-                                        {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                        {% if creator.relative_uri and creator.is_active_user %}
-                                        <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
-                                        {% else %}
-                                        <span>{{ creator.name }}</span>
-                                        {% endif %}
-                                        {% endfor %}
-                                    </td>
-                                    <td><!-- Needed for datatable to function properly --></td>
-                                    <td><!-- Needed for datatable to function properly --></td>
-                                    <td><!-- Needed for datatable to function properly --></td>
-                                    <td>{{ last_updated|date:"U" }}</td>
-                                    <td><!-- Needed for datatable to function properly --></td>
-                                    <td>{{ res.created|date:"U" }}</td>
-                                    <td>{{ res.grantor.id }}</td>
-                                    {% endwith %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% include "includes/legend.html" %}
-                    </div>
-                </div>
+              <div class="row">
+                {% include 'includes/group-facets.html' %}
+                {% include "includes/resource-table.html" with rows_template='includes/my-resources-trows.html' collection=group_resources %}
+              </div>
             </div>
             {% endif %}
 
@@ -444,7 +246,7 @@
                                 {# Group Url #}
                                 <fieldset class="col-sm-12 has-space-top">
                                     <label>Group URL</label>
-                                    <input class="form-control" value="{{ group.gaccess.url }}" type="url"
+                                    <input class="form-control" value='{{ group.gaccess.url|default:"" }}' type="url"
                                         name="url"></input>
                                     <small class="text-muted">A URL for a web page that describes the group in more
                                         detail.</small>
@@ -782,8 +584,96 @@
 
 {% block extra_js %}
 {{ block.super }}
-<script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/group-actions.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/group.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/hs_resource_table.js' %}"></script>
+<script type="text/javascript">
+  var resourceTable;
+  
+  var ACTIONS_COL = 0;
+  var RESOURCE_TYPE_COL = 1;
+  var TITLE_COL = 2;
+  var OWNER_COL = 3;
+  var DATE_CREATED_COL = 4;
+  var LAST_MODIFIED_COL = 5;
+  var SUBJECT_COL = 6;
+  var AUTHORS_COL = 7;
+  var PERM_LEVEL_COL = 8;
+  var LABELS_COL = 9;
+  var FAVORITE_COL = 10;
+  var LAST_MODIF_SORT_COL = 11;
+  var SHARING_STATUS_COL = 12;
+  var DATE_CREATED_SORT_COL = 13;
+  var ACCESS_GRANTOR_COL = 14;
+  
+  var colDefs = [
+  {
+    targets: [ACTIONS_COL], // Row selector and controls
+    visible: false,
+  },
+  {
+    targets: [RESOURCE_TYPE_COL], // Resource type
+    width: "100px",
+  },
+  {
+    targets: [ACTIONS_COL], // Actions
+    orderable: false,
+    searchable: false,
+    width: "70px",
+  },
+  {
+    targets: [LAST_MODIFIED_COL], // Last modified
+    iDataSort: LAST_MODIF_SORT_COL,
+  },
+  {
+    targets: [DATE_CREATED_COL], // Created
+    iDataSort: DATE_CREATED_SORT_COL,
+  },
+  {
+    targets: [SUBJECT_COL], // Subject
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [AUTHORS_COL], // Authors
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [PERM_LEVEL_COL], // Permission level
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [LABELS_COL], // Labels
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [FAVORITE_COL], // Favorite
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [LAST_MODIF_SORT_COL], // Last modified (for sorting)
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [DATE_CREATED_SORT_COL], // Last modified (for sorting)
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [SHARING_STATUS_COL], // Sharing status
+    visible: false,
+    searchable: false,
+  },
+  {
+    targets: [ACCESS_GRANTOR_COL], // Access Grantor
+    visible: false,
+    searchable: true,
+  },
+];
+</script>
+
 {% endblock %}

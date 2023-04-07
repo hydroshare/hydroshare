@@ -5,95 +5,98 @@
 {% block meta_title %}Find Communities{% endblock %}
 
 {% block extra_css %}
-    <link href="{% static 'css/collaborate.css' %}" rel="stylesheet"/>
+<link href="{% static 'css/collaborate.css' %}" rel="stylesheet" />
 {% endblock %}
 
 {% block main %}
-    {% include 'hs_communities/communities-nav.html' with active='communities' %}
-    <div class="container has-space-bottom-2x">
-        <div class="row">
-            <div class="col-sm-12">
-                <h2 class="page-title">Find Communities</h2>
-                <a class="btn btn-success" data-toggle="modal" data-target="#request-new-community-dialog">
-                  <i class="fa fa-plus"></i> Request a New Community
-                </a>
-                {% comment %} <div>
-                    <div class="alert alert-info alert-dismissible"
-                         role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                aria-hidden="true">&times;</span></button>
-                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                        Communities are a new feature in HydroShare. For more information about creating one please
-                        contact <b><a href="mailto:help@cuahsi.org?subject=Creating New Communities">help@cuahsi.org</a></b>
-                    </div>
-                </div> {% endcomment %}
-                <div class="group-search input-group has-space-top">
-                    <span class="glyphicon glyphicon-search search-icon"></span>
-                    <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by community name..."/>
-                </div>
-                <p id="id-Group-Search-Result-Msg"></p>
-            </div>
+{% include 'hs_communities/communities-nav.html' with active='communities' %}
+<div class="container has-space-bottom-2x">
+  <div class="row">
+    <div class="col-sm-12">
+      <h2 class="page-title">Find Communities</h2>
+      <a class="btn btn-success" data-toggle="modal" data-target="#request-new-community-dialog">
+        <i class="fa fa-plus"></i> Request a New Community
+      </a>
+      {% comment %} <div>
+        <div class="alert alert-info alert-dismissible" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+              aria-hidden="true">&times;</span></button>
+          <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+          Communities are a new feature in HydroShare. For more information about creating one please
+          contact <b><a href="mailto:help@cuahsi.org?subject=Creating New Communities">help@cuahsi.org</a></b>
         </div>
-
-        <div class="group-thumbnails">
-            {% if not communities_list %}
-                <div class="col-sm-12"><i>No communities have been created yet.</i></div>
-            {% endif %}
-
-            {% for community in communities_list %}
-                <div class="group-container">
-                    <div class="group-thumbnail contribution community">
-                        {% if community.banner and community.banner.url %}
-                        <div class="community-banner"
-                            style="background-image: url({{ community.banner.url }})">
-                        </div>
-                        {% else %}
-                        <div class="community-banner default"></div>
-                        {% endif %}
-                        
-                        {% if community.picture and community.picture.url %}
-                          {% thumbnail community.picture "x150" crop="center" as im %}
-                            <div class="group-image-wrapper medium">
-                                <div class="group-image" style="background-image: url({{ im.url }})"></div>
-                            </div>
-                          {% endthumbnail %}
-                        {% else %}
-                            <div class="group-image-wrapper medium">
-                              <div class="group-image group-preview-image-default"
-                                  style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
-                              </div>
-                            </div>
-                        {% endif %}
-                        
-                        <div class="group-caption">
-                            <h3 class="group-name">
-                                <a href="/community/{{ community.id }}">{{ community.name }}</a>
-                            </h3>
-                            
-                            {% if community.purpose %}
-                            <div class="group-purpose text-muted">
-                                <p>{{ community.purpose|linebreaks }}</p>
-                            </div>
-                            {% endif %}
-
-                            {% if community.description %}
-                            <div class="community-description">
-                              <p>{{ community.description|linebreaks }}</p>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
+      </div> {% endcomment %}
+      <div class="group-search input-group has-space-top">
+        <span class="glyphicon glyphicon-search search-icon"></span>
+        <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by community name..." />
+      </div>
+      <p id="id-Group-Search-Result-Msg"></p>
     </div>
-    {% include 'hs_communities/request-new-community-modal.html' %}
+  </div>
+
+  <div class="group-thumbnails">
+    {% if not communities_list %}
+    <div class="col-sm-12"><i>No communities have been created yet.</i></div>
+    {% endif %}
+
+    {% for community in communities_list %}
+    <div class="group-container">
+      <div class="group-thumbnail contribution community">
+        {% if community.banner and community.banner.url %}
+        <div class="community-banner" style="background-image: url({{ community.banner.url }})">
+        </div>
+        {% elif community.is_czo_community %}
+        <div class="community-banner czo-banner"
+          style="background-image: url({% static 'img/czo-logo-wide.png' %})">
+        </div>
+        {% else %}
+        <div class="community-banner default"></div>
+        {% endif %}
+
+        {% if community.picture and community.picture.url %}
+        {% thumbnail community.picture "x150" crop="center" as im %}
+        <div class="group-image-wrapper medium">
+          <div class="group-image" style="background-image: url({{ im.url }})"></div>
+        </div>
+        {% endthumbnail %}
+        {% else %}
+        <div class="group-image-wrapper medium">
+          <div class="group-image group-preview-image-default"
+            style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="group-caption">
+          <h3 class="group-name">
+            <a href="/community/{{ community.id }}">{{ community.name }}</a>
+          </h3>
+
+          {% if community.purpose %}
+          <div class="group-purpose text-muted">
+            <p>{{ community.purpose|linebreaks }}</p>
+          </div>
+          {% endif %}
+
+          {% if community.description %}
+          <h5 class="is-marginless has-space-top">About this community:</h5>
+          <div class="community-description">
+            <p>{{ community.description|linebreaks }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% include 'hs_communities/request-new-community-modal.html' %}
 
 {% endblock %}
 
 {% block extra_js %}
-    {{ block.super }}
-    <script type="text/javascript" src="{% static 'js/bootstrap-toolkit.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/group-actions.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/collaborate.js' %}"></script>
+{{ block.super }}
+<script type="text/javascript" src="{% static 'js/bootstrap-toolkit.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/group-actions.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/collaborate.js' %}"></script>
 {% endblock %}

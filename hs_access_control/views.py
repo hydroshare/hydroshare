@@ -112,7 +112,8 @@ def community_json(community):
             'logo': logo_url or '',
             'banner': banner_url or '',
             'closed': 1 if community.closed is True else 0,
-            'owners': [user_json(u) for u in community.owners]
+            'owners': [user_json(u) for u in community.owners],
+            'is_czo_community': community.is_czo_community()
         }
     else:
         return {}

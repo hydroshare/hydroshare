@@ -112,3 +112,7 @@
 #filter-shared-by .no-items-found {
   margin: 1rem;
 }
+
+p {
+  word-break: break-all;
+}

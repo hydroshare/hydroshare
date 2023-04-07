@@ -1,0 +1,31 @@
+{% load hydroshare_tags %}
+
+<div class="col-lg-2" id="facets">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <span class="glyphicon glyphicon glyphicon-user"></span>
+        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
+          href="#filter-shared-by">&nbsp;Shared by</a>
+      </h4>
+    </div>
+    <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
+      <div class="panel-body">
+        <div class="list-group">
+          <ul class="list-group inputs-group">
+            <i class="list-group-item no-items-found text-muted">
+              <p class="has-space-top has-space-bottom">No resources have been
+                shared with this group yet.</p>
+            </i>
+          </ul>
+        </div>
+
+        <div id="grantors-list">
+          {% for res in group_resources %}
+          <span data-grantor-id="{{ res.grantor.id }}" data-grantor-name="{{ res.grantor|best_name }}"></span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
