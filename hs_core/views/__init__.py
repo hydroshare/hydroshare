@@ -40,7 +40,7 @@ from django_irods.icommands import SessionException
 from hs_access_control.emails import CommunityRequestEmailNotification
 from hs_access_control.enums import CommunityRequestEvents
 from hs_access_control.forms import RequestNewCommunityForm, UpdateCommunityForm
-from hs_access_control.models import Community, GroupCommunityRequest
+from hs_access_control.models import Community, GroupCommunityRequest, UserGroupPrivilege
 from hs_access_control.models import GroupMembershipRequest, GroupResourcePrivilege, PrivilegeCodes
 from hs_access_control.views import community_json, group_community_request_json
 from hs_core import hydroshare
@@ -2413,15 +2413,26 @@ class FindGroupsView(TemplateView):
         return super(FindGroupsView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
+
+        def get_groups_with_members(ugp_queryset):
+            group_seen = []
+            groups = []
+            for ugp in ugp_queryset:
+                if ugp.group.id not in group_seen:
+                    group = ugp.group
+                    group.members = []
+                    group_seen.append(group.id)
+                    groups.append(group)
+                else:
+                    group = groups[group_seen.index(ugp.group.id)]
+                if ugp.user.is_active:
+                    group.members.append(ugp.user)
+            groups = sorted(groups, key=lambda _group: _group.name)
+            return groups
+
         if self.request.user.is_authenticated:
             u = User.objects.get(pk=self.request.user.id)
 
-            groups = (
-                Group.objects.filter(gaccess__active=True)
-                .exclude(name="Hydroshare Author")
-                .select_related("gaccess")
-                .order_by('name')
-            )
             gmr_waiting_owner_action = GroupMembershipRequest.objects \
                 .filter(request_from=u, group_to_join__gaccess__active=True, redeemed=False) \
                 .values_list("group_to_join__id", flat=True)
@@ -2434,11 +2445,16 @@ class FindGroupsView(TemplateView):
                 .filter(group_to_join__gaccess__active=True, redeemed=False) \
                 .filter(Q(request_from=u) | Q(invitation_to=u)).select_related("group_to_join")
 
+            ugp_qs = UserGroupPrivilege.objects \
+                .filter(group__gaccess__active=True) \
+                .exclude(group__name="Hydroshare Author") \
+                .select_related("group", "user", "group__gaccess")
+
+            # for ech group collect members of the group - not using 'group.gaccess.members'
+            # as this results in N+1 query
+            groups = get_groups_with_members(ugp_qs)
+
             for g in groups:
-                # TODO: This (g.gaccess.members) is N+1 query (we should perhaps show a count of members of a group
-                #  and display group member details on demand. Here we are looping over all the groups in the system
-                #  so this N+1 query can potentially cause timeout error as more groups are created
-                g.members = g.gaccess.members
                 g.is_user_member = u in g.members
                 g.join_request = None
                 if g.is_user_member:
@@ -2461,14 +2477,13 @@ class FindGroupsView(TemplateView):
             return {"profile_user": u, "groups": groups}
         else:
             # for anonymous user
-            groups = Group.objects.filter(
-                Q(gaccess__active=True)
-                & (Q(gaccess__discoverable=True) | Q(gaccess__public=True))
-            ).exclude(name="Hydroshare Author").select_related("gaccess")
+            ugp_qs = UserGroupPrivilege.objects \
+                .filter(Q(group__gaccess__active=True)
+                        & (Q(group__gaccess__discoverable=True) | Q(group__gaccess__public=True))) \
+                .exclude(group__name="Hydroshare Author") \
+                .select_related("group", "user", "group__gaccess")
 
-            for g in groups:
-                # TODO: N+1 query fix
-                g.members = g.gaccess.members
+            groups = get_groups_with_members(ugp_qs)
             return {"groups": groups}
 
 
@@ -2485,9 +2500,20 @@ class MyGroupsView(TemplateView):
         groups = u.uaccess.my_groups
 
         # for each group object, set a dynamic attribute to know if the user owns the group
-        for g in groups:
-            # TODO: n+1 query problem to fix
-            g.is_group_owner = u.uaccess.owns_group(g)
+        ugp_qs = UserGroupPrivilege.objects \
+            .filter(group_id__in=[g.id for g in groups]) \
+            .select_related("group", "user", "group__gaccess")
+        groups = []
+        for ugp in ugp_qs:
+            if ugp.user == u:
+                ugp.group.is_group_owner = ugp.privilege == PrivilegeCodes.OWNER
+                groups.append(ugp.group)
+        for ugp in ugp_qs:
+            if ugp.group not in groups:
+                ugp.group.is_group_owner = False
+                groups.append(ugp.group)
+
+        groups = sorted(groups, key=lambda _group: _group.name)
 
         active_groups = [g for g in groups if g.gaccess.active]
         inactive_groups = [g for g in groups if not g.gaccess.active]
