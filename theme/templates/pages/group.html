@@ -246,7 +246,7 @@
                                 {# Group Url #}
                                 <fieldset class="col-sm-12 has-space-top">
                                     <label>Group URL</label>
-                                    <input class="form-control" value="{{ group.gaccess.url }}" type="url"
+                                    <input class="form-control" value='{{ group.gaccess.url|default:"" }}' type="url"
                                         name="url"></input>
                                     <small class="text-muted">A URL for a web page that describes the group in more
                                         detail.</small>
