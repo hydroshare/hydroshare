@@ -14,7 +14,7 @@ from django.core import signing
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.db import Error, IntegrityError
-from django.db.models import F, Q
+from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.http import (
     HttpResponse,
@@ -2448,12 +2448,11 @@ class FindGroupsView(TemplateView):
             ugp_qs = UserGroupPrivilege.objects \
                 .filter(group__gaccess__active=True) \
                 .exclude(group__name="Hydroshare Author") \
-                .select_related("group", "user", "group__gaccess")
+                .select_related("group", "user", "group__gaccess", "user__userprofile")
 
             # for ech group collect members of the group - not using 'group.gaccess.members'
             # as this results in N+1 query
             groups = get_groups_with_members(ugp_qs)
-
             for g in groups:
                 g.is_user_member = u in g.members
                 g.join_request = None
@@ -2481,7 +2480,7 @@ class FindGroupsView(TemplateView):
                 .filter(Q(group__gaccess__active=True)
                         & (Q(group__gaccess__discoverable=True) | Q(group__gaccess__public=True))) \
                 .exclude(group__name="Hydroshare Author") \
-                .select_related("group", "user", "group__gaccess")
+                .select_related("group", "user", "group__gaccess", "user__userprofile")
 
             groups = get_groups_with_members(ugp_qs)
             return {"groups": groups}
@@ -2503,29 +2502,22 @@ class MyGroupsView(TemplateView):
         ugp_qs = UserGroupPrivilege.objects \
             .filter(group_id__in=[g.id for g in groups]) \
             .select_related("group", "user", "group__gaccess")
-        groups = []
-        for ugp in ugp_qs:
-            if ugp.user == u:
-                ugp.group.is_group_owner = ugp.privilege == PrivilegeCodes.OWNER
-                groups.append(ugp.group)
-        for ugp in ugp_qs:
-            if ugp.group not in groups:
-                ugp.group.is_group_owner = False
-                groups.append(ugp.group)
 
         groups = sorted(groups, key=lambda _group: _group.name)
 
         active_groups = [g for g in groups if g.gaccess.active]
         inactive_groups = [g for g in groups if not g.gaccess.active]
-        my_pending_requests = GroupMembershipRequest.objects.filter(
-            request_from=u, redeemed=False
-        ).exclude(group_to_join__gaccess__active=False)
 
-        group_membership_requests = (
-            GroupMembershipRequest.objects.filter(invitation_to=u, redeemed=False)
-            .exclude(group_to_join__gaccess__active=False)
-            .all()
-        )
+        my_pending_requests = GroupMembershipRequest.objects \
+            .filter(request_from=u, redeemed=False) \
+            .exclude(group_to_join__gaccess__active=False) \
+            .select_related("invitation_to", "group_to_join")
+
+        group_membership_requests = GroupMembershipRequest.objects \
+            .filter(invitation_to=u, redeemed=False) \
+            .exclude(group_to_join__gaccess__active=False) \
+            .select_related("request_from", "request_from__userprofile", "group_to_join")
+
         return {
             "profile_user": u,
             "groups": active_groups,
@@ -2621,7 +2613,8 @@ class GroupView(TemplateView):
             data["pending"] = []
             for r in GroupCommunityRequest.objects.filter(
                     group=group, redeemed=False) \
-                    .select_related("community", "group") \
+                    .select_related("community", "group", "group__gaccess", "group_owner",
+                                    "group_owner__uaccess", "group_owner__userprofile") \
                     .order_by("community__name"):
                 data["pending"].append(group_community_request_json(r))
 
@@ -2669,23 +2662,19 @@ class GroupView(TemplateView):
             u.is_group_viewer = group.gaccess.public or group.gaccess.discoverable or group in u.uaccess.view_groups
             u.is_group_member = u in group_members
 
-            group.join_request_waiting_owner_action = (
-                group.gaccess.group_membership_requests.filter(request_from=u).exists()
-            )
-            group.join_request_waiting_user_action = (
-                group.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-            )
-            group.join_request = group.gaccess.group_membership_requests.filter(
-                invitation_to=u
-            ).first()
+            group.join_request_waiting_owner_action = group.gaccess.group_membership_requests \
+                .filter(request_from=u).exists()
+
+            group.join_request_waiting_user_action = group.gaccess.group_membership_requests \
+                .filter(invitation_to=u).exists()
+
+            group.join_request = group.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
             # This will exclude requests from inactive users made for themselves
             # as well as invitations from inactive users to others
-            group.gaccess.active_group_membership_requests = (
-                group.gaccess.group_membership_requests.filter(
-                    Q(request_from__is_active=True),
-                    Q(invitation_to=None) | Q(invitation_to__is_active=True),
-                )
+            group.gaccess.active_group_membership_requests = group.gaccess.group_membership_requests.filter(
+                Q(request_from__is_active=True),
+                Q(invitation_to=None) | Q(invitation_to__is_active=True),
             )
 
             if u.is_group_member:

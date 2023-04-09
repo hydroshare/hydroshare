@@ -98,7 +98,15 @@ class CommunityView(TemplateView):
                 data["pending"] = []
                 for r in GroupCommunityRequest.objects \
                         .filter(community=community, redeemed=False) \
-                        .select_related("community", "group") \
+                        .select_related("community",
+                                        "community_owner",
+                                        "community_owner__uaccess",
+                                        "community_owner__userprofile",
+                                        "group",
+                                        "group__gaccess",
+                                        "group_owner",
+                                        "group_owner__uaccess",
+                                        "group_owner__userprofile") \
                         .order_by("group__name"):
                     data["pending"].append(group_community_request_json(r))
 
@@ -208,13 +216,17 @@ class MyCommunitiesView(TemplateView):
 
         # get the list of any pending community create requests by this user
         user_pending_requests = []
-        rc_pending_qs = RequestCommunity.pending_requests().filter(requested_by=user)
+        rc_pending_qs = RequestCommunity.pending_requests() \
+            .filter(requested_by=user) \
+            .select_related("requested_by", "requested_by__userprofile")
         for rc in rc_pending_qs:
             user_pending_requests.append(community_request_json(rc))
 
         # get the list of any declined community create requests by this user
         user_declined_requests = []
-        rc_declined_qs = RequestCommunity.declined_requests().filter(requested_by=user)
+        rc_declined_qs = RequestCommunity.declined_requests() \
+            .filter(requested_by=user) \
+            .select_related("requested_by", "requested_by__userprofile")
         for rc in rc_declined_qs:
             user_declined_requests.append(community_request_json(rc))
 
@@ -222,7 +234,8 @@ class MyCommunitiesView(TemplateView):
 
         if user_is_admin:
             admin_all_requests = []
-            for request in RequestCommunity.all_requests().order_by("-date_requested"):
+            for request in RequestCommunity.all_requests() \
+                    .select_related("requested_by", "requested_by__userprofile").order_by("-date_requested"):
                 admin_all_requests.append(community_request_json(request))
             context["admin_all_requests"] = admin_all_requests
             context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
@@ -251,7 +264,9 @@ class CommunityCreationRequests(TemplateView):
 
     def get_context_data(self, **kwargs):
         admin_all_requests = []
-        for request in RequestCommunity.all_requests().order_by('-date_requested'):
+        for request in RequestCommunity.all_requests() \
+                .select_related("requested_by", "requested_by__userprofile") \
+                .order_by('-date_requested'):
             admin_all_requests.append(community_request_json(request))
 
         return {
