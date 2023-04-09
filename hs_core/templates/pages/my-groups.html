@@ -136,7 +136,7 @@
                                             {% else %}
                                                 <img src="{% static 'img/private.png' %}" alt="Private Group" title="Private Group">
                                             {% endif %}
-                                            {% with member_count=group.gaccess.members|length %}
+                                            {% with member_count=group.member_count %}
                                                 <small class="text-muted">{{ member_count }} Member{% if member_count > 1 %}s{% endif %}</small>
                                             {% endwith %}
                                         </td>
@@ -175,7 +175,7 @@
                                             {% else %}
                                                 <img src="{% static 'img/private.png' %}" alt="Private Group" title="Private Group">
                                             {% endif %}
-                                            <small class="text-muted">{{ group.gaccess.members|length }} Member{% if group.gaccess.members|length > 1 %}s{% endif %}</small>
+                                            <small class="text-muted">{{ group.member_count }} Member{% if group.member_count > 1 %}s{% endif %}</small>
                                         </td>
 
                                         <td style="text-align: right"><span>{% if group.is_group_owner %}Owner{% else %}Member{% endif %}</span></td>

@@ -2494,6 +2494,25 @@ class MyGroupsView(TemplateView):
         return super(MyGroupsView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        def get_groups_with_ownership(ugp_queryset, user):
+            group_seen = []
+            groups = []
+            for ugp in ugp_queryset:
+                if ugp.group.id not in group_seen:
+                    group = ugp.group
+                    group_seen.append(group.id)
+                    group.is_group_owner = False
+                    group.member_count = 1
+                    groups.append(group)
+                else:
+                    group = groups[group_seen.index(ugp.group.id)]
+                    group.member_count += 1
+                if ugp.user == user:
+                    group.is_group_owner = ugp.privilege == PrivilegeCodes.OWNER
+
+            groups = sorted(groups, key=lambda _group: _group.name)
+            return groups
+
         u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
 
         groups = u.uaccess.my_groups
@@ -2503,7 +2522,7 @@ class MyGroupsView(TemplateView):
             .filter(group_id__in=[g.id for g in groups]) \
             .select_related("group", "user", "group__gaccess")
 
-        groups = sorted(groups, key=lambda _group: _group.name)
+        groups = get_groups_with_ownership(ugp_qs, u)
 
         active_groups = [g for g in groups if g.gaccess.active]
         inactive_groups = [g for g in groups if not g.gaccess.active]
