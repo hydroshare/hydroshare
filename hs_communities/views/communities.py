@@ -65,7 +65,7 @@ class CommunityView(TemplateView):
             user = self.request.user
             community = Community.objects.get(id=int(cid))
             community_resources = community.resources()
-
+            is_admin = 0
             # Only authenticated users can make use of the data below
             if user.is_authenticated:
                 is_admin = 1 if UserCommunityPrivilege.objects.filter(user=user, community=community,
@@ -128,7 +128,19 @@ class CommunityView(TemplateView):
 
             # group members of community
             data["members"] = []
-            for g in community.member_groups.order_by("name"):
+            if user.is_authenticated:
+                if is_admin:
+                    # community owners can see all groups
+                    filter_condition = Q()
+                else:
+                    # non community owners can see groups in which they are members, or groups that are
+                    # public or discoverable
+                    filter_condition = Q(g2ugp__user=user) | Q(gaccess__public=True) | Q(gaccess__discoverable=True)
+            else:
+                # anonymous users can see groups that are public or discoverable
+                filter_condition = Q(gaccess__public=True) | Q(gaccess__discoverable=True)
+
+            for g in community.member_groups.filter(filter_condition).distinct().order_by("name"):
                 data["members"].append(group_json(g))
 
             context['data'] = data
