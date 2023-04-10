@@ -17,9 +17,8 @@ Numerical weather modeling and ensemble forecasting
 Precipitation
 Radiation and remote sensing
 Role of land and ocean surface processes in seasonal precipitation
-Synergy between in-situ, airborne, and remotely-sensed observations of the atmosphere's constituents, e.g. carbon dioxide, carbon monoxide, aerosols, ozone
 Urban air quality
-Weather analysis and predictability of large-scale systems, e.g. extratropical cyclones and associated fronts and jet streams
+Weather analysis and predictability of large-scale systems
 Aqueous geochemistry
 Biogeochemistry
 Characterization of contaminated sites
@@ -47,7 +46,6 @@ Mars paleohydrology
 Computational methods
 Conjunctive use
 Decision making and uncertainty
-Exploring natural stimuli for CAT scan groundwater basins
 Extreme value statistics
 Fractured rock hydrology
 Geological CO2 storage
@@ -134,7 +132,6 @@ Hydrologic impacts of projected climate change
 Information theory approach to learning
 International water development
 Legal and institutional issues
-Literacy: Public communication and understanding of Western water issues
 Mathematical and goal programming
 Maximum entropy approach to modeling
 Merging models with data
