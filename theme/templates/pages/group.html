@@ -22,7 +22,7 @@
     <div>
         {% if profile_user.is_group_owner or profile_user.is_group_editor %}
         {% if not group.gaccess.active %}
-        <div class="alert alert-warning alert-dismissible" role="alert">
+        <div class="alert alert-warning alert-dismissible has-space-bottom-2x" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                     aria-hidden="true">&times;</span></button>
             This group is set to <strong>inactive.</strong> Only owners of the group have access. Resources
@@ -156,8 +156,8 @@
                 {% endif %}
             </div>
 
-            {% if profile_user.is_group_owner and not group.gaccess.active %}
-            <a href="{% url " restore_user_group" group.id %}">
+            {% if group and profile_user.is_group_owner %}
+            <a href="{% url 'restore_user_group' group.id %}">
                 <span class="glyphicon glyphicon-retweet icon-button" data-toggle="tooltip" data-placement="auto"
                     title="Restore Group"></span></a>
             {% endif %}
@@ -229,8 +229,8 @@
                                 {# Group Name #}
                                 <fieldset class="col-sm-12">
                                     <label>Group Name *</label>
-                                    <small class="text-muted">300 characters or less</small>
-                                    <textarea class="form-control" required="required" name="name" maxlength="300" rows="1"
+                                    <small class="text-muted">150 characters or less</small>
+                                    <textarea class="form-control" required="required" name="name" maxlength="150" rows="1"
                                       >{{ group.name }}</textarea>
                                 </fieldset>
 
@@ -362,7 +362,7 @@
                     <div class="panel-heading">Restore this Group</div>
                     <div class="panel-body">
                         <p>Click on the button below if you want to make the group active again.</p>
-                        <a href="{% url " restore_user_group" group.id %}" class="btn btn-success">
+                        <a href='{% url 'restore_user_group' group.id %}' class="btn btn-success">
                             <span class="glyphicon glyphicon-retweet"></span> Restore this Group</a>
                     </div>
                     {% endif %}
