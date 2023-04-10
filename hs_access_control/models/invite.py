@@ -147,6 +147,10 @@ class GroupCommunityRequest(models.Model):
         community = kwargs['community']
         requester = kwargs['requester']
 
+        if not group.gaccess.active:
+            message = "Group '{}' is not active.".format(group.name)
+            return message, True
+
         # first check whether the group is already in the community (!)
         if group in community.member_groups:
             message = "Group '{}' is already connected to community '{}'."\
@@ -197,6 +201,10 @@ class GroupCommunityRequest(models.Model):
         elif requester.uaccess.owns_community(community):
             # requester owns community (this must be an invite)
             community_owner = requester
+
+            if group not in community_owner.uaccess.my_groups and not group.gaccess.public \
+                    and not group.gaccess.discoverable:
+                raise PermissionDenied("You must be a member of a private group to invite it to a community.")
 
             if 'privilege' in kwargs:  # only set by community owner
                 privilege = kwargs['privilege']
