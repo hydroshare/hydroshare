@@ -25,7 +25,6 @@
                                     <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
                                 </td>
                                 <td>
-                                    <!-- Saves 3 db queries per resource by avoiding get_absolute_url -->
                                     <strong><a href="/resource/{{ res.short_id }}" target="_blank">{{ res.title }}</a></strong></td>
                                 <td>
                                     {% if res.resource_type == "CompositeResource" %}
@@ -40,7 +39,6 @@
                                 </td>
                                 {% with res.raccess as raccess %}
                                     <td>
-                                        <!-- TODO:DRC #5030 if only we could select owners ahead of time... 1 query per res -->
                                         {% with raccess.owners.all|first as owner %}
 
                                             {% if owner.first_name %}

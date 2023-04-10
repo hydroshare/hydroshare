@@ -144,7 +144,6 @@ def get_collectable_resources(user, coll_resource):
                 | Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER)) \
         .exclude(short_id=coll_resource.short_id) \
         .exclude(id__in=coll_resource.resources.values_list("id", flat=True))  # no duplicates!
-    # TODO:DRC #5030 is there a way we can get the user permission on the resources here?
 
     collectable_resources = collectable_resources.only('short_id', 'title', 'resource_type', 'created')
     collectable_resources = collectable_resources.select_related('raccess')
