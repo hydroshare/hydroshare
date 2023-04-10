@@ -22,7 +22,7 @@
     <div>
         {% if profile_user.is_group_owner or profile_user.is_group_editor %}
         {% if not group.gaccess.active %}
-        <div class="alert alert-warning alert-dismissible" role="alert">
+        <div class="alert alert-warning alert-dismissible has-space-bottom-2x" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                     aria-hidden="true">&times;</span></button>
             This group is set to <strong>inactive.</strong> Only owners of the group have access. Resources
