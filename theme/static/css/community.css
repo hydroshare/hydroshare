@@ -5,6 +5,10 @@
   align-items: baseline;
 }
 
+.community-header {
+  word-break: break-all;
+}
+
 .community-info {
   margin-top: 20px;
   word-break: break-all;

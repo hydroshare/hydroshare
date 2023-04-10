@@ -92,6 +92,7 @@ div.group-thumbnails {
 
 .group-purpose {
   overflow-y: auto;
+  word-break: break-all;
 }
 
 .group-name {
@@ -110,6 +111,10 @@ div.group-thumbnails {
 
 #txt-search-groups {
   padding-left: 25px;
+}
+
+.group-container {
+  word-break: break-all;
 }
 
 .group-preview-image-default {
