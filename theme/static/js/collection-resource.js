@@ -35,7 +35,7 @@ $(document).ready(function() {
                     "visible": false,
                 },
                 {
-                    "targets": [6],     // <th>Remove</th>
+                    "targets": [5],     // <th>Remove</th>
                     "visible": false,
                 }
             ],
@@ -75,7 +75,7 @@ $(document).ready(function() {
         "info": false,
         "columnDefs": [
             {
-                "targets": [6],     // <th>Remove</th>
+                "targets": [5],     // <th>Remove</th>
                 "visible": false,
             }
         ],
@@ -569,7 +569,7 @@ function setUpCollectableResourcesDataTable(){
         "info": false,
         "columnDefs": [
             {
-                "targets": [6],     // <th>Remove</th>
+                "targets": [5],     // <th>Remove</th>
                 "visible": false,
             }
         ],
