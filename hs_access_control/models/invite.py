@@ -1,5 +1,5 @@
 from django.contrib.auth.models import Group, User
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -149,17 +149,17 @@ class GroupCommunityRequest(models.Model):
 
         if not group.gaccess.active:
             message = "Group '{}' is not active.".format(group.name)
-            return message, True
+            raise ValidationError(message)
 
         # first check whether the group is already in the community (!)
         if group in community.member_groups:
             message = "Group '{}' is already connected to community '{}'."\
                 .format(group.name, community.name)
-            return message, True
+            raise ValidationError(message)
 
         if community.closed:
             message = "Community '{}' is currently not allowing more groups to join.".format(community.name)
-            return message, True
+            raise ValidationError(message)
 
         # requester owns both community and group
         if requester.uaccess.owns_community(community) and requester.uaccess.owns_group(group):

@@ -358,23 +358,24 @@ class GroupView(GroupCommunityViewMixin):
 
             elif action == CommunityActions.JOIN:  # request to join a community
                 # group owner making a request to join a community
-                message, approved = GroupCommunityRequest.create_or_update(
-                    group=group, community=community, requester=user)
+                try:
+                    message, auto_approved = GroupCommunityRequest.create_or_update(
+                        group=group, community=community, requester=user)
+                    if not auto_approved:
+                        # send email notification to community owners
+                        gcr = GroupCommunityRequest.get_request(community=community, group=group)
+                        CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
+                                                        on_event=CommunityGroupEvents.JOIN_REQUESTED).send()
 
-                if not approved:
-                    # send email to group owner
-                    gcr = GroupCommunityRequest.get_request(community=community, group=group)
-                    # email notify to community owners
-                    CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
-                                                    on_event=CommunityGroupEvents.JOIN_REQUESTED).send()
-
-                # return relevant state
-                return JsonResponse({
-                    'joined': self.get_communities_joined(group),
-                    'pending': self.get_pending_community_requests(group),
-                    'available_to_join': self.get_communities_available_to_join(group)
-                })
-
+                    # return relevant state
+                    return JsonResponse({
+                        'joined': self.get_communities_joined(group),
+                        'pending': self.get_pending_community_requests(group),
+                        'available_to_join': self.get_communities_available_to_join(group)
+                    })
+                except Exception as e:
+                    logger.error(str(e))
+                    denied = str(e)
             elif action == CommunityActions.LEAVE:  # leave a community
                 # group owner making a group leave a community
                 message, worked = GroupCommunityRequest.remove(
@@ -387,7 +388,6 @@ class GroupView(GroupCommunityViewMixin):
                         'joined': self.get_communities_joined(group),
                         'available_to_join': self.get_communities_available_to_join(group)
                     })
-
             else:
                 assert action == CommunityActions.RETRACT
                 # remove a pending request
@@ -599,17 +599,18 @@ class CommunityView(GroupCommunityViewMixin):
             return self.decline_to_join(request_type=CommunityJoinRequestTypes.GROUP_REQUESTING, group=group,
                                         community=community)
 
-        elif action == CommunityActions.INVITE:
+        elif action == CommunityActions.INVITE: # community owner inviting a group to join
             group = Group.objects.get(id=gid)
             try:
-                message, approved = GroupCommunityRequest.create_or_update(
+                message, auto_approved = GroupCommunityRequest.create_or_update(
                     requester=user, group=group, community=community)
-                # send email to group owner
-                gcr = GroupCommunityRequest.get_request(community=community, group=group)
-                CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
-                                                on_event=CommunityGroupEvents.INVITED).send()
+                if not auto_approved:
+                    # send email to group owner
+                    gcr = GroupCommunityRequest.get_request(community=community, group=group)
+                    CommunityGroupEmailNotification(request=self.request, group_community_request=gcr,
+                                                    on_event=CommunityGroupEvents.INVITED).send()
                 context = {}
-                if approved:
+                if auto_approved:
                     context['members'] = self.get_group_members(community)
                 context['pending'] = self.get_pending_requests(community)
                 return JsonResponse(context)
