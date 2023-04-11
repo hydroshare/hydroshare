@@ -23,10 +23,9 @@ class ListUniversities(APIView):
         term_list = terms.split(' ')
 
         if len(term_list):
-            filtered_unis = University.objects.filter(
+            universities = University.objects.filter(
                 reduce(lambda x, y: x & y, [Q(name__icontains=word) for word in term_list])
-            )
-            universities = [uni.name for uni in filtered_unis]
+            ).values_list('name', flat=True)
         else:
             universities = []
 
@@ -51,10 +50,9 @@ class ListSubjectAreas(APIView):
         term_list = terms.split(' ')
 
         if len(term_list):
-            filtered_sas = SubjectArea.objects.filter(
+            subject_areas = SubjectArea.objects.filter(
                 reduce(lambda x, y: x & y, [Q(name__icontains=word) for word in term_list])
-            )
-            subject_areas = [uni.name for uni in filtered_sas]
+            ).values_list('name', flat=True)
         else:
             subject_areas = []
 
