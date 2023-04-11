@@ -8,7 +8,6 @@ from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q
 
 from hs_access_control.models import PrivilegeCodes
-from hs_access_control.models.privilege import UserResourcePrivilege
 from hs_core.hydroshare.resource import add_resource_files, delete_resource_file_only
 from hs_core.hydroshare.utils import current_site_url, resource_modified
 from hs_core.views.utils import get_my_resources_list
@@ -148,17 +147,6 @@ def get_collectable_resources(user, coll_resource):
 
     collectable_resources = collectable_resources.only('short_id', 'title', 'resource_type', 'created')
     collectable_resources = collectable_resources.select_related('raccess')
-
-    # fetch the owners of the resources rather than query for each resource
-    collectable_resources_dict = {r.short_id: r for r in collectable_resources}
-    collectable_resource_ids = collectable_resources_dict.keys()
-    urp_qs = UserResourcePrivilege.objects \
-        .filter(resource__short_id__in=collectable_resource_ids, privilege=PrivilegeCodes.OWNER)\
-        .select_related("user", "resource") \
-        .distinct()
-    for urp in urp_qs:
-        r = collectable_resources_dict[urp.resource.short_id]
-        r.owner = urp.user
 
     return collectable_resources
 

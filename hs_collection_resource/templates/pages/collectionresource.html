@@ -65,6 +65,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
+                                            <!-- TODO:DRC #5030 -->
                                             {% with res.owner as owner %}
                                                 {% if owner.first_name %}
                                                     <strong><a href='/user/{{ owner.pk }}/'
