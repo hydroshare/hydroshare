@@ -10,6 +10,7 @@ from hs_core.enums import RelationTypes
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 from .utils import add_or_remove_relation_metadata, get_collectable_resources
+from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -31,7 +32,15 @@ def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
             raise Exception(f"Collection {shortkey} is a published collection and can't be changed")
 
         collectable_resources = get_collectable_resources(user, collection_res)
-        context = {'collectable_resources': collectable_resources}
+
+        # fetch the owners of the resources rather than query for each resource
+        collectable_resource_ids = [r.short_id for r in collectable_resources]
+        urp_qs = UserResourcePrivilege.objects \
+            .filter(resource__short_id__in=collectable_resource_ids, privilege=PrivilegeCodes.OWNER)\
+            .select_related("user", "resource") \
+            .distinct()
+
+        context = {'user_resource_privileges': urp_qs}
         template_name = 'pages/collectable_resources_modal.html'
         collectable_resources_modal_html = render_to_string(template_name, context, request)
     except Exception as ex:
