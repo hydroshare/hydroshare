@@ -35,7 +35,7 @@
         {% if groups %}
         {% for group in groups %}
         {% if group.gaccess.public or group.gaccess.discoverable or group.is_user_member %}
-        <div class="group-container">
+        <div class="group-container word-break-normal">
             <div class="group-thumbnail contribution">
                 <div class="flex flex-sm-column justify-space-between gap-1 group-thumbnail-header">
                     {% if group.gaccess.picture and group.gaccess.picture.url %}
@@ -105,14 +105,14 @@
                 <div class="group-caption">
                     <h3 class="group-name"><a href="/group/{{ group.id }}">{{ group.name }}</a></h3>
                     {% if group.gaccess.purpose %}
-                    <div class="group-purpose text-muted">
+                    <div class="group-purpose word-break-normal text-muted">
                         <p>{{ group.gaccess.purpose|linebreaks}}</p>
                     </div>
                     {% endif %}
 
                     {% if group.gaccess.description %}
                     <h5 class="is-marginless has-space-top">About this group:</h5>
-                    <div class="group-description has-space-bottom">
+                    <div class="group-description has-space-bottom word-break-normal">
                         <p>{{ group.gaccess.description|linebreaks }}</p>
                     </div>
                     {% endif %}

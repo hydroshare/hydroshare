@@ -40,7 +40,7 @@
     {% endif %}
 
     {% for community in communities_list %}
-    <div class="group-container">
+    <div class="group-container word-break-normal">
       <div class="group-thumbnail contribution community">
         {% if community.banner and community.banner.url %}
         <div class="community-banner" style="background-image: url({{ community.banner.url }})">
@@ -73,7 +73,7 @@
           </h3>
 
           {% if community.purpose %}
-          <div class="group-purpose text-muted">
+          <div class="group-purpose word-break-normal text-muted">
             <p>{{ community.purpose|linebreaks }}</p>
           </div>
           {% endif %}

@@ -85,7 +85,7 @@
           </div>
           <div class="community-card--info flex-grow-1">
             <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>
-            <p v-if="community.purpose">${ community.purpose }</p>
+            <p v-if="community.purpose" class="has-space-top">${ community.purpose }</p>
             <!-- TODO (phase 2): auto share -->
             <!-- <div class="checkbox">
               <label :for="'auto-share-' + community.id">

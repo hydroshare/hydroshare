@@ -4815,3 +4815,8 @@ div.property-selector {
 .full-width {
   width: 100%;
 }
+
+.word-break-normal {
+  word-break: normal;
+  overflow-wrap: anywhere;
+}

@@ -28,7 +28,7 @@
 
 <div id="community-app" class="container">
   <div v-if="community" class="container full-width" style="padding: 0;">
-    <div class="container community-header">
+    <div class="container word-break-normal">
       {% if is_admin %}
       {% include 'hs_communities/community-settings-add-owner.html' %}
       {% endif %}
@@ -56,7 +56,7 @@
 
           <!-- Community Info -->
           {% if community.email or community.url %}
-          <div class="community-info">
+          <div class="community-info word-break-normal">
             {% if community.url %}
             <div v-if="community.url" class="text-muted">
               <i class="fa fa-link"></i> <a :href="community.url" target="_blank">{{ community.url }}</a>

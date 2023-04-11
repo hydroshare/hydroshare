@@ -87,12 +87,10 @@ div.group-thumbnails {
 .group-description {
   flex: 2 1 150px;
   overflow-y: auto;
-  word-break: break-word;
 }
 
 .group-purpose {
   overflow-y: auto;
-  word-break: break-all;
 }
 
 .group-name {
@@ -113,17 +111,11 @@ div.group-thumbnails {
   padding-left: 25px;
 }
 
-.group-container {
-  word-break: break-all;
-}
-
 .group-preview-image-default {
   background-size: initial;
   background-repeat: no-repeat;
 }
 
-.group-image-wrapper > .group-image-small,
-.community-image-wrapper > .community-image-small,
 .group-preview-image-default {
   background-color: #093e54;
 }
@@ -135,7 +127,6 @@ div.group-thumbnails {
   width: 120px;
   background-size: cover;
   background-position: center center;
-  background-color: #093e54;
   display: inline-block;
 }
 
@@ -170,7 +161,6 @@ div.group-thumbnails {
   background-repeat: no-repeat;
   background-position: center center;
   display: inline-block;
-  background-color: #093e54;
 }
 
 .group-image-extra-small {
@@ -294,7 +284,7 @@ hr.solid {
 .group-thumbnail .community-banner {
   height: 12rem;
   background-size: cover;
-  background-position: center center;
+  background-position: left center;
   margin-bottom: -4rem;
 }
 
@@ -305,7 +295,7 @@ hr.solid {
 }
 
 .group-thumbnail .community-banner.czo-banner {
-  background-position: left;
+  background-position: left center;
   background-size: cover;
   background-repeat: no-repeat;
 }
