@@ -33,7 +33,6 @@
                         <th>Type</th>
                         <th>Owners</th>
                         <th>Sharing Status</th>
-                        <th>My Permission</th>
                         <th>Remove</th>
                     </tr>
                     </thead>
@@ -89,15 +88,6 @@
 
                                             {% if raccess.shareable %}
                                                  & Shareable
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if upermission|lower == "none" %}
-                                                <strong class="label-private">{{ upermission }}</strong>
-                                            {% elif upermission|lower == "open access" %}
-                                                <strong class="label-public">{{ upermission }}</strong>
-                                            {% else %}
-                                                {{ upermission }}
                                             {% endif %}
                                         </td>
                                         <td>
