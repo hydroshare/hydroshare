@@ -69,7 +69,7 @@ div.group-thumbnails {
   gap: 2rem;
 }
 
-.group-caption {
+.group-caption, .community-caption {
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -84,12 +84,28 @@ div.group-thumbnails {
   padding-top: 5px;
 }
 
-.group-description {
+.group-description,
+.community-description {
   flex: 2 1 150px;
   overflow-y: auto;
 }
 
-.group-purpose {
+/** Custom scrollbar for card content **/
+.group-caption ::-webkit-scrollbar,
+.community-caption ::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+
+.group-caption ::-webkit-scrollbar-thumb,
+.community-caption ::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0,0,0,.5);
+  -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+/** ========== **/
+
+.group-purpose, .community-purpose {
   overflow-y: auto;
 }
 
@@ -125,7 +141,8 @@ div.group-thumbnails {
   height: 120px;
   text-align: center;
   width: 120px;
-  background-size: cover;
+  background-size: contain;
+  background-repeat: no-repeat;
   background-position: center center;
   display: inline-block;
 }
