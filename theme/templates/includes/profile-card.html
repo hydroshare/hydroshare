@@ -50,9 +50,7 @@
 
                     <div v-if="user.subject_areas" class="space-top">
                         <small class="text-muted">Subject Areas:</small>
-                        <div>
-                            ${expandedSubjectAreas}
-                        </div>
+                        <div>${user.subject_areas.join(", ")}</div>
                     </div>
 
                     <div v-if="hasIdentifiers" class="space-top">
