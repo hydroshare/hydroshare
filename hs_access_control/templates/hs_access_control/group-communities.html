@@ -14,6 +14,12 @@
     <!-- PENDING INVITATIONS -->
     <div v-if="isGroupOwner && pending.length">
       <h4 class="heading">Pending Community Membership Requests</h4>
+      <div v-if="isGroupPrivate" class="alert alert-warning">
+        <div class="flex align-center flex-sm-column">
+          <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+          <div>The owners of the communities you accept to join will be able to see the metadata for your group.</div>
+        </div>
+      </div>
       <div v-for="request of pending" class="group-community-card panel panel-default">
         <div class="panel-body flex gap-1 align-center">
           <div v-if="request.community.logo" class="group-image-wrapper medium">
@@ -26,8 +32,9 @@
             </div>
           </div>
           <div class="community-card--info">
-            <a class="community-card--heading" :href="'/community/' + request.community.id">${ request.community.name }</a>
-            <p v-if="request.community.purpose">${ request.community.purpose }</p>
+            <a class="community-card--heading" :href="'/community/' + request.community.id"
+              >${ request.community.name }</a>
+            <p v-if="request.community.purpose" class="has-space-top">${ request.community.purpose }</p>
             <!-- TODO (phase 2): auto share -->
             <!-- <div class="checkbox">
               <label :for="'auto-share-' + request.community.id">
