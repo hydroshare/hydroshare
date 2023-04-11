@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import pre_save
 from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import gettext_lazy as _
@@ -309,10 +310,12 @@ class UserProfile(models.Model):
     user_type = models.CharField(
         max_length=1024, null=True, blank=True, default="Unspecified"
     )
-    subject_areas = models.CharField(
-        max_length=1024, null=True, blank=True,
+    subject_areas = ArrayField(
+        models.CharField(max_length=1024),
         help_text='A list of subject areas you are interested in researching. e.g. "Water Management." '
-                  'Free text entry or select from the suggestions')
+                  'Free text entry or select from the suggestions',
+        null=True, blank=True
+    )
     organization = models.CharField(
         max_length=1024,
         null=True,

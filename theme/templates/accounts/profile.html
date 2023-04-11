@@ -126,9 +126,13 @@
                                             <tr>
                                                 <td><span class="text-muted">Subject Areas: </span></td>
                                                 <td>
-                                                    {% with profile.subject_areas|expand:"," as subject_areas %}
-                                                        {{subject_areas}}
-                                                    {% endwith %}
+                                                    {% for subject_area in profile.subject_areas %}
+                                                        {% if not forloop.last %}
+                                                            {{subject_area}},
+                                                        {% else %}
+                                                            {{subject_area}}
+                                                        {% endif %}
+                                                    {% endfor %}
                                                 </td>
                                             </tr>
                                         {% endif %}
@@ -221,7 +225,7 @@
                                 {# Subject areas #}
                                 <fieldset>
                                     <label>Subject areas</label>
-                                    <input id="subject_areas" class="form-control tagsinput" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
+                                    <input id="subject_areas" class="form-control tagsinput" {% if profile.subject_areas %}value="{{ profile.subject_areas|join:',' }}"{% endif %} name="subject_areas">
                                     <small class="text-muted">A list of subject areas you are interested in researching. e.g. "Water Management." Free text entry or select from the suggestions.
                                     </small>
                                 </fieldset>

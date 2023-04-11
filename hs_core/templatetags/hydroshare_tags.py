@@ -201,12 +201,12 @@ def name_without_commas(name):
     return name  # default
 
 
-@register.filter(name='expand')
-def expand(value, delimiter):
+@register.filter(name='join')
+def join(value, delimiter):
     """
-        Returns the value with whitespace after delimiter
+        Returns the array joined with delimiter
     """
-    return value.replace(f'{delimiter}', f'{delimiter} ')
+    return f'{delimiter}'.join(value)
 
 
 @register.filter
