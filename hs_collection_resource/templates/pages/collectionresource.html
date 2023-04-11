@@ -33,7 +33,6 @@
                         <th>Type</th>
                         <th>Owners</th>
                         <th>Sharing Status</th>
-                        <th>My Permission</th>
                         <th>Remove</th>
                     </tr>
                     </thead>
@@ -66,7 +65,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {% with raccess.owners.all|first as owner %}
+                                            {% with res.owner as owner %}
                                                 {% if owner.first_name %}
                                                     <strong><a href='/user/{{ owner.pk }}/'
                                                                target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
@@ -89,15 +88,6 @@
 
                                             {% if raccess.shareable %}
                                                  & Shareable
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if upermission|lower == "none" %}
-                                                <strong class="label-private">{{ upermission }}</strong>
-                                            {% elif upermission|lower == "open access" %}
-                                                <strong class="label-public">{{ upermission }}</strong>
-                                            {% else %}
-                                                {{ upermission }}
                                             {% endif %}
                                         </td>
                                         <td>

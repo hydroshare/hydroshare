@@ -39,7 +39,7 @@
                                 </td>
                                 {% with res.raccess as raccess %}
                                     <td>
-                                        {% with raccess.owners.all|first as owner %}
+                                        {% with res.owner as owner %}
 
                                             {% if owner.first_name %}
                                                 <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>

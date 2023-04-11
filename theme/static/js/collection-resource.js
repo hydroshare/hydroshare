@@ -14,8 +14,7 @@ $(document).ready(function() {
     //                <th>Type</th>            2
     //                <th>Owners</th>          3
     //                <th>Sharing status</th>  4
-    //                <th>My Permission</th>   5
-    //                <th>Remove</th>          6
+    //                <th>Remove</th>          5
 
     var edit_mode = $("#edit-mode").val();
     var published = $("#published").val();
@@ -557,8 +556,7 @@ function setUpCollectableResourcesDataTable(){
     //                <th>Type</th>            2
     //                <th>Owners</th>          3
     //                <th>Sharing status</th>  4
-    //                <th>My Permission</th>   5
-    //                <th>Remove</th>          6
+    //                <th>Remove</th>          5
 
     resourceTable = $("#collection-table-candidate").DataTable({
         "order": [[2, "asc"]],
