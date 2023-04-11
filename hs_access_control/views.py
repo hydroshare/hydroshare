@@ -599,7 +599,7 @@ class CommunityView(GroupCommunityViewMixin):
             return self.decline_to_join(request_type=CommunityJoinRequestTypes.GROUP_REQUESTING, group=group,
                                         community=community)
 
-        elif action == CommunityActions.INVITE: # community owner inviting a group to join
+        elif action == CommunityActions.INVITE:  # community owner inviting a group to join
             group = Group.objects.get(id=gid)
             try:
                 message, auto_approved = GroupCommunityRequest.create_or_update(

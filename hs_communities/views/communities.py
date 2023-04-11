@@ -79,8 +79,9 @@ class CommunityView(TemplateView):
                 if is_admin:
                     # Community owners can invite any group in which they are members, or groups that are public
                     # or discoverable
-                    groups = Group.objects.filter(Q(g2ugp__user=user) | Q(gaccess__public=True) |
-                                                  Q(gaccess__discoverable=True)).distinct()
+                    groups = Group.objects \
+                        .filter(Q(g2ugp__user=user) | Q(gaccess__public=True) | Q(gaccess__discoverable=True)) \
+                        .distinct()
 
                     # forms needed for admin actions
                     hs_core_dublin_context = add_generic_context(self.request, None)
