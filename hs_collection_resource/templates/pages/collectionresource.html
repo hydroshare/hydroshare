@@ -65,8 +65,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <!-- TODO:DRC #5030 -->
-                                            {% with res.owner as owner %}
+                                            {% with raccess.owners.all|first as owner %}
                                                 {% if owner.first_name %}
                                                     <strong><a href='/user/{{ owner.pk }}/'
                                                                target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
