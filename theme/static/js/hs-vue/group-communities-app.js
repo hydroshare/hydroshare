@@ -22,6 +22,7 @@ let groupCommunitiesApp = new Vue({
     this.joined = appData.joined;
     this.pending = appData.pending;
     this.availableToJoin = appData.available_to_join;
+    this.isGroupPrivate = appData.is_group_private;
   },
   methods: {
     leaveCommunity: async function(id) {

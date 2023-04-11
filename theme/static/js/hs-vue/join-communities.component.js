@@ -10,6 +10,7 @@ Vue.component("join-communities", {
       type: Array,
       default: [],
     },
+    isGroupPrivate: { type: Boolean },
     defaultGroupId: { type: Number },
     defaultCommunityId: { type: Number },
   },

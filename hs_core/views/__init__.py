@@ -2615,10 +2615,10 @@ class GroupView(TemplateView):
         message = ""
         group_id = kwargs["group_id"]
         denied = self.hydroshare_denied(group_id)
-        if denied == "":
-            group = Group.objects.select_related("gaccess").get(pk=group_id)
 
         if denied == "":
+            group = Group.objects.select_related("gaccess").get(pk=group_id)
+            data["is_group_private"] = 0 if group.gaccess.public or group.gaccess.discoverable else 1
             data["denied"] = denied  # empty string means ok
             data["message"] = message
             data["gid"] = group_id
