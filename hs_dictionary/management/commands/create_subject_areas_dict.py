@@ -6,7 +6,6 @@ from os.path import dirname
 
 from django.core.management.base import BaseCommand
 from hs_dictionary.models import SubjectArea
-from theme.models import UserProfile
 import imp
 
 imp.reload(sys)
