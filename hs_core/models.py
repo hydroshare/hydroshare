@@ -871,7 +871,7 @@ class Date(AbstractMetaDataElement):
         ('available', 'Available')
     )
     HS_DATE_TYPE_CHOICES = (
-        ('reviewStarted', 'Review Started'),
+        ('review_started', 'Review Started'),
         ('published', 'Published')
     )
     DATE_TYPE_CHOICES = DC_DATE_TYPE_CHOICES + HS_DATE_TYPE_CHOICES
