@@ -871,7 +871,7 @@ class Date(AbstractMetaDataElement):
         ('available', 'Available')
     )
     HS_DATE_TYPE_CHOICES = (
-        ('review_started', 'Review Started'),
+        ('reviewStarted', 'Review Started'),
         ('published', 'Published')
     )
     DATE_TYPE_CHOICES = DC_DATE_TYPE_CHOICES + HS_DATE_TYPE_CHOICES
@@ -933,9 +933,9 @@ class Date(AbstractMetaDataElement):
             if kwargs['type'] == 'published':
                 if not resource.raccess.published:
                     raise ValidationError("Resource is not published yet.")
-            if kwargs['type'] == 'review_started':
-                if not resource.raccess.review_pending:
-                    raise ValidationError("Review is not pending yet.")
+            if kwargs['type'] == 'reviewStarted':
+                if resource.raccess.review_pending:
+                    raise ValidationError("Review is already pending.")
             elif kwargs['type'] == 'available':
                 if not resource.raccess.public:
                     raise ValidationError("Resource has not been made public yet.")
