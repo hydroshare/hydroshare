@@ -248,11 +248,6 @@ class MyCommunitiesView(TemplateView):
         user_is_admin = user.is_authenticated and user.is_superuser
 
         if user_is_admin:
-            admin_all_requests = []
-            for request in RequestCommunity.all_requests() \
-                    .select_related("requested_by", "requested_by__userprofile").order_by("-date_requested"):
-                admin_all_requests.append(community_request_json(request))
-            context["admin_all_requests"] = admin_all_requests
             context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
 
         context["communities_list"] = communities_member_of
@@ -334,12 +329,6 @@ class CommunityCreationRequest(TemplateView):
         if denied == "" and rid is not None:
             req = RequestCommunity.objects.get(id=int(rid))
             context["community_request"] = community_request_json(req)
-
-            admin_all_requests = []
-            for request in RequestCommunity.all_requests().order_by("-date_requested"):
-                admin_all_requests.append(community_request_json(request))
-
-            context["admin_all_requests"] = admin_all_requests
             context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
         else:
             context["denied"] = denied
