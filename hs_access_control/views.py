@@ -23,16 +23,14 @@ from hs_access_control.models.privilege import PrivilegeCodes, UserCommunityPriv
 logger = logging.getLogger(__name__)
 
 
-def user_json(user):
+def user_json(user, minimal=True):
     """ JSON format for user data suitable for UI """
     if user is not None:
-        user.viewable_contributions = user.uaccess.can_view_resources_owned_by(user)
-
         picture = None
         if user.userprofile.picture:
             picture = user.userprofile.picture.url
 
-        return {
+        user_data = {
             "id": user.id,
             "pictureUrl": picture or '',
             "best_name": best_name(user),
@@ -44,8 +42,8 @@ def user_json(user):
             "email": user.email,
             "organization": user.userprofile.organization or '',
             "title": user.userprofile.title or '',
-            "contributions": len(user.uaccess.owned_resources) if user.is_active else None,
-            "viewable_contributions": user.viewable_contributions if user.is_active else None,
+            "contributions": 0,
+            "viewable_contributions": 0,
             "subject_areas": user.userprofile.subject_areas or '',
             "identifiers": user.userprofile.identifiers,
             "state": user.userprofile.state or '',
@@ -53,6 +51,10 @@ def user_json(user):
             "joined": user.date_joined.strftime("%d %b, %Y"),
             "is_active": 1 if user.is_active else 0
         }
+        if not minimal and user.is_active:
+            user.viewable_contributions = user.uaccess.owned_resources.count()
+            user_data["viewable_contributions"] = user.viewable_contributions
+        return user_data
     else:
         return {}
 
@@ -112,7 +114,7 @@ def community_json(community):
             'logo': logo_url or '',
             'banner': banner_url or '',
             'closed': 1 if community.closed is True else 0,
-            'owners': [user_json(u) for u in community.owners],
+            'owners': [user_json(u, minimal=False) for u in community.owners],
             'is_czo_community': 1 if community.is_czo_community() else 0
         }
     else:
@@ -138,12 +140,11 @@ def group_community_request_json(request):
     }
 
 
-def community_request_json(cr):
+def community_request_json(cr, include_requested_by=False, minimal_user_data=True):
     """ JSON format for community request data suitable for UI """
     if cr is not None:
-        return {
+        cr_data = {
             'id': cr.id,
-            'requested_by': user_json(cr.requested_by),
             'community_to_approve': community_json(cr.community_to_approve),
             'date_requested': cr.date_requested.strftime("%m/%d/%Y, %H:%M:%S"),
             'date_processed': 0 if cr.pending_approval or not cr.date_processed
@@ -154,6 +155,9 @@ def community_request_json(cr):
             'decline_reason': cr.decline_reason if cr.decline_reason is not None else '',
             'is_cancelled': 1 if cr.cancelled is True else 0
         }
+        if include_requested_by:
+            cr_data['requested_by'] = user_json(cr.requested_by, minimal_user_data)
+        return cr_data
     else:
         return {}
 
@@ -406,6 +410,7 @@ class GroupView(GroupCommunityViewMixin):
             return error_response(denied)
 
     def get(self, *args, **kwargs):
+        # TODO: this get request seems to be NOT used anywhere - remove it if it is not used
         gid = kwargs['gid']
         denied = self.hydroshare_denied(gid)
         if denied:
