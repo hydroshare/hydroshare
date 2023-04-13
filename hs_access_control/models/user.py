@@ -1574,7 +1574,7 @@ class UserAccess(models.Model):
         :param owner: The owner whose resources will be checked for viewing
         :return: Count of owner's resources that can be viewed
         """
-        if self.user.id == owner.id:
+        if self.user.id == owner.id or self.user.is_superuser:
             if not self.user.is_active:
                 raise PermissionDenied("Requesting user is not active")
             return owner.uaccess.owned_resources.count()
