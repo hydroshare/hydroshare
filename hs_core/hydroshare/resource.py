@@ -1043,13 +1043,14 @@ def submit_resource_for_review(request, pk):
     from hs_core.views.utils import send_action_to_take_email
     send_action_to_take_email(request, user=user_to, user_from=request.user,
                               action_type='metadata_review', resource=resource)
+
+    # create review date -- must be before review_pending = True
+    resource.metadata.dates.all().filter(type='reviewStarted').delete()
+    resource.metadata.create_element('date', type='reviewStarted', start_date=datetime.datetime.now(tz.UTC))
+
     resource.raccess.review_pending = True
     resource.raccess.immutable = True
     resource.raccess.save()
-
-    # create review date -- must be after review_pending = True
-    resource.metadata.dates.all().filter(type='review_started').delete()
-    resource.metadata.create_element('date', type='review_started', start_date=datetime.datetime.now(tz.UTC))
 
 
 def publish_resource(user, pk):
