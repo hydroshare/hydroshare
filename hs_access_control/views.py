@@ -420,68 +420,6 @@ class GroupView(GroupCommunityViewMixin):
         if denied:
             return error_response(denied)
 
-    def get(self, *args, **kwargs):
-        # TODO: this get request seems to be NOT used anywhere - remove it if it is not used
-        gid = kwargs['gid']
-        denied = self.hydroshare_denied(gid)
-        if denied:
-            return error_response(denied)
-
-        group = Group.objects.get(id=gid)
-        user = self.request.user
-        context = {}
-        context['denied'] = denied  # empty string means ok
-        context['user'] = user_json(user)
-        context['group'] = group_json(group, include_owners=True)
-
-        # communities joined
-        context['joined'] = []
-        for c in Community.objects.filter(c2gcp__group=group).order_by('name'):
-            context['joined'].append(community_json(c))
-
-        gcr_select_related = ['community', 'group', 'group__gaccess', 'group_owner', 'group_owner__userprofile',
-                              'group_owner__uaccess', 'community_owner', 'community_owner__userprofile',
-                              'community_owner__uaccess']
-        # invites from communities to be approved or declined
-        context['approvals'] = []
-        for r in GroupCommunityRequest.objects.filter(
-                group=group,
-                group__gaccess__active=True,
-                group_owner__isnull=True) \
-                .select_related(*gcr_select_related) \
-                .order_by('community__name'):
-            context['approvals'].append(group_community_request_json(r))
-
-        # pending requests from this group
-        context['pending'] = []
-        for r in GroupCommunityRequest.objects.filter(
-                group=group, redeemed=False, community_owner__isnull=True) \
-                .select_related(*gcr_select_related) \
-                .order_by('community__name'):
-            context['pending'].append(group_community_request_json(r))
-
-        # requests that were declined by others
-        context['group_declined'] = []
-        for r in GroupCommunityRequest.objects \
-                .filter(
-                group=group, redeemed=True, approved=False,
-                when_group__lt=F('when_community')) \
-                .select_related(*gcr_select_related) \
-                .order_by('community__name'):
-            context['group_declined'].append(group_community_request_json(r))
-
-        # requests that were declined by us
-        context['community_declined'] = []
-        for r in GroupCommunityRequest.objects.filter(
-                group=group, redeemed=True, approved=False,
-                when_group__gt=F('when_community')) \
-                .select_related(*gcr_select_related) \
-                .order_by('community__name'):
-            context['community_declined'].append(group_community_request_json(r))
-
-        return JsonResponse(context)
-
-
 class CommunityView(GroupCommunityViewMixin):
     """ Community transaction engine manages inviting and approving groups """
 
