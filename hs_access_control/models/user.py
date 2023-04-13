@@ -1569,17 +1569,18 @@ class UserAccess(models.Model):
 
     def can_view_resources_owned_by(self, owner):
         """
-        Whether user can view the resources owned by another user
+        Count of resources that self has permission to view that are owned by owner.
 
         :param owner: The owner whose resources will be checked for viewing
         :return: Count of owner's resources that can be viewed
         """
-        these_resources = owner.uaccess.owned_resources
-        viewable_count = 0
-        for resource in these_resources:
-            if self.can_view_resource(resource):
-                viewable_count += 1
-        return viewable_count
+        if self.user.id == owner.id:
+            if not self.user.is_active:
+                raise PermissionDenied("Requesting user is not active")
+            return owner.uaccess.owned_resources.count()
+
+        resource_ids = owner.uaccess.owned_resources.only('id').values_list('id', flat=True)
+        return self.view_resources.filter(id__in=resource_ids).count()
 
     def can_delete_resource(self, this_resource):
         """
