@@ -1,117 +1,103 @@
-import json
 import datetime
-from dateutil import tz
+import json
 import logging
-from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
-from django.db.models import Q
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
-from django.core.mail import send_mail
+from autocomplete_light import shortcuts as autocomplete_light
+from dateutil import tz
+from django import forms
+from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
-from django.contrib import messages
-from django.utils.decorators import method_decorator
-from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
+from django.core import signing
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
+from django.core.mail import send_mail
+from django.db import Error, IntegrityError
+from django.db.models import Q
+from django.forms.models import model_to_dict
 from django.http import (
-    HttpResponseRedirect,
     HttpResponse,
-    JsonResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
+    HttpResponseRedirect,
+    JsonResponse,
 )
-from django.shortcuts import get_object_or_404, render, redirect
-from django.core import signing
-from django.db import Error, IntegrityError
-from django import forms
-from django.views.generic import TemplateView
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.forms.models import model_to_dict
-
-from rest_framework import status
-from rest_framework.decorators import api_view
-
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
-from mezzanine.utils.email import subject_template, send_mail_template
-
-from autocomplete_light import shortcuts as autocomplete_light
+from mezzanine.utils.email import send_mail_template, subject_template
+from rest_framework import status
+from rest_framework.decorators import api_view
+from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from django_irods.icommands import SessionException
-
+from hs_access_control.emails import CommunityRequestEmailNotification
+from hs_access_control.enums import CommunityRequestEvents
+from hs_access_control.forms import RequestNewCommunityForm, UpdateCommunityForm
+from hs_access_control.models import Community, GroupCommunityRequest, UserGroupPrivilege
+from hs_access_control.models import GroupMembershipRequest, GroupResourcePrivilege, PrivilegeCodes
+from hs_access_control.views import community_json, group_community_request_json
 from hs_core import hydroshare
+from hs_core import signals
+from hs_core.enums import RelationTypes
+from hs_core.hydroshare.resource import (
+    METADATA_STATUS_INSUFFICIENT,
+    METADATA_STATUS_SUFFICIENT,
+    update_quota_usage as update_quota_usage_utility,
+)
 from hs_core.hydroshare.utils import (
     get_resource_by_shortkey,
-    resource_modified,
     resolve_request,
+    resource_modified,
 )
-from .utils import (
-    authorize,
-    upload_from_irods,
-    ACTION_TO_AUTHORIZE,
-    run_script_to_update_hyrax_input_files,
-    get_my_resources_list,
-    send_action_to_take_email,
-    get_coverage_data_dict,
-    get_my_resources_filter_counts,
-)
-
 from hs_core.models import (
     BaseResource,
-    resource_processor,
     CoreMetaData,
     Subject,
     TaskNotification,
+    resource_processor,
 )
-from hs_core.hydroshare.resource import (
-    METADATA_STATUS_SUFFICIENT,
-    METADATA_STATUS_INSUFFICIENT,
-    update_quota_usage as update_quota_usage_utility,
-)
-
-from hs_tools_resource.app_launch_helper import resource_level_tool_urls
-
 from hs_core.task_utils import (
-    get_all_tasks,
-    revoke_task_by_id,
     dismiss_task_by_id,
-    set_task_delivered_by_id,
+    get_all_tasks,
     get_or_create_task_notification,
-    get_task_user_id,
     get_resource_delete_task,
+    get_task_user_id,
+    revoke_task_by_id,
+    set_task_delivered_by_id,
 )
 from hs_core.tasks import (
     copy_resource_task,
-    replicate_resource_bag_to_user_zone_task,
     create_new_version_resource_task,
     delete_resource_task,
+    replicate_resource_bag_to_user_zone_task,
 )
-from hs_core.enums import RelationTypes
-
-from . import resource_rest_api
-from . import resource_metadata_rest_api
-from . import user_rest_api
-from . import resource_folder_hierarchy
-
-from . import resource_access_api
-from . import resource_folder_rest_api
-from . import debug_resource_view
-from . import resource_ticket_rest_api
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from . import apps
-
-from hs_core.hydroshare import utils
-
-from hs_core import signals
-
-from hs_access_control.models import (
-    PrivilegeCodes,
-    GroupMembershipRequest,
-    GroupResourcePrivilege,
+from . import debug_resource_view
+from . import resource_access_api
+from . import resource_folder_hierarchy
+from . import resource_folder_rest_api
+from . import resource_metadata_rest_api
+from . import resource_rest_api
+from . import resource_ticket_rest_api
+from . import user_rest_api
+from .utils import (
+    ACTION_TO_AUTHORIZE,
+    authorize,
+    get_coverage_data_dict,
+    get_my_resources_filter_counts,
+    get_my_resources_list,
+    run_script_to_update_hyrax_input_files,
+    send_action_to_take_email,
+    upload_from_irods,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +108,7 @@ def short_url(request, *args, **kwargs):
     except KeyError:
         raise TypeError("shortkey must be specified...")
 
-    m = get_resource_by_shortkey(shortkey)
+    m = hydroshare.utils.get_resource_by_shortkey(shortkey)
     return HttpResponseRedirect(m.get_absolute_url())
 
 
@@ -249,7 +235,7 @@ def change_quota_holder(request, shortkey):
         )
         return JsonResponse(ajax_response_data)
 
-    res = utils.get_resource_by_shortkey(shortkey)
+    res = hydroshare.utils.get_resource_by_shortkey(shortkey)
     try:
         res.set_quota_holder(request.user, new_holder_u)
 
@@ -274,7 +260,7 @@ def change_quota_holder(request, shortkey):
             "message"
         ] = "You do not have permission to change the quota holder for this resource."
         return JsonResponse(ajax_response_data)
-    except utils.QuotaException as ex:
+    except hydroshare.utils.QuotaException as ex:
         msg = (
             "Failed to change quota holder to {0} since {0} does not have "
             "enough quota to hold this new resource. The exception quota message "
@@ -352,7 +338,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         file_folder = file_folder[len("data/contents/") :]
 
     try:
-        utils.resource_file_add_pre_process(
+        hydroshare.utils.resource_file_add_pre_process(
             resource=resource,
             files=res_files,
             user=request.user,
@@ -1093,7 +1079,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
                 shortkey, new_res_id=None, request_username=user.username
             )
             return HttpResponseRedirect(response_url)
-        except utils.ResourceCopyException:
+        except hydroshare.utils.ResourceCopyException:
             return HttpResponseRedirect(res.get_absolute_url())
 
 
@@ -1152,7 +1138,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         try:
             response_url = create_new_version_resource_task(shortkey, user.username)
             return HttpResponseRedirect(response_url)
-        except utils.ResourceVersioningException as ex:
+        except hydroshare.utils.ResourceVersioningException as ex:
             request.session[
                 "resource_creation_error"
             ] = "Failed to create a new version of " "this resource: " + str(ex)
@@ -1354,9 +1340,9 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
     group_to_share_with = None
     status_code = 200
     if user_or_group == "user":
-        user_to_share_with = utils.user_from_id(user_or_group_id)
+        user_to_share_with = hydroshare.utils.user_from_id(user_or_group_id)
     else:
-        group_to_share_with = utils.group_from_id(user_or_group_id)
+        group_to_share_with = hydroshare.utils.group_from_id(user_or_group_id)
 
     status = "success"
     err_message = ""
@@ -1426,7 +1412,7 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
     res, _, user = authorize(
         request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
     )
-    user_to_unshare_with = utils.user_from_id(user_id)
+    user_to_unshare_with = hydroshare.utils.user_from_id(user_id)
     ajax_response_data = {"status": "success"}
     try:
         user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
@@ -1447,7 +1433,7 @@ def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
     res, _, user = authorize(
         request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
     )
-    group_to_unshare_with = utils.group_from_id(group_id)
+    group_to_unshare_with = hydroshare.utils.group_from_id(group_id)
     ajax_response_data = {"status": "success"}
     try:
         user.uaccess.unshare_resource_with_group(res, group_to_unshare_with)
@@ -1467,7 +1453,7 @@ def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
     res, _, user = authorize(
         request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
     )
-    user_to_unshare_with = utils.user_from_id(user_id)
+    user_to_unshare_with = hydroshare.utils.user_from_id(user_id)
     ajax_response_data = {"status": "success"}
     try:
         user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
@@ -1499,7 +1485,7 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
     res, _, user = authorize(
         request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
     )
-    group_to_unshare_with = utils.group_from_id(group_id)
+    group_to_unshare_with = hydroshare.utils.group_from_id(group_id)
     ajax_response_data = {"status": "success"}
     try:
         user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
@@ -1562,6 +1548,8 @@ class GroupForm(forms.Form):
     name = forms.CharField(required=True)
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
+    email = forms.EmailField(required=False)
+    url = forms.URLField(required=False)
     picture = ThumbnailImageField()
     privacy_level = forms.CharField(required=True)
     auto_approve = forms.BooleanField(required=False)
@@ -1591,14 +1579,15 @@ class GroupCreateForm(GroupForm):
     def save(self, request):
         frm_data = self.cleaned_data
 
-        new_group = request.user.uaccess.create_group(
-            title=frm_data["name"],
-            description=frm_data["description"],
-            purpose=frm_data["purpose"],
-            auto_approve=frm_data["auto_approve"],
-            requires_explanation=frm_data["requires_explanation"],
-        )
-        if "picture" in request.FILES:
+        new_group = request.user.uaccess.create_group(title=frm_data["name"],
+                                                      description=frm_data["description"],
+                                                      purpose=frm_data["purpose"],
+                                                      email=frm_data["email"],
+                                                      url=frm_data["url"],
+                                                      auto_approve=frm_data["auto_approve"],
+                                                      requires_explanation=frm_data["requires_explanation"]
+                                                      )
+        if 'picture' in request.FILES:
             # resize uploaded image
             img = request.FILES["picture"]
             img.image = get_thumbnail(img, "x150", crop="center")
@@ -1616,6 +1605,8 @@ class GroupUpdateForm(GroupForm):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data["description"]
         group_to_update.gaccess.purpose = frm_data["purpose"]
+        group_to_update.gaccess.email = frm_data["email"]
+        group_to_update.gaccess.url = frm_data["url"]
         group_to_update.gaccess.auto_approve = frm_data["auto_approve"]
         group_to_update.gaccess.requires_explanation = frm_data["requires_explanation"]
         if "picture" in request.FILES:
@@ -1665,7 +1656,7 @@ class PatchedChoiceWidget(autocomplete_light.ChoiceWidget):
 @processor_for(BaseResource)
 def add_generic_context(request, page):
     user = request.user
-    user_zone_account_exist = utils.get_user_zone_status_info(user)
+    user_zone_account_exist = hydroshare.utils.get_user_zone_status_info(user)
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(
@@ -1739,11 +1730,11 @@ def create_resource(request, *args, **kwargs):
             requesting_user=request.user,
             **kwargs,
         )
-    except utils.ResourceFileSizeException as ex:
+    except hydroshare.utils.ResourceFileSizeException as ex:
         ajax_response_data["message"] = str(ex)
         return JsonResponse(ajax_response_data)
 
-    except utils.ResourceFileValidationException as ex:
+    except hydroshare.utils.ResourceFileValidationException as ex:
         ajax_response_data["message"] = str(ex)
         return JsonResponse(ajax_response_data)
 
@@ -1770,14 +1761,14 @@ def create_resource(request, *args, **kwargs):
         return JsonResponse(ajax_response_data)
 
     try:
-        utils.resource_post_create_actions(
+        hydroshare.utils.resource_post_create_actions(
             request=request,
             resource=resource,
             user=request.user,
             metadata=metadata,
             **kwargs,
         )
-    except (utils.ResourceFileValidationException, Exception) as ex:
+    except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         request.session["validation_error"] = str(ex)
         ajax_response_data["message"] = str(ex)
         ajax_response_data["status"] = "success"
@@ -1820,9 +1811,32 @@ def create_user_group(request, *args, **kwargs):
 
 
 @login_required
+def update_user_community(request, community_id, *args, **kwargs):
+    """Updates metadata for a community"""
+
+    community_to_update = hydroshare.utils.community_from_id(community_id)
+
+    community_form = UpdateCommunityForm(request.POST, request.FILES)
+    if community_form.is_valid():
+        try:
+            community_form.update(community_to_update, request)
+            messages.success(request, "Community update was successful.")
+        except PermissionDenied:
+            err_msg = "You don't have permission to update community"
+            messages.error(request, err_msg)
+        except Exception as ex:
+            messages.error(request, f"Community update errors:{str(ex)}.")
+
+    else:
+        messages.error(request, "Community update errors:{}.".format(community_form.errors.as_json))
+
+    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+
+
+@login_required
 def update_user_group(request, group_id, *args, **kwargs):
     user = request.user
-    group_to_update = utils.group_from_id(group_id)
+    group_to_update = hydroshare.utils.group_from_id(group_id)
 
     if user.uaccess.can_change_group_flags(group_to_update):
         group_form = GroupUpdateForm(request.POST, request.FILES)
@@ -1885,8 +1899,8 @@ def restore_user_group(request, group_id, *args, **kwargs):
 @login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
     requesting_user = request.user
-    group_to_share = utils.group_from_id(group_id)
-    user_to_share_with = utils.user_from_id(user_id)
+    group_to_share = hydroshare.utils.group_from_id(group_id)
+    user_to_share_with = hydroshare.utils.user_from_id(user_id)
     if privilege == "view":
         access_privilege = PrivilegeCodes.VIEW
     elif privilege == "edit":
@@ -1924,8 +1938,8 @@ def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
     :return:
     """
     requesting_user = request.user
-    group_to_unshare = utils.group_from_id(group_id)
-    user_to_unshare_with = utils.user_from_id(user_id)
+    group_to_unshare = hydroshare.utils.group_from_id(group_id)
+    user_to_unshare_with = hydroshare.utils.user_from_id(user_id)
 
     try:
         requesting_user.uaccess.unshare_group_with_user(
@@ -1957,14 +1971,14 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     :return:
     """
     requesting_user = request.user
-    group_to_join = utils.group_from_id(group_id)
+    group_to_join = hydroshare.utils.group_from_id(group_id)
     user_to_join = None
     if request.method == "POST":
         explanation = request.POST.get("explanation", None)
     else:
         explanation = None
     if user_id is not None:
-        user_to_join = utils.user_from_id(user_id)
+        user_to_join = hydroshare.utils.user_from_id(user_id)
     try:
         membership_request = requesting_user.uaccess.create_group_membership_request(
             group_to_join, user_to_join, explanation=explanation
@@ -2010,11 +2024,15 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                         group_owner=grp_owner,
                         explanation=explanation,
                     )
-        messages.success(request, message)
+        return JsonResponse({
+            "status": "success",
+            "message": message
+        })
     except PermissionDenied as ex:
-        messages.error(request, str(ex))
-
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return JsonResponse({
+            "status": "error",
+            "message": str(ex),
+        })
 
 
 def group_membership(request, uidb36, token, membership_request_id, **kwargs):
@@ -2096,7 +2114,7 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
     else:
         user = request.user
 
-    res = get_resource_by_shortkey(shortkey)
+    res = hydroshare.utils.get_resource_by_shortkey(shortkey)
     if not res.raccess.review_pending:
         messages.error(
             request,
@@ -2223,11 +2241,11 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
     """
     user_data = {}
     if is_group == "false":
-        user = utils.user_from_id(user_or_group_id)
-        user_data["name"] = utils.get_user_party_name(user)
+        user = hydroshare.utils.user_from_id(user_or_group_id)
+        user_data["name"] = hydroshare.utils.get_user_party_name(user)
         user_data["email"] = user.email
         user_data["url"] = "{domain}/user/{uid}/".format(
-            domain=utils.current_site_url(), uid=user.pk
+            domain=hydroshare.utils.current_site_url(), uid=user.pk
         )
         if user.userprofile.phone_1:
             user_data["phone"] = user.userprofile.phone_1
@@ -2260,10 +2278,10 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user_data["date_joined"] = user.date_joined
         user_data["subject_areas"] = user.userprofile.subject_areas
     else:
-        group = utils.group_from_id(user_or_group_id)
+        group = hydroshare.utils.group_from_id(user_or_group_id)
         user_data["organization"] = group.name
         user_data["url"] = "{domain}/user/{uid}/".format(
-            domain=utils.current_site_url(), uid=group.pk
+            domain=hydroshare.utils.current_site_url(), uid=group.pk
         )
         user_data["description"] = group.gaccess.description
 
@@ -2388,64 +2406,83 @@ def _set_resource_sharing_status(user, resource, flag_to_set, flag_value):
 
 class FindGroupsView(TemplateView):
     template_name = (
-        "pages/groups-unauthenticated.html"  # default view is for users not logged in
+        "pages/find-groups.html"
     )
 
     def dispatch(self, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            self.template_name = "pages/groups-authenticated.html"  # update template if user is logged in
         return super(FindGroupsView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
+
+        def get_groups_with_members(ugp_queryset):
+            group_seen = []
+            groups = []
+            for ugp in ugp_queryset:
+                if ugp.group.id not in group_seen:
+                    group = ugp.group
+                    group.members = []
+                    group_seen.append(group.id)
+                    groups.append(group)
+                else:
+                    group = groups[group_seen.index(ugp.group.id)]
+                if ugp.user.is_active:
+                    group.members.append(ugp.user)
+            groups = sorted(groups, key=lambda _group: _group.name)
+            return groups
+
         if self.request.user.is_authenticated:
             u = User.objects.get(pk=self.request.user.id)
 
-            groups = (
-                Group.objects.filter(gaccess__active=True)
-                .exclude(name="Hydroshare Author")
-                .select_related("gaccess")
-            )
+            gmr_waiting_owner_action = GroupMembershipRequest.objects \
+                .filter(request_from=u, group_to_join__gaccess__active=True, redeemed=False) \
+                .values_list("group_to_join__id", flat=True)
+
+            gmr_waiting_user_action = GroupMembershipRequest.objects \
+                .filter(invitation_to=u, group_to_join__gaccess__active=True, redeemed=False) \
+                .values_list("group_to_join__id", flat=True)
+
+            gmr_pending = GroupMembershipRequest.objects \
+                .filter(group_to_join__gaccess__active=True, redeemed=False) \
+                .filter(Q(request_from=u) | Q(invitation_to=u)).select_related("group_to_join")
+
+            ugp_qs = UserGroupPrivilege.objects \
+                .filter(group__gaccess__active=True) \
+                .exclude(group__name="Hydroshare Author") \
+                .select_related("group", "user", "group__gaccess", "user__userprofile")
+
+            # for ech group collect members of the group - not using 'group.gaccess.members'
+            # as this results in N+1 query
+            groups = get_groups_with_members(ugp_qs)
             for g in groups:
-                g.members = g.gaccess.members
                 g.is_user_member = u in g.members
                 g.join_request = None
                 if g.is_user_member:
                     g.join_request_waiting_owner_action = False
                     g.join_request_waiting_user_action = False
                 else:
-                    g.join_request_waiting_owner_action = (
-                        g.gaccess.group_membership_requests.filter(
-                            request_from=u
-                        ).exists()
-                    )
-                    g.join_request_waiting_user_action = (
-                        g.gaccess.group_membership_requests.filter(
-                            invitation_to=u
-                        ).exists()
-                    )
+                    g.join_request_waiting_owner_action = g.id in gmr_waiting_owner_action
+                    g.join_request_waiting_user_action = g.id in gmr_waiting_user_action
 
                     if (
                         g.join_request_waiting_owner_action
                         or g.join_request_waiting_user_action
                     ):
-                        g.join_request = (
-                            g.gaccess.group_membership_requests.filter(
-                                request_from=u
-                            ).first()
-                            or g.gaccess.group_membership_requests.filter(
-                                invitation_to=u
-                            ).first()
-                        )
+                        g.join_request = None
+                        for gmr in gmr_pending:
+                            if g.id == gmr.group_to_join.id:
+                                g.join_request = gmr
+                                break
+
             return {"profile_user": u, "groups": groups}
         else:
             # for anonymous user
-            groups = Group.objects.filter(
-                Q(gaccess__active=True)
-                & (Q(gaccess__discoverable=True) | Q(gaccess__public=True))
-            ).exclude(name="Hydroshare Author")
+            ugp_qs = UserGroupPrivilege.objects \
+                .filter(Q(group__gaccess__active=True)
+                        & (Q(group__gaccess__discoverable=True) | Q(group__gaccess__public=True))) \
+                .exclude(group__name="Hydroshare Author") \
+                .select_related("group", "user", "group__gaccess", "user__userprofile")
 
-            for g in groups:
-                g.members = g.gaccess.members
+            groups = get_groups_with_members(ugp_qs)
             return {"groups": groups}
 
 
@@ -2457,23 +2494,49 @@ class MyGroupsView(TemplateView):
         return super(MyGroupsView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        def get_groups_with_ownership(ugp_queryset, user):
+            group_seen = []
+            groups = []
+            for ugp in ugp_queryset:
+                if ugp.group.id not in group_seen:
+                    group = ugp.group
+                    group_seen.append(group.id)
+                    group.is_group_owner = False
+                    group.member_count = 1
+                    groups.append(group)
+                else:
+                    group = groups[group_seen.index(ugp.group.id)]
+                    group.member_count += 1
+                if ugp.user == user:
+                    group.is_group_owner = ugp.privilege == PrivilegeCodes.OWNER
+
+            groups = sorted(groups, key=lambda _group: _group.name)
+            return groups
+
         u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
 
         groups = u.uaccess.my_groups
-        group_membership_requests = (
-            GroupMembershipRequest.objects.filter(invitation_to=u, redeemed=False)
-            .exclude(group_to_join__gaccess__active=False)
-            .all()
-        )
+
         # for each group object, set a dynamic attribute to know if the user owns the group
-        for g in groups:
-            g.is_group_owner = u.uaccess.owns_group(g)
+        ugp_qs = UserGroupPrivilege.objects \
+            .filter(group_id__in=[g.id for g in groups]) \
+            .select_related("group", "user", "group__gaccess")
+
+        groups = get_groups_with_ownership(ugp_qs, u)
 
         active_groups = [g for g in groups if g.gaccess.active]
         inactive_groups = [g for g in groups if not g.gaccess.active]
-        my_pending_requests = GroupMembershipRequest.objects.filter(
-            request_from=u, redeemed=False
-        ).exclude(group_to_join__gaccess__active=False)
+
+        my_pending_requests = GroupMembershipRequest.objects \
+            .filter(request_from=u, redeemed=False) \
+            .exclude(group_to_join__gaccess__active=False) \
+            .select_related("invitation_to", "group_to_join")
+
+        group_membership_requests = GroupMembershipRequest.objects \
+            .filter(invitation_to=u, redeemed=False) \
+            .exclude(group_to_join__gaccess__active=False) \
+            .select_related("request_from", "request_from__userprofile", "group_to_join")
+
         return {
             "profile_user": u,
             "groups": active_groups,
@@ -2489,89 +2552,169 @@ class AddUserForm(forms.Form):
     )
 
 
+@login_required
+def request_new_community(request, *args, **kwargs):
+    """ A view function to server request for creating a new community """
+
+    community_form = RequestNewCommunityForm(request.POST, request.FILES)
+    if community_form.is_valid():
+        try:
+            new_community_request = community_form.save(request)
+            new_community_name = new_community_request.community_to_approve.name
+            msg = f"New community ({new_community_name}) request was successful."
+            messages.success(request, msg)
+            # send email to hydroshare support
+            CommunityRequestEmailNotification(request=request, community_request=new_community_request,
+                                              on_event=CommunityRequestEvents.CREATED).send()
+            return HttpResponseRedirect(reverse('my_communities'))
+        except PermissionDenied:
+            err_msg = "You don't have permission to request new community"
+            messages.error(request, err_msg)
+        except Exception as ex:
+            messages.error(request, f"Community request errors:{str(ex)}.")
+
+    else:
+        messages.error(request, "Community request errors:{}.".format(community_form.errors.as_json))
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+# Any HydroShare user (whether authenticated or not) can access the landing page for a public or discoverable Group.
+# When they do, they will see the Group’s metadata.
+# For public groups, anyone will be able to see the Group’s public and published resources and group membership.
+# For discoverable Groups, the list of resources and membership will only be accessible to Group members.
 class GroupView(TemplateView):
-    template_name = "pages/group-unauthenticated.html"
+    template_name = "pages/group.html"
+
+    def hydroshare_denied(self, gid):
+        try:
+            g = Group.objects.select_related("gaccess").get(pk=gid)
+        except Group.DoesNotExist:
+            message = "group id {} not found".format(gid)
+            logger.error(message)
+            return message
+
+        if not (g.gaccess.public or g.gaccess.discoverable):
+            if not self.request.user.is_authenticated:
+                message = 'You need to sign in to access the contents of this private Group'
+                return message
+
+            u = User.objects.get(pk=self.request.user.id)
+            if u not in g.gaccess.members:
+                message = 'Only Group members can access the content of this private Group'
+                return message
+
+        return ''
 
     def dispatch(self, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            self.template_name = "pages/group.html"
         return super(GroupView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        context = {}
+        data = {}  # JSON serializable data to be used in Vue app
+        message = ""
         group_id = kwargs["group_id"]
-        g = Group.objects.select_related("gaccess").get(pk=group_id)
+        denied = self.hydroshare_denied(group_id)
+
+        if denied == "":
+            group = Group.objects.select_related("gaccess").get(pk=group_id)
+            data["is_group_private"] = 0 if group.gaccess.public or group.gaccess.discoverable else 1
+            data["denied"] = denied  # empty string means ok
+            data["message"] = message
+            data["gid"] = group_id
+
+            # communities joined
+            data["joined"] = []
+            for c in Community.objects.filter(c2gcp__group=group).order_by('name'):
+                data["joined"].append(community_json(c))
+
+            # pending requests from this group
+            data["pending"] = []
+            for r in GroupCommunityRequest.objects.filter(
+                    group=group, redeemed=False) \
+                    .select_related("community", "group", "group__gaccess", "group_owner",
+                                    "group_owner__uaccess", "group_owner__userprofile") \
+                    .order_by("community__name"):
+                data["pending"].append(group_community_request_json(r))
+
+            # Communities that can be joined.
+            data["available_to_join"] = []
+            for c in Community.objects.filter(active=True) \
+                    .exclude(closed=True) \
+                    .exclude(Q(invite_c2gcr__group=group) & Q(invite_c2gcr__redeemed=False)) \
+                    .exclude(c2gcp__group=group) \
+                    .order_by("name"):
+                data["available_to_join"].append(community_json(c))
+        else:  # non-empty denied means an error.
+            data["denied"] = denied
+            context["denied"] = denied
+            return context
 
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
-        for res in g.gaccess.view_resources:
-            grp = GroupResourcePrivilege.objects.select_related("grantor").get(resource=res, group=g)
-            res.grantor = grp.grantor
-            res.date_granted = grp.start
-            group_resources.append(res)
+        view_resources = group.gaccess.view_resources
+        res_ids = [res.short_id for res in view_resources]
+        grp_qs = GroupResourcePrivilege.objects \
+            .filter(group=group, resource__short_id__in=res_ids) \
+            .select_related("grantor", "resource")
+
+        for res in view_resources:
+            for grp in grp_qs:
+                if res.short_id == grp.resource.short_id:
+                    res.grantor = grp.grantor
+                    res.date_granted = grp.start
+                    group_resources.append(res)
+                    break
 
         group_resources = sorted(
             group_resources, key=lambda x: x.date_granted, reverse=True
         )
 
+        context["group"] = group
+        context["view_users"] = group.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW)
+
         if self.request.user.is_authenticated:
-            group_members = g.gaccess.members
+            group_members = group.gaccess.members
             u = User.objects.select_related("uaccess").get(pk=self.request.user.id)
-            u.is_group_owner = u.uaccess.owns_group(g)
-            u.is_group_editor = g in u.uaccess.edit_groups
-            u.is_group_viewer = (
-                g in u.uaccess.view_groups or g.gaccess.public or g.gaccess.discoverable
-            )
+            u.is_group_owner = u.uaccess.owns_group(group)
+            u.is_group_editor = group in u.uaccess.edit_groups
+            u.is_group_viewer = group.gaccess.public or group.gaccess.discoverable or group in u.uaccess.view_groups
             u.is_group_member = u in group_members
 
-            g.join_request_waiting_owner_action = (
-                g.gaccess.group_membership_requests.filter(request_from=u).exists()
-            )
-            g.join_request_waiting_user_action = (
-                g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-            )
-            g.join_request = g.gaccess.group_membership_requests.filter(
-                invitation_to=u
-            ).first()
+            group.join_request_waiting_owner_action = group.gaccess.group_membership_requests \
+                .filter(request_from=u).exists()
+
+            group.join_request_waiting_user_action = group.gaccess.group_membership_requests \
+                .filter(invitation_to=u).exists()
+
+            group.join_request = group.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
             # This will exclude requests from inactive users made for themselves
-            # as well as invitations from innactive users to others
-            g.gaccess.active_group_membership_requests = (
-                g.gaccess.group_membership_requests.filter(
-                    Q(request_from__is_active=True),
-                    Q(invitation_to=None) | Q(invitation_to__is_active=True),
-                )
+            # as well as invitations from inactive users to others
+            group.gaccess.active_group_membership_requests = group.gaccess.group_membership_requests.filter(
+                Q(request_from__is_active=True),
+                Q(invitation_to=None) | Q(invitation_to__is_active=True),
             )
 
-            if u not in group_members:
-                group_resources = [
-                    r
-                    for r in group_resources
-                    if r.raccess.public or r.raccess.discoverable
-                ]
+            if u.is_group_member:
+                context["group_resources"] = group_resources
+            elif group.gaccess.public:
+                # If the group is public, anyone can see the group's public and published resources and group membership
+                group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
+                context["group_resources"] = group_resources
 
-            return {
-                "group": g,
-                "view_users": g.gaccess.get_users_with_explicit_access(
-                    PrivilegeCodes.VIEW
-                ),
-                "group_resources": group_resources,
-                "add_view_user_form": AddUserForm(),
-                "profile_user": u,
-            }
+            context["profile_user"] = u
+            context["add_view_user_form"] = AddUserForm()
+            data["is_group_owner"] = u.is_group_owner
         else:
-            public_group_resources = [
-                r for r in group_resources if r.raccess.public or r.raccess.discoverable
-            ]
+            # If the group is public, anonymous users can see discoverable and public resources shared with the group
+            if group.gaccess.public:
+                public_group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
+                context["group_resources"] = public_group_resources
 
-            return {
-                "group": g,
-                "view_users": g.gaccess.get_users_with_explicit_access(
-                    PrivilegeCodes.VIEW
-                ),
-                "group_resources": public_group_resources,
-                "add_view_user_form": AddUserForm(),
-            }
+        context["data"] = data
+        return context
 
 
 @login_required

@@ -24,6 +24,7 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.files.storage import DefaultStorage
 from django.core.validators import validate_email, URLValidator
+from hs_access_control.models.community import Community
 
 from mezzanine.conf import settings
 
@@ -158,6 +159,24 @@ def group_from_id(grp):
             raise Http404('Group not found')
         except ObjectDoesNotExist:
             raise Http404('Group not found')
+    return tgt
+
+
+def community_from_id(community):
+    if isinstance(community, Community):
+        return community
+
+    try:
+        tgt = Community.objects.get(name=community)
+    except ObjectDoesNotExist:
+        try:
+            tgt = Community.objects.get(id=int(community))
+        except ValueError:
+            raise Http404('Community not found')
+        except TypeError:
+            raise Http404('Community not found')
+        except ObjectDoesNotExist:
+            raise Http404('Community not found')
     return tgt
 
 

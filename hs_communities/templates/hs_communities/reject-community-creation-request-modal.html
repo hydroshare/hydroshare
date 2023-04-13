@@ -1,0 +1,36 @@
+<div class="modal fade" id="reject-new-community-creation-request-dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="removeGroupLabel">Reject Community Request</h4>
+                </div>
+                <div class="modal-body">
+                    <div>Are you sure you want to reject this community?</div>
+                    <br>
+                    <br>
+                    <div class="form-group">
+                        <label for="inputReason">Please provide a reason *</label>
+                        <textarea v-model.trim="rejectReason" type="text" class="form-control" id="inputReason" rows="3"
+                        required="required"></textarea>
+                    </div>
+                    
+                    <br>
+                    <fieldset>
+                        <small class="text-muted">( * ) Required fields</small>
+                    </fieldset>
+                </div>
+                <div class="modal-footer">
+                    <button @click="rejectReason = ''" type="button" class="btn btn-default" data-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-danger" :disabled="!rejectReason || isRejecting" @click="onReject">Reject
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

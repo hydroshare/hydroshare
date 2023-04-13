@@ -819,7 +819,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                 if (mode === "edit") {
                     $('#fb-files-container').append(
                         '<div>' +
-                            '<span class="text-muted fb-empty-dir space-bottom">This directory is empty</span>' +
+                            '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
                             '<div class="hs-upload-indicator text-center">' +
                                 '<i class="fa fa-file" aria-hidden="true"></i>' +
                                 '<h4>Drop files here or click "Add files" to upload</h4>' +
