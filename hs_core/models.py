@@ -864,14 +864,17 @@ class Type(AbstractMetaDataElement):
 class Date(AbstractMetaDataElement):
     """Define Date metadata model."""
 
-    DATE_TYPE_CHOICES = (
+    DC_DATE_TYPE_CHOICES = (
         ('created', 'Created'),
         ('modified', 'Modified'),
         ('valid', 'Valid'),
-        ('available', 'Available'),
-        ('review_started', 'Review Started'),
+        ('available', 'Available')
+    )
+    HS_DATE_TYPE_CHOICES = (
+        ('reviewStarted', 'Review Started'),
         ('published', 'Published')
     )
+    DATE_TYPE_CHOICES = DC_DATE_TYPE_CHOICES + HS_DATE_TYPE_CHOICES
 
     term = 'Date'
     type = models.CharField(max_length=20, choices=DATE_TYPE_CHOICES)
@@ -893,7 +896,10 @@ class Date(AbstractMetaDataElement):
     def rdf_triples(self, subject, graph):
         date_node = BNode()
         graph.add((subject, self.get_class_term(), date_node))
-        graph.add((date_node, RDF.type, getattr(DCTERMS, self.type)))
+        if self.type in [inner[0] for inner in self.DC_DATE_TYPE_CHOICES]:
+            graph.add((date_node, RDF.type, getattr(DCTERMS, self.type)))
+        else:
+            graph.add((date_node, RDF.type, getattr(HSTERMS, self.type)))
         graph.add((date_node, RDF.value, Literal(self.start_date.isoformat())))
 
     @classmethod
@@ -927,9 +933,9 @@ class Date(AbstractMetaDataElement):
             if kwargs['type'] == 'published':
                 if not resource.raccess.published:
                     raise ValidationError("Resource is not published yet.")
-            if kwargs['type'] == 'review_started':
-                if not resource.raccess.review_pending:
-                    raise ValidationError("Review is not pending yet.")
+            if kwargs['type'] == 'reviewStarted':
+                if resource.raccess.review_pending:
+                    raise ValidationError("Review is already pending.")
             elif kwargs['type'] == 'available':
                 if not resource.raccess.public:
                     raise ValidationError("Resource has not been made public yet.")
