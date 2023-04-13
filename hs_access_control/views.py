@@ -2,7 +2,7 @@ import logging
 
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
-from django.db.models import F, Q
+from django.db.models import Q
 from django.http import JsonResponse
 from django.views.generic import View
 from hs_core.templatetags.hydroshare_tags import best_name
@@ -419,6 +419,7 @@ class GroupView(GroupCommunityViewMixin):
 
         if denied:
             return error_response(denied)
+
 
 class CommunityView(GroupCommunityViewMixin):
     """ Community transaction engine manages inviting and approving groups """
