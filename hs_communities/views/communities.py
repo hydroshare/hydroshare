@@ -170,7 +170,8 @@ class FindCommunitiesView(TemplateView):
 
         if user.is_authenticated:
             # get the list of any pending community create requests by this user
-            user_pending_requests = user.uaccess.pending_community_requests()
+            user_pending_requests = user.uaccess.pending_community_requests() \
+                .select_related("requested_by", "requested_by__userprofile", "requested_by__uaccess")
             context["user_pending_requests"] = user_pending_requests
 
         if user_is_admin:
@@ -233,7 +234,7 @@ class MyCommunitiesView(TemplateView):
         user_pending_requests = []
         rc_pending_qs = RequestCommunity.pending_requests() \
             .filter(requested_by=user) \
-            .select_related("requested_by", "requested_by__userprofile")
+            .select_related("requested_by", "requested_by__userprofile", "requested_by__uaccess")
         for rc in rc_pending_qs:
             user_pending_requests.append(community_request_json(rc))
 
@@ -241,7 +242,7 @@ class MyCommunitiesView(TemplateView):
         user_declined_requests = []
         rc_declined_qs = RequestCommunity.declined_requests() \
             .filter(requested_by=user) \
-            .select_related("requested_by", "requested_by__userprofile")
+            .select_related("requested_by", "requested_by__userprofile", "requested_by__uaccess")
         for rc in rc_declined_qs:
             user_declined_requests.append(community_request_json(rc))
 
@@ -275,9 +276,10 @@ class CommunityCreationRequests(TemplateView):
     def get_context_data(self, **kwargs):
         admin_all_requests = []
         for request in RequestCommunity.all_requests() \
-                .select_related("requested_by", "requested_by__userprofile") \
+                .select_related("requested_by", "requested_by__userprofile", "requested_by__uaccess") \
                 .order_by('-date_requested'):
-            admin_all_requests.append(community_request_json(request))
+            admin_all_requests.append(community_request_json(request, include_requested_by=True,
+                                                             minimal_user_data=False))
 
         return {
             "admin_all_requests": admin_all_requests,
@@ -327,8 +329,12 @@ class CommunityCreationRequest(TemplateView):
         denied = self.hydroshare_denied(rid)
 
         if denied == "" and rid is not None:
-            req = RequestCommunity.objects.get(id=int(rid))
-            context["community_request"] = community_request_json(req)
+            req = RequestCommunity.objects \
+                .select_related("requested_by", "requested_by__userprofile",
+                                "requested_by__uaccess", "community_to_approve") \
+                .get(id=rid)
+            context["community_request"] = community_request_json(req, include_requested_by=True,
+                                                                  minimal_user_data=False)
             context["admin_pending_requests"] = RequestCommunity.pending_requests().count()
         else:
             context["denied"] = denied

@@ -2665,6 +2665,7 @@ class GroupView(TemplateView):
                     res.grantor = grp.grantor
                     res.date_granted = grp.start
                     group_resources.append(res)
+                    break
 
         group_resources = sorted(
             group_resources, key=lambda x: x.date_granted, reverse=True

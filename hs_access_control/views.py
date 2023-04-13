@@ -228,7 +228,13 @@ class GroupCommunityViewMixin(View):
     def get_pending_community_requests(group):
         """get a list of pending request to join a community for a given group"""
         pending = []
-        for r in GroupCommunityRequest.objects.filter(group=group, redeemed=False).order_by("community__name"):
+        gcr_select_related = ['community', 'group', 'group__gaccess', 'group_owner', 'group_owner__userprofile',
+                              'group_owner__uaccess', 'community_owner', 'community_owner__userprofile',
+                              'community_owner__uaccess']
+        for r in GroupCommunityRequest.objects\
+                .filter(group=group, redeemed=False) \
+                .select_related(*gcr_select_related) \
+                .order_by("community__name"):
             pending.append(group_community_request_json(r))
         return pending
 
@@ -263,8 +269,13 @@ class GroupCommunityViewMixin(View):
     @staticmethod
     def get_pending_requests(community):
         pending = []
+        gcr_select_related = ['community', 'group', 'group__gaccess', 'group_owner', 'group_owner__userprofile',
+                              'group_owner__uaccess', 'community_owner', 'community_owner__userprofile',
+                              'community_owner__uaccess']
         for r in GroupCommunityRequest.objects.filter(
-                community=community, redeemed=False, group_owner__isnull=True).order_by('group__name'):
+                community=community, redeemed=False, group_owner__isnull=True) \
+                .select_related(*gcr_select_related) \
+                .order_by('group__name'):
             pending.append(group_community_request_json(r))
         return pending
 
@@ -428,33 +439,44 @@ class GroupView(GroupCommunityViewMixin):
         for c in Community.objects.filter(c2gcp__group=group).order_by('name'):
             context['joined'].append(community_json(c))
 
+        gcr_select_related = ['community', 'group', 'group__gaccess', 'group_owner', 'group_owner__userprofile',
+                              'group_owner__uaccess', 'community_owner', 'community_owner__userprofile',
+                              'community_owner__uaccess']
         # invites from communities to be approved or declined
         context['approvals'] = []
         for r in GroupCommunityRequest.objects.filter(
                 group=group,
                 group__gaccess__active=True,
-                group_owner__isnull=True).order_by('community__name'):
+                group_owner__isnull=True) \
+                .select_related(*gcr_select_related) \
+                .order_by('community__name'):
             context['approvals'].append(group_community_request_json(r))
 
         # pending requests from this group
         context['pending'] = []
         for r in GroupCommunityRequest.objects.filter(
                 group=group, redeemed=False, community_owner__isnull=True) \
+                .select_related(*gcr_select_related) \
                 .order_by('community__name'):
             context['pending'].append(group_community_request_json(r))
 
         # requests that were declined by others
         context['group_declined'] = []
-        for r in GroupCommunityRequest.objects.filter(
+        for r in GroupCommunityRequest.objects \
+                .filter(
                 group=group, redeemed=True, approved=False,
-                when_group__lt=F('when_community')).order_by('community__name'):
+                when_group__lt=F('when_community')) \
+                .select_related(*gcr_select_related) \
+                .order_by('community__name'):
             context['group_declined'].append(group_community_request_json(r))
 
         # requests that were declined by us
         context['community_declined'] = []
         for r in GroupCommunityRequest.objects.filter(
                 group=group, redeemed=True, approved=False,
-                when_group__gt=F('when_community')).order_by('community__name'):
+                when_group__gt=F('when_community')) \
+                .select_related(*gcr_select_related) \
+                .order_by('community__name'):
             context['community_declined'].append(group_community_request_json(r))
 
         return JsonResponse(context)
@@ -740,8 +762,13 @@ class CommunityRequestView(View):
         context['pending'] = []
 
         # collect declined requests and pending requests
-        declined_qs = RequestCommunity.objects.filter(declined=True, cancelled=False, requested_by=user)
-        pending_qs = RequestCommunity.objects.filter(pending_approval=True, requested_by=user)
+        select_related = ['community_to_approve', 'requested_by', 'requested_by__uaccess', 'requested_by__userprofile']
+        declined_qs = RequestCommunity.objects \
+            .filter(declined=True, cancelled=False, requested_by=user) \
+            .select_related(*select_related)
+        pending_qs = RequestCommunity.objects\
+            .filter(pending_approval=True, requested_by=user) \
+            .select_related(*select_related)
 
         for d_cr in declined_qs:
             context['declined'].append(community_request_json(d_cr))
