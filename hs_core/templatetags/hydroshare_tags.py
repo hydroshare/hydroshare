@@ -11,8 +11,7 @@ from mezzanine import template
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.search_indexes import normalize_name
-from hs_access_control.models.privilege import PrivilegeCodes
-
+from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivilege
 
 register = template.Library()
 
@@ -27,12 +26,14 @@ def user_permission(content, arg):
     user_pk = arg
     permission = "None"
     res_obj = content
-    if res_obj.raccess.owners.filter(pk=user_pk).exists():
-        permission = "Owner"
-    elif res_obj.raccess.edit_users.filter(pk=user_pk).exists():
-        permission = "Edit"
-    elif res_obj.raccess.view_users.filter(pk=user_pk).exists():
-        permission = "View"
+    urp = UserResourcePrivilege.objects.filter(user__id=user_pk, resource=res_obj).first()
+    if urp is not None:
+        if urp.privilege == PrivilegeCodes.OWNER:
+            permission = "Owner"
+        elif urp.privilege == PrivilegeCodes.CHANGE:
+            permission = "Edit"
+        elif urp.privilege == PrivilegeCodes.VIEW:
+            permission = "View"
 
     if permission == "None":
         if res_obj.raccess.published or res_obj.raccess.discoverable or res_obj.raccess.public:
