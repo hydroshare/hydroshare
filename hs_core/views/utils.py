@@ -1644,6 +1644,23 @@ def get_coverage_data_dict(source, coverage_type='spatial'):
         return temporal_coverage_dict
 
 
+def get_default_admin_user():
+    """A helper method to get the default admin user - used in email notification"""
+
+    from hs_core.hydroshare import create_account
+    try:
+        default_user_from = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
+    except User.DoesNotExist:
+        default_user_from = create_account(
+            email=settings.DEFAULT_FROM_EMAIL,
+            username=settings.DEFAULT_FROM_EMAIL,
+            first_name=settings.DEFAULT_FROM_EMAIL,
+            last_name=settings.DEFAULT_FROM_EMAIL,
+            superuser=True
+        )
+    return default_user_from
+
+
 def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=True):
     """helper method for moving/renaming file/folder"""
 

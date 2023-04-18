@@ -82,9 +82,9 @@ class OriginalCoverageGeofeature(AbstractMetaDataElement):
             html_tags.legend('Spatial Reference')
             html_tags.div('Coordinate Reference System', cls='text-muted')
             html_tags.div(self.projection_name)
-            html_tags.div('Datum', cls='text-muted space-top')
+            html_tags.div('Datum', cls='text-muted has-space-top')
             html_tags.div(self.datum)
-            html_tags.div('Coordinate String Text', cls='text-muted space-top')
+            html_tags.div('Coordinate String Text', cls='text-muted has-space-top')
             html_tags.div(self.projection_string)
             html_tags.h4('Extent', cls='space-top')
             with html_tags.table(cls='custom-table'):

@@ -91,7 +91,6 @@
     }
 
     .profile-card .flex > div:first-child {
-        background: #f8f8f8;
         border-right: 1px solid #DDD;
         width: 110px;
     }
@@ -205,7 +204,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="dropdown-footer">
+                                    <div class="dropdown-footer has-background-light-gray">
                                         <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
                                         <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
                                             <span class="glyphicon glyphicon-log-out"></span> Sign out

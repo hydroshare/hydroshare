@@ -1,0 +1,206 @@
+<form action="/hsapi/_internal/update-user-community/{{ community.id }}" method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="row">
+    <div class="col-xs-12 col-sm-7 has-space-bottom-2x">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Community Preferences
+        </div>
+  
+        <div class="panel-body">
+          <div class="row">
+            {# Community Name #}
+            <fieldset class="col-sm-12">
+              <label>Community Name *</label>
+              <textarea type="text" class="form-control" rows="1"
+                required="required" name="name" placeholder="Descriptive name for the Community"
+                >{{ community.name }}</textarea>
+            </fieldset>
+    
+            {# Community Contact Email #}
+            <fieldset class="col-sm-12 has-space-top">
+              <label>Community Contact Email</label>
+              <input class="form-control" type="email" name="email" value="{{ community.email }}"></input>
+              <small class="text-muted">An email address for someone in charge of the community.</small>
+            </fieldset>
+    
+            {# Community Url #}
+            <fieldset class="col-sm-12 has-space-top">
+              <label>Community URL</label>
+              <input class="form-control" value="{{ community.url }}" type="url" name="url"></input>
+              <small class="text-muted">A URL for a web page that describes the community in more detail.</small>
+            </fieldset>
+    
+            {# Purpose #}
+            <fieldset class="col-sm-12 has-space-top">
+              <label>Purpose</label>
+              <textarea class="form-control" name="purpose" maxlength="300" rows="4">{{ community.purpose }}</textarea>
+              <small class="text-muted">A brief description of the purpose for which the community was created.</small><br>
+              <small class="text-muted">300 characters or less.</small>
+            </fieldset>
+    
+            {# Community Description #}
+            <fieldset class="col-sm-12 has-space-top">
+              <label>About this community *</label>
+              <textarea class="form-control" required="required" name="description" rows="4">{{ community.description }}</textarea>
+              <small class="text-muted">A longer text description for the community.</small>
+            </fieldset>
+    
+            {# auto approve membership #}
+            <fieldset class="col-sm-12 has-space-top">
+              <input id="auto-approve" type="checkbox" {% if community.auto_approve_group %}checked{% endif %}
+                name="auto_approve_group">
+              <label class="checkbox-label" for="auto-approve">Auto approve membership</label><br>
+              <small class="text-muted">Choose this option if you want Community membership requests to be automatically
+                approved. If you check this box, any HydroShare group that requests membership in the Community will be
+                automatically added.</small>
+            </fieldset>
+    
+            <!-- TODO(Phase 2): auto approve resource display -->
+            <!-- <fieldset class="col-sm-12">
+              <input id="auto-approve-r" type="checkbox" {% if community.auto_approve_resource %}checked{% endif %}
+                name="auto_approve_resource">
+              <label class="checkbox-label" for="auto-approve">Auto approve resource display</label><br>
+              <small class="text-muted">Choose this option if you want resources shared with the Community to be
+                automatically approved for display on the Community landing page. If you leave this box unchecked, you will
+                have to approve any resources shared with the Community before those resources will appear on the
+                Community's landing page.</small>
+            </fieldset> -->
+    
+            {# Banner image #}
+            <fieldset class="has-space-top col-sm-12">
+              <label>Add a Custom Banner Image</label>
+    
+              <div class="input-group">
+                <span class="input-group-btn">
+                  <span class="btn btn-default btn-file">
+                    Browse&hellip; <input @input="onBannerChange" class="upload-picture" type="file" name="banner">
+                  </span>
+                </span>
+                <input type="text" :value="selectedBanner" class="form-control" readonly>
+              </div>
+              <small class="text-muted hint">Add a custom banner image that will display at the top of the Community page. Custom
+                banner images must be uploaded in JPEG format and must have dimensions of 1400 x 200 pixels (or wider) to display correctly.</small>
+            </fieldset>
+    
+            {# Logo image #}
+            <fieldset class="has-space-top col-sm-12">
+              <label>Add a Community Logo Image</label>
+    
+              <div class="input-group">
+                <span class="input-group-btn">
+                  <span class="btn btn-default btn-file">
+                    Browse&hellip; <input @input="onLogoChange" class="upload-picture" type="file" name="picture">
+                  </span>
+                </span>
+                <input type="text" :value="selectedLogo" class="form-control" readonly>
+              </div>
+              <small class="text-muted hint">Add a custom Community logo image that will display at the top of the Community
+                page. Custom logo images must be uploaded in JPEG format and must have dimensions of 200 x 200 pixels to display optimally.</small>
+            </fieldset>
+    
+            <fieldset class="col-sm-12 has-space-top">
+              <small class="text-muted">( * ) Required fields</small>
+            </fieldset>
+
+            <div class="col-sm-12 has-space-top">
+              <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xs-12 col-sm-5 has-space-bottom-2x">
+      <div class="panel panel-default">
+        <div class="panel-heading flex justify-space-between align-center">
+          <div>Community Owners</div>
+          <button data-toggle="modal" data-target="#community-settings-add-owner"
+              class="btn btn-success has-space-left btn-sm">
+              <i class="fa fa-plus" aria-hidden="true"></i> Add Owner</button>
+        </div>
+        <div class="panel-body">
+          {# Owners #}
+          <div v-for="owner in community.owners"
+            class="flex justify-space-between gap-1 align-center align-sm-start has-space-bottom flex-sm-column">
+            <profile-link :user="owner" :key="owner.id" @load-card="loadOwnerCard($event)"
+              :show-details="true" class="flex-shrink-0">
+            </profile-link>
+            <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
+            <button type="button" data-toggle="modal" data-target="#remove-community-owner-modal"
+              class="btn btn-danger btn-sm" @click="targetOwner = owner"
+              :disabled="isRemovingOwner[owner.id] || community.owners.length === 1">Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12 col-sm-7">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Delete this Community
+        </div>
+  
+        <div class="panel-body">
+          <p>Deleting a Community does not delete any of the Groups that are members of the Community or the
+              resources that have been shared with the Groups. However, once your Community is deleted, it will be gone
+              forever. Make sure this is what you want to do!</p>
+          <button type="button" class="btn btn-danger" data-toggle="modal"
+            data-target="#delete-community-dialog">Delete this Community</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+</form>
+
+<!-- Delete Community Modal -->
+<div class="modal fade" id="delete-community-dialog" tabindex="-1" role="dialog" aria-labelledby="Delete">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cancel"><span
+            aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title" id="Delete">Delete Group</h4>
+      </div>
+        <div class="modal-body">
+          <h5>Are you sure you want to delete this community?</h5>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" :disabled="isDeletingCommunity" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button @click="deleteCommunity" :disabled="isDeletingCommunity" type="button" class="btn btn-danger">Delete</button>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- Remove Community Owner Modal -->
+<div class="modal fade" id="remove-community-owner-modal" tabindex="-1" role="dialog"
+  aria-labelledby="removeCommunityOwnerLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" v-if="targetOwner">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title" id="removeCommunityOwnerLabel">Remove Community Owner</h4>
+      </div>
+      <div class="modal-body">
+        Are you sure you want remove this Community owner?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">
+          Cancel
+        </button>
+        <button class="btn btn-danger" :disabled="community.owners.length === 1 || isRemovingOwner[targetOwner.id]"
+          @click="removeOwner(targetOwner.id)">Remove
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

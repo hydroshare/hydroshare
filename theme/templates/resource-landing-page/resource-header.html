@@ -32,7 +32,7 @@
                       <div v-if="res_mode === 'Edit'">
                         {% if not cm.raccess.published_or_review_pending %}
                         <a :disabled="isUpdatingAuthor" type="button" id="btn-add-new-author"
-                           class="btn btn-success btn-xs space-right-1x" data-toggle="modal"
+                           class="btn btn-success btn-xs has-space-right" data-toggle="modal"
                            data-target="#add-author-modal" title="Add Author">
                             <span class="glyphicon glyphicon-plus"></span>
                         </a>
@@ -60,7 +60,7 @@
                           </span>
                         {% endif %}
                       </div>
-                      <div style="display:flex; align-items: center;" class="space-left gap-1x">
+                      <div class="flex has-space-left align-center gap-1">
                         {% if resource_edit_mode %}
                             {% if not cm.raccess.published_or_review_pending %}
                                 <span data-toggle="tooltip" data-placement="auto"
@@ -82,7 +82,7 @@
                     <td v-if="owners.length" class="owners-wrapper">
                         <template v-for="owner in owners">
                             <profile-link
-                                :user="owner" :key="owner.id" @load-card="onLoadOwnerCard($event)">
+                                :user="owner" :key="owner.id" @load-card="loadOwnerCard($event)">
                             </profile-link>
                         </template>
 
@@ -113,7 +113,7 @@
                 <tr>
                     <th>Last updated:</th>
                     <td> {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }}
-                        <profile-link v-if="lastChanagedBy.is_active" v-on:load-card="onLoadOwnerCard($event)" :user="lastChanagedBy"></profile-link>
+                        <profile-link v-if="lastChanagedBy.is_active" v-on:load-card="loadOwnerCard($event)" :user="lastChanagedBy"></profile-link>
                         <profile-card v-if="lastChanagedBy.is_active" :user="lastChanagedBy" :position="cardPosition"></profile-card>
                     </td>
                 </tr>
