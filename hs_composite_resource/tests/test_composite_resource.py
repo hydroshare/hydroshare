@@ -60,6 +60,7 @@ class CompositeResourceTest(
         self.user = hydroshare.create_account(
             "user1@nowhere.com",
             username="user1",
+            password='mypassword1',
             first_name="Creator_FirstName",
             last_name="Creator_LastName",
             superuser=False,
