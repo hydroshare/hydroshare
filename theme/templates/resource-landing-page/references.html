@@ -99,7 +99,7 @@ Click this button to add a relationship to another resource, external website, o
                         {% if res|user_permission:request.user.pk|lower == "none" %}
                             <strong>{{ res.metadata.title }}</strong>
                         {% else %}
-                            <strong><a href="{{ res.get_absolute_url }}"
+                            <strong><a href="{{ res.absolute_url }}"
                                        target="_blank">{{ res.metadata.title }}</a></strong>
                         {% endif %}
                     </td>
