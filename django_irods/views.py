@@ -13,7 +13,7 @@ from rest_framework.decorators import api_view
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
 from hs_core.signals import pre_check_bag_flag, pre_download_file
-from hs_core.task_utils import get_or_create_task_notification, get_resource_bag_task, get_task, get_task_user_id
+from hs_core.task_utils import get_or_create_task_notification, get_resource_bag_task, get_task_user_id
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 
@@ -170,17 +170,16 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             task_id = task.task_id
             delete_zip.apply_async((irods_output_path,),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
+
+            task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
+                                                        username=user_id)
             if api_request:
-                get_or_create_task_notification(task_id, name='zip download', payload=download_path,
-                                                username=user_id)
                 return JsonResponse({
                     'zip_status': 'Not ready',
-                    'task_id': task.task_id,
+                    'task_id': task_dict["id"],
                     'download_path': '/django_irods/rest_download/' + output_path})
             else:
                 # return status to the task notification App AJAX call
-                task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
-                                                            username=user_id)
                 return JsonResponse(task_dict)
 
         else:  # synchronous creation of download
@@ -380,5 +379,5 @@ def rest_check_task_status(request, task_id, *args, **kwargs):
     if not task_id:
         task_id = request.POST.get('task_id')
 
-    task = get_task(task_id)
+    task = get_or_create_task_notification(task_id)
     return JsonResponse(task)
