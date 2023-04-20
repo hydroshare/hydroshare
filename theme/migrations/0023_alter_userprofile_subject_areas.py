@@ -57,6 +57,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL("UPDATE theme_userprofile set subject_areas = NULL "
+                          "where theme_userprofile.subject_areas like '';"),
         migrations.RunPython(migrate_csv_subject_areas),
         migrations.AlterField(
             model_name='userprofile',
