@@ -3,7 +3,6 @@ import mimetypes
 import os
 import urllib
 from uuid import uuid4
-from celery.result import AsyncResult
 
 from django.conf import settings
 from django.http import HttpResponse, FileResponse, HttpResponseRedirect, JsonResponse
