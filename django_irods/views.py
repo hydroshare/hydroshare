@@ -389,6 +389,8 @@ def rest_check_task_status(request, task_id, *args, **kwargs):
         n_status = task_notification['status']
         if n_status in ['completed', 'delivered']:
             return JsonResponse({"status": 'true', 'payload': task_notification['payload']})
+        if n_status == 'progress':
+            return JsonResponse({"status": 'false'})
         if n_status in ['failed', 'aborted']:
             return JsonResponse({"status": 'false'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
