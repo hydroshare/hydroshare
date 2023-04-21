@@ -19,7 +19,7 @@ class MyTemporaryUploadedFile(UploadedFile):
         return self.orig_name
 
 
-def prepare_resource(folder, res, user, extracted_directory, test_bag_path):
+def prepare_resource(folder, res, user, extracted_directory, test_bag_path, upload_to=""):
     from hs_core.views.utils import unzip_file
 
     dir_to_zip = os.path.join(extracted_directory, folder)
@@ -30,9 +30,14 @@ def prepare_resource(folder, res, user, extracted_directory, test_bag_path):
     bag_file_name = os.path.basename(test_bag_path)
     files_to_upload = [UploadedFile(file=open(test_bag_path, 'rb'),
                                     name=bag_file_name)]
-    add_resource_files(res.short_id, *files_to_upload, full_paths={})
+    add_resource_files(res.short_id, *files_to_upload, full_paths={}, folder=upload_to)
 
-    unzip_file(user, res.short_id, "data/contents/" + bag_file_name, True,
+    if upload_to:
+        zip_file_path = os.path.join("data", "contents", upload_to, bag_file_name)
+    else:
+        zip_file_path = os.path.join("data", "contents", bag_file_name)
+
+    unzip_file(user, res.short_id, zip_file_path, True,
                overwrite=True, auto_aggregate=True, ingest_metadata=True)
 
     res.refresh_from_db()

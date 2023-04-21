@@ -181,13 +181,13 @@ class OriginalCoverageRaster(AbstractMetaDataElement):
 
         with root_div:
             html_tags.legend('Spatial Reference')
-            html_tags.div('Coordinate Reference System', cls='text-muted space-top')
+            html_tags.div('Coordinate Reference System', cls='text-muted has-space-top')
             html_tags.div(self.value.get('projection', ''))
-            html_tags.div('Coordinate Reference System Unit', cls='text-muted space-top')
+            html_tags.div('Coordinate Reference System Unit', cls='text-muted has-space-top')
             html_tags.div(self.value['units'])
-            html_tags.div('Datum', cls='text-muted space-top')
+            html_tags.div('Datum', cls='text-muted has-space-top')
             html_tags.div(self.value.get('datum', ''))
-            html_tags.div('Coordinate String', cls='text-muted space-top')
+            html_tags.div('Coordinate String', cls='text-muted has-space-top')
             html_tags.div(self.value.get('projection_string', ''), style="word-break: break-all;")
             html_tags.h4('Extent', cls='space-top')
             with html_tags.table(cls='custom-table'):
@@ -739,7 +739,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
                         log.info("Geographic raster aggregation type - new files were added "
                                  "to the resource.")
-                        logical_file.extra_data['vrt_created'] = vrt_created
+                        logical_file.extra_data['vrt_created'] = str(vrt_created)
                         logical_file.save()
                         # use the extracted metadata to populate file metadata
                         for element in metadata:
@@ -769,9 +769,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         deleted."""
 
         # need to delete the system generated vrt file
-        vrt_created = self.extra_data.get('vrt_created', False)
+        vrt_created = self.extra_data.get('vrt_created', 'False')
         vrt_file = None
-        if vrt_created:
+        if vrt_created == 'True':
             # the vrt file is a system generated file
             for res_file in self.files.all():
                 if res_file.file_name.lower().endswith(".vrt"):
@@ -783,7 +783,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_primary_resource_file(cls, resource_files):
-        """Gets a resource file that has extension .vrt (if exists) otherwsie 'tif'
+        """Gets a resource file that has extension .vrt (if exists) otherwise 'tif'
         from the list of files *resource_files* """
 
         res_files = [f for f in resource_files if f.extension.lower() == '.vrt']
@@ -822,15 +822,10 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
         res_files = ResourceFile.list_folder(resource=resource, folder=raster_folder,
                                              sub_folders=False)
 
-        uploaded_vrt = None
         vrt_files_for_raster = get_vrt_files(raster_file, res_files)
         if len(vrt_files_for_raster) > 1:
             error_info.append("The raster {} is listed by more than one vrt file {}".format(raster_file,
                                                                                             vrt_files_for_raster))
-            return validation_results
-
-        if uploaded_vrt is not None and not vrt_files_for_raster:
-            error_info.append("The raster {} is not listed in vrt file {}".format(raster_file, uploaded_vrt))
             return validation_results
 
         if len(vrt_files_for_raster) == 1:

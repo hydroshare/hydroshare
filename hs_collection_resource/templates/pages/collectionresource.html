@@ -33,7 +33,6 @@
                         <th>Type</th>
                         <th>Owners</th>
                         <th>Sharing Status</th>
-                        <th>My Permission</th>
                         <th>Remove</th>
                     </tr>
                     </thead>
@@ -92,15 +91,6 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {% if upermission|lower == "none" %}
-                                                <strong class="label-private">{{ upermission }}</strong>
-                                            {% elif upermission|lower == "open access" %}
-                                                <strong class="label-public">{{ upermission }}</strong>
-                                            {% else %}
-                                                {{ upermission }}
-                                            {% endif %}
-                                        </td>
-                                        <td>
                                             <span data-res-id="{{ res.short_id }}"
                                                   data-form-id="form-favorite-{{ res.short_id }}"
                                                   data-form-type="toggle-favorite"
@@ -134,7 +124,7 @@
             {% endif %}
             <hr>
             {% block download_bag %}
-                <button id="btn-download-all" class="btn btn-default row-selector space-bottom"
+                <button id="btn-download-all" class="btn btn-default row-selector has-space-bottom"
                     {% if cm.raccess.require_download_agreement %}
                         data-target="#license-agree-dialog-bag" data-toggle="modal"
                         data-placement="auto"
@@ -248,15 +238,16 @@
                     <div id="clear-deleted-res-warning" class="collection-div-popup-warning">Clearing deleted resources and updating bag. Please wait...</div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="clear-deleted-res-btn-cancel">
+                      Cancel
+                    </button>
                     {% if page.perms.change %}
                         <button type="button" data-res-id="{{ cm.short_id }}" class="btn btn-success"
                                 id="clear-deleted-res-btn">
                             Clear and Update Bag
                         </button>
                     {% endif %}
-                    <button type="button" class="btn btn-default" data-dismiss="modal" id="clear-deleted-res-btn-cancel">
-                       Close
-                    </button>
+     
                 </div>
             </div>
         </div>

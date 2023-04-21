@@ -1,0 +1,93 @@
+<form id="request-form">
+  {% csrf_token %}
+  <div class="row">
+    <div class="col-xs-12 col-sm-7">
+      <div class="row">
+        <div class="text-right col-sm-12">
+          <button v-if="!isEditMode"
+            type="button" role="button" class="btn btn-default" @click.prevent="history.back()">Back</button>
+          <button v-if="!isEditMode && (request.status === 'Submitted' || request.status === 'Rejected') && !request.is_cancelled"
+            type="button" role="button" class="btn btn-default" @click.prevent="isEditMode = true">Edit</button>
+          <template v-if="isEditMode">
+            <button type="button" class="btn btn-default" :disabled="isSaving" @click.prevent="onCancel">Cancel</button>
+            <button type="submit" class="btn btn-success" :disabled="isSaving" @click.prevent="onUpdate">
+              ${ isSaving ? 'Saving...' : 'Save Changes' }
+            </button>
+          </template>
+        </div>
+
+        {# Community Name #}
+        <fieldset class="col-sm-12" :disabled="!isEditMode || isSaving">
+          <label>Community Name *</label>
+          <small class="text-muted">300 characters or less</small>
+          <textarea ref="name" :value="request.community_to_approve.name" class="form-control" required="required" name="name" maxlength="300" rows="1"
+            placeholder="Descriptive name for the Community"></textarea>
+        </fieldset>
+
+        <br>
+        {# Community Contact Email #}
+        <fieldset class="col-sm-12" :disabled="!isEditMode || isSaving">
+          <label>Community Contact Email</label>
+          <input ref="email" class="form-control" type="email" name="email"
+            :value="request.community_to_approve.email"></input>
+          <small class="text-muted">An email address for someone in charge of the community.</small>
+        </fieldset>
+
+        <br>
+        {# Community Url #}
+        <fieldset class="col-sm-12" :disabled="!isEditMode || isSaving">
+          <label>Community URL</label>
+          <input ref="url" class="form-control" :value="request.community_to_approve.url" type="url" name="url"></input>
+          <small class="text-muted">A URL for a web page that describes the community in more detail.</small>
+        </fieldset>
+
+        <br>
+        {# Purpose #}
+        <fieldset class="col-sm-12" :disabled="!isEditMode || isSaving">
+          <label>Purpose</label>
+          <textarea ref="purpose" class="form-control" name="purpose" rows="4"
+            maxlength="300">${ request.community_to_approve.purpose }</textarea>
+          <small class="text-muted">A brief description of the purpose for which the community was created.</small><br>
+          <small class="text-muted">300 characters or less.</small>
+        </fieldset>
+
+        <br>
+        {# Community Description #}
+        <fieldset class="col-sm-12" :disabled="!isEditMode || isSaving">
+          <label>About this community *</label>
+          <textarea ref="description" class="form-control" required="required" rows="4"
+            name="description">${ request.community_to_approve.description }</textarea>
+          <small class="text-muted">A longer text description for the community.</small>
+        </fieldset>
+
+        <br>
+        <fieldset class="col-sm-12" :disabled="!isEditMode || isSaving">
+          <small class="text-muted">( * ) Required fields</small>
+        </fieldset>
+        <br>
+      </div>
+
+      <template v-if="!isEditMode">
+        {% if user.is_superuser %}
+        <template v-if="request.status === 'Submitted' && !request.is_cancelled">
+          <button data-toggle="modal"
+            data-target="#reject-new-community-creation-request-dialog"
+            :disabled="isApproving || isRejecting || request.status === 'Rejected'" type="button" class="btn btn-default">
+            ${ isRejecting ? 'Rejecting Community...' : 'Reject' }
+          </button>
+          <button @click="onApprove" :disabled="isApproving || isRejecting"
+            type="button" class="btn btn-success has-space-right">
+            ${ isApproving ? 'Approving Community...' : 'Approve' }
+          </button>
+        </template>
+        {% endif %}
+        <button v-if="request.status === 'Rejected' && !request.is_cancelled" @click="onResubmit" :disabled="isResubmitting" type="button"
+          class="btn btn-default">
+          ${ isResubmitting ? 'Resubmitting...' : 'Resubmit' }
+        </button>
+      </template>
+
+      {% include 'hs_communities/reject-community-creation-request-modal.html' %}
+    </div>
+  </div>
+</form>

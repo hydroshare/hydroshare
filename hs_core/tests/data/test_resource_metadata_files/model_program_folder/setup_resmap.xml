@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+   xmlns:citoterms="http://purl.org/spar/cito/"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:dcterms="http://purl.org/dc/terms/"
+   xmlns:foaf="http://xmlns.com/foaf/0.1/"
+   xmlns:ore="http://www.openarchives.org/ore/terms/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:rdfs1="http://www.w3.org/2001/01/rdf-schema#"
+>
+  <rdf:Description rdf:about="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup_resmap.xml">
+    <dc:format>application/rdf+xml</dc:format>
+    <ore:describes rdf:resource="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup_resmap.xml#aggregation"/>
+    <dcterms:created>2021-09-22T22:15:24Z</dcterms:created>
+    <dcterms:modified>2021-09-22T22:15:24Z</dcterms:modified>
+    <dcterms:creator rdf:resource="http://foresite-toolkit.googlecode.com/#pythonAgent"/>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/ResourceMap"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup_resmap.xml#aggregation">
+    <ore:aggregates rdf:resource="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup_meta.xml"/>
+        <ore:isDescribedBy>http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup_resmap.xml</ore:isDescribedBy>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation"/>
+    <dcterms:type rdf:resource="http://localhost:8000/terms/ModelProgramAggregation"/>
+    <citoterms:isDocumentedBy>http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup_meta.xml</citoterms:isDocumentedBy>
+    <ore:aggregates rdf:resource="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup.cfg"/>
+    <dc:title>setup againas</dc:title>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://localhost:8000/terms/ModelProgramAggregation">
+    <rdfs1:label>Model Program Aggregation</rdfs1:label>
+    <rdfs1:isDefinedBy>http://localhost:8000/terms</rdfs1:isDefinedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup_meta.xml">
+    <dc:format>application/rdf+xml</dc:format>
+    <ore:isAggregatedBy>http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup_resmap.xml#aggregation</ore:isAggregatedBy>
+    <citoterms:documents>http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup_resmap.xml#aggregation</citoterms:documents>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup.cfg">
+    <dc:format>application/cfg</dc:format>
+    <ore:isAggregatedBy>http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/model_program_folder/setup_resmap.xml#aggregation</ore:isAggregatedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.openarchives.org/ore/terms/ResourceMap">
+    <rdfs1:label>ResourceMap</rdfs1:label>
+    <rdfs1:isDefinedBy>http://www.openarchives.org/ore/terms/</rdfs1:isDefinedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://foresite-toolkit.googlecode.com/#pythonAgent">
+    <foaf:name>Foresite Toolkit (Python)</foaf:name>
+    <foaf:mbox>foresite@googlegroups.com</foaf:mbox>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.openarchives.org/ore/terms/Aggregation">
+    <rdfs1:isDefinedBy>http://www.openarchives.org/ore/terms/</rdfs1:isDefinedBy>
+    <rdfs1:label>Aggregation</rdfs1:label>
+  </rdf:Description>
+</rdf:RDF>

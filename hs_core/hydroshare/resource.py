@@ -17,7 +17,6 @@ from django.contrib.auth.models import User
 from rest_framework import status
 
 from hs_core.hydroshare import hs_bagit
-from hs_core.hydroshare.users import create_account
 from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
@@ -1026,6 +1025,8 @@ def submit_resource_for_review(request, pk):
     and other general exceptions
 
     """
+    from hs_core.views.utils import get_default_support_user
+
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
@@ -1038,26 +1039,18 @@ def submit_resource_for_review(request, pk):
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
 
-    try:
-        user_to = User.objects.get(email__iexact=settings.DEFAULT_SUPPORT_EMAIL)
-    except User.DoesNotExist:
-        user_to = create_account(
-            email=settings.DEFAULT_SUPPORT_EMAIL,
-            username=settings.DEFAULT_SUPPORT_EMAIL,
-            first_name=settings.DEFAULT_SUPPORT_EMAIL,
-            last_name=settings.DEFAULT_SUPPORT_EMAIL,
-            superuser=True
-        )
+    user_to = get_default_support_user()
     from hs_core.views.utils import send_action_to_take_email
     send_action_to_take_email(request, user=user_to, user_from=request.user,
                               action_type='metadata_review', resource=resource)
+
+    # create review date -- must be before review_pending = True
+    resource.metadata.dates.all().filter(type='reviewStarted').delete()
+    resource.metadata.create_element('date', type='reviewStarted', start_date=datetime.datetime.now(tz.UTC))
+
     resource.raccess.review_pending = True
     resource.raccess.immutable = True
     resource.raccess.save()
-
-    # create review date -- must be after review_pending = True
-    resource.metadata.dates.all().filter(type='review_started').delete()
-    resource.metadata.create_element('date', type='review_started', start_date=datetime.datetime.now(tz.UTC))
 
 
 def publish_resource(user, pk):

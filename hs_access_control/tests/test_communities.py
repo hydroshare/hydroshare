@@ -8,10 +8,9 @@ from hs_access_control.models import PrivilegeCodes, GroupCommunityPrivilege,\
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestCommunities(MockIRODSTestCaseMixin, TestCase):
+class TestCommunities(TestCase):
 
     def setUp(self):
         super(TestCommunities, self).setUp()
@@ -165,6 +164,12 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.pests = self.bat.uaccess.create_community(
             'all kinds of pests',
             'collaboration on how to be a more effective pest.')
+
+        # make the communities active
+        self.pets.active = True
+        self.pets.save()
+        self.pests.active = True
+        self.pests.save()
 
     def tearDown(self):
         super(TestCommunities, self).tearDown()

@@ -1,0 +1,14 @@
+<div class="collaborate-header">
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="collaborate-nav flex flex-sm-column">
+          <a href="{% url 'groups' %}"
+            class="collaborate-nav-item{% if active == 'find_groups' %} active{% endif %}">Find Groups</a>
+          <a href="{% url 'my_groups' %}"
+            class="collaborate-nav-item{% if active == 'my_groups' %} active{% endif %}">My Groups</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
