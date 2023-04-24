@@ -56,6 +56,10 @@ hydroshare:
     - rabbitmq:rabbitmq
     - solr:solr
   command: /bin/bash init-hydroshare
+redis:
+  image: redis:6.2.6-buster
+  container_name: redis
+  hostname: redis
 defaultworker:
   build: .
   container_name: defaultworker

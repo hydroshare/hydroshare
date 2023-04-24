@@ -223,6 +223,17 @@ PROJECT_DIRNAME = PROJECT_ROOT.split(os.sep)[-1]
 # project specific.
 CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 
+# https://github.com/jazzband/django-redis#configure-as-cache-backend
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
 
@@ -286,6 +297,7 @@ INSTALLED_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
     "oauth2_provider",
+    "cachalot",
     "corsheaders",
     "django.contrib.contenttypes",
     "django.contrib.redirects",
@@ -632,6 +644,9 @@ TRACKING_PROFILE_FIELDS = [
     "country",
 ]
 TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 
 # info django that a reverse proxy sever (nginx) is handling ssl/https for it
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

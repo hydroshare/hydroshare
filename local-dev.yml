@@ -125,6 +125,10 @@ services:
       - "share_vol:/irods/cache"
       - "idata_vault_vol:/irods/data"
       - "iuser_vault_vol:/irods/user"
+  redis:
+    image: redis:6.2.6-buster
+    container_name: redis
+    hostname: redis
   hydroshare:
     build:
       context: .
@@ -171,6 +175,7 @@ services:
       - rabbitmq
       - data.local.org
       - users.local.org
+      - redis
     stdin_open: true
     tty: true
     command: /bin/bash init-hydroshare
@@ -211,6 +216,7 @@ services:
       - rabbitmq
       - data.local.org
       - users.local.org
+      - redis
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
