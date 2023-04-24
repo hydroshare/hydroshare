@@ -2212,6 +2212,66 @@ def hsapi_get_user(request, user_identifier):
     return get_user_or_group_data(request, user_identifier, "false")
 
 
+@swagger_auto_schema(
+    method="get",
+    operation_description="Get user data for Keycloak Migration",
+    responses={200: "Returns JsonResponse containing user data"},
+    manual_parameters=[uid],
+)
+@api_view(["GET"])
+def hsapi_get_user_for_keycloak(request, user_identifier):
+    """
+    Get user data
+
+    :param user_identifier: id of the user for which data is needed
+    :return: JsonResponse containing user data
+    """
+    user: User = utils.user_from_id(user_identifier)
+    keycloak_dict = {
+        #"id": "optional",
+          "username": user.username,
+          "email": user.email,
+          "firstName": user.first_name,
+          "lastName": user.last_name,
+          "enabled": True,
+          "emailVerified": user.is_active,
+          #"attributes": {
+          #    "key": [
+          #        "value"
+          #    ]
+          #},
+          "roles": [
+              "default-roles-hydroshare"
+          ],
+          #"groups": [
+          #    "string"
+          #],
+          #"requiredActions": [
+          #    "requiredActions"
+          #]
+        }
+    return JsonResponse(keycloak_dict)
+
+
+@swagger_auto_schema(
+    method="post",
+    operation_description="Check user password for Keycloak Migration",
+    responses={200: "Password is valid", 400: "Password is invalid"},
+    manual_parameters=[uid],
+    request_body=openapi.Schema(type=openapi.TYPE_OBJECT,
+                                properties={'password': openapi.Schema(type=openapi.TYPE_STRING, description="raw password to validate")}
+                                )
+)
+@api_view(["POST"])
+def hsapi_post_user_for_keycloak(request, user_identifier):
+    """
+    Check the user password
+    """
+    password = json.loads(request.body.decode('utf-8'))['password']
+    user: User = utils.user_from_id(user_identifier)
+    return HttpResponse() if user.check_password(password) else HttpResponseBadRequest()
+
+
 @login_required
 def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs):
     """
