@@ -42,6 +42,7 @@ class HydroRealtimeSignalProcessor(BaseSignalProcessor):
         except Exception as e:
             logger.exception("{} exception: {}".format(type(instance), str(e)))
 
+
 def index_resource(signal_processor, instance: BaseResource):
     if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'):
         # work around for failure of super(BaseResource, instance) to work properly.
