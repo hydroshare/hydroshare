@@ -2211,14 +2211,22 @@ def hsapi_get_user(request, user_identifier):
     """
     return get_user_or_group_data(request, user_identifier, "false")
 
-
+@swagger_auto_schema(
+    method="post",
+    operation_description="Check user password for Keycloak Migration",
+    responses={200: "Password is valid", 400: "Password is invalid"},
+    manual_parameters=[uid],
+    request_body=openapi.Schema(type=openapi.TYPE_OBJECT,
+                                properties={'password': openapi.Schema(type=openapi.TYPE_STRING, description="raw password to validate")}
+                                )
+)
 @swagger_auto_schema(
     method="get",
     operation_description="Get user data for Keycloak Migration",
     responses={200: "Returns JsonResponse containing user data"},
     manual_parameters=[uid],
 )
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 def hsapi_get_user_for_keycloak(request, user_identifier):
     """
     Get user data
@@ -2226,6 +2234,9 @@ def hsapi_get_user_for_keycloak(request, user_identifier):
     :param user_identifier: id of the user for which data is needed
     :return: JsonResponse containing user data
     """
+    if request.method == "POST":
+        return hsapi_post_user_for_keycloak(request, user_identifier)
+
     user: User = utils.user_from_id(user_identifier)
     keycloak_dict = {
         #"id": "optional",
@@ -2253,16 +2264,7 @@ def hsapi_get_user_for_keycloak(request, user_identifier):
     return JsonResponse(keycloak_dict)
 
 
-@swagger_auto_schema(
-    method="post",
-    operation_description="Check user password for Keycloak Migration",
-    responses={200: "Password is valid", 400: "Password is invalid"},
-    manual_parameters=[uid],
-    request_body=openapi.Schema(type=openapi.TYPE_OBJECT,
-                                properties={'password': openapi.Schema(type=openapi.TYPE_STRING, description="raw password to validate")}
-                                )
-)
-@api_view(["POST"])
+
 def hsapi_post_user_for_keycloak(request, user_identifier):
     """
     Check the user password
