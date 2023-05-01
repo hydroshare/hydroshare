@@ -144,8 +144,9 @@ def update_collection(request, shortkey, *args, **kwargs):
                                                     set_res_modified=False)
 
                     # delete relation meta element of type 'isPartOf' from the resource removed from the collection
-                    res_obj_remove.metadata.relations.filter(type=RelationTypes.isPartOf,
-                                                             value__contains=collection_res_obj.short_id).first().delete()
+                    rel = res_obj_remove.metadata.relations.filter(type=RelationTypes.isPartOf,
+                                                                   value__contains=collection_res_obj.short_id).first()
+                    rel.delete()
                     set_dirty_bag_flag(res_obj_remove)
                 except AttributeError as e:
                     logger.exception(f"update_collection, removing metadata; collection_id:{shortkey}; {e}")
