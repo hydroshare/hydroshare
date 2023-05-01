@@ -217,6 +217,7 @@ There are many ways to contribute to Hydroshare. Review [Contributing guidelines
 2. Developing code to contribute to HydroShare 
 3. Developing a HydroShare App
 4. Submiting pull requests with code changes for review
+5. Helping to fix our iRods implementation
 
 ## License 
 
