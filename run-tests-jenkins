@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe
+coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe hs_core.tests.api.views.test_replicate_bag_to_user_zone.TestReplicateBagToUserZone --failfast
 coverage xml
 pytest
