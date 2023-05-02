@@ -1,7 +1,7 @@
 version: '3'
 services:
   data.local.org:
-    image: hydroshare/hs-irods:4.2.6b
+    image: hydroshare/hs-irods:4.2.6-buster
     container_name: data.local.org
     hostname: data.local.org
     links:
@@ -43,7 +43,7 @@ services:
     stdin_open: true
     tty: true
   users.local.org:
-    image: hydroshare/hs-irods:4.2.6b
+    image: hydroshare/hs-irods:4.2.6-buster
     container_name: users.local.org
     hostname: users.local.org
     volumes:

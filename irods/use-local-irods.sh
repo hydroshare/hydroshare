@@ -46,7 +46,7 @@ if [[ "${1}" == "--persist" ]]; then
         -e IRODS_DATABASE_SERVER_HOSTNAME=${IRODS_HOST} \
         -p ${IRODS_PORT} \
         --hostname ${IRODS_HOST} \
-        hydroshare/hs-irods:4.2.6b
+        hydroshare/hs-irods:4.2.6-buster
 
     # Create ${HS_USER_ZONE_HOST} container from irods v.4.2.6
     echo "CREATE: ${HS_USER_ZONE_HOST} container"
@@ -61,7 +61,7 @@ if [[ "${1}" == "--persist" ]]; then
         -p 1247 \
         -p 22 \
         --hostname ${HS_USER_ZONE_HOST} \
-        hydroshare/hs-irods:4.2.6b
+        hydroshare/hs-irods:4.2.6-buster
 else
     # Create ${IRODS_HOST} container from irods v.4.2.6
     echo "CREATE: ${IRODS_HOST} container"
@@ -71,7 +71,7 @@ else
         -e IRODS_DATABASE_SERVER_HOSTNAME=${IRODS_HOST} \
         -p ${IRODS_PORT} \
         --hostname ${IRODS_HOST} \
-        hydroshare/hs-irods:4.2.6b
+        hydroshare/hs-irods:4.2.6-buster
 
     # Create ${HS_USER_ZONE_HOST} container from irods v.4.2.6
     echo "CREATE: ${HS_USER_ZONE_HOST} container"
@@ -82,7 +82,7 @@ else
         -p 1247 \
         -p 22 \
         --hostname ${HS_USER_ZONE_HOST} \
-        hydroshare/hs-irods:4.2.6b
+        hydroshare/hs-irods:4.2.6-buster
 fi
 
 # wait for ${IRODS_HOST} and ${HS_USER_ZONE_HOST} to finish standing up
