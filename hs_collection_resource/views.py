@@ -38,7 +38,8 @@ def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
         urp_qs = UserResourcePrivilege.objects \
             .filter(resource__short_id__in=collectable_resource_ids, privilege=PrivilegeCodes.OWNER)\
             .select_related("user", "resource") \
-            .distinct()
+            .order_by("resource__title", "resource__short_id") \
+            .distinct("resource__title", "resource__short_id")
 
         context = {'user_resource_privileges': urp_qs}
         template_name = 'pages/collectable_resources_modal.html'
