@@ -53,7 +53,9 @@ class Command(BaseCommand):
         for res in resources:
             i = i + 1
             print(f"{i}/{res_count}: Checking resource {res}, {current_site}/resource/{res.short_id}")
-            rels = res.metadata.relations.filter(type=RelationTypes.isPartOf).all()
+            rels = None
+            if res.metadata:
+                rels = res.metadata.relations.filter(type=RelationTypes.isPartOf).all()
             if not rels:
                 print("Skipping resource, no isPartOf relations")
                 continue
