@@ -24,7 +24,6 @@ class Command(BaseCommand):
             print(f"Checking collection: {collection} {current_site}/resource/{collection.short_id}")
             for res in collection.resources.all():
                 rel_values = [rel.value for rel in res.metadata.relations.filter(type=RelationTypes.isPartOf).all()]
-                print(f"Relations: {rel_values}")
                 if collection.get_citation() not in rel_values:
                     print(f"IsPartOf relation missing from {res}, {current_site}/resource/{res.short_id}")
                     if dry_run:
