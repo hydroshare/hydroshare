@@ -72,7 +72,11 @@ class Command(BaseCommand):
             for rel in isPartOf_relations:
                 # get the collection object from the relation...
                 try:
-                    id = rel.value.split("/resource/")[1][:32]
+                    citation = rel.value
+                    if "doi.org" in citation:
+                        id = rel.value.split("/hs.")[1][:32]
+                    else:
+                        id = rel.value.split("/resource/")[1][:32]
                     col = BaseResource.objects.get(short_id=id)
                 except Exception as e:
                     message = f"Unable to parse id from citation: {rel.value}, {e}"
