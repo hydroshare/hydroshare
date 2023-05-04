@@ -5,6 +5,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from rest_framework import status as http_status
+from django.core.exceptions import ValidationError
 
 from hs_core.enums import RelationTypes
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
@@ -193,8 +194,12 @@ def update_collection(request, shortkey, *args, **kwargs):
                                                 set_res_modified=False)
 
                 # add relation meta element of type 'isPartOf' to the resource added to the collection
-                res_to_add.metadata.create_element('relation', type='isPartOf',
-                                                   value=collection_res_obj.get_citation())
+                try:
+                    res_to_add.metadata.create_element('relation', type='isPartOf',
+                                                       value=collection_res_obj.get_citation())
+                except ValidationError:
+                    # The isPartOf metadata already exists
+                    pass
                 set_dirty_bag_flag(res_to_add)
 
             if collection_res_obj.can_be_public_or_discoverable:
