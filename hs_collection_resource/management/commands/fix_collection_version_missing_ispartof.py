@@ -29,9 +29,10 @@ class Command(BaseCommand):
         fixed = 0
         for collection in collections:
             n = n + 1
+            col_citation = collection.get_citation()
             for res in collection.resources.all():
                 rel_values = [rel.value for rel in res.metadata.relations.filter(type=RelationTypes.isPartOf).all()]
-                if collection.get_citation() not in rel_values:
+                if col_citation not in rel_values:
                     print(f"{n}/{col_count}:For collection:{collection}, {current_site}/resource/{collection.short_id}")
                     print(f"IsPartOf relation missing from {res}, {current_site}/resource/{res.short_id}")
                     if dry_run:
@@ -40,7 +41,7 @@ class Command(BaseCommand):
                         print("Creating IsPartOf relation...")
                         res.metadata.create_element('relation',
                                                     type=RelationTypes.isPartOf,
-                                                    value=collection.get_citation())
+                                                    value=col_citation)
                     fixed = fixed + 1
                 res_citation = res.get_citation()
                 if not collection.metadata.relations.filter(type=RelationTypes.hasPart, value=res_citation).exists():
@@ -69,6 +70,7 @@ class Command(BaseCommand):
                 isPartOf_relations = res.metadata.relations.filter(type=RelationTypes.isPartOf).all()
             if not isPartOf_relations:
                 continue
+            res_citation = res.get_citation()
             for rel in isPartOf_relations:
                 # get the collection object from the relation...
                 try:
@@ -84,8 +86,7 @@ class Command(BaseCommand):
                     errors.append(message)
                     continue
                 haspart_relations = col.metadata.relations.filter(type=RelationTypes.hasPart).all()
-                citation = res.get_citation()
-                if citation not in [rel.value for rel in haspart_relations]:
+                if res_citation not in [rel.value for rel in haspart_relations]:
                     print(f"{i}/{res_count}:{res}, {current_site}/resource/{res.short_id} has isPart meta.")
                     print(f"Collection {col}, {current_site}/resource/{col.short_id} is missing hasPart.")
                     if dry_run:
