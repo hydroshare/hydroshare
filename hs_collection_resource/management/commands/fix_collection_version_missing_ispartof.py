@@ -30,10 +30,9 @@ class Command(BaseCommand):
         for collection in collections:
             n = n + 1
             for res in collection.resources.all():
-                print("Checking that all resources in collections have isPartOf metadata...")
                 rel_values = [rel.value for rel in res.metadata.relations.filter(type=RelationTypes.isPartOf).all()]
                 if collection.get_citation() not in rel_values:
-                    print(f"{n}/{col_count}: Collection={collection} {current_site}/resource/{collection.short_id}")
+                    print(f"{n}/{col_count}:For collection:{collection}, {current_site}/resource/{collection.short_id}")
                     print(f"IsPartOf relation missing from {res}, {current_site}/resource/{res.short_id}")
                     if dry_run:
                         print("SKIPPING creating IsPartOf relation because dry_run")
@@ -43,16 +42,17 @@ class Command(BaseCommand):
                                                     type=RelationTypes.isPartOf,
                                                     value=collection.get_citation())
                     fixed = fixed + 1
-                print("Checking that collection contains hasPart metadata...")
                 res_citation = res.get_citation()
                 if not collection.metadata.relations.filter(type=RelationTypes.hasPart, value=res_citation).exists():
-                    print(f"hasPart relation missing from {collection}, {current_site}/resource/{collection.short_id}")
+                    print(f"hasPart relation missing from collection: "
+                          f"{collection}, {current_site}/resource/{collection.short_id}")
                     if dry_run:
                         print("SKIPPING creating hasPart relation because dry_run")
                     else:
                         collection.metadata.create_element('relation',
                                                            type=RelationTypes.hasPart,
                                                            value=res_citation)
+                    fixed = fixed + 1
         print(f"{fixed} metadata relations were missing")
 
         print('-' * 100)
@@ -72,7 +72,7 @@ class Command(BaseCommand):
             for rel in isPartOf_relations:
                 # get the collection object from the relation...
                 try:
-                    id = rel.value.split(f"{current_site}/resource/")[1][:32]
+                    id = rel.value.split("/resource/")[1][:32]
                     col = BaseResource.objects.get(short_id=id)
                 except Exception as e:
                     message = f"Unable to parse id from citation: {rel.value}, {e}"
@@ -85,12 +85,12 @@ class Command(BaseCommand):
                     print(f"{i}/{res_count}:{res}, {current_site}/resource/{res.short_id} has isPart meta.")
                     print(f"Collection {col}, {current_site}/resource/{col.short_id} is missing hasPart.")
                     if dry_run:
-                        print("SKIPPING creating hasPart relation because dry_run")
+                        print("SKIPPING delete of isPartOf relation because dry_run")
                     else:
                         print("Removing dangling isPartOf relation...")
                         res.metadata.delete_element('relation', rel.id)
                     fixed = fixed + 1
-        print(f"{fixed} hasPart relations were missing")
+        print(f"{fixed} isPart relations found dangling")
         if errors:
             print("Errors:")
             for error in errors:
