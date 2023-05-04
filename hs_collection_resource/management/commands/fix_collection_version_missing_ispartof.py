@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
         print('-' * 100)
         print("check that all collections include hasPart metadata for contained resources")
-        resources = BaseResource.object.all()
+        resources = BaseResource.objects.all()
         res_count = resources.count()
         print(f"{res_count} resources to check")
         i = 0
