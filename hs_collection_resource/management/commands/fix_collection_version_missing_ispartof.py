@@ -61,7 +61,7 @@ class Command(BaseCommand):
                 col = rel.metadata.resource
                 haspart_relations = col.metadata.relations.filter(type=RelationTypes.hasPart).all()
                 citation = res.get_citation()
-                if citation not in haspart_relations:
+                if citation not in [rel.value for rel in haspart_relations]:
                     print(f"{i}/{res_count}:{res}, {current_site}/resource/{res.short_id} has isPart meta.")
                     print(f"Collection {col}, {current_site}/resource/{col.short_id} is missing hasPart.")
                     if dry_run:
