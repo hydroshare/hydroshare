@@ -25,6 +25,7 @@ class Command(BaseCommand):
         col_count = collections.count()
         print(f"{col_count} collections to check")
         n = 0
+        fixed = 0
         for collection in collections:
             n = n + 1
             print(f"{n}/{col_count}: Checking collection: {collection} {current_site}/resource/{collection.short_id}")
@@ -39,12 +40,16 @@ class Command(BaseCommand):
                         res.metadata.create_element('relation',
                                                     type=RelationTypes.isPartOf,
                                                     value=collection.get_citation())
+                    fixed = fixed + 1
+        print(f"{fixed} isPart relations were missing")
+
         print('-' * 100)
         print("check that all collections include hasPart metadata for contained resources")
         resources = BaseResource.object.all()
         res_count = resources.count()
         print(f"{res_count} resources to check")
         i = 0
+        fixed = 0
         for res in resources:
             i = i + 1
             print(f"{i}/{res_count}: Checking resource {res}, {current_site}/resource/{res.short_id}")
@@ -66,5 +71,7 @@ class Command(BaseCommand):
                         col.metadata.create_element('relation',
                                                     type=RelationTypes.hasPart,
                                                     value=citation)
+                    fixed = fixed + 1
+        print(f"{fixed} hasPart relations were missing")
 
         print("DONE")
