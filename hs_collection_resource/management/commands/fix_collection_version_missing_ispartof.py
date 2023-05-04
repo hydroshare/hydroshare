@@ -22,8 +22,12 @@ class Command(BaseCommand):
         collections = BaseResource.objects.filter(resource_type="CollectionResource").all()
         print('-' * 100)
         print("1. Check that all resources in collections have isPartOf metadata")
+        col_count = collections.count()
+        print(f"{col_count} collections to check")
+        n = 0
         for collection in collections:
-            print(f"Checking collection: {collection} {current_site}/resource/{collection.short_id}")
+            n = n + 1
+            print(f"{n}/{col_count}: Checking collection: {collection} {current_site}/resource/{collection.short_id}")
             for res in collection.resources.all():
                 rel_values = [rel.value for rel in res.metadata.relations.filter(type=RelationTypes.isPartOf).all()]
                 if collection.get_citation() not in rel_values:
@@ -37,8 +41,13 @@ class Command(BaseCommand):
                                                     value=collection.get_citation())
         print('-' * 100)
         print("check that all collections include hasPart metadata for contained resources")
-        for res in BaseResource.object.all():
-            print(f"Checking resource {res}, {current_site}/resource/{res.short_id}")
+        resources = BaseResource.object.all()
+        res_count = resources.count()
+        print(f"{res_count} resources to check")
+        i = 0
+        for res in resources:
+            i = i + 1
+            print(f"{i}/{res_count}: Checking resource {res}, {current_site}/resource/{res.short_id}")
             rels = res.metadata.relations.filter(type=RelationTypes.isPartOf).all()
             if not rels:
                 print("Skipping resource, no isPartOf relations")
