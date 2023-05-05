@@ -3,9 +3,11 @@
 import django.contrib.postgres.fields
 from django.db import migrations, models
 from django.db.utils import DataError
+from django.core.management import call_command
 
 
 def migrate_csv_subject_areas(apps, schema_editor):
+    call_command('create_subject_areas_dict')
     SubjectArea = apps.get_model('hs_dictionary.SubjectArea')
     UserProfile = apps.get_model('theme.UserProfile')
     # Attempt to match existing SAs from profiles
