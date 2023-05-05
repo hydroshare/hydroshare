@@ -4,9 +4,18 @@ import django.contrib.postgres.fields
 from django.db import migrations, models
 from django.db.utils import DataError
 from django.core.management import call_command
+import re
 
 
 def migrate_csv_subject_areas(apps, schema_editor):
+    def strip_for_dict(string=""):
+        # Check if the string consists of only spaces and braces
+        res, _ = re.subn('{|}', '', string)
+        if res.strip() == "":
+            return ""
+        # replace invalid braces
+        string = string.replace("{", "[").replace("}", "]")
+        return string.strip()
     call_command('create_subject_areas_dict')
     SubjectArea = apps.get_model('hs_dictionary.SubjectArea')
     UserProfile = apps.get_model('theme.UserProfile')
@@ -25,8 +34,16 @@ def migrate_csv_subject_areas(apps, schema_editor):
         print(f'Searching user #{profile.pk} which has subject areas: {profile.subject_areas}')
         new_subj_areas = []
         for subject in old_subject_areas:
+            if subject == '':
+                # There is a trailing comma that we need to remove
+                continue
+            stripped_subject = strip_for_dict(subject)
+            if stripped_subject == '':
+                # The subject contained only invalid chars
+                print(f"- Unmatched subject area '{subject}' contains invalid chars that will be stripped")
+                continue
             print(f"Searching for a match with '{subject}'")
-            match = [sa for sa in subject_area_objects if sa.name.lower() == subject.strip().lower()]
+            match = [sa for sa in subject_area_objects if sa.name.lower() == stripped_subject.lower()]
             if match:
                 new_subj_areas.append(match[0].name)
                 if match[0].name == subject:
@@ -34,12 +51,12 @@ def migrate_csv_subject_areas(apps, schema_editor):
                 else:
                     print(f'- Near match with pre-existing subject area: {subject}')
             else:
-                if subject.strip() == subject:
+                if stripped_subject == subject:
                     print(f"- Unmatched subject area '{subject}' will remain unaltered")
                     new_subj_areas.append(subject)
                 else:
-                    print(f"- Unmatched subject area '{subject}' contains whitespace that will be stripped")
-                    new_subj_areas.append(subject.strip())
+                    print(f"- Unmatched subject area '{subject}' contains invalid chars that will be stripped")
+                    new_subj_areas.append(stripped_subject)
 
         sas = ','.join(new_subj_areas)
         message = f'Updating {profile} from {profile.subject_areas} subject_areas to {{{sas}}}'
