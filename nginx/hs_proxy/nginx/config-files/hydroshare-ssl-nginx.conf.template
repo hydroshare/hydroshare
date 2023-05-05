@@ -53,6 +53,10 @@ server {
         rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
     }
 
+    if ($http_host = "EXTERNAL_METRICS_HOST") {
+        rewrite ^/(.*)  https://INTERNAL_METRICS_HOST/$1 permanent;
+    }
+
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log error;
 

@@ -22,6 +22,8 @@ preflight_nginx() {
     yes | cp -rf ${NGINX_CONFIG_DIRECTORY}/hydroshare-ssl-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
     sed -i 's/FQDN_OR_IP/'${FQDN_OR_IP}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
     sed -i 's/CURRENT_VM/'${CURRENT_VM}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+    sed -i 's/EXTERNAL_METRICS_HOST/'${EXTERNAL_METRICS_HOST}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+    sed -i 's/INTERNAL_METRICS_HOST/'${INTERNAL_METRICS_HOST}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
     sed -i 's/SSL_CERT_FILE/'${SSL_CERT_FILE}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
     sed -i 's/SSL_KEY_FILE/'${SSL_KEY_FILE}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf;
 }
