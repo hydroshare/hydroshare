@@ -13,8 +13,8 @@ def migrate_csv_subject_areas(apps, schema_editor):
         res, _ = re.subn('{|}', '', string)
         if res.strip() == "":
             return ""
-        # replace invalid braces
-        string = string.replace("{", "[").replace("}", "]")
+        # replace invalid braces and quotes
+        string = string.replace("{", "[").replace("}", "]").replace("\"", "\'")
         return string.strip()
     call_command('create_subject_areas_dict')
     SubjectArea = apps.get_model('hs_dictionary.SubjectArea')
