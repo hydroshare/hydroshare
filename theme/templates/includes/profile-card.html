@@ -1,3 +1,4 @@
+{% load hydroshare_tags %}
 <script id="profile-card-template" type="text/x-template">
     <ul class="dropdown-menu arrow_box profile-card" @click.stop=""
         :style="{top: position.top + 'px', left: position.left + 'px'}">
@@ -49,7 +50,7 @@
 
                     <div v-if="user.subject_areas" class="space-top">
                         <small class="text-muted">Subject Areas:</small>
-                        <div>${user.subject_areas}</div>
+                        <div>${user.subject_areas.join(", ")}</div>
                     </div>
 
                     <div v-if="hasIdentifiers" class="space-top">
