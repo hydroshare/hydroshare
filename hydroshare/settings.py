@@ -782,7 +782,7 @@ if 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
-    DISABLE_HAYSTACK = True
+    # DISABLE_HAYSTACK = True
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
