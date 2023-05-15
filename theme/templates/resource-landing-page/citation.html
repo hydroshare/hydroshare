@@ -55,7 +55,7 @@
             <br />
 
             {# ======= Sharing ======= #}
-            {% if not resource_edit_mode and not cm.raccess.published_or_review_pending %}
+            {% if not resource_edit_mode or cm.raccess.published_or_review_pending %}
                 {% if rights.statement or rights.url %}
                     <div id="rights">
                         {% if rights.statement %}
