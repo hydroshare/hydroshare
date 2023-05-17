@@ -37,6 +37,7 @@ def get_std_log_fields(request, session=None):
     """ returns a standard set of metadata that to each receiver function.
     This ensures that all activities are reporting a consistent set of metrics
     """
+    user_agent = request.META['HTTP_USER_AGENT']
     user_type = None
     user_email = None
     if session is not None:
@@ -47,6 +48,8 @@ def get_std_log_fields(request, session=None):
         'user_ip': get_client_ip(request),
         'user_type': user_type,
         'user_email_domain': user_email,
+        'is_human': is_human(user_agent),
+        'user_agent': user_agent
     }
 
 
