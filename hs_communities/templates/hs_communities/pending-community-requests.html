@@ -1,0 +1,64 @@
+{% extends "pages/page.html" %}
+
+{% load hydroshare_tags thumbnail %}
+
+{% block meta_title %} Pending Community Requests {% endblock %}
+{% block extra_css %}
+<link href="{% static 'css/collaborate.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block main %}
+{% include 'hs_communities/communities-nav.html' with active='manage_requests' %}
+{# Needs to be included first so it's available before other instances initialize #}
+{% include "includes/profile-card.html" %}
+<div id="pending-community-requests-app" class="container">
+  <div class="row">
+    <div class="col-sm-12">
+      <h2 class="page-title">Admin: New Community Requests</h2>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12">
+      <div v-if="!pendingRequests.length">No pending requests.</div>
+      <template v-else>
+        <table class="table-hover table-striped resource-custom-table">
+          <thead>
+            <tr>
+              <th>Community Name</th>
+              <th>Submission Date</th>
+              <th>Submitted By</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="request of pendingRequests">
+              <td><a :href="`{% url "manage_requests" %}${request.id}`">${ request.community_to_approve.name }</a></td>
+              <td>${ request.date_requested }</td>
+              <td>
+                <profile-link :user="request.requested_by" :key="request.requested_by.id"
+                  @load-card="loadOwnerCard($event)">
+                </profile-link>
+                <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
+              </td>
+              <td style="word-wrap: break-word;"
+                :class="{ 'text-success': request.status === 'Approved', 'text-danger': request.status === 'Rejected' }">
+                ${ request.status }${ request.is_cancelled ? ' & Cancelled' : ''}</td>
+            </tr>
+          </tbody>
+        </table>
+        <br>
+      </template>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script type="text/javascript">
+  // Constants here
+  const PENDING_REQUESTS = {{ admin_all_requests| safe }}
+</script>
+<script type="text/javascript" src="{% static 'js/pending-community-requests.js' %}"></script>
+<script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+{% endblock %}

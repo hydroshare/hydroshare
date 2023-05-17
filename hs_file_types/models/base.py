@@ -853,6 +853,11 @@ class AbstractLogicalFile(models.Model):
         return ""
 
     @classmethod
+    def supports_folder_based_aggregation(cls):
+        """If an aggregation of this type can be created from a folder"""
+        return False
+
+    @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """Sub classes must implement this method to create specific logical file (aggregation) type
         :param resource: an instance of resource type CompositeResource

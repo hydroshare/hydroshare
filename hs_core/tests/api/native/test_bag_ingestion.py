@@ -73,8 +73,8 @@ def compare_metadatas(self, short_id, new_metadata_str, original_metadata_file):
         self.assertEquals(new_triple, original_triple, "Ingested metadata does not match original")
 
 
-def prepare_resource(self, folder):
-    prepare_resource_util(folder, self.res, self.user, self.extracted_directory, self.test_bag_path)
+def prepare_resource(self, folder, upload_to=""):
+    prepare_resource_util(folder, self.res, self.user, self.extracted_directory, self.test_bag_path, upload_to)
 
 
 class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
@@ -119,59 +119,104 @@ class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
                           self.res.get_logical_files(GenericLogicalFile.type_name())[0].metadata.get_xml(),
                           "fileset_nested/fileset/singlefile_meta.xml")
 
-    def test_modelinstance_ingestion(self):
+    def test_modelinstance_ingestion_at_root(self):
+        """Ingesting at root of the resource file path"""
         prepare_resource(self, "model_program")
         prepare_resource(self, "model_instance")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(ModelInstanceLogicalFile.type_name())[0].metadata.get_xml(),
                           "model_instance/generic_file_meta.xml")
 
-    def test_modelinstance_folder_ingestion(self):
-        prepare_resource(self, "model_program_folder")
-        prepare_resource(self, "model_instance_folder")
+    def test_modelinstance_ingestion_at_folder(self):
+        """Ingesting at a folder of the resource"""
+        prepare_resource(self, "model_program_folder", upload_to="model_program_folder")
+        prepare_resource(self, "model_instance_folder", upload_to="model_instance_folder")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(ModelInstanceLogicalFile.type_name())[0].metadata.get_xml(),
-                          "model_instance_folder/model_instance/model_instance_meta.xml")
+                          "model_instance_folder/generic_file_meta.xml")
 
-    def test_modelprogram_ingestion(self):
+    def test_modelinstance_folder_ingestion(self):
+        prepare_resource(self, "model_program_folder_based")
+        prepare_resource(self, "model_instance_folder_based")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(ModelInstanceLogicalFile.type_name())[0].metadata.get_xml(),
+                          "model_instance_folder_based/model_instance/model_instance_meta.xml")
+
+    def test_modelprogram_ingestion_at_root(self):
+        """Ingesting at root of the resource file path"""
         prepare_resource(self, "model_program")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(ModelProgramLogicalFile.type_name())[0].metadata.get_xml(),
                           "model_program/setup_meta.xml")
 
-    def test_modelprogram_folder_ingestion(self):
-        prepare_resource(self, "model_program_folder")
+    def test_modelprogram_ingestion_at_folder(self):
+        """Ingesting at a folder of the resource"""
+        prepare_resource(self, "model_program_folder", upload_to="model_program_folder")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(ModelProgramLogicalFile.type_name())[0].metadata.get_xml(),
-                          "model_program_folder/model_program/model_program_meta.xml")
+                          "model_program_folder/setup_meta.xml")
 
-    def test_timeseries_ingestion(self):
+    def test_modelprogram_folder_ingestion(self):
+        prepare_resource(self, "model_program_folder_based")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(ModelProgramLogicalFile.type_name())[0].metadata.get_xml(),
+                          "model_program_folder_based/model_program/model_program_meta.xml")
+
+    def test_timeseries_ingestion_at_root(self):
+        """Ingesting at root of the resource file path"""
         prepare_resource(self, "timeseries")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(TimeSeriesLogicalFile.type_name())[0].metadata.get_xml(),
                           "timeseries/ODM2_Multi_Site_One_Variable_meta.xml")
 
-    def test_netcdf_ingestion(self):
+    def test_timeseries_ingestion_at_folder(self):
+        """Ingesting at a folder of the resource"""
+        prepare_resource(self, "timeseries_folder", upload_to="timeseries_folder")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(TimeSeriesLogicalFile.type_name())[0].metadata.get_xml(),
+                          "timeseries_folder/ODM2_Multi_Site_One_Variable_meta.xml")
+
+    def test_netcdf_ingestion_at_root(self):
+        """Ingesting at root of the resource file path"""
         prepare_resource(self, "netcdf")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(NetCDFLogicalFile.type_name())[0].metadata.get_xml(),
                           "netcdf/SWE_time_meta.xml")
 
-    def test_geofeature_ingestion(self):
+    def test_netcdf_ingestion_at_folder(self):
+        """Ingesting at a folder of the resource"""
+        prepare_resource(self, "netcdf_folder", upload_to="netcdf_folder")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(NetCDFLogicalFile.type_name())[0].metadata.get_xml(),
+                          "netcdf_folder/SWE_time_meta.xml")
+
+    def test_geofeature_ingestion_at_root(self):
         prepare_resource(self, "geographic_feature")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(GeoFeatureLogicalFile.type_name())[0].metadata.get_xml(),
                           "geographic_feature/watersheds_meta.xml")
 
+    def test_geofeature_ingestion_at_folder(self):
+        prepare_resource(self, "geographic_feature_folder", upload_to="geographic_feature_folder")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(GeoFeatureLogicalFile.type_name())[0].metadata.get_xml(),
+                          "geographic_feature_folder/watersheds_meta.xml")
+
     def test_resource_ingestion(self):
         prepare_resource(self, "resource")
         compare_metadatas(self, self.res.short_id, self.res.metadata.get_xml(), "resource/resourcemetadata.xml")
 
-    def test_singlefile_ingestion(self):
+    def test_singlefile_ingestion_at_root(self):
         prepare_resource(self, "single_file")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(GenericLogicalFile.type_name())[0].metadata.get_xml(),
                           "single_file/test_meta.xml")
+
+    def test_singlefile_ingestion_at_folder(self):
+        prepare_resource(self, "single_file_folder", upload_to="single_file_folder")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(GenericLogicalFile.type_name())[0].metadata.get_xml(),
+                          "single_file_folder/test_meta.xml")
 
     def test_fileset_ingestion(self):
         prepare_resource(self, "file_set")
@@ -179,14 +224,28 @@ class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
                           self.res.get_logical_files(FileSetLogicalFile.type_name())[0].metadata.get_xml(),
                           "file_set/asdf/asdf_meta.xml")
 
-    def test_georaster_ingestion(self):
+    def test_georaster_ingestion_to_root(self):
+        """Ingesting at root of the resource file path"""
         prepare_resource(self, "geographic_raster")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(GeoRasterLogicalFile.type_name())[0].metadata.get_xml(),
                           "geographic_raster/logan_meta.xml")
 
-    def test_reftimeseries_ingestion(self):
+    def test_georaster_ingestion_to_folder(self):
+        """Ingesting at a folder of the resource"""
+        prepare_resource(self, "geographic_raster_folder", upload_to="geographic_raster_folder")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(GeoRasterLogicalFile.type_name())[0].metadata.get_xml(),
+                          "geographic_raster_folder/logan_meta.xml")
+
+    def test_reftimeseries_ingestion_at_root(self):
         prepare_resource(self, "reference_timeseries")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(RefTimeseriesLogicalFile.type_name())[0].metadata.get_xml(),
                           "reference_timeseries/msf_version.refts_meta.xml")
+
+    def test_reftimeseries_ingestion_at_folder(self):
+        prepare_resource(self, "reference_timeseries_folder", upload_to="reference_timeseries_folder")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(RefTimeseriesLogicalFile.type_name())[0].metadata.get_xml(),
+                          "reference_timeseries_folder/msf_version.refts_meta.xml")

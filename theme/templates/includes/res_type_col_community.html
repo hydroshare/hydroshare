@@ -19,15 +19,15 @@
 {% endwith %}
 {#  Sharing Status icons #}
 <div class="access-icon-wrapper">
-    {% if resource.published %}
+    {% if resource.raccess.published %}
         <img src="{% static 'img/published.png' %}"
              data-toggle="tooltip" data-placement="right"
              alt="Published Resource" title="Published"/>
-    {% elif resource.public %}
+    {% elif resource.raccess.public %}
         <img src="{% static 'img/public.png' %}"
              data-toggle="tooltip" data-placement="right"
              alt="Public Resource" title="Public"/>
-    {% elif resource.discoverable %}
+    {% elif resource.raccess.discoverable %}
         <img src="{% static 'img/discoverable.png' %}"
              data-toggle="tooltip" data-placement="right"
              alt="Discoverable Resource" title="Discoverable"/>
@@ -37,14 +37,14 @@
              alt="Private Resource" title="Private"/>
     {% endif %}
 
-    {% if resource.published %}
+    {% if resource.raccess.published %}
         {% if "pending" in cm.doi or "failure" in cm.doi %}
             <img src="{% static 'img/pending.png' %}" alt="Pending Publication"
                  data-toggle="tooltip" data-placement="right"
                  title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
         {% endif %}
     {% else %}
-        {% if resource.shareable %}
+        {% if resource.raccess.shareable %}
             <img src="{% static 'img/shareable.png' %}" alt="Sharable Resource"
                  data-toggle="tooltip" data-placement="right" title="Shareable"/>
         {% else %}

@@ -1,0 +1,55 @@
+<!-- Invite Groups Modal -->
+<div class="modal fade" id="invite-groups-modal" tabindex="-1" role="dialog" aria-labelledby="Invite Group">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Invite Groups</h4>
+      </div>
+      <div class="modal-body">
+        <div class="input-group has-space-bottom full-width">
+          <span class="glyphicon glyphicon-search search-icon"></span>
+          <input v-model.trim="inviteSearch" type="text" class="form-control input--search"
+            placeholder="Search by group name" />
+        </div>
+
+        <div class="grid">
+          <div v-for="group of filteredAvailableToInvite"
+            class="community-group-card panel panel-default flex flex-column is-marginless">
+            <div class="community-card--actions text-right has-background-light-gray">
+              <button v-if="group.wasInvited" class="btn btn-default" disabled>
+                Invited
+              </button>
+
+              <button v-else class="btn btn-primary" @click="inviteGroup(group.id)" :disabled="isInviting[group.id]">
+                ${ isInviting[group.id] ? 'Sending invitation...' : 'Send Invite' }
+              </button>
+            </div>
+
+            <div class="panel-body flex">
+              <div v-if="group.picture" class="group-image-wrapper medium">
+                  <div class="group-image"
+                  :style="`background-image: url(${group.picture})`"></div>
+              </div>
+              <div v-else class="group-image-wrapper medium">
+                  <div class="group-image group-preview-image-default"
+                      style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                  </div>
+              </div>
+
+              <div class="community-card--info">
+                <a class="community-card--heading word-break-normal" :href="'/group/' + group.id">${ group.name }</a>
+              </div>
+            </div>
+
+            <div class="panel-body" v-if="group.purpose">
+              <p class="text-muted word-break-normal">${ group.purpose }</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

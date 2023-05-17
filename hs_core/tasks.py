@@ -261,7 +261,7 @@ def nightly_metadata_review_reminder():
 
     pending_resources = BaseResource.objects.filter(raccess__review_pending=True)
     for res in pending_resources:
-        review_date = res.metadata.dates.all().filter(type='review_started').first()
+        review_date = res.metadata.dates.all().filter(type='reviewStarted').first()
         if review_date:
             review_date = review_date.start_date
             cutoff_date = timezone.now() - timedelta(days=2)
@@ -641,7 +641,11 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new version collection will not contain "deleted resources"
-            new_res.resources.set(ori_res.resources.all())
+            ori_resources = ori_res.resources.all()
+            new_res.resources.set(ori_resources)
+            # set the isPartOf metadata on all of the contained resources so that they also point at the new col
+            for res in ori_resources:
+                res.metadata.create_element('relation', type=RelationTypes.isPartOf, value=new_res.get_citation())
 
         # create bag for the new resource
         create_bag(new_res)
@@ -853,11 +857,20 @@ def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
     aggregation = file_type_obj.objects.get(id=file_type_id)
     res_files.extend(aggregation.files.all())
     orig_aggregation_name = aggregation.aggregation_name
+    tgt_path = tgt_path.strip()
     for file in res_files:
-        tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
+        if tgt_path:
+            tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
+        else:
+            tgt_full_path = os.path.join(res.file_path, os.path.basename(file.storage_path))
+
         istorage.moveFile(file.storage_path, tgt_full_path)
         rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
-    new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
+    if tgt_path:
+        new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
+    else:
+        new_aggregation_name = os.path.basename(orig_aggregation_name)
+
     res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
                                                     new_path=new_aggregation_name)
     return res.get_absolute_url()

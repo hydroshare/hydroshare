@@ -66,7 +66,7 @@
                             <div class="modal-body">
                                 {{ add_view_hs_user_form.user }}
 
-                                <div v-if="addAuthorError" class="alert alert-danger space-top">
+                                <div v-if="addAuthorError" class="alert alert-danger has-space-top">
                                     ${addAuthorError}
                                 </div>
                             </div>
@@ -204,7 +204,7 @@
                                         </div>
                                     </template>
                                 </div>
-                                <div v-if="addAuthorError" v-html="addAuthorError" class="alert alert-danger space-top"></div>
+                                <div v-if="addAuthorError" v-html="addAuthorError" class="alert alert-danger has-space-top"></div>
                             </div>
 
                             <div class="modal-footer">
@@ -237,7 +237,7 @@
                     <div v-if="can_remove" class="modal-body">
                         <div class="flex">
                             <span @click="showConfirmDelete = !showConfirmDelete" title="Remove author"
-                                  class="glyphicon glyphicon-trash icon-button table-icon btn-remove space-right">
+                                  class="glyphicon glyphicon-trash icon-button table-icon btn-remove has-space-right">
                             </span>
 
                             <transition name="fade">
@@ -283,7 +283,7 @@
 
                                 {# PROFILE URL #}
                                 <div v-if="author.profileUrl && author.is_active" class="control-group">
-                                    <label class="control-label space-right">HydroShare Profile</label>
+                                    <label class="control-label has-space-right">HydroShare Profile</label>
                                     <div class="space-bottom"><a :href="author.profileUrl">View Profile</a></div>
                                 </div>
 
@@ -383,7 +383,7 @@
                                 </div>
                             </template>
                         </div>
-                        <div v-if="edit_author_error" v-html="edit_author_error" class="alert alert-danger space-top"></div>
+                        <div v-if="edit_author_error" v-html="edit_author_error" class="alert alert-danger has-space-top"></div>
                     </div>
 
                     <div class="modal-footer">
@@ -1181,7 +1181,7 @@
                         <div class="form-group">
                             {% csrf_token %}
                             <fieldset>
-                                <div id="div_id_edit_type" class="control-group space-bottom">
+                                <div id="div_id_edit_type" class="control-group has-space-bottom">
                                     <label for="id_type" class="control-label requiredField">
                                     Relation type<span class="asteriskField">*</span></label>
 
@@ -1372,7 +1372,7 @@
                         <div class="form-group">
                             {% csrf_token %}
                             <fieldset>
-                                <div id="div_id_add_type" class="control-group space-bottom">
+                                <div id="div_id_add_type" class="control-group has-space-bottom">
                                     <label for="id_type" class="control-label requiredField">
                                     Type of relationship<span class="asteriskField">*</span></label>
 

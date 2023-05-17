@@ -43,7 +43,7 @@ def user_permission(content, arg):
 @register.filter
 def user_resource_labels(resource, user):
     # get a list of labels associated with a specified resource by a given user
-    if resource.has_labels:
+    if hasattr(resource, 'has_labels') and resource.has_labels:
         return resource.rlabels.get_labels(user)
     return []
 
@@ -199,6 +199,14 @@ def name_without_commas(name):
             return first_names + " " + last_names
 
     return name  # default
+
+
+@register.filter(name='join')
+def join(value, delimiter):
+    """
+        Returns the array joined with delimiter
+    """
+    return f'{delimiter}'.join(value)
 
 
 @register.filter

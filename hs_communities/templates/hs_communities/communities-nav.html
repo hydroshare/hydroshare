@@ -1,0 +1,22 @@
+<div class="collaborate-header">
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="collaborate-nav flex flex-sm-column">
+          <a href="{% url 'communities' %}"
+            class="collaborate-nav-item{% if active == 'communities' %} active{% endif %}">Find Communities</a>
+          <a href="{% url 'my_communities' %}"
+            class="collaborate-nav-item{% if active == 'my_communities' %} active{% endif %}">My Communities</a>
+          {% if user_is_admin %}
+          <div class="spacer"></div>
+          <a href="{% url 'manage_requests' %}"
+            class="collaborate-nav-item{% if active == 'manage_requests' %} active{% endif %}">
+            <i class="fa fa-lock" aria-hidden="true"></i> Manage Requests <span class="badge">
+              {{ admin_pending_requests }}</span>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

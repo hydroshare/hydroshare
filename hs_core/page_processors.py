@@ -119,7 +119,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     # user requested the resource in READONLY mode
     if not resource_edit:
-        content_model.update_view_count(request)
+        content_model.update_view_count()
         temporal_coverage = content_model.metadata.temporal_coverage
         temporal_coverage_data_dict = {}
         if temporal_coverage:

@@ -388,7 +388,6 @@ function delete_multiple_resources_ajax_submit(indexes) {
     // Submit all delete requests asynchronously
     for (var i = 0; i < indexes.length; i++) {
         var form = $(indexes[i]).find("form[data-form-type='delete-resource']");
-        const row = $(indexes[i]);  // Needs to be a constant so the value doesn't change during the asynchronous calls
         var datastring = $(form).serialize();
         var url = $(form).attr("action");
         let deleteText = $('#confirm-res-id-text').val();
