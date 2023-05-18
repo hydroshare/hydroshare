@@ -37,7 +37,10 @@ def get_std_log_fields(request, session=None):
     """ returns a standard set of metadata that to each receiver function.
     This ensures that all activities are reporting a consistent set of metrics
     """
-    user_agent = request.META['HTTP_USER_AGENT']
+    try:
+        user_agent = request.META['HTTP_USER_AGENT']
+    except KeyError as e:
+        user_agent = None
     user_type = None
     user_email = None
     if session is not None:
