@@ -39,8 +39,10 @@ def get_std_log_fields(request, session=None):
     """
     try:
         user_agent = request.META['HTTP_USER_AGENT']
-    except KeyError as e:
+        human = is_human(user_agent)
+    except KeyError:
         user_agent = None
+        human = None
     user_type = None
     user_email = None
     if session is not None:
@@ -51,7 +53,7 @@ def get_std_log_fields(request, session=None):
         'user_ip': get_client_ip(request),
         'user_type': user_type,
         'user_email_domain': user_email,
-        'is_human': is_human(user_agent),
+        'is_human': human,
         'user_agent': user_agent
     }
 
