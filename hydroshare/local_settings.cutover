@@ -91,6 +91,7 @@ DATABASES = {
         "PORT": POSTGIS_PORT,
     }
 }
+DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
 POSTGIS_VERSION = (2, 1, 1)
 
 # Local resource iRODS configuration

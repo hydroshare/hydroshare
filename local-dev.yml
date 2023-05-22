@@ -91,6 +91,25 @@ services:
       - "54322:5432"
     stdin_open: true
     tty: true
+  pgbouncer:
+    image: bitnami/pgbouncer:latest
+    container_name: pgbouncer
+    environment:
+      # DATABASE_URL: 'postgres://postgres:postgres@postgis:5432/postgres'
+      POOL_MODE: transaction
+      MAX_DB_CONNECTIONS: 100  
+      DEFAULT_POOL_SIZE: 40
+      POSTGRESQL_USERNAME: 'postgres'
+      POSTGRESQL_PASSWORD: 'postgres'
+      POSTGRESQL_HOST: 'postgis'
+      POSTGRESQL_PORT: 5432
+      POSTGRESQL_DATABASE: 'postgres'
+      PGBOUNCER_PORT: 5432
+    ports:
+      - "5432:5432"
+    depends_on:
+      - postgis
+
   rabbitmq:
     image: rabbitmq:3.8.2
     container_name: rabbitmq
@@ -135,7 +154,7 @@ services:
       - "/dev/fuse"
     privileged: true
     environment:
-      POSTGIS_HOST: postgis
+      POSTGIS_HOST: 'pgbouncer'
       POSTGIS_PORT: 5432
       POSTGIS_PASSWORD: postgres
       POSTGIS_DB: postgres
@@ -145,7 +164,7 @@ services:
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
       TMP: /hs_tmp
-      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      POSTGIS_PORT_5432_TCP_ADDR: 'pgbouncer'
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
@@ -167,6 +186,7 @@ services:
       - users.local.org:users.local.org
     depends_on:
       - postgis
+      - pgbouncer
       - solr
       - rabbitmq
       - data.local.org
@@ -181,7 +201,7 @@ services:
     container_name: defaultworker
     hostname: defaultworker
     environment:
-      POSTGIS_HOST: postgis
+      POSTGIS_HOST: 'pgbouncer'
       POSTGIS_PORT: 5432
       POSTGIS_PASSWORD: postgres
       POSTGIS_DB: postgres
@@ -190,7 +210,7 @@ services:
       RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
-      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      POSTGIS_PORT_5432_TCP_ADDR: 'pgbouncer'
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings

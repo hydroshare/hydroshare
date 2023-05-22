@@ -203,6 +203,7 @@ DATABASES = {
         "PORT": "",
     }
 }
+DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 

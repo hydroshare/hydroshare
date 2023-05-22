@@ -5,6 +5,21 @@ postgis:
   container_name: postgis
   volumes:
     - "/var/lib/postgresql/data"
+  pgbouncer:
+    image: bitnami/pgbouncer:latest
+    container_name: pgbouncer
+    environment:
+      POOL_MODE: transaction
+      MAX_DB_CONNECTIONS: 100  
+      DEFAULT_POOL_SIZE: 40
+      POSTGRESQL_USERNAME: 'postgres'
+      POSTGRESQL_PASSWORD: 'postgres'
+      POSTGRESQL_HOST: 'postgis'
+      POSTGRESQL_PORT: 5432
+      POSTGRESQL_DATABASE: 'postgres'
+      PGBOUNCER_PORT: 5432
+    depends_on:
+      - postgis
 rabbitmq:
   image: rabbitmq:3.8.2
   container_name: rabbitmq
@@ -26,7 +41,7 @@ hydroshare:
     - "/dev/fuse"
   privileged: true
   environment:
-    POSTGIS_HOST: postgis
+    POSTGIS_HOST: pgbouncer
     POSTGIS_PORT: 5432
     POSTGIS_PASSWORD: postgres
     POSTGIS_DB: postgres
@@ -60,7 +75,7 @@ defaultworker:
   build: .
   container_name: defaultworker
   environment:
-    POSTGIS_HOST: postgis
+    POSTGIS_HOST: pgbouncer
     POSTGIS_PORT: 5432
     POSTGIS_PASSWORD: postgres
     POSTGIS_DB: postgres
