@@ -321,11 +321,11 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 5)
 
         kvp = dict(tuple(pair.split('=')) for pair in var2.value.split('|'))
         self.assertEqual(var2.name, 'login')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 5)
 
         client.logout()
 
@@ -333,7 +333,7 @@ class TrackingTests(TestCase):
         var = Variable.objects.latest('timestamp')
         kvp = dict(tuple(pair.split('=')) for pair in var.value.split('|'))
         self.assertEqual(var.name, 'logout')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 5)
 
     def test_activity_parsing(self):
 
@@ -345,7 +345,7 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 5)
 
         client.logout()
 
@@ -375,7 +375,7 @@ class UtilsTests(TestCase):
     def test_std_log_fields(self):
 
         log_fields = utils.get_std_log_fields(self.request, self.session)
-        self.assertTrue(len(list(log_fields.keys())) == 3)
+        self.assertTrue(len(list(log_fields.keys())) == 5)
         self.assertTrue('user_ip' in log_fields)
         self.assertTrue('user_type' in log_fields)
         self.assertTrue('user_email_domain' in log_fields)
