@@ -202,6 +202,14 @@ def name_without_commas(name):
     return name  # default
 
 
+@register.filter(name='join')
+def join(value, delimiter):
+    """
+        Returns the array joined with delimiter
+    """
+    return f'{delimiter}'.join(value)
+
+
 @register.filter
 def display_name(user):
     """

@@ -641,7 +641,11 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new version collection will not contain "deleted resources"
-            new_res.resources.set(ori_res.resources.all())
+            ori_resources = ori_res.resources.all()
+            new_res.resources.set(ori_resources)
+            # set the isPartOf metadata on all of the contained resources so that they also point at the new col
+            for res in ori_resources:
+                res.metadata.create_element('relation', type=RelationTypes.isPartOf, value=new_res.get_citation())
 
         # create bag for the new resource
         create_bag(new_res)

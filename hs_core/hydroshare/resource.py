@@ -1025,7 +1025,7 @@ def submit_resource_for_review(request, pk):
     and other general exceptions
 
     """
-    from hs_core.views.utils import get_default_admin_user
+    from hs_core.views.utils import get_default_support_user
 
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
@@ -1039,7 +1039,7 @@ def submit_resource_for_review(request, pk):
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
 
-    user_to = get_default_admin_user()
+    user_to = get_default_support_user()
     from hs_core.views.utils import send_action_to_take_email
     send_action_to_take_email(request, user=user_to, user_from=request.user,
                               action_type='metadata_review', resource=resource)

@@ -5,6 +5,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from rest_framework import status as http_status
+from django.core.exceptions import ValidationError
 
 from hs_core.enums import RelationTypes
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
@@ -38,7 +39,8 @@ def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
         urp_qs = UserResourcePrivilege.objects \
             .filter(resource__short_id__in=collectable_resource_ids, privilege=PrivilegeCodes.OWNER)\
             .select_related("user", "resource", "resource__raccess") \
-            .distinct()
+            .order_by("resource__title", "resource__short_id") \
+            .distinct("resource__title", "resource__short_id")
 
         context = {'user_resource_privileges': urp_qs}
         template_name = 'pages/collectable_resources_modal.html'
@@ -133,19 +135,23 @@ def update_collection(request, shortkey, *args, **kwargs):
                         res_id_list_remove.append(res_id_remove)
 
             for res_id_remove in res_id_list_remove:
-                # user with Edit permission over this collection can remove any resource from it
-                res_obj_remove = get_resource_by_shortkey(res_id_remove)
-                collection_res_obj.resources.remove(res_obj_remove)
+                try:
+                    # user with Edit permission over this collection can remove any resource from it
+                    res_obj_remove = get_resource_by_shortkey(res_id_remove)
+                    collection_res_obj.resources.remove(res_obj_remove)
 
-                # delete relation meta element of type 'hasPart' for the collection resource
-                add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
-                                                relation_type=hasPart, relation_value=res_obj_remove.get_citation(),
-                                                set_res_modified=False)
+                    # delete relation meta element of type 'hasPart' for the collection resource
+                    add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
+                                                    relation_type=hasPart, relation_value=res_obj_remove.get_citation(),
+                                                    set_res_modified=False)
 
-                # delete relation meta element of type 'isPartOf' from the resource removed from the collection
-                res_obj_remove.metadata.relations.filter(type=RelationTypes.isPartOf,
-                                                         value__contains=collection_res_obj.short_id).first().delete()
-                set_dirty_bag_flag(res_obj_remove)
+                    # delete relation meta element of type 'isPartOf' from the resource removed from the collection
+                    rel = res_obj_remove.metadata.relations.filter(type=RelationTypes.isPartOf,
+                                                                   value__contains=collection_res_obj.short_id).first()
+                    rel.delete()
+                    set_dirty_bag_flag(res_obj_remove)
+                except AttributeError as e:
+                    logger.exception(f"update_collection, removing metadata; collection_id:{shortkey}; {e}")
 
             # res to add
             res_id_list_add = []
@@ -189,8 +195,12 @@ def update_collection(request, shortkey, *args, **kwargs):
                                                 set_res_modified=False)
 
                 # add relation meta element of type 'isPartOf' to the resource added to the collection
-                res_to_add.metadata.create_element('relation', type='isPartOf',
-                                                   value=collection_res_obj.get_citation())
+                try:
+                    res_to_add.metadata.create_element('relation', type='isPartOf',
+                                                       value=collection_res_obj.get_citation())
+                except ValidationError:
+                    # The isPartOf metadata already exists
+                    pass
                 set_dirty_bag_flag(res_to_add)
 
             if collection_res_obj.can_be_public_or_discoverable:
@@ -204,9 +214,9 @@ def update_collection(request, shortkey, *args, **kwargs):
 
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
-        logger.error(err_msg.format(str(ex),
-                     request.user.username if request.user.is_authenticated else "anonymous",
-                     shortkey))
+        logger.exception(err_msg.format(str(ex),
+                         request.user.username if request.user.is_authenticated else "anonymous",
+                         shortkey))
         status = "error"
         msg = str(ex)
     finally:

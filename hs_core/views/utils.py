@@ -1661,6 +1661,23 @@ def get_default_admin_user():
     return default_user_from
 
 
+def get_default_support_user():
+    """A helper method to get or create the default support user - used in email notification"""
+
+    from hs_core.hydroshare import create_account
+    try:
+        support_user = User.objects.get(email__iexact=settings.DEFAULT_SUPPORT_EMAIL)
+    except User.DoesNotExist:
+        support_user = create_account(
+            email=settings.DEFAULT_SUPPORT_EMAIL,
+            username=settings.DEFAULT_SUPPORT_EMAIL,
+            first_name=settings.DEFAULT_SUPPORT_EMAIL,
+            last_name=settings.DEFAULT_SUPPORT_EMAIL,
+            superuser=True
+        )
+    return support_user
+
+
 def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=True):
     """helper method for moving/renaming file/folder"""
 
