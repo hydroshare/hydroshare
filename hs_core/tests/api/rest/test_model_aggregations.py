@@ -266,7 +266,6 @@ class TestModelAggregation(HSRESTTestCase):
         response = self.unauthorized_client.put(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-
     def test_get_metadata_model_instance(self):
         """Test that we can retrieve all metadata for a model instance aggregation."""
 
@@ -458,7 +457,6 @@ class TestModelAggregation(HSRESTTestCase):
         self.assertTrue(mp_aggr.metadata_schema_json)
 
         base_file_path = 'hs_core/tests/data/{}'
-        json_file_path = base_file_path.format('model_instance_meta.json')
         mi_aggr_path = mi_aggr.aggregation_name
         url = f"/hsapi/resource/{self.res.short_id}/modelinstance/meta/{mi_aggr_path}"
         # first just update the executed_by for the model instance aggregation
@@ -478,7 +476,6 @@ class TestModelAggregation(HSRESTTestCase):
         self.res.raccess.save()
         response = self.unauthorized_client.put(url, data={"executed_by": mp_aggr.aggregation_name}, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
 
     def _create_model_program_aggregation(self, expected_file_count, upload_folder=""):
         base_file_path = 'hs_core/tests/data/{}'
