@@ -456,7 +456,6 @@ class TestModelAggregation(HSRESTTestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertTrue(mp_aggr.metadata_schema_json)
 
-        base_file_path = 'hs_core/tests/data/{}'
         mi_aggr_path = mi_aggr.aggregation_name
         url = f"/hsapi/resource/{self.res.short_id}/modelinstance/meta/{mi_aggr_path}"
         # first just update the executed_by for the model instance aggregation
