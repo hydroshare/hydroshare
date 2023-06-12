@@ -89,6 +89,20 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
         }
 
 
+def get_task_notification(task_id):
+    try:
+        obj = TaskNotification.objects.get(task_id=task_id)
+
+        return {
+            'id': task_id,
+            'name': obj.name,
+            'status': obj.status,
+            'payload': obj.payload
+        }
+    except TaskNotification.DoesNotExist:
+        return None
+
+
 def get_resource_bag_task(res_id):
     job_name = 'hs_core.tasks.create_bag_by_irods'
     return _retrieve_job_id(job_name, res_id)

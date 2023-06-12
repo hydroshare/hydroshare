@@ -125,7 +125,15 @@
                                         {% if profile.subject_areas %}
                                             <tr>
                                                 <td><span class="text-muted">Subject Areas: </span></td>
-                                                <td>{{ profile.subject_areas }}</td>
+                                                <td>
+                                                    {% for subject_area in profile.subject_areas %}
+                                                        {% if not forloop.last %}
+                                                            {{subject_area}},
+                                                        {% else %}
+                                                            {{subject_area}}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
                                             </tr>
                                         {% endif %}
                                         </tbody>
@@ -165,7 +173,7 @@
                                         {# Organization #}
                                         <fieldset class="col-xs-12">
                                             <label>Organization *</label>
-                                            <input class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                            <input id="organization_input" class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
                                             <small class="text-muted">The names of the organizations you are associated with.</small><br />
                                         </fieldset>
                                         <br>
@@ -217,9 +225,8 @@
                                 {# Subject areas #}
                                 <fieldset>
                                     <label>Subject areas</label>
-                                    <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
-                                    <small class="text-muted">A comma-separated list of subject areas you are interested
-                                        in researching. e.g. "Computer Science, Hydrology, Water Management"
+                                    <input id="subject_areas" class="form-control tagsinput" {% if profile.subject_areas %}value="{{ profile.subject_areas|join:',' }}"{% endif %} name="subject_areas">
+                                    <small class="text-muted">A list of subject areas you are interested in researching. e.g. "Water Management." Free text entry or select from the suggestions.
                                     </small>
                                 </fieldset>
 
