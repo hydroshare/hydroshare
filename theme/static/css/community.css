@@ -1,0 +1,117 @@
+.community-title-container {
+  display: flex;
+  column-gap: 20px;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.community-info {
+  margin-top: 20px;
+}
+
+.community-info > div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.community-info > div > i {
+  margin-right: 6px;
+}
+
+.community-groups--sidebar {
+  width: 210px;
+  flex-shrink: 0;
+}
+
+.community-groups--content .heading {
+  margin: 0;
+  margin-bottom: 2rem;
+}
+
+#invite-groups-modal .grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(30rem, 100%), 1fr));
+  gap: 2rem;
+}
+
+#invite-groups-modal .panel-body {
+  flex: 1 1 auto;
+}
+
+#invite-groups-modal .modal-body {
+  max-height: 800px;
+  overflow: auto;
+}
+
+#invite-groups-modal .community-card--info {
+  flex: 1 1 auto;
+  margin-left: 2rem;
+}
+
+#invite-groups-modal .community-card--actions {
+  border-bottom: 1px solid #e5e5e5;
+  padding: 1rem;
+  position: relative;
+}
+
+#invite-groups-modal .group-image-wrapper {
+  margin-top: -6rem;
+  z-index: 1;
+  background: #FFF;
+}
+
+#invite-groups-modal .community-card--heading {
+  display: block;
+  margin: 1rem 0;
+}
+
+#invite-groups-modal .input--search {
+	padding-left: 25px;
+}
+
+.community-group-card {
+  border-radius: 4px;
+  max-width: 75rem;
+}
+
+@media (max-width: 992px) {
+  .community-group-card .panel-body  {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* .community-banner.czo-banner {
+    background-position: unset;
+  } */
+}
+
+@media screen and (min-width: 768px) {
+  #invite-groups-modal .modal-dialog {
+    width: 900px;
+  }
+}
+
+.community-banner {
+  height: 20rem;
+  width: 100%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: left center;
+  margin-top: -4rem;
+}
+
+/* .community-banner.czo-banner {
+  background-size: unset;
+} */
+
+#item-selectors td:nth-child(2) {
+  min-width: 20rem;
+}
+
+#filter-shared-by .no-items-found {
+  margin: 1rem;
+}
+
+/* p {
+  word-break: break-all;
+} */

@@ -128,6 +128,12 @@ let manageAccessApp = new Vue({
                 vue.isProcessing = false;
             });
         },
+        onBtnGroupsClick: function () {
+          this.isInviteUsers = false;
+          if (this.selectedAccess === 'owner') {
+            this.selectedAccess = 'view'
+          }
+        },
         getUserDropdownItemClass: function (user, accessToGrant) {
             let ddClass = {
                 active: false,
@@ -488,8 +494,8 @@ let manageAccessApp = new Vue({
             this.canBePublicDiscoverable = false;
         },
         onLoadQuotaHolderCard: function (data) {
-            let el = $(data.event.target);
-            let cardWidth = 350;
+            const el = $(data.event.target).closest('.profile-link');
+            const cardWidth = 350;
             this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
             this.cardPosition.top = el.position().top + 30;
         }
