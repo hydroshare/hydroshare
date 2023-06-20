@@ -22,6 +22,7 @@ Add the issues included in the release and update this document as release tasks
 - [ ] Create iROD account, test connection and delete iROD account
 - [ ] Create a new resource, check sharing/permission settings, delete new resource
 - [ ] Developers test around issues
+- [ ] Hsclient tests pass when targeting beta
 - [ ] QA testing around issues
 - [ ] Stakeholders approval
 
