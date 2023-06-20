@@ -3872,9 +3872,13 @@ class CompositeResourceTest(
 
         # there should not be any resource at this point
         self.assertEqual(BaseResource.objects.count(), 0)
-        self.create_composite_resource()
 
-        with self.assertNumQueries(8):
+        # navigating to home page for initializing db queries
+        response = self.client.get(reverse("home"), follow=True)
+        self.assertTrue(response.status_code == 200)
+        my_resources_query_count = 7
+        self.create_composite_resource()
+        with self.assertNumQueries(my_resources_query_count):
             response = self.client.get(reverse("my_resources"), follow=True)
             self.assertTrue(response.status_code == 200)
 
@@ -3884,9 +3888,11 @@ class CompositeResourceTest(
 
         self.create_composite_resource()
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(my_resources_query_count):
             response = self.client.get(reverse("my_resources"), follow=True)
             self.assertTrue(response.status_code == 200)
+
+        # there should be two resources at this point
         self.assertEqual(BaseResource.objects.count(), 2)
 
     def test_composite_resource_landing_scales(self):
@@ -3913,5 +3919,7 @@ class CompositeResourceTest(
         response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
         self.assertTrue(response.status_code == 200)
         two_queries = len(connection.queries)
+        # there should be two resources at this point
+        self.assertEqual(BaseResource.objects.count(), 2)
 
         self.assertLessEqual(two_queries, one_queries)
