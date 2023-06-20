@@ -3,6 +3,7 @@ import json
 from dateutil import parser
 from django.contrib.auth.models import Group
 from django.test import TransactionTestCase, Client
+from django.db import reset_queries, connection
 
 from hs_access_control.models import PrivilegeCodes
 from hs_collection_resource.models import CollectionResource, CollectionDeletedResource
@@ -1011,3 +1012,36 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resGen2.metadata.relations.filter(type='isPartOf').count(), 1)
         # collection should have 1 hasPart relation metadata
         self.assertEqual(self.resCollection.metadata.relations.filter(type='hasPart').count(), 1)
+
+    def test_collection_res_landing_scales(self):
+        # test basic collection queries have constant time complexity
+
+        # user 1 login
+        self.api_client.login(username='user1', password='mypassword1')
+
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        reset_queries()
+        response = self.api_client.get(f'/resource/{self.resCollection.short_id}', follow=True)
+        self.assertTrue(response.status_code == 200)
+
+        # add res to collection.resources
+        self.resCollection.resources.add(self.resGen1)
+
+        # test count
+        self.assertEqual(self.resCollection.resources.count(), 1)
+        reset_queries()
+        response = self.api_client.get(f'/resource/{self.resCollection.short_id}', follow=True)
+        self.assertTrue(response.status_code == 200)
+        single_queries = len(connection.queries)
+
+        # add res to collection.resources
+        self.resCollection.resources.add(self.resGen2)
+
+        # test count
+        self.assertEqual(self.resCollection.resources.count(), 2)
+        reset_queries()
+        response = self.api_client.get(f'/resource/{self.resCollection.short_id}', follow=True)
+        self.assertTrue(response.status_code == 200)
+        final_queries = len(connection.queries)
+
+        self.assertLessEqual(final_queries, single_queries)

@@ -9,6 +9,8 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.test import TransactionTestCase
+from django.urls import reverse
+from django.db import reset_queries, connection
 from rest_framework import status
 
 from hs_composite_resource.models import CompositeResource
@@ -58,6 +60,7 @@ class CompositeResourceTest(
         self.user = hydroshare.create_account(
             "user1@nowhere.com",
             username="user1",
+            password='mypassword1',
             first_name="Creator_FirstName",
             last_name="Creator_LastName",
             superuser=False,
@@ -3863,3 +3866,52 @@ class CompositeResourceTest(
                 f = os.path.basename(f)
                 self.assertIn(f, aggr_files)
             shutil.rmtree(os.path.dirname(temp_zip_file))
+
+    def test_composite_resource_my_resources_scales(self):
+        # test that db queries for "my_resources" remain constant when adding more resources
+
+        # there should not be any resource at this point
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self.create_composite_resource()
+
+        with self.assertNumQueries(8):
+            response = self.client.get(reverse("my_resources"), follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # there should be one resource at this point
+        self.assertEqual(BaseResource.objects.count(), 1)
+        self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
+
+        self.create_composite_resource()
+
+        with self.assertNumQueries(7):
+            response = self.client.get(reverse("my_resources"), follow=True)
+            self.assertTrue(response.status_code == 200)
+        self.assertEqual(BaseResource.objects.count(), 2)
+
+    def test_composite_resource_landing_scales(self):
+        # test that db queries for landing page have constant time complexity
+
+        # user 1 login
+        self.client.login(username='user1', password='mypassword1')
+
+        # there should not be any resource at this point
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self.create_composite_resource()
+
+        reset_queries()
+        response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+        self.assertTrue(response.status_code == 200)
+        one_queries = len(connection.queries)
+
+        # there should be one resource at this point
+        self.assertEqual(BaseResource.objects.count(), 1)
+        self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
+        self.create_composite_resource()
+
+        reset_queries()
+        response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+        self.assertTrue(response.status_code == 200)
+        two_queries = len(connection.queries)
+
+        self.assertLessEqual(two_queries, one_queries)
