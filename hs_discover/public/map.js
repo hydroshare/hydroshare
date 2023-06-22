@@ -21,12 +21,17 @@
 
   const createBatchMarkers = (locations, hsUid, labels) => {
     document.body.style.cursor = 'wait';
-    const minClusterZoom = 12;
+    const minClusterZoom = 14;
     const oms = new OverlappingMarkerSpiderfier(exports.map, {
+      // https://github.com/nmccready/OverlappingMarkerSpiderfier#construction
       markersWontMove: true,
       markersWontHide: true,
       basicFormatEvents: true,
-      minZoomLevel: minClusterZoom
+      minZoomLevel: minClusterZoom,
+      keepSpiderfied: true,
+      legWeight: 5,
+      circleSpiralSwitchover: 0,
+      // nearbyDistance
     });
 
     googMarkers = locations.map((location, k) => {
@@ -38,23 +43,32 @@
       const infowindow = new google.maps.InfoWindow(); // eslint-disable-line
       infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>
         lat: ${location.lat.toFixed(2)} lng: ${location.lng.toFixed(2)}`);
+      oms.addListener('spiderfy', ()=> {
+        infowindow.close();
+      });
+      oms.addListener('unspiderfy', ()=> {
+        infowindow.close();
+      });
       marker.addListener('click', () => {
+        infowindow.close();
+      });
+
+      google.maps.event.addListener(marker, 'spider_click', function(e) {  // 'spider_click', not plain 'click'
+        infowindow.close();
         infowindow.open(exports.map, marker);
       });
-      // google.maps.event.addListener(marker, 'spider_click', function(e) {  // 'spider_click', not plain 'click'
-      //   infowindow.setContent(markerData.text);
-      //   infowindow.open(exports.map, marker);
-      // });
       oms.addMarker(marker);  // adds the marker to the spiderfier _and_ the map
       return marker;
     });
-    const algorithm = new markerClusterer.SuperClusterAlgorithm({ maxZoom: minClusterZoom })
-    markerCluster = new markerClusterer.MarkerClusterer({ markers:googMarkers, map:exports.map, algorithm:algorithm });
-    google.maps.event.addListener(markerCluster, 'clusterclick', function(cluster) {
-      map.fitBounds(cluster.getBounds()); // Fit the bounds of the cluster clicked on
-      // if( map.getZoom() > minClusterZoom+1 ) // If zoomed in past first level without clustering, zoom out to that level
-      //     map.setZoom(minClusterZoom+1);
-  });
+    const algorithm = new markerClusterer.SuperClusterAlgorithm({ maxZoom: minClusterZoom, zoomOnClick: false })
+    const markerCluster = new markerClusterer.MarkerClusterer({ markers:googMarkers, map:exports.map, algorithm:algorithm });
+
+    // Optional: prevent overzooming
+    // google.maps.event.addListener(markerCluster, 'clusterclick', function(cluster) {
+    //   map.fitBounds(cluster.getBounds()); // Fit the bounds of the cluster clicked on
+    //   if( map.getZoom() > minClusterZoom+1 ) // If zoomed in past first level without clustering, zoom out to that level
+    //       map.setZoom(minClusterZoom+1);
+    // });
     document.body.style.cursor = 'default';
   };
 
@@ -76,7 +90,6 @@
       gestureHandling: 'greedy',
       mapTypeId: google.maps.MapTypeId.TERRAIN, // eslint-disable-line
     });
-    // TODO Listener
 
     exports.map.addListener('bounds_changed', () => {
       const visMarkers = [];
