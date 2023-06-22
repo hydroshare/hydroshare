@@ -21,6 +21,14 @@
 
   const createBatchMarkers = (locations, hsUid, labels) => {
     document.body.style.cursor = 'wait';
+    const minClusterZoom = 12;
+    const oms = new OverlappingMarkerSpiderfier(exports.map, {
+      markersWontMove: true,
+      markersWontHide: true,
+      basicFormatEvents: true,
+      minZoomLevel: minClusterZoom
+    });
+
     googMarkers = locations.map((location, k) => {
       const marker = new google.maps.Marker({ // eslint-disable-line
         map: exports.map,
@@ -33,9 +41,20 @@
       marker.addListener('click', () => {
         infowindow.open(exports.map, marker);
       });
+      // google.maps.event.addListener(marker, 'spider_click', function(e) {  // 'spider_click', not plain 'click'
+      //   infowindow.setContent(markerData.text);
+      //   infowindow.open(exports.map, marker);
+      // });
+      oms.addMarker(marker);  // adds the marker to the spiderfier _and_ the map
       return marker;
     });
-    markerCluster = new markerClusterer.MarkerClusterer({ markers:googMarkers, map:exports.map }); // eslint-disable-line
+    const algorithm = new markerClusterer.SuperClusterAlgorithm({ maxZoom: minClusterZoom })
+    markerCluster = new markerClusterer.MarkerClusterer({ markers:googMarkers, map:exports.map, algorithm:algorithm });
+    google.maps.event.addListener(markerCluster, 'clusterclick', function(cluster) {
+      map.fitBounds(cluster.getBounds()); // Fit the bounds of the cluster clicked on
+      // if( map.getZoom() > minClusterZoom+1 ) // If zoomed in past first level without clustering, zoom out to that level
+      //     map.setZoom(minClusterZoom+1);
+  });
     document.body.style.cursor = 'default';
   };
 
@@ -57,6 +76,7 @@
       gestureHandling: 'greedy',
       mapTypeId: google.maps.MapTypeId.TERRAIN, // eslint-disable-line
     });
+    // TODO Listener
 
     exports.map.addListener('bounds_changed', () => {
       const visMarkers = [];
