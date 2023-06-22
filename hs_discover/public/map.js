@@ -30,9 +30,10 @@
       minZoomLevel: minClusterZoom,
       keepSpiderfied: true,
       legWeight: 5,
-      circleSpiralSwitchover: 0,
-      // nearbyDistance
+      circleSpiralSwitchover: 9,
+      nearbyDistance: 5,
     });
+    const infoWindows = [];
 
     googMarkers = locations.map((location, k) => {
       const marker = new google.maps.Marker({ // eslint-disable-line
@@ -43,18 +44,16 @@
       const infowindow = new google.maps.InfoWindow(); // eslint-disable-line
       infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>
         lat: ${location.lat.toFixed(2)} lng: ${location.lng.toFixed(2)}`);
+      infoWindows.push(infowindow);
       oms.addListener('spiderfy', ()=> {
-        infowindow.close();
+        closeInfoWindows(infoWindows);
       });
       oms.addListener('unspiderfy', ()=> {
-        infowindow.close();
-      });
-      marker.addListener('click', () => {
-        infowindow.close();
+        closeInfoWindows(infoWindows);
       });
 
       google.maps.event.addListener(marker, 'spider_click', function(e) {  // 'spider_click', not plain 'click'
-        infowindow.close();
+        closeInfoWindows(infoWindows);
         infowindow.open(exports.map, marker);
       });
       oms.addMarker(marker);  // adds the marker to the spiderfier _and_ the map
@@ -69,7 +68,20 @@
     //   if( map.getZoom() > minClusterZoom+1 ) // If zoomed in past first level without clustering, zoom out to that level
     //       map.setZoom(minClusterZoom+1);
     // });
+
+    exports.map.addListener("zoom_changed", () => {
+      closeInfoWindows(infoWindows);
+    });
+    exports.map.addListener("dragstart", () => {
+      closeInfoWindows(infoWindows);
+    });
     document.body.style.cursor = 'default';
+  };
+
+  const closeInfoWindows = (infoWindows) => {
+    infoWindows.forEach(function(win) {
+      win.close();
+   });
   };
 
   const gotoBounds = () => {
