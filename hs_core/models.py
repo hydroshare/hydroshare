@@ -204,7 +204,7 @@ class ResourcePermissionsMixin(Ownable):
 
 
 # Build a JSON serializable object with user data
-def get_access_object(user, user_type, user_access, include_contributions=False):
+def get_access_object(user, user_type, user_access):
     from hs_core.templatetags.hydroshare_tags import best_name
     access_object = None
     picture = None
@@ -228,8 +228,7 @@ def get_access_object(user, user_type, user_access, include_contributions=False)
             "email": user.email,
             "organization": user.userprofile.organization,
             "title": user.userprofile.title,
-            "contributions": None,
-            "viewable_contributions": user.viewable_contributions if user.is_active and include_contributions else None,
+            "viewable_contributions": user.viewable_contributions if user.is_active else None,
             "subject_areas": user.userprofile.subject_areas,
             "identifiers": user.userprofile.identifiers,
             "state": user.userprofile.state,
@@ -321,7 +320,7 @@ def page_permissions_page_processor(request, page):
     users_json = []
 
     for usr in owners:
-        users_json.append(get_access_object(usr, "user", "owner", include_contributions=True))
+        users_json.append(get_access_object(usr, "user", "owner"))
 
     for usr in editors:
         users_json.append(get_access_object(usr, "user", "edit"))
@@ -346,8 +345,7 @@ def page_permissions_page_processor(request, page):
     else:
         lcb_access_level = 'none'
 
-    last_changed_by = json.dumps(get_access_object(last_changed_by, "user", lcb_access_level,
-                                                   include_contributions=True))
+    last_changed_by = json.dumps(get_access_object(last_changed_by, "user", lcb_access_level))
 
     users_json = json.dumps(users_json)
 
