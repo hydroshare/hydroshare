@@ -261,7 +261,7 @@ def nightly_metadata_review_reminder():
 
     pending_resources = BaseResource.objects.filter(raccess__review_pending=True)
     for res in pending_resources:
-        review_date = res.metadata.dates.all().filter(type='review_started').first()
+        review_date = res.metadata.dates.all().filter(type='reviewStarted').first()
         if review_date:
             review_date = review_date.start_date
             cutoff_date = timezone.now() - timedelta(days=2)
@@ -641,7 +641,11 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new version collection will not contain "deleted resources"
-            new_res.resources.set(ori_res.resources.all())
+            ori_resources = ori_res.resources.all()
+            new_res.resources.set(ori_resources)
+            # set the isPartOf metadata on all of the contained resources so that they also point at the new col
+            for res in ori_resources:
+                res.metadata.create_element('relation', type=RelationTypes.isPartOf, value=new_res.get_citation())
 
         # create bag for the new resource
         create_bag(new_res)
@@ -791,35 +795,26 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
         response = session.post(rest_url, timeout=timeout)
 
         if publish_urls and response.status_code == status.HTTP_201_CREATED:
-            try:
+            resource = utils.get_resource_by_shortkey(res_id)
+            response_content = json.loads(response.content.decode())
+            if "resource" in response_content:
+                for key, value in response_content["resource"].items():
+                    resource.extra_metadata[key] = value
+                    resource.save()
 
-                resource = utils.get_resource_by_shortkey(res_id)
-                response_content = json.loads(response.content.decode())
-
-                if "resource" in response_content:
-                    for key, value in response_content["resource"].items():
-                        resource.extra_metadata[key] = value
-                        resource.save()
-
-                if "content" in response_content:
-                    for url in response_content["content"]:
-                        logical_files = list(resource.logical_files)
-                        lf = logical_files[[i.aggregation_name for i in
-                                            logical_files].index(
-                            url["layer_name"].encode()
-                        )]
-                        lf.metadata.extra_metadata["Web Services URL"] = url["message"]
-                        lf.metadata.save()
-
-            except Exception as e:
-                logger.error(e)
-                return e
-
-        return response
-
-    except (requests.exceptions.RequestException, ValueError) as e:
-        logger.error(e)
-        return e
+            if "content" in response_content:
+                for url in response_content["content"]:
+                    logical_files = list(resource.logical_files)
+                    lf = logical_files[[i.aggregation_name for i in
+                                        logical_files].index(
+                        url["layer_name"].encode()
+                    )]
+                    lf.metadata.extra_metadata["Web Services URL"] = url["message"]
+                    lf.metadata.save()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Error updating web services: {str(e)}")
+        raise
 
 
 @shared_task
@@ -862,11 +857,20 @@ def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
     aggregation = file_type_obj.objects.get(id=file_type_id)
     res_files.extend(aggregation.files.all())
     orig_aggregation_name = aggregation.aggregation_name
+    tgt_path = tgt_path.strip()
     for file in res_files:
-        tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
+        if tgt_path:
+            tgt_full_path = os.path.join(res.file_path, tgt_path, os.path.basename(file.storage_path))
+        else:
+            tgt_full_path = os.path.join(res.file_path, os.path.basename(file.storage_path))
+
         istorage.moveFile(file.storage_path, tgt_full_path)
         rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
-    new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
+    if tgt_path:
+        new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
+    else:
+        new_aggregation_name = os.path.basename(orig_aggregation_name)
+
     res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
                                                     new_path=new_aggregation_name)
     return res.get_absolute_url()

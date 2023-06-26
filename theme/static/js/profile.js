@@ -5,7 +5,7 @@
 var CHECK_PROFILE_IMAGE_SIZE = true;
 const KILO_BYTE = 1024;
 const MEGA_BYTE = KILO_BYTE * KILO_BYTE;
-const PROFILE_IMAGE_SIZE_BYTE_LIMIT = KILO_BYTE * KILO_BYTE * 2;
+const PROFILE_IMAGE_SIZE_BYTE_LIMIT = DATA_UPLOAD_MAX_MEMORY_SIZE;
 const MEGA_BYTE_STR="MB";
 var PROFILE_IMAGE_SIZE_MB_LIMIT_MSG = PROFILE_IMAGE_SIZE_BYTE_LIMIT/MEGA_BYTE
                 + " " + MEGA_BYTE_STR;
@@ -448,7 +448,7 @@ $(document).ready(function () {
         }
     );
 
-    $('.tagsinput').tagsInput({
+    $('#organization_input').tagsInput({
       interactive: true,
       placeholder: "Organization(s)",
       delimiter: [";"],
@@ -461,6 +461,20 @@ $(document).ready(function () {
         }
       }
     });
+
+    $('#subject_areas').tagsInput({
+        interactive: true,
+        placeholder: "Subject Area(s)",
+        delimiter: [","],
+        autocomplete: {
+          source: "/hsapi/dictionary/subject_areas/",
+          minLength: 3,
+          delay: 500,
+          classes: {
+              "ui-autocomplete": "minHeight"
+          }
+        }
+      });
 
     $('.ui-autocomplete-input').on('blur', function(e) {
       e.preventDefault();

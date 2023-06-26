@@ -72,7 +72,7 @@ class Tracking(MiddlewareMixin):
         # get user info that will be recorded in the visit log
         session = Session.objects.for_request(request)
         usertype = utils.get_user_type(session)
-        emaildomain = utils.get_user_email_domain(session)
+        email_tld = utils.get_user_email_tld(session)
         ip = utils.get_client_ip(request)
 
         # build the message string (key:value pairs)
@@ -81,7 +81,7 @@ class Tracking(MiddlewareMixin):
                          'http_method=%s' % request.method,
                          'http_code=%s' % response.status_code,
                          'user_type=%s' % usertype,
-                         'user_email_domain=%s' % emaildomain,
+                         'user_email_domain=%s' % email_tld,
                          'request_url=%s' % request.path]])
 
         resource_id = get_resource_id_from_url(request.path)

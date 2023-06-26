@@ -226,13 +226,13 @@ class OriginalCoverage(AbstractMetaDataElement):
                 html_tags.div("Coordinate Reference System", cls="text-muted")
                 html_tags.div(self.value.get("projection", ""))
             if self.datum:
-                html_tags.div("Datum", cls="text-muted space-top")
+                html_tags.div("Datum", cls="text-muted has-space-top")
                 html_tags.div(self.datum)
             if self.projection_string_type:
-                html_tags.div("Coordinate String Type", cls="text-muted space-top")
+                html_tags.div("Coordinate String Type", cls="text-muted has-space-top")
                 html_tags.div(self.projection_string_type)
             if self.projection_string_text:
-                html_tags.div("Coordinate String Text", cls="text-muted space-top")
+                html_tags.div("Coordinate String Text", cls="text-muted has-space-top")
                 html_tags.div(self.projection_string_text)
 
             html_tags.h4("Extent", cls="space-top")
@@ -918,6 +918,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
                 # create the ncdump text file
                 dump_file_name = nc_file_name + "_header_info.txt"
+                folder_path = res_file.file_folder
                 for file in resource.files.filter(file_folder=folder_path):
                     # look for and delete an existing header_file before creating it below.
                     fname = os.path.basename(file.resource_file.name)
@@ -939,8 +940,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         istorage.delete(dump_file_path)
 
                 dump_file = create_header_info_txt_file(temp_file, nc_file_name)
-                file_folder = res_file.file_folder
-                upload_folder = file_folder
                 dataset_title = res_dublin_core_meta.get("title", nc_file_name)
                 logical_file = None
                 with transaction.atomic():
@@ -951,7 +950,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                             resource=resource,
                             res_files=[res_file],
                             new_files_to_upload=[dump_file],
-                            folder_path=upload_folder,
+                            folder_path=folder_path,
                         )
 
                         log.info(

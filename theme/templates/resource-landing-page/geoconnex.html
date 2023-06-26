@@ -55,6 +55,13 @@
                     </em>
                 </div>
             </div>
+            <div v-show="searchResultString" class="alert alert-warning" role="alert">
+                <div class="flex">
+                    <em style="padding-right:20px;">
+                        ${ searchResultString }
+                    </em>
+                </div>
+            </div>
             <div v-for="messageObj in appMessages" :class="'alert alert-dismissible alert-' + messageObj.level" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">×</span>
@@ -86,9 +93,10 @@
                             :loading="loadingCollections || searchingDescription !==''"
                             outlined
                             hide-details
-                            :color="collectionMessageColor"
-                            :item-color="collectionSearchColor"
+                            :color="collectionColor"
+                            :item-color="collectionColor"
                             :search-input.sync="collectionTypeahead"
+                            :error="searchResultString !==''"
                             return-object="true">
                                 <template v-slot:item="data">
                                     <template v-if="typeof data.item !== 'object'">
@@ -142,13 +150,6 @@
                                 class="glyphicon glyphicon-info-sign text-muted">
                                 </span>
                                 Feature options for step #2 have been limited to the collection ${ collectionsSelectedToSearch.length > 1 ? "s" : "" } you selected here
-                            </div>
-                            <div v-show="searchResultString">
-                                <span data-toggle="tooltip" data-placement="auto"
-                                :title="searchResultString"
-                                class="glyphicon glyphicon-info-sign text-muted">
-                                </span>
-                                ${ searchResultString }
                             </div>
                             <div v-show="loadingCollections">
                                 <span data-toggle="tooltip" data-placement="auto"
@@ -231,11 +232,11 @@
                                 </v-chip>
                             </template>
                             <template v-slot:message="rulesMessage">
-                                <div :style="`color: ${collectionMessageColor}; margin-left: -12px;`">
+                                <div :style="`color: ${featureMessageColor}; margin-left: -12px;`">
                                     <span data-toggle="tooltip" data-placement="auto"
                                         :title="rulesMessage.message"
                                         class="glyphicon glyphicon-info-sign"
-                                        :style="`color: ${collectionMessageColor}`">
+                                        :style="`color: ${featureMessageColor}`">
                                     </span>
                                     ${ rulesMessage.message }
                                 </div>
@@ -247,7 +248,7 @@
                         <table class="table hs-table info-table">
                             <tr v-for="value in selectedReferenceFeatures" style="padding-bottom: 20px">
                                 <td v-if="isUrl(value.value)" class="dataset-details">
-                                    <a v-if="isUrl(value.value)" target="_blank" :href="value.value"> ${value.text}</a>
+                                    <a target="_blank" :href="value.value"> ${value.text}</a>
                                     <i class="fa fa-external-link"></i>
                                 </td>
                                 <td v-else class="dataset-details">${value.text}</td>
@@ -277,7 +278,7 @@
                                 <i class="fa fa-minus"></i>Hide Map
                             </button>
                         </div>
-                        <div v-show="resSpatialType && showingMap && hasSearches && searchingDescription ==''">
+                        <div v-show="showingMap && hasSearches && searchingDescription ==''">
                             <button @click="searchForFeaturesUsingVisibleMapBounds" class="btn btn-info" depressed small>
                                 <i class="fa fa-search"></i>Search using visible map bounds
                             </button>

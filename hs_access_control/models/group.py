@@ -82,6 +82,8 @@ class GroupAccess(models.Model):
 
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = ThumbnailImageField(upload_to=get_upload_path_group, null=True, blank=True)
 

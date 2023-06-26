@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+>
+  <hsterms:GeographicFeatureAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation">
+    <hsterms:FieldInformation>
+      <rdf:Description>
+	    <hsterms:fieldPrecision rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</hsterms:fieldPrecision>
+        <hsterms:fieldType>Integer64</hsterms:fieldType>
+        <hsterms:fieldName>Id</hsterms:fieldName>
+        <hsterms:fieldWidth rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</hsterms:fieldWidth>
+        <hsterms:fieldTypeCode>12</hsterms:fieldTypeCode>
+      </rdf:Description>
+    </hsterms:FieldInformation>
+    <hsterms:spatialReference>
+      <hsterms:box>
+        <rdf:value>northlimit=4633133.1700797; southlimit=4590013.8756461; westlimit=433743.114844041; eastlimit=466551.480322555; projection_string=PROJCS["NAD83 / UTM zone 12N",
+    GEOGCS["NAD83",
+        DATUM["North_American_Datum_1983",
+            SPHEROID["GRS 1980",6378137,298.257222101,
+                AUTHORITY["EPSG","7019"]],
+            TOWGS84[0,0,0,0,0,0,0],
+            AUTHORITY["EPSG","6269"]],
+        PRIMEM["Greenwich",0,
+            AUTHORITY["EPSG","8901"]],
+        UNIT["degree",0.0174532925199433,
+            AUTHORITY["EPSG","9122"]],
+        AUTHORITY["EPSG","4269"]],
+    PROJECTION["Transverse_Mercator"],
+    PARAMETER["latitude_of_origin",0],
+    PARAMETER["central_meridian",-111],
+    PARAMETER["scale_factor",0.9996],
+    PARAMETER["false_easting",500000],
+    PARAMETER["false_northing",0],
+    UNIT["metre",1,
+        AUTHORITY["EPSG","9001"]],
+    AXIS["Easting",EAST],
+    AXIS["Northing",NORTH],
+    AUTHORITY["EPSG","26912"]]; projection_name=NAD83 / UTM zone 12N; datum=North_American_Datum_1983; units=metre</rdf:value>
+      </hsterms:box>
+    </hsterms:spatialReference>
+    <hsterms:FieldInformation>
+      <rdf:Description>
+        <hsterms:fieldWidth rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">19</hsterms:fieldWidth>
+        <hsterms:fieldType>Real</hsterms:fieldType>
+        <hsterms:fieldPrecision rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</hsterms:fieldPrecision>
+        <hsterms:fieldName>Shape_Leng</hsterms:fieldName>
+        <hsterms:fieldTypeCode>2</hsterms:fieldTypeCode>
+      </rdf:Description>
+    </hsterms:FieldInformation>
+    <hsterms:FieldInformation>
+      <rdf:Description>
+	    <hsterms:fieldPrecision rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</hsterms:fieldPrecision>
+        <hsterms:fieldType>Integer64</hsterms:fieldType>
+        <hsterms:fieldName>gridcode</hsterms:fieldName>
+        <hsterms:fieldTypeCode>12</hsterms:fieldTypeCode>
+        <hsterms:fieldWidth rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</hsterms:fieldWidth>
+      </rdf:Description>
+    </hsterms:FieldInformation>
+    <dc:language>eng</dc:language>
+    <dc:coverage>
+      <dcterms:box>
+        <rdf:value>westlimit=-111.79812580632701; northlimit=41.84732649257394; eastlimit=-111.40051926333071; southlimit=41.46101782271056; projection=WGS 84 EPSG:4326; units=Decimal degrees</rdf:value>
+      </dcterms:box>
+    </dc:coverage>
+    <hsterms:FieldInformation>
+      <rdf:Description>
+	    <hsterms:fieldPrecision rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</hsterms:fieldPrecision>
+        <hsterms:fieldType>Integer64</hsterms:fieldType>
+        <hsterms:fieldName>OBJECTID</hsterms:fieldName>
+        <hsterms:fieldWidth rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</hsterms:fieldWidth>
+        <hsterms:fieldTypeCode>12</hsterms:fieldTypeCode>
+      </rdf:Description>
+    </hsterms:FieldInformation>
+    <dc:title>watersheds</dc:title>
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/GeographicFeatureAggregation"/>
+    <hsterms:FieldInformation>
+      <rdf:Description>
+        <hsterms:fieldPrecision rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</hsterms:fieldPrecision>
+        <hsterms:fieldWidth rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">19</hsterms:fieldWidth>
+        <hsterms:fieldTypeCode>2</hsterms:fieldTypeCode>
+        <hsterms:fieldName>Area_km2</hsterms:fieldName>
+        <hsterms:fieldType>Real</hsterms:fieldType>
+      </rdf:Description>
+    </hsterms:FieldInformation>
+    <hsterms:FieldInformation>
+      <rdf:Description>
+        <hsterms:fieldTypeCode>2</hsterms:fieldTypeCode>
+        <hsterms:fieldWidth rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">19</hsterms:fieldWidth>
+        <hsterms:fieldName>Shape_Area</hsterms:fieldName>
+        <hsterms:fieldPrecision rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</hsterms:fieldPrecision>
+        <hsterms:fieldType>Real</hsterms:fieldType>
+      </rdf:Description>
+    </hsterms:FieldInformation>
+    <hsterms:GeometryInformation>
+      <rdf:Description>
+        <hsterms:geometryType>POLYGON</hsterms:geometryType>
+        <hsterms:featureCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</hsterms:featureCount>
+      </rdf:Description>
+    </hsterms:GeometryInformation>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:URL rdf:resource="http://studio.bakajo.com"/>
+        <hsterms:rightsStatement>my statement</hsterms:rightsStatement>
+      </rdf:Description>
+    </dc:rights>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:value>value2</hsterms:value>
+        <hsterms:key>key2</hsterms:key>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:value>value</hsterms:value>
+        <hsterms:key>key</hsterms:key>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+  </hsterms:GeographicFeatureAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/GeographicFeatureAggregation">
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+    <rdfs:label>Geographic Feature Content: The multiple files that are part of a geographic shapefile</rdfs:label>
+  </rdf:Description>
+</rdf:RDF>

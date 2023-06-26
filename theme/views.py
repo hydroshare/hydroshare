@@ -116,6 +116,7 @@ class UserProfileView(TemplateView):
             "resources": resources,
             "quota_message": get_quota_message(u),
             "group_membership_requests": group_membership_requests,
+            "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE
         }
 
 
@@ -296,13 +297,13 @@ def update_user_profile(request, profile_user_id):
         messages.error(request, "Update failed. {}".format(str(ex)))
         return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
-    dict_items = request.POST["organization"].split(";")
-    for dict_item in dict_items:
+    org_items = request.POST["organization"].split(";")
+    for org_item in org_items:
         # Update Dictionaries
         try:
-            University.objects.get(name=dict_item)
+            University.objects.get(name=org_item)
         except ObjectDoesNotExist:
-            new_term = UncategorizedTerm(name=dict_item)
+            new_term = UncategorizedTerm(name=org_item)
             new_term.save()
         except MultipleObjectsReturned:
             pass

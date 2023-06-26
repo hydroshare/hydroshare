@@ -1127,12 +1127,13 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
     unzip_to_folder_path = ''
     unzip_path_temp = ''
+    unzip_temp_folder = ''
     try:
         # unzip to a temporary folder first to validate contents of the zip file
-        unzip_folder_name = uuid4().hex
+        unzip_temp_folder = uuid4().hex
         # Note: unzipping using the irods 'ibun' command seems to fail if the zip file contains files that have
         # non-english characters.
-        unzip_path_temp = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder_name)
+        unzip_path_temp = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_temp_folder)
 
         # validate files in the zip file - checking for banned characters
         unzipped_files = listfiles_recursively(istorage, unzip_path_temp)
@@ -1167,10 +1168,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 for res_file in res_files:
                     resource.add_file_to_aggregation(res_file)
         else:
-            # unzip to the current folder
             dir_file_list = istorage.listdir(unzip_path_temp)
             unzip_subdir_list = dir_file_list[0]
-            unzipped_foldername = os.path.basename(unzip_path_temp)
             override_tgt_paths = []
             for sub_dir_name in unzip_subdir_list:
                 dest_sub_path = os.path.join(os.path.dirname(zip_with_full_path), sub_dir_name)
@@ -1185,7 +1184,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 res_files, meta_files, map_files = identify_metadata_files(res_files)
 
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
                 if istorage.exists(destination_file):
                     override_tgt_paths.append(destination_file)
 
@@ -1221,12 +1220,12 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
             # now move each file to the destination
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
                 istorage.moveFile(file.name, destination_file)
             # and now link them to the resource
             added_resource_files = []
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
                 destination_file = destination_file.replace(res_id + "/", "", 1)
                 destination_file = resource.get_irods_path(destination_file)
                 res_file = link_irods_file_to_django(resource, destination_file)
@@ -1245,14 +1244,14 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 delete_resource_file(res_id, zip_with_rel_path, user)
 
                 from hs_file_types.utils import ingest_metadata_files
-                ingest_metadata_files(resource, meta_files, map_files)
+                ingest_metadata_files(resource, meta_files, map_files, unzip_temp_folder)
     except Exception as err:
         logger.exception(f"Failed to unzip file:{zip_with_full_path}. Error:{str(err)}")
         if unzip_to_folder_path and istorage.exists(unzip_to_folder_path):
             istorage.delete(unzip_to_folder_path)
         if not unzip_path_temp:
             unzip_path_temp = os.path.dirname(zip_with_full_path)
-            unzip_path_temp = os.path.join(unzip_path_temp, unzip_folder_name)
+            unzip_path_temp = os.path.join(unzip_path_temp, unzip_temp_folder)
         raise
     finally:
         if unzip_path_temp and istorage.exists(unzip_path_temp):
@@ -1643,6 +1642,40 @@ def get_coverage_data_dict(source, coverage_type='spatial'):
             temporal_coverage_dict['start'] = start_date.strftime('%m-%d-%Y')
             temporal_coverage_dict['end'] = end_date.strftime('%m-%d-%Y')
         return temporal_coverage_dict
+
+
+def get_default_admin_user():
+    """A helper method to get the default admin user - used in email notification"""
+
+    from hs_core.hydroshare import create_account
+    try:
+        default_user_from = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
+    except User.DoesNotExist:
+        default_user_from = create_account(
+            email=settings.DEFAULT_FROM_EMAIL,
+            username=settings.DEFAULT_FROM_EMAIL,
+            first_name=settings.DEFAULT_FROM_EMAIL,
+            last_name=settings.DEFAULT_FROM_EMAIL,
+            superuser=True
+        )
+    return default_user_from
+
+
+def get_default_support_user():
+    """A helper method to get or create the default support user - used in email notification"""
+
+    from hs_core.hydroshare import create_account
+    try:
+        support_user = User.objects.get(email__iexact=settings.DEFAULT_SUPPORT_EMAIL)
+    except User.DoesNotExist:
+        support_user = create_account(
+            email=settings.DEFAULT_SUPPORT_EMAIL,
+            username=settings.DEFAULT_SUPPORT_EMAIL,
+            first_name=settings.DEFAULT_SUPPORT_EMAIL,
+            last_name=settings.DEFAULT_SUPPORT_EMAIL,
+            superuser=True
+        )
+    return support_user
 
 
 def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=True):
