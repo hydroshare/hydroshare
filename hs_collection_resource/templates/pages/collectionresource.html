@@ -49,7 +49,7 @@
                                             {% if upermission|lower == "none" %}
                                                 <strong>{{ res.metadata.title }}</strong>
                                             {% else %}
-                                                <strong><a href="{{ res.get_absolute_url }}"
+                                                <strong><a href="{{ res.absolute_url }}"
                                                            target="_blank">{{ res.metadata.title }}</a></strong>
                                             {% endif %}
                                         </td>
