@@ -20,11 +20,13 @@
   };
 
   const createBatchMarkers = (locations, hsUid, labels) => {
-    document.body.style.cursor = 'wait';
+    document.body.style.cursor = "wait";
     const minClusterZoom = exports.map.maxZoom;
-    const spiderified_marker_url = "http://maps.google.com/mapfiles/ms/icons/red.png";
+    const spiderified_marker_url =
+      "http://maps.google.com/mapfiles/ms/icons/red.png";
+
+    // https://github.com/jawj/OverlappingMarkerSpiderfier
     const oms = new OverlappingMarkerSpiderfier(exports.map, {
-      // https://github.com/jawj/OverlappingMarkerSpiderfier
       markersWontMove: true,
       markersWontHide: true,
       basicFormatEvents: true,
@@ -38,25 +40,26 @@
     });
     const infoWindows = [];
 
-    // create svg literal with fill color
-    const get_svg = function(count=2, color="#0000ff"){
+    // create an svg literal matching the markerclusterer svg
+    // https://github.com/googlemaps/js-markerclusterer/blob/v2.3.1/src/renderer.ts#L117
+    const get_svg = function (count = 2, color = "#0000ff") {
       const svg = `<svg fill="${color}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="50" height="50">
       <circle cx="120" cy="120" opacity=".6" r="70" />
       <circle cx="120" cy="120" opacity=".3" r="90" />
       <circle cx="120" cy="120" opacity=".2" r="110" />
       <text x="50%" y="50%" style="fill:#fff" text-anchor="middle" font-size="50" dominant-baseline="middle" font-family="roboto,arial,sans-serif">${count}</text>
       </svg>`;
-      return `data:image/svg+xml;base64,${btoa(svg)}`
-    }
+      return `data:image/svg+xml;base64,${btoa(svg)}`;
+    };
 
-    const generate_cluster_icon = function(marker){
-      const near = oms.markersNearMarker(marker, firstOnly=false).length;
-      if (near > 0){
-        return get_svg(count=near+1)
-      }else{
-        return spiderified_marker_url
-      }  
-    }
+    const generate_cluster_icon = function (marker) {
+      const near = oms.markersNearMarker(marker, (firstOnly = false)).length;
+      if (near > 0) {
+        return get_svg((count = near + 1));
+      } else {
+        return spiderified_marker_url;
+      }
+    };
 
     googMarkers = locations.map((location, k) => {
       const marker = new google.maps.Marker({ // eslint-disable-line
@@ -65,49 +68,58 @@
         hsUid: hsUid[k % hsUid.length],
       });
       const infowindow = new google.maps.InfoWindow(); // eslint-disable-line
-      infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>
+      infowindow.setContent(`<a href="/resource/${
+        hsUid[k % hsUid.length]
+      }" target="_blank">${labels[k % labels.length]}</a>
         lat: ${location.lat.toFixed(2)} lng: ${location.lng.toFixed(2)}`);
       infoWindows.push(infowindow);
 
-      google.maps.event.addListener(marker, 'spider_click', function(e) {  // 'spider_click', not plain 'click'
+      google.maps.event.addListener(marker, "spider_click", function (e) {
         closeInfoWindows(infoWindows);
         infowindow.open(exports.map, marker);
       });
-      oms.addMarker(marker);  // adds the marker to the spiderfier _and_ the map
+      oms.addMarker(marker); // adds the marker to the spiderfier AND the map
       return marker;
     });
 
-    oms.addListener('spiderfy', (spiderified)=> {
-      spiderified.forEach((marker)=>{
+    oms.addListener("spiderfy", (spiderified) => {
+      spiderified.forEach((marker) => {
         marker.setIcon({
           url: spiderified_marker_url,
         });
-      })
+      });
       closeInfoWindows(infoWindows);
     });
 
-    oms.addListener('unspiderfy', (unspiderified)=> {
-      unspiderified.forEach((marker)=>{
+    oms.addListener("unspiderfy", (unspiderified) => {
+      unspiderified.forEach((marker) => {
         marker.setIcon({
-          url: generate_cluster_icon(marker)
+          url: generate_cluster_icon(marker),
         });
-      })
+      });
       closeInfoWindows(infoWindows);
     });
 
-    const algorithm = new markerClusterer.SuperClusterAlgorithm({ maxZoom: minClusterZoom - 1, zoomOnClick: false })
-    const markerCluster = new markerClusterer.MarkerClusterer({ markers:googMarkers, map:exports.map, algorithm:algorithm });
+    const algorithm = new markerClusterer.SuperClusterAlgorithm({
+      maxZoom: minClusterZoom - 1,
+      zoomOnClick: false,
+    });
+    const markerCluster = new markerClusterer.MarkerClusterer({
+      markers: googMarkers,
+      map: exports.map,
+      algorithm: algorithm,
+    });
 
-    google.maps.event.addListenerOnce(markerCluster, 'click', function() {
-      if(exports.map.getZoom() > minClusterZoom){
+    google.maps.event.addListenerOnce(markerCluster, "click", function () {
+      if (exports.map.getZoom() > minClusterZoom) {
         exports.map.setZoom(minClusterZoom);
       }
     });
 
     exports.map.addListener("zoom_changed", () => {
-      oms.markersNearAnyOtherMarker().forEach((spider)=>{
+      oms.markersNearAnyOtherMarker().forEach((spider) => {
         spider.setIcon({
-          url: generate_cluster_icon(spider)
+          url: generate_cluster_icon(spider),
         });
       });
       closeInfoWindows(infoWindows);
@@ -115,35 +127,38 @@
     exports.map.addListener("dragstart", () => {
       closeInfoWindows(infoWindows);
     });
-    document.body.style.cursor = 'default';
+    document.body.style.cursor = "default";
   };
 
   const closeInfoWindows = (infoWindows) => {
-    infoWindows.forEach(function(win) {
+    infoWindows.forEach(function (win) {
       win.close();
-   });
+    });
   };
 
   const gotoBounds = () => {
     const bounds = new google.maps.LatLngBounds();
-    googMarkers.forEach(marker => bounds.extend(marker.position));
+    googMarkers.forEach((marker) => bounds.extend(marker.position));
     exports.map.fitBounds(bounds);
   };
 
   const toggleMap = () => {
-    document.getElementById('map-view').style.display = document.getElementById('map-view').style.display === 'block' ? 'none' : 'block';
+    document.getElementById("map-view").style.display =
+      document.getElementById("map-view").style.display === "block"
+        ? "none"
+        : "block";
   };
 
   const initMap = () => {
     // eslint-disable-next-line no-param-reassign,no-undef
-    exports.map = new google.maps.Map(document.getElementById('map'), {
+    exports.map = new google.maps.Map(document.getElementById("map"), {
       center: mapCenter,
       zoom: mapDefaultZoom,
-      gestureHandling: 'greedy',
+      gestureHandling: "greedy",
       mapTypeId: google.maps.MapTypeId.TERRAIN, // eslint-disable-line
     });
 
-    exports.map.addListener('bounds_changed', () => {
+    exports.map.addListener("bounds_changed", () => {
       const visMarkers = [];
       const bounds = exports.map.getBounds();
       googMarkers.forEach((marker) => {
@@ -161,4 +176,4 @@
   exports.deleteMarkers = deleteMarkers; // eslint-disable-line
   exports.gotoBounds = gotoBounds; // eslint-disable-line
   exports.recenterMap = recenterMap; //eslint-disable-line
-})(this.window = this.window || {});
+})((this.window = this.window || {}));
