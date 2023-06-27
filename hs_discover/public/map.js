@@ -1,5 +1,5 @@
 ((exports) => {
-  const mapDefaultZoom = 4;
+  const mapDefaultZoom = 15;
   const mapCenter = { lat: 42, lng: -71 };
   // eslint-disable-next-line no-unused-vars
   let googMarkers = [];
@@ -98,17 +98,11 @@
     const algorithm = new markerClusterer.SuperClusterAlgorithm({ maxZoom: minClusterZoom - 1, zoomOnClick: false })
     const markerCluster = new markerClusterer.MarkerClusterer({ markers:googMarkers, map:exports.map, algorithm:algorithm });
 
-    // zoom in, generate counts, zoom back out
-    // google.maps.event.addListenerOnce(exports.map, 'idle', function() {
-      const init_zoom = exports.map.getZoom();
-      exports.map.setZoom(minClusterZoom);
-      oms.markersNearAnyOtherMarker().forEach((spider)=>{
-        spider.setIcon({
-          url: generate_cluster_icon(spider)
-        });
-      });
-      exports.map.setZoom(init_zoom);
-    // });
+    google.maps.event.addListenerOnce(markerCluster, 'click', function() {
+      if(exports.map.getZoom() > minClusterZoom){
+        exports.map.setZoom(minClusterZoom);
+      }
+    });
 
     exports.map.addListener("zoom_changed", () => {
       oms.markersNearAnyOtherMarker().forEach((spider)=>{
