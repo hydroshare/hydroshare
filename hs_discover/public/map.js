@@ -21,9 +21,10 @@
 
   const createBatchMarkers = (locations, hsUid, labels) => {
     document.body.style.cursor = 'wait';
-    const minClusterZoom = 14;
+    const minClusterZoom = exports.map.maxZoom;
+    const spiderified_marker_url = "http://maps.google.com/mapfiles/ms/icons/red.png";
     const oms = new OverlappingMarkerSpiderfier(exports.map, {
-      // https://github.com/nmccready/OverlappingMarkerSpiderfier#construction
+      // https://github.com/jawj/OverlappingMarkerSpiderfier
       markersWontMove: true,
       markersWontHide: true,
       basicFormatEvents: true,
@@ -31,9 +32,31 @@
       keepSpiderfied: true,
       legWeight: 5,
       circleSpiralSwitchover: 9,
-      nearbyDistance: 5,
+      nearbyDistance: 1,
+      circleFootSeparation: 100,
+      spiralFootSeparation: 150,
     });
     const infoWindows = [];
+
+    // create svg literal with fill color
+    const get_svg = function(count=2, color="#0000ff"){
+      const svg = `<svg fill="${color}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="50" height="50">
+      <circle cx="120" cy="120" opacity=".6" r="70" />
+      <circle cx="120" cy="120" opacity=".3" r="90" />
+      <circle cx="120" cy="120" opacity=".2" r="110" />
+      <text x="50%" y="50%" style="fill:#fff" text-anchor="middle" font-size="50" dominant-baseline="middle" font-family="roboto,arial,sans-serif">${count}</text>
+      </svg>`;
+      return `data:image/svg+xml;base64,${btoa(svg)}`
+    }
+
+    const generate_cluster_icon = function(marker){
+      const near = oms.markersNearMarker(marker, firstOnly=false).length;
+      if (near > 0){
+        return get_svg(count=near+1)
+      }else{
+        return spiderified_marker_url
+      }  
+    }
 
     googMarkers = locations.map((location, k) => {
       const marker = new google.maps.Marker({ // eslint-disable-line
@@ -45,12 +68,6 @@
       infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>
         lat: ${location.lat.toFixed(2)} lng: ${location.lng.toFixed(2)}`);
       infoWindows.push(infowindow);
-      oms.addListener('spiderfy', ()=> {
-        closeInfoWindows(infoWindows);
-      });
-      oms.addListener('unspiderfy', ()=> {
-        closeInfoWindows(infoWindows);
-      });
 
       google.maps.event.addListener(marker, 'spider_click', function(e) {  // 'spider_click', not plain 'click'
         closeInfoWindows(infoWindows);
@@ -59,17 +76,46 @@
       oms.addMarker(marker);  // adds the marker to the spiderfier _and_ the map
       return marker;
     });
-    const algorithm = new markerClusterer.SuperClusterAlgorithm({ maxZoom: minClusterZoom, zoomOnClick: false })
+
+    oms.addListener('spiderfy', (spiderified)=> {
+      spiderified.forEach((marker)=>{
+        marker.setIcon({
+          url: spiderified_marker_url,
+        });
+      })
+      closeInfoWindows(infoWindows);
+    });
+
+    oms.addListener('unspiderfy', (unspiderified)=> {
+      unspiderified.forEach((marker)=>{
+        marker.setIcon({
+          url: generate_cluster_icon(marker)
+        });
+      })
+      closeInfoWindows(infoWindows);
+    });
+
+    const algorithm = new markerClusterer.SuperClusterAlgorithm({ maxZoom: minClusterZoom - 1, zoomOnClick: false })
     const markerCluster = new markerClusterer.MarkerClusterer({ markers:googMarkers, map:exports.map, algorithm:algorithm });
 
-    // Optional: prevent overzooming
-    // google.maps.event.addListener(markerCluster, 'clusterclick', function(cluster) {
-    //   map.fitBounds(cluster.getBounds()); // Fit the bounds of the cluster clicked on
-    //   if( map.getZoom() > minClusterZoom+1 ) // If zoomed in past first level without clustering, zoom out to that level
-    //       map.setZoom(minClusterZoom+1);
+    // zoom in, generate counts, zoom back out
+    // google.maps.event.addListenerOnce(exports.map, 'idle', function() {
+      const init_zoom = exports.map.getZoom();
+      exports.map.setZoom(minClusterZoom);
+      oms.markersNearAnyOtherMarker().forEach((spider)=>{
+        spider.setIcon({
+          url: generate_cluster_icon(spider)
+        });
+      });
+      exports.map.setZoom(init_zoom);
     // });
 
     exports.map.addListener("zoom_changed", () => {
+      oms.markersNearAnyOtherMarker().forEach((spider)=>{
+        spider.setIcon({
+          url: generate_cluster_icon(spider)
+        });
+      });
       closeInfoWindows(infoWindows);
     });
     exports.map.addListener("dragstart", () => {
