@@ -4,8 +4,12 @@
   // eslint-disable-next-line no-unused-vars
   let googMarkers = [];
   let markerCluster;
+  let oms;
 
   const deleteMarkers = () => {
+    if ( oms ){
+      oms.removeAllMarkers();
+    }
     googMarkers.forEach((marker) => {
       marker.setMap(null);
     });
@@ -26,7 +30,7 @@
       "http://maps.google.com/mapfiles/ms/icons/red.png";
 
     // https://github.com/jawj/OverlappingMarkerSpiderfier
-    const oms = new OverlappingMarkerSpiderfier(exports.map, {
+    oms = new OverlappingMarkerSpiderfier(exports.map, {
       markersWontMove: true,
       markersWontHide: true,
       basicFormatEvents: true,
@@ -104,7 +108,7 @@
       maxZoom: minClusterZoom - 1,
       zoomOnClick: false,
     });
-    const markerCluster = new markerClusterer.MarkerClusterer({
+    markerCluster = new markerClusterer.MarkerClusterer({
       markers: googMarkers,
       map: exports.map,
       algorithm: algorithm,
