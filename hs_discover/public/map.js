@@ -51,6 +51,7 @@
     const minClusterZoom = exports.map.maxZoom;
 
     // https://github.com/jawj/OverlappingMarkerSpiderfier
+    // minZoomLevel and nearbyDistance must be "tuned" to find a good match for the maxZoom of the map
     oms = new OverlappingMarkerSpiderfier(exports.map, {
       markersWontMove: true,
       markersWontHide: true,
@@ -93,7 +94,7 @@
     });
 
     oms.addListener("unspiderfy", () => {
-      reset_clusters(oms)
+      reset_clusters(oms);
       closeInfoWindows(infoWindows);
     });
 
