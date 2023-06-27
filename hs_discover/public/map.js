@@ -1,13 +1,15 @@
 ((exports) => {
   const mapDefaultZoom = 15;
   const mapCenter = { lat: 42, lng: -71 };
+  const spiderified_marker_url =
+    "http://maps.google.com/mapfiles/ms/icons/red.png";
   // eslint-disable-next-line no-unused-vars
   let googMarkers = [];
   let markerCluster;
   let oms;
 
   const deleteMarkers = () => {
-    if ( oms ){
+    if (oms) {
       oms.removeAllMarkers();
     }
     googMarkers.forEach((marker) => {
@@ -23,11 +25,30 @@
     exports.map.panTo(mapCenter);
   };
 
+  // create an svg literal matching the markerclusterer svg
+  // https://github.com/googlemaps/js-markerclusterer/blob/v2.3.1/src/renderer.ts#L117
+  const get_svg = function (count = 2, color = "#0000ff") {
+    const svg = `<svg fill="${color}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="50" height="50">
+    <circle cx="120" cy="120" opacity=".6" r="70" />
+    <circle cx="120" cy="120" opacity=".3" r="90" />
+    <circle cx="120" cy="120" opacity=".2" r="110" />
+    <text x="50%" y="50%" style="fill:#fff" text-anchor="middle" font-size="50" dominant-baseline="middle" font-family="roboto,arial,sans-serif">${count}</text>
+    </svg>`;
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
+  };
+
+  const generate_cluster_icon = function (marker) {
+    const near = oms.markersNearMarker(marker, (firstOnly = false)).length;
+    if (near > 0) {
+      return get_svg((count = near + 1));
+    } else {
+      return spiderified_marker_url;
+    }
+  };
+
   const createBatchMarkers = (locations, hsUid, labels) => {
     document.body.style.cursor = "wait";
     const minClusterZoom = exports.map.maxZoom;
-    const spiderified_marker_url =
-      "http://maps.google.com/mapfiles/ms/icons/red.png";
 
     // https://github.com/jawj/OverlappingMarkerSpiderfier
     oms = new OverlappingMarkerSpiderfier(exports.map, {
@@ -36,34 +57,10 @@
       basicFormatEvents: true,
       minZoomLevel: minClusterZoom,
       keepSpiderfied: true,
-      legWeight: 5,
       circleSpiralSwitchover: 9,
-      nearbyDistance: 1,
-      circleFootSeparation: 100,
-      spiralFootSeparation: 150,
+      nearbyDistance: 5,
     });
     const infoWindows = [];
-
-    // create an svg literal matching the markerclusterer svg
-    // https://github.com/googlemaps/js-markerclusterer/blob/v2.3.1/src/renderer.ts#L117
-    const get_svg = function (count = 2, color = "#0000ff") {
-      const svg = `<svg fill="${color}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="50" height="50">
-      <circle cx="120" cy="120" opacity=".6" r="70" />
-      <circle cx="120" cy="120" opacity=".3" r="90" />
-      <circle cx="120" cy="120" opacity=".2" r="110" />
-      <text x="50%" y="50%" style="fill:#fff" text-anchor="middle" font-size="50" dominant-baseline="middle" font-family="roboto,arial,sans-serif">${count}</text>
-      </svg>`;
-      return `data:image/svg+xml;base64,${btoa(svg)}`;
-    };
-
-    const generate_cluster_icon = function (marker) {
-      const near = oms.markersNearMarker(marker, (firstOnly = false)).length;
-      if (near > 0) {
-        return get_svg((count = near + 1));
-      } else {
-        return spiderified_marker_url;
-      }
-    };
 
     googMarkers = locations.map((location, k) => {
       const marker = new google.maps.Marker({ // eslint-disable-line
@@ -95,12 +92,8 @@
       closeInfoWindows(infoWindows);
     });
 
-    oms.addListener("unspiderfy", (unspiderified) => {
-      unspiderified.forEach((marker) => {
-        marker.setIcon({
-          url: generate_cluster_icon(marker),
-        });
-      });
+    oms.addListener("unspiderfy", () => {
+      reset_clusters(oms)
       closeInfoWindows(infoWindows);
     });
 
@@ -121,11 +114,6 @@
     });
 
     exports.map.addListener("zoom_changed", () => {
-      oms.markersNearAnyOtherMarker().forEach((spider) => {
-        spider.setIcon({
-          url: generate_cluster_icon(spider),
-        });
-      });
       closeInfoWindows(infoWindows);
     });
     exports.map.addListener("dragstart", () => {
@@ -139,8 +127,16 @@
       win.close();
     });
   };
+  const reset_clusters = (oms) => {
+    oms.markersNearAnyOtherMarker().forEach((spider) => {
+      spider.setIcon({
+        url: generate_cluster_icon(spider),
+      });
+    });
+  };
 
   const gotoBounds = () => {
+    reset_clusters(oms);
     const bounds = new google.maps.LatLngBounds();
     googMarkers.forEach((marker) => bounds.extend(marker.position));
     exports.map.fitBounds(bounds);
@@ -172,7 +168,7 @@
       });
       this.visMarkers = visMarkers; // window
     });
-    exports.map.setOptions({ minZoom: 2, maxZoom: 15 });
+    exports.map.setOptions({ minZoom: 2, maxZoom: mapDefaultZoom });
   };
   exports.initMap = initMap; // eslint-disable-line
   exports.createBatchMarkers = createBatchMarkers; // eslint-disable-line
