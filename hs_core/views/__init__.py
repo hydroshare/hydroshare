@@ -662,6 +662,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             else:
                 ajax_response_data = {
                     "status": "success",
+                    "element_type": getattr(element, 'type', None),
                     "element_name": element_name,
                     "spatial_coverage": get_coverage_data_dict(res),
                     "temporal_coverage": get_coverage_data_dict(res, "temporal"),
