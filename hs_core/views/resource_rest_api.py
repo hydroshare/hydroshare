@@ -777,7 +777,6 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
 
         return resource.files.all()
 
-
     def get_serializer_class(self):
         return serializers.ResourceFileSerializer
 
