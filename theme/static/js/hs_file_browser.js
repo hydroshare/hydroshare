@@ -873,6 +873,7 @@ function bindFileBrowserItemEvents() {
                 // when aggregation type of the aggregation matches with the aggregation type supported by the tool
                 // matches, this will be set to true
                 let aggrApp = false;
+
                 let toolExtensions = '';
                 let toolAppKey = '';
                 if (fileSelected) {
@@ -883,6 +884,31 @@ function bindFileBrowserItemEvents() {
                             if (fileExtension.toLowerCase() === toolExtensions[i].trim().toLowerCase()) {
                                 extensionApp = true;
                                 break;
+                            }
+                        }
+                        if (extensionApp) {
+                            // check for appkey match
+                            if ($(this).attr("data-tool-appkey")) {
+                                toolAppKey = $(this).attr("data-tool-appkey");
+                            }
+                            if (aggrAppKey || toolAppKey) {
+                                if (aggrAppKey !== toolAppKey) {
+                                    extensionApp = false;
+                                }
+                            }
+                            else if (fileAggType) {
+                                // check for aggregation type match
+                                if ($(this).attr("data-agg-types")) {
+                                    aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                                }
+                                else {
+                                    aggrApp = false;
+                                }
+                                extensionApp = aggrApp;
+                            }
+                            else if ($(this).attr("data-agg-types")) {
+                                // tool has restricted aggregation types but the selected file is not an aggregation
+                                extensionApp = false;
                             }
                         }
                     }
@@ -901,7 +927,9 @@ function bindFileBrowserItemEvents() {
                             toolAppKey = $(this).attr("data-tool-appkey");
                         }
 
-                        if (aggrAppKey && toolAppKey) {
+                        if (aggrAppKey) {
+                            // selected file is part of an aggregation and the aggregation has an appkey
+                            // tool appkey and aggregation appkey must match for the tool to be available
                             if (aggrAppKey === toolAppKey) {
                                 appKeyApp = true;
                             }
@@ -916,8 +944,11 @@ function bindFileBrowserItemEvents() {
                              else if ($(this).attr("data-url-file")) {
                                 aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
                             }
-                            if (toolAppKey && !appKeyApp) {
-                                aggrApp = false;
+                            if (toolAppKey || aggrAppKey) {
+                                // if tool appkey or aggregation appkey is set, both must match for the tool to be available
+                                if (aggrAppKey !== toolAppKey) {
+                                    aggrApp = false;
+                                }
                             }
                             if (!aggrApp) {
                                 appKeyApp = false;
@@ -943,6 +974,13 @@ function bindFileBrowserItemEvents() {
                         }
                         if (!aggrApp) {
                             appKeyApp = false;
+                        }
+                    }
+                    if (appKeyApp || aggrApp) {
+                        if ($(this).attr("data-file-extensions")) {
+                            // tool has restricted file extensions - so tool is not available for folder based aggregation
+                            appKeyApp = false;
+                            aggrApp = false;
                         }
                     }
                 }
