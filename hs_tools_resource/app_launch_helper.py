@@ -125,7 +125,7 @@ def get_app_dict(user, resource, web_app_resource):
     hs_term_dict_file["HS_AGG_PATH"] = "HS_JS_AGG_KEY"
     hs_term_dict_file["HS_FILE_PATH"] = "HS_JS_FILE_KEY"
     hs_term_dict_file["HS_MAIN_FILE"] = "HS_JS_MAIN_FILE_KEY"
-    default_resource_term_dict = web_app_resource.extra_metadata
+    default_resource_term_dict = web_app_resource.extra_metadata.copy()
     default_resource_term_dict.update(resource.get_hs_term_dict())
     return [default_resource_term_dict, hs_term_dict_user, hs_term_dict_file]
 
