@@ -82,8 +82,13 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         if tool_metadata.app_icon else "raise-img-error"
 
     url_key_values = get_app_dict(request_obj.user, resource_obj, tool_res_obj)
+    tool_url_resource_new = None
+    if tool_app_key in resource_obj.extra_metadata and tool_app_key in tool_res_obj.extra_metadata:
+        if resource_obj.extra_metadata[tool_app_key] == tool_res_obj.extra_metadata[tool_app_key]:
+            tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
+    elif tool_app_key not in resource_obj.extra_metadata and tool_app_key not in tool_res_obj.extra_metadata:
+        tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
 
-    tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
     tool_url_agg_new = parse_app_url_template(tool_url_aggregation, url_key_values)
     tool_url_file_new = parse_app_url_template(tool_url_file, url_key_values)
 
