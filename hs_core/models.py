@@ -2060,6 +2060,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     download_count = models.PositiveIntegerField(default=0)
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
+    _citation = models.TextField(null=True, blank=True)
+    citation_dirty = models.BooleanField(default=False)
+
+    @property
+    def citation_error(self):
+        return "Failed to generate citation."
 
     def update_view_count(self):
         self.view_count += 1
@@ -2551,13 +2557,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             return ''
         return str(self.metadata.citation.first())
 
-    def get_citation(self, forceHydroshareURI=True):
-        """Get citation or citations from resource metadata."""
+    def update_citation(self):
+        self._citation = self._compute_citation()
+        if self._citation == self.citation_error:
+            logging.error(f"Failed to generate citation for resource {self.short_id}")
+        else:
+            self.citation_dirty = False
+        self.save(update_fields=['_citation', 'citation_dirty'])
 
+    def _compute_citation(self, forceHydroshareURI=True):
         citation_str_lst = []
-
-        CITATION_ERROR = "Failed to generate citation."
-
         creators = self.metadata.creators.all()
         first_author = [cr for cr in creators if cr.order == 1][0]
         if first_author.organization and not first_author.name:
@@ -2576,7 +2585,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         if len(citation_str_lst[-1]) > 2:
             citation_str_lst[-1] = citation_str_lst[-1][:-2]
         else:
-            return CITATION_ERROR
+            return self.citation_error
 
         meta_dates = self.metadata.dates.all()
         published_date = [dt for dt in meta_dates if dt.type == "published"]
@@ -2589,32 +2598,44 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 citation_date = modified_date[0]
 
         if citation_date is None:
-            return CITATION_ERROR
+            return self.citation_error
 
         citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
         citation_str_lst.append(self.metadata.title.value)
 
-        isPendingActivation = False
+        is_pending_activation = False
         identifiers = self.metadata.identifiers.all()
         doi = [idn for idn in identifiers if idn.name == "doi"]
 
         if doi and not forceHydroshareURI:
             hs_identifier = doi[0]
             if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
-                isPendingActivation = True
+                is_pending_activation = True
         else:
             hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
             if hs_identifier:
                 hs_identifier = hs_identifier[0]
             else:
-                return CITATION_ERROR
+                return self.citation_error
 
         citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
-        if isPendingActivation and not forceHydroshareURI:
+        if is_pending_activation and not forceHydroshareURI:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
 
         return ''.join(citation_str_lst)
+
+    def get_citation(self, forceHydroshareURI=True):
+        """Get citation or citations from resource metadata."""
+        if self._citation is None or self.citation_dirty:
+            self.update_citation()
+        if forceHydroshareURI:
+            return self._citation
+
+        if not self.metadata.identifiers.all().filter(name="doi").exists():
+            return self._citation
+
+        return self._compute_citation(forceHydroshareURI=False)
 
     @classmethod
     def get_supported_upload_file_types(cls):
