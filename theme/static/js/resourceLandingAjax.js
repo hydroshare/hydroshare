@@ -725,6 +725,7 @@ function delete_virtual_folder_ajax_submit(hs_file_type, file_type_id) {
 function resetAfterFBDelete() {
     refreshFileBrowser();
     $("#fb-files-container li.ui-selected").css("cursor", "auto").removeClass("deleting");
+    $(".file-browser-container, #fb-files-container").css("cursor", "auto");
     $(".fb-cust-spinner").remove();
 }
 
