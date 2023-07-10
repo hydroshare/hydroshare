@@ -977,7 +977,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     folder = kwargs.pop('folder', '')
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
-    resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
+    resource_file_objects, new_aggregations = add_resource_files(resource.short_id, *files, folder=folder,
                                                source_names=source_names, full_paths=full_paths,
                                                auto_aggregate=auto_aggregate, user=user)
     resource.refresh_from_db()
@@ -994,7 +994,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     check_file_dict_for_error(file_validation_dict)
 
     resource_modified(resource, user, overwrite_bag=False)
-    return resource_file_objects
+    return resource_file_objects, new_aggregations
 
 
 # TODO: move this to BaseResource

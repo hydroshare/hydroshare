@@ -692,6 +692,6 @@ def _add_files_to_resource(resource, files_to_add, upload_folder=None):
     for fl in files_to_add:
         file_to_upload = UploadedFile(file=open(fl, 'rb'), name=os.path.basename(fl))
         files_to_upload.append(file_to_upload)
-    added_resource_files = add_resource_files(resource.short_id,
+    added_resource_files, _ = add_resource_files(resource.short_id,
                                               *files_to_upload, folder=upload_folder)
     return added_resource_files

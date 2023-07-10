@@ -355,7 +355,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         return JsonResponse(msg, status=500)
 
     try:
-        hydroshare.utils.resource_file_add_process(
+        _, new_aggregations = hydroshare.utils.resource_file_add_process(
             resource=resource,
             files=res_files,
             user=request.user,
@@ -397,7 +397,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     response_data = {
         "res_public_status": res_public_status,
         "res_discoverable_status": res_discoverable_status,
-        "metadata_extracted": extract_metadata,
+        "new_aggregations": new_aggregations,
         "metadata_status": metadata_status,
         "show_meta_status": show_meta_status,
     }

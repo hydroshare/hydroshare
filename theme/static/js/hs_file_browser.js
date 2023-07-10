@@ -1778,7 +1778,7 @@ function warnExternalContent(shortId) {
 function onUploadSuccess(file, response) {
     // uploaded files can affect metadata in composite resource.
     // Use the json data returned from backend to update UI
-    if (RES_TYPE === 'Resource' && response.metadata_extracted) {
+    if (RES_TYPE === 'Resource' && response.new_aggregations) {
         updateResourceUI();
     }
     showCompletedMessage(response);

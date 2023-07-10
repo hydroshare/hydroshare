@@ -619,7 +619,7 @@ class ResourceFileCRUD(APIView):
             raise ValidationError(detail=error_msg)
 
         try:
-            res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
+            res_file_objects, _ = hydroshare.utils.resource_file_add_process(resource=resource,
                                                                           files=[resource_files[0]],
                                                                           folder=pathname,
                                                                           user=request.user,
@@ -803,7 +803,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             raise ValidationError(detail=error_msg)
 
         try:
-            res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
+            res_file_objects, _ = hydroshare.utils.resource_file_add_process(resource=resource,
                                                                           files=[resource_files[0]],
                                                                           user=request.user,
                                                                           folder=folder,
