@@ -219,10 +219,6 @@ def data_store_structure(request):
                      'aggregations': aggregations,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
-    if resource.resource_type == "CompositeResource":
-        return_object['spatial_coverage'] = get_coverage_data_dict(resource)
-        return_object['temporal_coverage'] = get_coverage_data_dict(resource,
-                                                                    coverage_type='temporal')
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"
