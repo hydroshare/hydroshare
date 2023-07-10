@@ -1,5 +1,6 @@
 from hs_core.models import get_user
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+from hs_file_types.utils import get_aggregation_types
 from hs_tools_resource.app_keys import tool_app_key
 from hs_tools_resource.models import ToolResource
 from hs_tools_resource.utils import parse_app_url_template, get_SupportedResTypes_choices
@@ -99,6 +100,11 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     if supported_aggr_types is not None:
         agg_types = supported_aggr_types.get_supported_agg_types_str()
         tool_appkey = tool_res_obj.extra_metadata.get(tool_app_key, '')
+
+    if tool_url_agg_new is not None and not agg_types:
+        # make the tool available for all aggregation types
+        agg_type_cls_names = [agg_type.__name__ for agg_type in get_aggregation_types()]
+        agg_types = ",".join(agg_type_cls_names)
 
     supported_file_extensions = tool_metadata.supported_file_extensions
     if supported_file_extensions:
