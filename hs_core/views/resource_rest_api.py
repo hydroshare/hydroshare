@@ -756,13 +756,26 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         """
         return self.list(request)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            resource_file_info_list = []
+            for f in page:
+                resource_file_info_list.append(self.resourceFileToListItem(f))
+
+            serializer = self.get_serializer(resource_file_info_list, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def get_queryset(self):
         resource, _, _ = view_utils.authorize(self.request, self.kwargs['pk'],
                                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        resource_file_info_list = []
-        for f in resource.files.all():
-            resource_file_info_list.append(self.resourceFileToListItem(f))
-        return resource_file_info_list
+
+        return resource.files.all()
 
     def get_serializer_class(self):
         return serializers.ResourceFileSerializer
