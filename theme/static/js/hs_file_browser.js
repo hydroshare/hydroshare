@@ -891,23 +891,28 @@ function bindFileBrowserItemEvents() {
                             if ($(this).attr("data-tool-appkey")) {
                                 toolAppKey = $(this).attr("data-tool-appkey");
                             }
-                            if (aggrAppKey || toolAppKey) {
+                            if (aggrAppKey && toolAppKey) {
+                                // selected file is part of an aggregation and the aggregation has an appkey
+                                // tool appkey and aggregation appkey must match for the tool to be available
                                 if (aggrAppKey !== toolAppKey) {
                                     extensionApp = false;
                                 }
+                            }
+                            else if (toolAppKey) {
+                                // tool has appkey but there is no aggregation appkey for the selected file
+                                // tool is not applicable/viewable for the selected file
+                                extensionApp = false;
                             }
                             else if (fileAggType) {
                                 // check for aggregation type match
                                 if ($(this).attr("data-agg-types")) {
                                     aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                                    extensionApp = aggrApp;
                                 }
-                                else {
-                                    aggrApp = false;
-                                }
-                                extensionApp = aggrApp;
                             }
                             else if ($(this).attr("data-agg-types")) {
                                 // tool has restricted aggregation types but the selected file is not an aggregation
+                                // tool is not applicable/viewable for the selected file
                                 extensionApp = false;
                             }
                         }
@@ -927,9 +932,9 @@ function bindFileBrowserItemEvents() {
                             toolAppKey = $(this).attr("data-tool-appkey");
                         }
 
-                        if (aggrAppKey) {
-                            // selected file is part of an aggregation and the aggregation has an appkey
-                            // tool appkey and aggregation appkey must match for the tool to be available
+                        if (aggrAppKey && toolAppKey) {
+                            // both the tool and aggregation have appkey restriction
+                            // both app keys must match for the tool to be available
                             if (aggrAppKey === toolAppKey) {
                                 appKeyApp = true;
                             }
@@ -944,11 +949,15 @@ function bindFileBrowserItemEvents() {
                              else if ($(this).attr("data-url-file")) {
                                 aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
                             }
-                            if (toolAppKey || aggrAppKey) {
-                                // if tool appkey or aggregation appkey is set, both must match for the tool to be available
+                            if (toolAppKey && aggrAppKey) {
+                                // both the tool and aggregation have appkey restriction
+                                // both app keys must match for the tool to be available
                                 if (aggrAppKey !== toolAppKey) {
                                     aggrApp = false;
                                 }
+                            }
+                            else if (toolAppKey) {
+                                aggrApp = false;
                             }
                             if (!aggrApp) {
                                 appKeyApp = false;
@@ -962,6 +971,8 @@ function bindFileBrowserItemEvents() {
                         toolAppKey = $(this).attr("data-tool-appkey");
                     }
                     if (aggrAppKey && toolAppKey) {
+                        // both the tool and aggregation have appkey restriction
+                        // both app keys must match for the tool to be available
                         if (aggrAppKey === toolAppKey) {
                             appKeyApp = true;
                         }

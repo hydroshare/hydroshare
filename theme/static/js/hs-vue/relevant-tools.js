@@ -26,7 +26,7 @@ let relevantToolsApp = new Vue({
             }
             return null;    // default
         },
-        // Returns the Url needed to launch a file in this resource
+        // Returns the Url needed to launch an aggregation in this resource
         getAggregationAppUrl: function (tool) {
             if (tool.hasOwnProperty('agg_types') && tool.url_aggregation) {
                 return this.trackingAppLaunchUrl + '?url=' + tool.url_aggregation + '&name=' + tool.title +
