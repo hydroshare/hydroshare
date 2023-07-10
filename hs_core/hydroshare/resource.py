@@ -659,7 +659,7 @@ def add_resource_files(pk, *files, **kwargs):
     files - A list of file-like objects representing files that will be added
     to the existing resource identified by pid
 
-    Returns:    
+    Returns:
     A list of ResourceFile objects added to the resource
     and a boolean indicating whether aggregations were created
 

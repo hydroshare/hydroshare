@@ -620,10 +620,10 @@ class ResourceFileCRUD(APIView):
 
         try:
             res_file_objects, _ = hydroshare.utils.resource_file_add_process(resource=resource,
-                                                                          files=[resource_files[0]],
-                                                                          folder=pathname,
-                                                                          user=request.user,
-                                                                          extract_metadata=True)
+                                                                             files=[resource_files[0]],
+                                                                             folder=pathname,
+                                                                             user=request.user,
+                                                                             extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
             error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
@@ -804,10 +804,10 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
 
         try:
             res_file_objects, _ = hydroshare.utils.resource_file_add_process(resource=resource,
-                                                                          files=[resource_files[0]],
-                                                                          user=request.user,
-                                                                          folder=folder,
-                                                                          extract_metadata=True)
+                                                                             files=[resource_files[0]],
+                                                                             user=request.user,
+                                                                             folder=folder,
+                                                                             extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
             error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
