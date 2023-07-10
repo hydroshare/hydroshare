@@ -397,6 +397,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     response_data = {
         "res_public_status": res_public_status,
         "res_discoverable_status": res_discoverable_status,
+        "metadata_extracted": extract_metadata,
         "metadata_status": metadata_status,
         "show_meta_status": show_meta_status,
     }

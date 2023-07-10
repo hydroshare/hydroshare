@@ -196,7 +196,7 @@ function metadata_update_ajax_submit(form_id){
                 if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     ((json_response.element_name.toLowerCase() === 'coverage' ||
                     json_response.element_name.toLowerCase() === 'site') && resourceType === 'Resource')){
-                    element_type = json_response.element_type?.toLowerCase() || ''
+                    const element_type = json_response.element_type?.toLowerCase() || '';
                     if (element_type === 'period' && json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
