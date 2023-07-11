@@ -18,6 +18,11 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         # delete any existing records from haystack
         call_command('clear_index', "--noinput")
 
+    def tearDown(self):
+        super(TestResourceFileMetadataEndpoint, self).tearDown()
+        # clean up haystack
+        call_command('clear_index', "--noinput")
+
     def test_discovery_rest_api(self):
         # Just need to test it works, more thorough tests exist in the discover view
         response = self.client.get(reverse('discover-hsapi', kwargs={}))
