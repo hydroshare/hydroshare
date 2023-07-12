@@ -763,7 +763,11 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         if page is not None:
             resource_file_info_list = []
             for f in page:
-                resource_file_info_list.append(self.resourceFileToListItem(f))
+                # list only if the file exists in iRODS
+                if f.exists:
+                    resource_file_info_list.append(self.resourceFileToListItem(f))
+                else:
+                    logger.warning(f"File not found in iRODS: {f.storage_path}")
 
             serializer = self.get_serializer(resource_file_info_list, many=True)
             return self.get_paginated_response(serializer.data)
