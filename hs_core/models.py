@@ -2679,10 +2679,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         res_files_at_root = self.files.filter(file_folder='')
         readme_txt_file = None
         readme_md_file = None
+        def get_file_name(f):
+            return os.path.basename(f.get_storage_path(resource=self)).lower()
+
         for res_file in res_files_at_root:
-            if res_file.file_name.lower() == 'readme.md':
+            file_name = get_file_name(res_file)
+            if file_name == 'readme.md':
                 readme_md_file = res_file
-            elif res_file.file_name.lower() == 'readme.txt':
+            elif file_name == 'readme.txt':
                 readme_txt_file = res_file
             if readme_md_file is not None:
                 break
@@ -3135,6 +3139,13 @@ class ResourceFile(ResourceFileIRODSMixin):
         # instance.content_object can be stale after changes.
         # Re-fetch based upon key; bypass type system; it is not relevant
         resource = self.resource
+        return self.get_storage_path(resource)
+
+    def get_storage_path(self, resource):
+        """Return the qualified name for a file in the storage hierarchy.
+        Note: This is the preferred way to get the storage path for a file when we are trying to find
+        the storage path for more than one file in a resource.
+        """
         if resource.is_federated:  # false if None or empty
             if __debug__:
                 assert self.resource_file.name is None or \
