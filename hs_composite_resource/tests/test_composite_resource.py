@@ -10,45 +10,40 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.test import TransactionTestCase
 from django.urls import reverse
-from django.db import reset_queries, connection
 from rest_framework import status
 
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import (
-    resource_file_add_process,
-    get_resource_by_shortkey,
     ResourceVersioningException,
-    add_file_to_resource,
-    get_file_from_irods,
+    add_file_to_resource, get_file_from_irods,
+    get_resource_by_shortkey, resource_file_add_process
 )
 from hs_core.models import BaseResource, ResourceFile
+from hs_core.tasks import FileOverrideException
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import (
-    create_folder,
+    add_reference_url_to_resource,
+    create_folder, delete_resource_file,
+    edit_reference_url_in_resource,
     move_or_rename_file_or_folder,
     remove_folder,
-    unzip_file,
-    add_reference_url_to_resource,
-    edit_reference_url_in_resource,
-    delete_resource_file,
-    zip_by_aggregation_file,
+    unzip_file, zip_by_aggregation_file
 )
 from hs_file_types.models import (
-    GenericLogicalFile,
-    GeoRasterLogicalFile,
-    GenericFileMetaData,
-    RefTimeseriesLogicalFile,
     FileSetLogicalFile,
-    NetCDFLogicalFile,
-    TimeSeriesLogicalFile,
+    GenericFileMetaData,
+    GenericLogicalFile,
     GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
     ModelInstanceLogicalFile,
     ModelProgramLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile
 )
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from hs_file_types.tests.utils import CompositeResourceTestMixin
-from hs_core.tasks import FileOverrideException
 
 
 class CompositeResourceTest(
@@ -3931,7 +3926,6 @@ class CompositeResourceTest(
         with self.assertNumQueries(_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT):
             response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
             self.assertTrue(response.status_code == 200)
-
 
         # test resource landing page with resource files
         # add a file to the resource

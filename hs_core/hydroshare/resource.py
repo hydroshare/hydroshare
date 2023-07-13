@@ -125,6 +125,7 @@ def res_has_web_reference(res):
             return True
     return False
 
+
 def get_science_metadata(pk):
     """
     Describes the resource identified by the pid by returning the associated science metadata

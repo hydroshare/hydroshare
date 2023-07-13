@@ -2679,6 +2679,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         res_files_at_root = self.files.filter(file_folder='')
         readme_txt_file = None
         readme_md_file = None
+
         def get_file_name(f):
             return os.path.basename(f.get_storage_path(resource=self)).lower()
 
