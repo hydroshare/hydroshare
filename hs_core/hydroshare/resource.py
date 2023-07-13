@@ -120,12 +120,10 @@ def res_has_web_reference(res):
     if res.resource_type != "CompositeResource":
         return False
 
-    for f in ResourceFile.objects.filter(object_id=res.id):
-        if f.has_logical_file:
-            if 'url' in f.logical_file.extra_data:
-                return True
+    for lf in res.get_logical_files('GenericLogicalFile'):
+        if 'url' in lf.extra_data:
+            return True
     return False
-
 
 def get_science_metadata(pk):
     """
