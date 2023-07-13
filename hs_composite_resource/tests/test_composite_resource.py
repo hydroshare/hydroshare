@@ -3898,28 +3898,60 @@ class CompositeResourceTest(
     def test_composite_resource_landing_scales(self):
         # test that db queries for landing page have constant time complexity
 
+        # expected number of queries for landing page when the resource has no resource file
+        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 161
+
+        # expected number of queries for landing page when the resource has resource file
+        _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 12
+
         # user 1 login
         self.client.login(username='user1', password='mypassword1')
+        # navigating to home page for initializing db queries
+        response = self.client.get(reverse("home"), follow=True)
+        self.assertTrue(response.status_code == 200)
 
         # there should not be any resource at this point
         self.assertEqual(BaseResource.objects.count(), 0)
+
+        # create a composite resource
         self.create_composite_resource()
-
-        reset_queries()
-        response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
-        self.assertTrue(response.status_code == 200)
-        one_queries = len(connection.queries)
-
         # there should be one resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
         self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
-        self.create_composite_resource()
 
-        reset_queries()
-        response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
-        self.assertTrue(response.status_code == 200)
-        two_queries = len(connection.queries)
+        with self.assertNumQueries(_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # create another resource
+        self.create_composite_resource()
         # there should be two resources at this point
         self.assertEqual(BaseResource.objects.count(), 2)
 
-        self.assertLessEqual(two_queries, one_queries)
+        with self.assertNumQueries(_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+
+        # test resource landing page with resource files
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+
+        with self.assertNumQueries(_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # add 3 more files to the resource
+        self.add_file_to_resource(file_to_add=self.netcdf_file)
+        self.add_file_to_resource(file_to_add=self.watershed_shp_file)
+        self.add_file_to_resource(file_to_add=self.watershed_dbf_file)
+        self.assertEqual(self.composite_resource.files.count(), 4)
+
+        with self.assertNumQueries(_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # accessing the readme file should only be 1 db query
+        with self.assertNumQueries(1):
+            _ = self.composite_resource.readme_file
