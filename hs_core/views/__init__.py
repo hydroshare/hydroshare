@@ -355,7 +355,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         return JsonResponse(msg, status=500)
 
     try:
-        _, new_aggregations = hydroshare.utils.resource_file_add_process(
+        hydroshare.utils.resource_file_add_process(
             resource=resource,
             files=res_files,
             user=request.user,

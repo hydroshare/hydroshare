@@ -27,9 +27,9 @@ class CompositeResourceTestMixin(object):
         for fl in files_to_add:
             file_to_upload = UploadedFile(file=open(fl, 'rb'), name=os.path.basename(fl))
             files_to_upload.append(file_to_upload)
-        added_resource_files, new_aggregations = add_resource_files(self.composite_resource.short_id,
-                                                                    *files_to_upload, folder=upload_folder)
-        return added_resource_files, new_aggregations
+        added_resource_files = add_resource_files(self.composite_resource.short_id,
+                                                  *files_to_upload, folder=upload_folder)
+        return added_resource_files
 
     def create_composite_resource(self, file_to_upload=[], auto_aggregate=False, folder=''):
         if isinstance(file_to_upload, str):

@@ -152,7 +152,7 @@ def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
     urltempfile.write(urlstring.encode())
     fileobj = File(file=urltempfile, name=ref_file_name)
 
-    filelist, _ = add_resource_files(res_id, fileobj, folder=curr_path)
+    filelist = add_resource_files(res_id, fileobj, folder=curr_path)
 
     if filelist:
         return filelist[0]

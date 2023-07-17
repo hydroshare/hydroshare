@@ -659,11 +659,9 @@ def add_resource_files(pk, *files, **kwargs):
     files - A list of file-like objects representing files that will be added
     to the existing resource identified by pid
 
-    Returns:
-    A list of ResourceFile objects added to the resource
-    and a boolean indicating whether aggregations were created
+    Returns:    A list of ResourceFile objects added to the resource
 
-    Return Type:    list, boolean
+    Return Type:    list
 
     Raises:
     Exceptions.NotAuthorized - The user is not authorized
@@ -724,11 +722,9 @@ def add_resource_files(pk, *files, **kwargs):
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
-            new_logical_files = utils.check_aggregations(resource, ret)
-            if len(new_logical_files) > 0:
-                return ret, True
+            utils.check_aggregations(resource, ret)
 
-    return ret, False
+    return ret
 
 
 def update_science_metadata(pk, metadata, user):
