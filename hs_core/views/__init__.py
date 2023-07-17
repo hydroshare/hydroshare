@@ -354,6 +354,9 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         msg = {"validation_error": str(ex)}
         return JsonResponse(msg, status=500)
 
+    aggregations_pre = [aggr for aggr in resource.logical_files]
+    aggr_count_pre = len(aggregations_pre)
+
     try:
         hydroshare.utils.resource_file_add_process(
             resource=resource,
@@ -368,6 +371,9 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = {"validation_error": str(ex)}
         return JsonResponse(msg, status=500)
+
+    aggregations_post = [aggr for aggr in resource.logical_files]
+    aggr_count_post = len(aggregations_post)
 
     res_public_status = "public" if resource.raccess.public else "not public"
     res_discoverable_status = (
@@ -397,7 +403,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     response_data = {
         "res_public_status": res_public_status,
         "res_discoverable_status": res_discoverable_status,
-        "new_aggregations": new_aggregations,
+        "number_new_aggregations": aggr_count_post - aggr_count_pre,
         "metadata_status": metadata_status,
         "show_meta_status": show_meta_status,
     }
