@@ -20,6 +20,7 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
+from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types, \
@@ -41,11 +42,12 @@ logger = logging.getLogger(__name__)
 
 # Mixins
 class ResourceFileToListItemMixin(object):
+    # URLs in metadata should be fully qualified.
+    # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
+    site_url = hydroshare.utils.current_site_url()
+
     def resourceFileToListItem(self, f):
-        # URLs in metadata should be fully qualified.
-        # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
-        site_url = hydroshare.utils.current_site_url()
-        url = site_url + f.url
+        url = self.site_url + f.url
         fsize = f.size
         logical_file_type = f.logical_file_type_name
         file_name = os.path.basename(f.resource_file.name)
@@ -763,7 +765,11 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         if page is not None:
             resource_file_info_list = []
             for f in page:
-                resource_file_info_list.append(self.resourceFileToListItem(f))
+                try:
+                    resource_file_info_list.append(self.resourceFileToListItem(f))
+                except SessionException as err:
+                    # primarily this exception will be raised if the file is not found in iRODS
+                    logger.error(f"Error for file {f.storage_path} from iRODS: {err.stderr}")
 
             serializer = self.get_serializer(resource_file_info_list, many=True)
             return self.get_paginated_response(serializer.data)
