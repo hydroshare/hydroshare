@@ -8,7 +8,12 @@ from hs_core.tasks import create_bag_by_irods
 from hs_core.models import BaseResource
 from django_irods.storage import IrodsStorage
 from hs_core.task_utils import _retrieve_task_id
+from hs_core.tests.api.utils import prepare_resource as prepare_resource_util
 
+def prepare_resource(self, folder, upload_to=""):
+    test_bag_path = 'hs_core/tests/data/test_resource_metadata_files.zip'
+    extracted_directory = 'hs_core/tests/data/test_resource_metadata_files/'
+    prepare_resource_util(folder, self.test_res, self.user, extracted_directory, test_bag_path, upload_to)
 
 class TestBagIt(TestCase):
     def setUp(self):
@@ -59,6 +64,19 @@ class TestBagIt(TestCase):
         istorage = self.test_res.get_irods_storage()
         bag_path = self.test_res.bag_path
         self.assertFalse(istorage.exists(bag_path))
+
+    def test_bag_file_create_zip(self):
+        bag_modified = lambda: self.test_res.getAVU('bag_modified')
+
+        create_bag_by_irods(self.test_res.short_id, create_zip=True)
+        self.assertFalse(bag_modified())
+
+        prepare_resource(self, 'single_file')
+        self.assertTrue(bag_modified())
+
+        create_bag_by_irods(self.test_res.short_id, create_zip=False)
+        # Bag modified doesn't get toggled when create_zip = False
+        self.assertTrue(bag_modified())
 
     def test_retrieve_create_bag_by_irods_task_id(self):
         mock_res_id = '84d1b8b60f274ba4be155881129561a9'
