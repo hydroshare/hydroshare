@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
@@ -10,10 +11,10 @@ from django_irods.storage import IrodsStorage
 from hs_core.task_utils import _retrieve_task_id
 from hs_core.tests.api.utils import prepare_resource as prepare_resource_util
 
+
 def prepare_resource(self, folder, upload_to=""):
-    test_bag_path = 'hs_core/tests/data/test_resource_metadata_files.zip'
-    extracted_directory = 'hs_core/tests/data/test_resource_metadata_files/'
-    prepare_resource_util(folder, self.test_res, self.user, extracted_directory, test_bag_path, upload_to)
+    prepare_resource_util(folder, self.test_res, self.user, self.extracted_directory, self.test_bag_path, upload_to)
+
 
 class TestBagIt(TestCase):
     def setUp(self):
@@ -34,9 +35,15 @@ class TestBagIt(TestCase):
             self.user,
             'My Test Resource'
         )
+        self.test_bag_path = 'hs_core/tests/data/test_resource_metadata_files.zip'
+        self.extracted_directory = 'hs_core/tests/data/test_resource_metadata_files/'
 
     def tearDown(self):
         super(TestBagIt, self).tearDown()
+        try:
+            os.remove(self.test_bag_path)
+        except OSError:
+            pass
         if self.test_res:
             self.test_res.delete()
         BaseResource.objects.all().delete()
@@ -66,7 +73,8 @@ class TestBagIt(TestCase):
         self.assertFalse(istorage.exists(bag_path))
 
     def test_bag_file_create_zip(self):
-        bag_modified = lambda: self.test_res.getAVU('bag_modified')
+        def bag_modified():
+            return self.test_res.getAVU('bag_modified')
 
         create_bag_by_irods(self.test_res.short_id, create_zip=True)
         self.assertFalse(bag_modified())
