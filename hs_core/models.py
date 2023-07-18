@@ -3235,7 +3235,23 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         This is the path that should be used as a key to index things such as file type.
         """
-        if self.resource.is_federated:
+
+        # use of self.resource generates a query
+        return self.get_short_path(self.resource)
+
+    def get_short_path(self, resource):
+        """Return the unqualified path to the file object.
+
+        * This path is invariant of where the object is stored.
+
+        * Thus, it does not change if the resource is moved.
+
+        This is the path that should be used as a key to index things such as file type.
+        :param resource: the resource to which the file (self) belongs
+        Note: This is the preferred way to get the short path for a file when we are trying to find short path
+        for more than one file in a resource.
+        """
+        if resource.is_federated:
             folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
         else:
             folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
