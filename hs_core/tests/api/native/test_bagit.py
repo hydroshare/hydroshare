@@ -45,8 +45,8 @@ class TestBagIt(MockIRODSTestCaseMixin, TestCase):
             os.remove(self.test_bag_path)
         except OSError:
             pass
-        if self.test_res:
-            self.test_res.delete()
+        self.user.delete()
+        self.test_res.delete()
         BaseResource.objects.all().delete()
 
     def test_create_bag_files(self):
