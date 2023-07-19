@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe hs_core.tests.api.native.test_bagit
-coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe hs_core.tests.api.rest.test_resource_list
+coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe hs_core.tests.api.native.test_bagit hs_core.tests.api.rest.test_resource_list
 coverage xml
 pytest
