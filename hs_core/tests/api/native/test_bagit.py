@@ -1,5 +1,6 @@
 import os
 from django.contrib.auth.models import Group
+from django.conf import settings
 from django.test import TestCase
 
 from hs_core import hydroshare
@@ -47,6 +48,9 @@ class TestBagIt(TestCase):
         if self.test_res:
             self.test_res.delete()
         BaseResource.objects.all().delete()
+        if settings.IRODS_HOST != 'data.local.org':
+            for patcher in self.irods_patchers:
+                patcher.stop()
 
     def test_create_bag_files(self):
         # this is the api call we are testing
