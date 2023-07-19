@@ -33,12 +33,17 @@ class TestBagIt(TestCase):
             'My Test Resource'
         )
         self.readme_md = "readme.md"
+        self.readme_md_file = open(self.readme_md, 'w')
+        self.readme_md_file.write("##This is a readme markdown file")
+        self.readme_md_file.close()
 
     def tearDown(self):
         super(TestBagIt, self).tearDown()
         if self.test_res:
             self.test_res.delete()
         BaseResource.objects.all().delete()
+        self.readme_md_file.close()
+        os.remove(self.readme_md_file.name)
 
     def test_create_bag_files(self):
         # this is the api call we are testing
