@@ -851,6 +851,7 @@ def delete_format_metadata_after_delete_file(resource, file_name):
     if delete_file_extension not in resource_file_extensions:
         resource.metadata.formats.filter(value=delete_file_mime_type).delete()
 
+
 # TODO: Remove option for file id, not needed since names are unique.
 # TODO: Test that short_path deletes properly.
 def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
