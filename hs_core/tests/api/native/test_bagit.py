@@ -1,6 +1,5 @@
 import os
 from django.contrib.auth.models import Group
-from django.conf import settings
 from django.test import TestCase
 
 from hs_core import hydroshare
@@ -10,6 +9,7 @@ from hs_core.tasks import create_bag_by_irods
 from hs_core.models import BaseResource
 from django_irods.storage import IrodsStorage
 from hs_core.task_utils import _retrieve_task_id
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.tests.api.utils import prepare_resource as prepare_resource_util
 
 
@@ -17,7 +17,7 @@ def prepare_resource(self, folder, upload_to=""):
     prepare_resource_util(folder, self.test_res, self.user, self.extracted_directory, self.test_bag_path, upload_to)
 
 
-class TestBagIt(TestCase):
+class TestBagIt(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
@@ -48,9 +48,6 @@ class TestBagIt(TestCase):
         if self.test_res:
             self.test_res.delete()
         BaseResource.objects.all().delete()
-        if settings.IRODS_HOST != 'data.local.org':
-            for patcher in self.irods_patchers:
-                patcher.stop()
 
     def test_create_bag_files(self):
         # this is the api call we are testing
