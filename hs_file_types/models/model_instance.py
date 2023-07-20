@@ -581,6 +581,7 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
                 istorage.delete(self.schema_values_file_path)
         super(ModelInstanceLogicalFile, self).logical_delete(
             user,
+            resource=resource,
             delete_res_files=delete_res_files,
             delete_meta_files=delete_meta_files
         )
