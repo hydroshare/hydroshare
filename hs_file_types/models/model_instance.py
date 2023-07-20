@@ -574,7 +574,9 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
     def logical_delete(self, user, resource=None, delete_res_files=True, delete_meta_files=True):
         # super deletes files needed to delete the values file path
         if delete_meta_files:
-            istorage = self.resource.get_irods_storage()
+            if resource is None:
+                resource = self.resource
+            istorage = resource.get_irods_storage()
             if istorage.exists(self.schema_values_file_path):
                 istorage.delete(self.schema_values_file_path)
         super(ModelInstanceLogicalFile, self).logical_delete(
