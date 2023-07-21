@@ -540,7 +540,6 @@ def create_bag_by_irods(resource_id, create_zip=True):
     bag_modified = bag_modified is None or bag_modified
     if metadata_dirty or bag_modified:
         create_bagit_files_by_irods(res, istorage)
-        res.setAVU("bag_modified", False)
 
     if create_zip:
         irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
@@ -557,6 +556,7 @@ def create_bag_by_irods(resource_id, create_zip=True):
                     # compute checksum to meet DataONE distribution requirement
                     chksum = istorage.checksum(bag_path)
                     res.bag_checksum = chksum
+                res.setAVU("bag_modified", False)
                 return res.bag_url
             except SessionException as ex:
                 raise SessionException(-1, '', ex.stderr)

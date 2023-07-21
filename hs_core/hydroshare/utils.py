@@ -992,8 +992,6 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
                                     res_files=resource_file_objects, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
-
-    resource_modified(resource, user, overwrite_bag=False)
     return resource_file_objects
 
 

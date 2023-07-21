@@ -280,7 +280,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             bag_modified = res.getAVU("bag_modified")
             if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
                 res.setAVU("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
-                create_bag_by_irods(res_id, False)
+                create_bag_by_irods(res_id, create_zip=False)
 
         # send signal for pre download file
         # TODO: does not contain subdirectory information: duplicate refreshes possible
