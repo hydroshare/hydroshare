@@ -42,12 +42,39 @@ $(document).ready(function () {
   if ($("#coverageMap").length) {
     initMap();
   }
+  $("#div_id_type input:radio").change(function () {
+    leafletMarkers.clearLayers();
+    if ($(this).val() == "point") {
+      $("#div_id_north").show();
+      $("#div_id_east").show();
+      $("#div_id_elevation").show();
+      $("#div_id_northlimit").hide();
+      $("#div_id_eastlimit").hide();
+      $("#div_id_southlimit").hide();
+      $("#div_id_westlimit").hide();
+      $("#div_id_uplimit").hide();
+      $("#div_id_downlimit").hide();
+      drawMarkerOnTextChange();
+    } else {
+      $("#div_id_north").hide();
+      $("#div_id_east").hide();
+      $("#div_id_elevation").hide();
+      $("#div_id_northlimit").show();
+      $("#div_id_eastlimit").show();
+      $("#div_id_southlimit").show();
+      $("#div_id_westlimit").show();
+      $("#div_id_uplimit").show();
+      $("#div_id_downlimit").show();
+      drawRectangleOnTextChange();
+    }
+    // Show save changes button
+    $("#coverage-spatial").find(".btn-primary").show();
+  });
 });
 
 async function drawInitialShape() {
   // This field is populated if the page is in view mode
   const shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
-
   const resourceType = $("#resource-type").val();
   // Center the map
   if (shapeType || resourceType === "Time Series") {
@@ -123,33 +150,6 @@ async function drawInitialShape() {
       drawMarkerOnTextChange();
     }
   }
-  $("#div_id_type input:radio").change(function () {
-    if ($(this).val() == "point") {
-      $("#div_id_north").show();
-      $("#div_id_east").show();
-      $("#div_id_elevation").show();
-      $("#div_id_northlimit").hide();
-      $("#div_id_eastlimit").hide();
-      $("#div_id_southlimit").hide();
-      $("#div_id_westlimit").hide();
-      $("#div_id_uplimit").hide();
-      $("#div_id_downlimit").hide();
-      drawMarkerOnTextChange();
-    } else {
-      $("#div_id_north").hide();
-      $("#div_id_east").hide();
-      $("#div_id_elevation").hide();
-      $("#div_id_northlimit").show();
-      $("#div_id_eastlimit").show();
-      $("#div_id_southlimit").show();
-      $("#div_id_westlimit").show();
-      $("#div_id_uplimit").show();
-      $("#div_id_downlimit").show();
-      drawRectangleOnTextChange();
-    }
-    // Show save changes button
-    $("#coverage-spatial").find(".btn-primary").show();
-  });
   if (sessionStorage.signininfo) {
     $("#sign-in-info").text(sessionStorage.signininfo);
     $("#btn-select-irods-file").show();
@@ -261,6 +261,7 @@ function initMap() {
     let coordinates;
     let type = e.layerType,
       layer = e.layer;
+    leafletMarkers.clearLayers();
     leafletMarkers.addLayer(layer);
 
     if (type === "rectangle") {
@@ -383,17 +384,15 @@ function drawMarkerOnTextChange() {
   if (badInput) {
     return;
   }
-  leafletMarkers.clearLayers();
   let latlng = L.latLng(north, east);
   // Define the marker.
   drawMarker(latlng);
 }
 
 function drawMarker(latLng) {
+  leafletMarkers.clearLayers();
   let marker = L.marker(latLng);
   leafletMarkers.addLayer(marker);
-
-  marker.addTo(coverageMap);
 
   // Center map at new marker
   coverageMap.fitBounds(leafletMarkers.getBounds(), { maxZoom: coverageMapPointMaxZoom });
@@ -408,8 +407,6 @@ function drawRectangleOnTextChange() {
     east: parseFloat($("#id_eastlimit").val()),
     west: parseFloat($("#id_westlimit").val()),
   };
-  // Delete previous drawings
-  leafletMarkers.clearLayers();
   // Bounds validation
   let badInput = false;
   // North
@@ -454,13 +451,13 @@ function drawRectangleOnTextChange() {
   drawRectangle(bounds);
 }
 function drawRectangle(bounds) {
+  leafletMarkers.clearLayers();
   let rectangle = L.rectangle([
     [bounds.north, bounds.east],
     [bounds.south, bounds.west],
   ]);
   leafletMarkers.addLayer(rectangle);
 
-  rectangle.addTo(coverageMap);
   coverageMap.fitBounds(rectangle.getBounds(), { maxZoom: coverageMapBoxMaxZoom });
 }
 
