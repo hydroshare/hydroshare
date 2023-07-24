@@ -1,5 +1,5 @@
 ((exports) => {
-  const mapDefaultZoom = 15;
+  const mapDefaultZoom = 16;
   const mapCenter = { lat: 42, lng: -71 };
   const spiderified_marker_url =
     "http://maps.google.com/mapfiles/ms/icons/red.png";
@@ -59,7 +59,9 @@
       minZoomLevel: minClusterZoom,
       keepSpiderfied: true,
       circleSpiralSwitchover: 9,
-      nearbyDistance: 5,
+      spiralFootSeparation: 40,
+      circleFootSeparation: 40,
+      nearbyDistance: .01,
     });
     const infoWindows = [];
 
