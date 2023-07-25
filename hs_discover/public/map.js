@@ -2,7 +2,7 @@
   const mapDefaultZoom = 16;
   const mapCenter = { lat: 42, lng: -71 };
   const spiderified_marker_url =
-    "http://maps.google.com/mapfiles/ms/icons/red.png";
+    "https://maps.google.com/mapfiles/ms/icons/red.png";
   // eslint-disable-next-line no-unused-vars
   let googMarkers = [];
   let markerCluster;
