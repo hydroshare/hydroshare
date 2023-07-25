@@ -212,6 +212,9 @@ urlpatterns = [
     url(r'^dictionary/universities/$',
         dict_views.ListUniversities.as_view(), name="get_dictionary"),
 
+    url(r'^dictionary/subject_areas/$',
+        dict_views.ListSubjectAreas.as_view(), name="get_subject_areas"),
+
     # Resource Access
     url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$',
         core_views.resource_access_api.ResourceAccessUpdateDelete.as_view(),

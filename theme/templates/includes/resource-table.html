@@ -1,0 +1,124 @@
+  
+<div class="col-lg-10" id="items">
+  <div class="row">
+    <div class="col-sm-8 col-xs-12 pull-right">
+      <div id="search-container" class="input-group">
+        <span class="glyphicon glyphicon-search search-icon"></span>
+        <input id="resource-search-input" type="text" class="form-control" placeholder="Search" />
+
+        <div class="input-group-btn">
+          <div class="btn-group" role="group">
+            <div class="dropdown dropdown-lg">
+              <span id="btn-clear-search-input" class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer">
+              </span>
+
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                aria-expanded="false"><span class="caret"></span></button>
+
+              <div class="dropdown-menu dropdown-menu-left shadow-md" role="menu">
+                <form class="form-horizontal" role="form">
+                  <div class="form-group">
+                    <label for="filter">Type</label>
+                    <select id="input-resource-type" class="form-control pull-left">
+                      <option value="" selected>All</option>
+                      <option value="collection resource">Collection</option>
+                      <option value="composite resource">Resource</option>
+                      <option value="web app resource">App Connector</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="contain">Author</label>
+                    <input id="input-author" class="form-control" type="text" />
+                    <span id="btn-clear-author-input"
+                      class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
+                  </div>
+                  <div class="form-group">
+                    <label for="contain">Subject</label>
+                    <input id="input-subject" class="form-control" type="text" />
+                    <span id="btn-clear-subject-input"
+                      class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if has_selection_control_actions %}
+    <div class="col-sm-4 col-xs-12 pull-left">
+      <div id="resource-actions-container" class="noselect">
+        <span data-toggle="tooltip" data-placement="bottom" title="Label">
+          <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle" data-toggle="dropdown"
+            aria-expanded="false"></span>
+
+          <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
+            <div class="panel-body" role="form">
+              <strong>Label as:</strong>
+              <ul class="list-group list-labels">
+                <li class="divider persist"></li>
+                <li class="list-group-item persist" data-toggle="modal" data-target="#modalCreateLabel">
+                  <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create
+                  New Label
+                </li>
+                <li class="list-group-item persist" data-toggle="modal" data-target="#modalManageLabels">
+                  <span style="color:#0A91AB"
+                    class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels
+                </li>
+              </ul>
+            </div>
+          </div>
+        </span>
+
+        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip" data-placement="bottom"
+          title="Favorite"></span>
+
+        <span data-toggle="tooltip" data-placement="bottom" title="Delete">
+          <span id="btn-confirm-delete-resources" class="glyphicon glyphicon-trash btn-remove" data-toggle="modal"
+            data-target="#delete-multiple-resources-dialog"></span>
+        </span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <table id="item-selectors" class="table-hover table-striped resource-custom-table my-resources-table">
+    <thead>
+      <tr>
+        <th><input class="all-rows-selector" type="checkbox"></th>
+        <th>Type</th>
+        <th>Title</th>
+        <th>First Author</th>
+        <th>Date Created</th>
+        <th>Last Modified</th>
+        <th>Subject</th> {# Used in table processing #}
+        <th>Authors</th> {# Used in table processing #}
+        <th>Permission Level</th> {# Used in table processing #}
+        <th>Labels</th> {# Used in table processing #}
+        <th>Favorite</th> {# Used in table processing #}
+        <th>Last Modified</th> {# Used in table processing #}
+        <th>Sharing Status</th> {# Used in table processing #}
+        <th>Date Created</th> {# Used in table processing #}
+      </tr>
+    </thead>
+    <tbody>
+      {% include rows_template %}
+    </tbody>
+  </table>
+
+  {% if show_help %}
+  <div class="alert alert-info has-space-top">
+    <strong>
+      <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
+    </strong>
+    <p class="has-space-top">
+      Search for public resources not owned by you on the <a href="/search"><strong>Discover</strong></a> page.
+    </p>
+  </div>
+  {% endif %}
+
+  {% include "includes/legend.html" %}
+</div>
+
+<script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/hs_resource_table.js' %}"></script>

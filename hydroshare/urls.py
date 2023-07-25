@@ -132,6 +132,16 @@ urlpatterns = i18n_patterns(
         name="community",
     ),
     url(
+        r"^communities/manage-requests/$",
+        hs_communities.views.communities.CommunityCreationRequests.as_view(),
+        name="manage_requests",
+    ),
+    url(
+        r"^communities/manage-requests/(?P<rid>[0-9]+)/$",
+        hs_communities.views.communities.CommunityCreationRequest.as_view(),
+        name="manage_request"
+    ),
+    url(
         r"^collaborate/$",
         hs_communities.views.communities.CollaborateView.as_view(),
         name="collaborate",
@@ -172,6 +182,7 @@ urlpatterns += [
     url("", include("hs_core.metadata_terms_urls")),
     url("", include("hs_core.debug_urls")),
     url("^irods/", include("irods_browser_app.urls")),
+    url("^access/", include("hs_access_control.urls")),
     url("^hs_metrics/", include("hs_metrics.urls")),
 ]
 

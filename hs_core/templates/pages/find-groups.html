@@ -1,0 +1,230 @@
+{% extends "pages/page.html" %}
+
+{% load hydroshare_tags thumbnail %}
+
+{% block meta_title %}Find Groups{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/collaborate.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block main %}
+{% include 'includes/groups-nav.html' with active='find_groups' %}
+
+<div class="container has-space-bottom-2x">
+    <div class="row">
+        <div class="col-sm-12">
+            {% if request.user.is_authenticated %}
+            <h2 class="page-title">Find Groups</h2>
+            <a class="btn btn-success" data-toggle="modal" data-target="#create-group-modal"><i class="fa fa-plus"></i>
+                Create Group</a>
+            <br><br>
+            {% else %}
+            <h2 class="page-title">Find Public Groups</h2>
+            {% endif %}
+
+            <div class="group-search input-group">
+                <span class="glyphicon glyphicon-search search-icon"></span>
+                <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by group name...">
+            </div>
+            <p id="id-Group-Search-Result-Msg"></p>
+        </div>
+    </div>
+
+    <div class="group-thumbnails">
+        {% if groups %}
+        {% for group in groups %}
+        {% if group.gaccess.public or group.gaccess.discoverable or group.is_user_member %}
+        <div class="group-container word-break-normal">
+            <div class="group-thumbnail contribution">
+                <div class="flex flex-sm-column justify-space-between gap-1 group-thumbnail-header">
+                    {% if group.gaccess.picture and group.gaccess.picture.url %}
+                        {% thumbnail group.gaccess.picture "x150" crop="center" as im %}
+                        <div class="group-image-wrapper medium">
+                            <div class="group-image" style="background-image: url({{ im.url }})"></div>
+                        </div>
+                        {% endthumbnail %}
+                    {% else %}
+                        <div class="group-image-wrapper medium">
+                            <div class="group-image group-preview-image-default"
+                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="flex flex-column gap-1 align-flex-end">
+                        <span>
+                            {% if group.gaccess.public and group.gaccess.discoverable %}
+                            <img src="{% static 'img/public.png' %}" alt="Public Group" title="Public Group"><span
+                                class="small">Public Group</span>
+                            {% elif not group.gaccess.public and group.gaccess.discoverable %}
+                            <img src="{% static 'img/discoverable.png' %}" alt="Discoverable Group" title="Discoverable Group"><span
+                                class="small">Discoverable Group</span>
+                            {% endif %}
+                        </span>
+
+                        {% if request.user.is_authenticated %}
+                        {% if group.is_user_member %}
+                        <div class="flag-joined text-right"><i class="fa fa-check-circle-o"></i></span> <b>You have joined this group</b></div>
+                        {% elif group.join_request_waiting_owner_action %}
+                        <span class="badge badge-success"><i class="fa fa-paper-plane"></i> Request Sent</span>
+                        {% elif group.join_request_waiting_user_action %}
+                        <div>
+                            <div class="flag-joined text-right has-space-bottom is-marginless"><b>You have been invited to join this group!</b></div>
+                            <div class="flex gap-1 justify-flex-end">
+                                <form class="act-on-request height-fix"
+                                    action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
+                                    method="POST">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-success btn-act-on-request" data-user-action="Accept">Accept</button>
+                                </form>
+
+                                <form class="act-on-request height-fix"
+                                    action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
+                                    method="POST">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-default btn-act-on-request">
+                                        Decline
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% else %}
+                        <form id="join-{{ group.id }}" method="post"
+                            action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
+                            {% csrf_token %}
+                            <button type="button" data-form-id="join-{{ group.id }}"
+                                requires_explanation="{{ group.gaccess.requires_explanation }}"
+                                class="btn btn-primary btn-ask-to-join" role="button">Ask to join</button>
+                        </form>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="group-caption">
+                    <h3 class="group-name"><a href="/group/{{ group.id }}">{{ group.name }}</a></h3>
+                    {% if group.gaccess.purpose %}
+                    <div class="group-purpose word-break-normal text-muted">
+                        <p>{{ group.gaccess.purpose|linebreaks}}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if group.gaccess.description %}
+                    <h5 class="is-marginless has-space-top">About this group:</h5>
+                    <div class="group-description has-space-bottom word-break-normal">
+                        <p>{{ group.gaccess.description|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="spacer"></div>
+
+                    <div class="text-center group-thumbnail-footer">
+                        {% if group.gaccess.public %}
+                        {% if group.members|length > 0 %}
+                        <div class="users-joined height-fix">
+                            <div class="link-members"><a class="text-muted" href="#" data-toggle="modal"
+                                    data-target="#modal-members-list-{{ group.id }}">MEMBERS</a></div>
+                            {% for member in group.members|slice:":5" %}
+                            {% if member.userprofile.picture and member.userprofile.picture.url %}
+                            {% thumbnail member.userprofile.picture "x80" crop="center" as im %}
+                            <div style="background-image: url('{{ im.url }}');"
+                                class="round-image profile-pic-thumbnail" title="{{ member|best_name }}">
+                            </div>
+                            {% endthumbnail %}
+                            {% else %}
+                            <div class="profile-pic-thumbnail-small round-image" title="{{ member|best_name }}"></div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if group.members|length > 5 %}
+                        <div>
+                            <small class="text-muted">and {{ group.members|length|add:"-5" }} others have joined</small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Members List Modal -->
+                        <div class="modal fade members-modal" id="modal-members-list-{{ group.id }}" tabindex="-1"
+                            role="dialog" aria-labelledby="Invite">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal"
+                                            aria-label="Close"><span aria-hidden="true">&times;</span>
+                                        </button>
+                                        <h4 class="modal-title">Members</h4>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <table class="table access-table members-table" style="text-align: left;">
+                                            <tbody>
+                                                {% for u in group.members %}
+                                                <tr id="row-id-{{ u.pk }}"
+                                                    {% if owners|length == 1 or not self_access_level == 'owner' %}class="hide-actions" {% endif %}>
+                                                    <td>
+                                                        <div class="user-scope">
+                                                            {% if u.userprofile.picture %}
+                                                            {% thumbnail u.userprofile.picture "x80" crop="center" as im %}
+                                                            <div style="background-image: url('{{ im.url }}');"
+                                                                class="round-image profile-pic-thumbnail">
+                                                            </div>
+                                                            {% endthumbnail %}
+                                                            {% else %}
+                                                            <div class="profile-pic-thumbnail round-image user-icon">
+                                                            </div>
+                                                            {% endif %}
+
+                                                            <a data-col="name" class="user-name">{{ u|contact }}</a>
+                                                            {% if u.pk == current_user.pk %}
+                                                            <span class="text-muted you-flag">(You)</span>
+                                                            {% endif %}
+                                                            <br>
+                                                            <span data-col="user-name" class="user-username-content"
+                                                                >{{ u.username }}</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        {% if request.user.is_authenticated %}
+        <div class="col-sm-12"><i>No groups have been created yet.</i>
+        </div>
+        {% else %}
+        <div class="col-sm-12"><i>No public groups have been created yet.</i>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% if request.user.is_authenticated %}
+{% include "includes/create-group-modal.html" %}
+{% include "includes/group_explanation_modal.html" %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script type="text/javascript" src="{% static 'js/bootstrap-toolkit.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/group-actions.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/collaborate.js' %}"></script>
+{% endblock %}

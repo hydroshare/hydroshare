@@ -228,7 +228,6 @@ def get_access_object(user, user_type, user_access):
             "email": user.email,
             "organization": user.userprofile.organization,
             "title": user.userprofile.title,
-            "contributions": len(user.uaccess.owned_resources) if user.is_active else None,
             "viewable_contributions": user.viewable_contributions if user.is_active else None,
             "subject_areas": user.userprofile.subject_areas,
             "identifiers": user.userprofile.identifiers,
@@ -346,7 +345,6 @@ def page_permissions_page_processor(request, page):
     else:
         lcb_access_level = 'none'
 
-    # last_changed_by.can_undo = False
     last_changed_by = json.dumps(get_access_object(last_changed_by, "user", lcb_access_level))
 
     users_json = json.dumps(users_json)
@@ -864,14 +862,17 @@ class Type(AbstractMetaDataElement):
 class Date(AbstractMetaDataElement):
     """Define Date metadata model."""
 
-    DATE_TYPE_CHOICES = (
+    DC_DATE_TYPE_CHOICES = (
         ('created', 'Created'),
         ('modified', 'Modified'),
         ('valid', 'Valid'),
-        ('available', 'Available'),
-        ('review_started', 'Review Started'),
+        ('available', 'Available')
+    )
+    HS_DATE_TYPE_CHOICES = (
+        ('reviewStarted', 'Review Started'),
         ('published', 'Published')
     )
+    DATE_TYPE_CHOICES = DC_DATE_TYPE_CHOICES + HS_DATE_TYPE_CHOICES
 
     term = 'Date'
     type = models.CharField(max_length=20, choices=DATE_TYPE_CHOICES)
@@ -893,7 +894,10 @@ class Date(AbstractMetaDataElement):
     def rdf_triples(self, subject, graph):
         date_node = BNode()
         graph.add((subject, self.get_class_term(), date_node))
-        graph.add((date_node, RDF.type, getattr(DCTERMS, self.type)))
+        if self.type in [inner[0] for inner in self.DC_DATE_TYPE_CHOICES]:
+            graph.add((date_node, RDF.type, getattr(DCTERMS, self.type)))
+        else:
+            graph.add((date_node, RDF.type, getattr(HSTERMS, self.type)))
         graph.add((date_node, RDF.value, Literal(self.start_date.isoformat())))
 
     @classmethod
@@ -927,9 +931,9 @@ class Date(AbstractMetaDataElement):
             if kwargs['type'] == 'published':
                 if not resource.raccess.published:
                     raise ValidationError("Resource is not published yet.")
-            if kwargs['type'] == 'review_started':
-                if not resource.raccess.review_pending:
-                    raise ValidationError("Review is not pending yet.")
+            if kwargs['type'] == 'reviewStarted':
+                if resource.raccess.review_pending:
+                    raise ValidationError("Review is already pending.")
             elif kwargs['type'] == 'available':
                 if not resource.raccess.public:
                     raise ValidationError("Resource has not been made public yet.")
@@ -1761,7 +1765,7 @@ class Coverage(AbstractMetaDataElement):
                 legend('Spatial Coverage')
                 div('Coordinate Reference System', cls='text-muted')
                 div(self.value['projection'])
-                div('Coordinate Reference System Unit', cls='text-muted space-top')
+                div('Coordinate Reference System Unit', cls='text-muted has-space-top')
                 div(self.value['units'])
                 h4('Extent', cls='space-top')
                 with table(cls='custom-table'):
@@ -2675,10 +2679,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         res_files_at_root = self.files.filter(file_folder='')
         readme_txt_file = None
         readme_md_file = None
+
+        def get_file_name(f):
+            return os.path.basename(f.get_storage_path(resource=self)).lower()
+
         for res_file in res_files_at_root:
-            if res_file.file_name.lower() == 'readme.md':
+            file_name = get_file_name(res_file)
+            if file_name == 'readme.md':
                 readme_md_file = res_file
-            elif res_file.file_name.lower() == 'readme.txt':
+            elif file_name == 'readme.txt':
                 readme_txt_file = res_file
             if readme_md_file is not None:
                 break
@@ -3131,6 +3140,13 @@ class ResourceFile(ResourceFileIRODSMixin):
         # instance.content_object can be stale after changes.
         # Re-fetch based upon key; bypass type system; it is not relevant
         resource = self.resource
+        return self.get_storage_path(resource)
+
+    def get_storage_path(self, resource):
+        """Return the qualified name for a file in the storage hierarchy.
+        Note: This is the preferred way to get the storage path for a file when we are trying to find
+        the storage path for more than one file in a resource.
+        """
         if resource.is_federated:  # false if None or empty
             if __debug__:
                 assert self.resource_file.name is None or \
@@ -3219,7 +3235,23 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         This is the path that should be used as a key to index things such as file type.
         """
-        if self.resource.is_federated:
+
+        # use of self.resource generates a query
+        return self.get_short_path(self.resource)
+
+    def get_short_path(self, resource):
+        """Return the unqualified path to the file object.
+
+        * This path is invariant of where the object is stored.
+
+        * Thus, it does not change if the resource is moved.
+
+        This is the path that should be used as a key to index things such as file type.
+        :param resource: the resource to which the file (self) belongs
+        Note: This is the preferred way to get the short path for a file when we are trying to find short path
+        for more than one file in a resource.
+        """
+        if resource.is_federated:
             folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
         else:
             folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)

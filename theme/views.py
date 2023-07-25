@@ -297,8 +297,16 @@ def update_user_profile(request, profile_user_id):
         messages.error(request, "Update failed. {}".format(str(ex)))
         return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
-    dict_items = request.POST["organization"].split(";")
-    check_organization_terms(dict_items)
+    org_items = request.POST["organization"].split(";")
+    for org_item in org_items:
+        # Update Dictionaries
+        try:
+            University.objects.get(name=org_item)
+        except ObjectDoesNotExist:
+            new_term = UncategorizedTerm(name=org_item)
+            new_term.save()
+        except MultipleObjectsReturned:
+            pass
 
     profile_form = UserProfileForm(post_data_dict, request.FILES, instance=user_profile)
     try:

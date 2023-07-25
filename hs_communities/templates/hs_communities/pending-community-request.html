@@ -1,0 +1,61 @@
+{% extends "pages/page.html" %}
+
+{% load hydroshare_tags thumbnail %}
+
+{% block meta_title %} Pending Community Request {% endblock %}
+{% block extra_css %}
+<link href="{% static 'css/collaborate.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block main %}
+{% include 'hs_communities/communities-nav.html' with active='manage_requests' %}
+<!-- Load context data needed in Vue app -->
+{{ community_request|json_script:"community_request" }}
+
+{# Profile card component needs to be included first so it's available before other instances initialize #}
+{% include "includes/profile-card.html" %}
+<div id="pending-community-request-app" class="container">
+  <div class="row">
+    <div class="col-sm-12">
+      <h2 class="page-title">Admin: Community Request</h2>
+    </div>
+  </div>
+  <div class="row">
+    <div v-if="request" class="col-sm-12">
+      <p>Submission Date: ${ request.date_requested }</p>
+      <p>Submitted by:
+        <profile-link :user="request.requested_by" :key="request.requested_by.id" @load-card="loadOwnerCard($event)">
+        </profile-link>
+        <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
+      </p>
+
+      <br>
+
+      <div v-if="request.status === 'Approved'" class="alert alert-success col-xs-12 col-sm-7">This request has been
+        approved.</div>
+
+      <div v-if="request.status === 'Submitted' && !request.is_cancelled" class="alert alert-warning col-xs-12 col-sm-7"
+        >This request is pending approval.</div>
+
+      <div v-if="request.status === 'Rejected'" class="alert alert-danger col-xs-12 col-sm-7">
+        <div>This request has been rejected.</div>
+        <br>
+        <p><b>Reason for rejection:</b> ${request.decline_reason}</p>
+      </div>
+
+      <div v-if="request.is_cancelled" class="alert alert-warning col-xs-12 col-sm-7">The user has cancelled this request.</div>
+
+      <template>
+        {% include 'hs_communities/pending-community-request-form.html' %}
+      </template>
+    </div>
+  </div>
+  <div v-else class="text-muted">Failed to load this request</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+
+<script type="text/javascript" src="{% static 'js/pending-community-request.js' %}"></script>
+{% endblock %}

@@ -902,25 +902,48 @@ def remove_irods_folder_in_django(resource, folder_path, user):
     :return:
     """
 
+    def get_file_extension(rf):
+        _file_name = os.path.basename(rf.get_storage_path(resource=resource))
+        _, ext = os.path.splitext(_file_name)
+        return ext
+
     if folder_path.endswith('/'):
         folder_path = folder_path.rstrip('/')
 
     # we need to delete only the files that are under the folder_path
     rel_folder_path = folder_path[len(resource.file_path) + 1:]
-    res_file_set = ResourceFile.objects.filter(object_id=resource.id, file_folder__startswith=rel_folder_path)
+    res_file_set = ResourceFile.objects.filter(object_id=resource.id,
+                                               file_folder__startswith=rel_folder_path)
 
     if resource.resource_type == 'CompositeResource':
-        # delete all aggregation objects that are under the folder_path
-        rel_folder_path = f"{rel_folder_path}/"
+        # delete all aggregation objects that are under the folder that got deleted
+        aggr_start_path = f"{rel_folder_path}/"
         for lf in resource.logical_files:
-            if lf.aggregation_name.startswith(rel_folder_path):
-                lf.logical_delete(user, delete_res_files=False)
+            if lf.aggregation_name.startswith(aggr_start_path):
+                lf.logical_delete(user, resource=resource, delete_res_files=False, delete_meta_files=False)
 
-    # delete resource files
-    for f in res_file_set:
-        file_name = f.file_name
-        f.delete()
-        hydroshare.delete_format_metadata_after_delete_file(resource, file_name)
+        # delete if there is a folder based aggregation matching the folder that got deleted
+        for lf in resource.logical_files:
+            if lf.aggregation_name == rel_folder_path:
+                lf.logical_delete(user, resource=resource, delete_res_files=False, delete_meta_files=False)
+                break
+
+    deleted_file_extensions = {get_file_extension(f) for f in res_file_set}
+
+    # delete resource file records from Django DB
+    ResourceFile.objects.filter(object_id=resource.id,
+                                file_folder__startswith=rel_folder_path).delete()
+
+    resource_file_extensions = {get_file_extension(f) for f in resource.files.all()}
+    mime_types = []
+    for file_ext in deleted_file_extensions:
+        if file_ext not in resource_file_extensions:
+            file_name = f"file.{file_ext}"
+            delete_file_mime_type = get_file_mime_type(file_name)
+            mime_types.append(delete_file_mime_type)
+
+    if mime_types:
+        resource.metadata.formats.filter(value__in=mime_types).delete()
 
     if resource.resource_type == 'CompositeResource':
         resource.cleanup_aggregations()
@@ -1642,6 +1665,40 @@ def get_coverage_data_dict(source, coverage_type='spatial'):
             temporal_coverage_dict['start'] = start_date.strftime('%m-%d-%Y')
             temporal_coverage_dict['end'] = end_date.strftime('%m-%d-%Y')
         return temporal_coverage_dict
+
+
+def get_default_admin_user():
+    """A helper method to get the default admin user - used in email notification"""
+
+    from hs_core.hydroshare import create_account
+    try:
+        default_user_from = User.objects.get(email__iexact=settings.DEFAULT_FROM_EMAIL)
+    except User.DoesNotExist:
+        default_user_from = create_account(
+            email=settings.DEFAULT_FROM_EMAIL,
+            username=settings.DEFAULT_FROM_EMAIL,
+            first_name=settings.DEFAULT_FROM_EMAIL,
+            last_name=settings.DEFAULT_FROM_EMAIL,
+            superuser=True
+        )
+    return default_user_from
+
+
+def get_default_support_user():
+    """A helper method to get or create the default support user - used in email notification"""
+
+    from hs_core.hydroshare import create_account
+    try:
+        support_user = User.objects.get(email__iexact=settings.DEFAULT_SUPPORT_EMAIL)
+    except User.DoesNotExist:
+        support_user = create_account(
+            email=settings.DEFAULT_SUPPORT_EMAIL,
+            username=settings.DEFAULT_SUPPORT_EMAIL,
+            first_name=settings.DEFAULT_SUPPORT_EMAIL,
+            last_name=settings.DEFAULT_SUPPORT_EMAIL,
+            superuser=True
+        )
+    return support_user
 
 
 def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=True):

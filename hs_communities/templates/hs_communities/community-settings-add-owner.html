@@ -1,0 +1,19 @@
+<div class="modal fade" id="community-settings-add-owner" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        Add Community Owner
+      </div>
+      <div class="modal-body">
+        <label>Select a HydroShare user to add as an owner to this Community</label>
+        <div class="add-view-user-form">
+          {{ add_view_invite_user_form.user }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
+        <button type="button" @click="addOwner" class="btn btn-success">Add Owner</button>
+      </div>
+    </div>
+  </div>
+</div>

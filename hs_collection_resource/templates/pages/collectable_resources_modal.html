@@ -13,34 +13,33 @@
                         <th>Add</th>
                         <th>Title</th>
                         <th>Type</th>
-                        <th>Owners</th>
+                        <th>Owner</th>
                         <th>Sharing Status</th>
-                        <th>My Permission</th>
                         <th>Remove</th>
                     </tr>
                     </thead>
                     <tbody>
-                        {% for res in collectable_resources %}
-                            <tr id="{{ res.short_id }}">
+                        {% for urp in user_resource_privileges %}
+                            <tr id="{{ urp.resource.short_id }}">
                                 <td>
-                                    <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
+                                    <input class="row-selector" type="checkbox" id="{{ urp.resource.short_id }}">
                                 </td>
                                 <td>
-                                    <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.title }}</a></strong></td>
+                                    <strong><a href="/resource/{{ urp.resource.short_id }}" target="_blank">{{ urp.resource.title }}</a></strong></td>
                                 <td>
-                                    {% if res.resource_type == "CompositeResource" %}
+                                    {% if urp.resource.resource_type == "CompositeResource" %}
                                         Resource
-                                    {% elif res.resource_type == "CollectionResource" %}
+                                    {% elif urp.resource.resource_type == "CollectionResource" %}
                                         Collection
-                                    {% elif res.resource_type == "ToolResource" %}
+                                    {% elif urp.resource.resource_type == "ToolResource" %}
                                         App Connector
                                     {% else %}
-                                        {{ res.resource_type }}
+                                        {{ urp.resource.resource_type }}
                                     {% endif %}
                                 </td>
-                                {% with res.raccess as raccess %}
+                                {% with urp.resource.raccess as raccess %}
                                     <td>
-                                        {% with raccess.owners.all|first as owner %}
+                                        {% with urp.user as owner %}
 
                                             {% if owner.first_name %}
                                                 <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
@@ -66,19 +65,8 @@
                                     </td>
                                 {% endwith %}
                                 <td>
-                                    {% with res|user_permission:request.user.pk as upermission %}
-                                        {% if upermission|lower == "none" %}
-                                            <strong class="label-private">{{ upermission }}</strong>
-                                        {% elif upermission|lower == "open access" %}
-                                            <strong class="label-public">{{ upermission }}</strong>
-                                        {% else %}
-                                            {{ upermission }}
-                                        {% endif %}
-                                    {% endwith %}
-                                </td>
-                                <td>
-                                    <span data-res-id="{{ res.short_id }}"
-                                          data-form-id="form-favorite-{{ res.short_id }}"
+                                    <span data-res-id="{{ urp.resource.short_id }}"
+                                          data-form-id="form-favorite-{{ urp.resource.short_id }}"
                                           data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-collection-item">
                                     </span>

@@ -20,7 +20,7 @@ from hs_core.views import utils as view_utils
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
-    rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
+    rename_file_or_folder, irods_path_is_directory, \
     add_reference_url_to_resource, edit_reference_url_in_resource, zip_by_aggregation_file
 
 from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
@@ -219,10 +219,6 @@ def data_store_structure(request):
                      'aggregations': aggregations,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
-    if resource.resource_type == "CompositeResource":
-        return_object['spatial_coverage'] = get_coverage_data_dict(resource)
-        return_object['temporal_coverage'] = get_coverage_data_dict(resource,
-                                                                    coverage_type='temporal')
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"

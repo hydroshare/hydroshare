@@ -35,7 +35,7 @@
                                 </option>
                             </select>
 
-                            <div v-if="quotaError" class='alert alert-danger space-top small'>
+                            <div v-if="quotaError" class='alert alert-danger has-space-top small'>
                                 <strong>Error: </strong>${ quotaError }
                             </div>
                         </div>
@@ -45,7 +45,7 @@
 
             <button
                 :class="{disabled: isChangingQuotaHolder}"
-                class="btn btn-default space-right" data-toggle="collapse"
+                class="btn btn-default has-space-right" data-toggle="collapse"
                 type="button"
                 data-target="#form-quota-holder">Cancel
             </button>

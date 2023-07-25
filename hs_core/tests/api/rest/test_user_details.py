@@ -36,7 +36,7 @@ class TestUserDetails(APITestCase):
         self.user.userprofile.website = 'https://www.hydroshare.org'
         self.user.userprofile.identifiers = {'ORCID': '1234566', 'ResearchGate': 'someresearchgateid'}
         self.user.userprofile.user_type = 'Computer Programming'
-        self.user.userprofile.subject_areas = 'Hydrology, Water quality, Hydroinformatics'
+        self.user.userprofile.subject_areas = ['Hydrology', 'Water quality', 'Hydroinformatics']
         self.user.userprofile.save()
 
         self.client.force_authenticate(user=self.user)
@@ -53,7 +53,7 @@ class TestUserDetails(APITestCase):
         self.assertEqual(content['website'], 'https://www.hydroshare.org')
         self.assertEqual(content['identifiers']['ORCID'], '1234566')
         self.assertEqual(content['identifiers']['ResearchGate'], 'someresearchgateid')
-        self.assertEqual(content['subject_areas'], 'Hydrology, Water quality, Hydroinformatics')
+        self.assertEqual(content['subject_areas'], ['Hydrology', 'Water quality', 'Hydroinformatics'])
         self.assertEqual(content['type'], 'Computer Programming')
         self.assertTrue(content['date_joined'])
 

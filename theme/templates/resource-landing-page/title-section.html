@@ -230,7 +230,7 @@
                 <a v-if="openWithTools.length" data-toggle="tooltip" data-placement="auto"
                   href="https://www.youtube.com/watch?v=rw4RERFchns" target="_blank"
                   title='How to: Use Open With Function'
-                  class="fa fa-youtube-play icon-red space-left no-decoration icon-guide">
+                  class="fa fa-youtube-play icon-red has-space-left no-decoration icon-guide">
                 </a>
             </span>
             <script type="text/javascript" src="{% static 'js/hs-vue/relevant-tools.js' %}"></script>
@@ -339,7 +339,7 @@
         <div class="col-xs-12">
     {% else %}
         {# need to add space to the bottom as the right side toolbar buttons won't be displayed for unauthenticated user #}
-        <div class="col-xs-12 space-bottom">
+        <div class="col-xs-12 has-space-bottom">
     {% endif %}
         <div class="clear-fix">
             <i>An older version of this resource {{ is_version_of|urlize }} is available.</i>

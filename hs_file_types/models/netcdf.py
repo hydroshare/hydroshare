@@ -226,13 +226,13 @@ class OriginalCoverage(AbstractMetaDataElement):
                 html_tags.div("Coordinate Reference System", cls="text-muted")
                 html_tags.div(self.value.get("projection", ""))
             if self.datum:
-                html_tags.div("Datum", cls="text-muted space-top")
+                html_tags.div("Datum", cls="text-muted has-space-top")
                 html_tags.div(self.datum)
             if self.projection_string_type:
-                html_tags.div("Coordinate String Type", cls="text-muted space-top")
+                html_tags.div("Coordinate String Type", cls="text-muted has-space-top")
                 html_tags.div(self.projection_string_type)
             if self.projection_string_text:
-                html_tags.div("Coordinate String Text", cls="text-muted space-top")
+                html_tags.div("Coordinate String Text", cls="text-muted has-space-top")
                 html_tags.div(self.projection_string_text)
 
             html_tags.h4("Extent", cls="space-top")

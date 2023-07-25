@@ -261,7 +261,7 @@ def nightly_metadata_review_reminder():
 
     pending_resources = BaseResource.objects.filter(raccess__review_pending=True)
     for res in pending_resources:
-        review_date = res.metadata.dates.all().filter(type='review_started').first()
+        review_date = res.metadata.dates.all().filter(type='reviewStarted').first()
         if review_date:
             review_date = review_date.start_date
             cutoff_date = timezone.now() - timedelta(days=2)
@@ -540,7 +540,6 @@ def create_bag_by_irods(resource_id, create_zip=True):
     bag_modified = bag_modified is None or bag_modified
     if metadata_dirty or bag_modified:
         create_bagit_files_by_irods(res, istorage)
-        res.setAVU("bag_modified", False)
 
     if create_zip:
         irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
@@ -557,6 +556,7 @@ def create_bag_by_irods(resource_id, create_zip=True):
                     # compute checksum to meet DataONE distribution requirement
                     chksum = istorage.checksum(bag_path)
                     res.bag_checksum = chksum
+                res.setAVU("bag_modified", False)
                 return res.bag_url
             except SessionException as ex:
                 raise SessionException(-1, '', ex.stderr)
@@ -641,7 +641,11 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
             # note that new version collection will not contain "deleted resources"
-            new_res.resources.set(ori_res.resources.all())
+            ori_resources = ori_res.resources.all()
+            new_res.resources.set(ori_resources)
+            # set the isPartOf metadata on all of the contained resources so that they also point at the new col
+            for res in ori_resources:
+                res.metadata.create_element('relation', type=RelationTypes.isPartOf, value=new_res.get_citation())
 
         # create bag for the new resource
         create_bag(new_res)

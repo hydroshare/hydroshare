@@ -17,7 +17,6 @@ from django.contrib.auth.models import User
 from rest_framework import status
 
 from hs_core.hydroshare import hs_bagit
-from hs_core.hydroshare.users import create_account
 from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
@@ -121,10 +120,9 @@ def res_has_web_reference(res):
     if res.resource_type != "CompositeResource":
         return False
 
-    for f in ResourceFile.objects.filter(object_id=res.id):
-        if f.has_logical_file:
-            if 'url' in f.logical_file.extra_data:
-                return True
+    for lf in res.get_logical_files('GenericLogicalFile'):
+        if 'url' in lf.extra_data:
+            return True
     return False
 
 
@@ -724,6 +722,7 @@ def add_resource_files(pk, *files, **kwargs):
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
+        utils.resource_modified(resource, user, overwrite_bag=False)
 
     return ret
 
@@ -831,7 +830,7 @@ def delete_resource_file_only(resource, f):
         f: the ResourceFile object to be deleted
     Returns: unqualified relative path to file that has been deleted
     """
-    short_path = f.short_path
+    short_path = f.get_short_path(resource)
     f.delete()
     return short_path
 
@@ -848,12 +847,10 @@ def delete_format_metadata_after_delete_file(resource, file_name):
 
     # if there is no other resource file with the same extension as the
     # file just deleted then delete the matching format metadata element for the resource
-    resource_file_extensions = [os.path.splitext(get_resource_file_name(f))[1] for f in
-                                resource.files.all()]
+    resource_file_extensions = {os.path.splitext(f.get_short_path(resource))[1] for f in
+                                resource.files.all()}
     if delete_file_extension not in resource_file_extensions:
-        format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
-        if format_element:
-            resource.metadata.delete_element(format_element.term, format_element.id)
+        resource.metadata.formats.filter(value=delete_file_mime_type).delete()
 
 
 # TODO: Remove option for file id, not needed since names are unique.
@@ -1026,6 +1023,8 @@ def submit_resource_for_review(request, pk):
     and other general exceptions
 
     """
+    from hs_core.views.utils import get_default_support_user
+
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
@@ -1038,26 +1037,18 @@ def submit_resource_for_review(request, pk):
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
 
-    try:
-        user_to = User.objects.get(email__iexact=settings.DEFAULT_SUPPORT_EMAIL)
-    except User.DoesNotExist:
-        user_to = create_account(
-            email=settings.DEFAULT_SUPPORT_EMAIL,
-            username=settings.DEFAULT_SUPPORT_EMAIL,
-            first_name=settings.DEFAULT_SUPPORT_EMAIL,
-            last_name=settings.DEFAULT_SUPPORT_EMAIL,
-            superuser=True
-        )
+    user_to = get_default_support_user()
     from hs_core.views.utils import send_action_to_take_email
     send_action_to_take_email(request, user=user_to, user_from=request.user,
                               action_type='metadata_review', resource=resource)
+
+    # create review date -- must be before review_pending = True
+    resource.metadata.dates.all().filter(type='reviewStarted').delete()
+    resource.metadata.create_element('date', type='reviewStarted', start_date=datetime.datetime.now(tz.UTC))
+
     resource.raccess.review_pending = True
     resource.raccess.immutable = True
     resource.raccess.save()
-
-    # create review date -- must be after review_pending = True
-    resource.metadata.dates.all().filter(type='review_started').delete()
-    resource.metadata.create_element('date', type='review_started', start_date=datetime.datetime.now(tz.UTC))
 
 
 def publish_resource(user, pk):

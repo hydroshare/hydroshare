@@ -1,0 +1,70 @@
+<div class="modal fade" id="request-new-community-dialog" tabindex="-1" role="dialog"
+    data-backdrop="static"
+    aria-labelledby="rc-modal-label">
+    <div class="modal-dialog" role="document"> 
+        <div class="modal-content">
+            <form id="request-new-community-form" action="/hsapi/_internal/request-new-community/"
+                method="POST" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="rc-modal-label">Request a New Community</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <p>You can use this form to request creation of a new Community. Community creation requests will be reviewed by CUAHSI. If your request is approved, your new Community will appear in HydroShare and you will be notified.</p>
+                    </div>
+                    <div  class="row">
+                        {% csrf_token %}
+                        <!-- Community Name -->
+                        <fieldset class="col-sm-12">
+                            <label>Community Name *</label>
+                            <small class="text-muted">300 characters or less</small>
+                            <textarea class="form-control" required="required" name="name" maxlength="300" rows="1"
+                                placeholder="Descriptive name for the Community"></textarea>
+                        </fieldset>
+
+                        <!-- Community Contact Email -->
+                        <fieldset class="col-sm-12">
+                            <label>Community Contact Email</label>
+                            <input type="email" name="email" class="form-control"
+                            placeholder="Email address for a person in charge of the Community">
+                        </fieldset>
+
+                        <!-- Community Url -->
+                        <fieldset class="col-sm-12">
+                            <label>Community URL</label>
+                            <input type="url" name="url" class="form-control"
+                            placeholder="A URL for a web page that describes the Community in more detail">
+                        </fieldset>
+
+                        <!-- Purpose -->
+                        <fieldset class="col-sm-12">
+                            <label>Purpose</label>
+                            <small class="text-muted">300 characters or less</small>
+                            <textarea class="form-control" name="purpose" maxlength="300"
+                                placeholder="A brief statement of the purpose for the Community"></textarea>
+                        </fieldset>
+
+                        <!-- About -->
+                        <fieldset class="col-sm-12">
+                            <label>About this Community *</label>
+                            <textarea class="form-control" name="description" required="required"
+                                placeholder="A longer text description of the Community"></textarea>
+                        </fieldset>
+                        
+                        <br>
+                        <fieldset class="col-sm-12">
+                            <small class="text-muted">( * ) Required fields</small>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Community Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
