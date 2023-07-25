@@ -170,7 +170,9 @@ def data_store_structure(request):
             if not main_extension:
                 # accept any extension
                 main_extension = ""
-            if f.extension and main_extension.endswith(f.extension):
+
+            _ , file_extension = os.path.splitext(fname)
+            if file_extension and main_extension.endswith(file_extension):
                 if not hasattr(f.logical_file, 'folder') or f.logical_file.folder is None:
                     aggregation_appkey = f.logical_file.metadata.extra_metadata.get(_APPKEY, '')
 
