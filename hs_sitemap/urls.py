@@ -2,11 +2,13 @@ from django.conf.urls import url
 
 from django.contrib.sitemaps import views
 
-from .sitemaps import PagesSitemap, ResourcesSitemap
+from .sitemaps import PagesSitemap, ResourcesSitemap, CommunitiesSitemap, GroupsSitemap
 
 sitemaps = {
     "resources": ResourcesSitemap,
-    "pages": PagesSitemap
+    "pages": PagesSitemap,
+    "communities": CommunitiesSitemap,
+    "groups": GroupsSitemap
 }
 sitemap_view = 'django.contrib.sitemaps.views.sitemap'
 
