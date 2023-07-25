@@ -20,7 +20,7 @@ class CommunitiesSitemap(sitemaps.Sitemap):
     priority = 0.5
     changefreq = 'weekly'
 
-    def items(self): 
+    def items(self):
         return Community.objects.filter(active=True)
 
     def location(self, item):
@@ -31,8 +31,7 @@ class GroupsSitemap(sitemaps.Sitemap):
     priority = 0.5
     changefreq = 'daily'
 
-    def items(self): 
-
+    def items(self):
         return GroupAccess.objects.filter(active=True)
 
     def location(self, item):
