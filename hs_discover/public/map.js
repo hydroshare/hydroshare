@@ -71,11 +71,11 @@
         position: location,
         hsUid: hsUid[k % hsUid.length],
       });
-      const infowindow = new google.maps.InfoWindow(); // eslint-disable-line
-      infowindow.setContent(`<a href="/resource/${
-        hsUid[k % hsUid.length]
-      }" target="_blank">${labels[k % labels.length]}</a>
-        lat: ${location.lat.toFixed(2)} lng: ${location.lng.toFixed(2)}`);
+      const infowindow = new google.maps.InfoWindow({ maxWidth: 400 }); // eslint-disable-line
+      infowindow.setContent(`
+        <a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>
+        <br>lat: ${location.lat.toFixed(2)} lng: ${location.lng.toFixed(2)}
+      `);
       infoWindows.push(infowindow);
 
       google.maps.event.addListener(marker, "spider_click", function (e) {
