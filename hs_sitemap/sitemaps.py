@@ -1,7 +1,8 @@
 from django.contrib import sitemaps
 from django.urls import reverse
 from hs_core.models import BaseResource
-from hs_access_control.models import GroupAccess, Community
+from hs_access_control.models import Community
+from django.contrib.auth.models import Group
 from django.db.models import Q
 
 
@@ -32,7 +33,7 @@ class GroupsSitemap(sitemaps.Sitemap):
     changefreq = 'daily'
 
     def items(self):
-        return GroupAccess.objects.filter(active=True)
+        return Group.objects.filter(gaccess__active=True)
 
     def location(self, item):
         return f'/group/{ item.id }'
