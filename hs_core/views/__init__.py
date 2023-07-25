@@ -2263,7 +2263,7 @@ def hsapi_get_user_for_keycloak(request, user_identifier):
     if request.method == "POST":
         return hsapi_post_user_for_keycloak(request, user_identifier)
 
-    user: User = utils.user_from_id(user_identifier)
+    user: User = hydroshare.utils.user_from_id(user_identifier)
     keycloak_dict = {
         #"id": "optional",
           "username": user.username,
@@ -2296,7 +2296,7 @@ def hsapi_post_user_for_keycloak(request, user_identifier):
     Check the user password
     """
     password = json.loads(request.body.decode('utf-8'))['password']
-    user: User = utils.user_from_id(user_identifier)
+    user: User = hydroshare.utils.user_from_id(user_identifier)
     return HttpResponse() if user.check_password(password) else HttpResponseBadRequest()
 
 
