@@ -3756,6 +3756,11 @@ input.no-style {
 	border: 1px solid #DDD;
 }
 
+
+#map-view .gm-style-iw a {
+	outline: none;
+}
+
 #discover-map-legend {
 	background: rgba(255, 255, 255, 0.75);
 	padding: 10px;
