@@ -28,7 +28,7 @@ def landing_page(request, page):
 
 
 def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
-    """Inject a crispy_form layout into the page to display extended metadata.
+    """Inject a crispy_form layout into the page to display additional metadata.
 
     :param page: which page to get the template context for
     :param user: the user who is viewing the page
@@ -39,7 +39,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     should be extended by page/resource-specific page_processors
 
     Resource type specific app needs to call this method to inject a crispy_form layout
-    object for displaying metadata UI for the extended metadata for their resource
+    object for displaying metadata UI for the additional metadata for their resource
 
     TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
                 - split into two functions: get_readonly_page_context(...) and

@@ -49,7 +49,7 @@ The following are descriptions of each element of the resource bag:
 
 "resourcemap.xml" - This XML document contains an Open Archives Initiative Object Reuse and Exchange (OAI-ORE) resource map. It is a list of all of the files within the resource and any relationships that exist between them. The purpose of this file is to enable a computer to discover the structure of the resource.
 
-"resourcemetadata.xml" - This XML document stores the main metadata for the resource. It contains at least the standard Dublin Core metadata elements and may contain extended metadata elements, depending on the resource type.
+"resourcemetadata.xml" - This XML document stores the main metadata for the resource. It contains at least the standard Dublin Core metadata elements and may contain additional metadata elements, depending on the resource type.
 
 "visualization/" - This is a subdirectory within which an optional thumbnail visualization of the resource may reside if present.
 

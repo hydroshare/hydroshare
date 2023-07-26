@@ -842,7 +842,7 @@ def delete_coverage_element(request, hs_file_type, file_type_id,
 @authorise_for_aggregation_edit
 @login_required
 def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
-    """add/update key/value extended metadata for a given logical file
+    """add/update key/value additional metadata for a given logical file
     key/value data is expected as part of the request.POST data for adding
     key/value/key_original is expected as part of the request.POST data for updating
     If the key already exists, the value then gets updated, otherwise, the key/value is added
@@ -906,7 +906,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
 @authorise_for_aggregation_edit
 @login_required
 def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
-    """deletes one pair of key/value extended metadata for a given logical file
+    """deletes one pair of key/value additional metadata for a given logical file
     key data is expected as part of the request.POST data
     If key is found the matching key/value pair is deleted from the hstore dict type field
     """

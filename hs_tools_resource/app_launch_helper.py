@@ -58,7 +58,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     :param tool_res_obj: web tool app resource object
     :param open_with: Default is False, meaning check has to be done to see whether
                       the web app resource should show on the resource's open with list;
-                      if open_with is True, e.g., appkey extended metadata name-value pair
+                      if open_with is True, e.g., appkey additional metadata name-value pair
                       exists that associated this resource with the web app resource, no check
                       is needed, and this web app tool resource will show on this resource's
                       open with list

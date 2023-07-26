@@ -322,7 +322,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_web_app_extended_metadata_appkey_association(self):
         # testing a resource can be associated with a web app tool resource via
-        # appkey name-value extended metadata matching
+        # appkey name-value additional metadata matching
         self.assertEqual(ToolResource.objects.count(), 1)
         metadata = []
         metadata.append({'requesturlbase': {'value': 'https://www.google.com'}})
