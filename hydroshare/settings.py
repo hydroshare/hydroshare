@@ -508,6 +508,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE_QUERY_PARAM": "PAGE_SIZE",
     "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        "mozilla_django_oidc.contrib.drf.OIDCAuthentication",
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
