@@ -379,6 +379,18 @@ def update_user_profile(request, profile_user_id):
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
 
+def check_organization_terms(dict_items):
+    for dict_item in dict_items:
+        # Update Dictionaries
+        try:
+            University.objects.get(name=dict_item)
+        except ObjectDoesNotExist:
+            new_term = UncategorizedTerm(name=dict_item)
+            new_term.save()
+        except MultipleObjectsReturned:
+            pass
+
+
 def resend_verification_email(request, email):
     user = User.objects.filter(email=email).first()
     if user is None:
