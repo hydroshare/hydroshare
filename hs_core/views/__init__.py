@@ -2265,30 +2265,17 @@ def hsapi_get_user_for_keycloak(request, user_identifier):
 
     user: User = hydroshare.utils.user_from_id(user_identifier)
     keycloak_dict = {
-        #"id": "optional",
-          "username": user.username,
-          "email": user.email,
-          "firstName": user.first_name,
-          "lastName": user.last_name,
-          "enabled": True,
-          "emailVerified": user.is_active,
-          #"attributes": {
-          #    "key": [
-          #        "value"
-          #    ]
-          #},
-          "roles": [
-              "default-roles-hydroshare"
-          ],
-          #"groups": [
-          #    "string"
-          #],
-          #"requiredActions": [
-          #    "requiredActions"
-          #]
-        }
+        "username": user.username,
+        "email": user.email,
+        "firstName": user.first_name,
+        "lastName": user.last_name,
+        "enabled": True,
+        "emailVerified": user.is_active,
+        "roles": [
+            "default-roles-hydroshare"
+        ],
+    }
     return JsonResponse(keycloak_dict)
-
 
 
 def hsapi_post_user_for_keycloak(request, user_identifier):

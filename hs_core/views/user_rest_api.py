@@ -18,6 +18,7 @@ class UserSerializerIn(serializers.Serializer):
     country = serializers.CharField(max_length=150, required=False)
     user_type = serializers.CharField(max_length=150, required=False)
 
+
 class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     username = serializers.CharField(max_length=150)
@@ -57,6 +58,7 @@ class UserInfo(APIView):
             user_info['user_type'] = user_profile.user_type.strip()
 
         return user_info
+
     @swagger_auto_schema(operation_description="Get information about the autorized user",
                          responses={200: UserSerializer})
     def get(self, request):
@@ -100,9 +102,8 @@ class UserInfo(APIView):
         with transaction.atomic():
             if "last_name" in user_info or "first_name" in user_info:
                 user.save()
-            if "organization" in user_info or "state" in user_info or "country" in user_info or "user_type" in user_info:
+            if "organization" in user_info or "state" in user_info \
+                    or "country" in user_info or "user_type" in user_info:
                 user_profile.save()
 
         return self.get(request)
-
-
