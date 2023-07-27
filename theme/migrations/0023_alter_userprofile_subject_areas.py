@@ -5,8 +5,7 @@ from django.db import migrations, models
 from django.db.utils import DataError
 from django.core.management import call_command
 import re
-import os
-
+from hs_core.management.utils import HiddenPrints
 
 def migrate_csv_subject_areas(apps, schema_editor):
     def strip_for_dict(string=""):
@@ -17,8 +16,8 @@ def migrate_csv_subject_areas(apps, schema_editor):
         # replace invalid braces and quotes
         string = string.replace("{", "[").replace("}", "]").replace("\"", "\'")
         return string.strip()
-    with open(os.devnull, 'w') as f:
-        call_command('create_subject_areas_dict', stdout=f)
+    with HiddenPrints():
+        call_command('create_subject_areas_dict')
     SubjectArea = apps.get_model('hs_dictionary.SubjectArea')
     UserProfile = apps.get_model('theme.UserProfile')
     # Attempt to match existing SAs from profiles
