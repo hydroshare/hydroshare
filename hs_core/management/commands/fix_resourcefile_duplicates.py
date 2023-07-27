@@ -29,7 +29,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         dry_run = options['dryrun']
 
-        print("REPAIRING ALL RESOURCES")
         dup_resource_files = ResourceFile.objects.values('resource_file', 'object_id') \
             .annotate(count=Count('id')) \
             .values('resource_file', 'object_id') \

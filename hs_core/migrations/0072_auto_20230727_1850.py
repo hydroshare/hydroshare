@@ -3,12 +3,10 @@
 from django.db import migrations, models
 import django_irods.storage
 import hs_core.models
-from hs_core.management.utils import HiddenPrints
 from django.core.management import call_command
 
 def migrate_resourcefiles(apps, schema_editor):
-    with HiddenPrints():
-        call_command('fix_resourcefile_duplicates')
+    call_command('fix_resourcefile_duplicates')
 
 class Migration(migrations.Migration):
 

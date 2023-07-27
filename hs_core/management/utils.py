@@ -13,7 +13,6 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 import json
 import logging
 import os
-import sys
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -704,15 +703,6 @@ def repair_resource(resource, logger, stop_on_error=False,
               .format(resource.short_id, resource.resource_type,
                       resource.title))
 
-
-class HiddenPrints:
-    def __enter__(self):
-        self._original_stdout = sys.stdout
-        sys.stdout = open(os.devnull, 'w')
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout.close()
-        sys.stdout = self._original_stdout
 
 class CheckResource(object):
     """ comprehensively check a resource """
