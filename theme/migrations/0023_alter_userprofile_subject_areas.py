@@ -5,6 +5,7 @@ from django.db import migrations, models
 from django.db.utils import DataError
 from django.core.management import call_command
 import re
+import os
 
 
 def migrate_csv_subject_areas(apps, schema_editor):
@@ -16,7 +17,8 @@ def migrate_csv_subject_areas(apps, schema_editor):
         # replace invalid braces and quotes
         string = string.replace("{", "[").replace("}", "]").replace("\"", "\'")
         return string.strip()
-    call_command('create_subject_areas_dict')
+    with open(os.devnull, 'w') as f:
+        call_command('create_subject_areas_dict', stdout=f)
     SubjectArea = apps.get_model('hs_dictionary.SubjectArea')
     UserProfile = apps.get_model('theme.UserProfile')
     # Attempt to match existing SAs from profiles
