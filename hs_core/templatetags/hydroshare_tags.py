@@ -17,8 +17,7 @@ register = template.Library()
 
 RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Resource",
                                      "CollectionResource": "Collection",
-                                     "ToolResource": "App Connector",
-                                     "ExternalResource": "External"
+                                     "ToolResource": "App Connector"
                                      }
 
 

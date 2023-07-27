@@ -52,12 +52,10 @@ class ResourceNameDBToUIMap:
     dict = {
         'CompositeResource': 'composite',
         'ToolResource': 'webapp',
-        'CollectionResource': 'collection',
-        'ExternalResource': 'external'
+        'CollectionResource': 'collection'
     }
     dict_verbose_name = {
         'CompositeResource': 'Resource',
         'ToolResource': 'App Connector',
-        'CollectionResource': 'Collection',
-        'ExternalResource': 'External'
+        'CollectionResource': 'Collection'
     }
