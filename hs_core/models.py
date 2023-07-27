@@ -2048,6 +2048,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
+    # key/value metadata (additional metadata)
     extra_metadata = HStoreField(default=dict)
 
     # this field is for resources to store extra key:value pairs as needed, e.g., bag checksum is stored as

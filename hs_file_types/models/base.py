@@ -83,7 +83,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
     # one temporal coverage and one spatial coverage
     coverages = GenericRelation(Coverage)
-    # key/value metadata
+    # key/value metadata (additional metadata)
     extra_metadata = HStoreField(default=dict)
 
     # keywords
