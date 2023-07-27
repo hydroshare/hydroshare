@@ -83,7 +83,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
     # one temporal coverage and one spatial coverage
     coverages = GenericRelation(Coverage)
-    # key/value metadata
+    # key/value metadata (additional metadata)
     extra_metadata = HStoreField(default=dict)
 
     # keywords
@@ -171,7 +171,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         if self.extra_metadata:
             extra_metadata_div = div(cls="content-block")
             with extra_metadata_div:
-                legend('Extended Metadata')
+                legend('Additional Metadata')
                 with table(cls="hs-table table dataTable no-footer", style="width: 100%"):
                     with thead():
                         with tr(cls="header-row"):
@@ -269,7 +269,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         if self.extra_metadata:
             root_div_extra = div(id="filetype-extra-metadata")
             with root_div_extra:
-                legend('Extended Metadata')
+                legend('Additional Metadata')
                 get_add_keyvalue_button()
                 with table(cls="hs-table table dataTable no-footer",
                            style="width: 100%"):
@@ -305,7 +305,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         else:
             root_div_extra = div(id="filetype-extra-metadata", cls="content-block")
             with root_div_extra:
-                legend('Extended Metadata')
+                legend('Additional Metadata')
                 get_add_keyvalue_button()
                 self._get_add_key_value_modal_form()
             return root_div_extra

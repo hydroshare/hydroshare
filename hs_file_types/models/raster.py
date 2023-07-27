@@ -27,7 +27,7 @@ from hs_file_types import raster_meta_extract
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
-# extended metadata for raster aggregation type to store the original box type coverage
+# additional metadata for raster aggregation type to store the original box type coverage
 # since the core metadata coverage stores the converted WGS84 geographic coordinate
 # system projection coverage, see issue #210 on github for details
 @rdf_terms(HSTERMS.spatialReference)
