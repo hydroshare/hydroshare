@@ -2939,9 +2939,9 @@ class ResourceFile(ResourceFileIRODSMixin):
     file_folder = models.CharField(max_length=4096, null=False, default="")
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
-    resource_file = models.FileField(upload_to=get_path, max_length=4096,
+    resource_file = models.FileField(upload_to=get_path, max_length=4096, unique=True,
                                      null=True, blank=True, storage=IrodsStorage())
-    fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
+    fed_resource_file = models.FileField(upload_to=get_path, max_length=4096, unique=True,
                                          null=True, blank=True, storage=FedStorage())
 
     # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
