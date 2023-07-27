@@ -2237,13 +2237,15 @@ def hsapi_get_user(request, user_identifier):
     """
     return get_user_or_group_data(request, user_identifier, "false")
 
+
 @swagger_auto_schema(
     method="post",
     operation_description="Check user password for Keycloak Migration",
     responses={200: "Password is valid", 400: "Password is invalid"},
     manual_parameters=[uid],
     request_body=openapi.Schema(type=openapi.TYPE_OBJECT,
-                                properties={'password': openapi.Schema(type=openapi.TYPE_STRING, description="raw password to validate")}
+                                properties={'password': openapi.Schema(type=openapi.TYPE_STRING,
+                                                                       description="raw password to validate")}
                                 )
 )
 @swagger_auto_schema(
