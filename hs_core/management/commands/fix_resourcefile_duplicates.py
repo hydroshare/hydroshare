@@ -40,7 +40,7 @@ class Command(BaseCommand):
             current = 1
             print(f"Discovered the following duplicate file objects:\n {dup_resource_files}")
             for resourcefile in dup_resource_files:
-                filename=resourcefile["resource_file"]
+                filename = resourcefile["resource_file"]
                 if not dry_run:
                     print(f"{current}/{total} Repairing file {filename}")
                     resourcefiles_to_remove = ResourceFile.objects.filter(resource_file=filename)
