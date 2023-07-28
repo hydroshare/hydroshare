@@ -508,6 +508,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE_QUERY_PARAM": "PAGE_SIZE",
     "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.BasicAuthentication",
         "mozilla_django_oidc.contrib.drf.OIDCAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
@@ -749,6 +750,17 @@ HSWS_ACTIVATED = False
 THREDDS_SERVER_URL = "https://thredds.hydroshare.org/thredds/"
 # HydroShare Geoserver URL
 HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
+
+OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
+OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
+OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/userinfo"
+OIDC_RP_SIGN_ALGO = "RS256"
+OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
+# default client/secret for development
+OIDC_RP_CLIENT_ID = 'hydroshare_develop'
+OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
+LOGIN_REDIRECT_URL = '/home/'
+LOGIN_URL = '/oidc/authenticate/'
 
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
