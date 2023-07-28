@@ -3,19 +3,14 @@
 from django.db import migrations, models
 import django_irods.storage
 import hs_core.models
-from django.core.management import call_command
-
-def migrate_resourcefiles(apps, schema_editor):
-    call_command('fix_resourcefile_duplicates')
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0071_alter_date_type'),
+        ('hs_core', '0072_remove_duplicate_res_files'),
     ]
 
     operations = [
-        migrations.RunPython(migrate_resourcefiles),
         migrations.AlterField(
             model_name='resourcefile',
             name='resource_file',
