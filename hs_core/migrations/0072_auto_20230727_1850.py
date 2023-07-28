@@ -18,11 +18,6 @@ class Migration(migrations.Migration):
         migrations.RunPython(migrate_resourcefiles),
         migrations.AlterField(
             model_name='resourcefile',
-            name='fed_resource_file',
-            field=models.FileField(blank=True, max_length=4096, null=True, storage=hs_core.models.FedStorage(), unique=True, upload_to=hs_core.models.get_path),
-        ),
-        migrations.AlterField(
-            model_name='resourcefile',
             name='resource_file',
             field=models.FileField(blank=True, max_length=4096, null=True, storage=django_irods.storage.IrodsStorage(), unique=True, upload_to=hs_core.models.get_path),
         ),
