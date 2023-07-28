@@ -69,7 +69,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     metadata_status = _get_metadata_status(content_model)
 
-    belongs_to_collections = content_model.collections.all()
+    belongs_to_collections = content_model.collections.all().select_related('raccess')
 
     tool_homepage_url = None
     if not resource_edit:  # In view mode

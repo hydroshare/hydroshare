@@ -179,7 +179,6 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
         serializer = resource.metadata.serializer
-        self.serializer_class = resource.metadata.serializer
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
@@ -206,5 +205,4 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
 
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
         serializer = resource.metadata.serializer
-        self.serializer_class = serializer
         return Response(data=serializer.data, status=status.HTTP_202_ACCEPTED)
