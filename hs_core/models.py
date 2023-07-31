@@ -2940,7 +2940,9 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
     resource_file = models.FileField(upload_to=get_path, max_length=4096, unique=True,
-                                     null=True, blank=True, storage=IrodsStorage())
+                                     storage=IrodsStorage())
+    # TODO: ideally we would like a unique constraint on fed_resource_file
+    # due to https://code.djangoproject.com/ticket/10244 we can't set null=True and unique=True
     fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
                                          null=True, blank=True, storage=FedStorage())
 

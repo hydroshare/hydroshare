@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='resourcefile',
             name='resource_file',
-            field=models.FileField(blank=True, max_length=4096, null=True, storage=django_irods.storage.IrodsStorage(), unique=True, upload_to=hs_core.models.get_path),
+            field=models.FileField(max_length=4096, storage=django_irods.storage.IrodsStorage(), unique=True, upload_to=hs_core.models.get_path),
         ),
     ]
