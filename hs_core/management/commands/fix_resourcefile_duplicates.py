@@ -29,21 +29,29 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         dry_run = options['dryrun']
 
+        # first we remove files with content_type other than the content type for CompositeResource
+        non_conforming_files = ResourceFile.objects.exclude(content_type__model='baseresource')
+        print(f"Non-conforming files to be removed:\n{non_conforming_files}")
+        if dry_run:
+            print("Skipping file delete due to dryrun")
+        else:
+            non_conforming_files.delete()
+
         dup_resource_files = ResourceFile.objects.values('resource_file', 'object_id') \
             .annotate(count=Count('id')) \
-            .values('resource_file', 'object_id') \
             .order_by() \
             .filter(count__gt=1)
         if dup_resource_files:
-            total = dup_resource_files.count()
-            current = 1
+            total_resfile_containing_dups = dup_resource_files.count()
+            current_resfile = 1
             print(f"Discovered the following duplicate file objects:\n {dup_resource_files}")
             for resourcefile in dup_resource_files:
                 filename = resourcefile["resource_file"]
+                num_duplicate_paths = resourcefile['count']
                 if not dry_run:
-                    print(f"{current}/{total} Repairing file {filename}")
-                    resourcefiles_to_remove = ResourceFile.objects.filter(resource_file=filename)
+                    print(f"{current_resfile}/{total_resfile_containing_dups} Repairing file {filename} by removing {num_duplicate_paths -1} paths.")
+                    resourcefiles_to_remove = ResourceFile.objects.filter(resource_file=filename, object_id=resourcefile['object_id'])
                     ResourceFile.objects.filter(pk__in=resourcefiles_to_remove.values_list('pk')[1:]).delete()
                 else:
-                    print(f"{current}/{total} Repair of {filename} skipped due to dryrun")
-                current += 1
+                    print(f"{current_resfile}/{total_resfile_containing_dups} Repair of {filename} skipped due to dryrun. Would remove {num_duplicate_paths -1} paths.")
+                current_resfile += 1
