@@ -723,6 +723,7 @@ def add_resource_files(pk, *files, **kwargs):
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
+        utils.resource_modified(resource, user, overwrite_bag=False)
 
     return ret
 
