@@ -12,6 +12,8 @@ This checks that there is only one ResourceFile for each iRods file
 from django.core.management.base import BaseCommand
 from django.db.models import Count
 from hs_core.models import ResourceFile
+from django.contrib.contenttypes.models import ContentType
+from hs_composite_resource.models import CompositeResource
 
 
 class Command(BaseCommand):
@@ -30,7 +32,8 @@ class Command(BaseCommand):
         dry_run = options['dryrun']
 
         # first we remove files with content_type other than the content type for CompositeResource
-        non_conforming_files = ResourceFile.objects.exclude(content_type__model='baseresource')
+        desired_content_type = ContentType.objects.get_for_model(CompositeResource)
+        non_conforming_files = ResourceFile.objects.exclude(content_type=desired_content_type)
         print(f"Non-conforming files to be removed:\n{non_conforming_files}")
         if dry_run:
             print("Skipping file delete due to dryrun")
