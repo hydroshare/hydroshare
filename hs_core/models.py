@@ -3505,7 +3505,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def has_logical_file(self):
         """Check existence of logical file."""
-        return self.logical_file is not None
+        return self.logical_file_object_id is not None
 
     @property
     def logical_file(self):
@@ -3530,7 +3530,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def metadata(self):
         """Return logical file metadata."""
-        if self.logical_file is not None:
+        if self.has_logical_file:
             return self.logical_file.metadata
         return None
 
