@@ -49,9 +49,12 @@ class Command(BaseCommand):
                 filename = resourcefile["resource_file"]
                 num_duplicate_paths = resourcefile['count']
                 if not dry_run:
-                    print(f"{current_resfile}/{total_resfile_containing_dups} Repairing file {filename} by removing {num_duplicate_paths -1} paths.")
-                    resourcefiles_to_remove = ResourceFile.objects.filter(resource_file=filename, object_id=resourcefile['object_id'])
+                    print(f"{current_resfile}/{total_resfile_containing_dups} \
+                          Repairing file {filename} by removing {num_duplicate_paths -1} paths.")
+                    resourcefiles_to_remove = ResourceFile.objects \
+                        .filter(resource_file=filename, object_id=resourcefile['object_id'])
                     ResourceFile.objects.filter(pk__in=resourcefiles_to_remove.values_list('pk')[1:]).delete()
                 else:
-                    print(f"{current_resfile}/{total_resfile_containing_dups} Repair of {filename} skipped due to dryrun. Would remove {num_duplicate_paths -1} paths.")
+                    print(f"{current_resfile}/{total_resfile_containing_dups} \
+                          Repair of {filename} skipped due to dryrun. Would remove {num_duplicate_paths -1} paths.")
                 current_resfile += 1
