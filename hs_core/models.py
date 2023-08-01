@@ -3437,15 +3437,15 @@ class ResourceFile(ResourceFileIRODSMixin):
     def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
         if resource.resource_federation_path:
-            return ResourceFile.objects.get(object_id=resource.id,
-                                            fed_resource_file=get_resource_file_path(resource,
-                                                                                     file,
-                                                                                     folder))
+            return ResourceFile.objects.filter(object_id=resource.id,
+                                               fed_resource_file=get_resource_file_path(resource,
+                                                                                        file,
+                                                                                        folder)).first()
         else:
-            return ResourceFile.objects.get(object_id=resource.id,
-                                            resource_file=get_resource_file_path(resource,
-                                                                                 file,
-                                                                                 folder))
+            return ResourceFile.objects.filter(object_id=resource.id,
+                                               resource_file=get_resource_file_path(resource,
+                                                                                    file,
+                                                                                    folder)).first()
 
     # TODO: move to BaseResource as instance method
     @classmethod
