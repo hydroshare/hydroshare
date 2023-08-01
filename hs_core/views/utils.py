@@ -248,7 +248,10 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
         folder = curr_path
 
     # update url in extra_data in url file's logical file object
-    f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
+    try:
+        f = ResourceFile.get(resource=res, file=url_filename, folder=folder)
+    except ObjectDoesNotExist as ex:
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, str(ex)
     extra_data = f.logical_file.extra_data
     extra_data['url'] = new_ref_url
     f.logical_file.extra_data = extra_data

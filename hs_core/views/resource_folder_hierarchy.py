@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from django.core.exceptions import SuspiciousFileOperation, ValidationError
+from django.core.exceptions import SuspiciousFileOperation, ValidationError, ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 
 from rest_framework.decorators import api_view
@@ -899,7 +899,7 @@ def data_store_move_to_folder(request, pk=None):
         if not irods_path_is_directory(istorage, src_storage_path):  # there is django record
             try:
                 ResourceFile.get(resource, file, folder=folder)
-            except ResourceFile.DoesNotExist:
+            except ObjectDoesNotExist:
                 return HttpResponse('Source file {} does not exist'.format(src_short_path),
                                     status=status.HTTP_400_BAD_REQUEST)
 
@@ -1003,7 +1003,7 @@ def data_store_rename_file_or_folder(request, pk=None):
     if not irods_path_is_directory(istorage, src_storage_path):
         try:  # Django record should exist for each file
             ResourceFile.get(resource, base, folder=folder)
-        except ResourceFile.DoesNotExist:
+        except ObjectDoesNotExist:
             return JsonResponse({"error": "Path to be renamed does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
     # check that the target doesn't exist
@@ -1025,7 +1025,7 @@ def data_store_rename_file_or_folder(request, pk=None):
         err_msg = f"Desired name ({tgt_short_path}) already in use"
         return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
-    except ResourceFile.DoesNotExist:
+    except ObjectDoesNotExist:
         pass  # correct response
 
     try:

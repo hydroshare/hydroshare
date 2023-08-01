@@ -150,11 +150,10 @@ def get_res_file(pk, file_path):
         folder, file_name = ResourceFile.resource_path_is_acceptable(resource,
                                                                      file_storage_path,
                                                                      test_exists=True)
-    except ValidationError:
+        res_file = ResourceFile.get(resource, file_name, folder)
+    except (ValidationError, ObjectDoesNotExist):
         return Response('File {} does not exist.'.format(file_path),
                         status=status.HTTP_400_BAD_REQUEST)
-
-    res_file = ResourceFile.get(resource, file_name, folder)
 
     return res_file
 
@@ -562,7 +561,10 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
             tgt_full_path = os.path.join(res.file_path, file_name)
         if istorage.exists(tgt_full_path):
             override_tgt_paths.append(tgt_full_path)
-            override_tgt_res_files.append(ResourceFile.get(res, file=file_name, folder=tgt_path))
+            try:
+                override_tgt_res_files.append(ResourceFile.get(res, file=file_name, folder=tgt_path))
+            except ObjectDoesNotExist:
+                return JsonResponse(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     if override_tgt_paths:
         if not file_override:

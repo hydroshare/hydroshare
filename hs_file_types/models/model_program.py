@@ -6,7 +6,7 @@ import jsonschema
 from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
@@ -202,7 +202,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                     file = self.logical_file.files.get(resource_file__endswith=filename)
                     if not ModelProgramResourceFileType.objects.filter(res_file=file).exists():
                         ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=file, mp_metadata=self)
-                except ResourceFile.DoesNotExist:
+                except ObjectDoesNotExist:
                     pass
 
         schema_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchema)
