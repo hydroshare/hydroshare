@@ -760,7 +760,7 @@ OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-co
 OIDC_RP_CLIENT_ID = 'hydroshare_develop'
 OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
 LOGIN_REDIRECT_URL = '/home/'
-LOGIN_URL = '/oidc/authenticate/'
+#LOGIN_URL = '/oidc/authenticate/'
 
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
