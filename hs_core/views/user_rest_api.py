@@ -17,6 +17,7 @@ class UserSerializerIn(serializers.Serializer):
     state = serializers.CharField(max_length=150, required=False)
     country = serializers.CharField(max_length=150, required=False)
     user_type = serializers.CharField(max_length=150, required=False)
+    orcid = serializers.CharField(max_length=150, required=False)
 
 
 class UserSerializer(serializers.Serializer):
@@ -29,6 +30,7 @@ class UserSerializer(serializers.Serializer):
     state = serializers.CharField(max_length=150)
     country = serializers.CharField(max_length=150)
     user_type = serializers.CharField(max_length=150)
+    orcid = serializers.CharField(max_length=150, required=False)
 
 
 class UserInfo(APIView):
@@ -56,6 +58,8 @@ class UserInfo(APIView):
             user_info['country'] = user_profile.country
         if user_profile.user_type and user_profile.user_type.strip() and user_profile.user_type != 'Unspecified':
             user_info['user_type'] = user_profile.user_type.strip()
+        if "ORCID" in user_profile.identifiers:
+            user_info['orcid'] = user_profile.identifiers["ORCID"]
 
         return user_info
 
@@ -98,6 +102,8 @@ class UserInfo(APIView):
             user_profile.country = user_info["country"]
         if "user_type" in user_info:
             user_profile.user_type = user_info["user_type"]
+        if "orcid" in user_info:
+            user_profile.identifiers["ORCID"] = user_info["orcid"]
 
         with transaction.atomic():
             if "last_name" in user_info or "first_name" in user_info:
