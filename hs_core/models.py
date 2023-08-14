@@ -2940,8 +2940,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     file_folder = models.CharField(max_length=4096, null=False, default="")
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
-    resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                     null=True, blank=True, storage=IrodsStorage())
+    resource_file = models.FileField(upload_to=get_path, max_length=4096, unique=True,
+                                     storage=IrodsStorage())
+    # TODO: ideally we would like a unique constraint on fed_resource_file
+    # due to https://code.djangoproject.com/ticket/10244 we can't set null=True and unique=True
     fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
                                          null=True, blank=True, storage=FedStorage())
 
@@ -3435,16 +3437,15 @@ class ResourceFile(ResourceFileIRODSMixin):
     @classmethod
     def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
+        resource_file_path = get_resource_file_path(resource, file, folder)
         if resource.resource_federation_path:
-            return ResourceFile.objects.get(object_id=resource.id,
-                                            fed_resource_file=get_resource_file_path(resource,
-                                                                                     file,
-                                                                                     folder))
+            f = ResourceFile.objects.filter(object_id=resource.id, fed_resource_file=resource_file_path).first()
         else:
-            return ResourceFile.objects.get(object_id=resource.id,
-                                            resource_file=get_resource_file_path(resource,
-                                                                                 file,
-                                                                                 folder))
+            f = ResourceFile.objects.filter(object_id=resource.id, resource_file=resource_file_path).first()
+        if f:
+            return f
+        else:
+            raise ObjectDoesNotExist(f'ResourceFile {resource_file_path} does not exist.')
 
     # TODO: move to BaseResource as instance method
     @classmethod
