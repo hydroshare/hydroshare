@@ -174,13 +174,51 @@ def nightly_repair_resource_files():
     from hs_core.management.utils import check_time
     import time
     start_time = time.time()
-    recent_resources = BaseResource.objects.filter(updated__gte=datetime.now()-timedelta(days=1))
-    rids = [res.short_id for res in recent_resources]
-    call_command('repair_resource', rids, timeout=settings.NIGHTLY_RESOURCE_REPAIR_DURATION, log=True)
+    cuttoff_time = timezone.now()-timedelta(days=1)
+    recently_updated_resources = [res.short_id for res in BaseResource.objects.all() if res.last_updated >= cuttoff_time]
+    # TODO #5124: instead of call_command revise to call the repair function directly
+    call_command('repair_resource', recently_updated_resources, timeout=settings.NIGHTLY_RESOURCE_REPAIR_DURATION, log=True)
 
     # spend any remaining time fixing resources that weren't updated in the last day
-    remaining_time = check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
-    call_command('repair_resource', [], timeout=remaining_time, log=True)
+    try:
+        remaining_time = check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
+        call_command('repair_resource', [], timeout=remaining_time, log=True)
+    except TimeoutError:
+        pass
+
+    recently_repaired_resources = BaseResource.objects.filter(repaired__gte=timezone.now()-timedelta(days=1))
+    for res in recently_repaired_resources:
+        # TODO #5124 test email notifications
+        notify_owners_of_resource_repair(res)
+
+
+
+def notify_owners_of_resource_repair(resource):
+    """
+    Sends email notification to resource owners on resource file repair
+
+    :param resource: a resource that has been repaired
+    :return:
+    """
+    res_url = current_site_url() + resource.get_absolute_url()
+
+    email_msg = f'''Dear Resource Owner,
+    <p>We discovered corrupted files in the following resource that you own:
+    <a href="{ res_url }">
+    { res_url }</a></p>
+
+    <p>File corruption can occur if upload or delete processes get interrupted. 
+    The files have been repaired. Please contact us if you notice issues or if you repeatedly receive this message.</p>
+
+    <p>Thank you,</p>
+    <p>The HydroShare Team</p>
+    '''
+    if not settings.DISABLE_TASK_EMAILS:
+        send_mail(subject="HydroShare resource files repaired",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[o.email for o in resource.raccess.owners.all()])
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

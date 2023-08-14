@@ -18,6 +18,7 @@ import time
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from requests import post
 
 from django_irods.icommands import SessionException
@@ -673,7 +674,7 @@ def repair_resource(resource, logger, stop_on_error=False,
             ecount = ecount + 1
         return errors, ecount
 
-    print("REPAIRING RESOURCE {}".format(resource.short_id))
+    print("CHECKING IF RESOURCE {} NEEDS REPAIR".format(resource.short_id))
 
     # ingest any dangling iRODS files that you can
     # Do this before check because otherwise, errors get printed twice
@@ -690,6 +691,8 @@ def repair_resource(resource, logger, stop_on_error=False,
             print("... affected resource {} has type {}, title '{}'"
                   .format(resource.short_id, resource.resource_type,
                           resource.title))
+            resource.repaired = timezone.now()
+            resource.save()
 
     _, count = check_irods_files(resource,
                                  stop_on_error=False,
@@ -703,6 +706,8 @@ def repair_resource(resource, logger, stop_on_error=False,
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
                       resource.title))
+        resource.repaired = timezone.now()
+        resource.save()
 
 
 class CheckResource(object):

@@ -2062,6 +2062,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
 
+    repaired = models.DateTimeField(null=True)
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
