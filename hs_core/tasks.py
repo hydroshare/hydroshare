@@ -22,6 +22,7 @@ from celery import Task
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.management import call_command
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -116,6 +117,7 @@ def setup_periodic_tasks(sender, **kwargs):
         # Daily
         sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
         sender.add_periodic_task(crontab(minute=0, hour=1), nightly_periodic_task_check.s())
+        sender.add_periodic_task(crontab(minute=30, hour=1), nightly_repair_resource_files.s())
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
         sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
         sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
@@ -163,6 +165,15 @@ def nightly_zips_cleanup():
 def nightly_periodic_task_check():
     with open("celery/periodic_tasks_last_executed.txt", mode='w') as file:
         file.write(timezone.now().strftime('%m/%d/%y %H:%M:%S'))
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def nightly_repair_resource_files():
+    """
+    Run repair_resource management command on resources updated in the last day
+    """
+    recent_resources = BaseResource.objects.filter(updated__gte=datetime.now()-timedelta(days=1))
+    rids = [res.short_id for res in recent_resources]
+    call_command('repair_resource', rids, timeout=settings.NIGHTLY_RESOURCE_REPAIR_DURATION, log=True)
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

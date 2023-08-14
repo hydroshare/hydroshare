@@ -19,6 +19,19 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.management.utils import repair_resource
 
 import logging
+import time
+
+def check_time(start_time, time_limit):
+    elapsed_time = time.time() - start_time
+    if elapsed_time >= time_limit:
+        raise TimeoutError
+
+def log_or_echo(message, log_errors, logger):
+    if log_errors:
+        logger.info(message)
+    else:
+        print(message)
+
 
 
 class Command(BaseCommand):
@@ -36,16 +49,26 @@ class Command(BaseCommand):
             dest='log',  # value is options['log']
             help='log errors to system log',
         )
+        parser.add_argument(
+            '--timeout',
+            action='store_true',
+            dest='timeout',
+            help='limit runtime to X seconds',
+        )
 
     def handle(self, *args, **options):
 
         logger = logging.getLogger(__name__)
         log_errors = options['log']
         echo_errors = not options['log']
+        time_out = options['timeout']
+        start_time = time.time()
 
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
+                    if time_out:
+                        check_time(start_time, time_out)
                     resource = get_resource_by_shortkey(rid)
                     repair_resource(resource, logger,
                                     echo_errors=echo_errors,
@@ -53,13 +76,18 @@ class Command(BaseCommand):
                                     return_errors=False)
                 except BaseResource.DoesNotExist:
                     msg = "resource {} not found".format(rid)
-                    print(msg)
+                    log_or_echo(msg, log_errors, logger)
                     continue
+                except TimeoutError:
+                    log_or_echo(f"Terminating repair_resource job -- {time_out} second time limit has elapsed", log_errors, logger)
+                    break
 
         else:  # check all resources
-            print("REPAIRING ALL RESOURCES")
+            log_or_echo("REPAIRING ALL RESOURCES", log_errors, logger)
             for r in BaseResource.objects.all():
                 try:
+                    if time_out:
+                        check_time(start_time, time_out)
                     resource = get_resource_by_shortkey(r.short_id)
                     repair_resource(resource, logger,
                                     echo_errors=echo_errors,
@@ -67,5 +95,8 @@ class Command(BaseCommand):
                                     return_errors=False)
                 except BaseResource.DoesNotExist:
                     msg = "resource {} not found".format(r.short_id)
-                    print(msg)
+                    log_or_echo(msg, log_errors, logger)
                     continue
+                except TimeoutError:
+                    log_or_echo(f"Terminating repair_resource job -- {time_out} second time limit has elapsed", log_errors, logger)
+                    break

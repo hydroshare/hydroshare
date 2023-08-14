@@ -138,6 +138,9 @@ DEBUG = False
 # Best set to ``True`` in local_settings.py
 DISABLE_TASK_EMAILS = False
 
+# Integer seconds that worker should allocate every night to repair_resource file discrepancies
+NIGHTLY_RESOURCE_REPAIR_DURATION = 60*60
+
 # Whether a user's session cookie expires when the Web browser is closed.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
