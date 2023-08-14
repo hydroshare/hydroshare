@@ -110,18 +110,25 @@ def setup_periodic_tasks(sender, **kwargs):
     if (hasattr(settings, 'DISABLE_PERIODIC_TASKS') and settings.DISABLE_PERIODIC_TASKS):
         logger.debug("Periodic tasks are disabled in SETTINGS")
     else:
-        sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
-        sender.add_periodic_task(crontab(minute=0, hour=1, day_of_month=1), update_from_geoconnex_task.s())
-        sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
+        # Hourly
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s())
-        sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
-                                 send_over_quota_emails.s())
+
+        # Daily
+        sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=1), nightly_periodic_task_check.s())
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
+        sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
+        sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
+
+        # Weekly
+        sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
+
+        # Monthly
+        sender.add_periodic_task(crontab(minute=0, hour=1, day_of_month=1), update_from_geoconnex_task.s())
+        sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
+                    send_over_quota_emails.s())
         sender.add_periodic_task(
             crontab(minute=15, hour=1, day_of_month=1), monthly_group_membership_requests_cleanup.s())
-        sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
-        sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
-        sender.add_periodic_task(crontab(minute=0, hour=1), nightly_periodic_task_check.s())
 
 
 # Currently there are two different cleanups scheduled.
