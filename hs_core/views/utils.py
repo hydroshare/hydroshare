@@ -1481,6 +1481,7 @@ def remove_folder(user, res_id, folder_path):
     if not istorage.exists(coll_path):
         raise ValidationError(f"Specified folder ({folder_path}) was not found")
 
+    # TODO #5124: we delete from iRods before removing from DJango -- can we find a better way to keep them in sync?
     istorage.delete(coll_path)
 
     remove_irods_folder_in_django(resource, coll_path, user)
