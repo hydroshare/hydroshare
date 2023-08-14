@@ -171,9 +171,16 @@ def nightly_repair_resource_files():
     """
     Run repair_resource management command on resources updated in the last day
     """
+    from hs_core.management.utils import check_time
+    import time
+    start_time = time.time()
     recent_resources = BaseResource.objects.filter(updated__gte=datetime.now()-timedelta(days=1))
     rids = [res.short_id for res in recent_resources]
     call_command('repair_resource', rids, timeout=settings.NIGHTLY_RESOURCE_REPAIR_DURATION, log=True)
+
+    # spend any remaining time fixing resources that weren't updated in the last day
+    remaining_time = check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
+    call_command('repair_resource', [], timeout=remaining_time, log=True)
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

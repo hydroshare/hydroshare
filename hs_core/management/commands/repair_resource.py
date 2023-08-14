@@ -16,15 +16,10 @@ This checks that:
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
-from hs_core.management.utils import repair_resource
+from hs_core.management.utils import repair_resource, check_time
 
 import logging
 import time
-
-def check_time(start_time, time_limit):
-    elapsed_time = time.time() - start_time
-    if elapsed_time >= time_limit:
-        raise TimeoutError
 
 def log_or_echo(message, log_errors, logger):
     if log_errors:

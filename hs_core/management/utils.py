@@ -13,6 +13,7 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 import json
 import logging
 import os
+import time
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -818,3 +819,10 @@ def get_swat_meta_schema():
     meta_schema_path = "hs_core/management/model_aggr_meta_schema/swat.json"
     with open(meta_schema_path) as f:
         return json.loads(f.read())
+
+
+def check_time(start_time, time_limit):
+    elapsed_time = time.time() - start_time
+    if elapsed_time >= time_limit:
+        raise TimeoutError
+    return time_limit - elapsed_time
