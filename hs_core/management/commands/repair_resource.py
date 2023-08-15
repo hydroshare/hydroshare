@@ -16,17 +16,9 @@ This checks that:
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
-from hs_core.management.utils import repair_resource, check_time
+from hs_core.management.utils import repair_resource
 
 import logging
-import time
-
-
-def log_or_echo(message, log_errors, logger):
-    if log_errors:
-        logger.info(message)
-    else:
-        print(message)
 
 
 class Command(BaseCommand):
@@ -34,8 +26,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        # a list of resource id's, or none to check all resources
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        # id of the resource to repair
+        parser.add_argument('resource_id', type=str)
 
         # Named (optional) arguments
         parser.add_argument(
@@ -44,56 +36,22 @@ class Command(BaseCommand):
             dest='log',  # value is options['log']
             help='log errors to system log',
         )
-        parser.add_argument(
-            '--timeout',
-            action='store_true',
-            dest='timeout',
-            help='limit runtime to X seconds',
-        )
 
     def handle(self, *args, **options):
 
         logger = logging.getLogger(__name__)
         log_errors = options['log']
         echo_errors = not options['log']
-        time_out = options['timeout']
-        start_time = time.time()
+        rid = options['resource_id']
 
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
-                try:
-                    if time_out:
-                        check_time(start_time, time_out)
-                    resource = get_resource_by_shortkey(rid)
-                    repair_resource(resource, logger,
-                                    echo_errors=echo_errors,
-                                    log_errors=log_errors,
-                                    return_errors=False)
-                except BaseResource.DoesNotExist:
-                    msg = "resource {} not found".format(rid)
-                    log_or_echo(msg, log_errors, logger)
-                    continue
-                except TimeoutError:
-                    log_or_echo(f"Terminating repair_resource job -- \
-                                {time_out} second time limit has elapsed", log_errors, logger)
-                    break
+        try:
+            resource = get_resource_by_shortkey(rid, or_404=False)
+        except BaseResource.DoesNotExist:
+            msg = "resource {} not found".format(rid)
+            if log_errors:
+                logger.error(msg)
+            if echo_errors:
+                print(msg)
+            return
 
-        else:  # check all resources
-            log_or_echo("REPAIRING ALL RESOURCES", log_errors, logger)
-            for r in BaseResource.objects.all():
-                try:
-                    if time_out:
-                        check_time(start_time, time_out)
-                    resource = get_resource_by_shortkey(r.short_id)
-                    repair_resource(resource, logger,
-                                    echo_errors=echo_errors,
-                                    log_errors=log_errors,
-                                    return_errors=False)
-                except BaseResource.DoesNotExist:
-                    msg = "resource {} not found".format(r.short_id)
-                    log_or_echo(msg, log_errors, logger)
-                    continue
-                except TimeoutError:
-                    log_or_echo(f"Terminating repair_resource job -- \
-                                {time_out} second time limit has elapsed", log_errors, logger)
-                    break
+        repair_resource(resource, logger)
