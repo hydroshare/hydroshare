@@ -712,7 +712,6 @@ def data_store_remove_folder(request):
     where folder_path is the relative path (relative to res_id/data/contents) for the folder to
     be removed under res_id collection/directory.
     """
-    # TODO #5124 -- we should make folder deletion more robust
     res_id = request.POST.get('res_id', None)
     if res_id is None:
         return HttpResponse('Bad request - resource id is not included',

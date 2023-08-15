@@ -21,12 +21,12 @@ from hs_core.management.utils import repair_resource, check_time
 import logging
 import time
 
+
 def log_or_echo(message, log_errors, logger):
     if log_errors:
         logger.info(message)
     else:
         print(message)
-
 
 
 class Command(BaseCommand):
@@ -74,7 +74,8 @@ class Command(BaseCommand):
                     log_or_echo(msg, log_errors, logger)
                     continue
                 except TimeoutError:
-                    log_or_echo(f"Terminating repair_resource job -- {time_out} second time limit has elapsed", log_errors, logger)
+                    log_or_echo(f"Terminating repair_resource job -- \
+                                {time_out} second time limit has elapsed", log_errors, logger)
                     break
 
         else:  # check all resources
@@ -93,5 +94,6 @@ class Command(BaseCommand):
                     log_or_echo(msg, log_errors, logger)
                     continue
                 except TimeoutError:
-                    log_or_echo(f"Terminating repair_resource job -- {time_out} second time limit has elapsed", log_errors, logger)
+                    log_or_echo(f"Terminating repair_resource job -- \
+                                {time_out} second time limit has elapsed", log_errors, logger)
                     break

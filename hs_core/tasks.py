@@ -128,7 +128,7 @@ def setup_periodic_tasks(sender, **kwargs):
         # Monthly
         sender.add_periodic_task(crontab(minute=0, hour=1, day_of_month=1), update_from_geoconnex_task.s())
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
-                    send_over_quota_emails.s())
+                                 send_over_quota_emails.s())
         sender.add_periodic_task(
             crontab(minute=15, hour=1, day_of_month=1), monthly_group_membership_requests_cleanup.s())
 
@@ -166,6 +166,7 @@ def nightly_periodic_task_check():
     with open("celery/periodic_tasks_last_executed.txt", mode='w') as file:
         file.write(timezone.now().strftime('%m/%d/%y %H:%M:%S'))
 
+
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def nightly_repair_resource_files():
     """
@@ -173,7 +174,7 @@ def nightly_repair_resource_files():
     """
     from hs_core.management.utils import check_time, repair_resource
     start_time = time.time()
-    cuttoff_time = timezone.now()-timedelta(days=1)
+    cuttoff_time = timezone.now() - timedelta(days=1)
     recently_updated_resources = [res for res in BaseResource.objects.all() if res.last_updated >= cuttoff_time]
     repaired_resources = []
     try:
@@ -181,18 +182,18 @@ def nightly_repair_resource_files():
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             repair_resource(res, logger)
             repaired_resources.append(res)
-        
+
         # spend any remaining time fixing resources that weren't updated in the last day
         for res in BaseResource.objects.exclude(short_id__in=recently_updated_resources):
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             repair_resource(res, logger)
             repaired_resources.append(res)
     except TimeoutError:
-        logger.info(f"nightly_repair_resource_files terminated after {settings.NIGHTLY_RESOURCE_REPAIR_DURATION} seconds")
+        logger.info(f"nightly_repair_resource_files terminated after \
+                    {settings.NIGHTLY_RESOURCE_REPAIR_DURATION} seconds")
 
     for res in repaired_resources:
         notify_owners_of_resource_repair(res)
-
 
 
 def notify_owners_of_resource_repair(resource):
@@ -209,8 +210,8 @@ def notify_owners_of_resource_repair(resource):
     <a href="{ res_url }">
     { res_url }</a></p>
 
-    <p>File corruption can occur if upload or delete processes get interrupted. 
-    The files have been repaired. Please contact us if you notice issues or if you repeatedly receive this message.</p>
+    <p>File corruption can occur if upload or delete processes get interrupted. The files have been repaired.</p>
+    <p>Please contact us if you notice issues or if you repeatedly receive this message.</p>
 
     <p>Thank you,</p>
     <p>The HydroShare Team</p>
