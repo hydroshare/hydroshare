@@ -917,8 +917,6 @@ function bindFileBrowserItemEvents() {
                             }
                         }
                     }
-                }
-                if (fileSelected) {
                     if (!extensionApp) {
                         // file extension and tool supported extension didn't match - now check for appkey match
                         if (!aggrFolderBased) {
@@ -987,12 +985,10 @@ function bindFileBrowserItemEvents() {
                             appKeyApp = false;
                         }
                     }
-                    if (appKeyApp || aggrApp) {
-                        if ($(this).attr("data-file-extensions")) {
-                            // tool has restricted file extensions - so tool is not available for folder based aggregation
-                            appKeyApp = false;
-                            aggrApp = false;
-                        }
+                    if ($(this).attr("data-file-extensions")) {
+                        // tool has restricted file extensions - so tool is not available for folder based aggregation
+                        appKeyApp = false;
+                        aggrApp = false;
                     }
                 }
 
