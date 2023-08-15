@@ -175,20 +175,22 @@ def nightly_repair_resource_files():
     start_time = time.time()
     cuttoff_time = timezone.now()-timedelta(days=1)
     recently_updated_resources = [res for res in BaseResource.objects.all() if res.last_updated >= cuttoff_time]
+    repaired_resources = []
     try:
         for res in recently_updated_resources:
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             repair_resource(res, logger)
+            repaired_resources.append(res)
         
         # spend any remaining time fixing resources that weren't updated in the last day
         for res in BaseResource.objects.exclude(short_id__in=recently_updated_resources):
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             repair_resource(res, logger)
+            repaired_resources.append(res)
     except TimeoutError:
         logger.info(f"nightly_repair_resource_files terminated after {settings.NIGHTLY_RESOURCE_REPAIR_DURATION} seconds")
 
-    recently_repaired_resources = BaseResource.objects.filter(repaired__gte=timezone.now()-timedelta(days=1))
-    for res in recently_repaired_resources:
+    for res in repaired_resources:
         notify_owners_of_resource_repair(res)
 
 
