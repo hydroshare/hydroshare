@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 import traceback
 import zipfile
 import logging
@@ -22,7 +23,6 @@ from celery import Task
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.core.management import call_command
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -171,24 +171,24 @@ def nightly_repair_resource_files():
     """
     Run repair_resource management command on resources updated in the last day
     """
-    from hs_core.management.utils import check_time
-    import time
+    from hs_core.management.utils import check_time, repair_resource
     start_time = time.time()
     cuttoff_time = timezone.now()-timedelta(days=1)
-    recently_updated_resources = [res.short_id for res in BaseResource.objects.all() if res.last_updated >= cuttoff_time]
-    # TODO #5124: instead of call_command revise to call the repair function directly
-    call_command('repair_resource', recently_updated_resources, timeout=settings.NIGHTLY_RESOURCE_REPAIR_DURATION, log=True)
-
-    # spend any remaining time fixing resources that weren't updated in the last day
+    recently_updated_resources = [res for res in BaseResource.objects.all() if res.last_updated >= cuttoff_time]
     try:
-        remaining_time = check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
-        call_command('repair_resource', [], timeout=remaining_time, log=True)
+        for res in recently_updated_resources:
+            check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
+            repair_resource(res, logger)
+        
+        # spend any remaining time fixing resources that weren't updated in the last day
+        for res in BaseResource.objects.exclude(short_id__in=recently_updated_resources):
+            check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
+            repair_resource(res, logger)
     except TimeoutError:
-        pass
+        logger.info(f"nightly_repair_resource_files terminated after {settings.NIGHTLY_RESOURCE_REPAIR_DURATION} seconds")
 
     recently_repaired_resources = BaseResource.objects.filter(repaired__gte=timezone.now()-timedelta(days=1))
     for res in recently_repaired_resources:
-        # TODO #5124 test email notifications
         notify_owners_of_resource_repair(res)
 
 
