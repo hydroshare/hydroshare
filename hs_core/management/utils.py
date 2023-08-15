@@ -258,10 +258,11 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     else:
         # Step 2: does every file in Django refer to an existing file in iRODS?
         for f in resource.files.all():
-            if not istorage.exists(f.storage_path):
+            file_storage_path = f.get_storage_path(resource=resource)
+            if not istorage.exists(file_storage_path):
                 ecount += 1
                 msg = "check_irods_files: django file {} does not exist in iRODS"\
-                    .format(f.storage_path)
+                    .format(file_storage_path)
                 if clean_django:
                     delete_resource_file(resource.short_id, f.short_path, resource.creator,
                                          delete_logical_file=False)
@@ -275,28 +276,27 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                 if stop_on_error:
                     raise ValidationError(msg)
 
-        # Step 3: for composite resources, does every composite metadata file exist?
+        # Step 3: for composite resources, check any dangling logical file records in Django?
         from hs_composite_resource.models import CompositeResource as CR
         if isinstance(resource, CR):
             for lf in resource.logical_files:
-                for f in lf.files.all():
-                    try:
-                        f.resource_file.size
-                    except: # noqa
-                        ecount += 1
-                        msg = "check_resource: file {} does not exist on irods" \
-                            .format(f.storage_path.encode('ascii', 'replace'))
+                if lf.is_dangling:
+                    agg_cls_name = lf.type_name()
+                    ecount += 1
+                    msg = "check_irods_files: dangling aggregation {} in {}"\
+                        .format(agg_cls_name, resource.short_id)
+                    if clean_django:
+                        lf.remove_aggregation()
+                        msg += " (DELETED FROM DJANGO)"
+                    if echo_errors:
                         print(msg)
-                        if clean_django:
-                            f.delete()
-                        if echo_errors:
-                            print(msg)
-                        if log_errors:
-                            logger.error(msg)
-                        if return_errors:
-                            errors.append(msg)
-                        if stop_on_error:
-                            raise ValidationError(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+
         # Step 4: does every iRODS file correspond to a record in files?
         error2, ecount2 = __check_irods_directory(resource, resource.file_path, logger,
                                                   stop_on_error=stop_on_error,
@@ -399,7 +399,7 @@ def __check_irods_directory(resource, dir, logger,
             fullpath = dir + '/' + fname
             found = False
             for f in resource.files.all():
-                if f.storage_path == fullpath:
+                if f.get_storage_path(resource=resource) == fullpath:
                     found = True
                     break
             if not found and not resource.is_aggregation_xml_file(fullpath):
@@ -521,8 +521,9 @@ def __ingest_irods_directory(resource,
             fullpath = dir + '/' + fname
             found = False
             for res_file in resource.files.all():
-                if res_file.storage_path == fullpath:
+                if res_file.get_storage_path(resource=resource) == fullpath:
                     found = True
+                    break
 
             if not found and not resource.is_aggregation_xml_file(fullpath):
                 ecount += 1
@@ -559,7 +560,7 @@ def __ingest_irods_directory(resource,
                     elif res_file.has_logical_file and file_type is not None and \
                             not isinstance(res_file.logical_file, file_type):
                         msg = "ingest_irods_files: logical file for {} has type {}, should be {}"\
-                            .format(res_file.storage_path,
+                            .format(res_file.get_storage_path(resource=resource),
                                     type(res_file.logical_file).__name__,
                                     file_type.__name__)
                         if echo_errors:
@@ -572,7 +573,7 @@ def __ingest_irods_directory(resource,
                             raise ValidationError(msg)
                     elif res_file.has_logical_file and file_type is None:
                         msg = "ingest_irods_files: logical file for {} has type {}, not needed"\
-                            .format(res_file.storage_path, type(res_file.logical_file).__name__)
+                            .format(res_file.get_storage_path(resource=resource), type(res_file.logical_file).__name__)
                         if echo_errors:
                             print(msg)
                         if log_errors:
@@ -654,30 +655,12 @@ class CheckJSONLD(object):
             return
 
 
-def repair_resource(resource, logger, stop_on_error=False,
-                    log_errors=True, echo_errors=False, return_errors=False):
-    errors = []
-    ecount = 0
-
-    try:
-        resource = get_resource_by_shortkey(resource.short_id, or_404=False)
-    except BaseResource.DoesNotExist:
-        msg = "Resource with id {} not found in Django Resources".format(resource.short_id)
-        if log_errors:
-            logger.error(msg)
-        if echo_errors:
-            print(msg)
-        if return_errors:
-            errors.append(msg)
-            ecount = ecount + 1
-        return errors, ecount
+def repair_resource(resource, logger):
 
     print("REPAIRING RESOURCE {}".format(resource.short_id))
 
     # ingest any dangling iRODS files that you can
     # Do this before check because otherwise, errors get printed twice
-    # TODO: This does not currently work properly for composite resources
-    # if resource.resource_type == 'CompositeResource' or \
     if resource.resource_type == 'CompositeResource':
         _, count = ingest_irods_files(resource,
                                       logger,

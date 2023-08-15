@@ -26,8 +26,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        # a list of resource id's, or none to check all resources
-        parser.add_argument('resource_ids', nargs='*', type=str)
+        # id of the resource to repair
+        parser.add_argument('resource_id', type=str)
 
         # Named (optional) arguments
         parser.add_argument(
@@ -42,30 +42,16 @@ class Command(BaseCommand):
         logger = logging.getLogger(__name__)
         log_errors = options['log']
         echo_errors = not options['log']
+        rid = options['resource_id']
 
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            for rid in options['resource_ids']:
-                try:
-                    resource = get_resource_by_shortkey(rid)
-                    repair_resource(resource, logger,
-                                    echo_errors=echo_errors,
-                                    log_errors=log_errors,
-                                    return_errors=False)
-                except BaseResource.DoesNotExist:
-                    msg = "resource {} not found".format(rid)
-                    print(msg)
-                    continue
+        try:
+            resource = get_resource_by_shortkey(rid, or_404=False)
+        except BaseResource.DoesNotExist:
+            msg = "resource {} not found".format(rid)
+            if log_errors:
+                logger.error(msg)
+            if echo_errors:
+                print(msg)
+            return
 
-        else:  # check all resources
-            print("REPAIRING ALL RESOURCES")
-            for r in BaseResource.objects.all():
-                try:
-                    resource = get_resource_by_shortkey(r.short_id)
-                    repair_resource(resource, logger,
-                                    echo_errors=echo_errors,
-                                    log_errors=log_errors,
-                                    return_errors=False)
-                except BaseResource.DoesNotExist:
-                    msg = "resource {} not found".format(r.short_id)
-                    print(msg)
-                    continue
+        repair_resource(resource, logger)
