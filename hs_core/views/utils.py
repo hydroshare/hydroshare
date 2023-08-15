@@ -1481,8 +1481,9 @@ def remove_folder(user, res_id, folder_path):
     if not istorage.exists(coll_path):
         raise ValidationError(f"Specified folder ({folder_path}) was not found")
 
+    # Seems safest to delete from irods before removing from Django
+    # istorage command is the longest-running and most likely to get interrupted
     istorage.delete(coll_path)
-
     remove_irods_folder_in_django(resource, coll_path, user)
 
     resource.update_public_and_discoverable()  # make private if required
