@@ -337,14 +337,16 @@ class CompositeResource(BaseResource):
             raise ObjectDoesNotExist(
                 "No matching aggregation was found for name:{}".format(name))
 
-    def get_fileset_aggregation_in_path(self, path):
+    def get_fileset_aggregation_in_path(self, path, aggregations=None):
         """Get the first fileset aggregation in the path moving up (towards the root)in the path
         :param  path: directory path in which to search for a fileset aggregation
+        :param  aggregations:   a list of aggregations in the resource (self)
         :return a fileset aggregation object if found, otherwise None
         """
 
-        # will be using aggregations more than once if path consists of multiple folders
-        aggregations = list(self.logical_files) if '/' in path else None
+        if aggregations is None:
+            # will be using aggregations more than once if path consists of multiple folders
+            aggregations = list(self.logical_files) if '/' in path else None
 
         def get_fileset(path):
             try:
@@ -362,14 +364,16 @@ class CompositeResource(BaseResource):
         else:
             return get_fileset(path)
 
-    def get_model_aggregation_in_path(self, path):
+    def get_model_aggregation_in_path(self, path, aggregations=None):
         """Get the model program or model instance aggregation in the path moving up (towards the root)in the path
         :param  path: directory path in which to search for a model program or model instance aggregation
+        :param  aggregations:   a list of aggregations in the resource (self)
         :return a model program or model instance aggregation object if found, otherwise None
         """
 
-        # will be using aggregations more than once if path consists of multiple folders
-        aggregations = list(self.logical_files) if '/' in path else None
+        if aggregations is None:
+            # will be using aggregations more than once if path consists of multiple folders
+            aggregations = list(self.logical_files) if '/' in path else None
 
         def get_aggregation(path):
             try:

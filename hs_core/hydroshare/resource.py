@@ -674,10 +674,11 @@ def add_resource_files(pk, *files, **kwargs):
     resource = kwargs.pop("resource", None)
     if resource is None:
         resource = utils.get_resource_by_shortkey(pk)
-    ret = []
+    uploaded_res_files = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
+    istorage = resource.get_irods_storage()
 
     if __debug__:
         assert (isinstance(source_names, list))
@@ -701,6 +702,10 @@ def add_resource_files(pk, *files, **kwargs):
         base_dir = folder[len(prefix_path) + 1:]
     else:
         base_dir = folder
+
+    seen_paths = {}
+    seen_aggregations = {}
+    aggregations = list(resource.logical_files)
     for f in files:
         full_dir = base_dir
         if f in full_paths:
@@ -709,22 +714,70 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user))
+        if full_dir:
+            # file is being uploaded to a folder
+            tgt_full_upload_path = os.path.join(resource.file_path, full_dir)
+            if tgt_full_upload_path not in seen_paths:
+                parent_path = next((p for p in seen_paths.keys() if tgt_full_upload_path.startswith(p)), None)
+                check_path_exists = parent_path is None
+                if check_path_exists:
+                    if not istorage.exists(tgt_full_upload_path):
+                        add_to_aggregation = False
+                        check_path = tgt_full_upload_path
+                        while '/' in check_path:
+                            check_path = os.path.dirname(check_path)
+                            if check_path == resource.file_path:
+                                break
+                            if check_path and istorage.exists(check_path):
+                                add_to_aggregation = True
+                                break
+                    else:
+                        add_to_aggregation = True
+                else:
+                    add_to_aggregation = seen_paths[parent_path]
+                    if add_to_aggregation:
+                        if parent_path in seen_aggregations:
+                            seen_aggregations[full_dir] = seen_aggregations[parent_path]
+                    else:
+                        seen_aggregations[full_dir] = None
+
+                seen_paths[tgt_full_upload_path] = add_to_aggregation
+            else:
+                add_to_aggregation = seen_paths[tgt_full_upload_path]
+        else:
+            # file is being uploaded to the root of the resource path
+            add_to_aggregation = False
+
+        res_file = utils.add_file_to_resource(resource, f, folder=full_dir, add_to_aggregation=False, user=user)
+        uploaded_res_files.append(res_file)
+        if add_to_aggregation:
+            if full_dir not in seen_aggregations:
+                aggregation = resource.get_model_aggregation_in_path(full_dir, aggregations=aggregations)
+                if aggregation is None:
+                    aggregation = resource.get_fileset_aggregation_in_path(full_dir, aggregations=aggregations)
+                if aggregation is not None:
+                    # make the added file part of the fileset or model program/instance aggregation
+                    aggregation.add_resource_file(res_file)
+                seen_aggregations[full_dir] = aggregation
+            else:
+                aggregation = seen_aggregations[full_dir]
+                if aggregation is not None:
+                    aggregation.add_resource_file(res_file)
 
     for ifname in source_names:
-        ret.append(utils.add_file_to_resource(resource, None,
+        uploaded_res_files.append(utils.add_file_to_resource(resource, None,
                                               folder=folder,
                                               source_name=ifname, user=user))
 
-    if not ret:
+    if not uploaded_res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, ret)
+            utils.check_aggregations(resource, uploaded_res_files)
         utils.resource_modified(resource, user, overwrite_bag=False)
 
-    return ret
+    return uploaded_res_files
 
 
 def update_science_metadata(pk, metadata, user):
