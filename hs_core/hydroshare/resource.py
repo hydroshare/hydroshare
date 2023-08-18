@@ -765,9 +765,8 @@ def add_resource_files(pk, *files, **kwargs):
                     aggregation.add_resource_file(res_file)
 
     for ifname in source_names:
-        uploaded_res_files.append(utils.add_file_to_resource(resource, None,
-                                              folder=folder,
-                                              source_name=ifname, user=user))
+        res_file = utils.add_file_to_resource(resource, None, folder=folder, source_name=ifname, user=user)
+        uploaded_res_files.append(res_file)
 
     if not uploaded_res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
