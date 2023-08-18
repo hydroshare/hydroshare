@@ -700,6 +700,7 @@ def validate_resource_file_size(resource_files):
     # if no exception, return the total size of all files
     return size
 
+
 def validate_resource_file_count(resource_cls, files, resource=None):
     if len(files) > 0:
         if resource is None:
