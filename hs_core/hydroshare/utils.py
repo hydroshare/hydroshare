@@ -701,11 +701,10 @@ def validate_resource_file_size(resource_files):
     return size
 
 
-def validate_resource_file_count(resource_cls, files, resource=None):
+def validate_resource_file_count(resource_cls, files):
     if len(files) > 0:
-        if resource is None:
-            resource = resource_cls()
-        if resource.resource_type != "CompositeResource":
+        resource_type = resource_cls.__name__
+        if resource_type != "CompositeResource":
             err_msg = "Content files are not allowed in {res_type} resource"
             err_msg = err_msg.format(res_type=resource_cls)
             raise ResourceFileValidationException(err_msg)
@@ -957,7 +956,7 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
     if len(files) > 0:
         size = validate_resource_file_size(files)
         validate_user_quota(resource.get_quota_holder(), size)
-        validate_resource_file_count(resource_cls, files, resource)
+        validate_resource_file_count(resource_cls, files)
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
