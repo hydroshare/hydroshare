@@ -103,8 +103,9 @@ def data_store_structure(request):
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
                 folder_aggregation_appkey = aggregation_object.metadata.extra_metadata.get(_APPKEY, '')
-                if aggregation_object.get_main_file is not None:
-                    main_file = aggregation_object.get_main_file.file_name
+                aggr_main_file = aggregation_object.get_main_file
+                if aggr_main_file is not None:
+                    main_file = aggr_main_file.file_name
             else:
                 # check first if ModelProgram/ModelInstance aggregation type can be created from this folder
                 can_set_model_instance = ModelInstanceLogicalFile.can_set_folder_to_aggregation(
@@ -138,22 +139,28 @@ def data_store_structure(request):
     for index, fname in enumerate(store[1]):  # files
         f_store_path = os.path.join(store_path, fname)
         file_in_irods = resource.get_irods_path(f_store_path)
+
+        res_file = None
+        if is_federated:
+            for _file in resource.files.all():
+                if _file.fed_resource_file == file_in_irods:
+                    res_file = _file
+                    break
+        else:
+            for _file in resource.files.all():
+                if _file.resource_file == file_in_irods:
+                    res_file = _file
+                    break
+
+        if not res_file:
+            # skip metadata files
+            continue
+
         size = store[2][index]
         mtype = get_file_mime_type(fname)
         idx = mtype.find('/')
         if idx >= 0:
             mtype = mtype[idx + 1:]
-
-        if is_federated:
-            f = ResourceFile.objects.filter(object_id=resource.id,
-                                            fed_resource_file=file_in_irods).first()
-        else:
-            f = ResourceFile.objects.filter(object_id=resource.id,
-                                            resource_file=file_in_irods).first()
-
-        if not f:
-            # skip metadata files
-            continue
 
         f_ref_url = ''
         logical_file_type = ''
@@ -165,49 +172,49 @@ def data_store_structure(request):
         has_model_program_aggr_folder = False
         has_model_instance_aggr_folder = False
         aggregation_appkey = ''
-        if f.has_logical_file:
-            main_extension = f.logical_file.get_main_file_type()
+        if res_file.has_logical_file:
+            main_extension = res_file.logical_file.get_main_file_type()
             if not main_extension:
                 # accept any extension
                 main_extension = ""
 
             _ , file_extension = os.path.splitext(fname)
             if file_extension and main_extension.endswith(file_extension):
-                if not hasattr(f.logical_file, 'folder') or f.logical_file.folder is None:
-                    aggregation_appkey = f.logical_file.metadata.extra_metadata.get(_APPKEY, '')
+                if not hasattr(res_file.logical_file, 'folder') or res_file.logical_file.folder is None:
+                    aggregation_appkey = res_file.logical_file.metadata.extra_metadata.get(_APPKEY, '')
 
-                aggregations.append({'logical_file_id': f.logical_file.id,
-                                     'name': f.logical_file.dataset_name,
-                                     'logical_type': f.logical_file.get_aggregation_class_name(),
-                                     'aggregation_name': f.logical_file.get_aggregation_display_name(),
+                aggregations.append({'logical_file_id': res_file.logical_file.id,
+                                     'name': res_file.logical_file.dataset_name,
+                                     'logical_type': res_file.logical_file.get_aggregation_class_name(),
+                                     'aggregation_name': res_file.logical_file.get_aggregation_display_name(),
                                      'aggregation_appkey': aggregation_appkey,
-                                     'main_file': f.logical_file.get_main_file.file_name,
-                                     'preview_data_url': f.logical_file.metadata.get_preview_data_url(
+                                     'main_file': res_file.logical_file.get_main_file.file_name,
+                                     'preview_data_url': res_file.logical_file.metadata.get_preview_data_url(
                                          resource=resource,
                                          folder_path=f_store_path
                                      ),
-                                     'url': f.logical_file.url})
-            logical_file = f.logical_file
-            logical_file_type = f.logical_file_type_name
+                                     'url': res_file.logical_file.url})
+            logical_file = res_file.logical_file
+            logical_file_type = res_file.logical_file_type_name
             logical_file_id = logical_file.id
-            aggregation_name = f.aggregation_display_name
+            aggregation_name = res_file.aggregation_display_name
             aggregation_appkey = ''
             if not hasattr(logical_file, 'folder') or logical_file.folder is None:
                 aggregation_appkey = logical_file.metadata.extra_metadata.get(_APPKEY, '')
-            if 'url' in f.logical_file.extra_data:
-                f_ref_url = f.logical_file.extra_data['url']
+            if 'url' in res_file.logical_file.extra_data:
+                f_ref_url = res_file.logical_file.extra_data['url']
 
             # check if this file (f) is part of a model program folder aggregation
             if logical_file_type == "ModelProgramLogicalFile":
-                if f.file_folder is not None and f.logical_file.folder is not None:
-                    if f.file_folder.startswith(f.logical_file.folder):
+                if res_file.file_folder is not None and res_file.logical_file.folder is not None:
+                    if res_file.file_folder.startswith(res_file.logical_file.folder):
                         has_model_program_aggr_folder = True
             elif logical_file_type == "ModelInstanceLogicalFile":
-                if f.file_folder is not None and f.logical_file.folder is not None:
-                    if f.file_folder.startswith(f.logical_file.folder):
+                if res_file.file_folder is not None and res_file.logical_file.folder is not None:
+                    if res_file.file_folder.startswith(res_file.logical_file.folder):
                         has_model_instance_aggr_folder = True
 
-        files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f.url,
+        files.append({'name': fname, 'size': size, 'type': mtype, 'pk': res_file.pk, 'url': res_file.url,
                       'reference_url': f_ref_url,
                       'aggregation_name': aggregation_name,
                       'logical_type': logical_file_type,
@@ -230,7 +237,7 @@ def data_store_structure(request):
 def to_external_url(url):
     """
     Convert an internal download file/folder url to the external url.  This should eventually be
-    replaced with with a reverse method that gets the correct mapping.
+    replaced with a reverse method that gets the correct mapping.
     """
     return url.replace("django_irods/download", "resource", 1)
 
