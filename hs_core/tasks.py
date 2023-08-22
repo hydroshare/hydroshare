@@ -23,6 +23,7 @@ from celery import Task
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import F
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -180,14 +181,20 @@ def nightly_repair_resource_files():
     try:
         for res in recently_updated_resources:
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
-            repair_resource(res, logger)
-            repaired_resources.append(res)
+            is_corrupt = repair_resource(res, logger)
+            if is_corrupt:
+                repaired_resources.append(res)
 
-        # spend any remaining time fixing resources that weren't updated in the last day
-        for res in BaseResource.objects.exclude(short_id__in=recently_updated_resources):
+        # spend any remaining time fixing resources that haven't been checked
+        # followed by those previously checked, prioritizing the oldest checked date
+        recently_updated_rids = [res.short_id for res in recently_updated_resources]
+        not_recently_updated = BaseResource.objects.exclude(short_id__in=recently_updated_rids) \
+                                                            .order_by(F('files_checked').asc(nulls_first=True))
+        for res in not_recently_updated:
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
-            repair_resource(res, logger)
-            repaired_resources.append(res)
+            is_corrupt = repair_resource(res, logger)
+            if is_corrupt:
+                repaired_resources.append(res)
     except TimeoutError:
         logger.info(f"nightly_repair_resource_files terminated after \
                     {settings.NIGHTLY_RESOURCE_REPAIR_DURATION} seconds")

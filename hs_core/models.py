@@ -2062,6 +2062,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
 
+    # for tracking when resourceFiles were last compared with irods
+    files_checked = models.DateTimeField(null=True)
     repaired = models.DateTimeField(null=True)
 
     def update_view_count(self):

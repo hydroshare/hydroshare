@@ -660,24 +660,25 @@ class CheckJSONLD(object):
 def repair_resource(resource, logger):
 
     print("CHECKING IF RESOURCE {} NEEDS REPAIR".format(resource.short_id))
+    now = timezone.now()
 
     # ingest any dangling iRODS files that you can
     # Do this before check because otherwise, errors get printed twice
     if resource.resource_type == 'CompositeResource':
-        _, count = ingest_irods_files(resource,
+        _, ingest_count = ingest_irods_files(resource,
                                       logger,
                                       stop_on_error=False,
                                       echo_errors=True,
                                       log_errors=False,
                                       return_errors=False)
-        if count:
+        if ingest_count:
             print("... affected resource {} has type {}, title '{}'"
                   .format(resource.short_id, resource.resource_type,
                           resource.title))
-            resource.repaired = timezone.now()
-            resource.save()
+            
+            resource.repaired = now
 
-    _, count = check_irods_files(resource,
+    _, check_count = check_irods_files(resource,
                                  stop_on_error=False,
                                  echo_errors=True,
                                  log_errors=False,
@@ -685,12 +686,15 @@ def repair_resource(resource, logger):
                                  clean_irods=False,
                                  clean_django=True,
                                  sync_ispublic=True)
-    if count:
+    if check_count:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
                       resource.title))
-        resource.repaired = timezone.now()
-        resource.save()
+        resource.repaired = now
+    
+    resource.files_checked = now
+    resource.save()
+    return ingest_count or check_count
 
 
 class CheckResource(object):
