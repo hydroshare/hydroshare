@@ -1,7 +1,10 @@
+import json
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 
 from hs_core.signals import pre_download_file, pre_delete_resource, post_create_resource
+from hs_core.enums import RelationTypes
+from hs_core.hydroshare.utils import current_site_url
 
 from .models import Session
 from .models import Variable
@@ -58,6 +61,25 @@ def capture_download(**kwargs):
     fields['resource_size_bytes'] = kwargs['resource'].size
     fields['resource_type'] = kwargs['resource'].resource_type
     fields['resource_guid'] = kwargs['resource'].short_id
+
+    # MakeDataCount fields
+    fields['tracking_visitor_id'] = session.visitor.id
+    fields['doi'] = kwargs['resource'].doi
+    fields['user_agent'] = kwargs['request'].headers.get('user-agent')
+
+    # MakeDataCount also requires the following metadata about the resource:
+    res_metadata = {
+        'title': kwargs['resource'].title,
+        'creators': " ;".join(str(name) for name in kwargs['resource'].metadata.creators.only('name').all()),
+        'is_replaced_by': kwargs['resource'].get_relation_version_res_url(RelationTypes.isReplacedBy) or None,
+        'is_version_of': kwargs['resource'].get_relation_version_res_url(RelationTypes.isVersionOf) or None,
+        'resource_url': current_site_url() + kwargs['resource'].absolute_url
+    }
+    if kwargs['resource'].raccess.published:
+        res_metadata['publisher'] = str(kwargs['resource'].metadata.publisher),
+        res_metadata['publish_date'] = kwargs['resource'].publish_date.strftime("%m/%d/%Y %H:%M:%S.%f")
+    fields['resource_metadata'] = json.dumps(res_metadata)
+
 
     # format the 'download' kwargs
     msg = Variable.format_kwargs(**fields)
