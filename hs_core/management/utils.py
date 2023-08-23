@@ -666,32 +666,32 @@ def repair_resource(resource, logger):
     # Do this before check because otherwise, errors get printed twice
     if resource.resource_type == 'CompositeResource':
         _, ingest_count = ingest_irods_files(resource,
-                                      logger,
-                                      stop_on_error=False,
-                                      echo_errors=True,
-                                      log_errors=False,
-                                      return_errors=False)
+                                             logger,
+                                             stop_on_error=False,
+                                             echo_errors=True,
+                                             log_errors=False,
+                                             return_errors=False)
         if ingest_count:
             print("... affected resource {} has type {}, title '{}'"
                   .format(resource.short_id, resource.resource_type,
                           resource.title))
-            
+
             resource.repaired = now
 
     _, check_count = check_irods_files(resource,
-                                 stop_on_error=False,
-                                 echo_errors=True,
-                                 log_errors=False,
-                                 return_errors=False,
-                                 clean_irods=False,
-                                 clean_django=True,
-                                 sync_ispublic=True)
+                                       stop_on_error=False,
+                                       echo_errors=True,
+                                       log_errors=False,
+                                       return_errors=False,
+                                       clean_irods=False,
+                                       clean_django=True,
+                                       sync_ispublic=True)
     if check_count:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
                       resource.title))
         resource.repaired = now
-    
+
     resource.files_checked = now
     resource.save()
     return ingest_count or check_count
