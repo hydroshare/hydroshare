@@ -222,14 +222,15 @@ def create_bag_metadata_files(resource):
         # only the files that are not part of file type aggregation (logical file)
         # should be added to the resource level map xml file
         if f.logical_file is None:
+            short_path = f.get_short_path(resource=resource)
             res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url,
                 res_id=resource.short_id,
-                file_name=f.short_path)
+                file_name=short_path)
             res_uri = encode_resource_url(res_uri)
             ar = AggregatedResource(res_uri)
             ar._ore.isAggregatedBy = ag_url
-            ar._dc.format = get_file_mime_type(os.path.basename(f.short_path))
+            ar._dc.format = get_file_mime_type(os.path.basename(short_path))
             a.add_resource(ar)
 
     # handle collection resource type

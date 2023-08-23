@@ -2689,7 +2689,7 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
             # extract coverage data
             _extract_coverage_metadata(resource, cur, logical_file)
 
-            # extract extended metadata
+            # extract additional metadata
             cur.execute("SELECT * FROM Sites")
             sites = cur.fetchall()
             is_create_multiple_site_elements = len(sites) > 1

@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from django.core.exceptions import SuspiciousFileOperation, ValidationError
+from django.core.exceptions import SuspiciousFileOperation, ValidationError, ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 
 from rest_framework.decorators import api_view
@@ -20,7 +20,7 @@ from hs_core.views import utils as view_utils
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
-    rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
+    rename_file_or_folder, irods_path_is_directory, \
     add_reference_url_to_resource, edit_reference_url_in_resource, zip_by_aggregation_file
 
 from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
@@ -170,7 +170,9 @@ def data_store_structure(request):
             if not main_extension:
                 # accept any extension
                 main_extension = ""
-            if f.extension and main_extension.endswith(f.extension):
+
+            _ , file_extension = os.path.splitext(fname)
+            if file_extension and main_extension.endswith(file_extension):
                 if not hasattr(f.logical_file, 'folder') or f.logical_file.folder is None:
                     aggregation_appkey = f.logical_file.metadata.extra_metadata.get(_APPKEY, '')
 
@@ -219,10 +221,6 @@ def data_store_structure(request):
                      'aggregations': aggregations,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
-    if resource.resource_type == "CompositeResource":
-        return_object['spatial_coverage'] = get_coverage_data_dict(resource)
-        return_object['temporal_coverage'] = get_coverage_data_dict(resource,
-                                                                    coverage_type='temporal')
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"
@@ -903,7 +901,7 @@ def data_store_move_to_folder(request, pk=None):
         if not irods_path_is_directory(istorage, src_storage_path):  # there is django record
             try:
                 ResourceFile.get(resource, file, folder=folder)
-            except ResourceFile.DoesNotExist:
+            except ObjectDoesNotExist:
                 return HttpResponse('Source file {} does not exist'.format(src_short_path),
                                     status=status.HTTP_400_BAD_REQUEST)
 
@@ -1007,7 +1005,7 @@ def data_store_rename_file_or_folder(request, pk=None):
     if not irods_path_is_directory(istorage, src_storage_path):
         try:  # Django record should exist for each file
             ResourceFile.get(resource, base, folder=folder)
-        except ResourceFile.DoesNotExist:
+        except ObjectDoesNotExist:
             return JsonResponse({"error": "Path to be renamed does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
     # check that the target doesn't exist
@@ -1029,7 +1027,7 @@ def data_store_rename_file_or_folder(request, pk=None):
         err_msg = f"Desired name ({tgt_short_path}) already in use"
         return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
-    except ResourceFile.DoesNotExist:
+    except ObjectDoesNotExist:
         pass  # correct response
 
     try:

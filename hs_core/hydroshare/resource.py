@@ -120,10 +120,9 @@ def res_has_web_reference(res):
     if res.resource_type != "CompositeResource":
         return False
 
-    for f in ResourceFile.objects.filter(object_id=res.id):
-        if f.has_logical_file:
-            if 'url' in f.logical_file.extra_data:
-                return True
+    for lf in res.get_logical_files('GenericLogicalFile'):
+        if 'url' in lf.extra_data:
+            return True
     return False
 
 
@@ -723,6 +722,7 @@ def add_resource_files(pk, *files, **kwargs):
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
+        utils.resource_modified(resource, user, overwrite_bag=False)
 
     return ret
 
@@ -830,7 +830,7 @@ def delete_resource_file_only(resource, f):
         f: the ResourceFile object to be deleted
     Returns: unqualified relative path to file that has been deleted
     """
-    short_path = f.short_path
+    short_path = f.get_short_path(resource)
     f.delete()
     return short_path
 
@@ -847,12 +847,10 @@ def delete_format_metadata_after_delete_file(resource, file_name):
 
     # if there is no other resource file with the same extension as the
     # file just deleted then delete the matching format metadata element for the resource
-    resource_file_extensions = [os.path.splitext(get_resource_file_name(f))[1] for f in
-                                resource.files.all()]
+    resource_file_extensions = {os.path.splitext(f.get_short_path(resource))[1] for f in
+                                resource.files.all()}
     if delete_file_extension not in resource_file_extensions:
-        format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
-        if format_element:
-            resource.metadata.delete_element(format_element.term, format_element.id)
+        resource.metadata.formats.filter(value=delete_file_mime_type).delete()
 
 
 # TODO: Remove option for file id, not needed since names are unique.

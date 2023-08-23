@@ -2,12 +2,25 @@
 
 import django.contrib.postgres.fields
 from django.db import migrations, models
+from django.db.utils import DataError
+from django.core.management import call_command
+import re
 
 
 def migrate_csv_subject_areas(apps, schema_editor):
+    def strip_for_dict(string=""):
+        # Check if the string consists of only spaces and braces
+        res, _ = re.subn('{|}', '', string)
+        if res.strip() == "":
+            return ""
+        # replace invalid braces and quotes
+        string = string.replace("{", "[").replace("}", "]").replace("\"", "\'")
+        return string.strip()
+    call_command('create_subject_areas_dict')
     SubjectArea = apps.get_model('hs_dictionary.SubjectArea')
     UserProfile = apps.get_model('theme.UserProfile')
     # Attempt to match existing SAs from profiles
+    errors = []
     profiles_with_sa = UserProfile.objects \
         .exclude(subject_areas__isnull=True) \
         .exclude(subject_areas='')
@@ -21,8 +34,16 @@ def migrate_csv_subject_areas(apps, schema_editor):
         print(f'Searching user #{profile.pk} which has subject areas: {profile.subject_areas}')
         new_subj_areas = []
         for subject in old_subject_areas:
+            if subject == '':
+                # There is a trailing comma that we need to remove
+                continue
+            stripped_subject = strip_for_dict(subject)
+            if stripped_subject == '':
+                # The subject contained only invalid chars
+                print(f"- Unmatched subject area '{subject}' contains invalid chars that will be stripped")
+                continue
             print(f"Searching for a match with '{subject}'")
-            match = [sa for sa in subject_area_objects if sa.name.lower() == subject.strip().lower()]
+            match = [sa for sa in subject_area_objects if sa.name.lower() == stripped_subject.lower()]
             if match:
                 new_subj_areas.append(match[0].name)
                 if match[0].name == subject:
@@ -30,24 +51,33 @@ def migrate_csv_subject_areas(apps, schema_editor):
                 else:
                     print(f'- Near match with pre-existing subject area: {subject}')
             else:
-                if subject.strip() == subject:
+                if stripped_subject == subject:
                     print(f"- Unmatched subject area '{subject}' will remain unaltered")
                     new_subj_areas.append(subject)
                 else:
-                    print(f"- Unmatched subject area '{subject}' contains whitespace that will be stripped")
-                    new_subj_areas.append(subject.strip())
+                    print(f"- Unmatched subject area '{subject}' contains invalid chars that will be stripped")
+                    new_subj_areas.append(stripped_subject)
 
         sas = ','.join(new_subj_areas)
-        print(f'Updating {profile} from {profile.subject_areas} subject_areas to {{{sas}}}')
+        message = f'Updating {profile} from {profile.subject_areas} subject_areas to {{{sas}}}'
+        print(message)
         profile.subject_areas = f'{{{sas}}}'
+        try:
+            profile.save()
+        except DataError as e:
+            errors.append(f'Error saving profile: {e}' + message)
+
+    profiles_without_sa = UserProfile.objects.filter(subject_areas='')
+    for profile in profiles_without_sa:
+        print(f'Updating {profile} from "" to {{}}')
+        profile.subject_areas = '{}'
         profile.save()
 
-        profiles_without_sa = UserProfile.objects \
-            .filter(subject_areas='')
-        for profile in profiles_without_sa:
-            print(f'Updating {profile} from "" to {{}}')
-            profile.subject_areas = '{}'
-            profile.save()
+    print("Done updating Subject Areas.")
+    if errors:
+        print("Errors during update:")
+        for error in errors:
+            print(error)
 
 
 class Migration(migrations.Migration):

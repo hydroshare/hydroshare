@@ -150,11 +150,10 @@ def get_res_file(pk, file_path):
         folder, file_name = ResourceFile.resource_path_is_acceptable(resource,
                                                                      file_storage_path,
                                                                      test_exists=True)
-    except ValidationError:
+        res_file = ResourceFile.get(resource, file_name, folder)
+    except (ValidationError, ObjectDoesNotExist):
         return Response('File {} does not exist.'.format(file_path),
                         status=status.HTTP_400_BAD_REQUEST)
-
-    res_file = ResourceFile.get(resource, file_name, folder)
 
     return res_file
 
@@ -291,9 +290,9 @@ def use_template_metadata_schema_for_model_program(request, resource_id, aggrega
     """Assigns the specified template metadata schema as the metadata schema for a model program aggregation."""
 
     try:
-        resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
-                                                                 aggregation_path=aggregation_path,
-                                                                 model_type='model-program')
+        resource, aggr = _validate_model_aggregation_meta_api_request(request=request, resource_id=resource_id,
+                                                                      aggregation_path=aggregation_path,
+                                                                      model_type='model-program')
     except BadRequestException as ex:
         return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
 
@@ -332,9 +331,9 @@ def update_metadata_schema_for_model_instance(request, resource_id, aggregation_
     model program aggregation."""
 
     try:
-        resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
-                                                                 aggregation_path=aggregation_path,
-                                                                 model_type='model-instance')
+        resource, aggr = _validate_model_aggregation_meta_api_request(request=request, resource_id=resource_id,
+                                                                      aggregation_path=aggregation_path,
+                                                                      model_type='model-instance')
     except BadRequestException as ex:
         return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
 
@@ -368,9 +367,9 @@ def update_metadata_schema_for_model_instance(request, resource_id, aggregation_
 @api_view(['GET', 'PUT'])
 def model_program_metadata_in_json(request, resource_id, aggregation_path, **kwargs):
     try:
-        resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
-                                                                 aggregation_path=aggregation_path,
-                                                                 model_type='model-program')
+        resource, aggr = _validate_model_aggregation_meta_api_request(request=request, resource_id=resource_id,
+                                                                      aggregation_path=aggregation_path,
+                                                                      model_type='model-program')
     except BadRequestException as ex:
         return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
     if request.method == 'GET':
@@ -400,9 +399,9 @@ def model_program_metadata_in_json(request, resource_id, aggregation_path, **kwa
 @api_view(['GET', 'PUT'])
 def model_instance_metadata_in_json(request, resource_id, aggregation_path, **kwargs):
     try:
-        resource, aggr = _validate_model_aggregation_api_request(request=request, resource_id=resource_id,
-                                                                 aggregation_path=aggregation_path,
-                                                                 model_type='model-instance')
+        resource, aggr = _validate_model_aggregation_meta_api_request(request=request, resource_id=resource_id,
+                                                                      aggregation_path=aggregation_path,
+                                                                      model_type='model-instance')
     except BadRequestException as ex:
         return JsonResponse(data=str(ex), safe=False, status=status.HTTP_400_BAD_REQUEST)
 
@@ -562,7 +561,10 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
             tgt_full_path = os.path.join(res.file_path, file_name)
         if istorage.exists(tgt_full_path):
             override_tgt_paths.append(tgt_full_path)
-            override_tgt_res_files.append(ResourceFile.get(res, file=file_name, folder=tgt_path))
+            try:
+                override_tgt_res_files.append(ResourceFile.get(res, file=file_name, folder=tgt_path))
+            except ObjectDoesNotExist:
+                return JsonResponse(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     if override_tgt_paths:
         if not file_override:
@@ -842,7 +844,7 @@ def delete_coverage_element(request, hs_file_type, file_type_id,
 @authorise_for_aggregation_edit
 @login_required
 def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
-    """add/update key/value extended metadata for a given logical file
+    """add/update key/value additional metadata for a given logical file
     key/value data is expected as part of the request.POST data for adding
     key/value/key_original is expected as part of the request.POST data for updating
     If the key already exists, the value then gets updated, otherwise, the key/value is added
@@ -906,7 +908,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
 @authorise_for_aggregation_edit
 @login_required
 def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
-    """deletes one pair of key/value extended metadata for a given logical file
+    """deletes one pair of key/value additional metadata for a given logical file
     key data is expected as part of the request.POST data
     If key is found the matching key/value pair is deleted from the hstore dict type field
     """
@@ -1524,13 +1526,21 @@ def _is_update_file(logical_file, element_name, element):
     return update_file
 
 
-def _validate_model_aggregation_api_request(request, resource_id, aggregation_path, model_type):
+def _validate_model_aggregation_meta_api_request(request, resource_id, aggregation_path, model_type):
+    if request.method == 'GET':
+        needed_permission = ACTION_TO_AUTHORIZE.VIEW_METADATA
+        permission_denied_msg = "You do not have permission to view metadata for this resource."
+    else:
+        needed_permission = ACTION_TO_AUTHORIZE.EDIT_RESOURCE
+        permission_denied_msg = "You do not have permission to edit this resource."
+
     resource, authorized, user = authorize(
         request, resource_id,
-        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+        needed_permission=needed_permission,
         raises_exception=False)
+
     if not authorized:
-        raise PermissionDenied("You don't have permission to edit this.")
+        raise PermissionDenied(permission_denied_msg)
 
     if resource.resource_type != "CompositeResource":
         raise BadRequestException(f"Specified type:{resource_id} is not a resource.")

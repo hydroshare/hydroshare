@@ -571,12 +571,20 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
                         tgt_logical_file.metadata.save()
                         break
 
-    def logical_delete(self, user, delete_res_files=True):
+    def logical_delete(self, user, resource=None, delete_res_files=True, delete_meta_files=True):
         # super deletes files needed to delete the values file path
-        istorage = self.resource.get_irods_storage()
-        if istorage.exists(self.schema_values_file_path):
-            istorage.delete(self.schema_values_file_path)
-        super(ModelInstanceLogicalFile, self).logical_delete(user, delete_res_files=delete_res_files)
+        if delete_meta_files:
+            if resource is None:
+                resource = self.resource
+            istorage = resource.get_irods_storage()
+            if istorage.exists(self.schema_values_file_path):
+                istorage.delete(self.schema_values_file_path)
+        super(ModelInstanceLogicalFile, self).logical_delete(
+            user,
+            resource=resource,
+            delete_res_files=delete_res_files,
+            delete_meta_files=delete_meta_files
+        )
 
     def remove_aggregation(self):
         # super deletes files needed to delete the values file path
