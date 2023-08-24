@@ -769,7 +769,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
                     resource_file_info_list.append(self.resourceFileToListItem(f))
                 except SessionException as err:
                     logger.error(f"Error for file {f.storage_path} from iRODS: {err.stderr}")
-                except Exception as err:
+                except CoreValidationError as err:
                     # primarily this exception will be raised if the file is not found in iRODS
                     logger.error(f"Error for file {f.storage_path} from iRODS: {str(err)}")
 
