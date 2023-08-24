@@ -1275,7 +1275,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(box_coverage.value['southlimit'], 41.987457779031246)
         self.assertEqual(box_coverage.value['westlimit'], -111.65768822411243)
 
-        # testing extended metadata element: original coverage
+        # testing additional metadata element: original coverage
         ori_coverage = logical_file.metadata.originalCoverage
         self.assertNotEqual(ori_coverage, None)
         self.assertEqual(ori_coverage.value['northlimit'], 4655492.446916306)
@@ -1286,7 +1286,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(ori_coverage.value['projection'],
                          'NAD83 / UTM zone 12N')
 
-        # testing extended metadata element: cell information
+        # testing additional metadata element: cell information
         cell_info = logical_file.metadata.cellInformation
         self.assertEqual(cell_info.rows, 230)
         self.assertEqual(cell_info.columns, 220)
@@ -1294,7 +1294,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(cell_info.cellSizeYValue, 30.0)
         self.assertEqual(cell_info.cellDataType, 'Float32')
 
-        # testing extended metadata element: band information
+        # testing additional metadata element: band information
         self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
         band_info = logical_file.metadata.bandInformations.first()
         self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')

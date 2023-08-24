@@ -27,7 +27,7 @@ from rest_framework import status
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag, current_site_url
 from hydroshare.hydrocelery import app as celery_app
-from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bagit_files_by_irods
 from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref, \
     get_resource_doi
 from hs_core.task_utils import get_or_create_task_notification
@@ -566,8 +566,8 @@ def create_bag_by_irods(resource_id, create_zip=True):
 
 @shared_task
 def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
+    new_res = None
     try:
-        new_res = None
         if not new_res_id:
             new_res = create_empty_resource(ori_res_id, request_username, action='copy')
             new_res_id = new_res.short_id
@@ -577,10 +577,9 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
             new_res = utils.get_resource_by_shortkey(new_res_id)
         utils.copy_and_create_metadata(ori_res, new_res)
 
-        if new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
-            # the resource to be copied is a versioned resource, need to delete this isVersionOf
-            # relation element to maintain the single versioning obsolescence chain
-            new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
+        # the resource to be copied is a versioned resource, need to delete this isVersionOf
+        # relation element to maintain the single versioning obsolescence chain
+        new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).delete()
 
         # create the relation element for the new_res
         today = date.today().strftime("%m/%d/%Y")
@@ -594,9 +593,7 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
             # note that new collection will not contain "deleted resources"
             new_res.resources.set(ori_res.resources.all())
 
-        # create bag for the new resource
-        create_bag(new_res)
-        return new_res.get_absolute_url()
+        return new_res.absolute_url
     except Exception as ex:
         if new_res:
             new_res.delete()
@@ -631,11 +628,11 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         # add or update Relation element to link source and target resources
         ori_res.metadata.create_element('relation', type=RelationTypes.isReplacedBy, value=new_res.get_citation())
 
-        if new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).exists():
-            # the original resource is already a versioned resource, and its isVersionOf relation
-            # element is copied over to this new version resource, needs to delete this element so
-            # it can be created to link to its original resource correctly
-            new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).first().delete()
+        # the original resource is already a versioned resource, and its isVersionOf relation
+        # element is copied over to this new version resource, needs to delete this element so
+        # it can be created to link to its original resource correctly
+        new_res.metadata.relations.all().filter(type=RelationTypes.isVersionOf).delete()
+
         new_res.metadata.create_element('relation', type=RelationTypes.isVersionOf, value=ori_res.get_citation())
 
         if ori_res.resource_type.lower() == "collectionresource":
@@ -647,9 +644,6 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
             for res in ori_resources:
                 res.metadata.create_element('relation', type=RelationTypes.isPartOf, value=new_res.get_citation())
 
-        # create bag for the new resource
-        create_bag(new_res)
-
         # since an isReplaceBy relation element is added to original resource, needs to call
         # resource_modified() for original resource
         # if everything goes well up to this point, set original resource to be immutable so that
@@ -657,7 +651,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         ori_res.raccess.immutable = True
         ori_res.raccess.save()
         ori_res.save()
-        return new_res.get_absolute_url()
+        return new_res.absolute_url
     except Exception as ex:
         if new_res:
             new_res.delete()

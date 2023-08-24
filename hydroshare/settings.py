@@ -178,11 +178,6 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
 
-# Sitemap for robots
-ROBOTS_SITEMAP_URLS = [
-    "http://localhost:8000/sitemap/",
-]
-
 #############
 # DATABASES #
 #############

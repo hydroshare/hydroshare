@@ -83,7 +83,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
     # one temporal coverage and one spatial coverage
     coverages = GenericRelation(Coverage)
-    # key/value metadata
+    # key/value metadata (additional metadata)
     extra_metadata = HStoreField(default=dict)
 
     # keywords
@@ -171,7 +171,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         if self.extra_metadata:
             extra_metadata_div = div(cls="content-block")
             with extra_metadata_div:
-                legend('Extended Metadata')
+                legend('Additional Metadata')
                 with table(cls="hs-table table dataTable no-footer", style="width: 100%"):
                     with thead():
                         with tr(cls="header-row"):
@@ -269,7 +269,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         if self.extra_metadata:
             root_div_extra = div(id="filetype-extra-metadata")
             with root_div_extra:
-                legend('Extended Metadata')
+                legend('Additional Metadata')
                 get_add_keyvalue_button()
                 with table(cls="hs-table table dataTable no-footer",
                            style="width: 100%"):
@@ -305,7 +305,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         else:
             root_div_extra = div(id="filetype-extra-metadata", cls="content-block")
             with root_div_extra:
-                legend('Extended Metadata')
+                legend('Additional Metadata')
                 get_add_keyvalue_button()
                 self._get_add_key_value_modal_form()
             return root_div_extra
@@ -1212,35 +1212,48 @@ class AbstractLogicalFile(models.Model):
         override if needed"""
         super(AbstractLogicalFile, self).delete()
 
-    def logical_delete(self, user, delete_res_files=True):
+    def logical_delete(self, user, resource=None, delete_res_files=True, delete_meta_files=True):
         """
         Deletes the logical file as well as all resource files associated with this logical file.
         This function is primarily used by the system to delete logical file object and associated
         metadata as part of deleting a resource file object. Any time a request is made to
-        delete a specific resource file object, if the the requested file is part of a
+        delete a specific resource file object, if the requested file is part of a
         logical file then all files in the same logical file group will be deleted. if custom logic
         requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
         use LFO.logical_delete()
         :param  user:  user who is deleting file type/aggregation
+        :param  resource: an instance of CompositeResource to which this logical file belongs to
         :param delete_res_files: If True all resource files that are part of this logical file will
         be deleted
+        :param delete_meta_files: If True the resource map and metadata files that are part of this logical file
+        will be deleted. The only time this should be set to False is when deleting a folder as the folder
+        gets deleted from iRODS which deletes the associated metadata and resource map files.
         """
 
         from hs_core.hydroshare.resource import delete_resource_file
 
         parent_aggr = self.get_parent()
-        resource = self.resource
-        # delete associated metadata and map xml documents
-        istorage = resource.get_irods_storage()
-        if istorage.exists(self.metadata_file_path):
-            istorage.delete(self.metadata_file_path)
-        if istorage.exists(self.map_file_path):
-            istorage.delete(self.map_file_path)
+        if resource is None:
+            # this generates a db query
+            resource = self.resource
+
+        if delete_meta_files:
+            # delete associated metadata and map xml documents
+            istorage = resource.get_irods_storage()
+            if istorage.exists(self.metadata_file_path):
+                istorage.delete(self.metadata_file_path)
+            if istorage.exists(self.map_file_path):
+                istorage.delete(self.map_file_path)
 
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
                 delete_resource_file(resource.short_id, f.id, user, delete_logical_file=False)
+        else:
+            # first need to set the aggregation for each of the associated resource files to None
+            # so that deleting the aggregation (logical file) does not cascade to deleting of
+            # resource files associated with the aggregation
+            self.files.update(logical_file_object_id=None, logical_file_content_type=None)
 
         # delete logical file first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated

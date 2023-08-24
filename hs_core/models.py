@@ -2048,6 +2048,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
+    # key/value metadata (additional metadata)
     extra_metadata = HStoreField(default=dict)
 
     # this field is for resources to store extra key:value pairs as needed, e.g., bag checksum is stored as
@@ -2679,10 +2680,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         res_files_at_root = self.files.filter(file_folder='')
         readme_txt_file = None
         readme_md_file = None
+
+        def get_file_name(f):
+            return os.path.basename(f.get_storage_path(resource=self)).lower()
+
         for res_file in res_files_at_root:
-            if res_file.file_name.lower() == 'readme.md':
+            file_name = get_file_name(res_file)
+            if file_name == 'readme.md':
                 readme_md_file = res_file
-            elif res_file.file_name.lower() == 'readme.txt':
+            elif file_name == 'readme.txt':
                 readme_txt_file = res_file
             if readme_md_file is not None:
                 break
@@ -3135,6 +3141,13 @@ class ResourceFile(ResourceFileIRODSMixin):
         # instance.content_object can be stale after changes.
         # Re-fetch based upon key; bypass type system; it is not relevant
         resource = self.resource
+        return self.get_storage_path(resource)
+
+    def get_storage_path(self, resource):
+        """Return the qualified name for a file in the storage hierarchy.
+        Note: This is the preferred way to get the storage path for a file when we are trying to find
+        the storage path for more than one file in a resource.
+        """
         if resource.is_federated:  # false if None or empty
             if __debug__:
                 assert self.resource_file.name is None or \
@@ -3223,7 +3236,23 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         This is the path that should be used as a key to index things such as file type.
         """
-        if self.resource.is_federated:
+
+        # use of self.resource generates a query
+        return self.get_short_path(self.resource)
+
+    def get_short_path(self, resource):
+        """Return the unqualified path to the file object.
+
+        * This path is invariant of where the object is stored.
+
+        * Thus, it does not change if the resource is moved.
+
+        This is the path that should be used as a key to index things such as file type.
+        :param resource: the resource to which the file (self) belongs
+        Note: This is the preferred way to get the short path for a file when we are trying to find short path
+        for more than one file in a resource.
+        """
+        if resource.is_federated:
             folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
         else:
             folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
@@ -3476,7 +3505,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def has_logical_file(self):
         """Check existence of logical file."""
-        return self.logical_file is not None
+        return self.logical_file_object_id is not None
 
     @property
     def logical_file(self):
@@ -3501,7 +3530,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def metadata(self):
         """Return logical file metadata."""
-        if self.logical_file is not None:
+        if self.has_logical_file:
             return self.logical_file.metadata
         return None
 

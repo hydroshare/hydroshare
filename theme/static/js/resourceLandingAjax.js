@@ -196,7 +196,8 @@ function metadata_update_ajax_submit(form_id){
                 if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     ((json_response.element_name.toLowerCase() === 'coverage' ||
                     json_response.element_name.toLowerCase() === 'site') && resourceType === 'Resource')){
-                    if (json_response.hasOwnProperty('temporal_coverage')){
+                    const element_type = json_response.element_type?.toLowerCase() || '';
+                    if (element_type === 'period' && json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
                         // show/hide delete option for resource temporal coverage
@@ -210,7 +211,7 @@ function metadata_update_ajax_submit(form_id){
                         }
                     }
 
-                    if (json_response.hasOwnProperty('spatial_coverage')) {
+                    if (['box', 'point'].includes(element_type) && json_response.hasOwnProperty('spatial_coverage')) {
                         var spatialCoverage = json_response.spatial_coverage;
                         updateResourceSpatialCoverage(spatialCoverage);
                         if(resourceType === 'Resource' && json_response.has_logical_spatial_coverage) {
@@ -725,6 +726,7 @@ function delete_virtual_folder_ajax_submit(hs_file_type, file_type_id) {
 function resetAfterFBDelete() {
     refreshFileBrowser();
     $("#fb-files-container li.ui-selected").css("cursor", "auto").removeClass("deleting");
+    $(".file-browser-container, #fb-files-container").css("cursor", "auto");
     $(".fb-cust-spinner").remove();
 }
 
@@ -867,16 +869,6 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
-
-            if (mode === "edit" && result.hasOwnProperty('spatial_coverage')){
-                var spatialCoverage = result.spatial_coverage;
-                updateResourceSpatialCoverage(spatialCoverage);
-            }
-
-            if (mode == "edit" && result.hasOwnProperty('temporal_coverage')){
-                var temporalCoverage = result.temporal_coverage;
-                updateResourceTemporalCoverage(temporalCoverage);
-            }
         },
         error: function(xhr, errmsg, err){
             $(".selection-menu").hide();

@@ -1033,7 +1033,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # there should be one original coverage
         self.assertNotEqual(logical_file.metadata.originalCoverage, None)
-        # testing extended metadata element: variables
+        # testing additional metadata element: variables
         self.assertEqual(logical_file.metadata.variables.all().count(), 5)
 
         # there should be 4 coverage objects - 2 at the resource level
