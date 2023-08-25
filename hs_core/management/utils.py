@@ -664,6 +664,7 @@ def repair_resource(resource, logger):
 
     # ingest any dangling iRODS files that you can
     # Do this before check because otherwise, errors get printed twice
+    ingest_count = 0
     if resource.resource_type == 'CompositeResource':
         _, ingest_count = ingest_irods_files(resource,
                                              logger,
@@ -693,7 +694,7 @@ def repair_resource(resource, logger):
         resource.repaired = now
 
     resource.files_checked = now
-    resource.save()
+    resource.save(update_fields=["repaired", "files_checked"])
     return ingest_count or check_count
 
 
