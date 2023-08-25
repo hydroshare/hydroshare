@@ -176,12 +176,16 @@ def nightly_repair_resource_files():
     from hs_core.management.utils import check_time, repair_resource
     start_time = time.time()
     cuttoff_time = timezone.now() - timedelta(days=1)
-    recently_updated_resources = [res for res in BaseResource.objects.all() if res.last_updated >= cuttoff_time]
+    recently_updated_resources = BaseResource.objects.filter(updated__gte=cuttoff_time)
     repaired_resources = []
     try:
         for res in recently_updated_resources:
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
-            is_corrupt = repair_resource(res, logger)
+            is_corrupt = False
+            try:
+                is_corrupt = repair_resource(res, logger)
+            except ObjectDoesNotExist:
+                logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
             if is_corrupt:
                 repaired_resources.append(res)
 
@@ -192,7 +196,11 @@ def nightly_repair_resource_files():
             .order_by(F('files_checked').asc(nulls_first=True))
         for res in not_recently_updated:
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
-            is_corrupt = repair_resource(res, logger)
+            is_corrupt = False
+            try:
+                is_corrupt = repair_resource(res, logger)
+            except ObjectDoesNotExist:
+                logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
             if is_corrupt:
                 repaired_resources.append(res)
     except TimeoutError:
