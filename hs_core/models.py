@@ -3107,11 +3107,39 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def modified_time(self):
-        return self.resource_file.storage.get_modified_time(self.resource_file.name)
+        """Return modified time of the file.
+        If the modified time is not already set, then it is first retrieved from iRODS and stored in db.
+        """
+        if not self._modified_time:
+            self._modified_time = self.resource_file.storage.get_modified_time(self.resource_file.name)
+            self.save(update_fields=["_modified_time"])
+        return self._modified_time
+
+    def update_modified_time(self, save=True):
+        """Updates modified time of the file in db.
+        Retrieves the modified time from iRODS and stores it in db.
+        """
+        self._modified_time = self.resource_file.storage.get_modified_time(self.resource_file.name)
+        if save:
+            self.save(update_fields=["_modified_time"])
 
     @property
     def checksum(self):
-        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+        """Return checksum of the file.
+        If the checksum is not already set, then it is first retrieved from iRODS and stored in db.
+        """
+        if not self._checksum:
+            self._checksum = self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+            self.save(update_fields=["_checksum"])
+        return self._checksum
+
+    def update_checksum(self, save=True):
+        """Updates checksum of the file in db.
+        Retrieves the checksum from iRODS and stores it in db.
+        """
+        self._checksum = self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+        if save:
+            self.save(update_fields=["_checksum"])
 
     # TODO: write unit test
     @property
