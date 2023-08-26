@@ -2960,7 +2960,12 @@ class ResourceFile(ResourceFileIRODSMixin):
                                                   related_name="files")
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
+
+    # these file metadata (size, modified_time, and checksum) values are retrieved from iRODS and stored in db
+    # for performance reason so that we don't have to query iRODS for these values every time we need them
     _size = models.BigIntegerField(default=-1)
+    _modified_time = models.DateTimeField(null=True, blank=True)
+    _checksum = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         """Return resource filename or federated resource filename for string representation."""
