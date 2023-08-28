@@ -335,6 +335,22 @@ class CompositeResourceTest(
         # there should be 0 GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
+    def test_resource_file_system_metadata(self):
+        """Test when files are added/uploaded to a resource, system level metadata is retrieved from iRODS and saved in
+        the DB for each file.
+        """
+        self.create_composite_resource(self.generic_file)
+
+        # there should be one resource at this point
+        self.assertEqual(BaseResource.objects.count(), 1)
+        self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # check file level system metadata
+        self.assertGreater(res_file._size, 0)
+        self.assertGreater(len(res_file._checksum), 0)
+        self.assertNotEqual(res_file._modified_time, None)
+
     def test_aggregation_folder_delete(self):
         # here we are testing that when a folder is deleted containing
         # files for a logical file type, other files in the composite resource are still associated
