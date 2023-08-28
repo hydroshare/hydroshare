@@ -2674,29 +2674,24 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def readme_file(self):
         """Returns a resource file that is at the root with a file name of either
-        'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
+        'readme.txt' or 'readme.md' (filename is case-insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
-        res_files_at_root = self.files.filter(file_folder='')
-        readme_txt_file = None
-        readme_md_file = None
-
-        def get_file_name(f):
-            return os.path.basename(f.get_storage_path(resource=self)).lower()
-
-        for res_file in res_files_at_root:
-            file_name = get_file_name(res_file)
-            if file_name == 'readme.md':
-                readme_md_file = res_file
-            elif file_name == 'readme.txt':
-                readme_txt_file = res_file
-            if readme_md_file is not None:
-                break
+        readme_md_file_full_path = os.path.join(self.file_path, 'readme.md')
+        readme_txt_file_full_path = os.path.join(self.file_path, 'readme.txt')
+        if self.is_federated:
+            readme_md_file = self.files.filter(fed_resource_file__iexact=readme_md_file_full_path).first()
+        else:
+            readme_md_file = self.files.filter(resource_file__iexact=readme_md_file_full_path).first()
 
         if readme_md_file is not None:
             return readme_md_file
+
+        if self.is_federated:
+            readme_txt_file = self.files.filter(fed_resource_file__iexact=readme_txt_file_full_path).first()
         else:
-            return readme_txt_file
+            readme_txt_file = self.files.filter(resource_file__iexact=readme_txt_file_full_path).first()
+        return readme_txt_file
 
     def get_readme_file_content(self):
         """Gets the content of the readme file. If both a readme.md and a readme.txt file exist,
