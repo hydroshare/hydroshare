@@ -540,7 +540,7 @@ def __ingest_irods_directory(resource,
                 if stop_on_error:
                     raise ValidationError(msg)
                 # TODO: does not ingest logical file structure for composite resources
-                link_irods_file_to_django(resource, fullpath)
+                res_file = link_irods_file_to_django(resource, fullpath)
 
                 # Create required logical files as necessary
                 if resource.resource_type == "CompositeResource":
