@@ -1258,9 +1258,13 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 added_resource_files.append(res_file)
 
             if resource.resource_type == "CompositeResource":
-                # make the newly added files part of an aggregation if needed
                 for res_file in added_resource_files:
+                    # make the newly added files part of an aggregation if needed
                     resource.add_file_to_aggregation(res_file)
+                    # sets size, checksum, and modified time for the newly added file
+                    res_file.set_system_metadata(save=False)
+
+                ResourceFile.objects.bulk_update(added_resource_files, ResourceFile.system_meta_fields())
 
             if auto_aggregate:
                 check_aggregations(resource, added_resource_files)
