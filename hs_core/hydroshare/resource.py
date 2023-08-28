@@ -674,7 +674,7 @@ def add_resource_files(pk, *files, **kwargs):
     resource = kwargs.pop("resource", None)
     if resource is None:
         resource = utils.get_resource_by_shortkey(pk)
-    ret = []
+    res_files = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
@@ -709,22 +709,27 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user))
+        res_files.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user,
+                                                    save_file_system_metadata=False))
 
     for ifname in source_names:
-        ret.append(utils.add_file_to_resource(resource, None,
+        res_files.append(utils.add_file_to_resource(resource, None,
                                               folder=folder,
                                               source_name=ifname, user=user))
 
-    if not ret:
+    if not res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, ret)
+            utils.check_aggregations(resource, res_files)
         utils.resource_modified(resource, user, overwrite_bag=False)
+        # store file level system metadata in Django DB
+        for res_file in res_files:
+            res_file.set_system_metadata(save=False)
+        ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields())
+    return res_files
 
-    return ret
 
 
 def update_science_metadata(pk, metadata, user):
