@@ -775,7 +775,7 @@ class AbstractLogicalFile(models.Model):
             uploaded_file = UploadedFile(file=open(f, 'rb'), name=os.path.basename(f))
 
             new_res_file = add_file_to_resource(
-                resource, uploaded_file, folder=folder_path, add_to_aggregation=False
+                resource, uploaded_file, folder=folder_path, add_to_aggregation=False, save_file_system_metadata=True
             )
             logical_file.add_resource_file(new_res_file)
 

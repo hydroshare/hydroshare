@@ -2980,6 +2980,11 @@ class ResourceFile(ResourceFileIRODSMixin):
         return r'\/:*?"<>|'
 
     @classmethod
+    def system_meta_fields(cls):
+        """returns a list of system metadata fields"""
+        return ['_size', '_modified_time', '_checksum']
+
+    @classmethod
     def create(cls, resource, file, folder='', source=None):
         """Create custom create method for ResourceFile model.
 
@@ -3111,15 +3116,19 @@ class ResourceFile(ResourceFileIRODSMixin):
         If the modified time is not already set, then it is first retrieved from iRODS and stored in db.
         """
         if not self._modified_time:
-            self._modified_time = self.resource_file.storage.get_modified_time(self.resource_file.name)
-            self.save(update_fields=["_modified_time"])
+            self.calculate_modified_time()
         return self._modified_time
 
-    def update_modified_time(self, save=True):
+    def calculate_modified_time(self, save=True):
         """Updates modified time of the file in db.
         Retrieves the modified time from iRODS and stores it in db.
         """
-        self._modified_time = self.resource_file.storage.get_modified_time(self.resource_file.name)
+        try:
+            self._modified_time = self.resource_file.storage.get_modified_time(self.resource_file.name)
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            self._modified_time = None
         if save:
             self.save(update_fields=["_modified_time"])
 
@@ -3129,15 +3138,19 @@ class ResourceFile(ResourceFileIRODSMixin):
         If the checksum is not already set, then it is first retrieved from iRODS and stored in db.
         """
         if not self._checksum:
-            self._checksum = self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
-            self.save(update_fields=["_checksum"])
+            self.calculate_checksum()
         return self._checksum
 
-    def update_checksum(self, save=True):
+    def calculate_checksum(self, save=True):
         """Updates checksum of the file in db.
         Retrieves the checksum from iRODS and stores it in db.
         """
-        self._checksum = self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+        try:
+            self._checksum = self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            self._checksum = None
         if save:
             self.save(update_fields=["_checksum"])
 
@@ -3194,7 +3207,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             return self.resource_file.name
 
-    def calculate_size(self):
+    def calculate_size(self, save=True):
         """Reads the file size and saves to the DB"""
         if self.resource.resource_federation_path:
             if __debug__:
@@ -3204,7 +3217,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                 self._size = self.fed_resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
-                logger.warning("file {} not found".format(self.storage_path))
+                logger.warning("file {} not found in iRODS".format(self.storage_path))
                 self._size = 0
         else:
             if __debug__:
@@ -3214,9 +3227,26 @@ class ResourceFile(ResourceFileIRODSMixin):
                 self._size = self.resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
-                logger.warning("file {} not found".format(self.storage_path))
+                logger.warning("file {} not found in iRODS".format(self.storage_path))
                 self._size = 0
-        self.save(update_fields=["_size"])
+        if save:
+            self.save(update_fields=["_size"])
+
+    def set_system_metadata(self, save=True):
+        """Set system metadata (size, modified time, and checksum) for a file."""
+
+        self.calculate_size(save=save)
+        if self._size > 0:
+            # file exists in iRODS
+            self.calculate_modified_time(save=save)
+            self.calculate_checksum(save=save)
+        else:
+            # file was not found in iRODS
+            self._size = 0
+            self._modified_time = None
+            self._checksum = None
+            if save:
+                self.save(update_fields=self.system_meta_fields())
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):
