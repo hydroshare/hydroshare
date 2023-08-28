@@ -888,6 +888,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         # src_name and tgt_name are folder names
         res_file_objs = ResourceFile.list_folder(resource=resource, folder=src_name)
         resource_is_federated = resource.is_federated
+        batch_size = 10-000
         for fobj in res_file_objs:
             src_path = fobj.get_storage_path(resource=resource)
             # naively replace src_name with tgt_name
@@ -901,9 +902,10 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 
         if res_file_objs:
             if resource_is_federated:
-                ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'fed_resource_file'])
+                ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'fed_resource_file'],
+                                                 batch_size=batch_size)
             else:
-                ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'resource_file'])
+                ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'resource_file'], batch_size=batch_size)
 
 
 def remove_irods_folder_in_django(resource, folder_path, user):
