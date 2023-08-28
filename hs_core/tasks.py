@@ -37,7 +37,7 @@ from theme.models import UserQuota, QuotaMessage, User
 from django_irods.icommands import SessionException
 from celery.result import states
 
-from hs_core.models import BaseResource, TaskNotification
+from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.enums import RelationTypes
 from theme.utils import get_quota_message
 from hs_collection_resource.models import CollectionDeletedResource
@@ -387,14 +387,19 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         files = zcontents.get_files()
 
         resource.file_unpack_status = 'Running'
-        resource.save()
+        resource.save(update_fields=['file_unpack_status'])
 
+        resource_files = []
         for i, f in enumerate(files):
             logger.debug("Adding file {0} to resource {1}".format(f.name, pk))
-            utils.add_file_to_resource(resource, f)
+            res_file = utils.add_file_to_resource(resource, f, save_file_system_metadata=False)
+            res_file.set_system_metadata(save=False)
+            resource_files.append(res_file)
             resource.file_unpack_message = "Imported {0} of about {1} file(s) ...".format(
                 i, num_files)
-            resource.save()
+            resource.save(update_fields=['file_unpack_message'])
+
+        ResourceFile.objects.bulk_update(resource_files, ResourceFile.system_meta_fields())
 
         # This might make the resource unsuitable for public consumption
         resource.update_public_and_discoverable()
@@ -404,7 +409,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         # Call success callback
         resource.file_unpack_message = None
         resource.file_unpack_status = 'Done'
-        resource.save()
+        resource.save(update_fields=['file_unpack_message', 'file_unpack_status'])
 
     except BaseResource.DoesNotExist:
         msg = "Unable to add zip file contents to non-existent resource {pk}."
@@ -415,7 +420,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         if resource:
             resource.file_unpack_status = 'Error'
             resource.file_unpack_message = exc_info
-            resource.save()
+            resource.save(update_fields=['file_unpack_status', 'file_unpack_message'])
 
         if zfile:
             zfile.close()
