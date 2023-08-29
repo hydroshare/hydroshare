@@ -77,7 +77,8 @@ def capture_download(**kwargs):
     }
     if kwargs['resource'].raccess.published:
         res_metadata['publisher'] = str(kwargs['resource'].metadata.publisher),
-        res_metadata['publish_date'] = kwargs['resource'].publish_date.strftime("%m/%d/%Y %H:%M:%S.%f")
+        res_metadata['publish_date'] = kwargs['resource'].metadata.dates.all().filter(type='published').first()\
+            .start_date.strftime("%m/%d/%Y %H:%M:%S.%f")
     fields['resource_metadata'] = json.dumps(res_metadata)
 
     # format the 'download' kwargs
