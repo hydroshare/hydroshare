@@ -714,8 +714,8 @@ def add_resource_files(pk, *files, **kwargs):
 
     for ifname in source_names:
         res_files.append(utils.add_file_to_resource(resource, None,
-                                              folder=folder,
-                                              source_name=ifname, user=user))
+                                                    folder=folder,
+                                                    source_name=ifname, user=user))
 
     if not res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
@@ -729,7 +729,6 @@ def add_resource_files(pk, *files, **kwargs):
             res_file.set_system_metadata(save=False)
         ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields())
     return res_files
-
 
 
 def update_science_metadata(pk, metadata, user):
