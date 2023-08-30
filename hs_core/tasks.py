@@ -127,7 +127,7 @@ def setup_periodic_tasks(sender, **kwargs):
         # Monthly
         sender.add_periodic_task(crontab(minute=0, hour=1, day_of_month=1), update_from_geoconnex_task.s())
         sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
-                    send_over_quota_emails.s())
+                                 send_over_quota_emails.s())
         sender.add_periodic_task(
             crontab(minute=15, hour=1, day_of_month=1), monthly_group_membership_requests_cleanup.s())
 
