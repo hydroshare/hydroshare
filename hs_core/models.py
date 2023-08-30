@@ -3115,7 +3115,8 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Return modified time of the file.
         If the modified time is not already set, then it is first retrieved from iRODS and stored in db.
         """
-        if not self._modified_time:
+        # self._size != 0 -> file exists, or we have not set the size yet
+        if not self._modified_time and self._size != 0:
             self.calculate_modified_time()
         return self._modified_time
 
@@ -3137,7 +3138,8 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Return checksum of the file.
         If the checksum is not already set, then it is first retrieved from iRODS and stored in db.
         """
-        if not self._checksum:
+        # self._size != 0 -> file exists, or we have not set the size yet
+        if not self._checksum and self._size != 0:
             self.calculate_checksum()
         return self._checksum
 
@@ -3237,7 +3239,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         self.calculate_size(save=save)
         if self._size > 0:
-            # file exists in iRODS
+            # file exists in iRODS - get modified time and checksum
             self.calculate_modified_time(save=save)
             self.calculate_checksum(save=save)
         else:
@@ -3245,8 +3247,8 @@ class ResourceFile(ResourceFileIRODSMixin):
             self._size = 0
             self._modified_time = None
             self._checksum = None
-            if save:
-                self.save(update_fields=self.system_meta_fields())
+        if save:
+            self.save(update_fields=self.system_meta_fields())
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):
