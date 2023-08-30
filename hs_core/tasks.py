@@ -176,7 +176,8 @@ def nightly_repair_resource_files():
     from hs_core.management.utils import check_time, repair_resource
     start_time = time.time()
     cuttoff_time = timezone.now() - timedelta(days=1)
-    recently_updated_resources = BaseResource.objects.filter(updated__gte=cuttoff_time)
+    recently_updated_resources = BaseResource.objects \
+        .filter(updated__gte=cuttoff_time, raccess__published=False)
     repaired_resources = []
     try:
         for res in recently_updated_resources:
@@ -192,7 +193,8 @@ def nightly_repair_resource_files():
         # spend any remaining time fixing resources that haven't been checked
         # followed by those previously checked, prioritizing the oldest checked date
         recently_updated_rids = [res.short_id for res in recently_updated_resources]
-        not_recently_updated = BaseResource.objects.exclude(short_id__in=recently_updated_rids) \
+        not_recently_updated = BaseResource.objects \
+            .exclude(short_id__in=recently_updated_rids, raccess__published=True) \
             .order_by(F('files_checked').asc(nulls_first=True))
         for res in not_recently_updated:
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
