@@ -417,6 +417,7 @@ def check_geoserver_registrations(resources):
         send_mail(subject, msg, settings.DEFAULT_FROM_EMAIL, recipients)
     else:
         logger.error(msg)
+    return msg
 
 
 @shared_task

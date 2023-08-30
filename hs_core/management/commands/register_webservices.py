@@ -50,7 +50,8 @@ class Command(BaseCommand):
             print("CHECKING ALL PUBLIC RESOURCES")
             resources = BaseResource.objects.filter(raccess__public=True)
         if resources:
-            check_geoserver_registrations(resources)
+            result = check_geoserver_registrations(resources)
+            print(result)
         else:
             print("No resources found matching provided args.")
         print("DONE UPDATING WEB SERVICES")
