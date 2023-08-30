@@ -406,18 +406,18 @@ def check_geoserver_registrations(resources):
     except Exception as e:
         err_msg = f"Exception while updating web services. Error: {str(e)}\n"
 
-    msg = 'Attempt to update web services failed for the following resources:\n'
-    for res_url, resp in failed_resources:
-        msg += f'{res_url} => {json.dumps(resp)}\n'
-    msg = err_msg + msg
+    if failed_resources:
+        err_msg += 'Attempt to update web services failed for the following resources:\n'
+        for res_url, resp in failed_resources:
+            err_msg += f'{res_url} => {json.dumps(resp)}\n'
 
     if not settings.DISABLE_TASK_EMAILS:
         subject = "Web services failed to update"
         recipients = [settings.DEFAULT_SUPPORT_EMAIL]
-        send_mail(subject, msg, settings.DEFAULT_FROM_EMAIL, recipients)
+        send_mail(subject, err_msg, settings.DEFAULT_FROM_EMAIL, recipients)
     else:
-        logger.error(msg)
-    return msg
+        logger.error(err_msg)
+    return err_msg
 
 
 @shared_task
