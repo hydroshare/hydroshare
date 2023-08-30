@@ -384,7 +384,7 @@ def send_over_quota_emails():
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def check_geoserver_registrations(resources):
-    # Check for to ensure resources have updated web services registrations
+    # Check to ensure resources have updated web services registrations
     if not resources:
         cuttoff_time = timezone.now() - timedelta(days=1)
         resources = BaseResource.objects.filter(updated__gte=cuttoff_time, raccess__public=True)
