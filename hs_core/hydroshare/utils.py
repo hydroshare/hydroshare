@@ -467,7 +467,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         files_bulk_create.append(file_to_save)
 
     if files_bulk_create:
-        ResourceFile.objects.bulk_create(files_bulk_create)
+        ResourceFile.objects.bulk_create(files_bulk_create, batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
     # copy files with logical file one at a time
     files_with_logical_file = files\

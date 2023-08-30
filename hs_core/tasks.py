@@ -399,7 +399,8 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
                 i, num_files)
             resource.save(update_fields=['file_unpack_message'])
 
-        ResourceFile.objects.bulk_update(resource_files, ResourceFile.system_meta_fields())
+        ResourceFile.objects.bulk_update(resource_files, ResourceFile.system_meta_fields(),
+                                         batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
         # This might make the resource unsuitable for public consumption
         resource.update_public_and_discoverable()

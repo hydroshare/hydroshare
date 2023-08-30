@@ -1264,7 +1264,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                     # sets size, checksum, and modified time for the newly added file
                     res_file.set_system_metadata(save=False)
 
-                ResourceFile.objects.bulk_update(added_resource_files, ResourceFile.system_meta_fields())
+                ResourceFile.objects.bulk_update(added_resource_files, ResourceFile.system_meta_fields(),
+                                                 batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
             if auto_aggregate:
                 check_aggregations(resource, added_resource_files)
