@@ -36,6 +36,12 @@ class Command(BaseCommand):
             dest='log',  # value is options['log']
             help='log errors to system log',
         )
+        parser.add_argument(
+            '--dryrun',
+            action='store_true',  # True for presence, False for absence
+            dest='dry_run',  # value is options['dry_run']
+            help='run process without saving changes',
+        )
 
     def handle(self, *args, **options):
 
@@ -43,6 +49,7 @@ class Command(BaseCommand):
         log_errors = options['log']
         echo_errors = not options['log']
         rid = options['resource_id']
+        dry_run = options['dry_run']
 
         try:
             resource = get_resource_by_shortkey(rid, or_404=False)
@@ -54,4 +61,4 @@ class Command(BaseCommand):
                 print(msg)
             return
 
-        repair_resource(resource, logger)
+        repair_resource(resource, logger, dry_run=dry_run)

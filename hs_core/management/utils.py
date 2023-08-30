@@ -217,7 +217,8 @@ def check_relations(resource):
 
 def check_irods_files(resource, stop_on_error=False, log_errors=True,
                       echo_errors=False, return_errors=False,
-                      sync_ispublic=False, clean_irods=False, clean_django=False):
+                      sync_ispublic=False, clean_irods=False, clean_django=False,
+                      dry_run=False):
     """Check whether files in resource.files and on iRODS agree.
 
     :param resource: resource to check
@@ -265,7 +266,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                 ecount += 1
                 msg = "check_irods_files: django file {} does not exist in iRODS"\
                     .format(file_storage_path)
-                if clean_django:
+                if clean_django and not dry_run:
                     delete_resource_file(resource.short_id, f.short_path, resource.creator,
                                          delete_logical_file=False)
                     msg += " (DELETED FROM DJANGO)"
@@ -287,7 +288,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                     ecount += 1
                     msg = "check_irods_files: dangling aggregation {} in {}"\
                         .format(agg_cls_name, resource.short_id)
-                    if clean_django:
+                    if clean_django and not dry_run:
                         lf.remove_aggregation()
                         msg += " (DELETED FROM DJANGO)"
                     if echo_errors:
@@ -300,12 +301,13 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                         raise ValidationError(msg)
 
         # Step 4: does every iRODS file correspond to a record in files?
+        should_clean = clean_irods and not dry_run
         error2, ecount2 = __check_irods_directory(resource, resource.file_path, logger,
                                                   stop_on_error=stop_on_error,
                                                   log_errors=log_errors,
                                                   echo_errors=echo_errors,
                                                   return_errors=return_errors,
-                                                  clean=clean_irods)
+                                                  clean=should_clean)
         errors.extend(error2)
         ecount += ecount2
 
@@ -336,7 +338,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
             if not django_public:  # and irods_public
                 msg = "check_irods_files: resource {} public in irods, private in Django"\
                     .format(resource.short_id)
-                if sync_ispublic:
+                if sync_ispublic and not dry_run:
                     try:
                         resource.setAVU('isPublic', 'false')
                         msg += " (REPAIRED IN IRODS)"
@@ -347,7 +349,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
             else:  # django_public and not irods_public
                 msg = "check_irods_files: resource {} private in irods, public in Django"\
                     .format(resource.short_id)
-                if sync_ispublic:
+                if sync_ispublic and not dry_run:
                     try:
                         resource.setAVU('isPublic', 'true')
                         msg += " (REPAIRED IN IRODS)"
@@ -657,7 +659,7 @@ class CheckJSONLD(object):
             return
 
 
-def repair_resource(resource, logger):
+def repair_resource(resource, logger, dry_run=False):
 
     print("CHECKING IF RESOURCE {} NEEDS REPAIR".format(resource.short_id))
     now = timezone.now()
@@ -665,7 +667,7 @@ def repair_resource(resource, logger):
     # ingest any dangling iRODS files that you can
     # Do this before check because otherwise, errors get printed twice
     ingest_count = 0
-    if resource.resource_type == 'CompositeResource':
+    if resource.resource_type == 'CompositeResource' and not dry_run:
         _, ingest_count = ingest_irods_files(resource,
                                              logger,
                                              stop_on_error=False,
@@ -686,7 +688,8 @@ def repair_resource(resource, logger):
                                        return_errors=False,
                                        clean_irods=False,
                                        clean_django=True,
-                                       sync_ispublic=True)
+                                       sync_ispublic=True,
+                                       dry_run=dry_run)
     if check_count:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
