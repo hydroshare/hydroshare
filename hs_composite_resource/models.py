@@ -480,13 +480,22 @@ class CompositeResource(BaseResource):
             # action is needed
             pass
 
+    def is_metadata_xml_file(self, file_path):
+        """ determine whether a given file is metadata.
+        Note: this will return true for any file that ends with the metadata endings
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
+                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+            return False
+        return True
+
     def is_aggregation_xml_file(self, file_path):
         """ determine whether a given file in the file hierarchy is metadata.
 
         This is true if it is listed as metadata in any logical file.
         """
-        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
-                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+        if not self.is_metadata_xml_file(file_path):
             return False
         for logical_file in self.logical_files:
             if logical_file.metadata_file_path == file_path or \

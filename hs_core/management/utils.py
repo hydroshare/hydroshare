@@ -404,7 +404,7 @@ def __check_irods_directory(resource, dir, logger,
                 if f.get_storage_path(resource=resource) == fullpath:
                     found = True
                     break
-            if not found and not resource.is_aggregation_xml_file(fullpath):
+            if not found and not resource.is_metadata_xml_file(fullpath):
                 ecount += 1
                 msg = "check_irods_files: file {} in iRODs does not exist in Django"\
                     .format(fullpath)
@@ -527,7 +527,7 @@ def __ingest_irods_directory(resource,
                     found = True
                     break
 
-            if not found and not resource.is_aggregation_xml_file(fullpath):
+            if not found and not resource.is_metadata_xml_file(fullpath):
                 ecount += 1
                 msg = "ingest_irods_files: file {} in iRODs does not exist in Django (INGESTING)"\
                     .format(fullpath)
