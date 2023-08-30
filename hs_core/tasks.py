@@ -119,6 +119,7 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
         sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
         sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
+        sender.add_periodic_task(crontab(minute=30, hour=1), check_geoserver_registrations.s())
 
         # Weekly
         sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
@@ -379,6 +380,43 @@ def send_over_quota_emails():
                     uq.save()
         else:
             logger.debug('user ' + u.username + ' does not have UserQuota foreign key relation')
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def check_geoserver_registrations(resources):
+    # Check for to ensure resources have updated web services registrations
+    if not resources:
+        cuttoff_time = timezone.now() - timedelta(days=1)
+        resources = BaseResource.objects.filter(updated__gte=cuttoff_time, raccess__public=True)
+
+    failed_resources = {}
+    err_msg = ""
+    try:
+        for res in resources:
+            response = update_web_services(
+                settings.HSWS_URL,
+                settings.HSWS_API_TOKEN,
+                settings.HSWS_TIMEOUT,
+                settings.HSWS_PUBLISH_URLS,
+                res.short_id
+            )
+            if not response['success']:
+                res_url = current_site_url() + res.get_absolute_url()
+                failed_resources[res_url] = response
+    except Exception as e:
+        err_msg = f"Exception while updating web services. Error: {str(e)}\n"
+
+    msg = 'Attempt to update web services failed for the following resources:\n'
+    for res_url, resp in failed_resources:
+        msg += f'{res_url} => {json.dumps(resp)}\n'
+    msg = err_msg + msg
+
+    if not settings.DISABLE_TASK_EMAILS:
+        subject = "Web services failed to update"
+        recipients = [settings.DEFAULT_SUPPORT_EMAIL]
+        send_mail(subject, msg, settings.DEFAULT_FROM_EMAIL, recipients)
+    else:
+        logger.error(msg)
 
 
 @shared_task
@@ -812,7 +850,10 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                     )]
                     lf.metadata.extra_metadata["Web Services URL"] = url["message"]
                     lf.metadata.save()
-        return response.json()
+        if status.is_success(response.status_code):
+            return response.json()
+        else:
+            response.raise_for_status()
     except Exception as e:
         logger.error(f"Error updating web services: {str(e)}")
         raise
