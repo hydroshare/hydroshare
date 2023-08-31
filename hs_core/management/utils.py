@@ -673,28 +673,11 @@ def repair_resource(resource, logger, dry_run=False):
     print("CHECKING IF RESOURCE {} NEEDS REPAIR".format(resource.short_id))
     now = timezone.now()
 
-    # ingest any dangling iRODS files that you can
-    # Do this before check because otherwise, errors get printed twice
-    ingest_count = 0
-    if resource.resource_type == 'CompositeResource' and not dry_run:
-        _, ingest_count = ingest_irods_files(resource,
-                                             logger,
-                                             stop_on_error=False,
-                                             echo_errors=True,
-                                             log_errors=False,
-                                             return_errors=False)
-        if ingest_count:
-            print("... affected resource {} has type {}, title '{}'"
-                  .format(resource.short_id, resource.resource_type,
-                          resource.title))
-
-            resource.repaired = now
-
     _, ecount, dangling_in_django, missing_django = check_irods_files(resource,
                                                                       stop_on_error=False,
                                                                       echo_errors=True,
                                                                       log_errors=False,
-                                                                      return_errors=False,
+                                                                      return_errors=True,
                                                                       clean_irods=False,
                                                                       clean_django=True,
                                                                       sync_ispublic=True,
@@ -707,7 +690,7 @@ def repair_resource(resource, logger, dry_run=False):
 
     resource.files_checked = now
     resource.save(update_fields=["repaired", "files_checked"])
-    return ingest_count, missing_django, dangling_in_django
+    return missing_django, dangling_in_django
 
 
 class CheckResource(object):

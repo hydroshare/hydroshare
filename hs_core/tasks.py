@@ -184,7 +184,7 @@ def nightly_repair_resource_files():
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             is_corrupt = False
             try:
-                _, missing_django, dangling_in_django = repair_resource(res, logger)
+                missing_django, dangling_in_django = repair_resource(res, logger)
                 is_corrupt = missing_django > 0 or dangling_in_django > 0
             except ObjectDoesNotExist:
                 logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
@@ -201,7 +201,7 @@ def nightly_repair_resource_files():
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             is_corrupt = False
             try:
-                _, missing_django, dangling_in_django = repair_resource(res, logger)
+                missing_django, dangling_in_django = repair_resource(res, logger)
                 is_corrupt = missing_django > 0 or dangling_in_django > 0
             except ObjectDoesNotExist:
                 logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")

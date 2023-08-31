@@ -81,17 +81,15 @@ class Command(BaseCommand):
             res_url = site_url + resource.get_absolute_url()
             print("*" * 100)
             print(f"{count}/{total_res_to_check}: Checking resource {res_url}")
-            # TODO: why do we ingest and then check if missing in repair_resource?
-            ingested_into_django, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run)
-            if ingested_into_django > 0 or dangling_in_django > 0 or missing_in_django > 0:
+            missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run)
+            if dangling_in_django > 0 or missing_in_django > 0:
                 impacted_resources += 1
-                total_files_missing_in_django += missing_in_django + ingested_into_django
+                total_files_missing_in_django += missing_in_django
                 total_files_dangling_in_django += dangling_in_django
-                if missing_in_django > 0 or ingested_into_django > 0:
+                if missing_in_django > 0:
                     resources_with_missing_django.append(res_url)
                 if dangling_in_django > 0:
                     resources_with_missing_irods.append(res_url)
-                print(f"{ingested_into_django} files ingested into Django for this resource.")
                 print(f"{dangling_in_django} files dangling in Django for this resource.")
                 print(f"{missing_in_django} files missing in Django for this resource.")
                 print(f"Resources thus far with at least one missing django file: {len(resources_with_missing_django)}")
