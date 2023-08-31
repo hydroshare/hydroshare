@@ -2494,10 +2494,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Determine whether a given file is metadata.
         Note: this will return true for any file that ends with the metadata endings
         We are taking the risk that user might create a file with the same filename ending
-
-        This function is overridden for Composite Resource.
         """
-        return False
+        from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
+                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+            return False
+        return True
 
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths
