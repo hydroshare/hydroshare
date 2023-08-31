@@ -416,6 +416,9 @@ def __check_irods_directory(resource, dir, logger,
                 if resource.is_collection_list_csv(fullpath):
                     print("Skipping {} because it is a collection .csv file.".format(fullpath))
                     continue
+                if resource.is_schema_json_file(fullpath):
+                    print("Skipping {} because it is a schema.json file.".format(fullpath))
+                    continue
                 ecount += 1
                 msg = "check_irods_files: file {} in iRODs does not exist in Django"\
                     .format(fullpath)

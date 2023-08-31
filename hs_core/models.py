@@ -2490,6 +2490,23 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return self.metadata.get_xml(pretty_print=pretty_print,
                                      include_format_elements=include_format_elements)
 
+    def is_schema_json_file(self, file_path):
+        """Determine whether a given file is a schema.json file.
+        Note: this will return true for any file that ends with the schema.json ending
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.models.base import SCHEMA_JSON_FILE_ENDSWITH
+        if file_path.endswith(SCHEMA_JSON_FILE_ENDSWITH):
+            return True
+        return False
+
+    def is_collection_list_csv(self, file_path):
+        """Determine if a given file is an internally-generated collection list
+
+        This function is overridden for Collection Resource
+        """
+        return False
+
     def is_metadata_xml_file(self, file_path):
         """Determine whether a given file is metadata.
         Note: this will return true for any file that ends with the metadata endings
