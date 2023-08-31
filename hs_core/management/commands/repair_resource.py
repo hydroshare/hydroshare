@@ -54,16 +54,14 @@ class Command(BaseCommand):
             resources = resources.filter(short_id__in=resources_ids)
         if published:
             if not dry_run:
-                print("Executing with --published arg implies --dryrun. No modifications will be saved.")
-                dry_run = True
-            if resources_ids:
-                print("Can't supply resource_ids in addition to --published arg. Choose one or the other.")
-                return
+                print("WARNING: Executing with --published arg without --dryrun. Published resources will be modified.")
             print("FILTERING TO INCLUDE PUBLISHED RESOURCES ONLY")
             resources = resources.filter(raccess__published=True)
 
         if days:
             print(f"FILTERING TO INCLUDE RESOURCES UPDATED IN LAST {days} DAYS")
+            if resources_ids:
+                print("Your supplied resource_ids will be filtered by the --days that you provided. ")
             cuttoff_time = timezone.now() - timedelta(days)
             resources = resources.filter(updated__gte=cuttoff_time)
 
