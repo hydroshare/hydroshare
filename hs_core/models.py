@@ -3212,7 +3212,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         folder, base = self.path_is_acceptable(path, test_exists=test_exists)
         self.file_folder = folder
-        self.save()
 
         # self.content_object can be stale after changes. Re-fetch based upon key
         # bypass type system; it is not relevant
