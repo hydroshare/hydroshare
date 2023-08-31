@@ -10,7 +10,7 @@ This checks that:
 3. every iRODS directory {short_id} corresponds to a Django resource
 """
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from hs_core.models import BaseResource
 from hs_core.management.utils import repair_resource
 from hs_core import hydroshare
@@ -67,6 +67,9 @@ class Command(BaseCommand):
             cuttoff_time = timezone.now() - timedelta(days)
             resources = resources.filter(updated__gte=cuttoff_time)
 
+        if dry_run:
+            print("CONDUCTING A DRY RUN: FIXES WILL NOT BE SAVED")
+
         if not resources:
             print("NO RESOURCES FOUND MATCHING YOUR FILTER ARGUMENTS")
             return
@@ -112,3 +115,9 @@ class Command(BaseCommand):
         print(f"Number of resources with at least one missing irods file: {len(resources_with_missing_irods)}")
         for res in resources_with_missing_irods:
             print(res)
+
+        # Make it simple to detect clean/fail run in Jenkins
+        if impacted_resources:
+            raise CommandError("repair_resources detected problems")
+        else:
+            print("Completed run without detecting issues")
