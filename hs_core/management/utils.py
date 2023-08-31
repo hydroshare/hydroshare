@@ -683,12 +683,9 @@ def repair_resource(resource, logger, dry_run=False):
                                                                            sync_ispublic=True,
                                                                            dry_run=dry_run)
     if ecount:
-        message = "... affected resource {} has type {}, title '{}'" \
-            .format(resource.short_id, resource.resource_type,
-                    resource.title)
-        print(message)
-        if logger:
-            logger.debug(f"repair_resource: {message}")
+        print("... affected resource {} has type {}, title '{}'"
+              .format(resource.short_id, resource.resource_type,
+                      resource.title))
         resource.repaired = now
 
     resource.files_checked = now
