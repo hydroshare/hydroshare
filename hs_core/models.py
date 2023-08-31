@@ -2490,6 +2490,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return self.metadata.get_xml(pretty_print=pretty_print,
                                      include_format_elements=include_format_elements)
 
+    def is_metadata_xml_file(self, file_path):
+        """Determine whether a given file is metadata.
+        Note: this will return true for any file that ends with the metadata endings
+        We are taking the risk that user might create a file with the same filename ending
+
+        This function is overridden for Composite Resource.
+        """
+        return False
+
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths
 
