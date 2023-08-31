@@ -673,19 +673,22 @@ def repair_resource(resource, logger, dry_run=False):
     print("CHECKING IF RESOURCE {} NEEDS REPAIR".format(resource.short_id))
     now = timezone.now()
 
-    _, ecount, dangling_in_django, missing_django = check_irods_files(resource,
-                                                                      stop_on_error=False,
-                                                                      echo_errors=True,
-                                                                      log_errors=False,
-                                                                      return_errors=True,
-                                                                      clean_irods=False,
-                                                                      clean_django=True,
-                                                                      sync_ispublic=True,
-                                                                      dry_run=dry_run)
+    errors, ecount, dangling_in_django, missing_django = check_irods_files(resource,
+                                                                           stop_on_error=False,
+                                                                           echo_errors=True,
+                                                                           log_errors=True,
+                                                                           return_errors=True,
+                                                                           clean_irods=False,
+                                                                           clean_django=True,
+                                                                           sync_ispublic=True,
+                                                                           dry_run=dry_run)
     if ecount:
-        print("... affected resource {} has type {}, title '{}'"
-              .format(resource.short_id, resource.resource_type,
-                      resource.title))
+        message = "... affected resource {} has type {}, title '{}'" \
+            .format(resource.short_id, resource.resource_type,
+                    resource.title)
+        print(message)
+        if logger:
+            logger.debug(f"repair_resource: {message}")
         resource.repaired = now
 
     resource.files_checked = now
