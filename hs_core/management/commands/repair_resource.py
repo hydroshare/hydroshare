@@ -15,6 +15,7 @@ from hs_core.models import BaseResource
 from hs_core.management.utils import repair_resource
 from hs_core import hydroshare
 from django.utils import timezone
+from django.db.models import F
 from datetime import timedelta
 
 import logging
@@ -71,6 +72,8 @@ class Command(BaseCommand):
         if not resources:
             print("NO RESOURCES FOUND MATCHING YOUR FILTER ARGUMENTS")
             return
+
+        resources = resources.order_by(F('updated').asc(nulls_first=True))
 
         total_res_to_check = resources.count()
         impacted_resources = 0
