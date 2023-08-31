@@ -393,7 +393,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         for i, f in enumerate(files):
             logger.debug("Adding file {0} to resource {1}".format(f.name, pk))
             res_file = utils.add_file_to_resource(resource, f, save_file_system_metadata=False)
-            res_file.set_system_metadata(save=False)
+            res_file.set_system_metadata(resource=resource, save=False)
             resource_files.append(res_file)
             resource.file_unpack_message = "Imported {0} of about {1} file(s) ...".format(
                 i, num_files)

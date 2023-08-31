@@ -727,7 +727,7 @@ def add_resource_files(pk, *files, **kwargs):
         # store file level system metadata in Django DB
         for res_file in res_files:
             # getting file level system metadata from iRODS takes about 0.6 seconds per file
-            res_file.set_system_metadata(save=False)
+            res_file.set_system_metadata(resource=resource, save=False)
 
         ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(),
                                          batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)

@@ -26,11 +26,12 @@ class Command(BaseCommand):
         _BATCH_SIZE = settings.BULK_UPDATE_CREATE_BATCH_SIZE
         print(f"Total files in resource {res_id}: {res.files.all().count()}")
         file_counter = 0
-        for res_file in res.files.all().iterator():
+        # exclude files with size 0 as they don't exist in iRODS
+        for res_file in res.files.exclude(_size=0).iterator():
             # this is an expensive operation (3 irods calls per file) - about 1 min for 100 files
             # size, checksum and modified time are obtained from irods and assigned to
             # relevant fields of the resource file object
-            res_file.set_system_metadata(save=False)
+            res_file.set_system_metadata(resource=res, save=False)
             res_files.append(res_file)
             file_counter += 1
             print(f"Updated file count: {file_counter}")

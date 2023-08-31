@@ -1114,7 +1114,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     if not resource.metadata.formats.filter(value=file_format_type).exists():
         resource.metadata.create_element('format', value=file_format_type)
     if save_file_system_metadata:
-        ret.set_system_metadata()
+        ret.set_system_metadata(resource=resource)
 
     return ret
 
