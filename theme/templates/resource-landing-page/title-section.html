@@ -192,7 +192,7 @@
 {% endif %}
 
 {# ======= ResourceFile Repair notification =======#}
-{% if recently_repaired and resource_edit_mode %}
+{% if resource_edit_mode and notify_on_repair and recently_repaired %}
     <div class="col-sm-12">
         <div id="missing-metadata-file-type" class="alert alert-danger alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span

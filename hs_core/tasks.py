@@ -211,8 +211,9 @@ def nightly_repair_resource_files():
         logger.info(f"nightly_repair_resource_files terminated after \
                     {settings.NIGHTLY_RESOURCE_REPAIR_DURATION} seconds")
 
-    for res in repaired_resources:
-        notify_owners_of_resource_repair(res)
+    if settings.NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR:
+        for res in repaired_resources:
+            notify_owners_of_resource_repair(res)
 
 
 def notify_owners_of_resource_repair(resource):
