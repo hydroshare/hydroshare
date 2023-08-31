@@ -60,10 +60,10 @@ class Command(BaseCommand):
                 if dangling_in_django > 0:
                     resources_with_missing_irods.append(res_url)
                 print(f"{ingest} files ingested into Django for this resource.")
-                print(f"{dangling_in_django} files missing in iRods for this resource.")
+                print(f"{dangling_in_django} files dangling in Django for this resource.")
                 print(f"{missing_in_django} files missing in Django for this resource.")
                 print(f"Resources thus far with at least one missing django file: {len(resources_with_missing_django)}")
-                print(f"Resources thus far with at least one missing irods file: {len(resources_with_missing_irods)}")
+                print(f"Resources thus far with at least one dangling django file: {len(resources_with_missing_irods)}")
                 print(f"Total resources with discrepancies thus far: {impacted_resources}")
         print("*" * 100)
         print("*" * 100)
@@ -76,7 +76,7 @@ class Command(BaseCommand):
             print(res)
 
         print("*" * 100)
-        print(f"Total number of files missing in iRods (across all resources): {total_files_dangling_in_django}")
+        print(f"Total number of files dangling in Django (across all resources): {total_files_dangling_in_django}")
         print(f"Number of resources with at least one missing irods file: {len(resources_with_missing_irods)}")
         for res in resources_with_missing_irods:
             print(res)
