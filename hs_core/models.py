@@ -3120,12 +3120,20 @@ class ResourceFile(ResourceFileIRODSMixin):
             self.calculate_modified_time()
         return self._modified_time
 
-    def calculate_modified_time(self, save=True):
+    def calculate_modified_time(self, resource=None, save=True):
         """Updates modified time of the file in db.
         Retrieves the modified time from iRODS and stores it in db.
         """
+        if resource is None:
+            resource = self.resource
+
+        if resource.resource_federation_path:
+            file_path = self.fed_resource_file.name
+        else:
+            file_path = self.resource_file.name
+
         try:
-            self._modified_time = self.resource_file.storage.get_modified_time(self.resource_file.name)
+            self._modified_time = self.resource_file.storage.get_modified_time(file_path)
         except (SessionException, ValidationError):
             logger = logging.getLogger(__name__)
             logger.warning("file {} not found in iRODS".format(self.storage_path))
@@ -3143,12 +3151,20 @@ class ResourceFile(ResourceFileIRODSMixin):
             self.calculate_checksum()
         return self._checksum
 
-    def calculate_checksum(self, save=True):
+    def calculate_checksum(self, resource=None, save=True):
         """Updates checksum of the file in db.
         Retrieves the checksum from iRODS and stores it in db.
         """
+        if resource is None:
+            resource = self.resource
+
+        if resource.resource_federation_path:
+            file_path = self.fed_resource_file.name
+        else:
+            file_path = self.resource_file.name
+
         try:
-            self._checksum = self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+            self._checksum = self.resource_file.storage.checksum(file_path, force_compute=False)
         except (SessionException, ValidationError):
             logger = logging.getLogger(__name__)
             logger.warning("file {} not found in iRODS".format(self.storage_path))
@@ -3209,9 +3225,12 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             return self.resource_file.name
 
-    def calculate_size(self, save=True):
+    def calculate_size(self, resource=None, save=True):
         """Reads the file size and saves to the DB"""
-        if self.resource.resource_federation_path:
+        if resource is None:
+            resource = self.resource
+
+        if resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
@@ -3234,14 +3253,16 @@ class ResourceFile(ResourceFileIRODSMixin):
         if save:
             self.save(update_fields=["_size"])
 
-    def set_system_metadata(self, save=True):
-        """Set system metadata (size, modified time, and checksum) for a file."""
+    def set_system_metadata(self, resource=None, save=True):
+        """Set system metadata (size, modified time, and checksum) for a file.
+        This method should be called after a file is uploaded to iRODS and registered with Django.
+        """
 
-        self.calculate_size(save=save)
+        self.calculate_size(resource=resource, save=save)
         if self._size > 0:
             # file exists in iRODS - get modified time and checksum
-            self.calculate_modified_time(save=save)
-            self.calculate_checksum(save=save)
+            self.calculate_modified_time(resource=resource, save=save)
+            self.calculate_checksum(resource=resource, save=save)
         else:
             # file was not found in iRODS
             self._size = 0
