@@ -413,6 +413,9 @@ def __check_irods_directory(resource, dir, logger,
                 if resource.is_metadata_xml_file(fullpath):
                     print("Skipping {} because it is a metadata XML file.".format(fullpath))
                     continue
+                if resource.is_collection_list_csv(fullpath):
+                    print("Skipping {} because it is a collection .csv file.".format(fullpath))
+                    continue
                 ecount += 1
                 msg = "check_irods_files: file {} in iRODs does not exist in Django"\
                     .format(fullpath)
@@ -538,6 +541,9 @@ def __ingest_irods_directory(resource,
             if not found:
                 if resource.is_metadata_xml_file(fullpath):
                     print("Skipping {} because it is a metadata XML file.".format(fullpath))
+                    continue
+                if resource.is_collection_list_csv(fullpath):
+                    print("Skipping {} because it is a collection .csv file.".format(fullpath))
                     continue
                 ecount += 1
                 msg = "ingest_irods_files: file {} in iRODs does not exist in Django (INGESTING)"\

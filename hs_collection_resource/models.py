@@ -69,6 +69,13 @@ class CollectionResource(BaseResource):
         self.extra_data = {'update_text_file': flag}
         self.save()
 
+    def is_collection_list_csv(self, file_path):
+        from hs_collection_resource.utils import CSV_FULL_NAME_TEMPLATE
+        collection_list_filename = CSV_FULL_NAME_TEMPLATE.format(self.short_id)
+        if collection_list_filename in file_path:
+            return True
+        return False
+
 
 processor_for(CollectionResource)(resource_processor)
 

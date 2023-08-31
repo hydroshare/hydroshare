@@ -493,6 +493,9 @@ class CompositeResource(BaseResource):
                 return True
         return False
 
+    def is_collection_list_csv(self, file_path):
+        return False
+
     def supports_rename_path(self, src_full_path, tgt_full_path):
         """checks if file/folder rename/move is allowed
         :param  src_full_path: name of the file/folder storage path to be renamed (path starts with resource id)
