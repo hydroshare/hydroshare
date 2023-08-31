@@ -237,6 +237,8 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     istorage = resource.get_irods_storage()
     errors = []
     ecount = 0
+    dangling_in_django = 0
+    missing_in_django = 0
 
     # skip federated resources if not configured to handle these
     if resource.is_federated and not settings.REMOTE_USE_IRODS:
@@ -263,6 +265,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
         for f in resource.files.all():
             file_storage_path = f.get_storage_path(resource=resource)
             if not istorage.exists(file_storage_path):
+                dangling_in_django += 1
                 ecount += 1
                 msg = "check_irods_files: django file {} does not exist in iRODS"\
                     .format(file_storage_path)
@@ -302,14 +305,14 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
 
         # Step 4: does every iRODS file correspond to a record in files?
         should_clean = clean_irods and not dry_run
-        error2, ecount2 = __check_irods_directory(resource, resource.file_path, logger,
-                                                  stop_on_error=stop_on_error,
-                                                  log_errors=log_errors,
-                                                  echo_errors=echo_errors,
-                                                  return_errors=return_errors,
-                                                  clean=should_clean)
+        error2, missing_in_django = __check_irods_directory(resource, resource.file_path, logger,
+                                                            stop_on_error=stop_on_error,
+                                                            log_errors=log_errors,
+                                                            echo_errors=echo_errors,
+                                                            return_errors=return_errors,
+                                                            clean=should_clean)
         errors.extend(error2)
-        ecount += ecount2
+        ecount += missing_in_django
 
         # Step 5: check whether the iRODS public flag agrees with Django
         django_public = resource.raccess.public
@@ -378,7 +381,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
         if return_errors:
             errors.append(msg)
 
-    return errors, ecount  # empty unless return_errors=True
+    return errors, ecount, dangling_in_django, missing_in_django  # empty unless return_errors=True
 
 
 def __check_irods_directory(resource, dir, logger,
@@ -681,16 +684,16 @@ def repair_resource(resource, logger, dry_run=False):
 
             resource.repaired = now
 
-    _, check_count = check_irods_files(resource,
-                                       stop_on_error=False,
-                                       echo_errors=True,
-                                       log_errors=False,
-                                       return_errors=False,
-                                       clean_irods=False,
-                                       clean_django=True,
-                                       sync_ispublic=True,
-                                       dry_run=dry_run)
-    if check_count:
+    _, ecount, dangling_in_django, missing_django = check_irods_files(resource,
+                                                                      stop_on_error=False,
+                                                                      echo_errors=True,
+                                                                      log_errors=False,
+                                                                      return_errors=False,
+                                                                      clean_irods=False,
+                                                                      clean_django=True,
+                                                                      sync_ispublic=True,
+                                                                      dry_run=dry_run)
+    if ecount:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
                       resource.title))
@@ -698,7 +701,7 @@ def repair_resource(resource, logger, dry_run=False):
 
     resource.files_checked = now
     resource.save(update_fields=["repaired", "files_checked"])
-    return ingest_count or check_count
+    return ingest_count, missing_django, dangling_in_django
 
 
 class CheckResource(object):
@@ -764,10 +767,10 @@ class CheckResource(object):
                 print(("  AVU isPublic is {}, but public is {}".format(value,
                                                                        self.resource.raccess.public)))
 
-        irods_issues, irods_errors = check_irods_files(self.resource,
-                                                       log_errors=False,
-                                                       echo_errors=False,
-                                                       return_errors=True)
+        irods_issues, irods_errors, _, _ = check_irods_files(self.resource,
+                                                             log_errors=False,
+                                                             echo_errors=False,
+                                                             return_errors=True)
 
         if irods_errors:
             self.label()
