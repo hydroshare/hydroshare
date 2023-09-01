@@ -385,21 +385,26 @@ def send_over_quota_emails():
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def check_geoserver_registrations(resources):
     # Check to ensure resources have updated web services registrations
+    DISTRIBUTE_WEB_REGISTRATIONS_OVER = 2  # hours
     if not resources:
         cuttoff_time = timezone.now() - timedelta(days=1)
         resources = BaseResource.objects.filter(updated__gte=cuttoff_time, raccess__public=True)
 
+    # Evenly distribute requests
+    delay_between_res = (DISTRIBUTE_WEB_REGISTRATIONS_OVER ** 60) / resources.count()
+
     failed_resources = {}
     err_msg = ""
-    for res in resources:
+    for current_res_num, res in enumerate(resources, start=0):
+        delay = delay_between_res * current_res_num
         try:
-            response = update_web_services(
+            response = update_web_services.apply_async((
                 settings.HSWS_URL,
                 settings.HSWS_API_TOKEN,
                 settings.HSWS_TIMEOUT,
                 settings.HSWS_PUBLISH_URLS,
                 res.short_id
-            )
+            ), countdown=delay)
             if not response['success']:
                 res_url = current_site_url() + res.get_absolute_url()
                 failed_resources[res_url] = response
