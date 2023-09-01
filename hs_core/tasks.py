@@ -217,11 +217,12 @@ def nightly_repair_resource_files():
 
 
 @shared_task
-def repair_resource_before_publication(res):
+def repair_resource_before_publication(res_id):
     """
     Run repair_resource on resource
     """
     from hs_core.management.utils import repair_resource
+    res = utils.get_resource_by_shortkey(res_id)
     errors, missing_django, dangling_in_django = repair_resource(res, logger)
     if missing_django > 0 or dangling_in_django > 0:
         res_url = current_site_url() + res.get_absolute_url()
