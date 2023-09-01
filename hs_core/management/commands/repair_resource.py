@@ -37,7 +37,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--published',
             action='store_true',  # True for presence, False for absence
-            dest='published',  # value is options['dry_run']
+            dest='published',  # value is options['published']
             help='filter to just published resources',
         )
 
@@ -76,15 +76,17 @@ class Command(BaseCommand):
         resources = resources.order_by(F('updated').asc(nulls_first=True))
 
         total_res_to_check = resources.count()
+        current_resource = 0
         impacted_resources = 0
         total_files_missing_in_django = 0
         total_files_dangling_in_django = 0
         resources_with_missing_django = []
         resources_with_missing_irods = []
-        for count, resource in enumerate(resources):
-            res_url = site_url + resource.get_absolute_url()
+        for resource in resources.iterator():
+            current_resource += 1
+            res_url = site_url + resource.absolute_url
             print("*" * 100)
-            print(f"{count}/{total_res_to_check}: Checking resource {res_url}")
+            print(f"{current_resource}/{total_res_to_check}: Checking resource {res_url}")
             _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run)
             if dangling_in_django > 0 or missing_in_django > 0:
                 impacted_resources += 1

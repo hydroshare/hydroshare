@@ -219,10 +219,12 @@ def nightly_repair_resource_files():
 @shared_task
 def repair_resource_before_publication(res_id):
     """
-    Run repair_resource on resource
+    Run repair_resource on resource at the initiation of a publication request
     """
     from hs_core.management.utils import repair_resource
     res = utils.get_resource_by_shortkey(res_id)
+    if res.raccess.published:
+        raise ValidationError("Attempted pre-publication resource repair on a resource that is already published.")
     errors, missing_django, dangling_in_django = repair_resource(res, logger)
     if missing_django > 0 or dangling_in_django > 0:
         res_url = current_site_url() + res.get_absolute_url()

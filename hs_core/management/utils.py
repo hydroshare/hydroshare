@@ -262,7 +262,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
 
     else:
         # Step 2: does every file in Django refer to an existing file in iRODS?
-        for f in resource.files.all():
+        for f in resource.files.all().iterator():
             file_storage_path = f.get_storage_path(resource=resource)
             if not istorage.exists(file_storage_path):
                 dangling_in_django += 1
