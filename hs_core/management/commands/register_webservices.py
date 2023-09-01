@@ -19,10 +19,15 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('resource_ids', nargs='*', type=str)
         parser.add_argument('--days', type=int, dest='days', help='include resources updated in the last X days')
+        parser.add_argument('--async',
+                            action='store_true',  # True for presence, False for absence
+                            dest='run_async',
+                            help='web services requests should run async through celery')
 
     def handle(self, *args, **options):
         resources = options['resource_ids']
         days = options['days']
+        run_async = options['run_async']
 
         if resources and days:
             print("Please only include either [resources] or [days] argument, but not both")
@@ -50,8 +55,11 @@ class Command(BaseCommand):
             print("CHECKING ALL PUBLIC RESOURCES")
             resources = BaseResource.objects.filter(raccess__public=True)
         if resources:
-            result = check_geoserver_registrations(resources)
-            print(result)
+            if run_async:
+                check_geoserver_registrations(resources, run_async=True)
+                print("WEB SERVICE CHECKS WILL RUN ASYNC. CHECK CELERY FOR STATUS.")
+            else:
+                check_geoserver_registrations(resources, run_async=False)
+                print("DONE UPDATING WEB SERVICES")
         else:
             print("No resources found matching provided args.")
-        print("DONE UPDATING WEB SERVICES")
