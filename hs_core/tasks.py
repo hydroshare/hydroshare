@@ -391,8 +391,8 @@ def check_geoserver_registrations(resources):
 
     failed_resources = {}
     err_msg = ""
-    try:
-        for res in resources:
+    for res in resources:
+        try:
             response = update_web_services(
                 settings.HSWS_URL,
                 settings.HSWS_API_TOKEN,
@@ -403,8 +403,8 @@ def check_geoserver_registrations(resources):
             if not response['success']:
                 res_url = current_site_url() + res.get_absolute_url()
                 failed_resources[res_url] = response
-    except Exception as e:
-        err_msg = f"Exception while updating web services. Error: {str(e)}\n"
+        except Exception as e:
+            err_msg = f"Exception while updating web services. Error: {str(e)}\n"
 
     if failed_resources:
         err_msg += 'Attempt to update web services failed for the following resources:\n'
