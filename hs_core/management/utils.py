@@ -702,7 +702,7 @@ def repair_resource(resource, logger, dry_run=False):
 
     resource.files_checked = now
     resource.save(update_fields=["repaired", "files_checked"])
-    return missing_django, dangling_in_django
+    return errors, missing_django, dangling_in_django
 
 
 class CheckResource(object):

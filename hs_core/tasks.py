@@ -171,7 +171,7 @@ def nightly_periodic_task_check():
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def nightly_repair_resource_files():
     """
-    Run repair_resource management command on resources updated in the last day
+    Run repair_resource on resources updated in the last day
     """
     from hs_core.management.utils import check_time, repair_resource
     start_time = time.time()
@@ -184,7 +184,7 @@ def nightly_repair_resource_files():
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             is_corrupt = False
             try:
-                missing_django, dangling_in_django = repair_resource(res, logger)
+                _, missing_django, dangling_in_django = repair_resource(res, logger)
                 is_corrupt = missing_django > 0 or dangling_in_django > 0
             except ObjectDoesNotExist:
                 logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
@@ -201,7 +201,7 @@ def nightly_repair_resource_files():
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             is_corrupt = False
             try:
-                missing_django, dangling_in_django = repair_resource(res, logger)
+                _, missing_django, dangling_in_django = repair_resource(res, logger)
                 is_corrupt = missing_django > 0 or dangling_in_django > 0
             except ObjectDoesNotExist:
                 logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
@@ -214,6 +214,32 @@ def nightly_repair_resource_files():
     if settings.NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR:
         for res in repaired_resources:
             notify_owners_of_resource_repair(res)
+
+
+@shared_task
+def repair_resource_before_publication(res):
+    """
+    Run repair_resource on resource
+    """
+    from hs_core.management.utils import repair_resource
+    errors, missing_django, dangling_in_django = repair_resource(res, logger)
+    if missing_django > 0 or dangling_in_django > 0:
+        res_url = current_site_url() + res.get_absolute_url()
+
+        email_msg = f'''
+        <p>We discovered corrupted files in the following resource that is under review for publication:
+        <a href="{ res_url }">{ res_url }</a></p>
+        <p>We found {missing_django} files missing in Django and {dangling_in_django} files dangling in Django.</p>
+        <p>The files issues were fixed automatically. Some logs from the fix are included below:</p>
+        <p>{errors}</p>
+        '''
+
+        if not settings.DISABLE_TASK_EMAILS:
+            send_mail(subject="HydroShare files repaired for resource under publication review",
+                      message=email_msg,
+                      html_message=email_msg,
+                      from_email=settings.DEFAULT_FROM_EMAIL,
+                      recipient_list=[settings.DEFAULT_SUPPORT_EMAIL])
 
 
 def notify_owners_of_resource_repair(resource):

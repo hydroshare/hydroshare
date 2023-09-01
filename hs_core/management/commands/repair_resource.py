@@ -85,7 +85,7 @@ class Command(BaseCommand):
             res_url = site_url + resource.get_absolute_url()
             print("*" * 100)
             print(f"{count}/{total_res_to_check}: Checking resource {res_url}")
-            missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run)
+            _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run)
             if dangling_in_django > 0 or missing_in_django > 0:
                 impacted_resources += 1
                 total_files_missing_in_django += missing_in_django
