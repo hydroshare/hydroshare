@@ -1050,6 +1050,10 @@ def submit_resource_for_review(request, pk):
     resource.raccess.immutable = True
     resource.raccess.save()
 
+    # Repair resource and email support user if there are issues
+    from hs_core.tasks import repair_resource_before_publication
+    repair_resource_before_publication.apply_async((resource.short_id,))
+
 
 def publish_resource(user, pk):
     """
