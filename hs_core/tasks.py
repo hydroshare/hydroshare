@@ -876,6 +876,23 @@ def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
     return res.get_absolute_url()
 
 
+@shared_task
+def set_resource_files_system_metadata(resource_id):
+    """
+    Sets size, checksum, and modified time for resource files by getting these values
+    from iRODS and stores in db
+    :param resource_id: the id of the resource for which to set system metadata for all files currently missing
+    these metadata in db
+    """
+    resource = utils.get_resource_by_shortkey(resource_id)
+    res_files = resource.files.exclude(_size__gte=0).all()
+    for res_file in res_files:
+        res_file.set_system_metadata(resource=resource, save=False)
+
+    ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(),
+                                     batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
+
+
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def daily_odm2_sync():
     """
