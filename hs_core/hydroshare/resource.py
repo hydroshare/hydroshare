@@ -16,11 +16,9 @@ from django.contrib.auth.models import User
 
 from rest_framework import status
 
-from hs_core.hydroshare import hs_bagit
+from hs_core.hydroshare import hs_bagit, utils
 from hs_core.models import ResourceFile
 from hs_core import signals
-from hs_core.hydroshare import utils
-from hs_core.tasks import create_bag_by_irods
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
@@ -1124,6 +1122,7 @@ def publish_resource(user, pk):
 
     # async regenerate the bag to ensure that the bag is complete at time of publication.
     # it serves as a reference in case anything happens with the filesystem
+    from hs_core.tasks import create_bag_by_irods
     utils.resource_modified(resource, user, overwrite_bag=False)
     create_bag_by_irods.apply_async((resource.short_id, ))
 
