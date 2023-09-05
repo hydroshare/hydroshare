@@ -2062,6 +2062,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
 
+    # for tracking when resourceFiles were last compared with irods
+    files_checked = models.DateTimeField(null=True)
+    repaired = models.DateTimeField(null=True)
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
@@ -2485,6 +2489,36 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         return self.metadata.get_xml(pretty_print=pretty_print,
                                      include_format_elements=include_format_elements)
+
+    def is_schema_json_file(self, file_path):
+        """Determine whether a given file is a schema.json file.
+        Note: this will return true for any file that ends with the schema.json ending
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.models.base import SCHEMA_JSON_FILE_ENDSWITH
+        if file_path.endswith(SCHEMA_JSON_FILE_ENDSWITH):
+            return True
+        return False
+
+    def is_collection_list_csv(self, file_path):
+        """Determine if a given file is an internally-generated collection list
+        """
+        from hs_collection_resource.utils import CSV_FULL_NAME_TEMPLATE
+        collection_list_filename = CSV_FULL_NAME_TEMPLATE.format(self.short_id)
+        if collection_list_filename in file_path:
+            return True
+        return False
+
+    def is_metadata_xml_file(self, file_path):
+        """Determine whether a given file is metadata.
+        Note: this will return true for any file that ends with the metadata endings
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
+                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+            return False
+        return True
 
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths
