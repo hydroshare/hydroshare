@@ -1019,22 +1019,19 @@ def nightly_cache_file_system_metadata():
     cuttoff_time = timezone.now() - timedelta(days=1)
     recently_updated_resources = BaseResource.objects \
         .filter(updated__gte=cuttoff_time)
-    updated_resources = []
     try:
         for res in recently_updated_resources:
             check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
             set_resource_files_system_metadata(res.short_id)
-            updated_resources.append(res)
 
-        # spend any remaining time generating filesystem metadata starting with most recent files
+        # spend any remaining time generating filesystem metadata starting with most recently edited resources
         recently_updated_rids = [res.short_id for res in recently_updated_resources]
-        not_recently_updated = BaseResource.objects \
+        less_recently_updated = BaseResource.objects \
             .exclude(short_id__in=recently_updated_rids) \
-            .order_by(F('updated').desc(nulls_first=True))
-        for res in not_recently_updated:
+            .order_by('updated')
+        for res in less_recently_updated:
             check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
             set_resource_files_system_metadata(res.short_id)
-            updated_resources.append(res)
     except TimeoutError:
         logger.info(f"nightly_cache_file_system_metadata terminated after \
                     {settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION} seconds")
