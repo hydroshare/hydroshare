@@ -115,7 +115,7 @@ class Command(BaseCommand):
         print("*" * 100)
         print(f"Total number of files dangling in Django (across all checked resources): \
               {total_files_dangling_in_django}")
-        print(f"Number of resources with at least one missing irods file: {len(resources_with_missing_irods)}")
+        print(f"Number of resources with at least one dangling Django file: {len(resources_with_missing_irods)}")
         for res in resources_with_missing_irods:
             print(res)
 
