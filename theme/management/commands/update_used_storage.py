@@ -16,16 +16,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         errors = {}
+        successes = []
         for u in User.objects.all():
             if UserQuota.objects.filter(user=u).exists() and u.is_active and not u.is_superuser:
                 profile = f"{current_site_url()}/user/{u.id}"
-                print(f"Updating quota in Django for {u.username}: {profile}")
                 try:
                     update_quota_usage(u.username)
+                    print(f"Success updating quota in Django for {u.username}: {profile}")
+                    successes.append(profile)
                 except ValidationError as e:
                     print(e.message)
                     errors[profile] = e.message
         print("Completed updating quotas.")
+        if successes:
+            print("Successfully updated quota for the following users:")
+            for profile in successes:
+                print(profile)
         if errors:
             for profile, message in errors:
                 print(f"Error encountered while updating quota for {profile}: {message}")
