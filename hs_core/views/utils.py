@@ -1374,6 +1374,13 @@ def ingest_bag(resource, bag_file, user):
         res_file = link_irods_file_to_django(resource, irods_path)
         added_resource_files.append(res_file)
 
+    for res_file in added_resource_files:
+        # sets size, checksum, and modified time for the newly added file
+        res_file.set_system_metadata(resource=resource, save=False)
+
+    ResourceFile.objects.bulk_update(added_resource_files, ResourceFile.system_meta_fields(),
+                                     batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
+
     check_aggregations(resource, added_resource_files)
 
     ingest_metadata_files(resource, meta_files, map_files)
