@@ -122,6 +122,7 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
         sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
         sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=2), nightly_cache_file_system_metadata.s())
 
         # Weekly
         sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
@@ -1006,6 +1007,37 @@ def set_resource_files_system_metadata(resource_id):
 
     ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(),
                                      batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def nightly_cache_file_system_metadata():
+    """
+    Generate and store file checksums and modified times for a subset of resources
+    """
+    from hs_core.management.utils import check_time
+    start_time = time.time()
+    cuttoff_time = timezone.now() - timedelta(days=1)
+    recently_updated_resources = BaseResource.objects \
+        .filter(updated__gte=cuttoff_time)
+    updated_resources = []
+    try:
+        for res in recently_updated_resources:
+            check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
+            set_resource_files_system_metadata(res.short_id)
+            updated_resources.append(res)
+
+        # spend any remaining time generating filesystem metadata starting with most recent files
+        recently_updated_rids = [res.short_id for res in recently_updated_resources]
+        not_recently_updated = BaseResource.objects \
+            .exclude(short_id__in=recently_updated_rids) \
+            .order_by(F('updated').desc(nulls_first=True))
+        for res in not_recently_updated:
+            check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
+            set_resource_files_system_metadata(res.short_id)
+            updated_resources.append(res)
+    except TimeoutError:
+        logger.info(f"nightly_cache_file_system_metadata terminated after \
+                    {settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION} seconds")
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
