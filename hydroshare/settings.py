@@ -809,4 +809,4 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
     "/hydroshare/hs_file_types/model_meta_schema_templates"
 )
 
-BULK_UPDATE_CREATE_BATCH_SIZE = 10_000
+BULK_UPDATE_CREATE_BATCH_SIZE = 1000
