@@ -3513,10 +3513,14 @@ class CompositeResourceTest(
 
         # resource should have 3 files now
         self.assertEqual(self.composite_resource.files.count(), 3)
-        # there should not be any resource files ending with _meta.xml or _resmap.xml
         for res_file in self.composite_resource.files.all():
+            # there should not be any resource files ending with _meta.xml or _resmap.xml
             self.assertFalse(res_file.file_name.endswith(METADATA_FILE_ENDSWITH))
             self.assertFalse(res_file.file_name.endswith(RESMAP_FILE_ENDSWITH))
+            # check file level system metadata
+            self.assertGreater(res_file._size, 0)
+            self.assertGreater(len(res_file._checksum), 0)
+            self.assertNotEqual(res_file._modified_time, None)
 
     def test_unzip_rename(self):
         """Test that when a zip file gets unzipped at data/contents/ and the unzipped folder may be
