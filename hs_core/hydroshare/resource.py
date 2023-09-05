@@ -35,7 +35,7 @@ METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 logger = logging.getLogger(__name__)
 
 
-def get_quota_usage_from_irods(username):
+def get_quota_usage_from_irods(username, raise_on_error=True):
     """
     Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
     :param username: the user name to get quota usage for.
@@ -79,7 +79,10 @@ def get_quota_usage_from_irods(username):
     if uqDataZoneSize < 0 and uqUserZoneSize < 0:
         err_msg = 'no quota size AVU in data zone and user zone for user {}'.format(username)
         logger.error(err_msg)
-        raise ValidationError(err_msg)
+        if raise_on_error:
+            raise ValidationError(err_msg)
+        else:
+            return 0
     elif uqUserZoneSize < 0:
         used_val = uqDataZoneSize
     elif uqDataZoneSize < 0:
@@ -107,7 +110,7 @@ def update_quota_usage(username):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    used_val = get_quota_usage_from_irods(username)
+    used_val = get_quota_usage_from_irods(username, raise_on_error=False)
     uq.update_used_value(used_val)
 
 
