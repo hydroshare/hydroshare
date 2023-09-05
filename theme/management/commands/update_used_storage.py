@@ -1,8 +1,10 @@
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
+from django.core.exceptions import ValidationError
 
 from theme.models import UserQuota
 from hs_core.hydroshare.resource import update_quota_usage
+from hs_core.hydroshare import current_site_url
 
 
 class Command(BaseCommand):
@@ -13,6 +15,17 @@ class Command(BaseCommand):
            "brought in sync with iRODS quota AVUs"
 
     def handle(self, *args, **options):
+        errors = {}
         for u in User.objects.all():
             if UserQuota.objects.filter(user=u).exists() and u.is_active and not u.is_superuser:
-                update_quota_usage(u.username)
+                profile = f"{current_site_url()}/user/{u.id}"
+                print(f"Updating quota in Django for {u.username}: {profile}")
+                try:
+                    update_quota_usage(u.username)
+                except ValidationError as e:
+                    print(e.message)
+                    errors[profile] = e.message
+        print("Completed updating quotas.")
+        if errors:
+            for profile, message in errors:
+                print(f"Error encountered while updating quota for {profile}: {message}")
