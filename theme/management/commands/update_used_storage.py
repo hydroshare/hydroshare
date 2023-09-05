@@ -15,6 +15,7 @@ class Command(BaseCommand):
            "brought in sync with iRODS quota AVUs"
 
     def handle(self, *args, **options):
+        errors = {}
         for u in User.objects.all():
             if UserQuota.objects.filter(user=u).exists() and u.is_active and not u.is_superuser:
                 profile = f"{current_site_url()}/user/{u.id}"
@@ -23,4 +24,8 @@ class Command(BaseCommand):
                     print(f"Success updating quota in Django for {u.username}: {profile}")
                 except ValidationError as e:
                     print(f"{profile} Error updating quota:{e.message}")
+                    errors[profile] = e.message
         print("Completed updating quotas.")
+        if errors:
+            for profile, message in errors:
+                print(f"Error encountered while updating quota for {profile}: {message}")
