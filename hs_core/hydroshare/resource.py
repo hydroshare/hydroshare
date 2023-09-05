@@ -671,6 +671,8 @@ def add_resource_files(pk, *files, **kwargs):
     This does **not** handle mutability; changes to immutable resources should be denied elsewhere.
 
     """
+    from hs_core.tasks import set_resource_files_system_metadata
+
     resource = kwargs.pop("resource", None)
     if resource is None:
         resource = utils.get_resource_by_shortkey(pk)
@@ -715,7 +717,9 @@ def add_resource_files(pk, *files, **kwargs):
     for ifname in source_names:
         res_files.append(utils.add_file_to_resource(resource, None,
                                                     folder=folder,
-                                                    source_name=ifname, user=user))
+                                                    source_name=ifname,
+                                                    user=user,
+                                                    save_file_system_metadata=False))
 
     if not res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
@@ -724,13 +728,10 @@ def add_resource_files(pk, *files, **kwargs):
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, res_files)
         utils.resource_modified(resource, user, overwrite_bag=False)
-        # store file level system metadata in Django DB
-        for res_file in res_files:
-            # getting file level system metadata from iRODS takes about 0.6 seconds per file
-            res_file.set_system_metadata(resource=resource, save=False)
 
-        ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(),
-                                         batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
+        # store file level system metadata in Django DB (async task)
+        set_resource_files_system_metadata.apply_async((resource.short_id,))
+
     return res_files
 
 
