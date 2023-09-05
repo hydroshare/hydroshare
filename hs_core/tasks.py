@@ -1028,7 +1028,7 @@ def nightly_cache_file_system_metadata():
         recently_updated_rids = [res.short_id for res in recently_updated_resources]
         less_recently_updated = BaseResource.objects \
             .exclude(short_id__in=recently_updated_rids) \
-            .order_by('updated')
+            .order_by('-updated')
         for res in less_recently_updated:
             check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
             set_resource_files_system_metadata(res.short_id)
