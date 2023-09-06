@@ -7,7 +7,7 @@ from hs_core.management.utils import fix_resourcefile_duplicates
 
 def migrate_resourcefiles(apps, schema_editor):
     logger = logging.getLogger(__name__)
-    fix_resourcefile_duplicates(dry_run=False, logger=logger)
+    fix_resourcefile_duplicates(dry_run=False, logger=logger, get_model=True)
 
 
 class Migration(migrations.Migration):

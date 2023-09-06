@@ -218,7 +218,7 @@ def check_relations(resource):
                       .format(resource.short_id, r.type, target))
 
 
-def fix_resourcefile_duplicates(dry_run=False, logger=None):
+def fix_resourcefile_duplicates(dry_run=False, logger=None, get_model=False):
     """Remove duplicate ResourceFiles
 
     Args:
@@ -227,9 +227,13 @@ def fix_resourcefile_duplicates(dry_run=False, logger=None):
     if not logger:
         logger = logging.getLogger(__name__)
     # first we remove files with content_type other than the content type for CompositeResource
-    CompositeResource = apps.get_model('hs_composite_resource', 'CompositeResource')
-    ResourceFileModel = apps.get_model('hs_core', 'ResourceFile')
-    desired_content_type = ContentType.objects.get_for_model(CompositeResource)
+    if get_model:
+        CompositeResourceModel = apps.get_model('hs_composite_resource', 'CompositeResource')
+        ResourceFileModel = apps.get_model('hs_core', 'ResourceFile')
+    else:
+        from hs_core.models import ResourceFile as ResourceFileModel
+        from hs_composite_resource.models import CompositeResource as CompositeResourceModel
+    desired_content_type = ContentType.objects.get_for_model(CompositeResourceModel)
     non_conforming_files = ResourceFileModel.objects.exclude(content_type=desired_content_type).only('id')
     logger.info(f"Non-conforming files to be removed:\n{non_conforming_files}")
     if dry_run:
