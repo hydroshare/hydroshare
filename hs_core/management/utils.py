@@ -15,9 +15,12 @@ import logging
 import os
 import time
 
+from django.apps import apps
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
+from django.db.models import Count
 from django.utils import timezone
 from requests import post
 
@@ -213,6 +216,52 @@ def check_relations(resource):
             except BaseResource.DoesNotExist:
                 print("relation {} {} {} (this does not exist)"
                       .format(resource.short_id, r.type, target))
+
+
+def fix_resourcefile_duplicates(dry_run=False, logger=None, get_model=False):
+    """Remove duplicate ResourceFiles
+
+    Args:
+        dry_run (bool, optional): True means don't save any changes. Defaults to False.
+    """
+    if not logger:
+        logger = logging.getLogger(__name__)
+    # first we remove files with content_type other than the content type for CompositeResource
+    if get_model:
+        CompositeResourceModel = apps.get_model('hs_composite_resource', 'CompositeResource')
+        ResourceFileModel = apps.get_model('hs_core', 'ResourceFile')
+    else:
+        from hs_core.models import ResourceFile as ResourceFileModel
+        from hs_composite_resource.models import CompositeResource as CompositeResourceModel
+    desired_content_type = ContentType.objects.get_for_model(CompositeResourceModel)
+    non_conforming_files = ResourceFileModel.objects.exclude(content_type=desired_content_type).only('id')
+    logger.info(f"Non-conforming files to be removed:\n{non_conforming_files}")
+    if dry_run:
+        logger.info("Skipping file delete due to dryrun")
+    else:
+        non_conforming_files.delete()
+
+    dup_resource_files = ResourceFileModel.objects.values('resource_file', 'object_id') \
+        .annotate(count=Count('id')) \
+        .order_by() \
+        .filter(count__gt=1)
+    if dup_resource_files:
+        total_resfile_containing_dups = dup_resource_files.count()
+        current_resfile = 1
+        logger.info(f"Discovered the following duplicate file objects:\n {dup_resource_files}")
+        for resourcefile in dup_resource_files:
+            filename = resourcefile["resource_file"]
+            num_duplicate_paths = resourcefile['count']
+            if not dry_run:
+                logger.info(f"{current_resfile}/{total_resfile_containing_dups} \
+                        Repairing file {filename} by removing {num_duplicate_paths -1} paths.")
+                resourcefiles_to_remove = ResourceFileModel.objects \
+                    .filter(resource_file=filename, object_id=resourcefile['object_id'])
+                ResourceFileModel.objects.filter(pk__in=resourcefiles_to_remove.values_list('pk')[1:]).delete()
+            else:
+                logger.info(f"{current_resfile}/{total_resfile_containing_dups} \
+                        Repair of {filename} skipped due to dryrun. Would remove {num_duplicate_paths -1} paths.")
+            current_resfile += 1
 
 
 def check_irods_files(resource, stop_on_error=False, log_errors=True,
