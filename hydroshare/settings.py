@@ -141,6 +141,9 @@ DISABLE_TASK_EMAILS = False
 # Integer seconds that worker should allocate every night to repair_resource file discrepancies
 NIGHTLY_RESOURCE_REPAIR_DURATION = 60 * 60
 
+# Integer seconds that worker should allocate every night to generating filesystem metadata
+NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = 60 * 60
+
 # Should resource owners be notified of automated resource repair?
 NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR = False
 
@@ -814,3 +817,5 @@ else:
 MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
     "/hydroshare/hs_file_types/model_meta_schema_templates"
 )
+
+BULK_UPDATE_CREATE_BATCH_SIZE = 1000

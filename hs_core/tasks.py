@@ -39,7 +39,7 @@ from theme.models import UserQuota, QuotaMessage, User
 from django_irods.icommands import SessionException
 from celery.result import states
 
-from hs_core.models import BaseResource, TaskNotification
+from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.enums import RelationTypes
 from theme.utils import get_quota_message
 from hs_collection_resource.models import CollectionDeletedResource
@@ -122,6 +122,7 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
         sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
         sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=2), nightly_cache_file_system_metadata.s())
 
         # Weekly
         sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
@@ -502,14 +503,20 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         files = zcontents.get_files()
 
         resource.file_unpack_status = 'Running'
-        resource.save()
+        resource.save(update_fields=['file_unpack_status'])
 
+        resource_files = []
         for i, f in enumerate(files):
             logger.debug("Adding file {0} to resource {1}".format(f.name, pk))
-            utils.add_file_to_resource(resource, f)
+            res_file = utils.add_file_to_resource(resource, f, save_file_system_metadata=False)
+            res_file.set_system_metadata(resource=resource, save=False)
+            resource_files.append(res_file)
             resource.file_unpack_message = "Imported {0} of about {1} file(s) ...".format(
                 i, num_files)
-            resource.save()
+            resource.save(update_fields=['file_unpack_message'])
+
+        ResourceFile.objects.bulk_update(resource_files, ResourceFile.system_meta_fields(),
+                                         batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
         # This might make the resource unsuitable for public consumption
         resource.update_public_and_discoverable()
@@ -519,7 +526,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         # Call success callback
         resource.file_unpack_message = None
         resource.file_unpack_status = 'Done'
-        resource.save()
+        resource.save(update_fields=['file_unpack_message', 'file_unpack_status'])
 
     except BaseResource.DoesNotExist:
         msg = "Unable to add zip file contents to non-existent resource {pk}."
@@ -530,7 +537,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         if resource:
             resource.file_unpack_status = 'Error'
             resource.file_unpack_message = exc_info
-            resource.save()
+            resource.save(update_fields=['file_unpack_status', 'file_unpack_message'])
 
         if zfile:
             zfile.close()
@@ -983,6 +990,51 @@ def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
     res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
                                                     new_path=new_aggregation_name)
     return res.get_absolute_url()
+
+
+@shared_task
+def set_resource_files_system_metadata(resource_id):
+    """
+    Sets size, checksum, and modified time for resource files by getting these values
+    from iRODS and stores in db
+    :param resource_id: the id of the resource for which to set system metadata for all files currently missing
+    these metadata in db
+    """
+    resource = utils.get_resource_by_shortkey(resource_id)
+    res_files = resource.files.exclude(_size__gte=0).all()
+    for res_file in res_files:
+        res_file.set_system_metadata(resource=resource, save=False)
+
+    ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(),
+                                     batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def nightly_cache_file_system_metadata():
+    """
+    Generate and store file checksums and modified times for a subset of resources
+    """
+    from hs_core.management.utils import check_time
+    start_time = time.time()
+    cuttoff_time = timezone.now() - timedelta(days=1)
+    recently_updated_resources = BaseResource.objects \
+        .filter(updated__gte=cuttoff_time)
+    try:
+        for res in recently_updated_resources:
+            check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
+            set_resource_files_system_metadata(res.short_id)
+
+        # spend any remaining time generating filesystem metadata starting with most recently edited resources
+        recently_updated_rids = [res.short_id for res in recently_updated_resources]
+        less_recently_updated = BaseResource.objects \
+            .exclude(short_id__in=recently_updated_rids) \
+            .order_by('-updated')
+        for res in less_recently_updated:
+            check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
+            set_resource_files_system_metadata(res.short_id)
+    except TimeoutError:
+        logger.info(f"nightly_cache_file_system_metadata terminated after \
+                    {settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION} seconds")
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

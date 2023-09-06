@@ -467,7 +467,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         files_bulk_create.append(file_to_save)
 
     if files_bulk_create:
-        ResourceFile.objects.bulk_create(files_bulk_create)
+        ResourceFile.objects.bulk_create(files_bulk_create, batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
     # copy files with logical file one at a time
     files_with_logical_file = files\
@@ -1038,7 +1038,8 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder='', source_name='',
-                         check_target_folder=False, add_to_aggregation=True, user=None):
+                         check_target_folder=False, add_to_aggregation=True, user=None,
+                         save_file_system_metadata=False):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param  resource: Resource to which file should be added
@@ -1058,6 +1059,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     being added to the resource also will be added to a fileset aggregation if such an aggregation
     exists in the file path
     :param  user: user who is adding file to the resource
+    :param  save_file_system_metadata: if True, file system metadata will be retrieved from iRODS and saved in DB
     :return: The identifier of the ResourceFile added.
     """
 
@@ -1111,7 +1113,8 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     # TODO: generate this from data in ResourceFile rather than extension
     if not resource.metadata.formats.filter(value=file_format_type).exists():
         resource.metadata.create_element('format', value=file_format_type)
-    ret.calculate_size()
+    if save_file_system_metadata:
+        ret.set_system_metadata(resource=resource)
 
     return ret
 
