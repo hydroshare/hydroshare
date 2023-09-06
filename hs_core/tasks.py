@@ -1019,9 +1019,9 @@ def nightly_cache_file_system_metadata():
     def set_res_files_system_metadata(resource):
         # exclude files with size 0 (file missing in irods)
         res_files = resource.files.filter(
-            Q(_checksum__isnull=True) |
-            Q(_modified_time__isnull=True) |
-            Q(_size__lt=0)).exclude(_size=0).all()
+            Q(_checksum__isnull=True)
+            | Q(_modified_time__isnull=True)
+            | Q(_size__lt=0)).exclude(_size=0).all()
         for res_file in res_files:
             res_file.set_system_metadata(resource=resource, save=False)
 
