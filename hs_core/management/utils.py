@@ -228,16 +228,16 @@ def fix_resourcefile_duplicates(dry_run=False, logger=None):
         logger = logging.getLogger(__name__)
     # first we remove files with content_type other than the content type for CompositeResource
     CompositeResource = apps.get_model('hs_composite_resource', 'CompositeResource')
-    ResourceFile = apps.get_model('hs_core', 'ResourceFile')
+    ResourceFileModel = apps.get_model('hs_core', 'ResourceFile')
     desired_content_type = ContentType.objects.get_for_model(CompositeResource)
-    non_conforming_files = ResourceFile.objects.exclude(content_type=desired_content_type).only('id')
+    non_conforming_files = ResourceFileModel.objects.exclude(content_type=desired_content_type).only('id')
     logger.info(f"Non-conforming files to be removed:\n{non_conforming_files}")
     if dry_run:
         logger.info("Skipping file delete due to dryrun")
     else:
         non_conforming_files.delete()
 
-    dup_resource_files = ResourceFile.objects.values('resource_file', 'object_id') \
+    dup_resource_files = ResourceFileModel.objects.values('resource_file', 'object_id') \
         .annotate(count=Count('id')) \
         .order_by() \
         .filter(count__gt=1)
@@ -251,9 +251,9 @@ def fix_resourcefile_duplicates(dry_run=False, logger=None):
             if not dry_run:
                 logger.info(f"{current_resfile}/{total_resfile_containing_dups} \
                         Repairing file {filename} by removing {num_duplicate_paths -1} paths.")
-                resourcefiles_to_remove = ResourceFile.objects \
+                resourcefiles_to_remove = ResourceFileModel.objects \
                     .filter(resource_file=filename, object_id=resourcefile['object_id'])
-                ResourceFile.objects.filter(pk__in=resourcefiles_to_remove.values_list('pk')[1:]).delete()
+                ResourceFileModel.objects.filter(pk__in=resourcefiles_to_remove.values_list('pk')[1:]).delete()
             else:
                 logger.info(f"{current_resfile}/{total_resfile_containing_dups} \
                         Repair of {filename} skipped due to dryrun. Would remove {num_duplicate_paths -1} paths.")
