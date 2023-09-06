@@ -13,7 +13,7 @@ def migrate_resourcefiles(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0071_alter_date_type'),
+        ('hs_core', '0074_auto_20230905_1959'),
     ]
 
     operations = [

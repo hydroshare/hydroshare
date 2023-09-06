@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0075_baseresource_checked'),
+        ('hs_core', '0073_baseresource_checked'),
     ]
 
     operations = [
