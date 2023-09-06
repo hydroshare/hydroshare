@@ -23,7 +23,7 @@ from celery import Task
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db.models import F
+from django.db.models import F, Q
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -1015,6 +1015,18 @@ def nightly_cache_file_system_metadata():
     Generate and store file checksums and modified times for a subset of resources
     """
     from hs_core.management.utils import check_time
+
+    def set_res_files_system_metadata(resource):
+        # exclude files with size 0 (file missing in irods)
+        res_files = resource.files.filter(
+            Q(_checksum__isnull=True)
+            | Q(_modified_time__isnull=True)
+            | Q(_size__lt=0)).exclude(_size=0).all()
+        for res_file in res_files:
+            res_file.set_system_metadata(resource=resource, save=False)
+
+        ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(),
+                                         batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
     start_time = time.time()
     cuttoff_time = timezone.now() - timedelta(days=1)
     recently_updated_resources = BaseResource.objects \
@@ -1022,7 +1034,7 @@ def nightly_cache_file_system_metadata():
     try:
         for res in recently_updated_resources:
             check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
-            set_resource_files_system_metadata(res.short_id)
+            set_res_files_system_metadata(res)
 
         # spend any remaining time generating filesystem metadata starting with most recently edited resources
         recently_updated_rids = [res.short_id for res in recently_updated_resources]
@@ -1031,7 +1043,7 @@ def nightly_cache_file_system_metadata():
             .order_by('-updated')
         for res in less_recently_updated:
             check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
-            set_resource_files_system_metadata(res.short_id)
+            set_res_files_system_metadata(res)
     except TimeoutError:
         logger.info(f"nightly_cache_file_system_metadata terminated after \
                     {settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION} seconds")
