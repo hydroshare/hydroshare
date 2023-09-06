@@ -851,7 +851,7 @@ def _link_irods_folder_to_django(resource, istorage, foldername):
 
 def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     """
-    Rename file in Django DB after the file is renamed in Django side
+    Rename file in Django DB after the file/folder is renamed in iRODS side
     :param resource: the BaseResource object representing a HydroShare resource
     :param src_name: the file or folder full path name to be renamed
     :param tgt_name: the file or folder full path name to be renamed to
@@ -886,13 +886,26 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 
     except ObjectDoesNotExist:
         # src_name and tgt_name are folder names
-        res_file_objs = ResourceFile.list_folder(resource, src_name)
-
+        res_file_objs = ResourceFile.list_folder(resource=resource, folder=src_name)
+        resource_is_federated = resource.is_federated
+        batch_size = 10_000
         for fobj in res_file_objs:
-            src_path = fobj.storage_path
+            src_path = fobj.get_storage_path(resource=resource)
             # naively replace src_name with tgt_name
             new_path = src_path.replace(src_name, tgt_name, 1)
-            fobj.set_storage_path(new_path)
+            folder, _ = fobj.path_is_acceptable(new_path, test_exists=False)
+            fobj.file_folder = folder
+            if resource_is_federated:
+                fobj.fed_resource_file = new_path
+            else:
+                fobj.resource_file = new_path
+
+        if res_file_objs:
+            if resource_is_federated:
+                ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'fed_resource_file'],
+                                                 batch_size=batch_size)
+            else:
+                ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'resource_file'], batch_size=batch_size)
 
 
 def remove_irods_folder_in_django(resource, folder_path, user):
@@ -1258,9 +1271,14 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 added_resource_files.append(res_file)
 
             if resource.resource_type == "CompositeResource":
-                # make the newly added files part of an aggregation if needed
                 for res_file in added_resource_files:
+                    # make the newly added files part of an aggregation if needed
                     resource.add_file_to_aggregation(res_file)
+                    # sets size, checksum, and modified time for the newly added file
+                    res_file.set_system_metadata(resource=resource, save=False)
+
+                ResourceFile.objects.bulk_update(added_resource_files, ResourceFile.system_meta_fields(),
+                                                 batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
             if auto_aggregate:
                 check_aggregations(resource, added_resource_files)
@@ -1355,6 +1373,13 @@ def ingest_bag(resource, bag_file, user):
         irods_path = resource.get_irods_path(destination_file)
         res_file = link_irods_file_to_django(resource, irods_path)
         added_resource_files.append(res_file)
+
+    for res_file in added_resource_files:
+        # sets size, checksum, and modified time for the newly added file
+        res_file.set_system_metadata(resource=resource, save=False)
+
+    ResourceFile.objects.bulk_update(added_resource_files, ResourceFile.system_meta_fields(),
+                                     batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
     check_aggregations(resource, added_resource_files)
 
@@ -1481,8 +1506,9 @@ def remove_folder(user, res_id, folder_path):
     if not istorage.exists(coll_path):
         raise ValidationError(f"Specified folder ({folder_path}) was not found")
 
+    # Seems safest to delete from irods before removing from Django
+    # istorage command is the longest-running and most likely to get interrupted
     istorage.delete(coll_path)
-
     remove_irods_folder_in_django(resource, coll_path, user)
 
     resource.update_public_and_discoverable()  # make private if required

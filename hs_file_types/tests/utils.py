@@ -18,7 +18,8 @@ class CompositeResourceTestMixin(object):
                                       name=os.path.basename(file_to_add))
 
         new_res_file = add_file_to_resource(
-            self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True
+            self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True,
+            save_file_system_metadata=True
         )
         return new_res_file
 

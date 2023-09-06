@@ -775,7 +775,7 @@ class AbstractLogicalFile(models.Model):
             uploaded_file = UploadedFile(file=open(f, 'rb'), name=os.path.basename(f))
 
             new_res_file = add_file_to_resource(
-                resource, uploaded_file, folder=folder_path, add_to_aggregation=False
+                resource, uploaded_file, folder=folder_path, add_to_aggregation=False, save_file_system_metadata=True
             )
             logical_file.add_resource_file(new_res_file)
 
@@ -1140,7 +1140,7 @@ class AbstractLogicalFile(models.Model):
             uploaded_file = UploadedFile(file=open(fl, 'rb'),
                                          name=os.path.basename(fl))
             new_res_file = add_file_to_resource(
-                resource, uploaded_file, folder=upload_folder, add_to_aggregation=False
+                resource, uploaded_file, folder=upload_folder, add_to_aggregation=False, save_file_system_metadata=True
             )
 
             # make each resource file we added part of the logical file
@@ -1164,7 +1164,7 @@ class AbstractLogicalFile(models.Model):
 
     def copy_resource_files(self, resource, files_to_copy, tgt_folder):
         """
-        A helper for creating aggregation. Copies the given list of resource files to the the
+        A helper for creating aggregation. Copies the given list of resource files to the
         specified folder path and then makes those copied files as part of the aggregation
         :param  resource: an instance of CompositeResource for which aggregation being created
         :param  files_to_copy: a list of resource file paths in irods that need to be copied

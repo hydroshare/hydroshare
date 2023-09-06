@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 import traceback
 import zipfile
 import logging
@@ -22,7 +23,7 @@ from celery import Task
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from celery.exceptions import TaskError
+from django.db.models import F, Q
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -37,8 +38,9 @@ from django_irods.storage import IrodsStorage
 from theme.models import UserQuota, QuotaMessage, User
 from django_irods.icommands import SessionException
 from celery.result import states
+from celery.exceptions import TaskError
 
-from hs_core.models import BaseResource, TaskNotification
+from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.enums import RelationTypes
 from theme.utils import get_quota_message
 from hs_collection_resource.models import CollectionDeletedResource
@@ -114,23 +116,25 @@ def setup_periodic_tasks(sender, **kwargs):
         # Hourly
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s())
 
-        # Daily
-        sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
-        sender.add_periodic_task(crontab(minute=0, hour=1), nightly_periodic_task_check.s())
-        sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
-        sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
-        sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
-        sender.add_periodic_task(crontab(minute=30, hour=1), check_geoserver_registrations.s())
+        # Daily (times in UTC)
+        sender.add_periodic_task(crontab(minute=0, hour=3), nightly_metadata_review_reminder.s())
+        sender.add_periodic_task(crontab(minute=30, hour=3), nightly_zips_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=4), daily_odm2_sync.s())
+        sender.add_periodic_task(crontab(minute=30, hour=4), daily_innactive_group_requests_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=5), check_geoserver_registrations.s())
+        sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s())
+        sender.add_periodic_task(crontab(minute=0, hour=6), nightly_cache_file_system_metadata.s())
+        sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s())
 
         # Weekly
-        sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=7, day_of_week=1), task_notification_cleanup.s())
 
         # Monthly
-        sender.add_periodic_task(crontab(minute=0, hour=1, day_of_month=1), update_from_geoconnex_task.s())
-        sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
+        sender.add_periodic_task(crontab(minute=30, hour=7, day_of_month=1), update_from_geoconnex_task.s())
+        sender.add_periodic_task(crontab(minute=0, hour=8, day_of_week=1, day_of_month='1-7'),
                                  send_over_quota_emails.s())
         sender.add_periodic_task(
-            crontab(minute=15, hour=1, day_of_month=1), monthly_group_membership_requests_cleanup.s())
+            crontab(minute=30, hour=8, day_of_month=1), monthly_group_membership_requests_cleanup.s())
 
 
 # Currently there are two different cleanups scheduled.
@@ -165,6 +169,111 @@ def nightly_zips_cleanup():
 def nightly_periodic_task_check():
     with open("celery/periodic_tasks_last_executed.txt", mode='w') as file:
         file.write(timezone.now().strftime('%m/%d/%y %H:%M:%S'))
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def nightly_repair_resource_files():
+    """
+    Run repair_resource on resources updated in the last day
+    """
+    from hs_core.management.utils import check_time, repair_resource
+    start_time = time.time()
+    cuttoff_time = timezone.now() - timedelta(days=1)
+    recently_updated_resources = BaseResource.objects \
+        .filter(updated__gte=cuttoff_time, raccess__published=False)
+    repaired_resources = []
+    try:
+        for res in recently_updated_resources:
+            check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
+            is_corrupt = False
+            try:
+                _, missing_django, dangling_in_django = repair_resource(res, logger)
+                is_corrupt = missing_django > 0 or dangling_in_django > 0
+            except ObjectDoesNotExist:
+                logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
+            if is_corrupt:
+                repaired_resources.append(res)
+
+        # spend any remaining time fixing resources that haven't been checked
+        # followed by those previously checked, prioritizing the oldest checked date
+        recently_updated_rids = [res.short_id for res in recently_updated_resources]
+        not_recently_updated = BaseResource.objects \
+            .exclude(short_id__in=recently_updated_rids, raccess__published=True) \
+            .order_by(F('files_checked').asc(nulls_first=True))
+        for res in not_recently_updated:
+            check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
+            is_corrupt = False
+            try:
+                _, missing_django, dangling_in_django = repair_resource(res, logger)
+                is_corrupt = missing_django > 0 or dangling_in_django > 0
+            except ObjectDoesNotExist:
+                logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
+            if is_corrupt:
+                repaired_resources.append(res)
+    except TimeoutError:
+        logger.info(f"nightly_repair_resource_files terminated after \
+                    {settings.NIGHTLY_RESOURCE_REPAIR_DURATION} seconds")
+
+    if settings.NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR:
+        for res in repaired_resources:
+            notify_owners_of_resource_repair(res)
+
+
+@shared_task
+def repair_resource_before_publication(res_id):
+    """
+    Run repair_resource on resource at the initiation of a publication request
+    """
+    from hs_core.management.utils import repair_resource
+    res = utils.get_resource_by_shortkey(res_id)
+    if res.raccess.published:
+        raise ValidationError("Attempted pre-publication resource repair on a resource that is already published.")
+    errors, missing_django, dangling_in_django = repair_resource(res, logger)
+    if missing_django > 0 or dangling_in_django > 0:
+        res_url = current_site_url() + res.get_absolute_url()
+
+        email_msg = f'''
+        <p>We discovered corrupted files in the following resource that is under review for publication:
+        <a href="{ res_url }">{ res_url }</a></p>
+        <p>We found {missing_django} files missing in Django and {dangling_in_django} files dangling in Django.</p>
+        <p>The files issues were fixed automatically. Some logs from the fix are included below:</p>
+        <p>{errors}</p>
+        '''
+
+        if not settings.DISABLE_TASK_EMAILS:
+            send_mail(subject="HydroShare files repaired for resource under publication review",
+                      message=email_msg,
+                      html_message=email_msg,
+                      from_email=settings.DEFAULT_FROM_EMAIL,
+                      recipient_list=[settings.DEFAULT_SUPPORT_EMAIL])
+
+
+def notify_owners_of_resource_repair(resource):
+    """
+    Sends email notification to resource owners on resource file repair
+
+    :param resource: a resource that has been repaired
+    :return:
+    """
+    res_url = current_site_url() + resource.get_absolute_url()
+
+    email_msg = f'''Dear Resource Owner,
+    <p>We discovered corrupted files in the following resource that you own:
+    <a href="{ res_url }">
+    { res_url }</a></p>
+
+    <p>File corruption can occur if upload or delete processes get interrupted. The files have been repaired.</p>
+    <p>Please contact us if you notice issues or if you repeatedly receive this message.</p>
+
+    <p>Thank you,</p>
+    <p>The HydroShare Team</p>
+    '''
+    if not settings.DISABLE_TASK_EMAILS:
+        send_mail(subject="HydroShare resource files repaired",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[o.email for o in resource.raccess.owners.all()])
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
@@ -448,14 +557,20 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         files = zcontents.get_files()
 
         resource.file_unpack_status = 'Running'
-        resource.save()
+        resource.save(update_fields=['file_unpack_status'])
 
+        resource_files = []
         for i, f in enumerate(files):
             logger.debug("Adding file {0} to resource {1}".format(f.name, pk))
-            utils.add_file_to_resource(resource, f)
+            res_file = utils.add_file_to_resource(resource, f, save_file_system_metadata=False)
+            res_file.set_system_metadata(resource=resource, save=False)
+            resource_files.append(res_file)
             resource.file_unpack_message = "Imported {0} of about {1} file(s) ...".format(
                 i, num_files)
-            resource.save()
+            resource.save(update_fields=['file_unpack_message'])
+
+        ResourceFile.objects.bulk_update(resource_files, ResourceFile.system_meta_fields(),
+                                         batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
         # This might make the resource unsuitable for public consumption
         resource.update_public_and_discoverable()
@@ -465,7 +580,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         # Call success callback
         resource.file_unpack_message = None
         resource.file_unpack_status = 'Done'
-        resource.save()
+        resource.save(update_fields=['file_unpack_message', 'file_unpack_status'])
 
     except BaseResource.DoesNotExist:
         msg = "Unable to add zip file contents to non-existent resource {pk}."
@@ -476,7 +591,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         if resource:
             resource.file_unpack_status = 'Error'
             resource.file_unpack_message = exc_info
-            resource.save()
+            resource.save(update_fields=['file_unpack_status', 'file_unpack_message'])
 
         if zfile:
             zfile.close()
@@ -932,6 +1047,63 @@ def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
     res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
                                                     new_path=new_aggregation_name)
     return res.get_absolute_url()
+
+
+@shared_task
+def set_resource_files_system_metadata(resource_id):
+    """
+    Sets size, checksum, and modified time for resource files by getting these values
+    from iRODS and stores in db
+    :param resource_id: the id of the resource for which to set system metadata for all files currently missing
+    these metadata in db
+    """
+    resource = utils.get_resource_by_shortkey(resource_id)
+    res_files = resource.files.exclude(_size__gte=0).all()
+    for res_file in res_files:
+        res_file.set_system_metadata(resource=resource, save=False)
+
+    ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(),
+                                     batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def nightly_cache_file_system_metadata():
+    """
+    Generate and store file checksums and modified times for a subset of resources
+    """
+    from hs_core.management.utils import check_time
+
+    def set_res_files_system_metadata(resource):
+        # exclude files with size 0 (file missing in irods)
+        res_files = resource.files.filter(
+            Q(_checksum__isnull=True)
+            | Q(_modified_time__isnull=True)
+            | Q(_size__lt=0)).exclude(_size=0).all()
+        for res_file in res_files:
+            res_file.set_system_metadata(resource=resource, save=False)
+
+        ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(),
+                                         batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
+    start_time = time.time()
+    cuttoff_time = timezone.now() - timedelta(days=1)
+    recently_updated_resources = BaseResource.objects \
+        .filter(updated__gte=cuttoff_time)
+    try:
+        for res in recently_updated_resources:
+            check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
+            set_res_files_system_metadata(res)
+
+        # spend any remaining time generating filesystem metadata starting with most recently edited resources
+        recently_updated_rids = [res.short_id for res in recently_updated_resources]
+        less_recently_updated = BaseResource.objects \
+            .exclude(short_id__in=recently_updated_rids) \
+            .order_by('-updated')
+        for res in less_recently_updated:
+            check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
+            set_res_files_system_metadata(res)
+    except TimeoutError:
+        logger.info(f"nightly_cache_file_system_metadata terminated after \
+                    {settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION} seconds")
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

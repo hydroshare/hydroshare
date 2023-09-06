@@ -783,7 +783,8 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         resource, _, _ = view_utils.authorize(self.request, self.kwargs['pk'],
                                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
-        return resource.files.all()
+        # exclude files with size 0 as they are missing from iRODS
+        return resource.files.exclude(_size=0).all()
 
     def get_serializer_class(self):
         return serializers.ResourceFileSerializer

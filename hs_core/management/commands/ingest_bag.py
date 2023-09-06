@@ -100,5 +100,5 @@ class Command(BaseCommand):
 
         bag_file_name = os.path.basename(bag_path)
         bag_file = UploadedFile(file=open(bag_path, mode="rb"), name=bag_file_name)
-        bag_res_file = add_file_to_resource(res, bag_file)
+        bag_res_file = add_file_to_resource(res, bag_file, save_file_system_metadata=True)
         ingest_bag(res, bag_res_file, user)
