@@ -142,10 +142,10 @@ def data_store_structure(request):
 
         if is_federated:
             res_file = ResourceFile.objects.filter(object_id=resource.id,
-                                            fed_resource_file=file_in_irods).first()
+                                                   fed_resource_file=file_in_irods).first()
         else:
             res_file = ResourceFile.objects.filter(object_id=resource.id,
-                                            resource_file=file_in_irods).first()
+                                                   resource_file=file_in_irods).first()
 
         if not res_file:
             # skip metadata files
