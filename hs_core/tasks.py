@@ -196,7 +196,8 @@ def nightly_repair_resource_files():
         # followed by those previously checked, prioritizing the oldest checked date
         recently_updated_rids = [res.short_id for res in recently_updated_resources]
         not_recently_updated = BaseResource.objects \
-            .exclude(short_id__in=recently_updated_rids, raccess__published=True) \
+            .exclude(short_id__in=recently_updated_rids) \
+            .exclude(raccess__published=True) \
             .order_by(F('files_checked').asc(nulls_first=True))
         for res in not_recently_updated:
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
