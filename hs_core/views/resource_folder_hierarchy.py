@@ -140,17 +140,12 @@ def data_store_structure(request):
         f_store_path = os.path.join(store_path, fname)
         file_in_irods = resource.get_irods_path(f_store_path)
 
-        res_file = None
         if is_federated:
-            for _file in resource.files.all():
-                if _file.fed_resource_file == file_in_irods:
-                    res_file = _file
-                    break
+            res_file = ResourceFile.objects.filter(object_id=resource.id,
+                                            fed_resource_file=file_in_irods).first()
         else:
-            for _file in resource.files.all():
-                if _file.resource_file == file_in_irods:
-                    res_file = _file
-                    break
+            res_file = ResourceFile.objects.filter(object_id=resource.id,
+                                            resource_file=file_in_irods).first()
 
         if not res_file:
             # skip metadata files
