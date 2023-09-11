@@ -437,7 +437,7 @@ class IrodsStorage(Storage):
                 "{} cannot be found in iRODS to retrieve " "file size".format(name)
             )
         # remove potential '\n' from stdout
-        size_string = stdout.replace("\n", "")
+        size_string = stdout.strip("0\n").replace("\n", "")
         return int(float(size_string))
 
     def checksum(self, full_name, force_compute=True):
