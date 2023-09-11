@@ -438,7 +438,11 @@ class IrodsStorage(Storage):
             )
         # remove potential '\n' from stdout
         size_string = stdout.strip("0\n").replace("\n", "")
-        return int(float(size_string))
+        try:
+            ret = int(float(size_string))
+            return ret
+        except ValueError:
+            return 0
 
     def checksum(self, full_name, force_compute=True):
         """
