@@ -436,7 +436,9 @@ class IrodsStorage(Storage):
             raise ValidationError(
                 "{} cannot be found in iRODS to retrieve " "file size".format(name)
             )
-        return int(float(stdout))
+        # remove potential '\n' from stdout
+        size_string = stdout.strip("\n")
+        return int(float(size_string))
 
     def checksum(self, full_name, force_compute=True):
         """
