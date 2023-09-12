@@ -38,7 +38,7 @@ from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
 from hs_core.hydroshare import add_resource_files
-from hs_core.hydroshare import check_resource_type, delete_resource_file
+from hs_core.hydroshare import check_resource_type, delete_resource_file, settings
 from hs_core.hydroshare.utils import check_aggregations
 from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, Relation, \
@@ -888,7 +888,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         # src_name and tgt_name are folder names
         res_file_objs = ResourceFile.list_folder(resource=resource, folder=src_name)
         resource_is_federated = resource.is_federated
-        batch_size = 10_000
+        batch_size = settings.BULK_UPDATE_CREATE_BATCH_SIZE
         for fobj in res_file_objs:
             src_path = fobj.get_storage_path(resource=resource)
             # naively replace src_name with tgt_name
