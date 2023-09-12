@@ -116,7 +116,8 @@ class UserProfileView(TemplateView):
             "resources": resources,
             "quota_message": get_quota_message(u),
             "group_membership_requests": group_membership_requests,
-            "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE
+            "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE,
+            "oidc_change_password_url": settings.OIDC_CHANGE_PASSWORD_URL
         }
 
 
