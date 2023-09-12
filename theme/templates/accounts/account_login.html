@@ -15,22 +15,19 @@
         </div>
         {% else %}
             {{ block.super }}
-
         <div class="col-xs-12">
             <h2 class="page-title">Sign In</h2>
         </div>
-        {% if user.is_authenticated %}
-          <p>Current user: {{ user.email }}</p>
-          <form action="{% url 'oidc_logout' %}" method="post">
-            {% csrf_token %}
-            <input type="submit" value="logout">
-          </form>
-        {% else %}
-          <a href="{% url 'oidc_authentication_init' %}">Login</a>
-        {% endif %}
         <div class="col-xs-12 col-sm-6">
             <form class="account-form has-space-bottom" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
                 {% csrf_token %}
+                <div class="col-md-12 alert alert-success alert-dissmissable">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                    <!-- TODO: update help link for CUAHSI SSO -->
+                    <strong> Attention:</strong><br>Hydroshare will soon migrate to <a href="https://help.hydroshare.org" target="_blank">CUAHSI single sign-on</a>.
+                    If you want, you can <a href="{% url 'oidc_authentication_init' %}">try it now</a>.
+                </div>
 
                 {% if form.non_field_errors %}
                     <div class="form-errors">
