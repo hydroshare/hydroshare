@@ -489,8 +489,7 @@ class CompositeResource(BaseResource):
 
         This is true if it is listed as metadata in any logical file.
         """
-        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
-                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+        if not self.is_metadata_xml_file(file_path):
             return False
         for logical_file in self.logical_files:
             if logical_file.metadata_file_path == file_path or \

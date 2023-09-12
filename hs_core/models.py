@@ -2062,6 +2062,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
 
+    # for tracking when resourceFiles were last compared with irods
+    files_checked = models.DateTimeField(null=True)
+    repaired = models.DateTimeField(null=True)
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
@@ -2485,6 +2489,36 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         return self.metadata.get_xml(pretty_print=pretty_print,
                                      include_format_elements=include_format_elements)
+
+    def is_schema_json_file(self, file_path):
+        """Determine whether a given file is a schema.json file.
+        Note: this will return true for any file that ends with the schema.json ending
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.models.base import SCHEMA_JSON_FILE_ENDSWITH
+        if file_path.endswith(SCHEMA_JSON_FILE_ENDSWITH):
+            return True
+        return False
+
+    def is_collection_list_csv(self, file_path):
+        """Determine if a given file is an internally-generated collection list
+        """
+        from hs_collection_resource.utils import CSV_FULL_NAME_TEMPLATE
+        collection_list_filename = CSV_FULL_NAME_TEMPLATE.format(self.short_id)
+        if collection_list_filename in file_path:
+            return True
+        return False
+
+    def is_metadata_xml_file(self, file_path):
+        """Determine whether a given file is metadata.
+        Note: this will return true for any file that ends with the metadata endings
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
+                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+            return False
+        return True
 
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths
@@ -2960,7 +2994,12 @@ class ResourceFile(ResourceFileIRODSMixin):
                                                   related_name="files")
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
+
+    # these file metadata (size, modified_time, and checksum) values are retrieved from iRODS and stored in db
+    # for performance reason so that we don't have to query iRODS for these values every time we need them
     _size = models.BigIntegerField(default=-1)
+    _modified_time = models.DateTimeField(null=True, blank=True)
+    _checksum = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         """Return resource filename or federated resource filename for string representation."""
@@ -2973,6 +3012,11 @@ class ResourceFile(ResourceFileIRODSMixin):
     def banned_symbols(cls):
         """returns a list of banned characters for file/folder name"""
         return r'\/:*?"<>|'
+
+    @classmethod
+    def system_meta_fields(cls):
+        """returns a list of system metadata fields"""
+        return ['_size', '_modified_time', '_checksum']
 
     @classmethod
     def create(cls, resource, file, folder='', source=None):
@@ -3102,11 +3146,65 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def modified_time(self):
-        return self.resource_file.storage.get_modified_time(self.resource_file.name)
+        """Return modified time of the file.
+        If the modified time is not already set, then it is first retrieved from iRODS and stored in db.
+        """
+        # self._size != 0 -> file exists, or we have not set the size yet
+        if not self._modified_time and self._size != 0:
+            self.calculate_modified_time()
+        return self._modified_time
+
+    def calculate_modified_time(self, resource=None, save=True):
+        """Updates modified time of the file in db.
+        Retrieves the modified time from iRODS and stores it in db.
+        """
+        if resource is None:
+            resource = self.resource
+
+        if resource.resource_federation_path:
+            file_path = self.fed_resource_file.name
+        else:
+            file_path = self.resource_file.name
+
+        try:
+            self._modified_time = self.resource_file.storage.get_modified_time(file_path)
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            self._modified_time = None
+        if save:
+            self.save(update_fields=["_modified_time"])
 
     @property
     def checksum(self):
-        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+        """Return checksum of the file.
+        If the checksum is not already set, then it is first retrieved from iRODS and stored in db.
+        """
+        # self._size != 0 -> file exists, or we have not set the size yet
+        if not self._checksum and self._size != 0:
+            self.calculate_checksum()
+        return self._checksum
+
+    def calculate_checksum(self, resource=None, save=True):
+        """Updates checksum of the file in db.
+        Retrieves the checksum from iRODS and stores it in db.
+        """
+        if resource is None:
+            resource = self.resource
+
+        if resource.resource_federation_path:
+            file_path = self.fed_resource_file.name
+        else:
+            file_path = self.resource_file.name
+
+        try:
+            self._checksum = self.resource_file.storage.checksum(file_path, force_compute=False)
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            self._checksum = None
+        if save:
+            self.save(update_fields=["_checksum"])
 
     # TODO: write unit test
     @property
@@ -3161,9 +3259,12 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             return self.resource_file.name
 
-    def calculate_size(self):
+    def calculate_size(self, resource=None, save=True):
         """Reads the file size and saves to the DB"""
-        if self.resource.resource_federation_path:
+        if resource is None:
+            resource = self.resource
+
+        if resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
@@ -3171,7 +3272,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                 self._size = self.fed_resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
-                logger.warning("file {} not found".format(self.storage_path))
+                logger.warning("file {} not found in iRODS".format(self.storage_path))
                 self._size = 0
         else:
             if __debug__:
@@ -3181,9 +3282,28 @@ class ResourceFile(ResourceFileIRODSMixin):
                 self._size = self.resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
-                logger.warning("file {} not found".format(self.storage_path))
+                logger.warning("file {} not found in iRODS".format(self.storage_path))
                 self._size = 0
-        self.save(update_fields=["_size"])
+        if save:
+            self.save(update_fields=["_size"])
+
+    def set_system_metadata(self, resource=None, save=True):
+        """Set system metadata (size, modified time, and checksum) for a file.
+        This method should be called after a file is uploaded to iRODS and registered with Django.
+        """
+
+        self.calculate_size(resource=resource, save=save)
+        if self._size > 0:
+            # file exists in iRODS - get modified time and checksum
+            self.calculate_modified_time(resource=resource, save=save)
+            self.calculate_checksum(resource=resource, save=save)
+        else:
+            # file was not found in iRODS
+            self._size = 0
+            self._modified_time = None
+            self._checksum = None
+        if save:
+            self.save(update_fields=self.system_meta_fields())
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):

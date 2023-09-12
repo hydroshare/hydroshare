@@ -671,6 +671,8 @@ def add_resource_files(pk, *files, **kwargs):
     This does **not** handle mutability; changes to immutable resources should be denied elsewhere.
 
     """
+    from hs_core.tasks import set_resource_files_system_metadata
+
     resource = kwargs.pop("resource", None)
     if resource is None:
         resource = utils.get_resource_by_shortkey(pk)
@@ -748,7 +750,8 @@ def add_resource_files(pk, *files, **kwargs):
             # file is being uploaded to the root of the resource path
             add_to_aggregation = False
 
-        res_file = utils.add_file_to_resource(resource, f, folder=full_dir, add_to_aggregation=False, user=user)
+        res_file = utils.add_file_to_resource(resource, f, folder=full_dir, add_to_aggregation=False, user=user,
+                                              save_file_system_metadata=False)
         uploaded_res_files.append(res_file)
         if add_to_aggregation:
             if full_dir not in seen_aggregations:
@@ -765,7 +768,8 @@ def add_resource_files(pk, *files, **kwargs):
                     aggregation.add_resource_file(res_file)
 
     for ifname in source_names:
-        res_file = utils.add_file_to_resource(resource, None, folder=folder, source_name=ifname, user=user)
+        res_file = utils.add_file_to_resource(resource, None, folder=folder, source_name=ifname, user=user,
+                                              save_file_system_metadata=False)
         uploaded_res_files.append(res_file)
 
     if not uploaded_res_files:
@@ -775,6 +779,9 @@ def add_resource_files(pk, *files, **kwargs):
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, uploaded_res_files)
         utils.resource_modified(resource, user, overwrite_bag=False)
+
+        # store file level system metadata in Django DB (async task)
+        set_resource_files_system_metadata.apply_async((resource.short_id,))
 
     return uploaded_res_files
 
@@ -1101,6 +1108,10 @@ def submit_resource_for_review(request, pk):
     resource.raccess.review_pending = True
     resource.raccess.immutable = True
     resource.raccess.save()
+
+    # Repair resource and email support user if there are issues
+    from hs_core.tasks import repair_resource_before_publication
+    repair_resource_before_publication.apply_async((resource.short_id,))
 
 
 def publish_resource(user, pk):

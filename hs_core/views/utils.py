@@ -1271,9 +1271,14 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 added_resource_files.append(res_file)
 
             if resource.resource_type == "CompositeResource":
-                # make the newly added files part of an aggregation if needed
                 for res_file in added_resource_files:
+                    # make the newly added files part of an aggregation if needed
                     resource.add_file_to_aggregation(res_file)
+                    # sets size, checksum, and modified time for the newly added file
+                    res_file.set_system_metadata(resource=resource, save=False)
+
+                ResourceFile.objects.bulk_update(added_resource_files, ResourceFile.system_meta_fields(),
+                                                 batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
             if auto_aggregate:
                 check_aggregations(resource, added_resource_files)
@@ -1368,6 +1373,13 @@ def ingest_bag(resource, bag_file, user):
         irods_path = resource.get_irods_path(destination_file)
         res_file = link_irods_file_to_django(resource, irods_path)
         added_resource_files.append(res_file)
+
+    for res_file in added_resource_files:
+        # sets size, checksum, and modified time for the newly added file
+        res_file.set_system_metadata(resource=resource, save=False)
+
+    ResourceFile.objects.bulk_update(added_resource_files, ResourceFile.system_meta_fields(),
+                                     batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
     check_aggregations(resource, added_resource_files)
 
@@ -1494,8 +1506,9 @@ def remove_folder(user, res_id, folder_path):
     if not istorage.exists(coll_path):
         raise ValidationError(f"Specified folder ({folder_path}) was not found")
 
+    # Seems safest to delete from irods before removing from Django
+    # istorage command is the longest-running and most likely to get interrupted
     istorage.delete(coll_path)
-
     remove_irods_folder_in_django(resource, coll_path, user)
 
     resource.update_public_and_discoverable()  # make private if required
