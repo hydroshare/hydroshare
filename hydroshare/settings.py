@@ -434,6 +434,7 @@ MIDDLEWARE = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
+    "hs_core.middleware.SunsetMiddleware",
 )
 
 # security settings
