@@ -1503,12 +1503,17 @@ def remove_folder(user, res_id, folder_path):
         raise ValidationError("Folder deletion is not allowed for a published resource")
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
-    if not istorage.exists(coll_path):
+    import time
+    st = time.time()
+    exist = istorage.exists(coll_path)
+    et = time.time()
+    elapsed_time = et - st
+    logger.error(f"Elapsed time for istorage exists() on col_path{coll_path} = {elapsed_time}")
+    if not exist:
         raise ValidationError(f"Specified folder ({folder_path}) was not found")
 
     # Seems safest to delete from irods before removing from Django
     # istorage command is the longest-running and most likely to get interrupted
-    import time
 
     # get the start time
     st = time.time()
