@@ -38,7 +38,7 @@ from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
 from hs_core.hydroshare import add_resource_files
-from hs_core.hydroshare import check_resource_type, delete_resource_file, settings
+from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.hydroshare.utils import check_aggregations
 from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, Relation, \
