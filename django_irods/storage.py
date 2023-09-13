@@ -315,7 +315,7 @@ class IrodsStorage(Storage):
         return name
 
     def delete(self, name):
-        self.session.run("irm", None, "-rf", name)
+        self.session.run("irm", None, "-r", name)
 
     def exists(self, name):
         try:
