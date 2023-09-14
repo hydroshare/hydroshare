@@ -1230,8 +1230,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             res_files = link_irods_folder_to_django(resource, istorage, unzip_to_folder_path, auto_aggregate)
             if resource.resource_type == 'CompositeResource':
                 # make the newly added files part of an aggregation if needed
+                aggregations = list(resource.logical_files)
                 for res_file in res_files:
-                    resource.add_file_to_aggregation(res_file)
+                    resource.add_file_to_aggregation(res_file, aggregations=aggregations)
         else:
             dir_file_list = istorage.listdir(unzip_path_temp)
             unzip_subdir_list = dir_file_list[0]
@@ -1297,9 +1298,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 added_resource_files.append(res_file)
 
             if resource.resource_type == "CompositeResource":
+                aggregations = list(resource.logical_files)
                 for res_file in added_resource_files:
                     # make the newly added files part of an aggregation if needed
-                    resource.add_file_to_aggregation(res_file)
+                    resource.add_file_to_aggregation(res_file, aggregations=aggregations)
                     # sets size, checksum, and modified time for the newly added file
                     res_file.set_system_metadata(resource=resource, save=False)
 
