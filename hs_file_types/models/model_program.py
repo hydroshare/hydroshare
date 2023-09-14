@@ -662,6 +662,22 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
                 ModelProgramResourceFileType.objects.create(file_type=mp_file_type.file_type, res_file=mp_res_file,
                                                             mp_metadata=tgt_logical_file.metadata)
 
+    def add_resource_files_in_folder(self, resource, folder):
+        """
+        A helper for creating aggregation. Makes all resource files in a given folder as part of
+        the aggregation/logical file type
+        :param  resource:  an instance of CompositeResource
+        :param  folder: folder from which all files need to be made part of this aggregation
+        """
+
+        res_files = ResourceFile.list_folder(resource=resource, folder=folder,
+                                             sub_folders=True)
+
+        for res_file in res_files:
+            self.add_resource_file(res_file,set_metadata_dirty=False)
+        self.set_metadata_dirty()
+        return res_files
+
     def get_copy(self, copied_resource):
         """Overrides the base class method"""
 
