@@ -172,6 +172,8 @@ class Session(object):
         logger = logging.getLogger(__name__)
         logger.error(f"Calling iCommand: {argList}")
         logger.error(f"data: {data}")
+        import time
+        st = time.time()
 
         proc = subprocess.Popen(
             argList,
@@ -181,6 +183,9 @@ class Session(object):
             env=myenv
         )
         stdout, stderr = proc.communicate(input=data) if stdin else proc.communicate()
+        et = time.time()
+        elapsed_time = et - st
+        logger.error(f"Elapsed time for icommand {argList} = {elapsed_time}")
 
         if proc.returncode:
             raise SessionException(proc.returncode, stdout, stderr)
