@@ -889,6 +889,23 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         res_file_objs = ResourceFile.list_folder(resource=resource, folder=src_name)
         resource_is_federated = resource.is_federated
         batch_size = settings.BULK_UPDATE_CREATE_BATCH_SIZE
+        is_target_folder_aggregation = False
+        if file_or_folder_move and resource.resource_type == 'CompositeResource':
+            try:
+                resource.get_aggregation_by_name(tgt_folder)
+                is_target_folder_aggregation = True
+            except ObjectDoesNotExist:
+                pass
+            aggregations = list(resource.logical_files)
+            # see the comments above (for the case of moving a single file) for why we need to remove the file from
+            # the aggregation
+            for fobj in res_file_objs:
+                # TODO: this is a case of n+1 query - which can be problematic if the folder being
+                #  moved contains a large number of files
+                resource.remove_aggregation_from_file(fobj, src_folder, tgt_folder, aggregations=aggregations,
+                                                      cleanup=False)
+            resource.cleanup_aggregations()
+
         for fobj in res_file_objs:
             src_path = fobj.get_storage_path(resource=resource)
             # naively replace src_name with tgt_name
@@ -907,6 +924,15 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             else:
                 ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'resource_file'], batch_size=batch_size)
 
+            if is_target_folder_aggregation and file_or_folder_move and resource.resource_type == 'CompositeResource':
+                res_file_objs = ResourceFile.list_folder(resource=resource, folder=tgt_name)
+                aggregations = list(resource.logical_files)
+                for fobj in res_file_objs:
+                    # see the comments above (for the case of moving a single file) for why we need to add the file to
+                    # the aggregation
+                    # TODO: this is a case of n+1 query - which can be problematic if the folder being
+                    #  moved contains a large number of files
+                    resource.add_file_to_aggregation(fobj, aggregations=aggregations)
 
 def remove_irods_folder_in_django(resource, folder_path, user):
     """
