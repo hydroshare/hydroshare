@@ -142,6 +142,7 @@ def test_create_aggregation_from_folder(composite_resource, aggr_cls, mock_irods
     assert mp_mi_aggregation.dataset_name == new_folder
     assert not res.dangling_aggregations_exist()
 
+
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
 def test_create_aggregation_from_parent_folder(composite_resource, aggr_cls, mock_irods):
@@ -181,6 +182,7 @@ def test_create_aggregation_from_parent_folder(composite_resource, aggr_cls, moc
     assert mp_mi_aggregation.folder == parent_folder
     assert mp_mi_aggregation.dataset_name == parent_folder
     assert not res.dangling_aggregations_exist()
+
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])

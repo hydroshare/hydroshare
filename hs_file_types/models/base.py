@@ -1156,7 +1156,7 @@ class AbstractLogicalFile(models.Model):
                                              sub_folders=False)
 
         for res_file in res_files:
-            self.add_resource_file(res_file,set_metadata_dirty=False)
+            self.add_resource_file(res_file, set_metadata_dirty=False)
         self.set_metadata_dirty()
         return res_files
 
