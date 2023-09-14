@@ -1156,8 +1156,8 @@ class AbstractLogicalFile(models.Model):
                                              sub_folders=False)
 
         for res_file in res_files:
-            self.add_resource_file(res_file)
-
+            self.add_resource_file(res_file,set_metadata_dirty=False)
+        self.set_metadata_dirty()
         return res_files
 
     def copy_resource_files(self, resource, files_to_copy, tgt_folder):
