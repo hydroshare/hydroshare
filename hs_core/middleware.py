@@ -14,14 +14,12 @@ class SunsetMiddleware:
 
         deprecation_date = datetime(2024, 4, 1)
         http_deprecation = http_date(deprecation_date.timestamp())
-
+        help_link = "https://help.hydroshare.org/about-hydroshare/cuahsi-single-sign-on/"
         if datetime.now() > deprecation_date:
             response['Deprecation'] = http_deprecation
-            # TODO: link to help page re CUAHSI SSO
-            response['Link'] = '''<https://help.hydroshare.org>; rel="deprecation"; type="text/html"'''
+            response['Link'] = f'''<{help_link}>; rel="deprecation"; type="text/html"'''
         else:
             # https://datatracker.ietf.org/doc/html/rfc8594
             response['Sunset'] = http_deprecation
-            # TODO: link to help page re CUAHSI SSO
-            response['Link'] = '''<https://help.hydroshare.org>; rel="sunset"; type="text/html"'''
+            response['Link'] = f'''<{help_link}>; rel="sunset"; type="text/html"'''
         return response
