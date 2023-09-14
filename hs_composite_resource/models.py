@@ -141,45 +141,50 @@ class CompositeResource(BaseResource):
 
         return True
 
-    def remove_aggregation_from_file(self, moved_res_file, src_folder, tgt_folder):
+    def remove_aggregation_from_file(self, moved_res_file, src_folder, tgt_folder, aggregations=None, cleanup=True):
         """removes association with aggregation (fileset or model program) from a resource file that has been moved
         :param  moved_res_file: an instance of a ResourceFile which has been moved to a different folder
         :param  src_folder: folder from which the file got moved from
         :param  tgt_folder: folder to which the file got moved into
+        :param aggregations:   list of all aggregations in self (this resource)
+        :param cleanup: if True, cleanup aggregation if aggregation is empty after the file removal
         """
 
         if moved_res_file.file_folder:
-            try:
-                aggregation = self.get_aggregation_by_name(moved_res_file.file_folder)
-                # aggregation must be one of 'fileset', modelinstance' or 'modelprogram
-                if aggregation == moved_res_file.logical_file:
-                    # remove aggregation association with the file
-                    # the removed aggregation is a fileset aggregation or a model program or a model instance
-                    # aggregation based on folder (note: model program/instance aggregation can also be
-                    # created from a single file)
-                    moved_res_file.logical_file_content_object = None
-                    moved_res_file.save()
-                    # delete any instance of ModelProgramResourceFileType associated with this moved file
-                    if aggregation.is_model_program:
-                        # if the file is getting moved within a model program folder hierarchy then no need
-                        # to delete any associated ModelProgramResourceFileType object
-                        if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
-                            ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
-                    self.cleanup_aggregations()
-            except ObjectDoesNotExist:
-                pass
+            aggregation = self.get_folder_aggregation_in_path(moved_res_file.file_folder, aggregations=aggregations)
+            if aggregation is None:
+                return
 
-    def add_file_to_aggregation(self, moved_res_file):
+            # aggregation must be one of 'fileset', 'model instance' or 'model program'
+            if aggregation == moved_res_file.logical_file:
+                # remove aggregation association with the file
+                # the removed aggregation is a fileset aggregation or a model program or a model instance
+                # aggregation based on folder (note: model program/instance aggregation can also be
+                # created from a single file)
+                moved_res_file.logical_file_content_object = None
+                moved_res_file.save()
+                # delete any instance of ModelProgramResourceFileType associated with this moved file
+                if aggregation.is_model_program:
+                    # if the file is getting moved within a model program folder hierarchy then no need
+                    # to delete any associated ModelProgramResourceFileType object
+                    if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
+                        ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
+                if cleanup:
+                    self.cleanup_aggregations()
+
+    def add_file_to_aggregation(self, moved_res_file, aggregations=None):
         """adds the moved file to the aggregation (fileset or model program/instance) into which the file has been moved
         :param  moved_res_file: an instance of ResourceFile which has been moved into a folder that represents
         a fileset, a model program, or a model instance aggregation
+        :param aggregations:   list of all aggregations in self (this resource)
         """
         if moved_res_file.file_folder and not moved_res_file.has_logical_file:
             # first check for model program/instance aggregation
-            aggregation = self.get_model_aggregation_in_path(moved_res_file.file_folder)
+            aggregation = self.get_model_aggregation_in_path(moved_res_file.file_folder, aggregations=aggregations)
             if aggregation is None:
                 # then check for fileset aggregation
-                aggregation = self.get_fileset_aggregation_in_path(moved_res_file.file_folder)
+                aggregation = self.get_fileset_aggregation_in_path(moved_res_file.file_folder,
+                                                                   aggregations=aggregations)
             if aggregation is not None:
                 # make the moved file part of the fileset or model program aggregation unless the file is
                 # already part of another aggregation (single file aggregation)
@@ -208,16 +213,17 @@ class CompositeResource(BaseResource):
                     return lf
         return None
 
-    def get_folder_aggregation_in_path(self, dir_path):
+    def get_folder_aggregation_in_path(self, dir_path, aggregations=None):
         """Gets any aggregation that is based on folder and exists in the specified path
         Searches for a folder based aggregation moving towards the root of the specified path
         :param  dir_path: directory path in which to search for a folder based aggregation
-
+        :param aggregations:   list of all aggregations in self (this resource)
         :return a folder based aggregation if found otherwise, None
         """
 
         # will be using aggregations more than once if dir_path consists of multiple folders
-        aggregations = list(self.logical_files) if '/' in dir_path else None
+        if aggregations is None:
+            aggregations = list(self.logical_files) if '/' in dir_path else None
         if dir_path.startswith(self.file_path):
             dir_path = dir_path[len(self.file_path) + 1:]
 
