@@ -712,7 +712,7 @@ def add_resource_files(pk, *files, **kwargs):
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
         res_file = utils.add_file_to_resource(resource, f, folder=full_dir, user=user, add_to_aggregation=False,
-                                                save_file_system_metadata=False)
+                                              save_file_system_metadata=False)
         uploaded_res_files.append(res_file)
 
     for ifname in source_names:
