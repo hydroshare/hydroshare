@@ -441,15 +441,49 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     for src_logical_file in src_res.logical_files:
         map_logical_files[src_logical_file] = src_logical_file.get_copy(tgt_res)
 
-    for n, f in enumerate(files):
-        folder, base = os.path.split(f.short_path)  # strips object information.
-        new_resource_file = ResourceFile.create(tgt_res, base, folder=folder)
+    def copy_file_to_target_resource(scr_file, save_to_db=True):
+        kwargs = {}
+        src_storage_path = scr_file.get_storage_path(resource=src_res)
+        tgt_storage_path = src_storage_path.replace(src_res.short_id, tgt_res.short_id)
+        kwargs['content_object'] = tgt_res
+        kwargs['file_folder'] = scr_file.file_folder
+        if tgt_res.is_federated:
+            kwargs['resource_file'] = None
+            kwargs['fed_resource_file'] = tgt_storage_path
+        else:
+            kwargs['resource_file'] = tgt_storage_path
+            kwargs['fed_resource_file'] = None
 
-        # if the original file is part of a logical file, then
-        # add the corresponding new resource file to the copy of that logical file
-        if f.has_logical_file:
-            tgt_logical_file = map_logical_files[f.logical_file]
-            tgt_logical_file.add_resource_file(new_resource_file)
+        if save_to_db:
+            return ResourceFile.objects.create(**kwargs)
+        else:
+            return ResourceFile(**kwargs)
+
+    # use bulk_create for files without logical file to copy all files at once
+    files_bulk_create = []
+    files_without_logical_file = files.filter(logical_file_object_id__isnull=True)
+    for f in files_without_logical_file:
+        file_to_save = copy_file_to_target_resource(f, save_to_db=False)
+        files_bulk_create.append(file_to_save)
+
+    if files_bulk_create:
+        ResourceFile.objects.bulk_create(files_bulk_create, batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
+
+    # copy files with logical file one at a time
+    files_with_logical_file = files\
+        .filter(logical_file_object_id__isnull=False)\
+        .select_related('logical_file_content_type')
+
+    seen_logical_files = {}
+    for f in files_with_logical_file:
+        if (f.logical_file_object_id, f.logical_file_content_type.id) not in seen_logical_files:
+            # accessing logical_file for each file (f.logical_file) generates one database query
+            seen_logical_files[(f.logical_file_object_id, f.logical_file_content_type.id)] = f.logical_file
+
+        logical_file = seen_logical_files[(f.logical_file_object_id, f.logical_file_content_type.id)]
+        new_resource_file = copy_file_to_target_resource(f)
+        tgt_logical_file = map_logical_files[logical_file]
+        tgt_logical_file.add_resource_file(new_resource_file)
 
     for lf in map_logical_files:
         if lf.type_name() == 'ModelProgramLogicalFile':
@@ -1004,7 +1038,8 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder='', source_name='',
-                         check_target_folder=False, add_to_aggregation=True, user=None):
+                         check_target_folder=False, add_to_aggregation=True, user=None,
+                         save_file_system_metadata=False):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param  resource: Resource to which file should be added
@@ -1024,6 +1059,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     being added to the resource also will be added to a fileset aggregation if such an aggregation
     exists in the file path
     :param  user: user who is adding file to the resource
+    :param  save_file_system_metadata: if True, file system metadata will be retrieved from iRODS and saved in DB
     :return: The identifier of the ResourceFile added.
     """
 
@@ -1077,7 +1113,8 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     # TODO: generate this from data in ResourceFile rather than extension
     if not resource.metadata.formats.filter(value=file_format_type).exists():
         resource.metadata.create_element('format', value=file_format_type)
-    ret.calculate_size()
+    if save_file_system_metadata:
+        ret.set_system_metadata(resource=resource)
 
     return ret
 

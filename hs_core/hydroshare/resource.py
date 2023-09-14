@@ -671,10 +671,12 @@ def add_resource_files(pk, *files, **kwargs):
     This does **not** handle mutability; changes to immutable resources should be denied elsewhere.
 
     """
+    from hs_core.tasks import set_resource_files_system_metadata
+
     resource = kwargs.pop("resource", None)
     if resource is None:
         resource = utils.get_resource_by_shortkey(pk)
-    ret = []
+    res_files = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
@@ -709,22 +711,28 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user))
+        res_files.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user,
+                                                    save_file_system_metadata=False))
 
     for ifname in source_names:
-        ret.append(utils.add_file_to_resource(resource, None,
-                                              folder=folder,
-                                              source_name=ifname, user=user))
+        res_files.append(utils.add_file_to_resource(resource, None,
+                                                    folder=folder,
+                                                    source_name=ifname,
+                                                    user=user,
+                                                    save_file_system_metadata=False))
 
-    if not ret:
+    if not res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, ret)
+            utils.check_aggregations(resource, res_files)
         utils.resource_modified(resource, user, overwrite_bag=False)
 
-    return ret
+        # store file level system metadata in Django DB (async task)
+        set_resource_files_system_metadata.apply_async((resource.short_id,))
+
+    return res_files
 
 
 def update_science_metadata(pk, metadata, user):
@@ -1049,6 +1057,10 @@ def submit_resource_for_review(request, pk):
     resource.raccess.review_pending = True
     resource.raccess.immutable = True
     resource.raccess.save()
+
+    # Repair resource and email support user if there are issues
+    from hs_core.tasks import repair_resource_before_publication
+    repair_resource_before_publication.apply_async((resource.short_id,))
 
 
 def publish_resource(user, pk):

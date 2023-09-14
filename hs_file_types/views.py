@@ -150,11 +150,10 @@ def get_res_file(pk, file_path):
         folder, file_name = ResourceFile.resource_path_is_acceptable(resource,
                                                                      file_storage_path,
                                                                      test_exists=True)
-    except ValidationError:
+        res_file = ResourceFile.get(resource, file_name, folder)
+    except (ValidationError, ObjectDoesNotExist):
         return Response('File {} does not exist.'.format(file_path),
                         status=status.HTTP_400_BAD_REQUEST)
-
-    res_file = ResourceFile.get(resource, file_name, folder)
 
     return res_file
 
@@ -562,7 +561,10 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
             tgt_full_path = os.path.join(res.file_path, file_name)
         if istorage.exists(tgt_full_path):
             override_tgt_paths.append(tgt_full_path)
-            override_tgt_res_files.append(ResourceFile.get(res, file=file_name, folder=tgt_path))
+            try:
+                override_tgt_res_files.append(ResourceFile.get(res, file=file_name, folder=tgt_path))
+            except ObjectDoesNotExist:
+                return JsonResponse(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     if override_tgt_paths:
         if not file_override:
@@ -842,7 +844,7 @@ def delete_coverage_element(request, hs_file_type, file_type_id,
 @authorise_for_aggregation_edit
 @login_required
 def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
-    """add/update key/value extended metadata for a given logical file
+    """add/update key/value additional metadata for a given logical file
     key/value data is expected as part of the request.POST data for adding
     key/value/key_original is expected as part of the request.POST data for updating
     If the key already exists, the value then gets updated, otherwise, the key/value is added
@@ -906,7 +908,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
 @authorise_for_aggregation_edit
 @login_required
 def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
-    """deletes one pair of key/value extended metadata for a given logical file
+    """deletes one pair of key/value additional metadata for a given logical file
     key data is expected as part of the request.POST data
     If key is found the matching key/value pair is deleted from the hstore dict type field
     """

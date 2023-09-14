@@ -369,7 +369,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resRaster.metadata.formats.all().filter(
             value='image/tiff').count(), 1)
 
-        # testing extended metadata element: original coverage
+        # testing additional metadata element: original coverage
         ori_coverage = self.resRaster.metadata.originalCoverage
         self.assertNotEqual(ori_coverage, None)
         self.assertEqual(float(ori_coverage.value['northlimit']), 4662392.446916306)
@@ -396,7 +396,7 @@ class TestCaseCommonUtilities(object):
                             'NORTH],AUTHORITY["EPSG","26912"]]'
         self.assertEqual(ori_coverage.value['projection_string'], projection_string)
 
-        # testing extended metadata element: cell information
+        # testing additional metadata element: cell information
         cell_info = self.resRaster.metadata.cellInformation
         self.assertEqual(cell_info.rows, 1660)
         self.assertEqual(cell_info.columns, 985)
@@ -404,7 +404,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(cell_info.cellSizeYValue, 30.0)
         self.assertEqual(cell_info.cellDataType, 'Float32')
 
-        # testing extended metadata element: band information
+        # testing additional metadata element: band information
         self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
@@ -482,7 +482,7 @@ class TestCaseCommonUtilities(object):
         subj_element = self.resNetcdf.metadata.subjects.all().first()
         self.assertEqual(subj_element.value, 'Snow water equivalent')
 
-        # testing extended metadata element: original coverage
+        # testing additional metadata element: original coverage
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
         self.assertNotEqual(ori_coverage, None)
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
@@ -495,7 +495,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(ori_coverage.value['units'], 'Meter')
         self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
 
-        # testing extended metadata element: variables
+        # testing additional metadata element: variables
         self.assertEqual(self.resNetcdf.metadata.variables.all().count(), 5)
 
         # test time variable
@@ -604,7 +604,7 @@ class TestCaseCommonUtilities(object):
         # there should be a total of 7 timeseries
         self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 7)
 
-        # testing extended metadata elements
+        # testing additional metadata elements
 
         # test 'site' - there should be 7 sites
         self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 7)

@@ -172,7 +172,7 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
 
     allowed_methods = ('GET', 'PUT')
 
-    # Overwritten by resource types with extended metadata
+    # Overwritten by resource types with additional metadata
     serializer_class = CoreMetaDataSerializer
 
     def get(self, request, pk):
