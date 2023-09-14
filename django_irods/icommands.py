@@ -170,8 +170,8 @@ class Session(object):
             stdin = StringIO(data)
         import logging
         logger = logging.getLogger(__name__)
-        logger.debug(f"Calling iCommand: {argList}")
-        logger.debug(f"data: {data}")
+        logger.error(f"Calling iCommand: {argList}")
+        logger.error(f"data: {data}")
 
         proc = subprocess.Popen(
             argList,
