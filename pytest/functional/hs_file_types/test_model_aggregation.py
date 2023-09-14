@@ -142,6 +142,48 @@ def test_create_aggregation_from_folder(composite_resource, aggr_cls, mock_irods
     assert mp_mi_aggregation.dataset_name == new_folder
     assert not res.dangling_aggregations_exist()
 
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
+def test_create_aggregation_from_parent_folder(composite_resource, aggr_cls, mock_irods):
+    """test that we can create a model program/instance aggregation from a parent folder (that contains sub folders)
+     as long as there is at least one file under the parent folder or in any of its sub folders.
+     all files become part of the aggregation including the ones in the sub folders
+     """
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    parent_folder = 'parent_folder'
+    ResourceFile.create_folder(res, parent_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=parent_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    sub_folder = 'sub_folder'
+    sub_folder_path = os.path.join(parent_folder, sub_folder)
+    ResourceFile.create_folder(res, sub_folder_path)
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=sub_folder_path, check_target_folder=True)
+    assert res.files.count() == 2
+    # at this point there should not be any model program aggregation
+    assert aggr_cls.objects.count() == 0
+    # set folder to model program aggregation type
+    aggr_cls.set_file_type(resource=res, user=user, folder_path=parent_folder)
+    for res_file in res.files.all():
+        assert res_file.has_logical_file
+        assert res_file.logical_file_type_name == aggr_cls.__name__
+        # file has folder
+        assert res_file.file_folder in (parent_folder, sub_folder_path)
+    assert aggr_cls.objects.count() == 1
+    mp_mi_aggregation = aggr_cls.objects.first()
+    assert mp_mi_aggregation.files.count() == 2
+    assert mp_mi_aggregation.folder == parent_folder
+    assert mp_mi_aggregation.dataset_name == parent_folder
+    assert not res.dangling_aggregations_exist()
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
