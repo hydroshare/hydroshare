@@ -675,13 +675,14 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
 
         for res_file in res_files:
             if not res_file.has_logical_file:
-                self.add_resource_file(res_file)
+                self.add_resource_file(res_file, set_metadata_dirty=False)
             else:
                 # if the file is already part of another aggregation, we need to remove it from that
                 # as nested aggregation is not allowed in a model program aggregation
                 res_file.logical_file_content_object = None
-                self.add_resource_file(res_file)
+                self.add_resource_file(res_file, set_metadata_dirty=False)
         if res_files:
+            self.set_metadata_dirty()
             resource.cleanup_aggregations()
         return res_files
 
