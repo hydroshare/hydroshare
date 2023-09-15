@@ -2,6 +2,7 @@ from autocomplete_light import shortcuts as autocomplete_light
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
+from django.views.generic.base import RedirectView
 from mezzanine.conf import settings
 from mezzanine.core.views import direct_to_template # noqa
 from mezzanine.pages.views import page
@@ -94,7 +95,7 @@ urlpatterns = i18n_patterns(
         theme.create_irods_account,
         name="create_irods_account",
     ),
-    url(r"^accounts/login/$", theme.login, name="login"),
+    url(r"^accounts/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="login"),
     url(r"^landingPage/$", theme.landingPage, name="landing_page"),
     url(r"^home/$", theme.dashboard, name="dashboard"),
     url(r"^$", theme.home_router, name="home_router"),

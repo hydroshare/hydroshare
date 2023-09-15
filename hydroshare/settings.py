@@ -767,7 +767,7 @@ OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-co
 OIDC_RP_SIGN_ALGO = "RS256"
 OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
 # default client/secret for development
-OIDC_RP_CLIENT_ID = 'hydroshare_develop'
+OIDC_RP_CLIENT_ID = 'hydroshare'
 OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
 LOGIN_REDIRECT_URL = '/home/'
 LOGIN_URL = '/oidc/authenticate/'
