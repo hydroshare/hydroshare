@@ -49,6 +49,7 @@ urlpatterns = i18n_patterns(
     url(
         r"^tracking/applaunch/", tracking.AppLaunch.as_view(), name="tracking-applaunch"
     ),
+    url(r"^sign-up/$", RedirectView.as_view(url='/oidc/authenticate'), name='sign-up'),
     url(r"^user/$", theme.UserProfileView.as_view()),
     url(r"^user/(?P<user>.*)/", theme.UserProfileView.as_view()),
     url(r"^comment/$", theme.comment),
