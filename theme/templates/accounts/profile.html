@@ -500,7 +500,7 @@
                                                 {% else %}
                                                     <tr>
                                                         <td><span class="text-muted">Email</span></td>
-                                                        <td>(<a href="{{ request|oidc_registration_url }}">Log in to send email</a>)</td>
+                                                        <td>(<a href="{% url 'login' %}">Log in to send email</a>)</td>
                                                     </tr>
                                                 {% endif %}
                                             {% endif %}
