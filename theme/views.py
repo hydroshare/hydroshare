@@ -41,6 +41,7 @@ from mezzanine.utils.email import (
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import is_spam
 
+from hs_core.authentication import build_oidc_url
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
@@ -111,13 +112,16 @@ class UserProfileView(TemplateView):
             Prefetch("content_object___description"),
             Prefetch("content_object___title"),
         )
+        oidc_registration = build_oidc_url(self.request)
+        oidc_registration = oidc_registration.replace('/auth?', '/registrations?')
         return {
             "profile_user": u,
             "resources": resources,
             "quota_message": get_quota_message(u),
             "group_membership_requests": group_membership_requests,
             "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE,
-            "oidc_change_password_url": settings.OIDC_CHANGE_PASSWORD_URL
+            "oidc_change_password_url": settings.OIDC_CHANGE_PASSWORD_URL,
+            "oidc_registration": oidc_registration
         }
 
 
@@ -133,7 +137,9 @@ class UserPasswordResetView(TemplateView):
 
 
 def landingPage(request, template="pages/homepage.html"):
-    return render(request, template)
+    redirect = build_oidc_url(request)
+    oidc_registration = redirect.replace('/auth?', '/registrations?')
+    return render(request, template, {"oidc_registration": oidc_registration})
 
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view

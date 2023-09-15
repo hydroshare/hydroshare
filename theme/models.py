@@ -2,7 +2,6 @@ import datetime
 import os
 import logging
 
-from django.conf import settings
 from django.utils import timezone
 from django.dispatch import receiver
 from django.contrib.auth.models import User
