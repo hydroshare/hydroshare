@@ -38,6 +38,7 @@ from django_irods.storage import IrodsStorage
 from theme.models import UserQuota, QuotaMessage, User
 from django_irods.icommands import SessionException
 from celery.result import states
+from celery.exceptions import TaskError
 
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.enums import RelationTypes
@@ -115,24 +116,25 @@ def setup_periodic_tasks(sender, **kwargs):
         # Hourly
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s())
 
-        # Daily
-        sender.add_periodic_task(crontab(minute=30, hour=0), daily_innactive_group_requests_cleanup.s())
-        sender.add_periodic_task(crontab(minute=0, hour=1), nightly_periodic_task_check.s())
-        sender.add_periodic_task(crontab(minute=30, hour=1), nightly_repair_resource_files.s())
-        sender.add_periodic_task(crontab(minute=00, hour=12), daily_odm2_sync.s())
-        sender.add_periodic_task(crontab(minute=30, hour=22), nightly_metadata_review_reminder.s())
-        sender.add_periodic_task(crontab(minute=30, hour=23), nightly_zips_cleanup.s())
-        sender.add_periodic_task(crontab(minute=0, hour=2), nightly_cache_file_system_metadata.s())
+        # Daily (times in UTC)
+        sender.add_periodic_task(crontab(minute=0, hour=3), nightly_metadata_review_reminder.s())
+        sender.add_periodic_task(crontab(minute=30, hour=3), nightly_zips_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=4), daily_odm2_sync.s())
+        sender.add_periodic_task(crontab(minute=30, hour=4), daily_innactive_group_requests_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=5), check_geoserver_registrations.s())
+        sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s())
+        sender.add_periodic_task(crontab(minute=0, hour=6), nightly_cache_file_system_metadata.s())
+        sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s())
 
         # Weekly
-        sender.add_periodic_task(crontab(minute=30, hour=1, day_of_week=1), task_notification_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=7, day_of_week=1), task_notification_cleanup.s())
 
         # Monthly
-        sender.add_periodic_task(crontab(minute=0, hour=1, day_of_month=1), update_from_geoconnex_task.s())
-        sender.add_periodic_task(crontab(minute=15, hour=0, day_of_week=1, day_of_month='1-7'),
+        sender.add_periodic_task(crontab(minute=30, hour=7, day_of_month=1), update_from_geoconnex_task.s())
+        sender.add_periodic_task(crontab(minute=0, hour=8, day_of_week=1, day_of_month='1-7'),
                                  send_over_quota_emails.s())
         sender.add_periodic_task(
-            crontab(minute=15, hour=1, day_of_month=1), monthly_group_membership_requests_cleanup.s())
+            crontab(minute=30, hour=8, day_of_month=1), monthly_group_membership_requests_cleanup.s())
 
 
 # Currently there are two different cleanups scheduled.
@@ -489,6 +491,58 @@ def send_over_quota_emails():
                     uq.save()
         else:
             logger.debug('user ' + u.username + ' does not have UserQuota foreign key relation')
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def check_geoserver_registrations(resources, run_async=True):
+    # Check to ensure resources have updated web services registrations
+
+    DISTRIBUTE_WEB_REGISTRATIONS_OVER = 2  # hours
+
+    if not settings.HSWS_ACTIVATED:
+        return
+
+    if not resources:
+        cuttoff_time = timezone.now() - timedelta(days=1)
+        resources = BaseResource.objects.filter(updated__gte=cuttoff_time, raccess__public=True)
+
+    if run_async:
+        # Evenly distribute requests
+        delay_between_res = (DISTRIBUTE_WEB_REGISTRATIONS_OVER * 60 * 60) / resources.count()
+
+        for current_res_num, res in enumerate(resources, start=0):
+            delay = delay_between_res * current_res_num
+            update_web_services.apply_async((
+                settings.HSWS_URL,
+                settings.HSWS_API_TOKEN,
+                settings.HSWS_TIMEOUT,
+                settings.HSWS_PUBLISH_URLS,
+                res.short_id
+            ), countdown=delay)
+    else:
+        failed_resources = {}
+        for res in resources:
+            response = update_web_services(
+                settings.HSWS_URL,
+                settings.HSWS_API_TOKEN,
+                settings.HSWS_TIMEOUT,
+                settings.HSWS_PUBLISH_URLS,
+                res.short_id
+            )
+            if not response['success']:
+                res_url = current_site_url() + res.get_absolute_url()
+                failed_resources[res_url] = response
+        if failed_resources:
+            err_msg = 'Attempt to update web services failed for the following resources:\n'
+            for res_url, resp in failed_resources:
+                err_msg += f'{res_url} => {json.dumps(resp)}\n'
+            if not settings.DISABLE_TASK_EMAILS:
+                subject = "Web services failed to update"
+                recipients = [settings.DEFAULT_SUPPORT_EMAIL]
+                send_mail(subject, err_msg, settings.DEFAULT_FROM_EMAIL, recipients)
+            else:
+                logger.error(err_msg)
+            raise TaskError(err_msg)
 
 
 @shared_task
@@ -928,7 +982,10 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                     )]
                     lf.metadata.extra_metadata["Web Services URL"] = url["message"]
                     lf.metadata.save()
-        return response.json()
+        if status.is_success(response.status_code):
+            return response.json()
+        else:
+            response.raise_for_status()
     except Exception as e:
         logger.error(f"Error updating web services: {str(e)}")
         raise
