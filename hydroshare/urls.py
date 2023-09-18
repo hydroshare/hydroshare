@@ -27,6 +27,7 @@ admin.autodiscover()
 urlpatterns = i18n_patterns(
     # Change the admin prefix here to use an alternate URL for the
     # admin interface, which would be marginally more secure.
+    url(r"^admin/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="admin_login"),
     url("^admin/", include(admin.site.urls)),
     url(r"^o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     url(
@@ -96,7 +97,6 @@ urlpatterns = i18n_patterns(
         theme.create_irods_account,
         name="create_irods_account",
     ),
-    url(r"^admin/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="admin_login"),
     url(r"^accounts/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="login"),
     url(r"^landingPage/$", theme.landingPage, name="landing_page"),
     url(r"^home/$", theme.dashboard, name="dashboard"),
