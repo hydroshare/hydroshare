@@ -23,11 +23,9 @@ from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
-from django.template.response import TemplateResponse
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
-from mezzanine.accounts.forms import LoginForm
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
 from mezzanine.utils.cache import add_cache_bypass
