@@ -3882,7 +3882,7 @@ class CompositeResourceTest(
                 f = os.path.basename(f)
                 self.assertIn(f, aggr_files)
             shutil.rmtree(os.path.dirname(temp_zip_file))
-    
+
     @skip("My Resources page does not scale constant with # of resources")
     def test_composite_resource_my_resources_scales(self):
         # TODO: this test passes but it should fail
