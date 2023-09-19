@@ -2261,7 +2261,7 @@ def hsapi_get_user_for_keycloak(request, user_identifier):
 
     :param user_identifier: id of the user for which data is needed
     :return: JsonResponse containing user data
-    """    
+    """
     user: User = hydroshare.utils.user_from_id(user_identifier)
 
     if not user.is_superuser:
