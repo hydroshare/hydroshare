@@ -24,10 +24,19 @@ admin.autodiscover()
 # Add the urlpatterns for any custom Django applications here.
 # You can also change the ``home`` view to add your own functionality
 # to the project's homepage.
-urlpatterns = i18n_patterns(
+urlpatterns = []
+if settings.ENABLE_OIDC_AUTHENTICATION:
+    urlpatterns += i18n_patterns(
+        url(r"^admin/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="admin_login"),
+        # url(r"^sign-up/$", RedirectView.as_view(url='/oidc/authenticate'), name='sign-up'),
+        url(r"^accounts/logout/$", RedirectView.as_view(url='/oidc/logout'), name="accounts_logout"),
+        url(r"^accounts/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="login"),
+        url('oidc/', include('mozilla_django_oidc.urls')),
+    )
+
+urlpatterns += i18n_patterns(
     # Change the admin prefix here to use an alternate URL for the
     # admin interface, which would be marginally more secure.
-    url(r"^admin/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="admin_login"),
     url("^admin/", include(admin.site.urls)),
     url(r"^o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     url(
@@ -50,7 +59,6 @@ urlpatterns = i18n_patterns(
     url(
         r"^tracking/applaunch/", tracking.AppLaunch.as_view(), name="tracking-applaunch"
     ),
-    url(r"^sign-up/$", RedirectView.as_view(url='/oidc/authenticate'), name='sign-up'),
     url(r"^user/$", theme.UserProfileView.as_view()),
     url(r"^user/(?P<user>.*)/", theme.UserProfileView.as_view()),
     url(r"^comment/$", theme.comment),
@@ -97,8 +105,6 @@ urlpatterns = i18n_patterns(
         theme.create_irods_account,
         name="create_irods_account",
     ),
-    url(r"^accounts/logout/$", RedirectView.as_view(url='/oidc/logout'), name="accounts_logout"),
-    url(r"^accounts/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="login"),
     url(r"^landingPage/$", theme.landingPage, name="landing_page"),
     url(r"^home/$", theme.dashboard, name="dashboard"),
     url(r"^$", theme.home_router, name="home_router"),
@@ -166,7 +172,6 @@ urlpatterns = i18n_patterns(
         r"^group/(?P<group_id>[0-9]+)", hs_core_views.GroupView.as_view(), name="group"
     ),
     url(r"^apps/$", hs_core_views.apps.AppsView.as_view(), name="apps"),
-    url('oidc/', include('mozilla_django_oidc.urls')),
 )
 
 # Filebrowser admin media library.
