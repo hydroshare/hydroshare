@@ -23,9 +23,11 @@ from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
+from django.template.response import TemplateResponse
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
+from mezzanine.accounts.forms import LoginForm
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
 from mezzanine.utils.cache import add_cache_bypass
@@ -572,6 +574,31 @@ def dashboard(request, template="pages/dashboard.html"):
 
     context = {"recent": my_recent}
     return render(request, template, context)
+
+
+def login(
+    request,
+    template="accounts/account_login.html",
+    form_class=LoginForm,
+    extra_context=None,
+):
+    """
+    Login form - customized from Mezzanine login form so that quota warning message can be
+    displayed when the user is logged in.
+    """
+    form = form_class(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        login_msg = "Successfully logged in"
+        authenticated_user = form.save()
+        add_msg = get_quota_message(authenticated_user)
+        if add_msg:
+            login_msg += " - " + add_msg
+        info(request, _(login_msg))
+        auth_login(request, authenticated_user)
+        return login_redirect(request)
+    context = {"form": form, "title": _("Log in")}
+    context.update(extra_context or {})
+    return TemplateResponse(request, template, context)
 
 
 def email_verify(request, new_email, uidb36=None, token=None):
