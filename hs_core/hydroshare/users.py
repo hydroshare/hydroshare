@@ -138,7 +138,7 @@ def create_account(
     if state:
         user_profile.state = state
         user_profile.save()
-    
+
     if subject_areas:
         user_profile.subject_areas = subject_areas
         user_profile.save()
