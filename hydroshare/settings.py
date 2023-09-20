@@ -169,11 +169,16 @@ INTERNAL_IPS = ("127.0.0.1",)
 # is not that great for our project use case
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
+# Wether to enable OIDC auth via mozilla_django_oidc
+# Default false to enable local development
+ENABLE_OIDC_AUTHENTICATION = False
+
 # TODO remove MezzanineBackend after conflicting users have been removed
 AUTHENTICATION_BACKENDS = [
     "theme.backends.CaseInsensitiveMezzanineBackend",
-    "hs_core.authentication.HydroShareOIDCAuthenticationBackend",
 ]
+if ENABLE_OIDC_AUTHENTICATION:
+    AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -512,17 +517,21 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
 ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = "bootstrap"
+
+DEFAULT_AUTHENTICATION_CLASSES = (
+    "rest_framework.authentication.BasicAuthentication",
+    "rest_framework.authentication.SessionAuthentication",
+    "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+)
+if ENABLE_OIDC_AUTHENTICATION:
+    DEFAULT_AUTHENTICATION_CLASSES += ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
+
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 100,
     "PAGE_SIZE_QUERY_PARAM": "PAGE_SIZE",
     "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.BasicAuthentication",
-        "mozilla_django_oidc.contrib.drf.OIDCAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
-        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": DEFAULT_AUTHENTICATION_CLASSES,
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
 }
 
@@ -761,19 +770,19 @@ THREDDS_SERVER_URL = "https://thredds.hydroshare.org/thredds/"
 # HydroShare Geoserver URL
 HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
 
-OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
-OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
-OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/userinfo"
-OIDC_RP_SIGN_ALGO = "RS256"
-OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
-# default client/secret for development
-OIDC_RP_CLIENT_ID = 'hydroshare'
-OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
-LOGIN_REDIRECT_URL = '/home/'
-LOGIN_URL = '/oidc/authenticate/'
-OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
-ALLOW_LOGOUT_GET_METHOD = True
-LOGOUT_REDIRECT_URL = '/'
+if ENABLE_OIDC_AUTHENTICATION:
+    OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
+    OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
+    OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/userinfo"
+    OIDC_RP_SIGN_ALGO = "RS256"
+    OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
+    OIDC_RP_CLIENT_ID = 'hydroshare'
+    OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
+    LOGIN_REDIRECT_URL = '/home/'
+    LOGIN_URL = '/oidc/authenticate/'
+    OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
+    ALLOW_LOGOUT_GET_METHOD = True
+    LOGOUT_REDIRECT_URL = '/'
 
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
