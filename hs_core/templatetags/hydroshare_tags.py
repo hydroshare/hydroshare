@@ -377,8 +377,10 @@ def discoverable(item):
 
 
 @register.filter
-def oidc_registration_url(request):
-    return build_oidc_url(request).replace('/auth?', '/registrations?')
+def signup_url(request):
+    if "hs_core.authentication.HydroShareOIDCAuthenticationBackend" in settings.AUTHENTICATION_BACKENDS:
+        return build_oidc_url(request).replace('/auth?', '/registrations?')
+    return "/sign-up/"
 
 
 @register.simple_tag(takes_context=True)
