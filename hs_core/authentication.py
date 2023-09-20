@@ -5,17 +5,19 @@ from django.urls import reverse, resolve
 
 class HydroShareOIDCAuthenticationBackend(OIDCAuthenticationBackend):
     def create_user(self, claims):
+        subject_areas = claims.get('subject_areas', '').split(";")
         return create_account(
             email=claims.get('email', ''),
-            username=claims.get('username', self.get_username(claims)),
+            username=claims.get('preferred_username', self.get_username(claims)),
             first_name=claims.get('given_name', ''),
             last_name=claims.get('family_name', ''),
             superuser=False,
-            active=True,
+            active=claims.get('email_verified', True),
             organization=claims.get('organization', ''),
             user_type=claims.get('user_type', ''),
             country=claims.get('country', ''),
-            state=claims.get('state', ''))
+            state=claims.get('state', ''),
+            subject_areas=subject_areas)
 
 
 def build_oidc_url(request):
