@@ -97,6 +97,7 @@ urlpatterns = i18n_patterns(
         theme.create_irods_account,
         name="create_irods_account",
     ),
+    url(r"^accounts/logout/$", RedirectView.as_view(pattern_name='oidc_logout'), name="accounts_logout"),
     url(r"^accounts/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="login"),
     url(r"^landingPage/$", theme.landingPage, name="landing_page"),
     url(r"^home/$", theme.dashboard, name="dashboard"),

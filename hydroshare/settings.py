@@ -772,6 +772,7 @@ OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
 LOGIN_REDIRECT_URL = '/home/'
 LOGIN_URL = '/oidc/authenticate/'
 OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
+ALLOW_LOGOUT_GET_METHOD = True
 
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
