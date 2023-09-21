@@ -192,6 +192,7 @@ ENABLE_OIDC_AUTHENTICATION = False
 # OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
 # ALLOW_LOGOUT_GET_METHOD = True
 # LOGOUT_REDIRECT_URL = '/'
+# OIDC_OP_LOGOUT_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/logout"
 
 # List of finder classes that know how to find static files in
 # various locations.

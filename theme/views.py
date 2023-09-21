@@ -24,7 +24,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.template.response import TemplateResponse
-from django.utils.http import int_to_base36
+from django.utils.http import int_to_base36, urlencode
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 from mezzanine.accounts.forms import LoginForm
@@ -194,6 +194,13 @@ def rating(request, template="generic/rating.html"):
 
 def oidc_signup(request):
     oidc_url = build_oidc_url(request).replace('/auth?', '/registrations?')
+    return redirect(oidc_url)
+
+
+def oidc_logout(request):
+    logout_url = settings.OIDC_OP_LOGOUT_ENDPOINT
+    return_to_url = request.build_absolute_uri(settings.LOGOUT_REDIRECT_URL)
+    oidc_url = logout_url + '?' + urlencode({'returnTo': return_to_url, 'client_id': settings.OIDC_RP_CLIENT_ID})
     return redirect(oidc_url)
 
 
