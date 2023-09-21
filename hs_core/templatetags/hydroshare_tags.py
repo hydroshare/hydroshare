@@ -378,7 +378,7 @@ def discoverable(item):
 
 @register.filter
 def signup_url(request):
-    if "hs_core.authentication.HydroShareOIDCAuthenticationBackend" in settings.AUTHENTICATION_BACKENDS:
+    if settings.ENABLE_OIDC_AUTHENTICATION:
         return build_oidc_url(request).replace('/auth?', '/registrations?')
     return "/sign-up/"
 
