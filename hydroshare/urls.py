@@ -29,7 +29,7 @@ if settings.ENABLE_OIDC_AUTHENTICATION:
     urlpatterns += i18n_patterns(
         url(r"^admin/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="admin_login"),
         url(r"^sign-up/$", oidc_signup, name='sign-up'),
-        url(r"^accounts/logout/$", RedirectView.as_view(url='/oidc/logout'), name="accounts_logout"),
+        url(r"^accounts/logout/$", RedirectView.as_view(url='/oidc/logout'), name="logout"),
         url(r"^accounts/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="login"),
         url('oidc/', include('mozilla_django_oidc.urls')),
     )
