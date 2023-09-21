@@ -169,16 +169,29 @@ INTERNAL_IPS = ("127.0.0.1",)
 # is not that great for our project use case
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
-# Wether to enable OIDC auth via mozilla_django_oidc
-# Default false to enable local development
-ENABLE_OIDC_AUTHENTICATION = False
-
 # TODO remove MezzanineBackend after conflicting users have been removed
 AUTHENTICATION_BACKENDS = [
     "theme.backends.CaseInsensitiveMezzanineBackend",
 ]
-if ENABLE_OIDC_AUTHENTICATION:
-    AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
+
+# Wether to enable OIDC auth via mozilla_django_oidc
+# Default false to enable local development
+# Set to true in local_settings if desired for specific deployment
+ENABLE_OIDC_AUTHENTICATION = False
+
+# If OIDC is enabled, the following additional settings should be defined in local_settings
+# OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
+# OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
+# OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/userinfo"
+# OIDC_RP_SIGN_ALGO = "RS256"
+# OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
+# OIDC_RP_CLIENT_ID = 'hydroshare'
+# OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
+# LOGIN_REDIRECT_URL = '/home/'
+# LOGIN_URL = '/oidc/authenticate/'
+# OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
+# ALLOW_LOGOUT_GET_METHOD = True
+# LOGOUT_REDIRECT_URL = '/'
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -523,8 +536,6 @@ DEFAULT_AUTHENTICATION_CLASSES = (
     "rest_framework.authentication.SessionAuthentication",
     "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
 )
-if ENABLE_OIDC_AUTHENTICATION:
-    DEFAULT_AUTHENTICATION_CLASSES += ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
@@ -770,20 +781,6 @@ THREDDS_SERVER_URL = "https://thredds.hydroshare.org/thredds/"
 # HydroShare Geoserver URL
 HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
 
-if ENABLE_OIDC_AUTHENTICATION:
-    OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
-    OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
-    OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/userinfo"
-    OIDC_RP_SIGN_ALGO = "RS256"
-    OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
-    OIDC_RP_CLIENT_ID = 'hydroshare'
-    OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
-    LOGIN_REDIRECT_URL = '/home/'
-    LOGIN_URL = '/oidc/authenticate/'
-    OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
-    ALLOW_LOGOUT_GET_METHOD = True
-    LOGOUT_REDIRECT_URL = '/'
-
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
     "hs_core.tasks.create_bag_by_irods",
@@ -848,3 +845,7 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 )
 
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
+
+if ENABLE_OIDC_AUTHENTICATION:
+    DEFAULT_AUTHENTICATION_CLASSES += ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
+    AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
