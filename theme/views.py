@@ -42,6 +42,7 @@ from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import is_spam
 
 from hs_access_control.models import GroupMembershipRequest
+from hs_core.authentication import build_oidc_url
 from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
 from hs_core.views.utils import run_ssh_command
@@ -189,6 +190,11 @@ def rating(request, template="generic/rating.html"):
         return response
     response = render(request, template)
     return response
+
+
+def oidc_signup(request):
+    oidc_url = build_oidc_url(request).replace('/auth?', '/registrations?')
+    return redirect(oidc_url)
 
 
 def signup(request, template="accounts/account_signup.html", extra_context=None):
