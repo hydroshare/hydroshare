@@ -5,7 +5,7 @@ from django_comments.views.moderation import perform_delete
 from rest_framework import status
 
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.messages import info, error
@@ -198,6 +198,7 @@ def oidc_signup(request):
 
 
 def oidc_logout(request):
+    auth_logout(request)
     logout_url = settings.OIDC_OP_LOGOUT_ENDPOINT
     return_to_url = request.build_absolute_uri(settings.LOGOUT_REDIRECT_URL)
     oidc_url = logout_url + '?' + urlencode({'returnTo': return_to_url, 'client_id': settings.OIDC_RP_CLIENT_ID})
