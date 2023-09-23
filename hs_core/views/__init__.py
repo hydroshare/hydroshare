@@ -2743,7 +2743,7 @@ def my_resources(request, *args, **kwargs):
     """
     View for listing resources that belong to a given user.
 
-    Renders either a full my-resources page, or just a table of new resorces
+    Renders either a full my-resources page, or just a table of new resources
     """
 
     if not request.is_ajax():
