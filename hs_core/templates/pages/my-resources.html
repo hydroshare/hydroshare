@@ -67,29 +67,32 @@
             </tr>
           </thead>
           <tbody>
-            {% if user.ulabels.saved_labels %}
-            {% for label in user.ulabels.saved_labels %}
-            <tr>
-              <td class="user-label" data-label="{{ label }}">{{ label }}</td>
-              <td>
-                <form class="hidden-form" data-id="form-delete-label-{{ label }}"
-                  action="/hsapi/_internal/label-resource-action/" method="post">
-                  {% csrf_token %}
-                  <input type="hidden" name="label" value="{{ label }}">
-                  <input type="hidden" name="label_type" value="SAVEDLABEL">
-                  <input type="hidden" name="action" value="DELETE">
-                </form>
-                <span data-label="{{ label }}" data-form-type="delete-label"
-                  class="btn-label-remove glyphicon glyphicon-remove"
-                  data-form-id="form-delete-label-{{ label }}"></span>
-              </td>
-            </tr>
-            {% endfor %}
-            {% else %}
-            <tr class="no-items-found">
-              <td>No labels found.</td>
-            </tr>
-            {% endif %}
+            {# QUERY COUNT: this generates 2 queries - not dependent of the number of resources #}
+            {%  with saved_labels=user.ulabels.saved_labels %}
+                {% if saved_labels %}
+                {% for label in saved_labels %}
+                <tr>
+                  <td class="user-label" data-label="{{ label }}">{{ label }}</td>
+                  <td>
+                    <form class="hidden-form" data-id="form-delete-label-{{ label }}"
+                      action="/hsapi/_internal/label-resource-action/" method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="label" value="{{ label }}">
+                      <input type="hidden" name="label_type" value="SAVEDLABEL">
+                      <input type="hidden" name="action" value="DELETE">
+                    </form>
+                    <span data-label="{{ label }}" data-form-type="delete-label"
+                      class="btn-label-remove glyphicon glyphicon-remove"
+                      data-form-id="form-delete-label-{{ label }}"></span>
+                  </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr class="no-items-found">
+                  <td>No labels found.</td>
+                </tr>
+                {% endif %}
+          {% endwith %}
           </tbody>
         </table>
       </div>
@@ -124,6 +127,7 @@
 {% endblock %}
 
 {# To be used for querying the table in javascrip t#}
+{# QUERY COUNT: this generates 1 query - not dependent on the number of resources #}
 <input id="currentUserName" value="{{ user|best_name }}" style="display:none">
 <span id="csrf">{% csrf_token %}</span>
 
