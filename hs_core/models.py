@@ -2711,6 +2711,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
+        if self.files.filter(file_folder='').count() == 0:
+            # no files exist at the root of the resource path - no need to check for readme file
+            return None
+
         file_path_md = os.path.join(self.file_path, 'readme.md')
         file_path_txt = os.path.join(self.file_path, 'readme.txt')
         if self.is_federated:
