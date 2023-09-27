@@ -24,7 +24,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.template.response import TemplateResponse
-from django.utils.http import int_to_base36
+from django.utils.http import int_to_base36, urlencode
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
@@ -216,6 +216,11 @@ class LogoutView(OIDCLogoutView):
             logout_from_op = self.get_settings("OIDC_OP_LOGOUT_URL_METHOD", "")
             if logout_from_op:
                 redirect_url = import_string(logout_from_op)(request)
+            else:
+                logout_url = settings.OIDC_OP_LOGOUT_ENDPOINT
+                return_to_url = request.build_absolute_uri(settings.LOGOUT_REDIRECT_URL)
+                redirect_url = logout_url + '?' \
+                    + urlencode({'returnTo': return_to_url, 'client_id': settings.OIDC_RP_CLIENT_ID})
 
             # Log out the Django user if they were logged in.
             auth_logout(request)
