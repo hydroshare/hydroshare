@@ -194,6 +194,12 @@ ENABLE_OIDC_AUTHENTICATION = False
 # LOGOUT_REDIRECT_URL = '/'
 # OIDC_OP_LOGOUT_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/logout"
 
+# The following two settings will logout of OIDC during signout
+# If these two settings are not enabled, 
+# the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
+# OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
+# OIDC_STORE_ID_TOKEN = True
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (

@@ -19,12 +19,13 @@ from django.urls import reverse
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.utils.http import int_to_base36, urlencode
+from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 from mezzanine.accounts.forms import LoginForm
@@ -40,6 +41,7 @@ from mezzanine.utils.email import (
 )
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import is_spam
+from mozilla_django_oidc.views import OIDCLogoutView
 
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.authentication import build_oidc_url
@@ -197,12 +199,33 @@ def oidc_signup(request):
     return redirect(oidc_url)
 
 
-def oidc_logout(request):
-    auth_logout(request)
-    logout_url = settings.OIDC_OP_LOGOUT_ENDPOINT
-    return_to_url = request.build_absolute_uri(settings.LOGOUT_REDIRECT_URL)
-    oidc_url = logout_url + '?' + urlencode({'returnTo': return_to_url, 'client_id': settings.OIDC_RP_CLIENT_ID})
-    return redirect(oidc_url)
+class LogoutView(OIDCLogoutView):
+    def get(self, request):
+        """Log out the user."""
+        if self.get_settings("ALLOW_LOGOUT_GET_METHOD", False):
+            return self.post(request)
+        return HttpResponseNotAllowed(["POST"])
+
+    def post(self, request):
+        """Log out the user."""
+        redirect_url = settings.LOGOUT_REDIRECT_URL
+
+        if request.user.is_authenticated:
+            # Check if a method exists to build the URL to log out the user
+            # from the OP.
+            logout_from_op = self.get_settings("OIDC_OP_LOGOUT_URL_METHOD", "")
+            if logout_from_op:
+                redirect_url = import_string(logout_from_op)(request)
+            else:
+                logout_url = settings.OIDC_OP_LOGOUT_ENDPOINT
+                return_to_url = request.build_absolute_uri(settings.LOGOUT_REDIRECT_URL)
+                redirect_url = logout_url + '?' \
+                    + urlencode({'returnTo': return_to_url, 'client_id': settings.OIDC_RP_CLIENT_ID})
+
+            # Log out the Django user if they were logged in.
+            auth_logout(request)
+
+        return HttpResponseRedirect(redirect_url)
 
 
 def signup(request, template="accounts/account_signup.html", extra_context=None):
