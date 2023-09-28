@@ -174,6 +174,7 @@ class Session(object):
         logger.error(f"session_path = {self.session_path}")
         logger.error(f"session_id = {self.session_id}")
         logger.error(f"Calling iCommand: {argList}")
+        logger.error(print(myenv))
         logger.error(f"data: {data}")
         import time
         st = time.time()
