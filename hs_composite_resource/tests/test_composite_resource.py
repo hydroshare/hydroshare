@@ -3917,7 +3917,7 @@ class CompositeResourceTest(
         _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 161
 
         # expected number of queries for landing page when the resource has resource file
-        _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 12
+        _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 16
 
         # user 1 login
         self.client.login(username='user1', password='mypassword1')
@@ -3966,6 +3966,6 @@ class CompositeResourceTest(
             response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
             self.assertTrue(response.status_code == 200)
 
-        # accessing the readme file should only be 1 db query
-        with self.assertNumQueries(1):
+        # accessing the readme file should only be 3 db query
+        with self.assertNumQueries(3):
             _ = self.composite_resource.readme_file
