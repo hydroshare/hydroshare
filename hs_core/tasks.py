@@ -770,6 +770,7 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
             # note that new collection will not contain "deleted resources"
             new_res.resources.set(ori_res.resources.all())
 
+        utils.set_dirty_bag_flag(new_res)
         return new_res.absolute_url
     except Exception as ex:
         if new_res:
@@ -828,6 +829,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         ori_res.raccess.immutable = True
         ori_res.raccess.save()
         ori_res.save()
+        utils.set_dirty_bag_flag(new_res)
         return new_res.absolute_url
     except Exception as ex:
         if new_res:
