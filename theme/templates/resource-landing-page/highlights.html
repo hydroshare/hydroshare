@@ -24,6 +24,25 @@
             {% endif %}
         </td>
     </tr>
+    {% if user.is_superuser %}
+        <tr>
+            {% if not cm.spam_allowlisted %}
+                <a id="spam_allowlist" href="/hsapi/_internal/spam_allowlist/{{ cm.short_id }}/allow/">
+                    <button
+                        class="btn btn-info btn-xs">
+                        Allow in Discover even if spam patterns
+                    </button>
+                </a>
+            {% else %}
+                <a id="spam_disallowlist" href="/hsapi/_internal/spam_allowlist/{{ cm.short_id }}/disallow/">
+                    <button
+                        class="btn btn-warning btn-xs">
+                        Remove from spam allowlist
+                    </button>
+                </a>
+            {% endif %}
+        </tr>
+    {% endif %}
     {% if "pending" in cm.doi or "failure" in cm.doi or cm.raccess.review_pending %}
             <tr>
                 <th>Publication Status: </th>

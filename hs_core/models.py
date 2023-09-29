@@ -6,7 +6,6 @@ import os.path
 import re
 import unicodedata
 import urllib.parse
-import re
 from uuid import uuid4
 import arrow
 from dateutil import parser
@@ -2068,6 +2067,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     files_checked = models.DateTimeField(null=True)
     repaired = models.DateTimeField(null=True)
 
+    # allow resource that contains spam_patterns to be discoverable/public
+    spam_allowlisted = models.BooleanField(default=False)
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
@@ -4101,6 +4103,30 @@ class BaseResource(Page, AbstractResource):
             return ''
 
     @property
+    def free_of_spam_patterns(self):
+        # Compile a single regular expression that will match any individual
+        # pattern from a given list of patterns, case-insensitive.
+        # ( '|' is a special character in regular expressions. An expression
+        # 'A|B' will match either 'A' or 'B' ).
+        full_pattern = re.compile("|".join(patterns), re.IGNORECASE)
+
+        if self.metadata:
+            match = re.search(full_pattern, self.metadata.title.value)
+            if match is not None:
+                return False
+
+            for sub in self.metadata.subjects.all():
+                match = re.search(full_pattern, sub.value)
+                if match is not None:
+                    return False
+
+            match = re.search(full_pattern, self.metadata.description.abstract)
+            if match is not None:
+                return False
+
+        return True
+
+    @property
     def show_in_discover(self):
         """
         return True if a resource should be exhibited
@@ -4116,32 +4142,9 @@ class BaseResource(Page, AbstractResource):
             return False
 
         # TODO: display message in UI if resource.raccess.discoverable but not show_in_discover
-        # TODO: also test performance of these 2 different approaches
-        # Compile a single regular expression that will match any individual
-        # pattern from a given list of patterns, case-insensitive.
-        # ( '|' is a special character in regular expressions. An expression
-        # 'A|B' will match either 'A' or 'B' ).
-        logger = logging.getLogger(__name__)
-        import time
-        st = time.time()
-        full_pattern = re.compile("|".join(patterns), re.IGNORECASE)
-
-        match = re.search(full_pattern, self.metadata.title.value)
-        if match is not None:
-            return False
-
-        for sub in self.metadata.subjects.all():
-            match = re.search(full_pattern, sub.value)
-            if match is not None:
+        if not self.spam_allowlisted:
+            if not self.free_of_spam_patterns:
                 return False
-
-        match = re.search(full_pattern,self.metadata.description.abstract)
-        if match is not None:
-            return False
-
-        et = time.time()
-        elapsed_time = et - st
-        logger.error(f"Elapsed time for models regex = {elapsed_time}")
 
         return True
 
