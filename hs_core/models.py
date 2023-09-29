@@ -4141,7 +4141,6 @@ class BaseResource(Page, AbstractResource):
             # there is a newer discoverable resource - so this resource should not be shown in discover
             return False
 
-        # TODO: display message in UI if resource.raccess.discoverable but not show_in_discover
         if not self.spam_allowlisted:
             if not self.free_of_spam_patterns:
                 return False

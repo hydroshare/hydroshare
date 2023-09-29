@@ -2175,6 +2175,8 @@ def spam_allowlist(request, shortkey, action, **kwargs):
             "Resource has been removed from allowlist. "
             "It will not show in Discover if it contains spam patterns.",
         )
+    # update the index
+    signals.post_spam_whitelist_change.send(sender=BaseResource, instance=res)
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 
 
