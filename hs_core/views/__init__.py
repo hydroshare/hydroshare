@@ -983,8 +983,6 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
         task_dict = get_or_create_task_notification(
             task_id, name="resource delete", payload=shortkey, username=user.username
         )
-        # make resource being deleted not discoverable to inform solr to remove this resource from solr index
-        res.set_discoverable(False)
         signals.pre_delete_resource.send(
             sender=type(res),
             request=request,
