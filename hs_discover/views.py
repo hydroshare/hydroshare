@@ -117,8 +117,14 @@ class SearchAPI(APIView):
                 sqs = sqs.filter(north__range=[-90, 90])  # return resources with geographic data
 
             # Exclude potential spam
+            logger = logging.getLogger(__name__)
+            import time
+            st = time.time()
             for pattern in patterns:
                 sqs = sqs.exclude(content__iregex=pattern)
+            et = time.time()
+            elapsed_time = et - st
+            logger.error(f"Elapsed time for searchapi sqs regex = {elapsed_time}")
 
             if filters.get('date'):
                 try:

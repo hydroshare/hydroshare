@@ -4121,6 +4121,9 @@ class BaseResource(Page, AbstractResource):
         # pattern from a given list of patterns, case-insensitive.
         # ( '|' is a special character in regular expressions. An expression
         # 'A|B' will match either 'A' or 'B' ).
+        logger = logging.getLogger(__name__)
+        import time
+        st = time.time()
         full_pattern = re.compile("|".join(patterns), re.IGNORECASE)
 
         match = re.search(full_pattern, self.metadata.title.value)
@@ -4135,6 +4138,10 @@ class BaseResource(Page, AbstractResource):
         match = re.search(full_pattern,self.metadata.description.abstract)
         if match is not None:
             return False
+
+        et = time.time()
+        elapsed_time = et - st
+        logger.error(f"Elapsed time for models regex = {elapsed_time}")
 
         return True
 
