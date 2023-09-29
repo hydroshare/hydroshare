@@ -118,7 +118,6 @@ class SearchAPI(APIView):
 
             # Exclude potential spam
             logger = logging.getLogger(__name__)
-            import time
             st = time.time()
             for pattern in patterns:
                 sqs = sqs.exclude(content__iregex=pattern)
