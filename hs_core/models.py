@@ -6,6 +6,7 @@ import os.path
 import re
 import unicodedata
 import urllib.parse
+import re
 from uuid import uuid4
 import arrow
 from dateutil import parser
@@ -41,6 +42,7 @@ from mezzanine.pages.models import Page
 from pyld import jsonld
 from rdflib import Literal, BNode, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
+from spam_patterns.patterns_re import patterns
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -4112,6 +4114,28 @@ class BaseResource(Page, AbstractResource):
         if any([res.raccess.discoverable for res in replaced_by_resources]):
             # there is a newer discoverable resource - so this resource should not be shown in discover
             return False
+
+        # TODO: display message in UI if resource.raccess.discoverable but not show_in_discover
+        # TODO: also test performance of these 2 different approaches
+        # Compile a single regular expression that will match any individual
+        # pattern from a given list of patterns, case-insensitive.
+        # ( '|' is a special character in regular expressions. An expression
+        # 'A|B' will match either 'A' or 'B' ).
+        full_pattern = re.compile("|".join(patterns), re.IGNORECASE)
+
+        match = re.search(full_pattern, self.metadata.title.value)
+        if match is not None:
+            return False
+
+        for sub in self.metadata.subjects.all():
+            match = re.search(full_pattern, sub.value)
+            if match is not None:
+                return False
+
+        match = re.search(full_pattern,self.metadata.description.abstract)
+        if match is not None:
+            return False
+
         return True
 
     def update_relation_meta(self):

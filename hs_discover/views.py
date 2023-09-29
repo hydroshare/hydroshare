@@ -13,6 +13,7 @@ from haystack.query import SearchQuerySet, SQ
 from haystack.inputs import Exact
 from rest_framework.views import APIView
 from hs_core.discovery_parser import ParseSQ
+from spam_patterns.patterns_re import patterns
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,10 @@ class SearchAPI(APIView):
 
             if filters.get('geofilter'):
                 sqs = sqs.filter(north__range=[-90, 90])  # return resources with geographic data
+
+            # Exclude potential spam
+            for pattern in patterns:
+                sqs = sqs.exclude(content__iregex=pattern)
 
             if filters.get('date'):
                 try:
