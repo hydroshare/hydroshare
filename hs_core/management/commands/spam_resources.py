@@ -78,13 +78,7 @@ class Command(BaseCommand):
                 print(f"Checked {current_resource}/{total_res_to_check}")
                 print(f"Resource has spam patterns: {res_info}")
                 print(f"Total thus far with spam patterns: {len(shadow_banned_resources)}")
-        print("*" * 100)
-
-        if shadow_banned_resources:
-            print(f"List of {len(shadow_banned_resources)} resources containing spam patterns:")
-            for res in shadow_banned_resources:
-                print(res)
-            print("*" * 100)
+                print("*" * 100)
 
         if allowlisted:
             print(f"List of {len(allowlisted)} resources that have been allowlisted:")
