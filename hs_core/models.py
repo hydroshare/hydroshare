@@ -41,7 +41,7 @@ from mezzanine.pages.models import Page
 from pyld import jsonld
 from rdflib import Literal, BNode, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
-from spam_patterns.worst_patterns import patterns
+from spam_patterns.worst_patterns_re import patterns
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage

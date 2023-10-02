@@ -4,7 +4,7 @@ FROM hydroshare/hs_docker_base:2.2.10
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
-RUN pip install spam_patterns@git+https://github.com/CUAHSI/spam_patterns.git@0.0.2
+RUN pip install spam_patterns@git+https://github.com/CUAHSI/spam_patterns.git@0.0.3
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
