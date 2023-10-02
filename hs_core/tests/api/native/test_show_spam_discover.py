@@ -61,7 +61,7 @@ class TestSpamDiscover(TestCase):
         elem = metadata.create_element("description", abstract="Escore spam")
         self.assertFalse(self.copy0.show_in_discover)
 
-        metadata.delete_element(elem)
+        metadata.delete_element("description", elem.id)
 
         self.assertTrue(self.copy0.show_in_discover)
 
@@ -71,7 +71,7 @@ class TestSpamDiscover(TestCase):
         elem = metadata.create_element("subject", value="Escort spam")
         self.assertFalse(self.copy0.show_in_discover)
 
-        metadata.delete_element(elem)
+        metadata.delete_element("subject", elem.id)
 
         self.assertTrue(self.copy0.show_in_discover)
 
@@ -86,3 +86,7 @@ class TestSpamDiscover(TestCase):
         self.copy0.spam_allowlist = False
         self.copy0.save()
         self.assertFalse(self.copy0.show_in_discover)
+
+        self.copy0.metadata.title.value = "Test Composite Resource"
+        self.copy0.save()
+        self.assertTrue(self.copy0.show_in_discover)
