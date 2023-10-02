@@ -4105,20 +4105,32 @@ class BaseResource(Page, AbstractResource):
         # ( '|' is a special character in regular expressions. An expression
         # 'A|B' will match either 'A' or 'B' ).
         full_pattern = re.compile("|".join(patterns), re.IGNORECASE)
-
+        
         if self.metadata:
-            match = re.search(full_pattern, self.metadata.title.value)
-            if match is not None:
-                return False
-
-            for sub in self.metadata.subjects.all():
-                match = re.search(full_pattern, sub.value)
+            try:
+                match = re.search(full_pattern, self.metadata.title.value)
                 if match is not None:
                     return False
+            except AttributeError:
+                # no title
+                pass
 
-            match = re.search(full_pattern, self.metadata.description.abstract)
-            if match is not None:
-                return False
+            try:
+                for sub in self.metadata.subjects.all():
+                    match = re.search(full_pattern, sub.value)
+                    if match is not None:
+                        return False
+            except AttributeError:
+                # no keywords
+                pass
+
+            try:
+                match = re.search(full_pattern, self.metadata.description.abstract)
+                if match is not None:
+                    return False
+            except AttributeError:
+                # no abstract
+                pass
 
         return True
 
