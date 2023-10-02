@@ -67,7 +67,7 @@ class Command(BaseCommand):
             match = resource.spam_patterns
             if match:
                 match_text = match.group(0)
-                match_stats[match_text] = match_stats.get(match, 0) + 1
+                match_stats[match_text] = match_stats.get(match_text, 0) + 1
                 if resource.metadata:
                     try:
                         res_info += f"\n{resource.metadata.title.value}\nmatched on '{match_text}'"
