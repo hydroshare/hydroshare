@@ -63,10 +63,11 @@ class Command(BaseCommand):
         for resource in resources.iterator():
             current_resource += 1
             res_info = site_url + resource.absolute_url
-            if not resource.free_of_spam_patterns:
+            match = resource.spam_patterns
+            if match:
                 if resource.metadata:
                     try:
-                        res_info += f": {resource.metadata.title.value}"
+                        res_info += f"\n{resource.metadata.title.value}\nmatched on '{match.group(0)}'"
                     except AttributeError:
                         pass
                 if resource.spam_allowlisted:

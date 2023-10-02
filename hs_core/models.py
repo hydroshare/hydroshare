@@ -4099,7 +4099,7 @@ class BaseResource(Page, AbstractResource):
             return ''
 
     @property
-    def free_of_spam_patterns(self):
+    def spam_patterns(self):
         # Compile a single regular expression that will match any individual
         # pattern from a given list of patterns, case-insensitive.
         # ( '|' is a special character in regular expressions. An expression
@@ -4110,7 +4110,7 @@ class BaseResource(Page, AbstractResource):
             try:
                 match = re.search(full_pattern, self.metadata.title.value)
                 if match is not None:
-                    return False
+                    return match
             except AttributeError:
                 # no title
                 pass
@@ -4119,7 +4119,7 @@ class BaseResource(Page, AbstractResource):
                 for sub in self.metadata.subjects.all():
                     match = re.search(full_pattern, sub.value)
                     if match is not None:
-                        return False
+                        return match
             except AttributeError:
                 # no keywords
                 pass
@@ -4127,12 +4127,12 @@ class BaseResource(Page, AbstractResource):
             try:
                 match = re.search(full_pattern, self.metadata.description.abstract)
                 if match is not None:
-                    return False
+                    return match
             except AttributeError:
                 # no abstract
                 pass
 
-        return True
+        return None
 
     @property
     def show_in_discover(self):
@@ -4150,7 +4150,7 @@ class BaseResource(Page, AbstractResource):
             return False
 
         if not self.spam_allowlisted:
-            if not self.free_of_spam_patterns:
+            if self.spam_patterns:
                 return False
 
         return True
