@@ -4149,7 +4149,7 @@ class BaseResource(Page, AbstractResource):
             # there is a newer discoverable resource - so this resource should not be shown in discover
             return False
 
-        if not self.spam_allowlisted:
+        if not self.spam_allowlisted and not self.raccess.published:
             if self.spam_patterns:
                 return False
 
