@@ -59,12 +59,11 @@ class Command(BaseCommand):
         current_resource = 0
         shadow_banned_resources = []
         allowlisted = []
+        print("Iterating over resources...")
         for resource in resources.iterator():
             current_resource += 1
             res_info = site_url + resource.absolute_url
-            print(f"{current_resource}/{total_res_to_check}: Checking resource {res_info}")
             if not resource.free_of_spam_patterns:
-                print("Resource contains spam pattern")
                 if resource.metadata:
                     try:
                         res_info += f": {resource.metadata.title.value}"
@@ -75,7 +74,9 @@ class Command(BaseCommand):
                     print("== THIS RESOURCE HAS BEEN ALLOWLISTED AND WILL SHOW UP IN DISCOVER ==")
                 else:
                     shadow_banned_resources.append(res_info)
-                print(f"Resources thus far with spam patterns: {len(shadow_banned_resources)}")
+                print(f"Checked {current_resource}/{total_res_to_check}")
+                print(f"Resource has spam patterns: {res_info}")
+                print(f"Total thus far with spam patterns: {len(shadow_banned_resources)}")
         print("*" * 100)
 
         if shadow_banned_resources:
