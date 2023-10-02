@@ -4,11 +4,10 @@
 Show resources that contain spam patterns
 """
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core import hydroshare
 from django.db.models import F
-from django.db.models import Q
 from datetime import timedelta
 from django.utils import timezone
 
