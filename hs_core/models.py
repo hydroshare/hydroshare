@@ -4105,7 +4105,7 @@ class BaseResource(Page, AbstractResource):
         # ( '|' is a special character in regular expressions. An expression
         # 'A|B' will match either 'A' or 'B' ).
         full_pattern = re.compile("|".join(patterns), re.IGNORECASE)
-        
+
         if self.metadata:
             try:
                 match = re.search(full_pattern, self.metadata.title.value)
