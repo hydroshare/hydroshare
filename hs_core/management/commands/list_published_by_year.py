@@ -41,6 +41,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         days = options['days']
+        count = 1
         resources = BaseResource.objects.filter(raccess__published=True)
 
         if options['owned_by'] is not None:
@@ -62,7 +63,10 @@ class Command(BaseCommand):
                 cuttoff_time = timezone.now() - timedelta(days)
                 if not pub_date >= cuttoff_time:
                     continue
+            print("*" * 100)
+            print(f"{count}/{resources.count()}")
             self.print_resource(resource, pub_date)
+            count += 1
 
     def get_publication_date(self, resource):
         meta_dates = resource.metadata.dates.all()
@@ -79,7 +83,6 @@ class Command(BaseCommand):
         site_url = hydroshare.utils.current_site_url()
         res_url = site_url + res.absolute_url
         funding_agencies = res.metadata.funding_agencies.all()
-        print("*" * 100)
         print(f"{res_url}")
         print(res.metadata.title.value)
         if pub_date:
@@ -88,7 +91,7 @@ class Command(BaseCommand):
             print("Resource has no publication date")
 
         if funding_agencies:
-            print("Funding agency")
+            print("Funding agency/agencies:")
             for f in funding_agencies:
                 print(f.agency_name)
         else:
