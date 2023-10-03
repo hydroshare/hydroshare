@@ -157,7 +157,8 @@ class Command(BaseCommand):
         failed_resource_ids = []
         for r in BaseResource.objects.all():
             try:
-                pub_date = r.metadata.dates.get(type='published')
+                pub_date = r.metadata.dates.get(type='published')\
+                    .start_date.strftime("%m/%d/%Y %H:%M:%S.%f")
             except Date.DoesNotExist:
                 pub_date = None
             try:
