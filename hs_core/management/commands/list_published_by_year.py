@@ -1,7 +1,4 @@
-"""This lists all the resources published in a given year.
-
-* By default, prints errors on stdout.
-* Optional argument --log: logs output to system log.
+"""Lists all the resources published in a given year.
 """
 
 from django.core.management.base import BaseCommand
