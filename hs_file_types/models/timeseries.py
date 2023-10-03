@@ -2600,7 +2600,7 @@ def add_blank_sqlite_file(resource, upload_folder):
     try:
         uploaded_file = UploadedFile(file=open(_ODM2_SQLITE_FILE_PATH, 'rb'), name=odm2_sqlite_file_name)
         new_res_file = utils.add_file_to_resource(
-            resource, uploaded_file, folder=upload_folder
+            resource, uploaded_file, folder=upload_folder, save_file_system_metadata=True
         )
 
         log.info("Blank SQLite file was added.")
