@@ -22,7 +22,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--year',
             dest='year',
-            help='limit to resources publishef in a given year'
+            help='limit to resources published in a given year'
         )
 
         parser.add_argument('--days', type=int, dest='days', help='include resources updated in the last X days')
@@ -56,7 +56,7 @@ class Command(BaseCommand):
         for resource in resources:
             pub_date = self.get_publication_date(resource)
             if options['year']:
-                if pub_date.year != options['year']:
+                if pub_date.year != int(options['year']):
                     continue
             if days:
                 cuttoff_time = timezone.now() - timedelta(days)
